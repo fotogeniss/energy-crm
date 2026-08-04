@@ -24,6 +24,27 @@ class ECRM_REST {
 
 	const NS = 'ecrm/v1';
 
+	/**
+	 * Public entry point for the extended-fields bag, used by
+	 * EnergyCRM\Http\ContractSaveController. Moves under src/ with the rest of
+	 * the contract-writing logic.
+	 */
+	public static function sanitize_extra_bag( $extra ): ?string {
+		return self::sanitize_extra( $extra );
+	}
+
+	/** Record the "contract created" entry in the event log. */
+	public static function log_creation( int $contract_id, int $user_id, string $status ): void {
+		global $wpdb;
+		$wpdb->insert( ECRM_DB::table( 'events' ), [
+			'contract_id' => $contract_id,
+			'user_id'     => $user_id,
+			'type'        => 'created',
+			'to_status'   => $status,
+			'message'     => 'Αποθήκευση αίτησης',
+		] );
+	}
+
 	/** Sanitize the extended fields bag and JSON-encode it. */
 	private static function sanitize_extra( $extra ): ?string {
 		if ( ! is_array( $extra ) || ! $extra ) {
@@ -145,13 +166,7 @@ class ECRM_REST {
 		] );
 		register_rest_route( self::NS, '/extract',    [ 'methods' => 'POST', 'callback' => [ __CLASS__, 'extract' ],       'permission_callback' => $auth ] );
 		register_rest_route( self::NS, '/dashboard',  [ 'methods' => 'GET',  'callback' => [ __CLASS__, 'dashboard' ],     'permission_callback' => $auth ] );
-		// Το GET μετακινήθηκε στο EnergyCRM\Http\ContractsReadController.
-		// Εδώ μένει μόνο η εγγραφή, μέχρι να μεταφερθεί κι αυτή.
-		register_rest_route( self::NS, '/contracts',  [
-			'methods'             => [ 'POST' ],
-			'callback'            => [ __CLASS__, 'contracts_router' ],
-			'permission_callback' => $auth,
-		] );
+		// GET/POST /contracts -> ContractsReadController / ContractSaveController
 
 		register_rest_route( self::NS, '/contracts/bulk', [
 			'methods'             => 'POST',
@@ -272,10 +287,6 @@ class ECRM_REST {
 		$u = wp_get_current_user();
 		$ecrm_roles = class_exists( 'ECRM_DB' ) ? array_keys( ECRM_DB::roles() ) : [];
 		return (bool) array_intersect( $ecrm_roles, (array) $u->roles );
-	}
-
-	public static function contracts_router( WP_REST_Request $req ) {
-		return $req->get_method() === 'POST' ? self::save_contract( $req ) : self::list_contracts( $req );
 	}
 
 	// ---------------------------------------------------------------------
@@ -811,296 +822,6 @@ class ECRM_REST {
 	}
 
 	// ---------------------------------------------------------------------
-	// Save contract (+ customer)
-	// ---------------------------------------------------------------------
-	public static function save_contract( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$p = $req->get_json_params();
-		if ( empty( $p ) ) { $p = $req->get_params(); }
-
-		// Authorisation is resolved once, up front, and every read/write below
-		// goes through a repository that requires it. See src/Access/UserScope.
-		try {
-			$scope = \EnergyCRM\Services::scopeResolver()->forCurrentUser();
-		} catch ( \EnergyCRM\Access\NotAuthenticated $e ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Απαιτείται σύνδεση.' ], 401 );
-		}
-		$contracts_repo = \EnergyCRM\Services::contracts();
-		$customers_repo = \EnergyCRM\Services::customers();
-
-		// Resolve the target contract *before* touching anything. A contract the
-		// actor cannot see is indistinguishable from one that does not exist.
-		$contract_id  = isset( $p['contract_id'] ) ? (int) $p['contract_id'] : 0;
-		$old_contract = null;
-		if ( $contract_id > 0 ) {
-			$old_contract = $contracts_repo->find( $contract_id, $scope );
-			if ( $old_contract === null ) {
-				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Η σύμβαση δεν βρέθηκε.' ], 404 );
-			}
-		}
-
-		$cust_cols = [ 'customer_type','afm','doy','first_name','last_name','father_name','company_name','adt','birth_date','region','city','street','street_no','postal_code','phone','mobile','email' ];
-		$customer  = [];
-		foreach ( $cust_cols as $c ) {
-			if ( isset( $p[ $c ] ) && $p[ $c ] !== '' ) {
-				$customer[ $c ] = sanitize_text_field( (string) $p[ $c ] );
-			}
-		}
-
-		// Validate ΑΦΜ (when provided) — block obvious typos via the check digit.
-		if ( ! empty( $customer['afm'] ) && class_exists( 'ECRM_Validate' ) && ! ECRM_Validate::afm( $customer['afm'] ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη έγκυρο ΑΦΜ (αποτυχία ελέγχου ψηφίου).', 'field' => 'afm' ], 422 );
-		}
-
-		// A customer id from the request is only honoured when it is already
-		// attached to the contract being edited, or otherwise reachable.
-		$customer_id = isset( $p['customer_id'] ) ? (int) $p['customer_id'] : 0;
-		if ( $customer_id > 0 ) {
-			$linked = $old_contract !== null && (int) $old_contract['customer_id'] === $customer_id;
-			if ( ! $linked && ! $customers_repo->isReachable( $customer_id, $scope ) ) {
-				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.' ], 404 );
-			}
-		}
-
-		$old_customer = ( $customer_id && $customer ) ? $customers_repo->find( $customer_id, $scope ) : null;
-		if ( $customer ) {
-			if ( $customer_id ) {
-				$customers_repo->update( $customer_id, $scope, $customer );
-			} else {
-				$customer_id = $customers_repo->create( $customer );
-			}
-		}
-
-		$status = in_array( ( $p['status'] ?? '' ), array_keys( ECRM_DB::statuses() ), true ) ? $p['status'] : 'draft';
-
-		$contract = [
-			'customer_id'     => $customer_id ?: null,
-			'provider_id'     => isset( $p['provider_id'] ) ? (int) $p['provider_id'] : null,
-			'program_id'      => isset( $p['program_id'] ) ? (int) $p['program_id'] : null,
-			'energy_type'     => sanitize_text_field( $p['energy_type'] ?? 'power' ),
-			'category'        => sanitize_text_field( $p['category'] ?? 'home' ),
-			'price_type'      => isset( $p['price_type'] ) ? sanitize_text_field( $p['price_type'] ) : null,
-			'customer_type'   => sanitize_text_field( $p['customer_type'] ?? 'individual' ),
-			'activation_type' => isset( $p['activation_type'] ) ? sanitize_text_field( $p['activation_type'] ) : null,
-			'supply_number'   => isset( $p['supply_number'] ) ? sanitize_text_field( $p['supply_number'] ) : null,
-			'meter_number'    => isset( $p['meter_number'] ) ? sanitize_text_field( $p['meter_number'] ) : null,
-			'invoice_code'    => isset( $p['invoice_code'] ) ? sanitize_text_field( $p['invoice_code'] ) : null,
-			'status'          => $status,
-			'notes'           => isset( $p['notes'] ) ? sanitize_textarea_field( $p['notes'] ) : null,
-			'extracted_json'  => isset( $p['extracted_json'] ) ? wp_kses_post( $p['extracted_json'] ) : null,
-			'extra_json'      => self::sanitize_extra( $p['extra'] ?? null ),
-		];
-
-		// Duration / expiry: start + term -> auto end date if end not provided.
-		$start = isset( $p['start_date'] ) ? sanitize_text_field( $p['start_date'] ) : '';
-		$term  = isset( $p['term_months'] ) ? (int) $p['term_months'] : 0;
-		$end   = isset( $p['end_date'] ) ? sanitize_text_field( $p['end_date'] ) : '';
-		if ( $start === '' ) { $start = null; }
-		if ( $end === '' && $start && $term > 0 ) {
-			$end = gmdate( 'Y-m-d', strtotime( $start . ' +' . $term . ' months' ) );
-		}
-		$contract['start_date']  = $start;
-		$contract['term_months'] = $term ?: null;
-		$contract['end_date']    = $end ?: null;
-
-		// GDPR consent capture (timestamp + IP) when the consent box is ticked.
-		if ( ! empty( $p['consent'] ) ) {
-			$contract['consent_at'] = current_time( 'mysql' );
-			$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-			$contract['consent_ip'] = substr( $ip, 0, 64 );
-		}
-
-		// The scope is part of the UPDATE's WHERE clause, so the ownership check
-		// and the write are one statement and cannot drift apart.
-		$is_update = $old_contract !== null;
-		if ( $is_update ) {
-			$contracts_repo->update( $contract_id, $scope, $contract );
-		} else {
-			$contract_id = $contracts_repo->create( $contract, $scope );
-			if ( $contract_id <= 0 ) {
-				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Η αποθήκευση απέτυχε.' ], 500 );
-			}
-			$contracts_repo->update( $contract_id, $scope, [ 'code' => sprintf( 'APP-%04d', $contract_id ) ] );
-		}
-
-		// Audit trail: log field-level diffs on edits (not on first creation).
-		if ( $is_update && class_exists( 'ECRM_Audit' ) ) {
-			$changes = [];
-			if ( $old_customer ) { $changes += ECRM_Audit::diff( $old_customer, $customer ); }
-			if ( $old_contract ) { $changes += ECRM_Audit::diff( $old_contract, $contract ); }
-			ECRM_Audit::log( $contract_id, $changes );
-		}
-
-		if ( ! $is_update ) {
-			$wpdb->insert( ECRM_DB::table( 'events' ), [
-				'contract_id' => $contract_id,
-				'user_id'     => get_current_user_id(),
-				'type'        => 'created',
-				'to_status'   => $status,
-				'message'     => 'Αποθήκευση αίτησης',
-			] );
-		}
-
-		// Auto-generate & attach the contract PDF on every save (best-effort).
-		self::store_contract_pdf( (int) $contract_id );
-
-		return new WP_REST_Response( [ 'ok' => true, 'contract_id' => $contract_id, 'customer_id' => $customer_id, 'status' => $status ], 200 );
-	}
-
-	// ---------------------------------------------------------------------
-	// List contracts + counts
-	// ---------------------------------------------------------------------
-	public static function list_contracts( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$ct  = ECRM_DB::table( 'contracts' );
-		$cu  = ECRM_DB::table( 'customers' );
-		$pr  = ECRM_DB::table( 'providers' );
-		$pg  = ECRM_DB::table( 'programs' );
-		$uid = get_current_user_id();
-
-		$status = sanitize_text_field( (string) $req->get_param( 'status' ) );
-		$q      = sanitize_text_field( (string) $req->get_param( 'q' ) );
-
-		$scope = sanitize_text_field( (string) $req->get_param( 'scope' ) );
-		if ( $scope === 'team' ) {
-			$ids = ECRM_DB::visible_user_ids( $uid );
-			$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-			$where  = [ "c.partner_user_id IN ($ph)" ];
-			$params = $ids;
-		} else {
-			$where  = [ 'c.partner_user_id = %d' ];
-			$params = [ $uid ];
-		}
-
-		if ( $status && array_key_exists( $status, ECRM_DB::statuses() ) ) {
-			$where[]  = 'c.status = %s';
-			$params[] = $status;
-		}
-		if ( $q !== '' ) {
-			$like     = '%' . $wpdb->esc_like( $q ) . '%';
-			$where[]  = '( cu.first_name LIKE %s OR cu.last_name LIKE %s OR cu.company_name LIKE %s OR cu.afm LIKE %s OR c.supply_number LIKE %s OR c.code LIKE %s )';
-			array_push( $params, $like, $like, $like, $like, $like, $like );
-		}
-
-		$where_sql = implode( ' AND ', $where );
-
-		$sql = "SELECT c.id, c.code, c.status, c.energy_type, c.category, c.invoice_code, c.supply_number, c.created_at, c.updated_at, c.partner_user_id,
-				p.name AS provider_name, p.slug AS provider_slug, p.logo_url AS provider_logo,
-				g.name AS program_name,
-				cu.first_name, cu.last_name, cu.company_name, cu.afm, cu.phone
-			FROM {$ct} c
-			LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			LEFT JOIN {$pr} p  ON p.id  = c.provider_id
-			LEFT JOIN {$pg} g  ON g.id  = c.program_id
-			WHERE {$where_sql}
-			ORDER BY c.updated_at DESC
-			LIMIT 200";
-
-		$rows = (array) $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
-
-		// Who owns each contract. Resolved in one query for the whole page —
-		// a per-row get_userdata() would reintroduce the N+1 we just removed.
-		$owner_ids = array_values( array_unique( array_filter( array_map(
-			static function ( $r ) { return (int) ( $r['partner_user_id'] ?? 0 ); },
-			$rows
-		) ) ) );
-		$owner_names = [];
-		if ( $owner_ids ) {
-			foreach ( get_users( [ 'include' => $owner_ids, 'fields' => [ 'ID', 'display_name' ] ] ) as $u ) {
-				$owner_names[ (int) $u->ID ] = $u->display_name;
-			}
-		}
-		foreach ( $rows as $i => $r ) {
-			$rows[ $i ]['partner_name'] = $owner_names[ (int) ( $r['partner_user_id'] ?? 0 ) ] ?? '—';
-		}
-
-		// Per-status counts (own scope), for the filter tabs.
-		$counts = [ 'all' => 0 ];
-		foreach ( array_keys( ECRM_DB::statuses() ) as $s ) { $counts[ $s ] = 0; }
-		if ( $scope === 'team' ) {
-			$ids = ECRM_DB::visible_user_ids( $uid );
-			$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-			$crows = $wpdb->get_results( $wpdb->prepare( "SELECT status, COUNT(*) c FROM {$ct} WHERE partner_user_id IN ($ph) GROUP BY status", $ids ), ARRAY_A );
-		} else {
-			$crows = $wpdb->get_results( $wpdb->prepare( "SELECT status, COUNT(*) c FROM {$ct} WHERE partner_user_id = %d GROUP BY status", $uid ), ARRAY_A );
-		}
-		foreach ( $crows as $cr ) {
-			$counts[ $cr['status'] ] = (int) $cr['c'];
-			$counts['all'] += (int) $cr['c'];
-		}
-
-		return new WP_REST_Response( [
-			'rows'     => $rows,
-			'counts'   => $counts,
-			'statuses' => ECRM_DB::statuses(),
-		], 200 );
-	}
-
-
-	// ---------------------------------------------------------------------
-	// Contract detail (+ history + files), ownership-guarded
-	// ---------------------------------------------------------------------
-	public static function get_contract( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$id  = (int) $req['id'];
-		$uid = get_current_user_id();
-		$ct  = ECRM_DB::table( 'contracts' );
-		$cu  = ECRM_DB::table( 'customers' );
-		$pr  = ECRM_DB::table( 'providers' );
-		$pg  = ECRM_DB::table( 'programs' );
-		$ev  = ECRM_DB::table( 'events' );
-		$fl  = ECRM_DB::table( 'files' );
-		$vis_ids = ECRM_DB::visible_user_ids( $uid );
-		$vis_ph  = implode( ',', array_fill( 0, count( $vis_ids ), '%d' ) );
-
-		$row = $wpdb->get_row( $wpdb->prepare(
-			"SELECT c.*, p.name AS provider_name, g.name AS program_name,
-				cu.first_name, cu.last_name, cu.father_name, cu.company_name, cu.afm, cu.doy,
-				cu.adt, cu.birth_date, cu.region, cu.city, cu.street, cu.street_no, cu.postal_code,
-				cu.phone, cu.mobile, cu.email
-			FROM {$ct} c
-			LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			LEFT JOIN {$pr} p  ON p.id  = c.provider_id
-			LEFT JOIN {$pg} g  ON g.id  = c.program_id
-			WHERE c.id = %d AND c.partner_user_id IN ($vis_ph)",
-			array_merge( [ $id ], $vis_ids )
-		), ARRAY_A );
-
-		if ( ! $row ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.' ], 404 );
-		}
-
-		$row['events'] = $wpdb->get_results( $wpdb->prepare(
-			"SELECT type, from_status, to_status, message, created_at FROM {$ev} WHERE contract_id = %d ORDER BY created_at DESC",
-			$id
-		), ARRAY_A );
-
-		$files = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, doc_kind, filename, mime, attachment_id, path, protected FROM {$fl} WHERE contract_id = %d ORDER BY id",
-			$id
-		), ARRAY_A );
-		foreach ( $files as &$ff ) {
-			// Always serve through the authenticated, signed endpoint — never a public URL/path.
-			$ff['url']      = class_exists( 'ECRM_Files' ) ? ECRM_Files::url( (int) $ff['id'] ) : '';
-			$ff['is_image'] = ( strpos( (string) $ff['mime'], 'image/' ) === 0 );
-			unset( $ff['path'], $ff['attachment_id'] ); // don't leak storage details to the client
-		}
-		unset( $ff );
-		$row['files'] = $files;
-		$row['extra'] = ! empty( $row['extra_json'] ) ? (array) json_decode( $row['extra_json'], true ) : [];
-		$row['track_url'] = class_exists( 'ECRM_Tracking' ) ? ECRM_Tracking::url( $id ) : '';
-		$row['doc_checklist'] = class_exists( 'ECRM_Docs' ) ? ECRM_Docs::checklist( $id, $row['activation_type'] ?? '' ) : null;
-		$row['doc_kinds']     = class_exists( 'ECRM_Docs' ) ? ECRM_Docs::kinds() : [];
-
-		return new WP_REST_Response( [
-			'ok'               => true,
-			'contract'         => $row,
-			'statuses'         => ECRM_DB::statuses(),
-			'activation_types' => ECRM_DB::activation_types(),
-		], 200 );
-	}
-
-	// ---------------------------------------------------------------------
 	// Change status (+ log event), ownership-guarded
 	// ---------------------------------------------------------------------
 	/**
@@ -1173,76 +894,6 @@ class ECRM_REST {
 			}
 		}
 		return true;
-	}
-
-	public static function change_status( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$id  = (int) $req['id'];
-		$uid = get_current_user_id();
-		$ct  = ECRM_DB::table( 'contracts' );
-		$p   = $req->get_json_params();
-		if ( empty( $p ) ) { $p = $req->get_params(); }
-
-		$to     = sanitize_text_field( $p['status'] ?? '' );
-		$target = ContractStatus::tryFromSlug( $to );
-		if ( $target === null ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Άγνωστη κατάσταση.' ], 400 );
-		}
-
-		// Scoped lookup: a manager may move a team member's contract forward,
-		// which the previous "partner_user_id = me" check made impossible.
-		try {
-			$scope = \EnergyCRM\Services::scopeResolver()->forCurrentUser();
-		} catch ( \EnergyCRM\Access\NotAuthenticated $e ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Απαιτείται σύνδεση.' ], 401 );
-		}
-		$current = \EnergyCRM\Services::contracts()->find( $id, $scope );
-		if ( $current === null ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.' ], 404 );
-		}
-
-		$from = (string) $current['status'];
-		if ( $from === $to ) {
-			return new WP_REST_Response( [ 'ok' => true, 'status' => $to ], 200 );
-		}
-
-		$source = ContractStatus::tryFromSlug( $from );
-		if ( $source !== null && ! $source->canMoveTo( $target ) ) {
-			return new WP_REST_Response( [
-				'ok'    => false,
-				'error' => sprintf(
-					'Δεν επιτρέπεται μετάβαση από «%s» σε «%s».',
-					$source->label(),
-					$target->label()
-				),
-				'allowed' => array_map(
-					static function ( ContractStatus $s ) {
-						return [ 'status' => $s->value, 'label' => $s->label() ];
-					},
-					$source->allowedNext()
-				),
-			], 409 );
-		}
-
-		// Document gate: block advancing into routed/active unless required docs are present.
-		if ( class_exists( 'ECRM_Docs' ) && in_array( $to, ECRM_Docs::gate_statuses(), true ) ) {
-			$missing = ECRM_Docs::missing_labels( $id, $current['activation_type'] ?? '' );
-			if ( $missing ) {
-				return new WP_REST_Response( [
-					'ok'      => false,
-					'error'   => 'Λείπουν δικαιολογητικά: ' . implode( ', ', $missing ),
-					'missing' => $missing,
-				], 422 );
-			}
-		}
-
-		self::transition( $id, $to, [
-			'user_id' => $uid,
-			'from'    => $from,
-			'message' => isset( $p['message'] ) ? sanitize_textarea_field( $p['message'] ) : null,
-		] );
-
-		return new WP_REST_Response( [ 'ok' => true, 'status' => $to ], 200 );
 	}
 
 
@@ -2062,155 +1713,6 @@ class ECRM_REST {
 		return new WP_REST_Response( [ 'ok' => true, 'saved' => count( $saved ), 'files' => $saved ], 200 );
 	}
 
-
-	// ---------------------------------------------------------------------
-	// Customers: distinct customers in visible scope + duplicate check
-	// ---------------------------------------------------------------------
-	public static function customers_list( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$cu  = ECRM_DB::table( 'customers' );
-		$ct  = ECRM_DB::table( 'contracts' );
-		$uid = get_current_user_id();
-		$scope = sanitize_text_field( (string) $req->get_param( 'scope' ) );
-		$ids   = $scope === 'team' ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-		$ph    = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		$q   = trim( (string) $req->get_param( 'q' ) );
-		$args = $ids;
-		$where = "c.partner_user_id IN ($ph)";
-		if ( $q !== '' ) {
-			$like = '%' . $wpdb->esc_like( $q ) . '%';
-			$where .= " AND ( CONCAT_WS(' ', cu.first_name, cu.last_name, cu.company_name) LIKE %s OR cu.afm LIKE %s OR cu.phone LIKE %s )";
-			array_push( $args, $like, $like, $like );
-		}
-
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT cu.id, cu.first_name, cu.last_name, cu.company_name, cu.afm, cu.phone, cu.email,
-				COUNT(c.id) AS contracts, MAX(c.updated_at) AS last_at
-			 FROM {$cu} cu JOIN {$ct} c ON c.customer_id = cu.id
-			 WHERE {$where}
-			 GROUP BY cu.id ORDER BY last_at DESC LIMIT 500",
-			$args
-		), ARRAY_A );
-
-		$out = array_map( function ( $r ) {
-			$name = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
-			return [
-				'id' => (int) $r['id'], 'name' => $name ?: '—', 'afm' => $r['afm'],
-				'phone' => $r['phone'], 'email' => $r['email'],
-				'contracts' => (int) $r['contracts'], 'last_at' => $r['last_at'],
-			];
-		}, $rows );
-
-		return new WP_REST_Response( [ 'ok' => true, 'rows' => $out, 'count' => count( $out ) ], 200 );
-	}
-
-	public static function customers_check( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$ct  = ECRM_DB::table( 'contracts' );
-		$cu  = ECRM_DB::table( 'customers' );
-		$uid = get_current_user_id();
-		$ids = ECRM_DB::visible_user_ids( $uid );
-		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		$afm    = trim( (string) $req->get_param( 'afm' ) );
-		$supply = trim( (string) $req->get_param( 'supply' ) );
-		if ( $afm === '' && $supply === '' ) {
-			return new WP_REST_Response( [ 'ok' => true, 'matches' => [] ], 200 );
-		}
-
-		$conds = []; $args = $ids;
-		if ( $afm !== '' )    { $conds[] = 'cu.afm = %s';            $args[] = $afm; }
-		if ( $supply !== '' ) { $conds[] = 'c.supply_number = %s';   $args[] = $supply; }
-		$cond = '(' . implode( ' OR ', $conds ) . ')';
-
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.code, c.status, c.supply_number, cu.afm, cu.first_name, cu.last_name, cu.company_name
-			 FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			 WHERE c.partner_user_id IN ($ph) AND {$cond}
-			 ORDER BY c.updated_at DESC LIMIT 10",
-			$args
-		), ARRAY_A );
-
-		$matches = array_map( function ( $r ) {
-			$name = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
-			return [ 'code' => $r['code'], 'status' => $r['status'], 'name' => $name ?: '—', 'afm' => $r['afm'], 'supply' => $r['supply_number'] ];
-		}, $rows );
-
-		return new WP_REST_Response( [ 'ok' => true, 'matches' => $matches ], 200 );
-	}
-
-
-	// Delete a contract (drafts only, within visible scope).
-	public static function delete_contract( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$id  = (int) $req['id'];
-		$uid = get_current_user_id();
-		$ct  = ECRM_DB::table( 'contracts' );
-		$ids = ECRM_DB::visible_user_ids( $uid );
-		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		$row = $wpdb->get_row( $wpdb->prepare( "SELECT id, status FROM {$ct} WHERE id=%d AND partner_user_id IN ($ph)", array_merge( [ $id ], $ids ) ), ARRAY_A );
-		if ( ! $row ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε η αίτηση.' ], 404 );
-		}
-		// Documents first: the row is the only pointer to the file on disk.
-		\EnergyCRM\Services::files()->purgeForContracts( [ $id ] );
-
-		$wpdb->delete( ECRM_DB::table( 'events' ),        [ 'contract_id' => $id ] );
-		$wpdb->delete( ECRM_DB::table( 'signatures' ),    [ 'contract_id' => $id ] );
-		$wpdb->delete( ECRM_DB::table( 'notifications' ), [ 'contract_id' => $id ] );
-		$wpdb->delete( $ct, [ 'id' => $id ] );
-		return new WP_REST_Response( [ 'ok' => true ], 200 );
-	}
-
-
-	// ---------------------------------------------------------------------
-	// Notifications / follow-ups
-	// ---------------------------------------------------------------------
-	public static function notifications( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$uid   = get_current_user_id();
-		$scope = sanitize_text_field( (string) $req->get_param( 'scope' ) );
-		$ids   = $scope === 'team' ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-		$data  = ECRM_Notifications::followups_for( $ids );
-		$data['ok'] = true;
-		$data['threshold'] = ECRM_Notifications::threshold_days();
-
-		// Stored event notifications (e.g. customer signatures) for this user.
-		$nt   = ECRM_DB::table( 'notifications' );
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, contract_id, type, title, body, read_at, created_at
-			 FROM {$nt} WHERE user_id = %d ORDER BY id DESC LIMIT 30", $uid
-		), ARRAY_A );
-		$data['notifs'] = array_map( function ( $r ) {
-			return [
-				'id' => (int) $r['id'], 'contract_id' => (int) $r['contract_id'],
-				'type' => $r['type'], 'title' => $r['title'], 'body' => $r['body'],
-				'read' => ! empty( $r['read_at'] ), 'created_at' => $r['created_at'],
-			];
-		}, $rows ?: [] );
-		$data['unread'] = (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM {$nt} WHERE user_id = %d AND read_at IS NULL", $uid
-		) );
-		return new WP_REST_Response( $data, 200 );
-	}
-
-	/** POST /notifications/read — mark notifications read (all, or one by id). */
-	public static function notifications_read( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$uid = get_current_user_id();
-		$nt  = ECRM_DB::table( 'notifications' );
-		$p   = $req->get_json_params() ?: $req->get_params();
-		$now = current_time( 'mysql', true );
-		if ( ! empty( $p['id'] ) ) {
-			$wpdb->query( $wpdb->prepare( "UPDATE {$nt} SET read_at=%s WHERE user_id=%d AND id=%d AND read_at IS NULL", $now, $uid, (int) $p['id'] ) );
-		} else {
-			$wpdb->query( $wpdb->prepare( "UPDATE {$nt} SET read_at=%s WHERE user_id=%d AND read_at IS NULL", $now, $uid ) );
-		}
-		return new WP_REST_Response( [ 'ok' => true ], 200 );
-	}
-
 	/** Insert a single in-app notification. */
 	public static function notify( int $user_id, string $type, string $title, string $body = '', int $contract_id = 0 ): void {
 		if ( $user_id <= 0 ) { return; }
@@ -2273,52 +1775,6 @@ class ECRM_REST {
 		foreach ( self::upline_of( $owner ) as $mid ) {
 			self::notify( $mid, 'signed', $title, $body, $contract_id );
 		}
-	}
-
-
-	// ---------------------------------------------------------------------
-	// Renewals / expiries
-	// ---------------------------------------------------------------------
-	public static function renewals( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$ct  = ECRM_DB::table( 'contracts' );
-		$cu  = ECRM_DB::table( 'customers' );
-		$pr  = ECRM_DB::table( 'providers' );
-		$uid = get_current_user_id();
-		$scope = sanitize_text_field( (string) $req->get_param( 'scope' ) );
-		$ids   = $scope === 'team' ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-		$ph    = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-		$window = (int) ( $req->get_param( 'days' ) ?: 60 );
-
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.id, c.code, c.status, c.end_date, c.term_months,
-				DATEDIFF(c.end_date, NOW()) AS days_left,
-				p.name AS provider_name, p.logo_url AS provider_logo,
-				cu.first_name, cu.last_name, cu.company_name, cu.phone
-			 FROM {$ct} c
-			 LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			 LEFT JOIN {$pr} p  ON p.id  = c.provider_id
-			 WHERE c.partner_user_id IN ($ph) AND c.end_date IS NOT NULL
-			   AND c.status NOT IN ('cancelled','draft')
-			   AND DATEDIFF(c.end_date, NOW()) <= %d
-			 ORDER BY c.end_date ASC LIMIT 300",
-			array_merge( $ids, [ $window ] )
-		), ARRAY_A );
-
-		$out = []; $soon = 0;
-		foreach ( $rows as $r ) {
-			$dl = (int) $r['days_left'];
-			if ( $dl <= 30 ) { $soon++; }
-			$name = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
-			$out[] = [
-				'id' => (int) $r['id'], 'code' => $r['code'], 'status' => $r['status'],
-				'customer' => $name ?: '—', 'phone' => $r['phone'],
-				'provider_name' => $r['provider_name'], 'provider_logo' => $r['provider_logo'],
-				'end_date' => $r['end_date'], 'days_left' => $dl,
-				'expired' => $dl < 0,
-			];
-		}
-		return new WP_REST_Response( [ 'ok' => true, 'rows' => $out, 'count' => count( $out ), 'soon' => $soon, 'window' => $window ], 200 );
 	}
 
 	public static function renew_contract( WP_REST_Request $req ): WP_REST_Response {
