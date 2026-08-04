@@ -73,16 +73,25 @@ final class NetworkPath
      */
     public static function ids(string $path): array
     {
-        if (! self::isValid($path)) {
-            return [];
-        }
+        return self::isValid($path) ? self::segments($path) : [];
+    }
 
-        $segments = array_filter(
+    /**
+     * Split without validating.
+     *
+     * isValid() needs the segments in order to decide, so it cannot go through
+     * ids() — that would make the two call each other forever.
+     *
+     * @return list<int>
+     */
+    private static function segments(string $path): array
+    {
+        $parts = array_filter(
             explode(self::SEPARATOR, $path),
             static fn (string $segment): bool => $segment !== ''
         );
 
-        return array_map('intval', array_values($segments));
+        return array_map('intval', array_values($parts));
     }
 
     /** The id the path belongs to, or 0 when the path is unusable. */
@@ -109,7 +118,7 @@ final class NetworkPath
             return false;
         }
 
-        $ids = self::ids($path);
+        $ids = self::segments($path);
 
         foreach ($ids as $id) {
             if ($id <= 0) {
