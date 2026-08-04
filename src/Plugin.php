@@ -16,11 +16,12 @@ namespace EnergyCRM;
 
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
+use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 
 final class Plugin
 {
-    public const VERSION = '0.66.1';
+    public const VERSION = '0.67.0';
 
     private static ?self $instance = null;
 
@@ -83,6 +84,7 @@ final class Plugin
         Roles::maybeSync();
 
         (new NetworkSync(Services::network()))->register();
+        (new Retention())->register();
 
         LegacyLoader::boot();
     }

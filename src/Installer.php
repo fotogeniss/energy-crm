@@ -19,6 +19,7 @@ use ECRM_Files;
 use ECRM_Notifications;
 use ECRM_Providers;
 use ECRM_REST;
+use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 use EnergyCRM\Persistence\Schema\MigrationList;
 use EnergyCRM\Persistence\Schema\MigrationRunner;
@@ -54,6 +55,7 @@ final class Installer
         LegacyLoader::loadFiles();
 
         ECRM_Notifications::unschedule();
+        Retention::unschedule();
         wp_clear_scheduled_hook(ECRM_REST::AUTO_PROCESS_HOOK);
         wp_clear_scheduled_hook(ECRM_REST::AUTO_PROCESS_HOOK . '_sweep');
         flush_rewrite_rules();

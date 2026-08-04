@@ -29,8 +29,31 @@ class ECRM_Admin {
 		);
 	}
 
+	/**
+	 * Store the API key encrypted, and treat an empty field as "leave it alone".
+	 *
+	 * The field is never pre-filled, so an empty submission means the admin did
+	 * not intend to change the key — not that they wanted to erase it.
+	 */
+	public static function sanitize_api_key( $value ) {
+		$secrets = \EnergyCRM\Services::secrets();
+		$value   = sanitize_text_field( (string) $value );
+
+		if ( $value === '' ) {
+			return get_option( ECRM_PREFIX . 'claude_api_key', '' );
+		}
+
+		$secrets->put( 'claude_api_key', $value );
+
+		// put() has already written the encrypted value; returning it keeps the
+		// Settings API from overwriting it with the raw input.
+		return get_option( ECRM_PREFIX . 'claude_api_key', '' );
+	}
+
 	public static function settings(): void {
-		register_setting( 'ecrm_settings', ECRM_PREFIX . 'claude_api_key', [ 'sanitize_callback' => 'sanitize_text_field' ] );
+		register_setting( 'ecrm_settings', ECRM_PREFIX . 'claude_api_key', [
+			'sanitize_callback' => [ __CLASS__, 'sanitize_api_key' ],
+		] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'claude_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'company_name', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'company_info', [ 'sanitize_callback' => 'sanitize_textarea_field' ] );
@@ -39,6 +62,7 @@ class ECRM_Admin {
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'pdf_footer', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'followup_days', [ 'sanitize_callback' => 'absint' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'renewal_reminder_days', [ 'sanitize_callback' => 'absint' ] );
+		register_setting( 'ecrm_settings', ECRM_PREFIX . 'extraction_retention_days', [ 'sanitize_callback' => 'absint' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'sla_escalation_days', [ 'sanitize_callback' => 'absint' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'notify_email', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'notify_digest', [ 'sanitize_callback' => 'sanitize_text_field' ] );
@@ -116,23 +140,37 @@ class ECRM_Admin {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
-		$key   = ECRM_Extractor::api_key();
-		$model = ECRM_Extractor::model();
-		$masked = $key ? str_repeat( '•', max( 0, strlen( $key ) - 4 ) ) . substr( $key, -4 ) : '';
+		$secrets = \EnergyCRM\Services::secrets();
+		$model   = ECRM_Extractor::model();
+		$masked  = $secrets->mask( 'claude_api_key' );
+		$pinned  = $secrets->isPinned( 'claude_api_key' );
 		?>
 		<div class="wrap">
 			<h1>Energy CRM — Ρυθμίσεις</h1>
-			<p>Η AI εξαγωγή στοιχείων από έγγραφα χρησιμοποιεί το Claude API. Το κλειδί αποθηκεύεται στη βάση και δεν εμφανίζεται ποτέ στο front-end.</p>
+			<p>Η AI εξαγωγή στοιχείων από έγγραφα χρησιμοποιεί το Claude API.</p>
+			<?php if ( ! $pinned ) : ?>
+				<div class="notice notice-info inline"><p>
+					<strong>Προτεινόμενο:</strong> όρισε το κλειδί στο <code>wp-config.php</code> ώστε να μη βρίσκεται καθόλου στη βάση:
+					<br><code>define( 'ECRM_CLAUDE_API_KEY', 'sk-ant-...' );</code>
+					<br>Όσο δεν είναι εκεί, αποθηκεύεται κρυπτογραφημένο — προστασία για αντίγραφα βάσης, όχι για πλήρη πρόσβαση στον server.
+				</p></div>
+			<?php endif; ?>
 			<form method="post" action="options.php">
 				<?php settings_fields( 'ecrm_settings' ); ?>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><label for="ecrm_key">Claude API key</label></th>
 						<td>
-							<input type="password" id="ecrm_key" name="<?php echo esc_attr( ECRM_PREFIX . 'claude_api_key' ); ?>"
-								value="<?php echo esc_attr( $key ); ?>" class="regular-text" autocomplete="off" placeholder="sk-ant-...">
-							<?php if ( $masked ) : ?>
+							<?php if ( $pinned ) : ?>
+								<p class="description">Ορίζεται στο <code>wp-config.php</code> ή σε μεταβλητή περιβάλλοντος και δεν επεξεργάζεται από εδώ.</p>
 								<p class="description">Τρέχον: <code><?php echo esc_html( $masked ); ?></code></p>
+							<?php else : ?>
+								<?php // The value is never sent to the browser: an empty field means "keep the current key". ?>
+								<input type="password" id="ecrm_key" name="<?php echo esc_attr( ECRM_PREFIX . 'claude_api_key' ); ?>"
+									value="" class="regular-text" autocomplete="off" placeholder="sk-ant-...">
+								<?php if ( $masked ) : ?>
+									<p class="description">Τρέχον: <code><?php echo esc_html( $masked ); ?></code> — άφησε το πεδίο κενό για να παραμείνει.</p>
+								<?php endif; ?>
 							<?php endif; ?>
 						</td>
 					</tr>

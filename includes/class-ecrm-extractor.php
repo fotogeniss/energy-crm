@@ -218,7 +218,7 @@ PROMPT;
 	// Settings accessors
 	// ---------------------------------------------------------------------
 	public static function api_key(): string {
-		return (string) get_option( ECRM_PREFIX . 'claude_api_key', '' );
+		return \EnergyCRM\Services::secrets()->get( 'claude_api_key' );
 	}
 
 	public static function model(): string {
