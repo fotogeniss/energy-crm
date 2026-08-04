@@ -1,0 +1,79 @@
+<?php
+/**
+ * Plugin bootstrap — the single composition root.
+ *
+ * Responsibilities are deliberately narrow: know the plugin's identity, wire
+ * the WordPress lifecycle hooks, and delegate the actual work to the installer
+ * and the module loaders. Business logic never lives here.
+ *
+ * @package EnergyCRM
+ */
+
+declare( strict_types=1 );
+
+namespace EnergyCRM;
+
+use EnergyCRM\Legacy\Loader as LegacyLoader;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+final class Plugin {
+
+	public const VERSION = '0.63.0';
+
+	private static ?self $instance = null;
+
+	/** Absolute path to the main plugin file. */
+	private string $file;
+
+	private function __construct( string $file ) {
+		$this->file = $file;
+	}
+
+	/** Boot once; repeated calls return the same instance. */
+	public static function boot( string $file ): self {
+		if ( self::$instance === null ) {
+			self::$instance = new self( $file );
+			self::$instance->register_hooks();
+		}
+		return self::$instance;
+	}
+
+	public static function instance(): ?self {
+		return self::$instance;
+	}
+
+	public function file(): string {
+		return $this->file;
+	}
+
+	public function dir(): string {
+		return plugin_dir_path( $this->file );
+	}
+
+	public function url(): string {
+		return plugin_dir_url( $this->file );
+	}
+
+	// -----------------------------------------------------------------------
+
+	private function register_hooks(): void {
+		register_activation_hook( $this->file, [ Installer::class, 'activate' ] );
+		register_deactivation_hook( $this->file, [ Installer::class, 'deactivate' ] );
+
+		add_action( 'plugins_loaded', [ $this, 'on_plugins_loaded' ] );
+	}
+
+	/**
+	 * Runs on every request once WordPress and all plugins are available.
+	 *
+	 * Order matters: schema first (so every module can assume its tables
+	 * exist), then the modules themselves.
+	 */
+	public function on_plugins_loaded(): void {
+		Installer::maybe_upgrade();
+		LegacyLoader::boot();
+	}
+}

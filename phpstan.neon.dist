@@ -1,0 +1,19 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 6
+    phpVersion: 80000
+
+    paths:
+        - src
+        - energy-crm.php
+
+    # Legacy ECRM_* classes are analysed only once they move under src/.
+    # Until then PHPStan cannot see them, so their names are ignored.
+    scanDirectories:
+        - includes
+        - admin
+        - public
+
+    treatPhpDocTypesAsCertain: false

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<ruleset name="Energy CRM">
+    <description>Coding standard for the Energy CRM plugin.</description>
+
+    <file>src</file>
+    <file>tests</file>
+    <file>energy-crm.php</file>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+    <arg name="parallel" value="8"/>
+
+    <rule ref="WordPress-Core">
+        <!-- PSR-4 requires StudlyCase filenames; WPCS wants class-foo.php. -->
+        <exclude name="WordPress.Files.FileName"/>
+    </rule>
+    <rule ref="WordPress-Docs"/>
+
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="ecrm"/>
+                <element value="EnergyCRM"/>
+            </property>
+        </properties>
+    </rule>
+
+    <config name="minimum_supported_wp_version" value="6.2"/>
+    <config name="testVersion" value="8.0-"/>
+    <rule ref="PHPCompatibilityWP"/>
+</ruleset>
