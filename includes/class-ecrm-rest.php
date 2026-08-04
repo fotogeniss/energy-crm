@@ -246,17 +246,7 @@ class ECRM_REST {
 			'permission_callback' => self::needs( Capability::VIEW_ANALYTICS ),
 		] );
 
-		register_rest_route( self::NS, '/customers', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'customers_list' ],
-			'permission_callback' => $auth,
-		] );
-
-		register_rest_route( self::NS, '/customers/check', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'customers_check' ],
-			'permission_callback' => $auth,
-		] );
+		// /customers και /customers/check -> EnergyCRM\Http\CustomersController
 
 		// /notifications, /notifications/read και /renewals μετακινήθηκαν σε
 		// EnergyCRM\Http\NotificationsController και RenewalsController.

@@ -93,6 +93,113 @@ final class CustomerRepository
     }
 
     /**
+     * Customers reachable by the actor, with a contract count, newest first.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function search(UserScope $scope, string $term = '', int $limit = 500): array
+    {
+        global $wpdb;
+
+        $conditions = ['1 = 1'];
+        $params     = [$this->table, $this->contractsTable];
+
+        if (! $scope->isAdministrator()) {
+            $conditions[] = 'c.partner_user_id IN (' . $scope->placeholders() . ')';
+            $params       = [...$params, ...$scope->userIds()];
+        }
+
+        if ($term !== '') {
+            $like         = '%' . $wpdb->esc_like($term) . '%';
+            $conditions[] = "( CONCAT_WS(' ', cu.first_name, cu.last_name, cu.company_name) LIKE %s"
+                . ' OR cu.afm LIKE %s OR cu.phone LIKE %s )';
+            $params       = [...$params, $like, $like, $like];
+        }
+
+        $where = implode(' AND ', $conditions);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT cu.id, cu.first_name, cu.last_name, cu.company_name,
+                        cu.afm, cu.phone, cu.email,
+                        COUNT(c.id) AS contracts, MAX(c.updated_at) AS last_at
+                 FROM %i cu
+                 JOIN %i c ON c.customer_id = cu.id
+                 WHERE {$where}
+                 GROUP BY cu.id
+                 ORDER BY last_at DESC
+                 LIMIT " . max(1, $limit),
+                $params
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
+     * Existing contracts matching a ΑΦΜ or supply number.
+     *
+     * Used before saving, to warn that the customer is already on file rather
+     * than let a second application be raised for the same supply.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function duplicatesOf(UserScope $scope, string $afm, string $supply): array
+    {
+        global $wpdb;
+
+        $match  = [];
+        $params = [$this->table, $this->contractsTable];
+
+        if (! $scope->isAdministrator()) {
+            $params = [...$params, ...$scope->userIds()];
+        }
+
+        if ($afm !== '') {
+            $match[]  = 'cu.afm = %s';
+            $params[] = $afm;
+        }
+
+        if ($supply !== '') {
+            $match[]  = 'c.supply_number = %s';
+            $params[] = $supply;
+        }
+
+        if ($match === []) {
+            return [];
+        }
+
+        $scopeClause = $scope->isAdministrator()
+            ? ''
+            : ' c.partner_user_id IN (' . $scope->placeholders() . ') AND';
+
+        $where = $scopeClause . ' (' . implode(' OR ', $match) . ')';
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.code, c.status, c.supply_number, cu.afm,
+                        cu.first_name, cu.last_name, cu.company_name
+                 FROM %i cu
+                 JOIN %i c ON c.customer_id = cu.id
+                 WHERE {$where}
+                 ORDER BY c.id DESC
+                 LIMIT 20",
+                $params
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
      * @param array<string, mixed> $data
      *
      * @return bool True when the customer was reachable and updated.

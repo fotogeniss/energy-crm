@@ -23,7 +23,7 @@ use EnergyCRM\Legacy\Loader as LegacyLoader;
 
 final class Plugin
 {
-    public const VERSION = '0.72.0';
+    public const VERSION = '0.73.0';
 
     private static ?self $instance = null;
 
@@ -87,7 +87,11 @@ final class Plugin
 
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
-        (new Router(Services::scopeResolver(), Services::contracts()))->register();
+        (new Router(
+            Services::scopeResolver(),
+            Services::contracts(),
+            Services::customers()
+        ))->register();
 
         if (is_admin()) {
             (new FormCalibrator())->register();

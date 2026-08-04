@@ -16,6 +16,7 @@ namespace EnergyCRM\Http;
 
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\CustomerRepository;
 
 final class Router
 {
@@ -24,12 +25,16 @@ final class Router
     /** @var list<Controller> */
     private array $controllers;
 
-    public function __construct(ScopeResolver $scope, ContractRepository $contracts)
-    {
+    public function __construct(
+        ScopeResolver $scope,
+        ContractRepository $contracts,
+        CustomerRepository $customers,
+    ) {
         $this->controllers = [
             new ProviderFormController(),
             new NotificationsController($scope),
             new RenewalsController($scope, $contracts),
+            new CustomersController($scope, $customers),
         ];
     }
 
