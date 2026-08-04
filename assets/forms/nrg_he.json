@@ -1,0 +1,148 @@
+{
+ "page_w": 210.0,
+ "page_h": 297.0,
+ "fields": {
+  "onomateponymo": {
+   "page": 1,
+   "x": 52.1,
+   "y": 45.9
+  },
+  "afm": {
+   "page": 1,
+   "x": 32.3,
+   "y": 52.4
+  },
+  "doy": {
+   "page": 1,
+   "x": 91.2,
+   "y": 52.4
+  },
+  "adt": {
+   "page": 1,
+   "x": 150.6,
+   "y": 52.4
+  },
+  "tilefono": {
+   "page": 1,
+   "x": 41.6,
+   "y": 58.7
+  },
+  "kinito": {
+   "page": 1,
+   "x": 95.6,
+   "y": 53.2
+  },
+  "email": {
+   "page": 1,
+   "x": 34.9,
+   "y": 65.4
+  },
+  "odos": {
+   "page": 1,
+   "x": 33.5,
+   "y": 89.5
+  },
+  "poli": {
+   "page": 1,
+   "x": 33.8,
+   "y": 95.6
+  },
+  "tk": {
+   "page": 1,
+   "x": 117.7,
+   "y": 96.1
+  },
+  "nomos": {
+   "page": 1,
+   "x": 156.1,
+   "y": 96.1
+  },
+  "ar_paroxis": {
+   "page": 1,
+   "x": 43.4,
+   "y": 124.3
+  },
+  "ar_metriti": {
+   "page": 1,
+   "x": 162.5,
+   "y": 124.3
+  },
+  "ipistamenos_promitheftis": {
+   "page": 1,
+   "x": 57.2,
+   "y": 147.9
+  },
+  "programma": {
+   "page": 1,
+   "x": 133.0,
+   "y": 142.7
+  },
+  "contact_onomateponymo": {
+   "page": 1,
+   "x": 80,
+   "y": 71.7
+  },
+  "contact_tilefono": {
+   "page": 1,
+   "x": 41,
+   "y": 78.1
+  },
+  "contact_kinito": {
+   "page": 1,
+   "x": 96,
+   "y": 78.1
+  },
+  "contact_email": {
+   "page": 1,
+   "x": 154,
+   "y": 78.1
+  },
+  "poso_eggiisis": {
+   "page": 1,
+   "x": 47.3,
+   "y": 184.2
+  },
+  "diarkeia": {
+   "page": 1,
+   "x": 161,
+   "y": 177.1
+  },
+  "odos_paroxis": {
+   "page": 1,
+   "x": 55.0,
+   "y": 140.0
+  },
+  "poli_paroxis": {
+   "page": 1,
+   "x": 55.0,
+   "y": 145.0
+  },
+  "tk_paroxis": {
+   "page": 1,
+   "x": 115.0,
+   "y": 145.0
+  },
+  "hkasp": {
+   "page": 1,
+   "x": 155.0,
+   "y": 173.0
+  },
+  "isxis_paroxis": {
+   "page": 1,
+   "x": 130.0,
+   "y": 127.0
+  },
+  "imerominia": {
+   "page": 1,
+   "x": 30.0,
+   "y": 272.0
+  }
+ },
+ "sig": {
+  "page": 1,
+  "x": 108.0,
+  "y": 260.0,
+  "w": 46,
+  "h": 0
+ }
+}

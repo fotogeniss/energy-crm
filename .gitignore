@@ -1,0 +1,35 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build output
+/build/
+/dist/
+*.zip
+
+# Tooling caches
+/.phpunit.cache/
+/.phpunit.result.cache
+.phpstan-cache/
+/tests/_output/
+/coverage/
+
+# Local / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.sublime-*
+*.swp
+*~
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Generated / runtime artefacts
+/languages/*.mo
+*.log

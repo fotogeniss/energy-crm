@@ -1,0 +1,180 @@
+{
+ "page_w": 209.9,
+ "page_h": 297.0,
+ "fields": {
+  "onomateponymo": {
+   "page": 1,
+   "x": 35.9,
+   "y": 176.8
+  },
+  "odos": {
+   "page": 1,
+   "x": 85.3,
+   "y": 250.4
+  },
+  "afm": {
+   "page": 1,
+   "x": 133.9,
+   "y": 83.9
+  },
+  "tilefono": {
+   "page": 1,
+   "x": 26.9,
+   "y": 94.7
+  },
+  "tk": {
+   "page": 1,
+   "x": 105.7,
+   "y": 195.5
+  },
+  "poli": {
+   "page": 1,
+   "x": 146.6,
+   "y": 195.5
+  },
+  "doy": {
+   "page": 1,
+   "x": 83.5,
+   "y": 91.5
+  },
+  "adt": {
+   "page": 1,
+   "x": 146.5,
+   "y": 109.9
+  },
+  "kinito": {
+   "page": 1,
+   "x": 134.2,
+   "y": 183.7
+  },
+  "email": {
+   "page": 1,
+   "x": 160.1,
+   "y": 94.7
+  },
+  "ar_aitisis": {
+   "page": 1,
+   "x": 169.2,
+   "y": 63.3
+  },
+  "kod_synergati": {
+   "page": 1,
+   "x": 138.8,
+   "y": 68.4
+  },
+  "imerominia": {
+   "page": 2,
+   "x": 42.0,
+   "y": 233.0
+  },
+  "odos_paroxis": {
+   "page": 1,
+   "x": 38.9,
+   "y": 195.3
+  },
+  "hkasp": {
+   "page": 1,
+   "x": 20.5,
+   "y": 202.0
+  },
+  "ar_metriti": {
+   "page": 1,
+   "x": 104.6,
+   "y": 205.0
+  },
+  "timologio": {
+   "page": 1,
+   "x": 26.6,
+   "y": 217.5
+  },
+  "programma": {
+   "page": 1,
+   "x": 28.8,
+   "y": 220.7
+  },
+  "contact_onomateponymo": {
+   "page": 1,
+   "x": 35,
+   "y": 176.6
+  },
+  "contact_afm": {
+   "page": 1,
+   "x": 21,
+   "y": 179.9
+  },
+  "contact_adt": {
+   "page": 1,
+   "x": 96,
+   "y": 179.9
+  },
+  "contact_tilefono": {
+   "page": 1,
+   "x": 27,
+   "y": 183.5
+  },
+  "contact_kinito": {
+   "page": 1,
+   "x": 87,
+   "y": 183.5
+  },
+  "contact_email": {
+   "page": 1,
+   "x": 134,
+   "y": 183.5
+  },
+  "cat_etaireia": {
+   "page": 1,
+   "x": 26,
+   "y": 48.5,
+   "check": true
+  },
+  "cat_idiotis": {
+   "page": 1,
+   "x": 59,
+   "y": 48.5,
+   "check": true
+  },
+  "cat_atomiki": {
+   "page": 1,
+   "x": 108,
+   "y": 48.5,
+   "check": true
+  },
+  "dur_aoristou": {
+   "page": 1,
+   "x": 35,
+   "y": 263,
+   "check": true
+  },
+  "dur_12": {
+   "page": 1,
+   "x": 62,
+   "y": 263,
+   "check": true
+  },
+  "dur_18": {
+   "page": 1,
+   "x": 84,
+   "y": 263,
+   "check": true
+  },
+  "dur_24": {
+   "page": 1,
+   "x": 107,
+   "y": 263,
+   "check": true
+  },
+  "topos": {
+   "page": 2,
+   "x": 30.0,
+   "y": 230.0
+  }
+ },
+ "sig": {
+  "page": 2,
+  "x": 62.0,
+  "y": 236.0,
+  "w": 46,
+  "h": 0
+ }
+}

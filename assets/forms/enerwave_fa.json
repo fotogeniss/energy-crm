@@ -1,0 +1,120 @@
+{
+ "page_w": 210,
+ "page_h": 297,
+ "fields": {
+  "eponymo": {
+   "page": 2,
+   "x": 20,
+   "y": 33
+  },
+  "onoma": {
+   "page": 2,
+   "x": 48,
+   "y": 33
+  },
+  "patronymo": {
+   "page": 2,
+   "x": 77,
+   "y": 33
+  },
+  "afm": {
+   "page": 2,
+   "x": 20,
+   "y": 41
+  },
+  "doy": {
+   "page": 2,
+   "x": 48,
+   "y": 41
+  },
+  "adt": {
+   "page": 2,
+   "x": 77,
+   "y": 43
+  },
+  "odos": {
+   "page": 2,
+   "x": 20,
+   "y": 53.3
+  },
+  "poli": {
+   "page": 2,
+   "x": 48,
+   "y": 53.3
+  },
+  "tk": {
+   "page": 2,
+   "x": 77,
+   "y": 53.4
+  },
+  "tilefono": {
+   "page": 2,
+   "x": 20,
+   "y": 63.4
+  },
+  "kinito": {
+   "page": 2,
+   "x": 48,
+   "y": 63.4
+  },
+  "email": {
+   "page": 2,
+   "x": 20,
+   "y": 73.5
+  },
+  "contact_onomateponymo": {
+   "page": 2,
+   "x": 20,
+   "y": 116.3
+  },
+  "contact_tilefono": {
+   "page": 2,
+   "x": 74,
+   "y": 116.3
+  },
+  "hkasp": {
+   "page": 2,
+   "x": 155,
+   "y": 54.5
+  },
+  "ipistamenos_promitheftis": {
+   "page": 2,
+   "x": 155,
+   "y": 74.7
+  },
+  "odos_paroxis": {
+   "page": 2,
+   "x": 115,
+   "y": 82.2
+  },
+  "poli_paroxis": {
+   "page": 2,
+   "x": 120.0,
+   "y": 80.0,
+   "size": 7.5
+  },
+  "tk_paroxis": {
+   "page": 2,
+   "x": 160.0,
+   "y": 80.0,
+   "size": 7.5
+  },
+  "isxis_paroxis": {
+   "page": 2,
+   "x": 155.0,
+   "y": 68.0
+  },
+  "topos_imerominia": {
+   "page": 2,
+   "x": 18.0,
+   "y": 261.0
+  }
+ },
+ "sig": {
+  "page": 2,
+  "x": 85.0,
+  "y": 248.0,
+  "w": 44,
+  "h": 0
+ }
+}

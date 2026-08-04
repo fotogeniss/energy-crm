@@ -1,0 +1,170 @@
+{
+ "page_w": 210.0,
+ "page_h": 297.0,
+ "fields": {
+  "synergatis": {
+   "page": 1,
+   "x": 31.4,
+   "y": 46.8
+  },
+  "ar_aitisis": {
+   "page": 1,
+   "x": 145.0,
+   "y": 45.9
+  },
+  "kod_synergati": {
+   "page": 1,
+   "x": 30.2,
+   "y": 51.7
+  },
+  "imerominia": {
+   "page": 2,
+   "x": 66.6,
+   "y": 17.8
+  },
+  "politis": {
+   "page": 1,
+   "x": 28.5,
+   "y": 57.6
+  },
+  "odos": {
+   "page": 1,
+   "x": 135.6,
+   "y": 100.3
+  },
+  "tk": {
+   "page": 1,
+   "x": 108.9,
+   "y": 99.4
+  },
+  "poli": {
+   "page": 1,
+   "x": 136.1,
+   "y": 99.4
+  },
+  "kinito": {
+   "page": 1,
+   "x": 19.1,
+   "y": 104.4
+  },
+  "email": {
+   "page": 1,
+   "x": 111.5,
+   "y": 105.3
+  },
+  "epaggelma": {
+   "page": 1,
+   "x": 108.5,
+   "y": 110.3
+  },
+  "adt": {
+   "page": 1,
+   "x": 30.6,
+   "y": 122.1
+  },
+  "afm": {
+   "page": 1,
+   "x": 75.4,
+   "y": 123.0
+  },
+  "doy": {
+   "page": 1,
+   "x": 116.1,
+   "y": 122.1
+  },
+  "contact_onomateponymo": {
+   "page": 1,
+   "x": 128.2,
+   "y": 141.4
+  },
+  "contact_tilefono": {
+   "page": 1,
+   "x": 23.0,
+   "y": 144.7
+  },
+  "contact_kinito": {
+   "page": 1,
+   "x": 77.0,
+   "y": 144.7
+  },
+  "contact_email": {
+   "page": 1,
+   "x": 128.5,
+   "y": 144.7
+  },
+  "ipistamenos_promitheftis": {
+   "page": 1,
+   "x": 74.9,
+   "y": 226.7
+  },
+  "ar_paroxis": {
+   "page": 1,
+   "x": 58.0,
+   "y": 194.0
+  },
+  "ar_metriti": {
+   "page": 1,
+   "x": 150.0,
+   "y": 194.0
+  },
+  "odos_paroxis": {
+   "page": 1,
+   "x": 165.7,
+   "y": 155.2
+  },
+  "tk_paroxis": {
+   "page": 1,
+   "x": 140.0,
+   "y": 206.0
+  },
+  "poli_paroxis": {
+   "page": 1,
+   "x": 168.0,
+   "y": 206.0
+  },
+  "hkasp": {
+   "page": 1,
+   "x": 19.3,
+   "y": 281.3
+  },
+  "topos_imerominia": {
+   "page": 4,
+   "x": 58.0,
+   "y": 240.0
+  },
+  "cat_oikiaki": {
+   "page": 1,
+   "x": 78.0,
+   "y": 232.0,
+   "check": true
+  },
+  "act_new": {
+   "page": 1,
+   "x": 105.0,
+   "y": 254.0,
+   "check": true
+  },
+  "act_reconnection": {
+   "page": 1,
+   "x": 163.0,
+   "y": 254.0,
+   "check": true
+  }
+ },
+ "sigs": [
+  {
+   "page": 4,
+   "x": 150.0,
+   "y": 142.0,
+   "w": 42,
+   "h": 0
+  },
+  {
+   "page": 4,
+   "x": 110.0,
+   "y": 236.0,
+   "w": 42,
+   "h": 0
+  }
+ ]
+}

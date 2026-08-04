@@ -1,0 +1,187 @@
+{
+ "page_w": 210.1,
+ "page_h": 297.1,
+ "fields": {
+  "onomateponymo": {
+   "page": 1,
+   "x": 51.5,
+   "y": 65.2
+  },
+  "dieuthynsi": {
+   "page": 1,
+   "x": 26.2,
+   "y": 74.8
+  },
+  "adt": {
+   "page": 1,
+   "x": 18.3,
+   "y": 80.2
+  },
+  "afm": {
+   "page": 1,
+   "x": 74.0,
+   "y": 143.9
+  },
+  "doy": {
+   "page": 1,
+   "x": 131.6,
+   "y": 80.2
+  },
+  "tilefono": {
+   "page": 1,
+   "x": 25.8,
+   "y": 90.1
+  },
+  "kinito": {
+   "page": 1,
+   "x": 68.4,
+   "y": 91.2
+  },
+  "email": {
+   "page": 1,
+   "x": 130.7,
+   "y": 91.2
+  },
+  "ar_aitisis": {
+   "page": 1,
+   "x": 33.7,
+   "y": 47.8
+  },
+  "imerominia": {
+   "page": 1,
+   "x": 67.5,
+   "y": 47.8
+  },
+  "programma": {
+   "page": 1,
+   "x": 110.1,
+   "y": 47.8
+  },
+  "ar_paroxis": {
+   "page": 1,
+   "x": 23.5,
+   "y": 159.6
+  },
+  "odos_paroxis": {
+   "page": 1,
+   "x": 26.4,
+   "y": 164.8
+  },
+  "timologio": {
+   "page": 1,
+   "x": 26.2,
+   "y": 173.7
+  },
+  "ipistamenos_promitheftis": {
+   "page": 1,
+   "x": 111.2,
+   "y": 182.9
+  },
+  "cat_etaireia": {
+   "page": 1,
+   "x": 22.3,
+   "y": 54.6,
+   "check": true
+  },
+  "cat_idiotis": {
+   "page": 1,
+   "x": 38.8,
+   "y": 54.6,
+   "check": true
+  },
+  "cat_atomiki": {
+   "page": 1,
+   "x": 71.4,
+   "y": 54.6,
+   "check": true
+  },
+  "dur_aoristou": {
+   "page": 1,
+   "x": 25.9,
+   "y": 238.6,
+   "check": true
+  },
+  "dur_6": {
+   "page": 1,
+   "x": 44.6,
+   "y": 238.6,
+   "check": true
+  },
+  "dur_12": {
+   "page": 1,
+   "x": 65.3,
+   "y": 238.6,
+   "check": true
+  },
+  "dur_18": {
+   "page": 1,
+   "x": 85.1,
+   "y": 238.6,
+   "check": true
+  },
+  "dur_24": {
+   "page": 1,
+   "x": 104.3,
+   "y": 238.6,
+   "check": true
+  },
+  "dur_36": {
+   "page": 1,
+   "x": 125.0,
+   "y": 238.6,
+   "check": true
+  },
+  "contact_onomateponymo": {
+   "page": 1,
+   "x": 52.1,
+   "y": 140.2
+  },
+  "contact_adt": {
+   "page": 1,
+   "x": 19.5,
+   "y": 142.8
+  },
+  "contact_afm": {
+   "page": 1,
+   "x": 74.5,
+   "y": 142.8
+  },
+  "contact_tilefono": {
+   "page": 1,
+   "x": 25.8,
+   "y": 147.4
+  },
+  "contact_kinito": {
+   "page": 1,
+   "x": 70.4,
+   "y": 147.4
+  },
+  "contact_email": {
+   "page": 1,
+   "x": 131.2,
+   "y": 147.4
+  },
+  "teleftaia_endeixi_imeras": {
+   "page": 1,
+   "x": 48.2,
+   "y": 178.4
+  },
+  "poso_eggiisis": {
+   "page": 1,
+   "x": 96.2,
+   "y": 187.5
+  },
+  "odos": {
+   "page": 1,
+   "x": 25.9,
+   "y": 160.7
+  }
+ },
+ "sig": {
+  "page": 2,
+  "x": 14.0,
+  "y": 212.0,
+  "w": 42,
+  "h": 0
+ }
+}

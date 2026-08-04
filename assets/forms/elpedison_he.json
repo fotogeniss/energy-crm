@@ -1,0 +1,132 @@
+{
+ "page_w": 210.0,
+ "page_h": 297.0,
+ "fields": {
+  "eponymo": {
+   "page": 2,
+   "x": 25.5,
+   "y": 26.2
+  },
+  "onoma": {
+   "page": 2,
+   "x": 55.8,
+   "y": 26.2
+  },
+  "patronymo": {
+   "page": 2,
+   "x": 92.4,
+   "y": 26.2
+  },
+  "afm": {
+   "page": 2,
+   "x": 21.4,
+   "y": 34.5
+  },
+  "doy": {
+   "page": 2,
+   "x": 53.2,
+   "y": 34.5
+  },
+  "adt": {
+   "page": 2,
+   "x": 84.7,
+   "y": 34.5
+  },
+  "odos": {
+   "page": 2,
+   "x": 31.8,
+   "y": 42.7
+  },
+  "poli": {
+   "page": 2,
+   "x": 53.2,
+   "y": 42.7
+  },
+  "tk": {
+   "page": 2,
+   "x": 81.1,
+   "y": 42.7
+  },
+  "tilefono": {
+   "page": 2,
+   "x": 26.9,
+   "y": 50.9
+  },
+  "kinito": {
+   "page": 2,
+   "x": 55.3,
+   "y": 50.9
+  },
+  "birth_date": {
+   "page": 2,
+   "x": 79.4,
+   "y": 59.2
+  },
+  "contact_onomateponymo": {
+   "page": 2,
+   "x": 59,
+   "y": 74.5
+  },
+  "contact_tilefono": {
+   "page": 2,
+   "x": 86,
+   "y": 74.5
+  },
+  "email": {
+   "page": 2,
+   "x": 32.0,
+   "y": 60.0
+  },
+  "kod_synergati": {
+   "page": 2,
+   "x": 115.0,
+   "y": 68.0
+  },
+  "ar_paroxis": {
+   "page": 2,
+   "x": 115.0,
+   "y": 92.0
+  },
+  "ipistamenos_promitheftis": {
+   "page": 2,
+   "x": 150.0,
+   "y": 92.0
+  },
+  "odos_paroxis": {
+   "page": 2,
+   "x": 112.0,
+   "y": 101.0,
+   "size": 7
+  },
+  "poli_paroxis": {
+   "page": 2,
+   "x": 152.0,
+   "y": 101.0,
+   "size": 7
+  },
+  "tk_paroxis": {
+   "page": 2,
+   "x": 182.0,
+   "y": 101.0,
+   "size": 7
+  },
+  "topos_imerominia": {
+   "page": 2,
+   "x": 18.0,
+   "y": 255.0
+  },
+  "act_any": {
+   "page": 2,
+   "x": 180.0,
+   "y": 106.0,
+   "check": true
+  }
+ },
+ "sig": {
+  "page": 2,
+  "x": 66.0,
+  "y": 242.0,
+  "w": 50,
+  "h": 0
+ }
+}
