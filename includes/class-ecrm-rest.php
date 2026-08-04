@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use EnergyCRM\Access\Capability;
+use EnergyCRM\Domain\Contract\ContractStatus;
 
 class ECRM_REST {
 
@@ -1125,8 +1126,9 @@ class ECRM_REST {
 	 */
 	public static function transition( int $id, string $to, array $opts = [] ): bool {
 		global $wpdb;
-		$ct = ECRM_DB::table( 'contracts' );
-		if ( ! array_key_exists( $to, ECRM_DB::statuses() ) ) {
+		$ct     = ECRM_DB::table( 'contracts' );
+		$target = ContractStatus::tryFromSlug( $to );
+		if ( $target === null ) {
 			return false;
 		}
 
@@ -1136,6 +1138,13 @@ class ECRM_REST {
 
 		if ( $from === $to && empty( $opts['force'] ) ) {
 			return true;
+		}
+
+		// Refuse moves the pipeline does not allow — reviving a cancelled
+		// contract, or rewinding a signed one past its own signature.
+		$current = ContractStatus::tryFromSlug( $from );
+		if ( $current !== null && ! $current->canMoveTo( $target ) ) {
+			return false;
 		}
 
 		$data = [ 'status' => $to, 'updated_at' => current_time( 'mysql' ) ];
@@ -1181,21 +1190,45 @@ class ECRM_REST {
 		$p   = $req->get_json_params();
 		if ( empty( $p ) ) { $p = $req->get_params(); }
 
-		$to = sanitize_text_field( $p['status'] ?? '' );
-		if ( ! array_key_exists( $to, ECRM_DB::statuses() ) ) {
+		$to     = sanitize_text_field( $p['status'] ?? '' );
+		$target = ContractStatus::tryFromSlug( $to );
+		if ( $target === null ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Άγνωστη κατάσταση.' ], 400 );
 		}
 
-		$current = $wpdb->get_row( $wpdb->prepare(
-			"SELECT status, activation_type FROM {$ct} WHERE id = %d AND partner_user_id = %d", $id, $uid
-		), ARRAY_A );
-		if ( ! $current ) {
+		// Scoped lookup: a manager may move a team member's contract forward,
+		// which the previous "partner_user_id = me" check made impossible.
+		try {
+			$scope = \EnergyCRM\Services::scopeResolver()->forCurrentUser();
+		} catch ( \EnergyCRM\Access\NotAuthenticated $e ) {
+			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Απαιτείται σύνδεση.' ], 401 );
+		}
+		$current = \EnergyCRM\Services::contracts()->find( $id, $scope );
+		if ( $current === null ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.' ], 404 );
 		}
 
-		$from = $current['status'];
+		$from = (string) $current['status'];
 		if ( $from === $to ) {
 			return new WP_REST_Response( [ 'ok' => true, 'status' => $to ], 200 );
+		}
+
+		$source = ContractStatus::tryFromSlug( $from );
+		if ( $source !== null && ! $source->canMoveTo( $target ) ) {
+			return new WP_REST_Response( [
+				'ok'    => false,
+				'error' => sprintf(
+					'Δεν επιτρέπεται μετάβαση από «%s» σε «%s».',
+					$source->label(),
+					$target->label()
+				),
+				'allowed' => array_map(
+					static function ( ContractStatus $s ) {
+						return [ 'status' => $s->value, 'label' => $s->label() ];
+					},
+					$source->allowedNext()
+				),
+			], 409 );
 		}
 
 		// Document gate: block advancing into routed/active unless required docs are present.

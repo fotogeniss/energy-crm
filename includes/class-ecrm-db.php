@@ -283,20 +283,7 @@ class ECRM_DB {
 	 * @return array<string,string>
 	 */
 	public static function statuses(): array {
-		return [
-			'draft'             => 'Πρόχειρο',
-			'new'               => 'Νέα',
-			'pending_signature' => 'Προς υπογραφή',
-			'awaiting_signature' => 'Αναμονή υπογραφής πελάτη',
-			'signed'            => 'Υπεγράφη',
-			'processing'        => 'Σε επεξεργασία',
-			'pending'           => 'Εκκρεμότητα',
-			'resolved'          => 'Επιλύθηκε',
-			'routed'            => 'Δρομολογήθηκε',
-			'active'            => 'Ενεργή',
-			'cancelled'         => 'Ακυρώθηκε',
-			'terminated'        => 'Τερματίστηκε',
-		];
+		return \EnergyCRM\Domain\Contract\ContractStatus::labels();
 	}
 
 	/** Activation types (slug => label). */
@@ -361,7 +348,13 @@ class ECRM_DB {
 
 	/** Statuses that count as a payable/successful contract for commissions. */
 	public static function payable_statuses(): array {
-		return [ 'routed', 'active', 'resolved' ];
+		$payable = [];
+		foreach ( \EnergyCRM\Domain\Contract\ContractStatus::cases() as $status ) {
+			if ( $status->isPayable() ) {
+				$payable[] = $status->value;
+			}
+		}
+		return $payable;
 	}
 
 	/** Greek label for an energy/service type. */

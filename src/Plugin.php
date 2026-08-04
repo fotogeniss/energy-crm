@@ -20,7 +20,7 @@ use EnergyCRM\Legacy\Loader as LegacyLoader;
 
 final class Plugin
 {
-    public const VERSION = '0.65.0';
+    public const VERSION = '0.66.0';
 
     private static ?self $instance = null;
 
