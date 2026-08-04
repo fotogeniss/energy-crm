@@ -41,6 +41,18 @@
     <!-- The WordPress rules worth enforcing. -->
     <rule ref="WordPress.Security"/>
     <rule ref="WordPress.DB"/>
+
+    <!--
+        `src/Persistence/` is the layer whose entire job is talking to the
+        database; flagging it for doing so says nothing. Caching is a real
+        concern, but it belongs to a deliberate step with measurements behind
+        it, not to a blanket warning on every query.
+
+        Note that WordPress.DB.PreparedSQL stays enabled everywhere.
+    -->
+    <rule ref="WordPress.DB.DirectDatabaseQuery">
+        <exclude-pattern>src/Persistence/*</exclude-pattern>
+    </rule>
     <rule ref="WordPress.WP.GlobalVariablesOverride"/>
     <rule ref="WordPress.PHP.NoSilencedErrors"/>
     <rule ref="WordPress.PHP.DontExtract"/>

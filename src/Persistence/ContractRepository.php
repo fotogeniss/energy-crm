@@ -10,6 +10,13 @@
  * Writes are scoped in the WHERE clause rather than by a preceding SELECT, so
  * the check and the write are a single statement and cannot drift apart.
  *
+ * On the phpcs exemptions below: table names are bound with %i, and every
+ * value is a bound parameter. What PHPStan and phpcs cannot verify is the
+ * `IN (%d,%d,…)` fragment, whose length varies with team size. That fragment is
+ * produced by UserScope::placeholders(), which emits nothing but "%d" — no
+ * request data reaches it. Each exemption is scoped to a single statement so a
+ * future query in this file is still checked.
+ *
  * @package EnergyCRM
  */
 
@@ -18,7 +25,6 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Access\UserScope;
-use InvalidArgumentException;
 
 final class ContractRepository
 {
@@ -73,14 +79,16 @@ final class ContractRepository
 
         [$clause, $params] = $this->scopeClause($scope);
 
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
         /** @var array<string, mixed>|null $row */
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT * FROM {$this->table} WHERE id = %d{$clause}",
-                [$contractId, ...$params]
+                "SELECT * FROM %i WHERE id = %d{$clause}",
+                [$this->table, $contractId, ...$params]
             ),
             ARRAY_A
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 
         return $row ?: null;
     }
@@ -115,7 +123,8 @@ final class ContractRepository
         $values      = [];
 
         foreach ($data as $column => $value) {
-            $assignments[] = "{$column} = " . ($value === null ? 'NULL' : '%s');
+            // Column names come from self::WRITABLE, never from the caller's keys.
+            $assignments[] = '`' . $column . '` = ' . ($value === null ? 'NULL' : '%s');
 
             if ($value !== null) {
                 $values[] = $value;
@@ -124,12 +133,13 @@ final class ContractRepository
 
         [$clause, $scopeParams] = $this->scopeClause($scope);
 
-        $sql = "UPDATE {$this->table} SET " . implode(', ', $assignments)
-            . " WHERE id = %d{$clause}";
+        $sql = 'UPDATE %i SET ' . implode(', ', $assignments) . " WHERE id = %d{$clause}";
 
+        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
         $affected = $wpdb->query(
-            $wpdb->prepare($sql, [...$values, $contractId, ...$scopeParams])
+            $wpdb->prepare($sql, [$this->table, ...$values, $contractId, ...$scopeParams])
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 
         if ($affected === false) {
             return false;
@@ -145,7 +155,7 @@ final class ContractRepository
      *
      * @param array<string, mixed> $data
      *
-     * @return int The new contract id.
+     * @return int The new contract id, or 0 when the insert failed.
      */
     public function create(array $data, UserScope $scope): int
     {
@@ -183,19 +193,23 @@ final class ContractRepository
 
         [$clause, $params] = $this->scopeClause($scope);
 
-        return $wpdb->query(
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+        $result = $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$this->table} SET partner_user_id = %d WHERE id = %d{$clause}",
-                [$newOwnerId, $contractId, ...$params]
+                "UPDATE %i SET partner_user_id = %d WHERE id = %d{$clause}",
+                [$this->table, $newOwnerId, $contractId, ...$params]
             )
-        ) !== false;
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+
+        return $result !== false;
     }
 
     /**
      * SQL fragment restricting rows to the scope, plus its bound values.
      *
      * Administrators get an empty fragment; everyone else gets an IN list that
-     * is guaranteed non-empty by UserScope.
+     * UserScope guarantees is non-empty.
      *
      * @return array{0: string, 1: list<int>}
      */
@@ -218,12 +232,10 @@ final class ContractRepository
      */
     private function filterWritable(array $data): array
     {
-        $unknown = array_diff(array_keys($data), self::WRITABLE);
+        $unknown = array_values(array_diff(array_keys($data), self::WRITABLE));
 
         if ($unknown !== []) {
-            throw new InvalidArgumentException(
-                'Μη εγγράψιμες στήλες σύμβασης: ' . implode(', ', $unknown)
-            );
+            throw UnknownColumns::forEntity('σύμβαση', $unknown);
         }
 
         return $data;

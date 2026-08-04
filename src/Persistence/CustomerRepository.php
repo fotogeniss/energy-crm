@@ -8,6 +8,8 @@
  * see". That join is expressed once, here, instead of being re-derived by
  * every caller.
  *
+ * See ContractRepository for the note on the phpcs exemptions.
+ *
  * @package EnergyCRM
  */
 
@@ -16,7 +18,6 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Access\UserScope;
-use InvalidArgumentException;
 
 final class CustomerRepository
 {
@@ -62,24 +63,26 @@ final class CustomerRepository
         if ($scope->isAdministrator()) {
             /** @var array<string, mixed>|null $row */
             $row = $wpdb->get_row(
-                $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $customerId),
+                $wpdb->prepare('SELECT * FROM %i WHERE id = %d', [$this->table, $customerId]),
                 ARRAY_A
             );
 
             return $row ?: null;
         }
 
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
         /** @var array<string, mixed>|null $row */
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT cu.* FROM {$this->table} cu
-                 INNER JOIN {$this->contractsTable} c ON c.customer_id = cu.id
-                 WHERE cu.id = %d AND c.partner_user_id IN (" . $scope->placeholders() . ')
+                'SELECT cu.* FROM %i cu
+                 INNER JOIN %i c ON c.customer_id = cu.id
+                 WHERE cu.id = %d AND c.partner_user_id IN (' . $scope->placeholders() . ')
                  LIMIT 1',
-                [$customerId, ...$scope->userIds()]
+                [$this->table, $this->contractsTable, $customerId, ...$scope->userIds()]
             ),
             ARRAY_A
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 
         return $row ?: null;
     }
@@ -110,7 +113,7 @@ final class CustomerRepository
     /**
      * @param array<string, mixed> $data
      *
-     * @return int The new customer id.
+     * @return int The new customer id, or 0 when the insert failed.
      */
     public function create(array $data): int
     {
@@ -128,12 +131,10 @@ final class CustomerRepository
      */
     private function filterWritable(array $data): array
     {
-        $unknown = array_diff(array_keys($data), self::WRITABLE);
+        $unknown = array_values(array_diff(array_keys($data), self::WRITABLE));
 
         if ($unknown !== []) {
-            throw new InvalidArgumentException(
-                'Μη εγγράψιμες στήλες πελάτη: ' . implode(', ', $unknown)
-            );
+            throw UnknownColumns::forEntity('πελάτης', $unknown);
         }
 
         return $data;
