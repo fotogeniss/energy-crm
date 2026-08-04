@@ -66,6 +66,68 @@
    "page": 1,
    "x": 58.4,
    "y": 76.7
+  },
+  "poli": {
+   "page": 1,
+   "x": 137.1,
+   "y": 94.5
+  },
+  "epaggelma": {
+   "page": 1,
+   "x": 24.2,
+   "y": 99.1
+  },
+  "nomimos_ekprosopos": {
+   "page": 1,
+   "x": 30.9,
+   "y": 132.2
+  },
+  "adt": {
+   "page": 1,
+   "x": 150.0,
+   "y": 132.2
+  },
+  "ar_metriti": {
+   "page": 1,
+   "x": 130.7,
+   "y": 202.6
+  },
+  "odos_paroxis": {
+   "page": 1,
+   "x": 18.2,
+   "y": 213.4
+  },
+  "tk_paroxis": {
+   "page": 1,
+   "x": 130.7,
+   "y": 213.4
+  },
+  "poli_paroxis": {
+   "page": 1,
+   "x": 158.0,
+   "y": 213.4
+  },
+  "cat_epaggelmatiki": {
+   "page": 1,
+   "x": 56.7,
+   "y": 233.7,
+   "check": true
+  },
+  "teleftaia_endeixi_imeras": {
+   "page": 1,
+   "x": 13.5,
+   "y": 269.7
+  },
+  "doy": {
+   "page": 1,
+   "x": 44.9,
+   "y": 115.4
+  },
+  "metr_imer_nyxt": {
+   "page": 1,
+   "x": 96.8,
+   "y": 241.3,
+   "check": true
   }
  },
  "sig": {

@@ -168,6 +168,21 @@
    "page": 2,
    "x": 30.0,
    "y": 230.0
+  },
+  "eponymia": {
+   "page": 1,
+   "x": 38.8,
+   "y": 109.9
+  },
+  "teleftaia_endeixi_imeras": {
+   "page": 1,
+   "x": 36.0,
+   "y": 225.5
+  },
+  "nomimos_ekprosopos": {
+   "page": 1,
+   "x": 36.2,
+   "y": 176.8
   }
  },
  "sig": {

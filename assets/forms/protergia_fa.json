@@ -71,6 +71,41 @@
    "page": 1,
    "x": 27.2,
    "y": 49.6
+  },
+  "contact_onomateponymo": {
+   "page": 1,
+   "x": 10.0,
+   "y": 82.5
+  },
+  "contact_tilefono": {
+   "page": 1,
+   "x": 10.0,
+   "y": 87.0
+  },
+  "contact_email": {
+   "page": 1,
+   "x": 112.2,
+   "y": 87.0
+  },
+  "odos_paroxis": {
+   "page": 1,
+   "x": 10.0,
+   "y": 130.5
+  },
+  "poli_paroxis": {
+   "page": 1,
+   "x": 112.1,
+   "y": 130.5
+  },
+  "teleftaia_endeixi_imeras": {
+   "page": 1,
+   "x": 112.1,
+   "y": 143.5
+  },
+  "email": {
+   "page": 1,
+   "x": 151.2,
+   "y": 69.0
   }
  },
  "sig": {
