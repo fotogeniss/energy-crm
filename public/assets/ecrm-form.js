@@ -122,25 +122,55 @@
 				.catch(function () { card.hidden = true; });
 		}
 
+		// Fields borrowed by the provider card, so they can be put back exactly
+		// where they came from when the provider changes. Without this, switching
+		// provider leaves the previous set stranded under the wrong captions.
+		var borrowed = [];
+
+		function returnBorrowedFields() {
+			borrowed.forEach(function (b) {
+				var label = b.el.querySelector('.ecrm-field__label');
+				if (label) label.textContent = b.label;
+				b.el.removeAttribute('title');
+				if (b.next && b.next.parentNode === b.parent) b.parent.insertBefore(b.el, b.next);
+				else b.parent.appendChild(b.el);
+			});
+			borrowed = [];
+		}
+
 		function paintProviderFields(card, d) {
 			var grid = card.querySelector('[data-provform-grid]');
 			var note = card.querySelector('[data-provform-note]');
 			var names = Object.keys(d.fields || {});
 
+			returnBorrowedFields();
+
 			if (!d.template || !names.length) { card.hidden = true; return; }
 
-			// The inputs already exist further down the form; move them here so
-			// there is one place to fill and no duplicate names in the payload.
+			// The inputs already exist further down the form; borrow them rather
+			// than creating copies, or two inputs would share a name and the save
+			// would keep whichever the browser serialised last.
 			grid.innerHTML = '';
 			names.forEach(function (n) {
 				var field = root.querySelector('[data-for="' + n + '"]');
 				if (!field) return;
+
 				var label = field.querySelector('.ecrm-field__label');
+				borrowed.push({
+					el: field,
+					parent: field.parentNode,
+					next: field.nextElementSibling,
+					label: label ? label.textContent : ''
+				});
+
 				if (label) label.textContent = d.fields[n].label;
+				// The provider's own wording, for when ours and theirs differ.
+				if (d.fields[n].onForm) field.title = 'Στο έντυπο: ' + d.fields[n].onForm;
+
 				grid.appendChild(field);
 			});
 
-			note.textContent = 'Έντυπο ' + d.template + ' · ' + names.length +
+			note.textContent = 'Έντυπο ' + d.template + ' · ' + borrowed.length +
 				' πεδία που ζητά συγκεκριμένα αυτός ο πάροχος';
 			card.hidden = false;
 		}

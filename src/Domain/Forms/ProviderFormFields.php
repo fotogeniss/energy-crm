@@ -1,17 +1,22 @@
 <?php
 
 /**
- * Which CRM inputs a given provider application actually needs.
+ * Which CRM inputs a given provider application actually needs, and what to
+ * call them on screen.
  *
- * Every provider asks for a different subset, under its own wording: NRG wants
- * "ΙΔΙΟΚΤΗΤΗΣ / ΜΙΣΘΩΤΗΣ", Protergia writes "Ονοματεπώνυμο / επωνυμία
- * επιχείρησης", Volton "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ". Showing an agent one generic
- * form and hoping they know which boxes matter for today's provider is how
- * applications come back rejected.
+ * Every provider asks for a different subset under its own wording. Showing an
+ * agent one generic form and hoping they know which boxes matter for today's
+ * provider is how applications come back rejected.
  *
- * The map files carry a `labels` block written from the provider's own PDF, so
- * the label an agent reads on screen is the label printed on the application
- * they are filling.
+ * Two rules govern the caption:
+ *
+ *   1. A field never shows its internal key. If nothing better is known, it
+ *      falls back to the Greek name in LABELS — a screen that reads
+ *      "contact_onomateponymo" is a bug, not a label.
+ *   2. Where the provider's own wording is unambiguous it wins, because the
+ *      point is that the agent reads on screen what is printed on the paper.
+ *      For contact and legal-representative boxes it does not win: the form
+ *      says plain "Τηλέφωνο" and that could be anyone's.
  *
  * @package EnergyCRM
  */
@@ -23,8 +28,8 @@ namespace EnergyCRM\Domain\Forms;
 final class ProviderFormFields
 {
     /**
-     * Fill keys that come from customer or contract columns and are already on
-     * the main form. They never appear in the provider-specific section.
+     * Fill keys backed by customer or contract columns. Already on the main
+     * form, so never repeated in the provider-specific section.
      *
      * @var list<string>
      */
@@ -44,10 +49,11 @@ final class ProviderFormFields
     ];
 
     /**
-     * Fill key => the CRM input that supplies it.
+     * Fill key => the CRM inputs that supply it.
      *
      * Several fill keys share one input: a single-choice group on paper is one
-     * dropdown on screen, and a person's name is two boxes.
+     * dropdown on screen. And one fill key can need two inputs: a person's
+     * name is a first and a last.
      *
      * @var array<string, list<string>>
      */
@@ -81,6 +87,53 @@ final class ProviderFormFields
         'contact_email'            => ['contact_email'],
     ];
 
+    /**
+     * What each input is called in the CRM's own words.
+     *
+     * @var array<string, string>
+     */
+    private const LABELS = [
+        'kad'                => 'Κ.Α.Δ.',
+        'gemi'               => 'Αρ. Γ.Ε.ΜΗ.',
+        'company_type'       => 'Νομική Μορφή',
+        'activity'           => 'Αντικείμενο Δραστηριότητας',
+        'eidiki_katigoria'   => 'Ειδική Κατηγορία (Ευάλωτος / Κ.Ο.Τ.)',
+        'iban'               => 'IBAN Πάγιας Εντολής',
+        'anotato_orio'       => 'Ανώτατο Όριο Λογαριασμού (€)',
+        'ar_koinoxristou'    => 'Αρ. Κοινόχρηστου Μετρητή',
+        'agreed_power'       => 'Συμφωνημένη Ισχύς (kVA)',
+        'day_indication'     => 'Τελευταία Ένδειξη Μετρητή',
+        'guarantee'          => 'Εγγύηση (€)',
+        'previous_provider'  => 'Υφιστάμενος Πάροχος',
+        'capacity_role'      => 'Ιδιότητα (Ιδιοκτήτης / Ενοικιαστής)',
+        'meter_position'     => 'Θέση Μετρητή (Εσωτερικός / Εξωτερικός)',
+        'meter_reading_type' => 'Είδος Μέτρησης',
+        'payment_method'     => 'Τρόπος Πληρωμής',
+        'rep_first_name'     => 'Όνομα Νόμιμου Εκπροσώπου',
+        'rep_last_name'      => 'Επώνυμο Νόμιμου Εκπροσώπου',
+        'contact_first_name' => 'Όνομα Υπεύθυνου Επικοινωνίας',
+        'contact_last_name'  => 'Επώνυμο Υπεύθυνου Επικοινωνίας',
+        'contact_adt'        => 'Α.Δ.Τ. Υπεύθυνου Επικοινωνίας',
+        'contact_afm'        => 'ΑΦΜ Υπεύθυνου Επικοινωνίας',
+        'contact_phone'      => 'Τηλέφωνο Υπεύθυνου Επικοινωνίας',
+        'contact_mobile'     => 'Κινητό Υπεύθυνου Επικοινωνίας',
+        'contact_email'      => 'Email Υπεύθυνου Επικοινωνίας',
+    ];
+
+    /**
+     * Inputs rendered as a single-choice dropdown.
+     *
+     * On paper these are a row of boxes, so the caption next to any one of them
+     * is an *option* — "ΜΙΣΘΩΤΗΣ", "Ημερήσια & Νυχτερινή" — never the question
+     * being asked. Using it as the field label would tell the agent to enter
+     * one specific answer.
+     *
+     * @var list<string>
+     */
+    private const DROPDOWNS = [
+        'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
+    ];
+
     private function __construct()
     {
     }
@@ -88,7 +141,7 @@ final class ProviderFormFields
     /**
      * Inputs required by a template, keyed by input name.
      *
-     * @return array<string, array{label: string, source: string}>
+     * @return array<string, array{label: string, onForm: string, source: string}>
      */
     public static function forTemplate(string $key, string $formsDir): array
     {
@@ -104,30 +157,84 @@ final class ProviderFormFields
             return [];
         }
 
-        /** @var array<string, string> $labels */
-        $labels = is_array($map['labels'] ?? null) ? $map['labels'] : [];
-        $needed = array_keys(is_array($map['fields'] ?? null) ? $map['fields'] : []);
-        $out    = [];
+        /** @var array<string, string> $printed */
+        $printed = is_array($map['labels'] ?? null) ? $map['labels'] : [];
+        $needed  = array_keys(is_array($map['fields'] ?? null) ? $map['fields'] : []);
+        $out     = [];
 
         foreach ($needed as $fillKey) {
             if (in_array($fillKey, self::FROM_COLUMNS, true)) {
                 continue;
             }
 
-            foreach (self::INPUTS[$fillKey] ?? [] as $input) {
-                // First label wins: two fill keys sharing an input (ΙΔΙΟΚΤΗΤΗΣ
-                // and ΜΙΣΘΩΤΗΣ) would otherwise fight over the caption.
+            $inputs = self::INPUTS[$fillKey] ?? [];
+
+            foreach ($inputs as $input) {
+                // Two fill keys can share an input — ΙΔΙΟΚΤΗΤΗΣ and ΜΙΣΘΩΤΗΣ
+                // are one dropdown — so the first caption wins.
                 if (isset($out[$input])) {
                     continue;
                 }
 
                 $out[$input] = [
-                    'label'  => (string) ($labels[$fillKey] ?? $fillKey),
+                    'label'  => self::caption($input, $inputs, (string) ($printed[$fillKey] ?? '')),
+                    'onForm' => (string) ($printed[$fillKey] ?? ''),
                     'source' => $fillKey,
                 ];
             }
         }
 
         return $out;
+    }
+
+    /**
+     * @param list<string> $siblings Inputs sharing the same fill key.
+     */
+    private static function caption(string $input, array $siblings, string $printed): string
+    {
+        $ours = self::LABELS[$input] ?? $input;
+
+        // One paper box split across two inputs: the provider's single caption
+        // cannot tell them apart, so ours has to.
+        if (count($siblings) > 1) {
+            return $ours;
+        }
+
+        // "Τηλέφωνο" on a contact-person line is ambiguous once it sits in a
+        // section of its own; keep the qualified name.
+        if (str_starts_with($input, 'contact_') || str_starts_with($input, 'rep_')) {
+            return $ours;
+        }
+
+        if (in_array($input, self::DROPDOWNS, true)) {
+            return $ours;
+        }
+
+        $printed = trim($printed);
+
+        if ($printed === '' || $printed === $input) {
+            return $ours;
+        }
+
+        // A whole sentence scraped off the page, or a quoted clause, is not a
+        // caption. Forty-five characters is roughly where a label stops being
+        // readable in a form grid.
+        if (mb_strlen($printed) > 45 || str_contains($printed, '“') || str_contains($printed, '"')) {
+            return $ours;
+        }
+
+        // Fragments like "AM (kWh)" carry no Greek at all and mean nothing on
+        // their own; three Greek letters is the floor for a real caption.
+        if (preg_match_all('/\p{Greek}/u', $printed) < 3) {
+            return $ours;
+        }
+
+        // "ΕΓΓΥΗΣΗΣ" is the tail of "ΠΟΣΟ ΕΓΓΥΗΣΗΣ" that wrapped onto its own
+        // line. A caption is a thing, not a genitive hanging off one.
+        if (! str_contains($printed, ' ') && preg_match('/(ΗΣ|ΟΥ|ΩΝ)$/u', $printed) === 1) {
+            return $ours;
+        }
+
+        return $printed;
     }
 }
