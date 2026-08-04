@@ -616,7 +616,12 @@
 							toast('Εξήχθησαν ' + d.count + ' συμβάσεις.');
 							return;
 						}
+						// Nothing moved and the pipeline explained why: lead with
+						// that, instead of reporting a success that never happened.
+						if (d.notice && !d.updated) { toast(d.notice, false); loadContracts(); return; }
+
 						var msg = okMsg + (d.updated != null ? ' (' + d.updated + ')' : '');
+						if (d.notice) msg += ' · ' + d.notice;
 						if (d.skipped) msg += ' · παραλείφθηκαν ' + d.skipped + ' (ελλιπή δικαιολογητικά)';
 						toast(msg);
 						loadContracts();

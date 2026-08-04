@@ -350,26 +350,52 @@ class ECRM_REST {
 		}
 
 		if ( $action === 'status' ) {
-			$to = sanitize_text_field( (string) $value );
-			if ( ! array_key_exists( $to, ECRM_DB::statuses() ) ) {
+			$to     = sanitize_text_field( (string) $value );
+			$target = ContractStatus::tryFromSlug( $to );
+			if ( $target === null ) {
 				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη έγκυρη κατάσταση.' ], 400 );
 			}
-			$gated = class_exists( 'ECRM_Docs' ) && in_array( $to, ECRM_Docs::gate_statuses(), true );
-			$updated = 0; $skipped = 0;
+			$gated    = class_exists( 'ECRM_Docs' ) && in_array( $to, ECRM_Docs::gate_statuses(), true );
+			$updated  = 0;
+			$skipped  = 0;
+			$rejected = [];
 			foreach ( $rows as $r ) {
 				$id = (int) $r['id'];
 				if ( $r['status'] === $to ) { continue; }
 				if ( $gated && class_exists( 'ECRM_Docs' ) && ECRM_Docs::missing_labels( $id, $r['activation_type'] ?? '' ) ) {
 					$skipped++; continue;
 				}
-				self::transition( $id, $to, [
+
+				// The pipeline may refuse the move; report that instead of
+				// counting it as done.
+				$source = ContractStatus::tryFromSlug( (string) $r['status'] );
+				if ( $source !== null && ! $source->canMoveTo( $target ) ) {
+					$rejected[] = $source->label();
+					continue;
+				}
+
+				if ( self::transition( $id, $to, [
 					'user_id' => (int) $r['partner_user_id'],
 					'from'    => $r['status'],
 					'message' => 'Μαζική αλλαγή κατάστασης',
-				] );
-				$updated++;
+				] ) ) {
+					$updated++;
+				} else {
+					$skipped++;
+				}
 			}
-			return new WP_REST_Response( [ 'ok' => true, 'updated' => $updated, 'skipped' => $skipped ], 200 );
+
+			$response = [ 'ok' => true, 'updated' => $updated, 'skipped' => $skipped ];
+			if ( $rejected ) {
+				$response['rejected'] = count( $rejected );
+				$response['notice']   = sprintf(
+					'%d σύμβαση/εις δεν άλλαξαν: δεν επιτρέπεται μετάβαση από «%s» σε «%s».',
+					count( $rejected ),
+					implode( '», «', array_unique( $rejected ) ),
+					$target->label()
+				);
+			}
+			return new WP_REST_Response( $response, 200 );
 		}
 
 		if ( $action === 'delete' ) {
