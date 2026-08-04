@@ -3,9 +3,9 @@
 /**
  * ScopeResolver backed by WordPress users and capabilities.
  *
- * The downline walk is currently delegated to the legacy ECRM_DB helper so this
- * step changes no behaviour. It is memoised per request, which already removes
- * the repeated tree walks a single request used to trigger.
+ * The downline comes from NetworkRepository, which answers it with one prefix
+ * query against the materialized path. Results are also memoised per request,
+ * so a page that asks about the same actor repeatedly pays once.
  *
  * @package EnergyCRM
  */
@@ -14,12 +14,16 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Access;
 
-use ECRM_DB;
+use EnergyCRM\Persistence\NetworkRepository;
 
 final class WordPressScopeResolver implements ScopeResolver
 {
     /** @var array<int, UserScope> */
     private array $memo = [];
+
+    public function __construct(private readonly NetworkRepository $network)
+    {
+    }
 
     public function forCurrentUser(): UserScope
     {
@@ -51,9 +55,6 @@ final class WordPressScopeResolver implements ScopeResolver
             return UserScope::forSelf($userId);
         }
 
-        /** @var list<int> $downline */
-        $downline = array_map('intval', ECRM_DB::visible_user_ids($userId));
-
-        return UserScope::forTeam($userId, $downline);
+        return UserScope::forTeam($userId, $this->network->subtreeIds($userId));
     }
 }

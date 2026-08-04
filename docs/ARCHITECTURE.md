@@ -51,13 +51,36 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 | 0 | Git safety net | ✅ |
 | 1 | Composer + PSR-4 + PHPUnit/PHPStan/PHPCS, λεπτό bootstrap | ✅ |
 | 2 | `Access` + `ContractRepository` με υποχρεωτικό scope· κλείσιμο του IDOR στο `save_contract` | ✅ |
-| 3 | Ιεραρχία δικτύου σε materialized path — τέλος στο N+1 του `visible_user_ids()` | ⬜ |
+| 3 | Ιεραρχία δικτύου σε materialized path — τέλος στο N+1 του `visible_user_ids()` | ✅ |
 | 4 | Migration runner + foreign keys· κατάργηση `ensure_columns()` | ⬜ |
 | 5 | Ρητή μηχανή καταστάσεων συμβολαίου (επιτρεπόμενες μεταβάσεις) | ⬜ |
 | 6 | Σπάσιμο του `class-ecrm-rest.php` σε controllers ανά resource, με `args` schema | ⬜ |
 | 7 | Διαφοροποίηση ρόλων (Συνεργάτης / Πωλητής / Καταχωρητής) σε πραγματικά capabilities | ⬜ |
 | 8 | Secrets εκτός `wp_options`· retention policy για `extracted_json` | ⬜ |
 | 9 | Frontend: build step, σπάσιμο του `ecrm-app.js`, τέλος στο χειροκίνητο `innerHTML` | ⬜ |
+
+## Ορατότητα και ιεραρχία
+
+Τρία ερωτήματα που το CRM συχνά μπερδεύει σε ένα:
+
+- **Ποιος πούλησε** — `contracts.partner_user_id`. Καθορίζει την προμήθεια.
+- **Ποιος διαχειρίζεται** — το δέντρο `ecrm_parent`. Καθορίζει την ομάδα.
+- **Ποιος βλέπει** — το `UserScope`. Παράγεται από τα δύο παραπάνω συν τα
+  capabilities.
+
+Η ιεραρχία αποθηκεύεται ως materialized path στο user meta `ecrm_path`:
+`/1/7/23/` σημαίνει ότι ο 23 αναφέρεται στον 7, που αναφέρεται στον 1. Έτσι το
+«όλοι κάτω από τον 7» γίνεται `WHERE ecrm_path LIKE '/1/7/%'` — ένα query αντί
+για ένα ανά κόμβο. Οι κάθετοι στα άκρα δεν είναι διακοσμητικές: χωρίς αυτές, το
+`/1/7` θα ταίριαζε και στο `/1/70/`.
+
+Το `ecrm_parent` παραμένει η πηγή αλήθειας για κάθε ακμή· το `ecrm_path` είναι
+παράγωγο και συντηρείται αυτόματα από το `NetworkSync`, που κρέμεται στα meta
+hooks — όχι από τους call sites.
+
+**Ο administrator βλέπει όλες τις συμβάσεις της εταιρείας.** Η ιεραρχία αφορά
+προμήθειες, όχι δικαίωμα εποπτείας. Ο ιδιοκτήτης δεν χρειάζεται να είναι γονέας
+όλων για να δει το σύνολο.
 
 ## Coding standard
 

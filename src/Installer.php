@@ -35,6 +35,7 @@ final class Installer
         ECRM_DB::install_roles();
         ECRM_Providers::seed();
         ECRM_Providers::backfill();
+        Services::network()->rebuildAll();
 
         update_option(self::VERSION_OPTION, ECRM_DB::DB_VERSION);
 
@@ -67,6 +68,7 @@ final class Installer
         ECRM_DB::install();
         ECRM_DB::install_roles();
         ECRM_Providers::backfill();
+        Services::network()->rebuildAll();
 
         update_option(self::VERSION_OPTION, ECRM_DB::DB_VERSION);
     }

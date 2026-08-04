@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '15';
+	const DB_VERSION = '16';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -344,29 +344,22 @@ class ECRM_DB {
 	 * All user IDs visible to a given user: themselves + their whole
 	 * downline (team members and sub-partners, recursively).
 	 *
+	 * Delegates to EnergyCRM\Persistence\NetworkRepository, which resolves the
+	 * subtree with a single prefix query on the materialized path. This used to
+	 * be a breadth-first walk issuing one get_users() call per node.
+	 *
 	 * @return int[]
 	 */
 	public static function visible_user_ids( int $user_id ): array {
-		$ids  = [ $user_id ];
-		$queue = [ $user_id ];
-		$guard = 0;
-		while ( $queue && $guard < 50 ) {
-			$guard++;
-			$parent = array_shift( $queue );
-			$children = get_users( [
-				'meta_key'   => 'ecrm_parent',
-				'meta_value' => $parent,
-				'fields'     => 'ID',
-			] );
-			foreach ( $children as $cid ) {
-				$cid = (int) $cid;
-				if ( ! in_array( $cid, $ids, true ) ) {
-					$ids[]   = $cid;
-					$queue[] = $cid;
-				}
-			}
+		$network = \EnergyCRM\Services::network();
+
+		// Administrators run the company; the partner tree describes who earns
+		// commission, not who is allowed to look. See docs/ARCHITECTURE.md.
+		if ( user_can( $user_id, 'manage_options' ) ) {
+			return $network->allUserIds();
 		}
-		return $ids;
+
+		return $network->subtreeIds( $user_id );
 	}
 
 

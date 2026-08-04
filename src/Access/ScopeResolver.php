@@ -3,9 +3,9 @@
 /**
  * Builds a UserScope for an actor.
  *
- * Behind an interface deliberately: the current implementation walks the
- * `ecrm_parent` user meta tree, which is an N+1 query per request. Step 3
- * replaces it with a materialized path without any caller changing.
+ * Behind an interface deliberately: swapping the tree walk for a materialized
+ * path changed only the implementation, and no caller had to move. The next
+ * change — caching, or a dedicated hierarchy table — can happen the same way.
  *
  * @package EnergyCRM
  */

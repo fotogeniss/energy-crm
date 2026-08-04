@@ -22,6 +22,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\WordPressScopeResolver;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
+use EnergyCRM\Persistence\NetworkRepository;
 
 final class Services
 {
@@ -31,13 +32,20 @@ final class Services
 
     private static ?CustomerRepository $customers = null;
 
+    private static ?NetworkRepository $network = null;
+
     private function __construct()
     {
     }
 
     public static function scopeResolver(): ScopeResolver
     {
-        return self::$scopeResolver ??= new WordPressScopeResolver();
+        return self::$scopeResolver ??= new WordPressScopeResolver(self::network());
+    }
+
+    public static function network(): NetworkRepository
+    {
+        return self::$network ??= new NetworkRepository();
     }
 
     public static function contracts(): ContractRepository
@@ -55,10 +63,12 @@ final class Services
         ?ScopeResolver $scopeResolver = null,
         ?ContractRepository $contracts = null,
         ?CustomerRepository $customers = null,
+        ?NetworkRepository $network = null,
     ): void {
         self::$scopeResolver = $scopeResolver ?? self::$scopeResolver;
         self::$contracts     = $contracts ?? self::$contracts;
         self::$customers     = $customers ?? self::$customers;
+        self::$network       = $network ?? self::$network;
     }
 
     public static function reset(): void
@@ -66,5 +76,6 @@ final class Services
         self::$scopeResolver = null;
         self::$contracts     = null;
         self::$customers     = null;
+        self::$network       = null;
     }
 }

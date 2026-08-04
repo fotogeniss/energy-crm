@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM;
 
+use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 
 final class Plugin
@@ -78,6 +79,9 @@ final class Plugin
     public function onPluginsLoaded(): void
     {
         Installer::maybeUpgrade();
+
+        (new NetworkSync(Services::network()))->register();
+
         LegacyLoader::boot();
     }
 }
