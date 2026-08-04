@@ -12,6 +12,9 @@
 	function api(path) { return ECRM.rest.replace(/\/$/, '') + path; }
 	function H() { return { 'X-WP-Nonce': ECRM.nonce }; }
 
+	// Hiding a control the user may not use. The server checks again regardless.
+	function can(capability) { return !!(ECRM.caps && ECRM.caps[capability]); }
+
 	// Force fresh data: never serve our API GETs from the browser/proxy cache.
 	// (Function declaration shadows the global fetch for the whole module.)
 	var _origFetch = window.fetch.bind(window);
@@ -466,8 +469,8 @@
 				Object.keys(statuses).map(function (s) { return '<option value="' + esc(s) + '">' + esc(statuses[s]) + '</option>'; }).join('') +
 				'</select><button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--primary" data-bulk-apply-status>Εφαρμογή</button>' +
 				(contractsState.scope === 'team' ? '<select class="ecrm-input ecrm-input--sm" data-bulk-assign><option value="">— Ανάθεση σε… —</option></select><button type="button" class="ecrm-btn ecrm-btn--sm" data-bulk-apply-assign>Ανάθεση</button>' : '') +
-				'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-export>⤓ Export επιλογής</button>' +
-				'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--danger" data-bulk-delete>🗑 Διαγραφή</button>' +
+				(can('ecrm_export_data') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-export>⤓ Export επιλογής</button>' : '') +
+				(can('ecrm_delete_contract') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--danger" data-bulk-delete>🗑 Διαγραφή</button>' : '') +
 				'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-clear>Καθαρισμός</button></div>' +
 				'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-table--rich"><thead><tr>' +
 				'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πάροχος</th><th>Πρόγραμμα</th><th>Πελάτης</th>' +

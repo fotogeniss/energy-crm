@@ -57,7 +57,7 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 | 4γ | Καθαρισμός ορφανών + foreign keys με `ON DELETE` | ✅ |
 | 5 | Ρητή μηχανή καταστάσεων συμβολαίου (επιτρεπόμενες μεταβάσεις) | ⬜ |
 | 6 | Σπάσιμο του `class-ecrm-rest.php` σε controllers ανά resource, με `args` schema | ⬜ |
-| 7 | Διαφοροποίηση ρόλων (Συνεργάτης / Πωλητής / Καταχωρητής) σε πραγματικά capabilities | ⬜ |
+| 7 | Διαφοροποίηση ρόλων (Συνεργάτης / Πωλητής / Καταχωρητής) σε πραγματικά capabilities | ✅ |
 | 8 | Secrets εκτός `wp_options`· retention policy για `extracted_json` | ⬜ |
 | 9 | Frontend: build step, σπάσιμο του `ecrm-app.js`, τέλος στο χειροκίνητο `innerHTML` | ⬜ |
 

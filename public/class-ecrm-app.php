@@ -67,7 +67,6 @@ class ECRM_App {
 		$nav = [
 			[ 'view' => 'dashboard',    'label' => 'Dashboard',      'icon' => 'dashboard' ],
 			[ 'view' => 'new-contract', 'label' => 'Νέα Σύμβαση',    'icon' => 'new' ],
-			[ 'view' => 'leads',        'label' => 'Leads',          'icon' => 'funnel', 'badge' => $leads_due ],
 			[ 'view' => 'contracts',    'label' => 'Συμβάσεις',      'icon' => 'contracts' ],
 			[ 'view' => 'pending', 'label' => 'Εκκρεμότητες', 'icon' => 'pending', 'badge' => $pending_ct ],
 			[ 'view' => 'tasks', 'label' => 'Εργασίες', 'icon' => 'tasks', 'badge' => $tasks_ct ],
@@ -75,13 +74,27 @@ class ECRM_App {
 			[ 'view' => 'renewals',     'label' => 'Λήξεις',         'icon' => 'renew' ],
 			[ 'view' => 'network',      'label' => 'Το δίκτυό μου',  'icon' => 'network' ],
 			[ 'view' => 'team',         'label' => 'Η ομάδα μου',    'icon' => 'team' ],
-			[ 'view' => 'commissions',  'label' => 'Προμήθειες',     'icon' => 'euro' ],
 			[ 'view' => 'calc',         'label' => 'Προσφορά',       'icon' => 'calc' ],
 			[ 'view' => 'kb',           'label' => 'Βάση Γνώσης',     'icon' => 'book' ],
 		];
-		if ( current_user_can( 'ecrm_manage_team' ) || current_user_can( 'manage_options' ) ) {
+
+		// The menu mirrors the capability matrix rather than guessing from the
+		// role, so a change in EnergyCRM\Access\Roles is reflected here for free.
+		if ( current_user_can( \EnergyCRM\Access\Capability::MANAGE_LEADS ) ) {
+			array_splice( $nav, 2, 0, [
+				[ 'view' => 'leads', 'label' => 'Leads', 'icon' => 'funnel', 'badge' => $leads_due ],
+			] );
+		}
+		if ( current_user_can( \EnergyCRM\Access\Capability::VIEW_COMMISSIONS ) ) {
+			$nav[] = [ 'view' => 'commissions', 'label' => 'Προμήθειες', 'icon' => 'euro' ];
+		}
+		if ( current_user_can( \EnergyCRM\Access\Capability::MANAGE_TEAM ) ) {
 			$nav[] = [ 'view' => 'teamlive', 'label' => 'Ομάδα Live', 'icon' => 'pulse' ];
+		}
+		if ( current_user_can( \EnergyCRM\Access\Capability::VIEW_ANALYTICS ) ) {
 			$nav[] = [ 'view' => 'analytics', 'label' => 'Στατιστικά', 'icon' => 'analytics' ];
+		}
+		if ( current_user_can( \EnergyCRM\Access\Capability::IMPORT_DATA ) ) {
 			$nav[] = [ 'view' => 'import', 'label' => 'Εισαγωγή Excel', 'icon' => 'import' ];
 		}
 

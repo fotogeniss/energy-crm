@@ -324,19 +324,16 @@ class ECRM_DB {
 		];
 	}
 
-	/** Create the roles (idempotent). Existing WP roles untouched. */
+	/**
+	 * Create the roles and align their capabilities with the matrix.
+	 *
+	 * Delegates to EnergyCRM\Access\Roles, which is the single place defining
+	 * who may do what. add_role() alone was not enough: it is a no-op once the
+	 * role exists, so an installed site kept its original capabilities forever
+	 * and revoking one was impossible.
+	 */
 	public static function install_roles(): void {
-		$base = [ 'read' => true, 'ecrm_use' => true ];
-		add_role( 'ecrm_partner', 'Συνεργάτης', $base + [ 'ecrm_manage_team' => true ] );
-		add_role( 'ecrm_seller', 'Πωλητής', $base );
-		add_role( 'ecrm_registrar', 'Καταχωρητής', $base );
-
-		// Grant the umbrella caps to administrators too.
-		$admin = get_role( 'administrator' );
-		if ( $admin ) {
-			$admin->add_cap( 'ecrm_use' );
-			$admin->add_cap( 'ecrm_manage_team' );
-		}
+		\EnergyCRM\Access\Roles::sync();
 	}
 
 	/**

@@ -23,10 +23,19 @@ class ECRM_Shortcodes {
 	public static function enqueue_form_assets(): void {
 		wp_enqueue_style( 'ecrm-form', ECRM_URL . 'public/assets/ecrm-form.css', [], ECRM_VERSION );
 		wp_enqueue_script( 'ecrm-form', ECRM_URL . 'public/assets/ecrm-form.js', [], ECRM_VERSION, true );
+		// Capabilities are sent so the UI can hide what the user cannot do.
+		// This is presentation only — every one of them is enforced again on
+		// the server, because anything reaching the browser is a suggestion.
+		$caps = [];
+		foreach ( \EnergyCRM\Access\Capability::all() as $capability ) {
+			$caps[ $capability ] = current_user_can( $capability );
+		}
+
 		wp_localize_script( 'ecrm-form', 'ECRM', [
 			'rest'     => esc_url_raw( rest_url( ECRM_REST::NS ) ),
 			'nonce'    => wp_create_nonce( 'wp_rest' ),
 			'statuses' => ECRM_DB::statuses(),
+			'caps'     => $caps,
 		] );
 	}
 

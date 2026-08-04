@@ -17,6 +17,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use EnergyCRM\Access\Capability;
+
 class ECRM_REST {
 
 	const NS = 'ecrm/v1';
@@ -104,6 +106,24 @@ class ECRM_REST {
 		return $response;
 	}
 
+	/**
+	 * Permission callback requiring a specific capability.
+	 *
+	 * Every route keeps `can_use` as the floor; the ones that create, destroy
+	 * or expose money on top of that name what they need. See
+	 * EnergyCRM\Access\Capability.
+	 */
+	private static function needs( string $capability ): callable {
+		return static function () use ( $capability ) {
+			return self::can_use() && current_user_can( $capability );
+		};
+	}
+
+	/** True when the current user holds the capability. */
+	public static function allows( string $capability ): bool {
+		return current_user_can( $capability );
+	}
+
 	public static function routes(): void {
 		$auth = [ __CLASS__, 'can_use' ];
 
@@ -111,7 +131,7 @@ class ECRM_REST {
 		register_rest_route( self::NS, '/quote/pdf', [ 'methods' => 'POST', 'callback' => [ __CLASS__, 'quote_pdf' ], 'permission_callback' => $auth ] );
 		register_rest_route( self::NS, '/lookup/afm', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'lookup_afm' ], 'permission_callback' => $auth ] );
 		register_rest_route( self::NS, '/search', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'global_search' ], 'permission_callback' => $auth ] );
-		register_rest_route( self::NS, '/team/live', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'team_live' ], 'permission_callback' => $auth ] );
+		register_rest_route( self::NS, '/team/live', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'team_live' ], 'permission_callback' => self::needs( Capability::MANAGE_TEAM ) ] );
 		register_rest_route( self::NS, '/filters', [
 			[ 'methods' => 'GET',  'callback' => [ __CLASS__, 'filters_list' ], 'permission_callback' => $auth ],
 			[ 'methods' => 'POST', 'callback' => [ __CLASS__, 'filters_save' ], 'permission_callback' => $auth ],
@@ -151,7 +171,7 @@ class ECRM_REST {
 		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/status', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'change_status' ],
-			'permission_callback' => $auth,
+			'permission_callback' => self::needs( Capability::CHANGE_STATUS ),
 		] );
 
 		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/pdf', [
@@ -175,25 +195,25 @@ class ECRM_REST {
 		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)', [
 			'methods'             => 'DELETE',
 			'callback'            => [ __CLASS__, 'delete_contract' ],
-			'permission_callback' => $auth,
+			'permission_callback' => self::needs( Capability::DELETE_CONTRACT ),
 		] );
 
 		register_rest_route( self::NS, '/contracts/export', [
 			'methods'             => 'GET',
 			'callback'            => [ __CLASS__, 'export_contracts' ],
-			'permission_callback' => $auth,
+			'permission_callback' => self::needs( Capability::EXPORT_DATA ),
 		] );
 
 		register_rest_route( self::NS, '/team', [
 			'methods'             => [ 'GET', 'POST' ],
 			'callback'            => [ __CLASS__, 'team_router' ],
-			'permission_callback' => $auth,
+			'permission_callback' => self::needs( Capability::MANAGE_TEAM ),
 		] );
 
 		register_rest_route( self::NS, '/team/(?P<id>\\d+)', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'team_update' ],
-			'permission_callback' => $auth,
+			'permission_callback' => self::needs( Capability::MANAGE_TEAM ),
 		] );
 
 		register_rest_route( self::NS, '/network', [
@@ -205,24 +225,24 @@ class ECRM_REST {
 		register_rest_route( self::NS, '/import/parse', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'import_parse' ],
-			'permission_callback' => $auth,
+			'permission_callback' => self::needs( Capability::IMPORT_DATA ),
 		] );
 
 		register_rest_route( self::NS, '/import/apply', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'import_apply' ],
-			'permission_callback' => $auth,
+			'permission_callback' => self::needs( Capability::IMPORT_DATA ),
 		] );
 
 		register_rest_route( self::NS, '/commissions', [
 			'methods'             => 'GET',
 			'callback'            => [ __CLASS__, 'commissions' ],
-			'permission_callback' => $auth,
+			'permission_callback' => self::needs( Capability::VIEW_COMMISSIONS ),
 		] );
 		register_rest_route( self::NS, '/analytics', [
 			'methods'             => 'GET',
 			'callback'            => [ __CLASS__, 'analytics' ],
-			'permission_callback' => $auth,
+			'permission_callback' => self::needs( Capability::VIEW_ANALYTICS ),
 		] );
 
 		register_rest_route( self::NS, '/customers', [
@@ -299,6 +319,18 @@ class ECRM_REST {
 		$value  = $p['value'] ?? '';
 		if ( ! $ids ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν επιλέχθηκαν συμβάσεις.' ], 400 );
+		}
+
+		// One endpoint, several operations: the capability depends on which one
+		// the request asked for, so it cannot be settled by the route alone.
+		$required = [
+			'status' => Capability::CHANGE_STATUS,
+			'delete' => Capability::DELETE_CONTRACT,
+			'assign' => Capability::ASSIGN_CONTRACT,
+			'export' => Capability::EXPORT_DATA,
+		];
+		if ( isset( $required[ $action ] ) && ! current_user_can( $required[ $action ] ) ) {
+			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν έχεις δικαίωμα για αυτή την ενέργεια.' ], 403 );
 		}
 
 		$uid        = get_current_user_id();
