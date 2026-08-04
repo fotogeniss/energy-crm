@@ -87,7 +87,11 @@ final class Roles
         ];
     }
 
-    /** Capabilities granted to a role, or an empty list for unknown roles. */
+    /**
+     * Capabilities granted to a role, or an empty list for unknown roles.
+     *
+     * @return list<string>
+     */
     public static function capabilitiesFor(string $role): array
     {
         return self::matrix()[$role]['capabilities'] ?? [];
