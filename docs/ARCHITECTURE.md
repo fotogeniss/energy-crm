@@ -53,8 +53,8 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 | 2 | `Access` + `ContractRepository` με υποχρεωτικό scope· κλείσιμο του IDOR στο `save_contract` | ✅ |
 | 3 | Ιεραρχία δικτύου σε materialized path — τέλος στο N+1 του `visible_user_ids()` | ✅ |
 | 4α | Migration runner· κατάργηση `ensure_columns()` | ✅ |
-| 4β | Καθαρισμός ορφανών + foreign keys με `ON DELETE` | ⬜ |
-| 4γ | Διαγραφή φυσικών αρχείων όταν σβήνεται σύμβαση | ⬜ |
+| 4β | Διαγραφή φυσικών αρχείων όταν σβήνεται σύμβαση | ✅ |
+| 4γ | Καθαρισμός ορφανών + foreign keys με `ON DELETE` | ⬜ |
 | 5 | Ρητή μηχανή καταστάσεων συμβολαίου (επιτρεπόμενες μεταβάσεις) | ⬜ |
 | 6 | Σπάσιμο του `class-ecrm-rest.php` σε controllers ανά resource, με `args` schema | ⬜ |
 | 7 | Διαφοροποίηση ρόλων (Συνεργάτης / Πωλητής / Καταχωρητής) σε πραγματικά capabilities | ⬜ |

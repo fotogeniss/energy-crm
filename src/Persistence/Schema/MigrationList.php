@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence\Schema;
 
 use EnergyCRM\Persistence\Schema\Migrations\EnsureLegacyColumns;
+use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
 
 final class MigrationList
 {
@@ -27,6 +28,7 @@ final class MigrationList
     {
         return [
             new EnsureLegacyColumns(),
+            new PurgeOrphanFiles(),
         ];
     }
 }

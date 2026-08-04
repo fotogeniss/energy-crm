@@ -137,21 +137,13 @@ class ECRM_GDPR {
 
 		$cu = ECRM_DB::table( 'customers' );
 		$ct = ECRM_DB::table( 'contracts' );
-		$fl = ECRM_DB::table( 'files' );
 
 		// 1) Delete attached documents (media + DB rows) for this customer's contracts.
 		$cids = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM {$ct} WHERE customer_id = %d", $id ) );
 		if ( $cids ) {
-			$in    = implode( ',', array_map( 'intval', $cids ) );
-			$files = $wpdb->get_results( "SELECT id, attachment_id, path FROM {$fl} WHERE contract_id IN ($in)", ARRAY_A );
-			foreach ( $files as $f ) {
-				if ( ! empty( $f['attachment_id'] ) ) {
-					wp_delete_attachment( (int) $f['attachment_id'], true );
-				} elseif ( ! empty( $f['path'] ) && file_exists( $f['path'] ) ) {
-					@unlink( $f['path'] ); // phpcs:ignore
-				}
-			}
-			$wpdb->query( "DELETE FROM {$fl} WHERE contract_id IN ($in)" );
+			// One implementation of "remove a document and its bytes", shared
+			// with contract deletion. See EnergyCRM\Persistence\FileRepository.
+			\EnergyCRM\Services::files()->purgeForContracts( array_map( 'intval', $cids ) );
 			// Strip PII echoed into contract notes/extracted data.
 			$wpdb->query( "UPDATE {$ct} SET notes = NULL, extracted_json = NULL, consent_ip = NULL WHERE customer_id = " . (int) $id );
 		}

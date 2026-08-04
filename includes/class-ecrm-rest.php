@@ -342,8 +342,11 @@ class ECRM_REST {
 		if ( $action === 'delete' ) {
 			$okids = array_map( function ( $r ) { return (int) $r['id']; }, $rows );
 			$list  = implode( ',', $okids );
+
+			// Documents first: the row is the only pointer to the file on disk.
+			\EnergyCRM\Services::files()->purgeForContracts( $okids );
+
 			$wpdb->query( "DELETE FROM " . ECRM_DB::table( 'events' )        . " WHERE contract_id IN ($list)" );
-			$wpdb->query( "DELETE FROM " . ECRM_DB::table( 'files' )         . " WHERE contract_id IN ($list)" );
 			$wpdb->query( "DELETE FROM " . ECRM_DB::table( 'signatures' )    . " WHERE contract_id IN ($list)" );
 			$wpdb->query( "DELETE FROM " . ECRM_DB::table( 'notifications' ) . " WHERE contract_id IN ($list)" );
 			$wpdb->query( "DELETE FROM {$ct} WHERE id IN ($list)" );
@@ -2093,8 +2096,10 @@ class ECRM_REST {
 		if ( ! $row ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε η αίτηση.' ], 404 );
 		}
+		// Documents first: the row is the only pointer to the file on disk.
+		\EnergyCRM\Services::files()->purgeForContracts( [ $id ] );
+
 		$wpdb->delete( ECRM_DB::table( 'events' ),        [ 'contract_id' => $id ] );
-		$wpdb->delete( ECRM_DB::table( 'files' ),         [ 'contract_id' => $id ] );
 		$wpdb->delete( ECRM_DB::table( 'signatures' ),    [ 'contract_id' => $id ] );
 		$wpdb->delete( ECRM_DB::table( 'notifications' ), [ 'contract_id' => $id ] );
 		$wpdb->delete( $ct, [ 'id' => $id ] );
