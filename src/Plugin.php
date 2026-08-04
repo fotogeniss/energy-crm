@@ -17,13 +17,13 @@ namespace EnergyCRM;
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Admin\FormCalibrator;
-use EnergyCRM\Http\ProviderFormController;
+use EnergyCRM\Http\Router;
 use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 
 final class Plugin
 {
-    public const VERSION = '0.71.1';
+    public const VERSION = '0.72.0';
 
     private static ?self $instance = null;
 
@@ -87,7 +87,7 @@ final class Plugin
 
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
-        (new ProviderFormController())->register();
+        (new Router(Services::scopeResolver(), Services::contracts()))->register();
 
         if (is_admin()) {
             (new FormCalibrator())->register();

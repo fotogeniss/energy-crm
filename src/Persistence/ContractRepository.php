@@ -211,6 +211,47 @@ final class ContractRepository
     }
 
     /**
+     * Contracts whose term ends within the given window.
+     *
+     * Drafts and cancellations are excluded: neither is up for renewal.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function expiring(UserScope $scope, int $withinDays): array
+    {
+        global $wpdb;
+
+        $customers = Tables::name(Tables::CUSTOMERS);
+        $providers = Tables::name(Tables::PROVIDERS);
+
+        [$clause, $params] = $this->scopeClause($scope, 'c');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.id, c.code, c.status, c.end_date, c.term_months,
+                        DATEDIFF(c.end_date, NOW()) AS days_left,
+                        p.name AS provider_name, p.logo_url AS provider_logo,
+                        cu.first_name, cu.last_name, cu.company_name, cu.phone
+                 FROM %i c
+                 LEFT JOIN %i cu ON cu.id = c.customer_id
+                 LEFT JOIN %i p  ON p.id  = c.provider_id
+                 WHERE c.end_date IS NOT NULL
+                   AND c.status NOT IN ('cancelled', 'draft')
+                   AND DATEDIFF(c.end_date, NOW()) <= %d{$clause}
+                 ORDER BY c.end_date ASC
+                 LIMIT 300",
+                [$this->table, $customers, $providers, $withinDays, ...$params]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
      * Clear extraction payloads older than the retention period.
      *
      * Deliberately unscoped: this is a scheduled maintenance sweep with no
@@ -251,14 +292,16 @@ final class ContractRepository
      *
      * @return array{0: string, 1: list<int>}
      */
-    private function scopeClause(UserScope $scope): array
+    private function scopeClause(UserScope $scope, string $alias = ''): array
     {
         if ($scope->isAdministrator()) {
             return ['', []];
         }
 
+        $column = ($alias === '' ? '' : $alias . '.') . 'partner_user_id';
+
         return [
-            ' AND partner_user_id IN (' . $scope->placeholders() . ')',
+            ' AND ' . $column . ' IN (' . $scope->placeholders() . ')',
             $scope->userIds(),
         ];
     }

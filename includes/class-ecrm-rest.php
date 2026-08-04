@@ -258,23 +258,10 @@ class ECRM_REST {
 			'permission_callback' => $auth,
 		] );
 
-		register_rest_route( self::NS, '/notifications', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'notifications' ],
-			'permission_callback' => $auth,
-		] );
-
-		register_rest_route( self::NS, '/notifications/read', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'notifications_read' ],
-			'permission_callback' => $auth,
-		] );
-
-		register_rest_route( self::NS, '/renewals', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'renewals' ],
-			'permission_callback' => $auth,
-		] );
+		// /notifications, /notifications/read και /renewals μετακινήθηκαν σε
+		// EnergyCRM\Http\NotificationsController και RenewalsController.
+		// Δεν επανεγγράφονται εδώ: μια διαδρομή σε δύο σημεία σημαίνει ότι
+		// κερδίζει σιωπηλά όποια δηλωθεί τελευταία.
 
 		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/renew', [
 			'methods'             => 'POST',

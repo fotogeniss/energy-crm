@@ -15,28 +15,19 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_FormFill;
-use EnergyCRM\Access\Capability;
 use EnergyCRM\Domain\Forms\ProviderFormFields;
 use EnergyCRM\Plugin;
 use WP_REST_Request;
 use WP_REST_Response;
 
-final class ProviderFormController
+final class ProviderFormController implements Controller
 {
-    private const NAMESPACE = 'ecrm/v1';
-
-    public function register(): void
-    {
-        add_action('rest_api_init', [$this, 'routes']);
-    }
-
     public function routes(): void
     {
-        register_rest_route(self::NAMESPACE, '/forms/fields', [
+        register_rest_route(Router::NAMESPACE, '/forms/fields', [
             'methods'             => 'GET',
             'callback'            => [$this, 'fields'],
-            'permission_callback' => static fn (): bool =>
-                is_user_logged_in() && current_user_can(Capability::USE_CRM),
+            'permission_callback' => Guards::crmUser(),
             'args'                => [
                 'provider' => [
                     'type'              => 'string',
