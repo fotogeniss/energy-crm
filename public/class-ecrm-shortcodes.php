@@ -226,7 +226,6 @@ class ECRM_Shortcodes {
 			-->
 			<section class="ecrm-card ecrm-provform" data-provider-fields hidden>
 				<div class="ecrm-step"><span class="ecrm-step__n">★</span> <span data-provform-title>Απαιτούμενα από τον πάροχο</span></div>
-				<p class="ecrm-sub" data-provform-note></p>
 				<div class="ecrm-grid" data-provform-grid></div>
 			</section>
 

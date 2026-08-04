@@ -140,7 +140,6 @@
 
 		function paintProviderFields(card, d) {
 			var grid = card.querySelector('[data-provform-grid]');
-			var note = card.querySelector('[data-provform-note]');
 			var names = Object.keys(d.fields || {});
 
 			returnBorrowedFields();
@@ -170,8 +169,6 @@
 				grid.appendChild(field);
 			});
 
-			note.textContent = 'Έντυπο ' + d.template + ' · ' + borrowed.length +
-				' πεδία που ζητά συγκεκριμένα αυτός ο πάροχος';
 			card.hidden = false;
 		}
 
