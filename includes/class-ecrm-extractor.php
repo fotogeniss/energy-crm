@@ -22,8 +22,15 @@ class ECRM_Extractor {
 	const API_URL = 'https://api.anthropic.com/v1/messages';
 	const API_VER = '2023-06-01';
 
-	/** Default model — overridable via settings. */
-	const DEFAULT_MODEL = 'claude-opus-4-8';
+	/**
+	 * Default model — overridable via settings.
+	 *
+	 * Sonnet over Opus deliberately: reading an ID card and a utility bill into
+	 * a fixed set of fields is well within its vision capability, at a fraction
+	 * of the cost per application. On this workload the cost difference lands
+	 * straight on the margin per contract.
+	 */
+	const DEFAULT_MODEL = 'claude-sonnet-5';
 
 	/** Fields we expect back. Keep in sync with the customers table + form. */
 	public static function fields(): array {
