@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Activation, deactivation and schema-upgrade lifecycle.
  *
@@ -9,65 +10,68 @@
  * @package EnergyCRM
  */
 
-declare( strict_types=1 );
+declare(strict_types=1);
 
 namespace EnergyCRM;
 
-use EnergyCRM\Legacy\Loader as LegacyLoader;
 use ECRM_DB;
 use ECRM_Files;
 use ECRM_Notifications;
 use ECRM_Providers;
 use ECRM_REST;
+use EnergyCRM\Legacy\Loader as LegacyLoader;
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+if (! defined('ABSPATH')) {
+    exit;
 }
 
-final class Installer {
+final class Installer
+{
+    /** Option holding the schema version currently applied to the database. */
+    public const VERSION_OPTION = 'ecrm_db_version';
 
-	/** Option holding the schema version currently applied to the database. */
-	public const VERSION_OPTION = 'ecrm_db_version';
+    public static function activate(): void
+    {
+        LegacyLoader::loadFiles();
 
-	public static function activate(): void {
-		LegacyLoader::load_files();
+        ECRM_DB::install();
+        ECRM_Files::dir();
+        ECRM_DB::install_roles();
+        ECRM_Providers::seed();
+        ECRM_Providers::backfill();
 
-		ECRM_DB::install();
-		ECRM_Files::dir();
-		ECRM_DB::install_roles();
-		ECRM_Providers::seed();
-		ECRM_Providers::backfill();
+        update_option(self::VERSION_OPTION, ECRM_DB::DB_VERSION);
 
-		update_option( self::VERSION_OPTION, ECRM_DB::DB_VERSION );
+        ECRM_Notifications::schedule();
+        flush_rewrite_rules();
+    }
 
-		ECRM_Notifications::schedule();
-		flush_rewrite_rules();
-	}
+    public static function deactivate(): void
+    {
+        LegacyLoader::loadFiles();
 
-	public static function deactivate(): void {
-		LegacyLoader::load_files();
+        ECRM_Notifications::unschedule();
+        wp_clear_scheduled_hook(ECRM_REST::AUTO_PROCESS_HOOK);
+        wp_clear_scheduled_hook(ECRM_REST::AUTO_PROCESS_HOOK . '_sweep');
+        flush_rewrite_rules();
+    }
 
-		ECRM_Notifications::unschedule();
-		wp_clear_scheduled_hook( ECRM_REST::AUTO_PROCESS_HOOK );
-		wp_clear_scheduled_hook( ECRM_REST::AUTO_PROCESS_HOOK . '_sweep' );
-		flush_rewrite_rules();
-	}
+    /**
+     * Apply pending schema changes when the stored version lags the code.
+     * Cheap no-op on the vast majority of requests: one option read.
+     */
+    public static function maybeUpgrade(): void
+    {
+        LegacyLoader::loadFiles();
 
-	/**
-	 * Apply pending schema changes when the stored version lags the code.
-	 * Cheap no-op on the vast majority of requests (one option read).
-	 */
-	public static function maybe_upgrade(): void {
-		LegacyLoader::load_files();
+        if (get_option(self::VERSION_OPTION) === ECRM_DB::DB_VERSION) {
+            return;
+        }
 
-		if ( get_option( self::VERSION_OPTION ) === ECRM_DB::DB_VERSION ) {
-			return;
-		}
+        ECRM_DB::install();
+        ECRM_DB::install_roles();
+        ECRM_Providers::backfill();
 
-		ECRM_DB::install();
-		ECRM_DB::install_roles();
-		ECRM_Providers::backfill();
-
-		update_option( self::VERSION_OPTION, ECRM_DB::DB_VERSION );
-	}
+        update_option(self::VERSION_OPTION, ECRM_DB::DB_VERSION);
+    }
 }

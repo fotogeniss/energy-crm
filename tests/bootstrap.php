@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PHPUnit bootstrap.
  *
@@ -10,11 +11,11 @@
  * @package EnergyCRM
  */
 
-declare( strict_types=1 );
+declare(strict_types=1);
 
 // The plugin's files guard on ABSPATH; satisfy it without loading WordPress.
-if ( ! defined( 'ABSPATH' ) ) {
-	define( 'ABSPATH', __DIR__ . '/' );
+if (! defined('ABSPATH')) {
+    define('ABSPATH', __DIR__ . '/');
 }
 
-require_once dirname( __DIR__ ) . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';

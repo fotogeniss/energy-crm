@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Minimal PSR-4 autoloader.
  *
@@ -10,54 +11,59 @@
  * @package EnergyCRM
  */
 
-declare( strict_types=1 );
+declare(strict_types=1);
 
 namespace EnergyCRM;
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+if (! defined('ABSPATH')) {
+    exit;
 }
 
-final class Autoloader {
+final class Autoloader
+{
+    /** Namespace prefix handled by this loader, with trailing separator. */
+    private string $prefix;
 
-	/** Namespace prefix handled by this loader, e.g. "EnergyCRM\". */
-	private string $prefix;
+    /** Absolute directory the prefix maps to, with trailing slash. */
+    private string $baseDir;
 
-	/** Absolute directory the prefix maps to, with trailing slash. */
-	private string $base_dir;
+    public function __construct(string $prefix, string $baseDir)
+    {
+        $this->prefix  = rtrim($prefix, '\\') . '\\';
+        $this->baseDir = rtrim($baseDir, '/\\') . '/';
+    }
 
-	public function __construct( string $prefix, string $base_dir ) {
-		$this->prefix   = rtrim( $prefix, '\\' ) . '\\';
-		$this->base_dir = rtrim( $base_dir, '/\\' ) . '/';
-	}
+    /** Instantiate and register on the SPL stack. */
+    public static function register(string $prefix, string $baseDir): self
+    {
+        $loader = new self($prefix, $baseDir);
+        spl_autoload_register([$loader, 'load']);
 
-	/** Instantiate and register on the SPL stack. */
-	public static function register( string $prefix, string $base_dir ): self {
-		$loader = new self( $prefix, $base_dir );
-		spl_autoload_register( [ $loader, 'load' ] );
-		return $loader;
-	}
+        return $loader;
+    }
 
-	/**
-	 * Resolve a fully-qualified class name to a file and require it.
-	 *
-	 * EnergyCRM\Domain\Contract\ContractId  ->  src/Domain/Contract/ContractId.php
-	 */
-	public function load( string $class ): void {
-		if ( strncmp( $class, $this->prefix, strlen( $this->prefix ) ) !== 0 ) {
-			return;
-		}
+    /**
+     * Resolve a fully-qualified class name to a file and require it.
+     *
+     * EnergyCRM\Domain\Contract\ContractId -> src/Domain/Contract/ContractId.php
+     */
+    public function load(string $fqcn): void
+    {
+        if (strncmp($fqcn, $this->prefix, strlen($this->prefix)) !== 0) {
+            return;
+        }
 
-		$relative = substr( $class, strlen( $this->prefix ) );
-		$path     = $this->base_dir . str_replace( '\\', '/', $relative ) . '.php';
+        $relative = substr($fqcn, strlen($this->prefix));
 
-		// Guard against traversal from a malformed class name.
-		if ( strpos( $relative, '..' ) !== false ) {
-			return;
-		}
+        // Guard against traversal from a malformed class name.
+        if (str_contains($relative, '..')) {
+            return;
+        }
 
-		if ( is_readable( $path ) ) {
-			require_once $path;
-		}
-	}
+        $path = $this->baseDir . str_replace('\\', '/', $relative) . '.php';
+
+        if (is_readable($path)) {
+            require_once $path;
+        }
+    }
 }

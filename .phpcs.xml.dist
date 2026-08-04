@@ -1,6 +1,17 @@
 <?xml version="1.0"?>
 <ruleset name="Energy CRM">
-    <description>Coding standard for the Energy CRM plugin.</description>
+    <description>
+        PSR-12 as the baseline, plus the WordPress sniffs that catch real bugs.
+
+        We deliberately do NOT use WordPress-Core/WordPress-Docs. Those rules
+        assume code without type declarations, where the docblock carried the
+        type information. Our code declares native types, so `@var string` above
+        `private string $prefix` is duplication that goes stale. Short-array and
+        Yoda rules are compatibility relics from PHP 5.x.
+
+        What we keep from WPCS is the part that earns its keep: output escaping,
+        nonce verification, input sanitisation and prepared SQL.
+    </description>
 
     <file>src</file>
     <file>tests</file>
@@ -10,23 +21,35 @@
     <exclude-pattern>*/node_modules/*</exclude-pattern>
 
     <arg name="extensions" value="php"/>
+    <arg name="basepath" value="."/>
+    <arg name="parallel" value="8"/>
     <arg name="colors"/>
     <arg value="sp"/>
-    <arg name="parallel" value="8"/>
 
-    <rule ref="WordPress-Core">
-        <!-- PSR-4 requires StudlyCase filenames; WPCS wants class-foo.php. -->
-        <exclude name="WordPress.Files.FileName"/>
-    </rule>
-    <rule ref="WordPress-Docs"/>
+    <!-- Baseline: modern PHP style. -->
+    <rule ref="PSR12"/>
 
+    <!-- The WordPress rules worth enforcing. -->
+    <rule ref="WordPress.Security"/>
+    <rule ref="WordPress.DB"/>
+    <rule ref="WordPress.WP.GlobalVariablesOverride"/>
+    <rule ref="WordPress.PHP.NoSilencedErrors"/>
+    <rule ref="WordPress.PHP.DontExtract"/>
+
+    <!-- Global constants must stay namespaced by prefix. -->
     <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
         <properties>
             <property name="prefixes" type="array">
-                <element value="ecrm"/>
+                <element value="ECRM"/>
                 <element value="EnergyCRM"/>
             </property>
         </properties>
+        <exclude-pattern>tests/*</exclude-pattern>
+    </rule>
+
+    <!-- Tests may use assertions and fixtures that trip production-only sniffs. -->
+    <rule ref="WordPress.Security">
+        <exclude-pattern>tests/*</exclude-pattern>
     </rule>
 
     <config name="minimum_supported_wp_version" value="6.2"/>

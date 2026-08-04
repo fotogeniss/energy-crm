@@ -59,6 +59,21 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 | 8 | Secrets εκτός `wp_options`· retention policy για `extracted_json` | ⬜ |
 | 9 | Frontend: build step, σπάσιμο του `ecrm-app.js`, τέλος στο χειροκίνητο `innerHTML` | ⬜ |
 
+## Coding standard
+
+`src/` και `tests/` ακολουθούν **PSR-12**, όχι WordPress-Core. Ο λόγος: οι
+κανόνες τεκμηρίωσης του WPCS (`@var`, `@param` παντού) γράφτηκαν για κώδικα
+χωρίς type declarations, όπου το docblock ήταν η μόνη πληροφορία τύπου. Με
+native types γίνονται διπλοεγγραφή που σαπίζει. Ομοίως τα short arrays και οι
+Yoda conditions είναι κατάλοιπα της PHP 5.x.
+
+Κρατάμε από το WPCS ό,τι πιάνει πραγματικά bugs: `WordPress.Security`
+(escaping, nonces, sanitization) και `WordPress.DB` (prepared statements).
+
+Ο legacy κώδικας σε `includes/`, `admin/`, `public/` δεν ελέγχεται ακόμη — θα
+μπει στο ruleset καθώς μεταναστεύει. Το `.editorconfig` κρατά tabs εκεί και
+spaces στο `src/`, ώστε να μη γεμίσουν τα diffs με αλλαγές κενών.
+
 ## Development
 
 ```bash
