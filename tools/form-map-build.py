@@ -54,20 +54,20 @@ SECTIONS = [
 ]
 
 RULES: list[tuple[str, dict[str, str]]] = [
-    (r"^ονοματεπωνυμο|^ονομ/μο|^ον/μο$", {"contact": "contact_onomateponymo",
+    (r"^ονοματεπωνυμο|^ονομνυμο|^ονμο$", {"contact": "contact_onomateponymo",
                                           "rep": "nomimos_ekprosopos",
                                           "default": "onomateponymo"}),
     (r"^επωνυμια", {"default": "eponymia"}),
     (r"^επωνυμο", {"default": "eponymo"}),
     (r"^ονομα$", {"default": "onoma"}),
     (r"πατρωνυμο|ονομαπατρος", {"default": "patronymo"}),
-    (r"^αδτ|αρδιαβ|δελτιοταυτοτητας", {"contact": "contact_adt", "default": "adt"}),
+    (r"^αδτ|αρδιαβ|δελτιοταυτοτητας|εγγραφουταυτοπροσωπιας|αρταυτοτητας", {"contact": "contact_adt", "default": "adt"}),
     (r"^αφμ", {"contact": "contact_afm", "company": "afm_etaireias", "default": "afm"}),
     (r"^δου", {"default": "doy"}),
-    (r"ημερομηνιαγεννησης", {"default": "birth_date"}),
+    (r"ημερομηνιαγεννησης|^γεννησης", {"default": "birth_date"}),
     (r"^επαγγελμα|δραστηριοτητα", {"default": "epaggelma"}),
     (r"^κινητο", {"contact": "contact_kinito", "default": "kinito"}),
-    (r"^τηλεφωνο|τηλοικιας|^τηλ$|σταθερο", {"contact": "contact_tilefono", "default": "tilefono"}),
+    (r"^τηλεφωνο|τηλοικιας|^τηλ$|σταθερο|τηλεπικοινωνιας", {"contact": "contact_tilefono", "default": "tilefono"}),
     (r"^email|^emai|ηλεκτρονικοταχυδρομειο", {"contact": "contact_email", "default": "email"}),
     (r"^διευθυνσηπαροχης", {"default": "odos_paroxis"}),
     (r"^διευθυνση|^οδος", {"supply": "odos_paroxis", "billing": None, "default": "odos"}),
@@ -82,7 +82,7 @@ RULES: list[tuple[str, dict[str, str]]] = [
     (r"^τιμολογιο", {"default": "timologio"}),
     (r"^προγραμμα", {"default": "programma"}),
     (r"^διαρκεια", {"default": "diarkeia"}),
-    (r"αριθμοςαιτησης|αραιτησης", {"default": "ar_aitisis"}),
+    (r"αριθμοςαιτησης|αραιτησης|κωδικοςαιτησης|κωδαιτησης", {"default": "ar_aitisis"}),
     (r"^ημερομηνια", {"default": "imerominia"}),
     (r"^τοπος", {"default": "topos"}),
     (r"ονμοσυνεργατη|ονοματεπωνυμοσυνεργατη", {"default": "synergatis"}),
@@ -91,7 +91,16 @@ RULES: list[tuple[str, dict[str, str]]] = [
     (r"υφισταμενοςπρομηθευτης|προηγουμενοςπρομηθευτης|τρεχωνπρομηθευτης|προηγπρομηθευτης",
      {"default": "ipistamenos_promitheftis"}),
     (r"εγγυηση", {"default": "poso_eggiisis"}),
-    (r"^ισχυς|συμφωνημενηισχυς", {"default": "isxis_paroxis"}),
+    (r"^ισχυς|συμφωνημενηισχυς|^σ1", {"default": "isxis_paroxis"}),
+    (r"^καδ", {"default": "kad"}),
+    (r"^αργεμη|^γεμη", {"default": "gemi"}),
+    (r"νομικημορφη", {"default": "nomiki_morfi"}),
+    (r"αντικειμενοεπιχειρησης|^χρηση$", {"default": "antikeimeno"}),
+    (r"ειδικηκατηγορια", {"default": "eidiki_katigoria"}),
+    (r"^iban|τραπεζικουλογαριασμου", {"default": "iban"}),
+    (r"ανωτατοοριολογαριασμου", {"default": "anotato_orio"}),
+    (r"αριθμοςκοινοχρηστου", {"default": "ar_koinoxristou"}),
+    (r"αριθμοςκινητου", {"contact": "contact_kinito", "default": "kinito"}),
 ]
 
 # Checkbox labels: the engine stamps an X when the matching key is non-empty.
@@ -109,13 +118,20 @@ CHECKS = [
     (r"^ημερησια&νυχτερινη|ημερησιακαινυχτερινη", "metr_imer_nyxt"),
     (r"^ημερησια$", "metr_imerisia"),
     (r"^αοριστου", "dur_aoristou"),
+    (r"^ιδιοκτητης", "own_idioktitis"),
+    (r"^μισθωτης|^ενοικιαστης", "own_misthotis"),
+    (r"^εσωτερικος", "metr_esoterikos"),
+    (r"^εξωτερικος", "metr_exoterikos"),
+    (r"παγιαεντολη", "pagia_entoli"),
+    (r"^μηοικιακος|^μηοικιακη", "cat_epaggelmatiki"),
+    (r"^οικιακος", "cat_oikiaki"),
 ]
 
 
 def norm(text: str) -> str:
     stripped = unicodedata.normalize("NFD", text)
     stripped = "".join(c for c in stripped if unicodedata.category(c) != "Mn")
-    return re.sub(r"[^α-ωa-z0-9&/]", "", stripped.lower())
+    return re.sub(r"[^α-ωa-z0-9&]", "", stripped.lower())
 
 
 def is_filler(token: str) -> bool:
@@ -196,6 +212,17 @@ def labels_on_line(words, y: float, x_from: float, x_to: float) -> list[tuple[st
     return out
 
 
+def stitch_above(words, y: float, x_from: float, x_to: float, label: str) -> str:
+    """Prepend the text sitting directly above, for labels split over two lines."""
+    above = [w for w in words
+             if 0 < y - w[3] * MM < 4.5
+             and x_from - 2 <= w[0] * MM <= x_to + 2
+             and not is_filler(w[4])]
+    above.sort(key=lambda w: w[0])
+
+    return (" ".join(w[4] for w in above) + " " + label).strip()
+
+
 def build(pdf: Path) -> dict:
     fields: dict[str, dict] = {}
     unresolved: list[str] = []
@@ -227,6 +254,13 @@ def build(pdf: Path) -> dict:
 
                 for label, ends in found:
                     key, is_check = resolve(label, section)
+
+                    # A label wrapped onto two lines ("ΑΡΙΘΜΟΣ" above,
+                    # "ΠΑΡΟΧΗΣ" below) reads as nonsense on its own. Retry with
+                    # the line above stitched on before giving up.
+                    if key is None:
+                        key, is_check = resolve(stitch_above(words, y0, x0, x1, label), section)
+
                     if key is None:
                         if norm(label):
                             unresolved.append(f"σελ{index} y={y0:.1f} « {label[:40]} »")

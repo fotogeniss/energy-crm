@@ -136,6 +136,18 @@
    "page": 1,
    "x": 30.0,
    "y": 272.0
+  },
+  "own_idioktitis": {
+   "page": 1,
+   "x": 145.2,
+   "y": 66.2,
+   "check": true
+  },
+  "pagia_entoli": {
+   "page": 1,
+   "x": 24.8,
+   "y": 190.1,
+   "check": true
   }
  },
  "sig": {

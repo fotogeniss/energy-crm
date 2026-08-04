@@ -146,6 +146,24 @@
    "page": 1,
    "x": 116.2,
    "y": 29.6
+  },
+  "own_misthotis": {
+   "page": 1,
+   "x": 171.2,
+   "y": 54.4,
+   "check": true
+  },
+  "pagia_entoli": {
+   "page": 1,
+   "x": 10.6,
+   "y": 173.1,
+   "check": true
+  },
+  "cat_epaggelmatiki": {
+   "page": 1,
+   "x": 83.2,
+   "y": 45.3,
+   "check": true
   }
  },
  "sig": {

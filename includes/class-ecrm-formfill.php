@@ -162,6 +162,26 @@ class ECRM_FormFill {
 			// Legal representative (companies).
 			'nomimos_ekprosopos' => $rep_name,
 
+			// Fields the provider forms ask for that the CRM keeps in the
+			// contract's extra bag rather than in a column of its own.
+			'kad'                => $xg( 'kad' ),
+			'gemi'               => $xg( 'gemi' ),
+			'nomiki_morfi'       => $xg( 'nomiki_morfi' ),
+			'antikeimeno'        => $xg( 'antikeimeno' ),
+			'eidiki_katigoria'   => $xg( 'eidiki_katigoria' ),
+			'iban'               => $xg( 'iban' ),
+			'anotato_orio'       => $xg( 'anotato_orio' ),
+			'isxis_paroxis'      => $xg( 'isxis_kva' ),
+			'ar_koinoxristou'    => $xg( 'ar_koinoxristou' ),
+
+			// Ownership and meter type: single-choice, so each option is its
+			// own checkbox key and only the selected one carries an X.
+			'own_idioktitis'     => ( $xg( 'idioktisia' ) === 'owner'   ? 'X' : '' ),
+			'own_misthotis'      => ( $xg( 'idioktisia' ) === 'tenant'  ? 'X' : '' ),
+			'metr_esoterikos'    => ( $xg( 'eidos_metriti' ) === 'inside'  ? 'X' : '' ),
+			'metr_exoterikos'    => ( $xg( 'eidos_metriti' ) === 'outside' ? 'X' : '' ),
+			'pagia_entoli'       => ( $xg( 'iban' ) !== '' ? 'X' : '' ),
+
 			// Communication contact (Υπεύθυνος Επικοινωνίας).
 			'contact_onomateponymo' => $contact_name,
 			'contact_adt'           => $xg( 'contact_adt' ),

@@ -77,6 +77,42 @@
    "page": 1,
    "x": 13.0,
    "y": 185.1
+  },
+  "gemi": {
+   "page": 1,
+   "x": 84.8,
+   "y": 58.4
+  },
+  "nomiki_morfi": {
+   "page": 1,
+   "x": 24.9,
+   "y": 69.8
+  },
+  "isxis_paroxis": {
+   "page": 1,
+   "x": 113.6,
+   "y": 139.6
+  },
+  "antikeimeno": {
+   "page": 1,
+   "x": 35.5,
+   "y": 162.4
+  },
+  "eidiki_katigoria": {
+   "page": 1,
+   "x": 24.9,
+   "y": 197.3
+  },
+  "pagia_entoli": {
+   "page": 1,
+   "x": 24.8,
+   "y": 203.7,
+   "check": true
+  },
+  "programma": {
+   "page": 1,
+   "x": 24.9,
+   "y": 184.6
   }
  },
  "sig": {
