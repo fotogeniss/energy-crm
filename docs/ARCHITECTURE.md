@@ -100,9 +100,13 @@ spaces στο `src/`, ώστε να μη γεμίσουν τα diffs με αλλ
 ## Development
 
 ```bash
-composer install      # dev tooling μόνο — το plugin τρέχει και χωρίς vendor/
-composer check        # phpcs + phpstan + phpunit
+composer install                      # dev tooling μόνο — το plugin τρέχει και χωρίς vendor/
+git config core.hooksPath .githooks   # μία φορά ανά clone
+composer check                        # phpcs + phpstan + phpunit
 ```
+
+Ο pre-commit hook τρέχει το `composer check` και μπλοκάρει το commit αν
+αποτύχει. Παράκαμψη μόνο συνειδητά, με `git commit --no-verify`.
 
 Τα unit tests δεν φορτώνουν WordPress. Αν μια κλάση δεν τεστάρεται χωρίς
 WordPress, είναι σήμα ότι ανακατεύει domain λογική με infrastructure.
