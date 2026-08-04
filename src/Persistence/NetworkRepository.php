@@ -163,7 +163,7 @@ final class NetworkRepository
     {
         global $wpdb;
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         $wpdb->query(
             $wpdb->prepare(
                 "UPDATE {$wpdb->usermeta}
@@ -175,6 +175,6 @@ final class NetworkRepository
                 $wpdb->esc_like($oldPath) . '%'
             )
         );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
     }
 }

@@ -11,11 +11,16 @@
  * the check and the write are a single statement and cannot drift apart.
  *
  * On the phpcs exemptions below: table names are bound with %i, and every
- * value is a bound parameter. What PHPStan and phpcs cannot verify is the
- * `IN (%d,%d,…)` fragment, whose length varies with team size. That fragment is
- * produced by UserScope::placeholders(), which emits nothing but "%d" — no
- * request data reaches it. Each exemption is scoped to a single statement so a
- * future query in this file is still checked.
+ * value is a bound parameter. What phpcs cannot verify is the `IN (%d,%d,…)`
+ * fragment, whose length varies with team size. That fragment is produced by
+ * UserScope::placeholders(), which emits nothing but "%d" — no request data
+ * reaches it.
+ *
+ * The exemptions name whole categories (WordPress.DB.PreparedSQL) rather than
+ * individual sniffs, because the sub-sniff that fires depends on whether the
+ * fragment arrives by interpolation or concatenation, and getting that name
+ * wrong silently leaves the statement unexempted. Each block wraps exactly one
+ * statement, so every other query in this file is still checked.
  *
  * @package EnergyCRM
  */
@@ -79,7 +84,7 @@ final class ContractRepository
 
         [$clause, $params] = $this->scopeClause($scope);
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var array<string, mixed>|null $row */
         $row = $wpdb->get_row(
             $wpdb->prepare(
@@ -88,7 +93,7 @@ final class ContractRepository
             ),
             ARRAY_A
         );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         return $row ?: null;
     }
@@ -135,11 +140,11 @@ final class ContractRepository
 
         $sql = 'UPDATE %i SET ' . implode(', ', $assignments) . " WHERE id = %d{$clause}";
 
-        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         $affected = $wpdb->query(
             $wpdb->prepare($sql, [$this->table, ...$values, $contractId, ...$scopeParams])
         );
-        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         if ($affected === false) {
             return false;
@@ -193,14 +198,14 @@ final class ContractRepository
 
         [$clause, $params] = $this->scopeClause($scope);
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         $result = $wpdb->query(
             $wpdb->prepare(
                 "UPDATE %i SET partner_user_id = %d WHERE id = %d{$clause}",
                 [$this->table, $newOwnerId, $contractId, ...$params]
             )
         );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         return $result !== false;
     }

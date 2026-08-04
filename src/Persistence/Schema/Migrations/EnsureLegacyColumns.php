@@ -82,7 +82,7 @@ final class EnsureLegacyColumns implements Migration
 
                 // Identifiers come from the closed set above; no request data
                 // reaches this statement, and DDL cannot be parameterised.
-                // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+                // phpcs:ignore WordPress.DB.PreparedSQL
                 $wpdb->query("ALTER TABLE `{$name}` ADD COLUMN `{$column}` {$definition}");
             }
         }

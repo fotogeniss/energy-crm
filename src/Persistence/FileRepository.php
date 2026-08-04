@@ -58,7 +58,7 @@ final class FileRepository
 
         $placeholders = implode(',', array_fill(0, count($ids), '%d'));
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
@@ -76,7 +76,7 @@ final class FileRepository
                 $ids
             )
         );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         return $removed === false ? 0 : (int) $removed;
     }
@@ -94,6 +94,7 @@ final class FileRepository
     {
         global $wpdb;
 
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             "SELECT f.id, f.path, f.attachment_id
@@ -102,6 +103,7 @@ final class FileRepository
              WHERE f.contract_id IS NOT NULL AND c.id IS NULL",
             ARRAY_A
         );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         if ($rows === []) {
             return 0;
@@ -112,11 +114,11 @@ final class FileRepository
         $ids          = array_map(static fn (array $r): int => (int) $r['id'], $rows);
         $placeholders = implode(',', array_fill(0, count($ids), '%d'));
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         $wpdb->query(
             $wpdb->prepare("DELETE FROM {$this->table} WHERE id IN ({$placeholders})", $ids)
         );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         return count($ids);
     }
