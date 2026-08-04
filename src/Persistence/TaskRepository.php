@@ -1,0 +1,177 @@
+<?php
+
+/**
+ * Tasks, scoped to who may act on them.
+ *
+ * A task is reachable when it is assigned to someone in the actor's scope, or
+ * when the actor raised it themselves — a seller who creates a reminder for a
+ * colleague must still be able to edit it.
+ *
+ * As with contracts, that condition lives in the WHERE clause of the write,
+ * not in a check preceding it. The old code read the row, decided, then wrote:
+ * three steps where one suffices, and two chances to drift apart.
+ *
+ * See ContractRepository for the note on the phpcs exemptions.
+ *
+ * @package EnergyCRM
+ */
+
+declare(strict_types=1);
+
+namespace EnergyCRM\Persistence;
+
+use EnergyCRM\Access\UserScope;
+
+final class TaskRepository
+{
+    private const WRITABLE = ['title', 'note', 'due_at', 'priority', 'status', 'done_at'];
+
+    private string $table;
+
+    public function __construct(?string $table = null)
+    {
+        $this->table = $table ?? Tables::name(Tables::TASKS);
+    }
+
+    /**
+     * @param 'open'|'done'|'today'|'overdue' $filter
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function search(UserScope $scope, string $filter = 'open'): array
+    {
+        global $wpdb;
+
+        $contracts = Tables::name(Tables::CONTRACTS);
+        $customers = Tables::name(Tables::CUSTOMERS);
+
+        [$clause, $params] = $this->reachable($scope, 't');
+        $params            = [$this->table, $contracts, $customers, ...$params];
+
+        $conditions = [$clause];
+
+        if ($filter === 'done') {
+            $conditions[] = "t.status = 'done'";
+        } else {
+            $conditions[] = "t.status = 'open'";
+
+            if ($filter === 'today') {
+                $conditions[] = 'DATE(t.due_at) = %s';
+                $params[]     = current_time('Y-m-d');
+            } elseif ($filter === 'overdue') {
+                $conditions[] = 't.due_at IS NOT NULL AND t.due_at < %s';
+                $params[]     = current_time('mysql');
+            }
+        }
+
+        $where = implode(' AND ', $conditions);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT t.*, c.code AS contract_code,
+                        cu.first_name, cu.last_name, cu.company_name
+                 FROM %i t
+                 LEFT JOIN %i c  ON c.id  = t.contract_id
+                 LEFT JOIN %i cu ON cu.id = t.customer_id
+                 WHERE {$where}
+                 ORDER BY ( t.due_at IS NULL ), t.due_at ASC, t.id DESC
+                 LIMIT 300",
+                $params
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function create(array $data): int
+    {
+        global $wpdb;
+
+        $wpdb->insert($this->table, $data);
+
+        return (int) $wpdb->insert_id;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function update(int $taskId, UserScope $scope, array $data): bool
+    {
+        global $wpdb;
+
+        $data = array_intersect_key($data, array_flip(self::WRITABLE));
+
+        if ($taskId <= 0 || $data === []) {
+            return false;
+        }
+
+        $assignments = [];
+        $values      = [];
+
+        foreach ($data as $column => $value) {
+            $assignments[] = '`' . $column . '` = ' . ($value === null ? 'NULL' : '%s');
+
+            if ($value !== null) {
+                $values[] = $value;
+            }
+        }
+
+        [$clause, $params] = $this->reachable($scope, '');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $affected = $wpdb->query(
+            $wpdb->prepare(
+                'UPDATE %i SET ' . implode(', ', $assignments) . " WHERE id = %d AND {$clause}",
+                [$this->table, ...$values, $taskId, ...$params]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $affected !== false && $affected > 0;
+    }
+
+    public function delete(int $taskId, UserScope $scope): bool
+    {
+        global $wpdb;
+
+        [$clause, $params] = $this->reachable($scope, '');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $affected = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM %i WHERE id = %d AND {$clause}",
+                [$this->table, $taskId, ...$params]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $affected !== false && $affected > 0;
+    }
+
+    /**
+     * Condition for "this actor may act on this task", plus its bound values.
+     *
+     * @return array{0: string, 1: list<int>}
+     */
+    private function reachable(UserScope $scope, string $alias): array
+    {
+        $prefix = $alias === '' ? '' : $alias . '.';
+
+        if ($scope->isAdministrator()) {
+            return ['1 = 1', []];
+        }
+
+        return [
+            '(' . $prefix . 'assigned_to IN (' . $scope->placeholders() . ')'
+            . ' OR ' . $prefix . 'created_by = %d)',
+            [...$scope->userIds(), $scope->actorId()],
+        ];
+    }
+}

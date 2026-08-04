@@ -17,6 +17,7 @@ namespace EnergyCRM\Http;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
+use EnergyCRM\Persistence\TaskRepository;
 
 final class Router
 {
@@ -29,12 +30,14 @@ final class Router
         ScopeResolver $scope,
         ContractRepository $contracts,
         CustomerRepository $customers,
+        TaskRepository $tasks,
     ) {
         $this->controllers = [
             new ProviderFormController(),
             new NotificationsController($scope),
             new RenewalsController($scope, $contracts),
             new CustomersController($scope, $customers),
+            new TasksController($scope, $tasks, $contracts),
         ];
     }
 

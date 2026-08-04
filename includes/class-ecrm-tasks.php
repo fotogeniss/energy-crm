@@ -146,16 +146,11 @@ class ECRM_Tasks {
 		}
 	}
 
+	/**
+	 * Οι διαδρομές /tasks μετακινήθηκαν στο EnergyCRM\Http\TasksController.
+	 * Η κλάση κρατά τα cron και το due_count() για το badge του μενού.
+	 */
 	public static function routes(): void {
-		$auth = [ 'ECRM_REST', 'can_use' ];
-		register_rest_route( ECRM_REST::NS, '/tasks', [
-			[ 'methods' => 'GET',  'callback' => [ __CLASS__, 'list_tasks' ], 'permission_callback' => $auth ],
-			[ 'methods' => 'POST', 'callback' => [ __CLASS__, 'create' ],     'permission_callback' => $auth ],
-		] );
-		register_rest_route( ECRM_REST::NS, '/tasks/(?P<id>\d+)', [
-			[ 'methods' => 'POST',   'callback' => [ __CLASS__, 'update' ], 'permission_callback' => $auth ],
-			[ 'methods' => 'DELETE', 'callback' => [ __CLASS__, 'remove' ], 'permission_callback' => $auth ],
-		] );
 	}
 
 	private static function can_manage(): bool {
