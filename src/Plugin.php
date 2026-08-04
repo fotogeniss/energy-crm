@@ -16,6 +16,7 @@ namespace EnergyCRM;
 
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
+use EnergyCRM\Admin\FormCalibrator;
 use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 
@@ -85,6 +86,10 @@ final class Plugin
 
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
+
+        if (is_admin()) {
+            (new FormCalibrator())->register();
+        }
 
         LegacyLoader::boot();
     }
