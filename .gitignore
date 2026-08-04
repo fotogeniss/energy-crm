@@ -33,3 +33,6 @@ Thumbs.db
 # Generated / runtime artefacts
 /languages/*.mo
 *.log
+
+# Provider source forms — large, reissued periodically, not ours to version.
+/tools/source-forms/
