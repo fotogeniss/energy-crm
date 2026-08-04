@@ -87,6 +87,22 @@
     </rule>
 
     <config name="minimum_supported_wp_version" value="6.2"/>
-    <config name="testVersion" value="8.2-"/>
-    <rule ref="PHPCompatibilityWP"/>
+
+    <!--
+        PHPCompatibility is deliberately absent.
+
+        Its job is to answer "does this code use syntax newer than the declared
+        minimum PHP?". The stable release (9.3.5) predates enums, so it reads an
+        enum body as though it were outside class scope and reports every $this
+        inside it as an error. Worse than the noise: a parser that misreads the
+        construct can just as easily miss a real problem inside it.
+
+        The same guarantee comes from two places that do understand PHP 8.2:
+        the platform requirement in composer.json, which stops installation on
+        an older runtime, and phpVersion in phpstan.neon.dist.
+
+        Reinstate once PHPCompatibility 10.0 is stable — it targets PHP 8.0+,
+        but currently requires PHP_CodeSniffer 4.x and is still in alpha.
+    -->
+
 </ruleset>
