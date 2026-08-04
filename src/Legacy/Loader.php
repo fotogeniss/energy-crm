@@ -17,10 +17,6 @@ namespace EnergyCRM\Legacy;
 
 use EnergyCRM\Plugin;
 
-if (! defined('ABSPATH')) {
-    exit;
-}
-
 final class Loader
 {
     private static bool $filesLoaded = false;

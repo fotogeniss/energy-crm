@@ -21,10 +21,6 @@ use ECRM_Providers;
 use ECRM_REST;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 
-if (! defined('ABSPATH')) {
-    exit;
-}
-
 final class Installer
 {
     /** Option holding the schema version currently applied to the database. */

@@ -16,10 +16,6 @@ namespace EnergyCRM;
 
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 
-if (! defined('ABSPATH')) {
-    exit;
-}
-
 final class Plugin
 {
     public const VERSION = '0.63.0';

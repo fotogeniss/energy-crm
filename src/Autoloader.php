@@ -15,10 +15,6 @@ declare(strict_types=1);
 
 namespace EnergyCRM;
 
-if (! defined('ABSPATH')) {
-    exit;
-}
-
 final class Autoloader
 {
     /** Namespace prefix handled by this loader, with trailing separator. */

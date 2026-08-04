@@ -3,7 +3,7 @@
 /**
  * Plugin Name:       Energy CRM
  * Plugin URI:        https://example.gr/energy-crm
- * Description:       CRM για ενεργειακούς συνεργάτες — αιτήσεις/συμβάσεις παρόχων με AI εξαγωγή στοιχείων από έγγραφα (ταυτότητα + λογαριασμός) μέσω Claude.
+ * Description:       CRM για ενεργειακούς συνεργάτες: αιτήσεις και συμβάσεις παρόχων, με AI εξαγωγή από έγγραφα.
  * Version:           0.63.0
  * Author:            Konstantinos
  * Text Domain:       energy-crm

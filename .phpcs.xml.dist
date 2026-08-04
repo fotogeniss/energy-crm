@@ -29,6 +29,15 @@
     <!-- Baseline: modern PHP style. -->
     <rule ref="PSR12"/>
 
+    <!--
+        A WordPress plugin entry file is by definition both a declaration
+        (the ECRM_* constants) and a bootstrap (side effects). That is the
+        contract WordPress imposes, so the sniff cannot apply here.
+    -->
+    <rule ref="PSR1.Files.SideEffects">
+        <exclude-pattern>energy-crm.php</exclude-pattern>
+    </rule>
+
     <!-- The WordPress rules worth enforcing. -->
     <rule ref="WordPress.Security"/>
     <rule ref="WordPress.DB"/>
