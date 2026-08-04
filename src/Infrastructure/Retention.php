@@ -35,7 +35,7 @@ final class Retention
 
     public function register(): void
     {
-        add_action(self::HOOK, [$this, 'sweep']);
+        add_action(self::HOOK, [$this, 'onScheduledSweep']);
 
         if (! wp_next_scheduled(self::HOOK)) {
             wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', self::HOOK);
@@ -58,6 +58,22 @@ final class Retention
         $days = (int) get_option('ecrm_extraction_retention_days', self::DEFAULT_DAYS);
 
         return max(0, (int) apply_filters('ecrm_extraction_retention_days', $days));
+    }
+
+    /**
+     * @return int Number of contracts cleared.
+     */
+    /**
+     * Cron entry point. WordPress discards return values, so the count is
+     * logged here rather than handed back into a void.
+     */
+    public function onScheduledSweep(): void
+    {
+        $cleared = $this->sweep();
+
+        if ($cleared > 0) {
+            error_log(sprintf('[Energy CRM] Καθαρίστηκαν δεδομένα εξαγωγής από %d συμβάσεις.', $cleared));
+        }
     }
 
     /**
