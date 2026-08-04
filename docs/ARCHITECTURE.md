@@ -50,7 +50,7 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 |---|---|---|
 | 0 | Git safety net | ✅ |
 | 1 | Composer + PSR-4 + PHPUnit/PHPStan/PHPCS, λεπτό bootstrap | ✅ |
-| 2 | `Access` + `ContractRepository` με υποχρεωτικό scope· κλείσιμο του IDOR στο `save_contract` | ⬜ |
+| 2 | `Access` + `ContractRepository` με υποχρεωτικό scope· κλείσιμο του IDOR στο `save_contract` | ✅ |
 | 3 | Ιεραρχία δικτύου σε materialized path — τέλος στο N+1 του `visible_user_ids()` | ⬜ |
 | 4 | Migration runner + foreign keys· κατάργηση `ensure_columns()` | ⬜ |
 | 5 | Ρητή μηχανή καταστάσεων συμβολαίου (επιτρεπόμενες μεταβάσεις) | ⬜ |

@@ -789,6 +789,27 @@ class ECRM_REST {
 		$p = $req->get_json_params();
 		if ( empty( $p ) ) { $p = $req->get_params(); }
 
+		// Authorisation is resolved once, up front, and every read/write below
+		// goes through a repository that requires it. See src/Access/UserScope.
+		try {
+			$scope = \EnergyCRM\Services::scopeResolver()->forCurrentUser();
+		} catch ( \EnergyCRM\Access\NotAuthenticated $e ) {
+			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Απαιτείται σύνδεση.' ], 401 );
+		}
+		$contracts_repo = \EnergyCRM\Services::contracts();
+		$customers_repo = \EnergyCRM\Services::customers();
+
+		// Resolve the target contract *before* touching anything. A contract the
+		// actor cannot see is indistinguishable from one that does not exist.
+		$contract_id  = isset( $p['contract_id'] ) ? (int) $p['contract_id'] : 0;
+		$old_contract = null;
+		if ( $contract_id > 0 ) {
+			$old_contract = $contracts_repo->find( $contract_id, $scope );
+			if ( $old_contract === null ) {
+				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Η σύμβαση δεν βρέθηκε.' ], 404 );
+			}
+		}
+
 		$cust_cols = [ 'customer_type','afm','doy','first_name','last_name','father_name','company_name','adt','birth_date','region','city','street','street_no','postal_code','phone','mobile','email' ];
 		$customer  = [];
 		foreach ( $cust_cols as $c ) {
@@ -802,22 +823,28 @@ class ECRM_REST {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη έγκυρο ΑΦΜ (αποτυχία ελέγχου ψηφίου).', 'field' => 'afm' ], 422 );
 		}
 
-		$customers_t = ECRM_DB::table( 'customers' );
+		// A customer id from the request is only honoured when it is already
+		// attached to the contract being edited, or otherwise reachable.
 		$customer_id = isset( $p['customer_id'] ) ? (int) $p['customer_id'] : 0;
-		$old_customer = ( $customer_id && $customer ) ? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$customers_t} WHERE id = %d", $customer_id ), ARRAY_A ) : null;
+		if ( $customer_id > 0 ) {
+			$linked = $old_contract !== null && (int) $old_contract['customer_id'] === $customer_id;
+			if ( ! $linked && ! $customers_repo->isReachable( $customer_id, $scope ) ) {
+				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.' ], 404 );
+			}
+		}
+
+		$old_customer = ( $customer_id && $customer ) ? $customers_repo->find( $customer_id, $scope ) : null;
 		if ( $customer ) {
 			if ( $customer_id ) {
-				$wpdb->update( $customers_t, $customer, [ 'id' => $customer_id ] );
+				$customers_repo->update( $customer_id, $scope, $customer );
 			} else {
-				$wpdb->insert( $customers_t, $customer );
-				$customer_id = (int) $wpdb->insert_id;
+				$customer_id = $customers_repo->create( $customer );
 			}
 		}
 
 		$status = in_array( ( $p['status'] ?? '' ), array_keys( ECRM_DB::statuses() ), true ) ? $p['status'] : 'draft';
 
 		$contract = [
-			'partner_user_id' => get_current_user_id(),
 			'customer_id'     => $customer_id ?: null,
 			'provider_id'     => isset( $p['provider_id'] ) ? (int) $p['provider_id'] : null,
 			'program_id'      => isset( $p['program_id'] ) ? (int) $p['program_id'] : null,
@@ -854,16 +881,17 @@ class ECRM_REST {
 			$contract['consent_ip'] = substr( $ip, 0, 64 );
 		}
 
-		$contracts_t = ECRM_DB::table( 'contracts' );
-		$contract_id = isset( $p['contract_id'] ) ? (int) $p['contract_id'] : 0;
-		$is_update   = (bool) $contract_id;
-		$old_contract = $is_update ? $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$contracts_t} WHERE id = %d", $contract_id ), ARRAY_A ) : null;
-		if ( $contract_id ) {
-			$wpdb->update( $contracts_t, $contract, [ 'id' => $contract_id ] );
+		// The scope is part of the UPDATE's WHERE clause, so the ownership check
+		// and the write are one statement and cannot drift apart.
+		$is_update = $old_contract !== null;
+		if ( $is_update ) {
+			$contracts_repo->update( $contract_id, $scope, $contract );
 		} else {
-			$wpdb->insert( $contracts_t, $contract );
-			$contract_id = (int) $wpdb->insert_id;
-			$wpdb->update( $contracts_t, [ 'code' => sprintf( 'APP-%04d', $contract_id ) ], [ 'id' => $contract_id ] );
+			$contract_id = $contracts_repo->create( $contract, $scope );
+			if ( $contract_id <= 0 ) {
+				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Η αποθήκευση απέτυχε.' ], 500 );
+			}
+			$contracts_repo->update( $contract_id, $scope, [ 'code' => sprintf( 'APP-%04d', $contract_id ) ] );
 		}
 
 		// Audit trail: log field-level diffs on edits (not on first creation).
