@@ -70,7 +70,7 @@ final class CustomerRepository
             return $row ?: null;
         }
 
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
         /** @var array<string, mixed>|null $row */
         $row = $wpdb->get_row(
             $wpdb->prepare(
@@ -82,7 +82,7 @@ final class CustomerRepository
             ),
             ARRAY_A
         );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 
         return $row ?: null;
     }
