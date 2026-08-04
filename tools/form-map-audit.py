@@ -207,8 +207,16 @@ def marks(pdf: Path) -> list[dict]:
 
 
 def covered(field: dict, page: int, x: float, y: float, x1: float, y1: float) -> bool:
+    """
+    Is this highlight already served by a mapped field?
+
+    Not a containment test. Where the provider highlights only the label —
+    "ΑΡΙΘΜΟΣ ΠΑΡΟΧΗΣ" — the value belongs to the *right* of the mark, so a field
+    sitting outside the rectangle is correct rather than missing. What matters
+    is the line: same page, same height, at or after the mark's left edge.
+    """
     return (int(field.get("page", 1)) == page
-            and x - X_SLACK <= float(field["x"]) <= x1 + X_SLACK
+            and float(field["x"]) >= x - X_SLACK
             and y - Y_SLACK <= float(field["y"]) <= y1 + Y_SLACK)
 
 
