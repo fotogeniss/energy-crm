@@ -64,7 +64,13 @@ final class SecretStore
         update_option('ecrm_' . $name, $value === '' ? '' : $this->encrypt($value));
     }
 
-    /** Last four characters, the rest as bullets. Safe to render. */
+    /**
+     * Last four characters, behind a fixed run of bullets.
+     *
+     * Fixed rather than proportional on purpose: a mask as long as the secret
+     * tells anyone reading the screen how long the secret is, which is free
+     * information for no benefit.
+     */
     public function mask(string $name): string
     {
         $value = $this->get($name);
@@ -73,7 +79,7 @@ final class SecretStore
             return '';
         }
 
-        return str_repeat('•', max(0, strlen($value) - 4)) . substr($value, -4);
+        return str_repeat('•', 12) . substr($value, -4);
     }
 
     private function encrypt(string $plaintext): string
