@@ -434,6 +434,9 @@
 		var startI = (contractsState.page - 1) * contractsState.pageSize;
 		var rowsPage = allRows.slice(startI, startI + contractsState.pageSize);
 
+		// Ownership only matters when more than one partner is in view.
+		var showOwner = contractsState.scope === 'team';
+
 		var body = rowsPage.map(function (r) {
 			var name = r.company_name || ((r.first_name || '') + ' ' + (r.last_name || '')).trim() || '—';
 			var stLabel = statuses[r.status] || r.status;
@@ -448,12 +451,13 @@
 				'<td><span class="ecrm-cell-prov">' + prov + '<span>' + esc(r.provider_name || '—') + '</span></span></td>' +
 				'<td>' + esc(r.program_name || '—') + '</td>' +
 				'<td><span class="ecrm-cell-cust">' + cust + '<span>' + esc(name) + '</span></span></td>' +
+				(showOwner ? '<td><span class="ecrm-cell-owner">' + esc(r.partner_name || '—') + '</span></td>' : '') +
 				'<td class="ecrm-mono">' + esc(r.supply_number || '') + '</td>' +
 				'<td>' + inv + '</td>' +
 				'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(stLabel) + '</span></td>' +
 				'<td class="ecrm-cell-date"><div>' + fmtDate(r.updated_at) + '</div><div class="ecrm-muted">' + timeAgo(r.updated_at) + '</div></td>' +
 				'</tr>' +
-				'<tr class="ecrm-exprow" data-exprow="' + r.id + '" hidden><td class="ecrm-expaccent" data-status="' + esc(r.status) + '"></td><td colspan="8"><div class="ecrm-exppanel" data-exppanel="' + r.id + '"><div class="ecrm-loading">Φόρτωση…</div></div></td></tr>';
+				'<tr class="ecrm-exprow" data-exprow="' + r.id + '" hidden><td class="ecrm-expaccent" data-status="' + esc(r.status) + '"></td><td colspan="' + (showOwner ? 9 : 8) + '"><div class="ecrm-exppanel" data-exppanel="' + r.id + '"><div class="ecrm-loading">Φόρτωση…</div></div></td></tr>';
 		}).join('');
 
 		var table = total
@@ -466,7 +470,9 @@
 				'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--danger" data-bulk-delete>🗑 Διαγραφή</button>' +
 				'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-clear>Καθαρισμός</button></div>' +
 				'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-table--rich"><thead><tr>' +
-				'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πάροχος</th><th>Πρόγραμμα</th><th>Πελάτης</th><th>ΗΚΑΣΠ / Παροχή</th><th>Τιμολόγιο</th><th>Κατάσταση</th><th>Ενημέρωση</th>' +
+				'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πάροχος</th><th>Πρόγραμμα</th><th>Πελάτης</th>' +
+				(showOwner ? '<th>Συνεργάτης</th>' : '') +
+				'<th>ΗΚΑΣΠ / Παροχή</th><th>Τιμολόγιο</th><th>Κατάσταση</th><th>Ενημέρωση</th>' +
 				'</tr></thead><tbody>' + body + '</tbody></table></div>' +
 				'<div class="ecrm-pager"><span>Σύνολο <b>' + total + '</b> συμβάσεις</span>' +
 				'<div class="ecrm-pager__nav"><button type="button" class="ecrm-pager__b" data-page="prev"' + (contractsState.page <= 1 ? ' disabled' : '') + '>‹ Προηγούμενη</button>' +

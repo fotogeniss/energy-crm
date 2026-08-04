@@ -955,7 +955,7 @@ class ECRM_REST {
 
 		$where_sql = implode( ' AND ', $where );
 
-		$sql = "SELECT c.id, c.code, c.status, c.energy_type, c.category, c.invoice_code, c.supply_number, c.created_at, c.updated_at,
+		$sql = "SELECT c.id, c.code, c.status, c.energy_type, c.category, c.invoice_code, c.supply_number, c.created_at, c.updated_at, c.partner_user_id,
 				p.name AS provider_name, p.slug AS provider_slug, p.logo_url AS provider_logo,
 				g.name AS program_name,
 				cu.first_name, cu.last_name, cu.company_name, cu.afm, cu.phone
@@ -967,7 +967,23 @@ class ECRM_REST {
 			ORDER BY c.updated_at DESC
 			LIMIT 200";
 
-		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
+		$rows = (array) $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
+
+		// Who owns each contract. Resolved in one query for the whole page —
+		// a per-row get_userdata() would reintroduce the N+1 we just removed.
+		$owner_ids = array_values( array_unique( array_filter( array_map(
+			static function ( $r ) { return (int) ( $r['partner_user_id'] ?? 0 ); },
+			$rows
+		) ) ) );
+		$owner_names = [];
+		if ( $owner_ids ) {
+			foreach ( get_users( [ 'include' => $owner_ids, 'fields' => [ 'ID', 'display_name' ] ] ) as $u ) {
+				$owner_names[ (int) $u->ID ] = $u->display_name;
+			}
+		}
+		foreach ( $rows as $i => $r ) {
+			$rows[ $i ]['partner_name'] = $owner_names[ (int) ( $r['partner_user_id'] ?? 0 ) ] ?? '—';
+		}
 
 		// Per-status counts (own scope), for the filter tabs.
 		$counts = [ 'all' => 0 ];

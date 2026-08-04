@@ -809,3 +809,13 @@
 
 .ecrm-modal__scope-sel { display: block; margin: 2px 0 16px; }
 .ecrm-modal__scope-sel .ecrm-field__label { display: block; margin-bottom: 6px; }
+
+/* Owning partner, shown only in the team view of the contracts list. */
+.ecrm-cell-owner {
+	display: inline-block;
+	max-width: 14ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	vertical-align: middle;
+}
