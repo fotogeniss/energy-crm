@@ -218,6 +218,18 @@ class ECRM_Shortcodes {
 				</div>
 			</section>
 
+			<!--
+				Πεδία που ζητά συγκεκριμένα η αίτηση του επιλεγμένου παρόχου.
+				Γεμίζει από το /forms/fields με τις ετικέτες του ίδιου του
+				εντύπου, ώστε ο συνεργάτης να διαβάζει στην οθόνη ό,τι θα δει
+				και στο χαρτί.
+			-->
+			<section class="ecrm-card ecrm-provform" data-provider-fields hidden>
+				<div class="ecrm-step"><span class="ecrm-step__n">★</span> <span data-provform-title>Απαιτούμενα από τον πάροχο</span></div>
+				<p class="ecrm-sub" data-provform-note></p>
+				<div class="ecrm-grid" data-provform-grid></div>
+			</section>
+
 			<!-- Νόμιμος Εκπρόσωπος (εταιρείες) -->
 			<section class="ecrm-card" data-when="company,sole_prop">
 				<div class="ecrm-step"><span class="ecrm-step__n">4</span> Νόμιμος Εκπρόσωπος</div>

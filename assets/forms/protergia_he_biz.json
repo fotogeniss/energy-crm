@@ -141,5 +141,33 @@
   "y": 136.8,
   "w": 46,
   "h": 0
+ },
+ "labels": {
+  "synergatis": "Ον/μο συνεργάτη",
+  "onomateponymo": "Ονοματεπώνυμο / επωνυμία επιχείρησης",
+  "odos": "Διεύθυνση",
+  "tk": "Τ.Κ.",
+  "poli": "Πόλη",
+  "epaggelma": "Επάγγελμα",
+  "email": "E-Mail",
+  "tilefono": "Τηλέφωνο",
+  "kinito": "Κινητό: Fax",
+  "nomimos_ekprosopos": "Ονοματεπώνυμο",
+  "adt": "ΑΔΤ (ή ΑΡ. ΔΙΑΒ.)",
+  "ar_paroxis": "ΑΡΙΘΜΟΣ ΠΑΡΟΧΗΣ",
+  "ar_metriti": "ΑΡΙΘΜΟΣ ΜΕΤΡΗΤΗ",
+  "odos_paroxis": "ΔΙΕΥΘΥΝΣΗ ΠΑΡΟΧΗΣ",
+  "tk_paroxis": "Τ.Κ.",
+  "poli_paroxis": "ΠΟΛΗ",
+  "cat_epaggelmatiki": "Επαγγελματική Κοινόχρηστη",
+  "isxis_paroxis": "ΙΣΧΥΣ ΠΑΡΟΧΗΣ (kVA)",
+  "teleftaia_endeixi_imeras": "ΤΕΛΕΥΤΑΙΑ ΕΝΔΕΙΞΗ ΜΕΤΡΗΤΗ",
+  "afm": "Α.Φ.Μ.",
+  "doy": "ΔΟΥ",
+  "kad": "Κ.Α.Δ.",
+  "metr_imer_nyxt": "Ημερήσια & Νυχτερινή",
+  "hkasp": "ΗΚΑΣΠ",
+  "imerominia": "ΗΜΕΡΟΜΗΝΊΑ ΥΠΟΒΟΛΉΣ ΑΊΤΗΣΗΣ",
+  "poso_eggiisis": "ΕΓΓΎΗΣΗ (€)"
  }
 }

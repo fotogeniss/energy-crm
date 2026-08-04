@@ -172,5 +172,24 @@
   "y": 265.0,
   "w": 48,
   "h": 0
+ },
+ "labels": {
+  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ ΕΠΩΝΥΜΙΑ",
+  "own_misthotis": "ΜΙΣΘΩΤΗΣ",
+  "email": "E-MAIL",
+  "tilefono": "ΠΡΟΣΩΠΟ ΕΠΙΚΟΙΝΩΝΙΑΣ",
+  "kinito": "ΚΙΝΗΤΟ",
+  "odos": "ΟΔΟΣ",
+  "poli": "ΠΟΛΗ",
+  "tk": "ΤΚ",
+  "nomos": "ΝΟΜΟΣ",
+  "hkasp": "Η.Κ.Α.Σ.Π.",
+  "teleftaia_endeixi_imeras": "ΕΝΔΕΙΞΗ ΜΕΤΡΗΤΗ",
+  "kod_synergati": "ΚΩΔ. ΣΥΝΕΡΓΑΤΗ",
+  "cat_epaggelmatiki": "ΜΗ ΟΙΚΙΑΚΟΣ",
+  "adt": "ΑΔΤ",
+  "ar_paroxis": "ΑΡ. ΠΑΡΟΧΗΣ ΗΛ. ΕΝΕΡΓΕΙΑΣ*",
+  "poso_eggiisis": "ΕΓΓΥΗΣΗΣ",
+  "pagia_entoli": "ΠΑΓΙΑ ΕΝΤΟΛΗ ΕΞΟΦΛΗΣΗΣ ΛΟΓΑΡΙΑΣΜΩΝ"
  }
 }

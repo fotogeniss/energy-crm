@@ -202,5 +202,24 @@
   "y": 236.0,
   "w": 46,
   "h": 0
+ },
+ "labels": {
+  "cat_etaireia": "ΕΤΑΙΡΕΙΑ",
+  "cat_idiotis": "ΙΔΙΩΤΗΣ",
+  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
+  "eponymia": "ΕΠΩΝΥΜΙΑ ΕΤΑΙΡΕΙΑΣ",
+  "teleftaia_endeixi_imeras": "ΤΕΛΕΥΤΑΙΑ ΕΝΔΕΙΞΗ",
+  "poli": "ΠΟΛΗ",
+  "odos": "ΟΔΟΣ",
+  "nomimos_ekprosopos": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
+  "tilefono": "ΤΗΛΕΦΩΝΟ",
+  "kinito": "ΚΙΝΗΤΟ ΤΗΛΕΦΩΝΟ",
+  "email": "EMAIL",
+  "adt": "Α.Δ.Τ.",
+  "afm": "Α.Φ.Μ.",
+  "tk": "Τ.Κ.",
+  "hkasp": "ΗΚΑΣΠ",
+  "own_idioktitis": "ΙΔΙΟΚΤΗΤΗΣ",
+  "kad": "ΚΑΔ"
  }
 }

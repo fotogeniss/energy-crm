@@ -76,8 +76,74 @@
 				state[field] = btn.getAttribute('data-val');
 				if (field === 'energy_type') renderPrograms();
 				if (field === 'energy_type' || field === 'category') refreshKbDocs();
+				refreshProviderFields();
 			});
 		});
+
+		// ---- provider-specific fields -----------------------------------
+		// Each application asks for a different subset under its own wording.
+		// The section below is filled from the provider's own PDF, so what the
+		// agent reads on screen matches what is printed on the paper.
+		var provFieldsCache = {};
+
+		function providerName() {
+			var b = root.querySelector('.ecrm-provider.is-on');
+			return b ? (b.getAttribute('data-pname') || '').trim() : '';
+		}
+
+		function programName() {
+			var s = root.querySelector('[data-program]');
+			if (!s || s.selectedIndex < 0) return '';
+			return (s.options[s.selectedIndex].textContent || '').trim();
+		}
+
+		function refreshProviderFields() {
+			var card = root.querySelector('[data-provider-fields]');
+			if (!card) return;
+
+			var name = providerName();
+			if (!name) { card.hidden = true; return; }
+
+			var qs = '?provider=' + encodeURIComponent(name) +
+				'&energy=' + encodeURIComponent(state.energy_type || 'power') +
+				'&customer_type=' + encodeURIComponent(state.customer_type || 'individual') +
+				'&program=' + encodeURIComponent(programName()) +
+				'&activation_type=' + encodeURIComponent(state.activation_type || '');
+
+			if (provFieldsCache[qs]) { paintProviderFields(card, provFieldsCache[qs]); return; }
+
+			fetch(api('/forms/fields') + qs, { headers: { 'X-WP-Nonce': ECRM.nonce } })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (!d || !d.ok) return;
+					provFieldsCache[qs] = d;
+					paintProviderFields(card, d);
+				})
+				.catch(function () { card.hidden = true; });
+		}
+
+		function paintProviderFields(card, d) {
+			var grid = card.querySelector('[data-provform-grid]');
+			var note = card.querySelector('[data-provform-note]');
+			var names = Object.keys(d.fields || {});
+
+			if (!d.template || !names.length) { card.hidden = true; return; }
+
+			// The inputs already exist further down the form; move them here so
+			// there is one place to fill and no duplicate names in the payload.
+			grid.innerHTML = '';
+			names.forEach(function (n) {
+				var field = root.querySelector('[data-for="' + n + '"]');
+				if (!field) return;
+				var label = field.querySelector('.ecrm-field__label');
+				if (label) label.textContent = d.fields[n].label;
+				grid.appendChild(field);
+			});
+
+			note.textContent = 'Έντυπο ' + d.template + ' · ' + names.length +
+				' πεδία που ζητά συγκεκριμένα αυτός ο πάροχος';
+			card.hidden = false;
+		}
 
 		// duplicate check on ΑΦΜ / supply number
 		['afm', 'supply_number'].forEach(function (nm) {
@@ -106,6 +172,7 @@
 					var lab = q('[data-selprov]'); if (lab) lab.textContent = 'Επιλεγμένος πάροχος: ' + p.name;
 					renderPrograms();
 					refreshKbDocs();
+					refreshProviderFields();
 				});
 				wrap.appendChild(b);
 			});
@@ -120,7 +187,12 @@
 			});
 			sel.innerHTML = '<option value="">—</option>';
 			opts.forEach(function (pr) { var o = document.createElement('option'); o.value = pr.id; o.textContent = pr.name; sel.appendChild(o); });
-			sel.onchange = function () { state.program_id = this.value ? parseInt(this.value, 10) : null; };
+			sel.onchange = function () {
+				state.program_id = this.value ? parseInt(this.value, 10) : null;
+				// Orizon splits its forms by programme, so the field list can
+				// change without the provider changing.
+				refreshProviderFields();
+			};
 		}
 
 		function selectProvider(pid) {

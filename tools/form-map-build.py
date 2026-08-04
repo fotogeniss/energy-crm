@@ -223,8 +223,16 @@ def stitch_above(words, y: float, x_from: float, x_to: float, label: str) -> str
     return (" ".join(w[4] for w in above) + " " + label).strip()
 
 
+def clean_label(text: str) -> str:
+    """The provider's own wording, tidied but not reworded."""
+    text = re.sub(r"[.…_]{2,}", " ", text)
+    text = re.sub(r"\s+", " ", text).strip(" :·")
+    return text[:60]
+
+
 def build(pdf: Path) -> dict:
     fields: dict[str, dict] = {}
+    labels: dict[str, str] = {}
     unresolved: list[str] = []
 
     with fitz.open(pdf) as doc:
@@ -265,6 +273,10 @@ def build(pdf: Path) -> dict:
                         if norm(label):
                             unresolved.append(f"σελ{index} y={y0:.1f} « {label[:40]} »")
                         continue
+                    # Keep the provider's wording even when the coordinate is
+                    # already mapped: the label is what the agent reads.
+                    labels.setdefault(key, clean_label(label))
+
                     if key in fields:
                         continue
 
@@ -279,7 +291,7 @@ def build(pdf: Path) -> dict:
                     fields[key] = entry
 
     return {"page_w": round(page_w), "page_h": round(page_h),
-            "fields": fields, "_unresolved": unresolved}
+            "fields": fields, "labels": labels, "_unresolved": unresolved}
 
 
 def merge(existing: dict, proposed: dict, overwrite: bool) -> tuple[dict, int, int]:
@@ -297,6 +309,11 @@ def merge(existing: dict, proposed: dict, overwrite: bool) -> tuple[dict, int, i
 
     out = dict(existing)
     out["fields"] = merged
+
+    # The provider's own wording for each field, so the CRM form can ask for
+    # "Κ.Α.Δ." on an NRG application and "ΚΑΔ Επιχείρησης" on a Protergia one.
+    out["labels"] = {**proposed.get("labels", {}), **existing.get("labels", {})}
+
     return out, added, changed
 
 
@@ -335,10 +352,13 @@ def main() -> int:
         for line in proposed["_unresolved"][:12]:
             print(f"    ? {line}")
 
-        if args.write and (added or changed):
+        # Labels change even when no coordinate does, so compare the whole file
+        # rather than trusting the counters.
+        if args.write and merged != existing:
             target.write_text(json.dumps(merged, ensure_ascii=False, indent=1),
                               encoding="utf-8")
-            print(f"    γράφτηκε {target.name} ({len(merged['fields'])} πεδία)")
+            print(f"    γράφτηκε {target.name} "
+                  f"({len(merged['fields'])} πεδία, {len(merged.get('labels', {}))} ετικέτες)")
 
     return 0
 

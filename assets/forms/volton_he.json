@@ -188,5 +188,18 @@
   "y": 212.0,
   "w": 42,
   "h": 0
+ },
+ "labels": {
+  "cat_atomiki": "ΕΤΑΙΡΕΙΑ ΙΔΙΩΤΗΣ ΑΤΟΜΙΚΗ ΕΠΙΧΕΙΡΗΣΗ",
+  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
+  "afm": "Α.Φ.Μ.",
+  "doy": "Δ.Ο.Υ.",
+  "tilefono": "ΤΗΛΕΦΩΝΟ",
+  "kinito": "ΚΙΝΗΤΟ",
+  "email": "EMAIL",
+  "contact_onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
+  "contact_afm": "Α.Φ.Μ.",
+  "poso_eggiisis": "ΕΓΓΥΗΣΗΣ",
+  "kad": "Κ.Α.Δ."
  }
 }

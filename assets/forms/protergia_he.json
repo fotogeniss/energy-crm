@@ -194,5 +194,24 @@
    "w": 42,
    "h": 0
   }
- ]
+ ],
+ "labels": {
+  "onomateponymo": "Ονοματεπώνυμο",
+  "odos": "Διεύθυνση",
+  "tk": "Τ.Κ.",
+  "poli": "Πόλη",
+  "email": "E-Mail",
+  "adt": "ΑΔΤ (ή Αρ. Διαβ.)",
+  "afm": "Α.Φ.Μ.",
+  "epaggelma": "Επάγγελμα",
+  "tilefono": "Τηλ. οικίας",
+  "ar_paroxis": "ΑΡΙΘΜΟΣ ΠΑΡΟΧΗΣ",
+  "odos_paroxis": "ΔΙΕΥΘΥΝΣΗ ΠΑΡΟΧΗΣ",
+  "cat_oikiaki": "Οικιακή",
+  "teleftaia_endeixi_imeras": "ΤΕΛΕΥΤΑΙΑ ΕΝΔΕΙΞΗ ΜΕΤΡΗΤΗ",
+  "synergatis": "Ον/μο συνεργάτη",
+  "ipistamenos_promitheftis": "ΥΦΙΣΤΑΜΕΝΟΣ ΠΡΟΜΗΘΕΥΤΗΣ",
+  "hkasp": "ΗΚΑΣΠ",
+  "imerominia": "ΗΜΕΡΟΜΗΝΊΑ ΥΠΟΒΟΛΉΣ ΑΊΤΗΣΗΣ"
+ }
 }

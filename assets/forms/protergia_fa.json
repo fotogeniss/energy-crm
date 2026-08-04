@@ -126,5 +126,29 @@
   "y": 298.0,
   "w": 46,
   "h": 0
+ },
+ "labels": {
+  "onomateponymo": "Ονοματεπώνυμο",
+  "odos": "Διεύθυνση",
+  "adt": "ΑΔΤ (ή αρ. Διαβ.)",
+  "poli": "Πόλη",
+  "tk": "Τ.Κ.",
+  "afm": "Α.Φ.Μ.",
+  "doy": "Δ.Ο.Υ.",
+  "tilefono": "Τηλ. Οικίας",
+  "contact_onomateponymo": "Ονοματεπώνυμο",
+  "contact_tilefono": "Τηλέφωνο",
+  "contact_kinito": "Κινητό",
+  "contact_email": "E-mail",
+  "odos_paroxis": "Διεύθυνση ακινήτου",
+  "poli_paroxis": "Πόλη",
+  "teleftaia_endeixi_imeras": "Τελευταία ένδειξη μετρητή (m3)",
+  "poso_eggiisis": "Ποσό εγγύησης (€)",
+  "epaggelma": "Επάγγελμα",
+  "email": "E-mail",
+  "own_idioktitis": "Ιδιοκτήτης εγκατάστασης Ενοικιαστής εγκατάστασης",
+  "pagia_entoli": "Πάγια εντολή εξόφλησης",
+  "hkasp": "ΗΚΑΣΠ",
+  "ar_paroxis": "Αριθμός παροχής"
  }
 }
