@@ -8,6 +8,7 @@
          failOnWarning="true"
          failOnNotice="true"
          failOnDeprecation="true"
+         failOnPhpunitDeprecation="true"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutCoverageMetadata="false">
 

@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# Quality gate. Runs before every commit.
+#
+# Enable once per clone:
+#   git config core.hooksPath .githooks
+#
+# The hook lives in the repository rather than in .git/hooks so that it is
+# versioned and every clone gets the same gate. Deliberate bypass:
+#   git commit --no-verify
+#
+
+# Only PHP-ish changes are worth the four seconds.
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+
+if ! printf '%s\n' "$staged" | grep -qE '\.(php|xml|dist|json|neon)$'; then
+    exit 0
+fi
+
+if [ ! -x vendor/bin/phpcs ] && [ ! -f vendor/bin/phpcs ]; then
+    printf 'pre-commit: λείπει το vendor/ — τρέξε composer install\n' >&2
+    exit 1
+fi
+
+printf 'pre-commit: composer check\n'
+
+if ! composer check; then
+    printf '\n' >&2
+    printf 'pre-commit: το composer check απέτυχε, το commit ακυρώθηκε.\n' >&2
+    printf 'Διόρθωσε τα παραπάνω ή, αν ξέρεις τι κάνεις: git commit --no-verify\n' >&2
+    exit 1
+fi
+
+exit 0

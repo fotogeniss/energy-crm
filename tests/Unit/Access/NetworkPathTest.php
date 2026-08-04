@@ -10,6 +10,7 @@ namespace EnergyCRM\Tests\Unit\Access;
 
 use EnergyCRM\Access\NetworkPath;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class NetworkPathTest extends TestCase
@@ -67,9 +68,7 @@ final class NetworkPathTest extends TestCase
         self::assertFalse(NetworkPath::isValid('/1/7/1/'));
     }
 
-    /**
-     * @dataProvider malformedPaths
-     */
+    #[DataProvider('malformedPaths')]
     public function testMalformedPathsAreRejected(string $path): void
     {
         self::assertFalse(NetworkPath::isValid($path));
