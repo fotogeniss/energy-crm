@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Infrastructure;
 
-use EnergyCRM\Persistence\Tables;
+use EnergyCRM\Persistence\ContractRepository;
 
 final class Retention
 {
@@ -28,6 +28,10 @@ final class Retention
 
     /** Days an extraction payload is kept before being cleared. */
     private const DEFAULT_DAYS = 90;
+
+    public function __construct(private readonly ContractRepository $contracts)
+    {
+    }
 
     public function register(): void
     {
@@ -61,28 +65,6 @@ final class Retention
      */
     public function sweep(): int
     {
-        global $wpdb;
-
-        $days = $this->days();
-
-        if ($days === 0) {
-            return 0;
-        }
-
-        $table = Tables::name(Tables::CONTRACTS);
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        $cleared = $wpdb->query(
-            $wpdb->prepare(
-                "UPDATE {$table}
-                 SET extracted_json = NULL
-                 WHERE extracted_json IS NOT NULL
-                   AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
-                $days
-            )
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        return $cleared === false ? 0 : (int) $cleared;
+        return $this->contracts->clearExtractionPayloads($this->days());
     }
 }

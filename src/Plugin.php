@@ -84,7 +84,7 @@ final class Plugin
         Roles::maybeSync();
 
         (new NetworkSync(Services::network()))->register();
-        (new Retention())->register();
+        (new Retention(Services::contracts()))->register();
 
         LegacyLoader::boot();
     }

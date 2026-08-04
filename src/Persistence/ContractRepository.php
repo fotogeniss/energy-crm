@@ -211,6 +211,39 @@ final class ContractRepository
     }
 
     /**
+     * Clear extraction payloads older than the retention period.
+     *
+     * Deliberately unscoped: this is a scheduled maintenance sweep with no
+     * actor behind it, and it is meant to touch every row that qualifies. It
+     * is the one method here that does not take a UserScope, which is safe
+     * because it only ever nulls a column and never reads or moves data.
+     *
+     * @return int Number of contracts cleared.
+     */
+    public function clearExtractionPayloads(int $olderThanDays): int
+    {
+        global $wpdb;
+
+        if ($olderThanDays <= 0) {
+            return 0;
+        }
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $cleared = $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$this->table}
+                 SET extracted_json = NULL
+                 WHERE extracted_json IS NOT NULL
+                   AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
+                $olderThanDays
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $cleared === false ? 0 : (int) $cleared;
+    }
+
+    /**
      * SQL fragment restricting rows to the scope, plus its bound values.
      *
      * Administrators get an empty fragment; everyone else gets an IN list that
