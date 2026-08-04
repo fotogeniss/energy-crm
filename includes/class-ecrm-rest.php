@@ -167,11 +167,7 @@ class ECRM_REST {
 
 		// GET /contracts/{id} -> EnergyCRM\Http\ContractsReadController::show
 
-		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/status', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'change_status' ],
-			'permission_callback' => self::needs( Capability::CHANGE_STATUS ),
-		] );
+		// POST /contracts/{id}/status -> EnergyCRM\Http\ContractStatusController
 
 		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/pdf', [
 			'methods'             => 'GET',
@@ -191,11 +187,7 @@ class ECRM_REST {
 			'permission_callback' => $auth,
 		] );
 
-		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)', [
-			'methods'             => 'DELETE',
-			'callback'            => [ __CLASS__, 'delete_contract' ],
-			'permission_callback' => self::needs( Capability::DELETE_CONTRACT ),
-		] );
+		// DELETE /contracts/{id} -> EnergyCRM\Http\ContractStatusController
 
 		register_rest_route( self::NS, '/contracts/export', [
 			'methods'             => 'GET',

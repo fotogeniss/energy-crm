@@ -176,6 +176,31 @@ final class ContractRepository
         return (int) $wpdb->insert_id;
     }
 
+    /**
+     * Delete a contract the actor may reach.
+     *
+     * Documents must be purged first: the row is the only pointer to the file
+     * on disk, and the foreign key will take the row away without touching the
+     * bytes. See FileRepository::purgeForContracts().
+     */
+    public function delete(int $contractId, UserScope $scope): bool
+    {
+        global $wpdb;
+
+        [$clause, $params] = $this->scopeClause($scope);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $affected = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM %i WHERE id = %d{$clause}",
+                [$this->table, $contractId, ...$params]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $affected !== false && $affected > 0;
+    }
+
     /** Owner of a contract, or null when it is outside the scope. */
     public function ownerId(int $contractId, UserScope $scope): ?int
     {
