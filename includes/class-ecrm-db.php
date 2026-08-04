@@ -275,7 +275,6 @@ class ECRM_DB {
 			KEY user_unread (user_id, read_at)
 		) {$charset};" );
 
-		self::ensure_columns();
 	}
 
 	/**
@@ -366,33 +365,6 @@ class ECRM_DB {
 	/** Statuses that count as a payable/successful contract for commissions. */
 	public static function payable_statuses(): array {
 		return [ 'routed', 'active', 'resolved' ];
-	}
-
-	/** Guarantee columns that dbDelta may miss (inline-comment quirks). Runs after table create. */
-	public static function ensure_columns(): void {
-		global $wpdb;
-		$ct = self::table( 'contracts' );
-		$has = $wpdb->get_results( "SHOW COLUMNS FROM {$ct} LIKE 'extra_json'" );
-		if ( empty( $has ) ) {
-			$wpdb->query( "ALTER TABLE {$ct} ADD COLUMN extra_json LONGTEXT NULL" );
-		}
-		foreach ( [ 'start_date' => 'DATE NULL', 'term_months' => 'INT NULL', 'end_date' => 'DATE NULL', 'payout_id' => 'BIGINT UNSIGNED NULL', 'consent_at' => 'DATETIME NULL', 'consent_ip' => 'VARCHAR(64) NULL', 'signed_at' => 'DATETIME NULL', 'signed_ip' => 'VARCHAR(64) NULL' ] as $col => $def ) {
-			$c = $wpdb->get_results( "SHOW COLUMNS FROM {$ct} LIKE '{$col}'" );
-			if ( empty( $c ) ) { $wpdb->query( "ALTER TABLE {$ct} ADD COLUMN {$col} {$def}" ); }
-		}
-		$pr = self::table( 'providers' );
-		$hasl = $wpdb->get_results( "SHOW COLUMNS FROM {$pr} LIKE 'logo_url'" );
-		if ( empty( $hasl ) ) {
-			$wpdb->query( "ALTER TABLE {$pr} ADD COLUMN logo_url VARCHAR(300) NULL" );
-		}
-		$pg = self::table( 'programs' );
-		foreach ( [ 'price_kwh' => 'DECIMAL(8,5) NULL', 'fixed_charge' => 'DECIMAL(8,2) NULL' ] as $col => $def ) {
-			$c = $wpdb->get_results( "SHOW COLUMNS FROM {$pg} LIKE '{$col}'" );
-			if ( empty( $c ) ) { $wpdb->query( "ALTER TABLE {$pg} ADD COLUMN {$col} {$def}" ); }
-		}
-		$flt = self::table( 'files' );
-		$cf  = $wpdb->get_results( "SHOW COLUMNS FROM {$flt} LIKE 'protected'" );
-		if ( empty( $cf ) ) { $wpdb->query( "ALTER TABLE {$flt} ADD COLUMN protected TINYINT NOT NULL DEFAULT 0" ); }
 	}
 
 	/** Greek label for an energy/service type. */

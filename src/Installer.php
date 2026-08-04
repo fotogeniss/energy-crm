@@ -20,6 +20,8 @@ use ECRM_Notifications;
 use ECRM_Providers;
 use ECRM_REST;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
+use EnergyCRM\Persistence\Schema\MigrationList;
+use EnergyCRM\Persistence\Schema\MigrationRunner;
 
 final class Installer
 {
@@ -36,6 +38,10 @@ final class Installer
         ECRM_Providers::seed();
         ECRM_Providers::backfill();
         Services::network()->rebuildAll();
+
+        // dbDelta has just built the tables in their final shape, so replaying
+        // historical migrations would be noise. Record them as done instead.
+        self::migrations()->markAllApplied();
 
         update_option(self::VERSION_OPTION, ECRM_DB::DB_VERSION);
 
@@ -61,6 +67,11 @@ final class Installer
     {
         LegacyLoader::loadFiles();
 
+        // Migrations are cheap to check and independent of the schema version,
+        // so a failed one retries on the next request instead of being stranded
+        // behind a version number that already moved on.
+        self::migrations()->run();
+
         if (get_option(self::VERSION_OPTION) === ECRM_DB::DB_VERSION) {
             return;
         }
@@ -71,5 +82,10 @@ final class Installer
         Services::network()->rebuildAll();
 
         update_option(self::VERSION_OPTION, ECRM_DB::DB_VERSION);
+    }
+
+    private static function migrations(): MigrationRunner
+    {
+        return new MigrationRunner(MigrationList::all());
     }
 }
