@@ -23,6 +23,7 @@ use EnergyCRM\Access\WordPressScopeResolver;
 use EnergyCRM\Infrastructure\SecretStore;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
+use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\TaskRepository;
@@ -43,6 +44,8 @@ final class Services
 
     private static ?TaskRepository $tasks = null;
 
+    private static ?EventRepository $events = null;
+
     private function __construct()
     {
     }
@@ -60,6 +63,11 @@ final class Services
     public static function files(): FileRepository
     {
         return self::$files ??= new FileRepository(\ECRM_Files::dir());
+    }
+
+    public static function events(): EventRepository
+    {
+        return self::$events ??= new EventRepository();
     }
 
     public static function tasks(): TaskRepository
@@ -106,5 +114,6 @@ final class Services
         self::$files         = null;
         self::$secrets       = null;
         self::$tasks         = null;
+        self::$events        = null;
     }
 }

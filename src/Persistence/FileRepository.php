@@ -40,6 +40,33 @@ final class FileRepository
     }
 
     /**
+     * Documents attached to a contract, for the detail view.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function forContract(int $contractId): array
+    {
+        global $wpdb;
+
+        if ($contractId <= 0) {
+            return [];
+        }
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT id, doc_kind, filename, mime, attachment_id, path, protected
+                 FROM %i WHERE contract_id = %d ORDER BY id',
+                $this->table,
+                $contractId
+            ),
+            ARRAY_A
+        );
+
+        return $rows;
+    }
+
+    /**
      * Remove every document belonging to the given contracts, bytes included.
      *
      * @param list<int> $contractIds

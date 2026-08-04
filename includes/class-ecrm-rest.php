@@ -145,8 +145,10 @@ class ECRM_REST {
 		] );
 		register_rest_route( self::NS, '/extract',    [ 'methods' => 'POST', 'callback' => [ __CLASS__, 'extract' ],       'permission_callback' => $auth ] );
 		register_rest_route( self::NS, '/dashboard',  [ 'methods' => 'GET',  'callback' => [ __CLASS__, 'dashboard' ],     'permission_callback' => $auth ] );
+		// Το GET μετακινήθηκε στο EnergyCRM\Http\ContractsReadController.
+		// Εδώ μένει μόνο η εγγραφή, μέχρι να μεταφερθεί κι αυτή.
 		register_rest_route( self::NS, '/contracts',  [
-			'methods'             => [ 'GET', 'POST' ],
+			'methods'             => [ 'POST' ],
 			'callback'            => [ __CLASS__, 'contracts_router' ],
 			'permission_callback' => $auth,
 		] );
@@ -163,11 +165,7 @@ class ECRM_REST {
 			'permission_callback' => $auth,
 		] );
 
-		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'get_contract' ],
-			'permission_callback' => $auth,
-		] );
+		// GET /contracts/{id} -> EnergyCRM\Http\ContractsReadController::show
 
 		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/status', [
 			'methods'             => 'POST',

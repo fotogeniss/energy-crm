@@ -211,6 +211,136 @@ final class ContractRepository
     }
 
     /**
+     * The contracts list, with the joined names the UI shows.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function search(UserScope $scope, string $status = '', string $term = '', int $limit = 200): array
+    {
+        global $wpdb;
+
+        [$clause, $scopeParams] = $this->scopeClause($scope, 'c');
+
+        $params     = [
+            $this->table,
+            Tables::name(Tables::CUSTOMERS),
+            Tables::name(Tables::PROVIDERS),
+            Tables::name(Tables::PROGRAMS),
+            ...$scopeParams,
+        ];
+        $conditions = ['1 = 1' . $clause];
+
+        if ($status !== '') {
+            $conditions[] = 'c.status = %s';
+            $params[]     = $status;
+        }
+
+        if ($term !== '') {
+            $like         = '%' . $wpdb->esc_like($term) . '%';
+            $conditions[] = '( cu.first_name LIKE %s OR cu.last_name LIKE %s OR cu.company_name LIKE %s'
+                . ' OR cu.afm LIKE %s OR c.supply_number LIKE %s OR c.code LIKE %s )';
+            $params       = [...$params, $like, $like, $like, $like, $like, $like];
+        }
+
+        $where = implode(' AND ', $conditions);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.id, c.code, c.status, c.energy_type, c.category, c.invoice_code,
+                        c.supply_number, c.created_at, c.updated_at, c.partner_user_id,
+                        p.name AS provider_name, p.slug AS provider_slug,
+                        p.logo_url AS provider_logo, g.name AS program_name,
+                        cu.first_name, cu.last_name, cu.company_name, cu.afm, cu.phone
+                 FROM %i c
+                 LEFT JOIN %i cu ON cu.id = c.customer_id
+                 LEFT JOIN %i p  ON p.id  = c.provider_id
+                 LEFT JOIN %i g  ON g.id  = c.program_id
+                 WHERE {$where}
+                 ORDER BY c.updated_at DESC
+                 LIMIT " . max(1, $limit),
+                $params
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
+     * How many contracts sit in each status, for the filter tabs.
+     *
+     * @return array<string, int>
+     */
+    public function countsByStatus(UserScope $scope): array
+    {
+        global $wpdb;
+
+        [$clause, $params] = $this->scopeClause($scope);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT status, COUNT(*) AS total FROM %i WHERE 1 = 1{$clause} GROUP BY status",
+                [$this->table, ...$params]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        $counts = [];
+
+        foreach ($rows as $row) {
+            $counts[(string) $row['status']] = (int) $row['total'];
+        }
+
+        return $counts;
+    }
+
+    /**
+     * A single contract joined with everything the detail view renders.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findDetailed(int $contractId, UserScope $scope): ?array
+    {
+        global $wpdb;
+
+        [$clause, $params] = $this->scopeClause($scope, 'c');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var array<string, mixed>|null $row */
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT c.*, p.name AS provider_name, g.name AS program_name,
+                        cu.first_name, cu.last_name, cu.father_name, cu.company_name,
+                        cu.afm, cu.doy, cu.adt, cu.birth_date, cu.region, cu.city,
+                        cu.street, cu.street_no, cu.postal_code, cu.phone, cu.mobile, cu.email
+                 FROM %i c
+                 LEFT JOIN %i cu ON cu.id = c.customer_id
+                 LEFT JOIN %i p  ON p.id  = c.provider_id
+                 LEFT JOIN %i g  ON g.id  = c.program_id
+                 WHERE c.id = %d{$clause}",
+                [
+                    $this->table,
+                    Tables::name(Tables::CUSTOMERS),
+                    Tables::name(Tables::PROVIDERS),
+                    Tables::name(Tables::PROGRAMS),
+                    $contractId,
+                    ...$params,
+                ]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $row ?: null;
+    }
+
+    /**
      * Contracts whose term ends within the given window.
      *
      * Drafts and cancellations are excluded: neither is up for renewal.
