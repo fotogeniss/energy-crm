@@ -45,7 +45,7 @@ final class NetworkPath
         self::assertUserId($userId);
 
         if (! self::isValid($parentPath)) {
-            throw new InvalidArgumentException('Μη έγκυρο parent path: ' . self::sanitise($parentPath));
+            throw new InvalidArgumentException('Μη έγκυρο parent path.');
         }
 
         return $parentPath . $userId . self::SEPARATOR;
@@ -60,7 +60,7 @@ final class NetworkPath
     public static function subtreePattern(string $path): string
     {
         if (! self::isValid($path)) {
-            throw new InvalidArgumentException('Μη έγκυρο path: ' . self::sanitise($path));
+            throw new InvalidArgumentException('Μη έγκυρο path.');
         }
 
         return $path . '%';
@@ -120,10 +120,5 @@ final class NetworkPath
         if ($userId <= 0) {
             throw new InvalidArgumentException('Το path χρειάζεται θετικό user id.');
         }
-    }
-
-    private static function sanitise(string $value): string
-    {
-        return (string) preg_replace('#[^0-9/]#', '', $value);
     }
 }
