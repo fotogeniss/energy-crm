@@ -77,7 +77,12 @@ final class NetworkPath
             return [];
         }
 
-        return array_map('intval', array_values(array_filter(explode(self::SEPARATOR, $path), 'strlen')));
+        $segments = array_filter(
+            explode(self::SEPARATOR, $path),
+            static fn (string $segment): bool => $segment !== ''
+        );
+
+        return array_map('intval', array_values($segments));
     }
 
     /** The id the path belongs to, or 0 when the path is unusable. */
