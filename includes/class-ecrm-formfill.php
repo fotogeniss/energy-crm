@@ -52,6 +52,17 @@ class ECRM_FormFill {
 		return '';
 	}
 
+	/**
+	 * Does the supply carry a night register?
+	 *
+	 * Read from the tariff code: Γ1 is a single register, Γ1Ν adds the night
+	 * one. Accepts both the Greek Ν and the Latin N, because both get typed.
+	 */
+	private static function has_night( array $c ): bool {
+		$code = strtoupper( trim( (string) ( $c['invoice_code'] ?? '' ) ) );
+		return $code !== '' && ( substr( $code, -1 ) === 'Ν' || substr( $code, -1 ) === 'N' );
+	}
+
 	/** Lowercase + strip Greek/Latin accents for robust provider matching. */
 	private static function norm( string $s ): string {
 		$s = function_exists( 'mb_strtolower' ) ? mb_strtolower( $s, 'UTF-8' ) : strtolower( $s );
@@ -171,6 +182,12 @@ class ECRM_FormFill {
 			'cat_atomiki'    => ( $ct === 'sole_prop' ? 'X' : '' ),
 			'cat_etaireia'   => ( $ct === 'company' ? 'X' : '' ),
 			// Supply category: home vs business (derived from customer type).
+			// Μέτρηση: παράγεται από τον κωδικό τιμολογίου (Γ1 απλή, Γ1Ν με
+			// νυχτερινό). Αν η εταιρεία το ορίζει αλλιώς, αυτές οι δύο γραμμές
+			// είναι το μόνο σημείο που αλλάζει.
+			'metr_imerisia'      => ( self::has_night( $c ) ? '' : 'X' ),
+			'metr_imer_nyxt'     => ( self::has_night( $c ) ? 'X' : '' ),
+
 			'cat_oikiaki'        => ( $ct === 'individual' ? 'X' : '' ),
 			'cat_epaggelmatiki'  => ( in_array( $ct, [ 'company', 'sole_prop' ], true ) ? 'X' : '' ),
 			// Activation / connection type.

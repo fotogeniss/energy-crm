@@ -155,6 +155,23 @@
    "x": 163.0,
    "y": 254.0,
    "check": true
+  },
+  "teleftaia_endeixi_imeras": {
+   "page": 1,
+   "x": 13.0,
+   "y": 263.0
+  },
+  "metr_imerisia": {
+   "page": 1,
+   "x": 56.2,
+   "y": 240.5,
+   "check": true
+  },
+  "metr_imer_nyxt": {
+   "page": 1,
+   "x": 96.1,
+   "y": 240.5,
+   "check": true
   }
  },
  "sigs": [
