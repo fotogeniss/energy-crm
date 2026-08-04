@@ -4,7 +4,7 @@
  * Plugin Name:       Energy CRM
  * Plugin URI:        https://example.gr/energy-crm
  * Description:       CRM για ενεργειακούς συνεργάτες: αιτήσεις και συμβάσεις παρόχων, με AI εξαγωγή από έγγραφα.
- * Version:           0.67.0
+ * Version:           0.68.0
  * Author:            Konstantinos
  * Text Domain:       energy-crm
  * Domain Path:       /languages
@@ -24,7 +24,7 @@ if (! defined('ABSPATH')) {
  * Legacy constants. Still consumed by the ECRM_* classes; each one disappears
  * as its consumers migrate to EnergyCRM\Plugin. Do not use in new code.
  */
-define('ECRM_VERSION', '0.67.0');
+define('ECRM_VERSION', '0.68.0');
 define('ECRM_FILE', __FILE__);
 define('ECRM_DIR', plugin_dir_path(__FILE__));
 define('ECRM_URL', plugin_dir_url(__FILE__));

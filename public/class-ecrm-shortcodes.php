@@ -195,8 +195,11 @@ class ECRM_Shortcodes {
 				<!-- εταιρεία -->
 				<div class="ecrm-grid" data-when="company,sole_prop">
 					<?php $ecrm_field( 'company_name', 'Επωνυμία Εταιρείας' ); ?>
-					<?php $ecrm_field( 'company_type', 'Τύπος Εταιρείας', 'text', true ); ?>
-					<?php $ecrm_field( 'activity', 'Δραστηριότητα', 'text', true ); ?>
+					<?php $ecrm_field( 'company_type', 'Νομική Μορφή', 'text', true, 'Α.Ε. / Ε.Π.Ε. / Ο.Ε.' ); ?>
+					<?php $ecrm_field( 'activity', 'Αντικείμενο Δραστηριότητας', 'text', true ); ?>
+					<?php // Ζητούνται ρητά στα επαγγελματικά έντυπα NRG και Protergia. ?>
+					<?php $ecrm_field( 'kad', 'Κ.Α.Δ.', 'text', true ); ?>
+					<?php $ecrm_field( 'gemi', 'Αρ. Γ.Ε.ΜΗ.', 'text', true ); ?>
 				</div>
 
 				<div class="ecrm-subhead">Διεύθυνση</div>
@@ -266,6 +269,13 @@ class ECRM_Shortcodes {
 					</label>
 					<?php $ecrm_field( 'agreed_power', 'Συμφωνημένη Ισχύς (kVA)', 'text', true ); ?>
 					<?php $ecrm_field( 'day_indication', 'Ένδειξη Ημέρας', 'text', true ); ?>
+					<label class="ecrm-field" data-for="meter_position">
+						<span class="ecrm-field__label">Θέση Μετρητή</span>
+						<select name="meter_position" class="ecrm-input" data-extra="1">
+							<option value="">—</option><option value="inside">Εσωτερικός</option><option value="outside">Εξωτερικός</option>
+						</select>
+					</label>
+					<?php $ecrm_field( 'eidiki_katigoria', 'Ειδική Κατηγορία', 'text', true, 'Ευάλωτος / Κ.Ο.Τ.' ); ?>
 					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
 					<?php $ecrm_field( 'promotion', 'Promotion', 'text', true ); ?>
 				</div>
@@ -295,6 +305,10 @@ class ECRM_Shortcodes {
 							<option value="">—</option><option value="email">Email</option><option value="post">Ταχυδρομικώς</option><option value="both">Και τα δύο</option>
 						</select>
 					</label>
+					<?php // Το IBAN ζητείται μόνο για πάγια εντολή· τα έντυπα το τυπώνουν δίπλα στο σχετικό κουτί. ?>
+					<?php $ecrm_field( 'iban', 'IBAN (πάγια εντολή)', 'text', true, 'GR..' ); ?>
+					<?php $ecrm_field( 'anotato_orio', 'Ανώτατο Όριο Λογαριασμού (€)', 'text', true ); ?>
+					<?php $ecrm_field( 'ar_koinoxristou', 'Αρ. Κοινόχρηστου Μετρητή', 'text', true ); ?>
 				</div>
 				<div class="ecrm-subhead">Διάρκεια Σύμβασης</div>
 				<div class="ecrm-grid">

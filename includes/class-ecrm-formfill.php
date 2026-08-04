@@ -164,23 +164,26 @@ class ECRM_FormFill {
 
 			// Fields the provider forms ask for that the CRM keeps in the
 			// contract's extra bag rather than in a column of its own.
+			// Fields the provider forms ask for. Where the CRM form already had
+			// a field under a different name, that one is reused rather than
+			// duplicated — company_type, activity, capacity_role and
+			// payment_method all predate this.
 			'kad'                => $xg( 'kad' ),
 			'gemi'               => $xg( 'gemi' ),
-			'nomiki_morfi'       => $xg( 'nomiki_morfi' ),
-			'antikeimeno'        => $xg( 'antikeimeno' ),
+			'nomiki_morfi'       => $xg( 'company_type' ),
+			'antikeimeno'        => $xg( 'activity' ),
 			'eidiki_katigoria'   => $xg( 'eidiki_katigoria' ),
 			'iban'               => $xg( 'iban' ),
 			'anotato_orio'       => $xg( 'anotato_orio' ),
-			'isxis_paroxis'      => $xg( 'isxis_kva' ),
 			'ar_koinoxristou'    => $xg( 'ar_koinoxristou' ),
 
-			// Ownership and meter type: single-choice, so each option is its
-			// own checkbox key and only the selected one carries an X.
-			'own_idioktitis'     => ( $xg( 'idioktisia' ) === 'owner'   ? 'X' : '' ),
-			'own_misthotis'      => ( $xg( 'idioktisia' ) === 'tenant'  ? 'X' : '' ),
-			'metr_esoterikos'    => ( $xg( 'eidos_metriti' ) === 'inside'  ? 'X' : '' ),
-			'metr_exoterikos'    => ( $xg( 'eidos_metriti' ) === 'outside' ? 'X' : '' ),
-			'pagia_entoli'       => ( $xg( 'iban' ) !== '' ? 'X' : '' ),
+			// Single-choice groups: every option is its own checkbox key, and
+			// only the selected one carries an X.
+			'own_idioktitis'     => ( $xg( 'capacity_role' ) === 'owner'  ? 'X' : '' ),
+			'own_misthotis'      => ( $xg( 'capacity_role' ) === 'tenant' ? 'X' : '' ),
+			'metr_esoterikos'    => ( $xg( 'meter_position' ) === 'inside'  ? 'X' : '' ),
+			'metr_exoterikos'    => ( $xg( 'meter_position' ) === 'outside' ? 'X' : '' ),
+			'pagia_entoli'       => ( $xg( 'payment_method' ) === 'standing_order' ? 'X' : '' ),
 
 			// Communication contact (Υπεύθυνος Επικοινωνίας).
 			'contact_onomateponymo' => $contact_name,
