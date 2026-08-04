@@ -287,6 +287,15 @@ class ECRM_Shortcodes {
 							<option value="">—</option><option value="inside">Εσωτερικός</option><option value="outside">Εξωτερικός</option>
 						</select>
 					</label>
+					<label class="ecrm-field" data-for="meter_reading_type">
+						<span class="ecrm-field__label">Μέτρηση</span>
+						<select name="meter_reading_type" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="day">Ημερήσια</option>
+							<option value="day_night">Ημερήσια &amp; Νυχτερινή</option>
+							<option value="telemetry">Τηλεμετρούμενη</option>
+						</select>
+					</label>
 					<?php $ecrm_field( 'eidiki_katigoria', 'Ειδική Κατηγορία', 'text', true, 'Ευάλωτος / Κ.Ο.Τ.' ); ?>
 					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
 					<?php $ecrm_field( 'promotion', 'Promotion', 'text', true ); ?>

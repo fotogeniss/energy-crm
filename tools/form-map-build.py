@@ -223,6 +223,34 @@ def stitch_above(words, y: float, x_from: float, x_to: float, label: str) -> str
     return (" ".join(w[4] for w in above) + " " + label).strip()
 
 
+def tick_boxes(page) -> list[tuple[float, float, float, float]]:
+    """
+    The small ovals and squares a tick goes into, in mm.
+
+    A highlight on a checkbox covers the *label* — "Ημερήσια" — while the box
+    itself sits a couple of centimetres to the right. Stamping the X at the
+    highlight prints it across the word instead of inside the box.
+    """
+    found = []
+    for drawing in page.get_drawings():
+        r = drawing["rect"]
+        w, h = (r.x1 - r.x0) * MM, (r.y1 - r.y0) * MM
+        if 2 <= w <= 14 and 1.5 <= h <= 7 and w >= h:
+            found.append((r.x0 * MM, r.y0 * MM, r.x1 * MM, r.y1 * MM))
+    return found
+
+
+def box_after(boxes, label_end: float, y: float) -> tuple[float, float] | None:
+    """Nearest tick box to the right of a label on the same line."""
+    same_line = [b for b in boxes
+                 if abs((b[1] + b[3]) / 2 - y) < 4 and b[0] >= label_end - 1]
+    if not same_line:
+        return None
+
+    box = min(same_line, key=lambda b: b[0])
+    return ((box[0] + box[2]) / 2, box[1])
+
+
 def clean_label(text: str) -> str:
     """The provider's own wording, tidied but not reworded."""
     text = re.sub(r"[.…_]{2,}", " ", text)
@@ -246,6 +274,7 @@ def build(pdf: Path) -> dict:
 
             words = page.get_text("words")
             headers = sections_on(page)
+            boxes = tick_boxes(page)
 
             for r in annots:
                 x0, y0, x1 = r.x0 * MM, r.y0 * MM, r.x1 * MM
@@ -282,7 +311,13 @@ def build(pdf: Path) -> dict:
 
                     entry = {"page": index}
                     if is_check:
-                        entry |= {"x": round(x0 + 1.0, 1), "y": round(y0, 1), "check": True}
+                        target = box_after(boxes, ends, y0)
+                        if target is not None:
+                            cx, top = target
+                            entry |= {"x": round(cx - 1.0, 1), "y": round(top - 0.7, 1),
+                                      "check": True}
+                        else:
+                            entry |= {"x": round(x0 + 1.0, 1), "y": round(y0, 1), "check": True}
                     elif inline:
                         entry |= {"x": round(ends + GAP_AFTER_LABEL, 1), "y": round(y0, 1)}
                     else:

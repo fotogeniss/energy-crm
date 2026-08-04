@@ -41,7 +41,6 @@ final class ProviderFormFields
         'cat_epaggelmatiki', 'act_change', 'act_succession', 'act_reconnection',
         'act_renewal', 'act_new', 'act_program_change', 'act_any',
         'dur_aoristou', 'dur_6', 'dur_12', 'dur_18', 'dur_24', 'dur_36',
-        'metr_imerisia', 'metr_imer_nyxt',
     ];
 
     /**
@@ -69,6 +68,9 @@ final class ProviderFormFields
         'own_misthotis'            => ['capacity_role'],
         'metr_esoterikos'          => ['meter_position'],
         'metr_exoterikos'          => ['meter_position'],
+        'metr_imerisia'            => ['meter_reading_type'],
+        'metr_imer_nyxt'           => ['meter_reading_type'],
+        'metr_tilemetroumeni'      => ['meter_reading_type'],
         'pagia_entoli'             => ['payment_method'],
         'nomimos_ekprosopos'       => ['rep_first_name', 'rep_last_name'],
         'contact_onomateponymo'    => ['contact_first_name', 'contact_last_name'],

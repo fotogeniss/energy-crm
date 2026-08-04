@@ -63,6 +63,21 @@ class ECRM_FormFill {
 		return $code !== '' && ( substr( $code, -1 ) === 'Ν' || substr( $code, -1 ) === 'N' );
 	}
 
+	/**
+	 * Reading type: day | day_night | telemetry.
+	 *
+	 * @param callable $xg Reader for the contract's extra bag.
+	 */
+	private static function reading_type( array $c, callable $xg ): string {
+		$chosen = (string) $xg( 'meter_reading_type' );
+
+		if ( in_array( $chosen, [ 'day', 'day_night', 'telemetry' ], true ) ) {
+			return $chosen;
+		}
+
+		return self::has_night( $c ) ? 'day_night' : 'day';
+	}
+
 	/** Lowercase + strip Greek/Latin accents for robust provider matching. */
 	private static function norm( string $s ): string {
 		$s = function_exists( 'mb_strtolower' ) ? mb_strtolower( $s, 'UTF-8' ) : strtolower( $s );
@@ -205,11 +220,12 @@ class ECRM_FormFill {
 			'cat_atomiki'    => ( $ct === 'sole_prop' ? 'X' : '' ),
 			'cat_etaireia'   => ( $ct === 'company' ? 'X' : '' ),
 			// Supply category: home vs business (derived from customer type).
-			// Μέτρηση: παράγεται από τον κωδικό τιμολογίου (Γ1 απλή, Γ1Ν με
-			// νυχτερινό). Αν η εταιρεία το ορίζει αλλιώς, αυτές οι δύο γραμμές
-			// είναι το μόνο σημείο που αλλάζει.
-			'metr_imerisia'      => ( self::has_night( $c ) ? '' : 'X' ),
-			'metr_imer_nyxt'     => ( self::has_night( $c ) ? 'X' : '' ),
+			// Μέτρηση: επιλογή του συνεργάτη στη φόρμα. Όταν δεν έχει δηλωθεί,
+			// συμπεραίνεται από τον κωδικό τιμολογίου (Γ1 απλή, Γ1Ν με
+			// νυχτερινό) ώστε οι παλιές συμβάσεις να μη βγαίνουν κενές.
+			'metr_imerisia'        => ( self::reading_type( $c, $xg ) === 'day'       ? 'X' : '' ),
+			'metr_imer_nyxt'       => ( self::reading_type( $c, $xg ) === 'day_night' ? 'X' : '' ),
+			'metr_tilemetroumeni'  => ( self::reading_type( $c, $xg ) === 'telemetry' ? 'X' : '' ),
 
 			'cat_oikiaki'        => ( $ct === 'individual' ? 'X' : '' ),
 			'cat_epaggelmatiki'  => ( in_array( $ct, [ 'company', 'sole_prop' ], true ) ? 'X' : '' ),
