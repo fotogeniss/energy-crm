@@ -12,11 +12,19 @@
    "x": 136.8,
    "y": 94.5
   },
-  "email": {
-   "page": 1,
-   "x": 112.8,
-   "y": 99.1
-  },
+  "email": [
+   {
+    "page": 1,
+    "x": 112.8,
+    "y": 99.1
+   },
+   {
+    "page": 1,
+    "x": 164.8,
+    "y": 170.3,
+    "size": 7
+   }
+  ],
   "tilefono": {
    "page": 1,
    "x": 22.7,
@@ -133,6 +141,39 @@
    "page": 1,
    "x": 126.8,
    "y": 115.4
+  },
+  "odos_arithmos_apostolis": {
+   "page": 1,
+   "x": 23.2,
+   "y": 170.3
+  },
+  "tk_apostolis": {
+   "page": 1,
+   "x": 81.7,
+   "y": 170.3
+  },
+  "poli_apostolis": {
+   "page": 1,
+   "x": 104.8,
+   "y": 170.3
+  },
+  "act_new": {
+   "page": 1,
+   "x": 103.3,
+   "y": 255.7,
+   "check": true
+  },
+  "act_reconnection": {
+   "page": 1,
+   "x": 171.0,
+   "y": 255.7,
+   "check": true
+  },
+  "ypovoli_ilektronika": {
+   "page": 2,
+   "x": 130.3,
+   "y": 25.9,
+   "check": true
   }
  },
  "sig": {

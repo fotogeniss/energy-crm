@@ -183,6 +183,27 @@
    "x": 157.4,
    "y": 240.0,
    "check": true
+  },
+  "odos_arithmos_apostolis": {
+   "page": 1,
+   "x": 23.2,
+   "y": 163.4
+  },
+  "tk_apostolis": {
+   "page": 1,
+   "x": 109.6,
+   "y": 163.4
+  },
+  "poli_apostolis": {
+   "page": 1,
+   "x": 134.8,
+   "y": 163.4
+  },
+  "ypovoli_ilektronika": {
+   "page": 2,
+   "x": 130.3,
+   "y": 25.9,
+   "check": true
   }
  },
  "sigs": [

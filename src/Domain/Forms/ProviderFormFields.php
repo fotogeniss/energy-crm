@@ -49,6 +49,7 @@ final class ProviderFormFields
         'cat_epaggelmatiki', 'act_change', 'act_succession', 'act_reconnection',
         'act_renewal', 'act_new', 'act_program_change', 'act_any',
         'dur_aoristou', 'dur_6', 'dur_12', 'dur_18', 'dur_24', 'dur_36',
+        'ypovoli_ilektronika', 'ypovoli_taxydromika',
     ];
 
     /**

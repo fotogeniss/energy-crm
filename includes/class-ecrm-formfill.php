@@ -268,6 +268,13 @@ class ECRM_FormFill {
 			'dur_18'         => ( $tm === 18 ? 'X' : '' ),
 			'dur_24'         => ( $tm === 24 ? 'X' : '' ),
 			'dur_36'         => ( $tm === 36 ? 'X' : '' ),
+
+			// «Τρόπος υποβολής αίτησης: Ηλεκτρονικά / Ταχυδρομικά». Constant,
+			// not a field: the CRM produces the application as a PDF and it is
+			// submitted electronically. If that ever stops being true it needs a
+			// setting, not a blank box.
+			'ypovoli_ilektronika' => 'X',
+			'ypovoli_taxydromika' => '',
 		];
 	}
 

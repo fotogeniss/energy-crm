@@ -220,13 +220,28 @@ def covered(field: dict, page: int, x: float, y: float, x1: float, y1: float) ->
             and y - Y_SLACK <= float(field["y"]) <= y1 + Y_SLACK)
 
 
+def placements(entry) -> list[dict]:
+    """
+    A field is one placement, or a list of them.
+
+    The same value legitimately prints in several boxes — an application code
+    repeated on every page, an e-mail asked for twice on one. ECRM_FormFill
+    accepts both shapes; so must the audit, or a mapped field reads as missing.
+    """
+    if isinstance(entry, list):
+        return [p for p in entry if isinstance(p, dict)]
+    return [entry] if isinstance(entry, dict) else []
+
+
 def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
     fields = json.loads((forms / f"{key}.json").read_text(encoding="utf-8"))["fields"]
     found = marks(pdf)
 
+    placed = [p for entry in fields.values() for p in placements(entry)]
+
     missing = [m for m in found
                if not any(covered(f, m["page"], m["x"], m["y"],
-                                  m["x"] + m["w"], m["y"] + 3) for f in fields.values())]
+                                  m["x"] + m["w"], m["y"] + 3) for f in placed)]
     named = [m for m in missing if m["key"]]
 
     print(f"\n=== {key}")
