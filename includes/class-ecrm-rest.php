@@ -176,27 +176,15 @@ class ECRM_REST {
 
 		// POST /contracts/{id}/status -> EnergyCRM\Http\ContractStatusController
 
-		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/pdf', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'contract_pdf' ],
-			'permission_callback' => $auth,
-		] );
+		// GET /contracts/{id}/pdf -> EnergyCRM\Http\ContractDocumentsController
 
-		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/provider-form', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'contract_provider_form' ],
-			'permission_callback' => $auth,
-		] );
+		// GET /contracts/{id}/provider-form -> ContractDocumentsController
 
 		// POST /contracts/{id}/files -> EnergyCRM\Http\DocumentsController
 
 		// DELETE /contracts/{id} -> EnergyCRM\Http\ContractStatusController
 
-		register_rest_route( self::NS, '/contracts/export', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'export_contracts' ],
-			'permission_callback' => self::needs( Capability::EXPORT_DATA ),
-		] );
+		// GET /contracts/export -> ContractDocumentsController
 
 		// GET/POST /team -> EnergyCRM\Http\TeamController
 
@@ -733,124 +721,8 @@ class ECRM_REST {
 		return true;
 	}
 
-
-	// ---------------------------------------------------------------------
-	// Export contracts to .xlsx (base64 payload; JS triggers the download)
-	// ---------------------------------------------------------------------
-	public static function export_contracts( WP_REST_Request $req ): WP_REST_Response {
-		if ( ! class_exists( 'ZipArchive' ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Λείπει η επέκταση ZipArchive στον server.' ], 500 );
-		}
-		$status = sanitize_text_field( (string) $req->get_param( 'status' ) );
-		$q      = sanitize_text_field( (string) $req->get_param( 'q' ) );
-		$from   = sanitize_text_field( (string) $req->get_param( 'from' ) );
-		$to     = sanitize_text_field( (string) $req->get_param( 'to' ) );
-		$scope  = sanitize_text_field( (string) $req->get_param( 'scope' ) );
-		$partner = (int) $req->get_param( 'partner' );
-
-		$uid     = get_current_user_id();
-		$visible = self::can_manage_team() ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-		if ( $partner && in_array( $partner, $visible, true ) ) {
-			$scope_ids = [ $partner ];                 // a specific seller within scope
-		} elseif ( $scope === 'team' && self::can_manage_team() ) {
-			$scope_ids = $visible;                     // whole team
-		} else {
-			$scope_ids = [ $uid ];                     // only me
-		}
-
-		// Validate date format (YYYY-MM-DD) loosely.
-		$from = preg_match( '/^\d{4}-\d{2}-\d{2}$/', $from ) ? $from : '';
-		$to   = preg_match( '/^\d{4}-\d{2}-\d{2}$/', $to ) ? $to : '';
-
-		$data  = ECRM_Export::contracts_dataset( $status, $q, [], $scope_ids, $from, $to );
-		$bytes = ECRM_Export::build_xlsx( $data['headers'], $data['rows'] );
-
-		$name = 'symvaseis-' . gmdate( 'Ymd-Hi' ) . '.xlsx';
-		return new WP_REST_Response( [
-			'ok'       => true,
-			'filename' => $name,
-			'mime'     => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-			'count'    => count( $data['rows'] ),
-			'b64'      => base64_encode( $bytes ),
-		], 200 );
-	}
-
 	public static function can_manage_team(): bool {
 		return current_user_can( 'ecrm_manage_team' ) || current_user_can( 'manage_options' );
-	}
-
-
-	// ---------------------------------------------------------------------
-	// Generate a filled application PDF for a contract (base64 payload)
-	// ---------------------------------------------------------------------
-	public static function contract_pdf( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$id  = (int) $req['id'];
-		$uid = get_current_user_id();
-		$ct  = ECRM_DB::table( 'contracts' );
-		$cu  = ECRM_DB::table( 'customers' );
-		$pr  = ECRM_DB::table( 'providers' );
-		$pg  = ECRM_DB::table( 'programs' );
-
-		// Allow viewing within the user's visible downline.
-		$ids = ECRM_DB::visible_user_ids( $uid );
-		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		$row = $wpdb->get_row( $wpdb->prepare(
-			"SELECT c.*, p.name AS provider_name, g.name AS program_name,
-				cu.first_name, cu.last_name, cu.father_name, cu.company_name, cu.afm, cu.doy,
-				cu.adt, cu.birth_date, cu.region, cu.city, cu.street, cu.street_no, cu.postal_code,
-				cu.phone, cu.mobile, cu.email
-			FROM {$ct} c
-			LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			LEFT JOIN {$pr} p  ON p.id  = c.provider_id
-			LEFT JOIN {$pg} g  ON g.id  = c.program_id
-			WHERE c.id = %d AND c.partner_user_id IN ($ph)",
-			array_merge( [ $id ], $ids )
-		), ARRAY_A );
-
-		if ( ! $row ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.' ], 404 );
-		}
-
-		// "Δημιουργία PDF": generate & attach without sending the file for download.
-		if ( (int) $req->get_param( 'store' ) === 1 ) {
-			$ok = self::store_contract_pdf( $id );
-			return new WP_REST_Response(
-				$ok ? [ 'ok' => true, 'stored' => true, 'message' => 'Το PDF δημιουργήθηκε και αποθηκεύτηκε.' ]
-				    : [ 'ok' => false, 'error' => 'Δεν ήταν δυνατή η δημιουργία του PDF.' ],
-				$ok ? 200 : 500
-			);
-		}
-		@set_time_limit( 60 );
-		$er = error_reporting();
-		error_reporting( 0 );
-		try {
-			ob_start();
-			$bytes = ECRM_PDF::build( $row );
-			ob_end_clean();
-		} catch ( \Throwable $e ) {
-			if ( ob_get_level() > 0 ) { ob_end_clean(); }
-			error_reporting( $er );
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Σφάλμα δημιουργίας PDF: ' . $e->getMessage() ], 500 );
-		}
-		error_reporting( $er );
-
-		// Strip any stray output (e.g. PHP notices) emitted before the PDF header.
-		$pos = strpos( (string) $bytes, '%PDF-' );
-		if ( $pos === false ) {
-			$head = substr( (string) $bytes, 0, 300 );
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Το PDF δεν δημιουργήθηκε σωστά. Πρώτα bytes: ' . $head ], 500 );
-		}
-		if ( $pos > 0 ) { $bytes = substr( $bytes, $pos ); }
-
-		$name = ( $row['code'] ?: ( 'symvasi-' . $id ) ) . '.pdf';
-		return new WP_REST_Response( [
-			'ok'       => true,
-			'filename' => $name,
-			'mime'     => 'application/pdf',
-			'b64'      => base64_encode( $bytes ),
-		], 200 );
 	}
 
 	/**
@@ -933,56 +805,6 @@ class ECRM_REST {
 			'protected'   => 1,
 		] );
 		return true;
-	}
-	public static function contract_provider_form( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$id  = (int) $req['id'];
-		$uid = get_current_user_id();
-		$ct  = ECRM_DB::table( 'contracts' );
-		$cu  = ECRM_DB::table( 'customers' );
-		$pr  = ECRM_DB::table( 'providers' );
-		$pg  = ECRM_DB::table( 'programs' );
-
-		$ids = ECRM_DB::visible_user_ids( $uid );
-		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		$row = $wpdb->get_row( $wpdb->prepare(
-			"SELECT c.*, p.name AS provider_name, g.name AS program_name,
-				cu.first_name, cu.last_name, cu.father_name, cu.company_name, cu.afm, cu.doy,
-				cu.adt, cu.birth_date, cu.region, cu.city, cu.street, cu.street_no, cu.postal_code,
-				cu.phone, cu.mobile, cu.email
-			FROM {$ct} c
-			LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			LEFT JOIN {$pr} p  ON p.id  = c.provider_id
-			LEFT JOIN {$pg} g  ON g.id  = c.program_id
-			WHERE c.id = %d AND c.partner_user_id IN ($ph)",
-			array_merge( [ $id ], $ids )
-		), ARRAY_A );
-
-		if ( ! $row ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.' ], 404 );
-		}
-
-		// Latest signature image for this contract, if one exists.
-		$sig_path = null;
-		$fl = ECRM_DB::table( 'files' );
-		$sig = $wpdb->get_var( $wpdb->prepare(
-			"SELECT path FROM {$fl} WHERE contract_id = %d AND doc_kind = 'signature' ORDER BY id DESC LIMIT 1",
-			$id
-		) );
-		if ( $sig && file_exists( $sig ) ) { $sig_path = $sig; }
-
-		$res = ECRM_FormFill::fill( $row, $sig_path );
-		if ( empty( $res['ok'] ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => $res['error'] ?? 'Αποτυχία.' ], 422 );
-		}
-
-		return new WP_REST_Response( [
-			'ok'       => true,
-			'filename' => $res['filename'],
-			'mime'     => 'application/pdf',
-			'b64'      => base64_encode( $res['bytes'] ),
-		], 200 );
 	}
 
 
