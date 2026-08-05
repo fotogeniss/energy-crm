@@ -206,23 +206,11 @@ class ECRM_REST {
 			'permission_callback' => self::needs( Capability::EXPORT_DATA ),
 		] );
 
-		register_rest_route( self::NS, '/team', [
-			'methods'             => [ 'GET', 'POST' ],
-			'callback'            => [ __CLASS__, 'team_router' ],
-			'permission_callback' => self::needs( Capability::MANAGE_TEAM ),
-		] );
+		// GET/POST /team -> EnergyCRM\Http\TeamController
 
-		register_rest_route( self::NS, '/team/(?P<id>\\d+)', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'team_update' ],
-			'permission_callback' => self::needs( Capability::MANAGE_TEAM ),
-		] );
+		// POST /team/{id} -> EnergyCRM\Http\TeamController
 
-		register_rest_route( self::NS, '/network', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'network' ],
-			'permission_callback' => $auth,
-		] );
+		// GET /network -> EnergyCRM\Http\TeamController
 
 		register_rest_route( self::NS, '/import/parse', [
 			'methods'             => 'POST',
@@ -807,145 +795,8 @@ class ECRM_REST {
 		], 200 );
 	}
 
-
-	// ---------------------------------------------------------------------
-	// Team: list / create members (sellers, registrars) under current user
-	// ---------------------------------------------------------------------
-	public static function team_router( WP_REST_Request $req ) {
-		return $req->get_method() === 'POST' ? self::team_create( $req ) : self::team_list();
-	}
-
 	public static function can_manage_team(): bool {
 		return current_user_can( 'ecrm_manage_team' ) || current_user_can( 'manage_options' );
-	}
-
-	public static function team_list(): WP_REST_Response {
-		$uid = get_current_user_id();
-		$members = get_users( [
-			'meta_key'   => 'ecrm_parent',
-			'meta_value' => $uid,
-			'orderby'    => 'display_name',
-		] );
-
-		$roles = ECRM_DB::roles();
-		$out   = [];
-		foreach ( $members as $u ) {
-			$role = '';
-			foreach ( (array) $u->roles as $r ) {
-				if ( isset( $roles[ $r ] ) ) { $role = $r; break; }
-			}
-			if ( $role === 'ecrm_partner' ) { continue; } // partners belong to "network", not "team"
-			$out[] = [
-				'id'           => $u->ID,
-				'name'         => $u->display_name,
-				'email'        => $u->user_email,
-				'role'         => $role,
-				'role_label'   => $roles[ $role ] ?? '—',
-				'active'       => ! (bool) get_user_meta( $u->ID, 'ecrm_disabled', true ),
-				'contracts'    => self::count_contracts_for( $u->ID ),
-			];
-		}
-
-		return new WP_REST_Response( [ 'ok' => true, 'members' => $out, 'can_manage' => self::can_manage_team(), 'roles' => $roles ], 200 );
-	}
-
-	private static function count_contracts_for( int $uid ): int {
-		global $wpdb;
-		$ct = ECRM_DB::table( 'contracts' );
-		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id = %d", $uid ) );
-	}
-
-	public static function team_create( WP_REST_Request $req ): WP_REST_Response {
-		if ( ! self::can_manage_team() ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν έχεις δικαίωμα διαχείρισης ομάδας.' ], 403 );
-		}
-		$p     = $req->get_json_params() ?: $req->get_params();
-		$name  = sanitize_text_field( $p['name'] ?? '' );
-		$email = sanitize_email( $p['email'] ?? '' );
-		$role  = in_array( ( $p['role'] ?? '' ), [ 'ecrm_seller', 'ecrm_registrar', 'ecrm_partner' ], true ) ? $p['role'] : 'ecrm_seller';
-		$pass  = (string) ( $p['password'] ?? '' );
-
-		if ( ! $name || ! is_email( $email ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Συμπλήρωσε όνομα και έγκυρο email.' ], 400 );
-		}
-		if ( email_exists( $email ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Υπάρχει ήδη χρήστης με αυτό το email.' ], 409 );
-		}
-		if ( strlen( $pass ) < 6 ) {
-			$pass = wp_generate_password( 12, true );
-		}
-
-		$username = sanitize_user( current( explode( '@', $email ) ) . '_' . wp_rand( 100, 999 ), true );
-		$user_id  = wp_insert_user( [
-			'user_login'   => $username,
-			'user_email'   => $email,
-			'user_pass'    => $pass,
-			'display_name' => $name,
-			'role'         => $role,
-		] );
-
-		if ( is_wp_error( $user_id ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => $user_id->get_error_message() ], 400 );
-		}
-
-		update_user_meta( $user_id, 'ecrm_parent', get_current_user_id() );
-
-		return new WP_REST_Response( [
-			'ok'       => true,
-			'id'       => $user_id,
-			'username' => $username,
-			'password' => $pass, // shown once so the partner can hand it over
-		], 200 );
-	}
-
-	public static function team_update( WP_REST_Request $req ): WP_REST_Response {
-		if ( ! self::can_manage_team() ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν έχεις δικαίωμα.' ], 403 );
-		}
-		$id = (int) $req['id'];
-		// Ownership: the member must be a direct report of the current user.
-		if ( (int) get_user_meta( $id, 'ecrm_parent', true ) !== get_current_user_id() ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν ανήκει στην ομάδα σου.' ], 403 );
-		}
-		$p  = $req->get_json_params() ?: $req->get_params();
-		$op = sanitize_text_field( $p['op'] ?? '' );
-
-		if ( $op === 'toggle' ) {
-			$now = (bool) get_user_meta( $id, 'ecrm_disabled', true );
-			update_user_meta( $id, 'ecrm_disabled', $now ? '' : '1' );
-			return new WP_REST_Response( [ 'ok' => true, 'active' => $now ], 200 );
-		}
-		if ( $op === 'remove' ) {
-			// Detach from the team (do not delete the WP account/data).
-			delete_user_meta( $id, 'ecrm_parent' );
-			update_user_meta( $id, 'ecrm_disabled', '1' );
-			return new WP_REST_Response( [ 'ok' => true, 'removed' => true ], 200 );
-		}
-		return new WP_REST_Response( [ 'ok' => false, 'error' => 'Άγνωστη ενέργεια.' ], 400 );
-	}
-
-	// ---------------------------------------------------------------------
-	// Network: sub-partners (role ecrm_partner) in the downline
-	// ---------------------------------------------------------------------
-	public static function network(): WP_REST_Response {
-		$uid     = get_current_user_id();
-		$members = get_users( [
-			'meta_key'   => 'ecrm_parent',
-			'meta_value' => $uid,
-			'orderby'    => 'display_name',
-		] );
-		$out = [];
-		foreach ( $members as $u ) {
-			if ( ! in_array( 'ecrm_partner', (array) $u->roles, true ) ) { continue; }
-			$out[] = [
-				'id'        => $u->ID,
-				'name'      => $u->display_name,
-				'email'     => $u->user_email,
-				'contracts' => self::count_contracts_for( $u->ID ),
-				'team_size' => count( get_users( [ 'meta_key' => 'ecrm_parent', 'meta_value' => $u->ID, 'fields' => 'ID' ] ) ),
-			];
-		}
-		return new WP_REST_Response( [ 'ok' => true, 'partners' => $out ], 200 );
 	}
 
 
