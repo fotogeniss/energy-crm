@@ -4,63 +4,63 @@
  "fields": {
   "adt_pelati": {
    "page": 1,
-   "x": 162.2,
-   "y": 49.6
+   "x": 167.3,
+   "y": 49.2
   },
   "odos_arithmos_katoikias": {
    "page": 1,
    "x": 20.9,
-   "y": 54.0
+   "y": 53.7
   },
   "poli_katoikias": {
    "page": 1,
    "x": 182.5,
-   "y": 54.0
+   "y": 53.7
   },
   "afm_pelati": {
    "page": 1,
-   "x": 16.7,
-   "y": 58.5
+   "x": 16.2,
+   "y": 58.2
   },
   "kinito_pelati": {
    "page": 1,
    "x": 119.9,
-   "y": 58.5
+   "y": 62.6
   },
   "doy_pelati": {
    "page": 1,
-   "x": 64.2,
-   "y": 58.5
+   "x": 64.0,
+   "y": 58.2
   },
   "epaggelma_pelati": {
    "page": 1,
    "x": 124.5,
-   "y": 58.5
+   "y": 58.2
   },
   "tilefono_pelati": {
    "page": 1,
-   "x": 14.4,
-   "y": 63.0
+   "x": 21.5,
+   "y": 62.6
   },
   "kinito_epikoinonias": {
    "page": 1,
    "x": 65.1,
-   "y": 81.0
+   "y": 80.6
   },
   "tk_katoikias": {
    "page": 1,
-   "x": 75.2,
-   "y": 90.3
+   "x": 154.5,
+   "y": 53.7
   },
   "hkasp": {
    "page": 1,
    "x": 17.6,
-   "y": 133.2
+   "y": 132.8
   },
   "arithmos_paroxis": {
    "page": 1,
    "x": 28.3,
-   "y": 150.0
+   "y": 149.7
   },
   "poso_eggiisis": {
    "page": 1,
@@ -70,53 +70,96 @@
   "onomateponymo_pelati": {
    "page": 1,
    "x": 27.2,
-   "y": 49.6
+   "y": 49.2
   },
   "onomateponymo_epikoinonias": {
    "page": 1,
-   "x": 10.0,
-   "y": 82.5
+   "x": 27.2,
+   "y": 76.1
   },
   "tilefono_epikoinonias": {
    "page": 1,
-   "x": 10.0,
-   "y": 87.0
+   "x": 20.5,
+   "y": 80.6
   },
   "email_epikoinonias": {
    "page": 1,
-   "x": 112.2,
-   "y": 87.0
+   "x": 119.0,
+   "y": 80.6
   },
   "odos_arithmos_paroxis": {
    "page": 1,
-   "x": 10.0,
-   "y": 130.5
+   "x": 30.3,
+   "y": 124.1
   },
   "poli_paroxis": {
    "page": 1,
-   "x": 112.1,
-   "y": 130.5
+   "x": 117.8,
+   "y": 124.1
   },
   "teleftaia_endeixi_metriti": {
    "page": 1,
-   "x": 112.1,
-   "y": 143.5
+   "x": 142.6,
+   "y": 137.1
   },
   "email_pelati": {
    "page": 1,
-   "x": 151.2,
-   "y": 69.0
+   "x": 158.0,
+   "y": 62.6
   },
   "idiotita_idioktitis": {
    "page": 1,
-   "x": 10.0,
-   "y": 67.4,
+   "x": 47.8,
+   "y": 66.0,
    "check": true
   },
   "pliromi_pagia_entoli": {
    "page": 1,
-   "x": 93.5,
-   "y": 96.3,
+   "x": 141.2,
+   "y": 94.5,
+   "check": true
+  },
+  "idiotita_misthotis": {
+   "page": 1,
+   "x": 97.0,
+   "y": 66.0,
+   "check": true
+  },
+  "odos_arithmos_apostolis": {
+   "page": 1,
+   "x": 20.9,
+   "y": 90.0
+  },
+  "tk_apostolis": {
+   "page": 1,
+   "x": 74.7,
+   "y": 90.0
+  },
+  "poli_apostolis": {
+   "page": 1,
+   "x": 117.9,
+   "y": 90.0
+  },
+  "tk_paroxis": {
+   "page": 1,
+   "x": 74.6,
+   "y": 124.1
+  },
+  "ipistamenos_promitheftis": {
+   "page": 1,
+   "x": 37.4,
+   "y": 137.1
+  },
+  "energopoiisi_nea_syndesi": {
+   "page": 1,
+   "x": 55.0,
+   "y": 140.3,
+   "check": true
+  },
+  "energopoiisi_epanasyndesi": {
+   "page": 1,
+   "x": 154.8,
+   "y": 140.3,
    "check": true
   }
  },

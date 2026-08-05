@@ -136,20 +136,21 @@ python tools/form-map-audit.py --sources tools/source-forms --only protergia_he
 |----:|----:|----:|---|---|---|
 | 1 | 31.4 | 46.8 | `eponymia_etaireias_mas` | κείμενο | συνεργάτη |
 | 1 | 58.4 | 76.7 | `onomateponymo_pelati` | κείμενο | επιχείρησης |
-| 1 | 136.8 | 94.5 | `odos_arithmos_katoikias` | κείμενο | Πόλη |
-| 1 | 137.1 | 94.5 | `poli_katoikias` | κείμενο | Πόλη |
+| 1 | 24.2 | 94.1 | `odos_arithmos_katoikias` | κείμενο | Διεύθυνση |
+| 1 | 110.0 | 94.1 | `tk_katoikias` | κείμενο | ΤΚ |
+| 1 | 137.9 | 94.1 | `poli_katoikias` | κείμενο | Πόλη |
 | 1 | 24.2 | 99.1 | `epaggelma_pelati` | κείμενο | Επάγγελμα |
 | 1 | 112.8 | 99.1 | `email_pelati [1]` | κείμενο | Mail |
-| 1 | 22.7 | 103.6 | `tilefono_pelati` | κείμενο | Τηλέφωνο |
-| 1 | 44.9 | 115.4 | `doy_pelati` | κείμενο | ΔΟΥ |
-| 1 | 126.5 | 115.4 | `afm_pelati` | κείμενο | Δ |
-| 1 | 126.8 | 115.4 | `kad` | κείμενο | Δ |
+| 1 | 22.7 | 103.2 | `tilefono_pelati` | κείμενο | Τηλέφωνο |
+| 1 | 113.7 | 103.2 | `kinito_pelati` | κείμενο | Κινητό |
+| 1 | 18.7 | 115.0 | `afm_pelati` | κείμενο | ΦΜ |
+| 1 | 44.9 | 115.0 | `doy_pelati` | κείμενο | ΔΟΥ |
+| 1 | 126.8 | 115.0 | `kad` | κείμενο | Δ |
 | 1 | 30.9 | 132.2 | `onomateponymo_ekprosopou` | κείμενο | Ονοματεπώνυμο |
 | 1 | 150.0 | 132.2 | `adt_pelati` | κείμενο | ΔΙΑΒ |
 | 1 | 31.6 | 149.2 | `onomateponymo_epikoinonias` | κείμενο | Ονοματεπώνυμο |
 | 1 | 23.7 | 153.4 | `tilefono_epikoinonias` | κείμενο | Τηλέφωνο |
 | 1 | 86.2 | 153.4 | `kinito_epikoinonias` | κείμενο | Κινητό |
-| 1 | 149.2 | 153.4 | `kinito_pelati` | κείμενο | Mail |
 | 1 | 150.1 | 153.4 | `email_epikoinonias` | κείμενο | Mail |
 | 1 | 23.2 | 170.3 | `odos_arithmos_apostolis` | κείμενο | Διεύθυνση |
 | 1 | 81.7 | 170.3 | `tk_apostolis` | κείμενο | ΤΚ |
@@ -157,7 +158,6 @@ python tools/form-map-audit.py --sources tools/source-forms --only protergia_he
 | 1 | 164.8 | 170.3 | `email_pelati [2]` | κείμενο 7pt | Mail |
 | 1 | 55.0 | 196.0 | `arithmos_paroxis` | κείμενο | ΠΑΡΟΧΗΣ |
 | 1 | 130.7 | 202.6 | `arithmos_metriti` | κείμενο |  |
-| 1 | 135.2 | 207.4 | `tk_katoikias` | κείμενο | ΤΚ |
 | 1 | 18.2 | 213.4 | `odos_arithmos_paroxis` | κείμενο |  |
 | 1 | 130.7 | 213.4 | `tk_paroxis` | κείμενο |  |
 | 1 | 158.0 | 213.4 | `poli_paroxis` | κείμενο |  |
@@ -174,30 +174,38 @@ python tools/form-map-audit.py --sources tools/source-forms --only protergia_he
 
 ## protergia_fa — Φυσικό αέριο
 
-Αρχείο: `assets/forms/protergia_fa.json` · 23 θέσεις
+Αρχείο: `assets/forms/protergia_fa.json` · 31 θέσεις
 
 | σελ | x | y | κλειδί | τύπος | ετικέτα αριστερά στο έντυπο |
 |----:|----:|----:|---|---|---|
-| 1 | 27.2 | 49.6 | `onomateponymo_pelati` | κείμενο | Ονοματεπώνυμο |
-| 1 | 162.2 | 49.6 | `adt_pelati` | κείμενο | ήαρ |
-| 1 | 20.9 | 54.0 | `odos_arithmos_katoikias` | κείμενο | Διεύθυνση |
-| 1 | 182.5 | 54.0 | `poli_katoikias` | κείμενο | Πόλη |
-| 1 | 16.7 | 58.5 | `afm_pelati` | κείμενο | ΑΦΜ |
-| 1 | 64.2 | 58.5 | `doy_pelati` | κείμενο | ΔΟΥ |
-| 1 | 119.9 | 58.5 | `kinito_pelati` | κείμενο | ΔΟΥ |
-| 1 | 124.5 | 58.5 | `epaggelma_pelati` | κείμενο | Επάγγελμα |
-| 1 | 14.4 | 63.0 | `tilefono_pelati` | κείμενο | Τηλ |
-| 1 | 10.0 | 67.4 | `idiotita_idioktitis` | ☑ X |  |
-| 1 | 151.2 | 69.0 | `email_pelati` | κείμενο | Ενοικιαστήςεγκατάστασης |
-| 1 | 65.1 | 81.0 | `kinito_epikoinonias` | κείμενο | Κινητό |
-| 1 | 10.0 | 82.5 | `onomateponymo_epikoinonias` | κείμενο |  |
-| 1 | 10.0 | 87.0 | `tilefono_epikoinonias` | κείμενο |  |
-| 1 | 112.2 | 87.0 | `email_epikoinonias` | κείμενο | ΤΚ |
-| 1 | 75.2 | 90.3 | `tk_katoikias` | κείμενο | ΤΚ |
-| 1 | 93.5 | 96.3 | `pliromi_pagia_entoli` | ☑ X | έσωπάγιαςεντολής |
-| 1 | 10.0 | 130.5 | `odos_arithmos_paroxis` | κείμενο |  |
-| 1 | 112.1 | 130.5 | `poli_paroxis` | κείμενο | Χαμηλήπίεση |
-| 1 | 17.6 | 133.2 | `hkasp` | κείμενο | ΗΚΑΣΠ |
-| 1 | 112.1 | 143.5 | `teleftaia_endeixi_metriti` | κείμενο | Στοιχείαπαροχήςηλεκτρικήςενέργ… |
-| 1 | 28.3 | 150.0 | `arithmos_paroxis` | κείμενο | Αριθμόςπαροχής |
+| 1 | 27.2 | 49.2 | `onomateponymo_pelati` | κείμενο | Ονοματεπώνυμο |
+| 1 | 167.3 | 49.2 | `adt_pelati` | κείμενο | Διαβ |
+| 1 | 20.9 | 53.7 | `odos_arithmos_katoikias` | κείμενο | Διεύθυνση |
+| 1 | 154.5 | 53.7 | `tk_katoikias` | κείμενο | ΤΚ |
+| 1 | 182.5 | 53.7 | `poli_katoikias` | κείμενο | Πόλη |
+| 1 | 16.2 | 58.2 | `afm_pelati` | κείμενο | ΑΦΜ |
+| 1 | 64.0 | 58.2 | `doy_pelati` | κείμενο | ΔΟΥ |
+| 1 | 124.5 | 58.2 | `epaggelma_pelati` | κείμενο | Επάγγελμα |
+| 1 | 21.5 | 62.6 | `tilefono_pelati` | κείμενο | Οικίας |
+| 1 | 119.9 | 62.6 | `kinito_pelati` | κείμενο | Κινητό |
+| 1 | 158.0 | 62.6 | `email_pelati` | κείμενο | mail |
+| 1 | 47.8 | 66.0 | `idiotita_idioktitis` | ☑ X | Ιδιοκτήτηςεγκατάστασης |
+| 1 | 97.0 | 66.0 | `idiotita_misthotis` | ☑ X | Ενοικιαστήςεγκατάστασης |
+| 1 | 27.2 | 76.1 | `onomateponymo_epikoinonias` | κείμενο | Ονοματεπώνυμο |
+| 1 | 20.5 | 80.6 | `tilefono_epikoinonias` | κείμενο | Τηλέφωνο |
+| 1 | 65.1 | 80.6 | `kinito_epikoinonias` | κείμενο | Κινητό |
+| 1 | 119.0 | 80.6 | `email_epikoinonias` | κείμενο | mail |
+| 1 | 20.9 | 90.0 | `odos_arithmos_apostolis` | κείμενο | Διεύθυνση |
+| 1 | 74.7 | 90.0 | `tk_apostolis` | κείμενο | ΤΚ |
+| 1 | 117.9 | 90.0 | `poli_apostolis` | κείμενο | Πόλη |
+| 1 | 141.2 | 94.5 | `pliromi_pagia_entoli` | ☑ X | Πάγιαεντολήεξόφλησης |
+| 1 | 30.3 | 124.1 | `odos_arithmos_paroxis` | κείμενο | Διεύθυνσηακινήτου |
+| 1 | 74.6 | 124.1 | `tk_paroxis` | κείμενο | ΤΚ |
+| 1 | 117.8 | 124.1 | `poli_paroxis` | κείμενο | Πόλη |
+| 1 | 17.6 | 132.8 | `hkasp` | κείμενο | ΗΚΑΣΠ |
+| 1 | 37.4 | 137.1 | `ipistamenos_promitheftis` | κείμενο | Υφιστάμενοςπρομηθευτής |
+| 1 | 142.6 | 137.1 | `teleftaia_endeixi_metriti` | κείμενο | m3 |
+| 1 | 55.0 | 140.3 | `energopoiisi_nea_syndesi` | ☑ X | Πρώτηενεργοποίησησύνδεσης |
+| 1 | 154.8 | 140.3 | `energopoiisi_epanasyndesi` | ☑ X | m3 |
+| 1 | 28.3 | 149.7 | `arithmos_paroxis` | κείμενο | Αριθμόςπαροχής |
 | 1 | 113.0 | 174.0 | `poso_eggiisis` | κείμενο | λογαριασμό |
