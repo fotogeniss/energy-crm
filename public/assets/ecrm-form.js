@@ -402,14 +402,75 @@
 			if (/(ταυτοτητ|id|adt|passport|διαβατ)/.test(n)) return 'id_card';
 			return 'other';
 		}
-		function addFiles(fileList) {
-			Array.prototype.forEach.call(fileList, function (f) {
-				if (state.files.length >= 10) return;
-				var ok = /\.(pdf|jpe?g|png)$/i.test(f.name) || ['application/pdf', 'image/jpeg', 'image/png'].indexOf(f.type) > -1;
-				if (!ok) return;
-				state.files.push({ file: f, kind: guessKind(f.name) });
+		// A photo of an ID card off a phone is 4000×3000 and several megabytes.
+		// All of it is uploaded, base64-encoded, and sent — and then scaled
+		// down anyway, because the model caps images at 1568px on its longest
+		// edge. Everything above that costs upload time and nothing else,
+		// which on a phone in someone's living room is most of the wait.
+		//
+		// 1600 leaves the cap intact while making a five-megabyte photo about
+		// three hundred kilobytes. PDFs are left alone: a canvas cannot read
+		// them, and they are already small.
+		var MAX_EDGE = 1600;
+
+		// How many files are still being scaled. The automatic reading waits
+		// for zero: firing at 1.2s while a large photo is still shrinking
+		// would upload the original and undo the whole point.
+		var shrinking = 0;
+
+		function shrink(file) {
+			if (!/^image\/(jpeg|png)$/.test(file.type) || file.size < 400 * 1024) {
+				return Promise.resolve(file);
+			}
+
+			return new Promise(function (resolve) {
+				var url = URL.createObjectURL(file);
+				var img = new Image();
+
+				// Any failure hands back the original: a document that uploads
+				// slowly beats a document that never arrives.
+				img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
+				img.onload = function () {
+					URL.revokeObjectURL(url);
+					var scale = Math.min(1, MAX_EDGE / Math.max(img.width, img.height));
+					if (scale === 1) { resolve(file); return; }
+
+					var canvas = document.createElement('canvas');
+					canvas.width = Math.round(img.width * scale);
+					canvas.height = Math.round(img.height * scale);
+					canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+					canvas.toBlob(function (blob) {
+						if (!blob || blob.size >= file.size) { resolve(file); return; }
+						resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+					}, 'image/jpeg', 0.85);
+				};
+				img.src = url;
 			});
+		}
+
+		function addFiles(fileList) {
+			var accepted = Array.prototype.filter.call(fileList, function (f) {
+				return /\.(pdf|jpe?g|png)$/i.test(f.name)
+					|| ['application/pdf', 'image/jpeg', 'image/png'].indexOf(f.type) > -1;
+			}).slice(0, Math.max(0, 10 - state.files.length));
+
+			if (!accepted.length) return;
+
+			// Shrinking is asynchronous, so the list is drawn twice: once with
+			// the originals so the agent sees them land, once when they are
+			// ready. Without the first pass the drop zone looks broken.
+			accepted.forEach(function (f) { state.files.push({ file: f, kind: guessKind(f.name) }); });
+			shrinking += accepted.length;
 			renderFiles();
+
+			Promise.all(accepted.map(function (f) {
+				return shrink(f).then(function (small) {
+					var entry = state.files.filter(function (i) { return i.file === f; })[0];
+					if (entry) { entry.file = small; }
+					shrinking--;
+				});
+			})).then(renderFiles);
 		}
 		function renderFiles() {
 			var ul = q('[data-filelist]'); ul.innerHTML = '';
@@ -474,7 +535,7 @@
 
 		function scheduleExtraction() {
 			clearTimeout(autoTimer);
-			if (!state.files.length) return;
+			if (!state.files.length || shrinking > 0) return;
 			if (filesSignature() === extractedFor) return;
 			// Long enough for someone dropping three files in a row to end up
 			// with one reading rather than three.

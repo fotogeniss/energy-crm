@@ -34,11 +34,20 @@ final class ExtractionGate
     /**
      * How many extractions may be in flight across the whole site.
      *
-     * Four leaves room on a thirty-worker box for everything else, and four
-     * agents waiting two minutes beats forty agents waiting for a site that
-     * never answers. Raise it only alongside `pm.max_children`.
+     * A measured extraction of two photographs takes about eighteen seconds,
+     * nearly all of it spent waiting on the model. Four slots therefore clear
+     * roughly thirteen readings a minute, and forty agents at once would leave
+     * the last one waiting three minutes — past the point where the browser
+     * gives up. Twelve brings that under a minute.
+     *
+     * Twelve blocked workers sounds worse than it is: a worker parked on an
+     * HTTP response holds its memory but almost no processor, which is not
+     * true of the PDF rendering this same reasoning moved out of the request.
+     * The number that matters is `pm.max_children`; a third of it is a sane
+     * ceiling, and the filter exists so the limit can follow the host rather
+     * than a constant written here.
      */
-    private const SLOTS = 4;
+    private const DEFAULT_SLOTS = 12;
 
     private const PREFIX = 'ecrm_extract_slot_';
 
@@ -51,7 +60,7 @@ final class ExtractionGate
     {
         global $wpdb;
 
-        for ($slot = 1; $slot <= self::SLOTS; $slot++) {
+        for ($slot = 1; $slot <= $this->slots(); $slot++) {
             $name = $this->name($slot);
 
             // Zero timeout: never queue inside the request. Either a slot is
@@ -106,8 +115,16 @@ final class ExtractionGate
     }
 
     /**
+     * At least one, or the endpoint would be closed rather than limited.
+     */
+    private function slots(): int
+    {
+        return max(1, (int) apply_filters('ecrm_extraction_slots', self::DEFAULT_SLOTS));
+    }
+
+    /**
      * Lock names are per database, so two sites in one MySQL would otherwise
-     * share the same four slots.
+     * share the same slots.
      */
     private function name(int $slot): string
     {
