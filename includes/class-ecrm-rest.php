@@ -188,11 +188,7 @@ class ECRM_REST {
 
 		// POST /import/apply -> EnergyCRM\Http\ImportController
 
-		register_rest_route( self::NS, '/commissions', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'commissions' ],
-			'permission_callback' => self::needs( Capability::VIEW_COMMISSIONS ),
-		] );
+		// GET /commissions -> EnergyCRM\Http\CommissionsController
 		register_rest_route( self::NS, '/analytics', [
 			'methods'             => 'GET',
 			'callback'            => [ __CLASS__, 'analytics' ],
@@ -525,89 +521,6 @@ class ECRM_REST {
 			'protected'   => 1,
 		] );
 		return true;
-	}
-
-
-	// ---------------------------------------------------------------------
-	// Commissions: per-contract amounts + summary for own/team scope
-	// ---------------------------------------------------------------------
-	public static function commissions( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$ct  = ECRM_DB::table( 'contracts' );
-		$cu  = ECRM_DB::table( 'customers' );
-		$pr  = ECRM_DB::table( 'providers' );
-		$uid = get_current_user_id();
-
-		$scope = sanitize_text_field( (string) $req->get_param( 'scope' ) );
-		$ids   = $scope === 'team' ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-		$ph    = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		$payable = ECRM_DB::payable_statuses();
-		$sph     = implode( ',', array_fill( 0, count( $payable ), '%s' ) );
-
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.id, c.code, c.status, c.provider_id, c.program_id, c.energy_type, c.category,
-				c.updated_at, c.payout_id, po.status AS payout_status,
-				p.name AS provider_name, cu.first_name, cu.last_name, cu.company_name
-			 FROM {$ct} c
-			 LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			 LEFT JOIN {$pr} p  ON p.id  = c.provider_id
-			 LEFT JOIN " . ECRM_DB::table( 'payouts' ) . " po ON po.id = c.payout_id
-			 WHERE c.partner_user_id IN ($ph) AND c.status IN ($sph)
-			 ORDER BY c.updated_at DESC LIMIT 2000",
-			array_merge( $ids, $payable )
-		), ARRAY_A );
-
-		$has_rules = class_exists( 'ECRM_Commissions' );
-		$total = 0.0; $out = [];
-		$paid_total = 0.0; $unpaid_total = 0.0;
-		$months = []; // 'YYYY-MM' => [count, amount]
-		foreach ( $rows as $r ) {
-			$amt    = $has_rules ? ECRM_Commissions::amount_for( $r ) : 0.0;
-			$total += $amt;
-			$is_paid = ( ( $r['payout_status'] ?? '' ) === 'paid' );
-			if ( $is_paid ) { $paid_total += $amt; } else { $unpaid_total += $amt; }
-			$name   = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
-			$out[]  = [ 'code' => $r['code'], 'customer' => $name ?: '—', 'provider' => $r['provider_name'] ?: '—', 'amount' => round( $amt, 2 ), 'paid' => $is_paid ];
-			$mk = substr( (string) $r['updated_at'], 0, 7 );
-			if ( ! isset( $months[ $mk ] ) ) { $months[ $mk ] = [ 'count' => 0, 'amount' => 0.0 ]; }
-			$months[ $mk ]['count']++; $months[ $mk ]['amount'] += $amt;
-		}
-
-		// Pending estimate: commission of not-yet-payable contracts.
-		$pend_st = [ 'new', 'processing', 'pending_signature', 'pending' ];
-		$psph    = implode( ',', array_fill( 0, count( $pend_st ), '%s' ) );
-		$prows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT provider_id, program_id, energy_type, category FROM {$ct}
-			 WHERE partner_user_id IN ($ph) AND status IN ($psph) LIMIT 2000",
-			array_merge( $ids, $pend_st )
-		), ARRAY_A );
-		$pending_est = 0.0;
-		foreach ( $prows as $r ) { $pending_est += $has_rules ? ECRM_Commissions::amount_for( $r ) : 0.0; }
-
-		// Monthly list (newest first) with Greek labels.
-		krsort( $months );
-		$gr = [ 1=>'Ιανουάριος',2=>'Φεβρουάριος',3=>'Μάρτιος',4=>'Απρίλιος',5=>'Μάιος',6=>'Ιούνιος',7=>'Ιούλιος',8=>'Αύγουστος',9=>'Σεπτέμβριος',10=>'Οκτώβριος',11=>'Νοέμβριος',12=>'Δεκέμβριος' ];
-		$month_list = []; $best = 0.0; $best_label = '';
-		foreach ( $months as $mk => $v ) {
-			$mn = (int) substr( $mk, 5, 2 );
-			$lbl = ( $gr[ $mn ] ?? $mk ) . ' ' . substr( $mk, 0, 4 );
-			$month_list[] = [ 'label' => $lbl, 'count' => $v['count'], 'amount' => round( $v['amount'], 2 ) ];
-			if ( $v['amount'] > $best ) { $best = $v['amount']; $best_label = $gr[ $mn ] ?? $mk; }
-		}
-
-		return new WP_REST_Response( [
-			'ok'           => true,
-			'rows'         => $out,
-			'total'        => round( $total, 2 ),
-			'paid_total'   => round( $paid_total, 2 ),
-			'unpaid_total' => round( $unpaid_total, 2 ),
-			'count'        => count( $out ),
-			'months'       => $month_list,
-			'best'         => round( $best, 2 ),
-			'best_label'   => $best_label,
-			'pending_est'  => round( $pending_est, 2 ),
-		], 200 );
 	}
 
 	// ---------------------------------------------------------------------

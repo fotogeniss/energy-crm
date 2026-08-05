@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Persistence\CommissionRepository;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\DashboardRepository;
@@ -45,6 +46,7 @@ final class Router
         SignatureRepository $signatures,
         ProviderRepository $providers,
         DashboardRepository $dashboard,
+        CommissionRepository $commissions,
     ) {
         $this->controllers = [
             new ProviderFormController(),
@@ -68,6 +70,7 @@ final class Router
             new ExtractionController(),
             new VatLookupController(),
             new DashboardController($scope, $dashboard),
+            new CommissionsController($scope, $commissions),
         ];
     }
 
