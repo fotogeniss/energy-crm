@@ -56,6 +56,12 @@ final class ExtractionGate
 
             // Zero timeout: never queue inside the request. Either a slot is
             // free now or the caller is told to come back.
+            //
+            // Not a table read, so the sniff's advice does not apply: GET_LOCK
+            // asks the server for exclusive use of a name, and a cached answer
+            // would hand the same slot to two requests — the one thing this
+            // class exists to prevent.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $taken = $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 0)', $name));
 
             if ((int) $taken === 1) {
@@ -82,6 +88,7 @@ final class ExtractionGate
             return;
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $this->held));
         $this->held = null;
     }
