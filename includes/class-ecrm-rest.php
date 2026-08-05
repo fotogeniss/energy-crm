@@ -162,11 +162,7 @@ class ECRM_REST {
 
 		// POST /contracts/bulk -> EnergyCRM\Http\ContractsBulkController
 
-		register_rest_route( self::NS, '/contracts/duplicate', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'check_duplicate' ],
-			'permission_callback' => $auth,
-		] );
+		// GET /contracts/duplicate -> EnergyCRM\Http\DuplicateCheckController
 
 		// GET /contracts/{id} -> EnergyCRM\Http\ContractsReadController::show
 
@@ -235,69 +231,6 @@ class ECRM_REST {
 		$u = wp_get_current_user();
 		$ecrm_roles = class_exists( 'ECRM_DB' ) ? array_keys( ECRM_DB::roles() ) : [];
 		return (bool) array_intersect( $ecrm_roles, (array) $u->roles );
-	}
-
-	// POST /contracts/bulk -> EnergyCRM\Http\ContractsBulkController
-
-	/**
-	 * ΑΦΜ → trader name/address via the EU VIES public REST service.
-	 * No API key required. Validates the check digit first.
-	 */
-	/** Warn about possible duplicate contracts by ΑΦΜ or supply number. */
-	public static function check_duplicate( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$afm    = preg_replace( '/\D+/', '', (string) $req->get_param( 'afm' ) );
-		$supply = trim( (string) $req->get_param( 'supply' ) );
-		$exclude = (int) $req->get_param( 'exclude' );
-		if ( ( $afm === '' || strlen( $afm ) < 9 ) && $supply === '' ) {
-			return new WP_REST_Response( [ 'ok' => true, 'matches' => [] ], 200 );
-		}
-
-		$ct = ECRM_DB::table( 'contracts' );
-		$cu = ECRM_DB::table( 'customers' );
-		$pr = ECRM_DB::table( 'providers' );
-
-		$cond = []; $params = [];
-		if ( $afm !== '' && strlen( $afm ) >= 9 ) { $cond[] = 'cu.afm = %s'; $params[] = $afm; }
-		if ( $supply !== '' )                     { $cond[] = 'c.supply_number = %s'; $params[] = $supply; }
-		$where = '( ' . implode( ' OR ', $cond ) . ' )';
-		if ( $exclude ) { $where .= ' AND c.id <> %d'; $params[] = $exclude; }
-
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.id, c.code, c.status, c.supply_number, c.partner_user_id,
-			        cu.first_name, cu.last_name, cu.company_name, cu.afm, p.name AS provider_name
-			 FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			 LEFT JOIN {$pr} p ON p.id = c.provider_id
-			 WHERE {$where}
-			 ORDER BY c.updated_at DESC LIMIT 8",
-			$params
-		), ARRAY_A );
-
-		$uid       = get_current_user_id();
-		$scope_ids = self::can_manage_team() ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-		$labels    = ECRM_DB::statuses();
-		$out = [];
-		foreach ( (array) $rows as $r ) {
-			$owner   = (int) $r['partner_user_id'];
-			$in_scope = in_array( $owner, $scope_ids, true );
-			$is_mine  = ( $owner === $uid );
-			$cust = $in_scope ? ( $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) ) ) : '';
-			$ownr = '';
-			if ( $in_scope && $owner ) { $u = get_userdata( $owner ); $ownr = $u ? $u->display_name : ''; }
-			$out[] = [
-				'id'           => $in_scope ? (int) $r['id'] : 0, // only openable if visible
-				'code'         => $r['code'],
-				'status'       => $r['status'],
-				'status_label' => $labels[ $r['status'] ] ?? $r['status'],
-				'provider'     => $r['provider_name'],
-				'customer'     => $cust ?: ( $in_scope ? '—' : 'άλλος συνεργάτης δικτύου' ),
-				'owner'        => $is_mine ? 'εσύ' : ( $ownr ?: ( $in_scope ? '—' : '' ) ),
-				'is_mine'      => $is_mine,
-				'in_scope'     => $in_scope,
-				'match_on'     => ( $afm !== '' && $r['afm'] === $afm ) ? 'afm' : 'supply',
-			];
-		}
-		return new WP_REST_Response( [ 'ok' => true, 'matches' => $out ], 200 );
 	}
 
 	/** Live team activity dashboard (manager-gated). */

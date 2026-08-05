@@ -62,6 +62,7 @@ final class Router
             new ContractDocumentsController($scope, $contracts, $files),
             new SavedFiltersController($scope),
             new CatalogueController($scope, $providers, $contracts),
+            new DuplicateCheckController($scope, $contracts),
         ];
     }
 

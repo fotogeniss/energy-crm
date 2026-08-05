@@ -366,6 +366,72 @@ final class ContractRepository
     }
 
     /**
+     * Contracts already on file for a ΑΦΜ or supply number — across the whole
+     * company, on purpose.
+     *
+     * The one query here that ignores scope, and it has to. A second
+     * application for a supply another partner already signed is exactly the
+     * collision worth warning about, and scoping the search would hide it. The
+     * caller masks what it returns: outside the actor's scope, only the fact of
+     * a clash is disclosed, never the customer or the colleague.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function possibleDuplicates(string $afm, string $supply, int $excludeId = 0): array
+    {
+        global $wpdb;
+
+        $match  = [];
+        $params = [
+            $this->table,
+            Tables::name(Tables::CUSTOMERS),
+            Tables::name(Tables::PROVIDERS),
+        ];
+
+        if (strlen($afm) >= 9) {
+            $match[]  = 'cu.afm = %s';
+            $params[] = $afm;
+        }
+
+        if ($supply !== '') {
+            $match[]  = 'c.supply_number = %s';
+            $params[] = $supply;
+        }
+
+        if ($match === []) {
+            return [];
+        }
+
+        $where = '( ' . implode(' OR ', $match) . ' )';
+
+        if ($excludeId > 0) {
+            $where   .= ' AND c.id <> %d';
+            $params[] = $excludeId;
+        }
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.id, c.code, c.status, c.supply_number, c.partner_user_id,
+                        cu.first_name, cu.last_name, cu.company_name, cu.afm,
+                        p.name AS provider_name
+                 FROM %i c
+                 LEFT JOIN %i cu ON cu.id = c.customer_id
+                 LEFT JOIN %i p  ON p.id  = c.provider_id
+                 WHERE {$where}
+                 ORDER BY c.updated_at DESC
+                 LIMIT 8",
+                $params
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
      * The top bar's global search: a few best matches across code, supply
      * number, customer name, ΑΦΜ and mobile.
      *
