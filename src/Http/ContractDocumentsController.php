@@ -215,6 +215,7 @@ final class ContractDocumentsController implements Controller
             return null;
         }
 
-        return $start > 0 ? substr($bytes, $start) : $bytes;
+        // substr from zero returns the string unchanged, so no branch is needed.
+        return substr($bytes, $start);
     }
 }

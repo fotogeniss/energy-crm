@@ -33,7 +33,10 @@ final class TeamRepository
         /** @var list<WP_User> $users */
         $users = get_users([
             'meta_key'   => self::PARENT_META,
-            'meta_value' => $userId,
+            // Meta values are stored as strings; WordPress compares them as
+            // such, and passing an int here is a type mismatch that happens to
+            // work rather than a contract.
+            'meta_value' => (string) $userId,
             'orderby'    => 'display_name',
         ]);
 
@@ -76,7 +79,7 @@ final class TeamRepository
     {
         return count((array) get_users([
             'meta_key'   => self::PARENT_META,
-            'meta_value' => $userId,
+            'meta_value' => (string) $userId,
             'fields'     => 'ID',
         ]));
     }
