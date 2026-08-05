@@ -58,6 +58,7 @@ final class Router
             new SigningController($signatures),
             new DocumentsController($scope, $contracts, $files),
             new ContractDocumentsController($scope, $contracts, $files),
+            new SavedFiltersController($scope),
         ];
     }
 

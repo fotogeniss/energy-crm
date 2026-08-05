@@ -154,11 +154,7 @@ class ECRM_REST {
 		register_rest_route( self::NS, '/lookup/afm', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'lookup_afm' ], 'permission_callback' => $auth ] );
 		register_rest_route( self::NS, '/search', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'global_search' ], 'permission_callback' => $auth ] );
 		register_rest_route( self::NS, '/team/live', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'team_live' ], 'permission_callback' => self::needs( Capability::MANAGE_TEAM ) ] );
-		register_rest_route( self::NS, '/filters', [
-			[ 'methods' => 'GET',  'callback' => [ __CLASS__, 'filters_list' ], 'permission_callback' => $auth ],
-			[ 'methods' => 'POST', 'callback' => [ __CLASS__, 'filters_save' ], 'permission_callback' => $auth ],
-		] );
-		register_rest_route( self::NS, '/filters/(?P<idx>\\d+)', [ 'methods' => 'DELETE', 'callback' => [ __CLASS__, 'filters_delete' ], 'permission_callback' => $auth ] );
+		// /filters -> EnergyCRM\Http\SavedFiltersController
 		// GET /file/{id} -> EnergyCRM\Http\DocumentsController
 		register_rest_route( self::NS, '/extract',    [ 'methods' => 'POST', 'callback' => [ __CLASS__, 'extract' ],       'permission_callback' => $auth ] );
 		register_rest_route( self::NS, '/dashboard',  [ 'methods' => 'GET',  'callback' => [ __CLASS__, 'dashboard' ],     'permission_callback' => $auth ] );
@@ -441,44 +437,6 @@ class ECRM_REST {
 	}
 
 	/** Per-user saved filters (stored in user meta). */
-	public static function filters_list(): WP_REST_Response {
-		$f = get_user_meta( get_current_user_id(), 'ecrm_saved_filters', true );
-		return new WP_REST_Response( [ 'ok' => true, 'filters' => is_array( $f ) ? array_values( $f ) : [] ], 200 );
-	}
-
-	public static function filters_save( WP_REST_Request $req ): WP_REST_Response {
-		$p   = $req->get_json_params() ?: $req->get_params();
-		$uid = get_current_user_id();
-		$f   = get_user_meta( $uid, 'ecrm_saved_filters', true );
-		$f   = is_array( $f ) ? array_values( $f ) : [];
-		$name = sanitize_text_field( (string) ( $p['name'] ?? '' ) );
-		if ( $name === '' ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δώσε όνομα.' ], 400 );
-		}
-		if ( count( $f ) >= 20 ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Όριο 20 αποθηκευμένων φίλτρων.' ], 400 );
-		}
-		$f[] = [
-			'name'   => mb_substr( $name, 0, 40 ),
-			'status' => sanitize_text_field( (string) ( $p['status'] ?? '' ) ),
-			'q'      => sanitize_text_field( (string) ( $p['q'] ?? '' ) ),
-			'scope'  => ( ( $p['scope'] ?? '' ) === 'team' ) ? 'team' : 'own',
-		];
-		update_user_meta( $uid, 'ecrm_saved_filters', $f );
-		return new WP_REST_Response( [ 'ok' => true, 'filters' => $f ], 200 );
-	}
-
-	public static function filters_delete( WP_REST_Request $req ): WP_REST_Response {
-		$uid = get_current_user_id();
-		$idx = (int) $req['idx'];
-		$f   = get_user_meta( $uid, 'ecrm_saved_filters', true );
-		$f   = is_array( $f ) ? array_values( $f ) : [];
-		if ( isset( $f[ $idx ] ) ) {
-			array_splice( $f, $idx, 1 );
-			update_user_meta( $uid, 'ecrm_saved_filters', $f );
-		}
-		return new WP_REST_Response( [ 'ok' => true, 'filters' => $f ], 200 );
-	}
 
 	public static function lookup_afm( WP_REST_Request $req ): WP_REST_Response {
 		if ( class_exists( 'ECRM_RateLimit' ) && ! ECRM_RateLimit::allow( 'afm', 30, 300 ) ) {
