@@ -24,3 +24,9 @@ parameters:
             - includes/lib/*
 
     treatPhpDocTypesAsCertain: false
+
+    # Each worker gets the full memory limit, so fewer of them means a smaller
+    # peak. The WordPress stubs alone are a few hundred megabytes of signatures
+    # before any of our code is read.
+    parallel:
+        maximumNumberOfProcesses: 2
