@@ -2,52 +2,52 @@
  "page_w": 210.0,
  "page_h": 297.0,
  "fields": {
-  "onomateponymo": {
+  "onomateponymo_pelati": {
    "page": 1,
    "x": 58.9,
    "y": 55.2
   },
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 1,
    "x": 28.4,
    "y": 61.0
   },
-  "tk": {
+  "tk_katoikias": {
    "page": 1,
    "x": 127.2,
    "y": 61.0
   },
-  "poli": {
+  "poli_katoikias": {
    "page": 1,
    "x": 128.0,
    "y": 179.7
   },
-  "adt": {
+  "adt_pelati": {
    "page": 1,
    "x": 97.1,
    "y": 67.2
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 162.7,
    "y": 136.8
   },
-  "doy": {
+  "doy_pelati": {
    "page": 1,
    "x": 161.1,
    "y": 66.0
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 1,
    "x": 29.7,
    "y": 72.2
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 91.1,
    "y": 72.2
   },
-  "email": {
+  "email_pelati": {
    "page": 1,
    "x": 140.1,
    "y": 72.2
@@ -57,42 +57,42 @@
    "x": 64.1,
    "y": 100.1
   },
-  "timologio": {
+  "kodikos_timologiou": {
    "page": 1,
    "x": 154.4,
    "y": 85.6
   },
-  "contact_onomateponymo": {
+  "onomateponymo_epikoinonias": {
    "page": 1,
    "x": 59,
    "y": 135.7
   },
-  "contact_tilefono": {
+  "tilefono_epikoinonias": {
    "page": 1,
    "x": 29,
    "y": 149.1
   },
-  "contact_kinito": {
+  "kinito_epikoinonias": {
    "page": 1,
    "x": 83,
    "y": 149.1
   },
-  "contact_email": {
+  "email_epikoinonias": {
    "page": 1,
    "x": 144,
    "y": 149.1
   },
-  "ar_aitisis": {
+  "arithmos_aitisis": {
    "page": 1,
    "x": 45.0,
    "y": 85.0
   },
-  "imerominia": {
+  "imerominia_aitisis": {
    "page": 1,
    "x": 110.0,
    "y": 85.0
   },
-  "ar_paroxis": {
+  "arithmos_paroxis": {
    "page": 1,
    "x": 68.2,
    "y": 106.3
@@ -115,12 +115,12 @@
    "y": 111.0,
    "size": 7.5
   },
-  "topos_imerominia": {
+  "topos_imerominia_aitisis": {
    "page": 1,
    "x": 135.0,
    "y": 275.0
   },
-  "nomimos_ekprosopos": {
+  "onomateponymo_ekprosopou": {
    "page": 1,
    "x": 32.7,
    "y": 165.6
@@ -134,13 +134,13 @@
   "h": 0
  },
  "labels": {
-  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
-  "odos": "ΔΙΕΥΘΥΝΣΗ",
-  "tk": "Τ.Κ.",
-  "ar_paroxis": "ΑΡΙΘΜΟΣ ΠΑΡΟΧΗΣ",
-  "nomimos_ekprosopos": "ΟΝΟΜ/ΝΥΜΟ",
-  "adt": "Α.Δ.Τ/ΔΙΑΒ. ΕΚΠΡ.",
-  "kinito": "ΚΙΝΗΤΟ ΕΚΠΡ.",
+  "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
+  "odos_arithmos_katoikias": "ΔΙΕΥΘΥΝΣΗ",
+  "tk_katoikias": "Τ.Κ.",
+  "arithmos_paroxis": "ΑΡΙΘΜΟΣ ΠΑΡΟΧΗΣ",
+  "onomateponymo_ekprosopou": "ΟΝΟΜ/ΝΥΜΟ",
+  "adt_pelati": "Α.Δ.Τ/ΔΙΑΒ. ΕΚΠΡ.",
+  "kinito_pelati": "ΚΙΝΗΤΟ ΕΚΠΡ.",
   "hkasp": "ΑΡΙΘΜΟΣ ΗΚΑΣΠ"
  }
 }

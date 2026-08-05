@@ -2,87 +2,87 @@
  "page_w": 210.0,
  "page_h": 297.0,
  "fields": {
-  "onomateponymo": {
+  "onomateponymo_pelati": {
    "page": 1,
    "x": 43.0,
    "y": 50.1
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 181.2,
    "y": 9.1
   },
-  "doy": {
+  "doy_pelati": {
    "page": 1,
    "x": 87.9,
    "y": 53.7
   },
-  "adt": {
+  "adt_pelati": {
    "page": 1,
    "x": 146.6,
    "y": 63.0
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 1,
    "x": 35.4,
    "y": 67.4
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 91.1,
    "y": 58.0
   },
-  "email": {
+  "email_pelati": {
    "page": 1,
    "x": 149.9,
    "y": 58.0
   },
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 1,
    "x": 29.9,
    "y": 124.3
   },
-  "poli": {
+  "poli_katoikias": {
    "page": 1,
    "x": 30.2,
    "y": 128.6
   },
-  "tk": {
+  "tk_katoikias": {
    "page": 1,
    "x": 110.1,
    "y": 90.0
   },
-  "nomos": {
+  "nomos_katoikias": {
    "page": 1,
    "x": 149.9,
    "y": 90.8
   },
-  "ar_metriti": {
+  "arithmos_metriti": {
    "page": 1,
    "x": 42.4,
    "y": 115.6
   },
-  "programma": {
+  "onoma_programmatos": {
    "page": 1,
    "x": 37.1,
    "y": 153.4
   },
-  "contact_onomateponymo": {
+  "onomateponymo_epikoinonias": {
    "page": 1,
    "x": 62,
    "y": 70.9
   },
-  "contact_tilefono": {
+  "tilefono_epikoinonias": {
    "page": 1,
    "x": 36,
    "y": 75.3
   },
-  "contact_kinito": {
+  "kinito_epikoinonias": {
    "page": 1,
    "x": 91,
    "y": 75.3
   },
-  "contact_email": {
+  "email_epikoinonias": {
    "page": 1,
    "x": 150,
    "y": 75.3
@@ -92,7 +92,7 @@
    "x": 43,
    "y": 132.2
   },
-  "diarkeia": {
+  "diarkeia_symvasis": {
    "page": 1,
    "x": 116,
    "y": 153.4
@@ -127,39 +127,39 @@
    "x": 115.0,
    "y": 130.0
   },
-  "ar_paroxis": {
+  "arithmos_paroxis": {
    "page": 1,
    "x": 51.3,
    "y": 162.8
   },
-  "imerominia": {
+  "imerominia_aitisis": {
    "page": 1,
    "x": 30.0,
    "y": 277.0
   },
-  "teleftaia_endeixi_imeras": {
+  "teleftaia_endeixi_metriti": {
    "page": 1,
    "x": 142.7,
    "y": 126.0
   },
-  "kod_synergati": {
+  "kodikos_synergati": {
    "page": 1,
    "x": 116.2,
    "y": 29.6
   },
-  "own_misthotis": {
+  "idiotita_misthotis": {
    "page": 1,
    "x": 171.2,
    "y": 54.4,
    "check": true
   },
-  "pagia_entoli": {
+  "pliromi_pagia_entoli": {
    "page": 1,
    "x": 10.6,
    "y": 173.1,
    "check": true
   },
-  "cat_epaggelmatiki": {
+  "katigoria_paroxis_epaggelmatiki": {
    "page": 1,
    "x": 83.2,
    "y": 45.3,
@@ -174,22 +174,22 @@
   "h": 0
  },
  "labels": {
-  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ ΕΠΩΝΥΜΙΑ",
-  "own_misthotis": "ΜΙΣΘΩΤΗΣ",
-  "email": "E-MAIL",
-  "tilefono": "ΠΡΟΣΩΠΟ ΕΠΙΚΟΙΝΩΝΙΑΣ",
-  "kinito": "ΚΙΝΗΤΟ",
-  "odos": "ΟΔΟΣ",
-  "poli": "ΠΟΛΗ",
-  "tk": "ΤΚ",
-  "nomos": "ΝΟΜΟΣ",
+  "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ ΕΠΩΝΥΜΙΑ",
+  "idiotita_misthotis": "ΜΙΣΘΩΤΗΣ",
+  "email_pelati": "E-MAIL",
+  "tilefono_pelati": "ΠΡΟΣΩΠΟ ΕΠΙΚΟΙΝΩΝΙΑΣ",
+  "kinito_pelati": "ΚΙΝΗΤΟ",
+  "odos_arithmos_katoikias": "ΟΔΟΣ",
+  "poli_katoikias": "ΠΟΛΗ",
+  "tk_katoikias": "ΤΚ",
+  "nomos_katoikias": "ΝΟΜΟΣ",
   "hkasp": "Η.Κ.Α.Σ.Π.",
-  "teleftaia_endeixi_imeras": "ΕΝΔΕΙΞΗ ΜΕΤΡΗΤΗ",
-  "kod_synergati": "ΚΩΔ. ΣΥΝΕΡΓΑΤΗ",
-  "cat_epaggelmatiki": "ΜΗ ΟΙΚΙΑΚΟΣ",
-  "adt": "ΑΔΤ",
-  "ar_paroxis": "ΑΡ. ΠΑΡΟΧΗΣ ΗΛ. ΕΝΕΡΓΕΙΑΣ*",
+  "teleftaia_endeixi_metriti": "ΕΝΔΕΙΞΗ ΜΕΤΡΗΤΗ",
+  "kodikos_synergati": "ΚΩΔ. ΣΥΝΕΡΓΑΤΗ",
+  "katigoria_paroxis_epaggelmatiki": "ΜΗ ΟΙΚΙΑΚΟΣ",
+  "adt_pelati": "ΑΔΤ",
+  "arithmos_paroxis": "ΑΡ. ΠΑΡΟΧΗΣ ΗΛ. ΕΝΕΡΓΕΙΑΣ*",
   "poso_eggiisis": "ΕΓΓΥΗΣΗΣ",
-  "pagia_entoli": "ΠΑΓΙΑ ΕΝΤΟΛΗ ΕΞΟΦΛΗΣΗΣ ΛΟΓΑΡΙΑΣΜΩΝ"
+  "pliromi_pagia_entoli": "ΠΑΓΙΑ ΕΝΤΟΛΗ ΕΞΟΦΛΗΣΗΣ ΛΟΓΑΡΙΑΣΜΩΝ"
  }
 }

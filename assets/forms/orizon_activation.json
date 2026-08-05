@@ -2,97 +2,97 @@
  "page_w": 209.9,
  "page_h": 297.0,
  "fields": {
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 1,
    "x": 23.9,
    "y": 82.8
   },
-  "arithmos": {
+  "arithmos_odou_katoikias": {
    "page": 1,
    "x": 169.2,
    "y": 83.2
   },
-  "tk": {
+  "tk_katoikias": {
    "page": 1,
    "x": 192.3,
    "y": 83.2
   },
-  "nomos": {
+  "nomos_katoikias": {
    "page": 1,
    "x": 29.8,
    "y": 90.9
   },
-  "poli": {
+  "poli_katoikias": {
    "page": 1,
    "x": 104.8,
    "y": 90.9
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 1,
    "x": 76.9,
    "y": 97.0
   },
-  "adt": {
+  "adt_pelati": {
    "page": 1,
    "x": 49.1,
    "y": 97.3
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 141.5,
    "y": 102.1
   },
-  "birth_date": {
+  "imerominia_gennisis": {
    "page": 1,
    "x": 40.2,
    "y": 107.3
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 45.4,
    "y": 121.8
   },
-  "diarkeia": {
+  "diarkeia_symvasis": {
    "page": 1,
    "x": 48.6,
    "y": 167.4
   },
-  "end_date": {
+  "imerominia_liksis": {
    "page": 1,
    "x": 69.7,
    "y": 172.6
   },
-  "programma": {
+  "onoma_programmatos": {
    "page": 1,
    "x": 50.1,
    "y": 193.6
   },
-  "ar_aitisis": {
+  "arithmos_aitisis": {
    "page": 9,
    "x": 201.9,
    "y": 48.9
   },
-  "imerominia": {
+  "imerominia_aitisis": {
    "page": 9,
    "x": 183.3,
    "y": 57.0
   },
-  "kod_synergati": {
+  "kodikos_synergati": {
    "page": 9,
    "x": 50.6,
    "y": 157.8
   },
-  "topos": {
+  "topos_aitisis": {
    "page": 9,
    "x": 25.6,
    "y": 189.0
   },
-  "onomateponymo": {
+  "onomateponymo_pelati": {
    "page": 1,
    "x": 47.8,
    "y": 77.3
   },
-  "email": {
+  "email_pelati": {
    "page": 1,
    "x": 112.5,
    "y": 97.0
@@ -111,21 +111,21 @@
   "h": 0
  },
  "labels": {
-  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
-  "odos": "ΟΔΟΣ",
-  "adt": "ΕΓΓΡΑΦΟΥ ΤΑΥΤΟΠΡΟΣΩΠΙΑΣ",
-  "birth_date": "ΓΕΝΝΗΣΗΣ",
-  "kinito": "ΚΙΝΗΤΟΥ",
-  "tk": "ΤΚ",
-  "poli": "ΠΕΡΙΟΧΗ",
-  "tilefono": "ΤΗΛΕΦΩΝΟ ΕΠΙΚΟΙΝΩΝΙΑΣ (ΚΙΝΗΤΟ)",
-  "email": "EMAIL",
-  "afm": "Α.Φ.Μ.",
-  "diarkeia": "ΔΙΑΡΚΕΙΑ ΣΥΜΒΑΣΗΣ",
-  "imerominia": "ΗΜΕΡΟΜΗΝΙΑ ΛΗΞΗΣ ΣΥΜΒΑΣΗΣ",
-  "programma": "ΠΡΟΓΡΑΜΜΑ ΧΡΗΣΗΣ",
-  "ar_aitisis": "Κωδικός Αίτησης",
+  "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
+  "odos_arithmos_katoikias": "ΟΔΟΣ",
+  "adt_pelati": "ΕΓΓΡΑΦΟΥ ΤΑΥΤΟΠΡΟΣΩΠΙΑΣ",
+  "imerominia_gennisis": "ΓΕΝΝΗΣΗΣ",
+  "kinito_pelati": "ΚΙΝΗΤΟΥ",
+  "tk_katoikias": "ΤΚ",
+  "poli_katoikias": "ΠΕΡΙΟΧΗ",
+  "tilefono_pelati": "ΤΗΛΕΦΩΝΟ ΕΠΙΚΟΙΝΩΝΙΑΣ (ΚΙΝΗΤΟ)",
+  "email_pelati": "EMAIL",
+  "afm_pelati": "Α.Φ.Μ.",
+  "diarkeia_symvasis": "ΔΙΑΡΚΕΙΑ ΣΥΜΒΑΣΗΣ",
+  "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΙΑ ΛΗΞΗΣ ΣΥΜΒΑΣΗΣ",
+  "onoma_programmatos": "ΠΡΟΓΡΑΜΜΑ ΧΡΗΣΗΣ",
+  "arithmos_aitisis": "Κωδικός Αίτησης",
   "anotato_orio": "XΡΗΣΗ ΥΠΗΡΕΣΙΑΣ “ΑΝΩΤΑΤΟ ΟΡΙΟ ΛΟΓΑΡΙΑΣΜΟΥ ΑΝΑ ΑΡΙΘΜΟ",
-  "kod_synergati": "ΚΩΔΙΚΟΣ ΣΥΝΕΡΓΑΤΗ"
+  "kodikos_synergati": "ΚΩΔΙΚΟΣ ΣΥΝΕΡΓΑΤΗ"
  }
 }

@@ -2,52 +2,52 @@
  "page_w": 210.0,
  "page_h": 330.1,
  "fields": {
-  "adt": {
+  "adt_pelati": {
    "page": 1,
    "x": 162.2,
    "y": 49.6
   },
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 1,
    "x": 20.9,
    "y": 54.0
   },
-  "poli": {
+  "poli_katoikias": {
    "page": 1,
    "x": 182.5,
    "y": 54.0
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 16.7,
    "y": 58.5
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 119.9,
    "y": 58.5
   },
-  "doy": {
+  "doy_pelati": {
    "page": 1,
    "x": 64.2,
    "y": 58.5
   },
-  "epaggelma": {
+  "epaggelma_pelati": {
    "page": 1,
    "x": 124.5,
    "y": 58.5
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 1,
    "x": 14.4,
    "y": 63.0
   },
-  "contact_kinito": {
+  "kinito_epikoinonias": {
    "page": 1,
    "x": 65.1,
    "y": 81.0
   },
-  "tk": {
+  "tk_katoikias": {
    "page": 1,
    "x": 75.2,
    "y": 90.3
@@ -57,7 +57,7 @@
    "x": 17.6,
    "y": 133.2
   },
-  "ar_paroxis": {
+  "arithmos_paroxis": {
    "page": 1,
    "x": 28.3,
    "y": 150.0
@@ -67,22 +67,22 @@
    "x": 113.0,
    "y": 174.0
   },
-  "onomateponymo": {
+  "onomateponymo_pelati": {
    "page": 1,
    "x": 27.2,
    "y": 49.6
   },
-  "contact_onomateponymo": {
+  "onomateponymo_epikoinonias": {
    "page": 1,
    "x": 10.0,
    "y": 82.5
   },
-  "contact_tilefono": {
+  "tilefono_epikoinonias": {
    "page": 1,
    "x": 10.0,
    "y": 87.0
   },
-  "contact_email": {
+  "email_epikoinonias": {
    "page": 1,
    "x": 112.2,
    "y": 87.0
@@ -97,23 +97,23 @@
    "x": 112.1,
    "y": 130.5
   },
-  "teleftaia_endeixi_imeras": {
+  "teleftaia_endeixi_metriti": {
    "page": 1,
    "x": 112.1,
    "y": 143.5
   },
-  "email": {
+  "email_pelati": {
    "page": 1,
    "x": 151.2,
    "y": 69.0
   },
-  "own_idioktitis": {
+  "idiotita_idioktitis": {
    "page": 1,
    "x": 10.0,
    "y": 67.4,
    "check": true
   },
-  "pagia_entoli": {
+  "pliromi_pagia_entoli": {
    "page": 1,
    "x": 93.5,
    "y": 96.3,
@@ -128,27 +128,27 @@
   "h": 0
  },
  "labels": {
-  "onomateponymo": "Ονοματεπώνυμο",
-  "odos": "Διεύθυνση",
-  "adt": "ΑΔΤ (ή αρ. Διαβ.)",
-  "poli": "Πόλη",
-  "tk": "Τ.Κ.",
-  "afm": "Α.Φ.Μ.",
-  "doy": "Δ.Ο.Υ.",
-  "tilefono": "Τηλ. Οικίας",
-  "contact_onomateponymo": "Ονοματεπώνυμο",
-  "contact_tilefono": "Τηλέφωνο",
-  "contact_kinito": "Κινητό",
-  "contact_email": "E-mail",
+  "onomateponymo_pelati": "Ονοματεπώνυμο",
+  "odos_arithmos_katoikias": "Διεύθυνση",
+  "adt_pelati": "ΑΔΤ (ή αρ. Διαβ.)",
+  "poli_katoikias": "Πόλη",
+  "tk_katoikias": "Τ.Κ.",
+  "afm_pelati": "Α.Φ.Μ.",
+  "doy_pelati": "Δ.Ο.Υ.",
+  "tilefono_pelati": "Τηλ. Οικίας",
+  "onomateponymo_epikoinonias": "Ονοματεπώνυμο",
+  "tilefono_epikoinonias": "Τηλέφωνο",
+  "kinito_epikoinonias": "Κινητό",
+  "email_epikoinonias": "E-mail",
   "odos_paroxis": "Διεύθυνση ακινήτου",
   "poli_paroxis": "Πόλη",
-  "teleftaia_endeixi_imeras": "Τελευταία ένδειξη μετρητή (m3)",
+  "teleftaia_endeixi_metriti": "Τελευταία ένδειξη μετρητή (m3)",
   "poso_eggiisis": "Ποσό εγγύησης (€)",
-  "epaggelma": "Επάγγελμα",
-  "email": "E-mail",
-  "own_idioktitis": "Ιδιοκτήτης εγκατάστασης Ενοικιαστής εγκατάστασης",
-  "pagia_entoli": "Πάγια εντολή εξόφλησης",
+  "epaggelma_pelati": "Επάγγελμα",
+  "email_pelati": "E-mail",
+  "idiotita_idioktitis": "Ιδιοκτήτης εγκατάστασης Ενοικιαστής εγκατάστασης",
+  "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης",
   "hkasp": "ΗΚΑΣΠ",
-  "ar_paroxis": "Αριθμός παροχής"
+  "arithmos_paroxis": "Αριθμός παροχής"
  }
 }

@@ -20,22 +20,22 @@
 
 | Κλειδί | Τι τυπώνει | Πηγή |
 |---|---|---|
-| `onomateponymo` | Ονοματεπώνυμο· για εταιρεία η επωνυμία | `first_name` + `last_name`, ή `company_name` |
-| `afm` | ΑΦΜ | `customers.afm` |
-| `doy` | ΔΟΥ | `customers.doy` |
-| `adt` | ΑΔΤ ή αρ. διαβατηρίου | `customers.adt` |
-| `tilefono` | Τηλέφωνο οικίας | `customers.phone` |
-| `kinito` | Κινητό | `customers.mobile` |
-| `email` | E-mail | `customers.email` |
-| `epaggelma` | Επάγγελμα / αντικείμενο | `extra_json.activity` |
+| `onomateponymo_pelati` | Ονοματεπώνυμο· για εταιρεία η επωνυμία | `first_name` + `last_name`, ή `company_name` |
+| `afm_pelati` | ΑΦΜ | `customers.afm` |
+| `doy_pelati` | ΔΟΥ | `customers.doy` |
+| `adt_pelati` | ΑΔΤ ή αρ. διαβατηρίου | `customers.adt` |
+| `tilefono_pelati` | Τηλέφωνο οικίας | `customers.phone` |
+| `kinito_pelati` | Κινητό | `customers.mobile` |
+| `email_pelati` | E-mail | `customers.email` |
+| `epaggelma_pelati` | Επάγγελμα / αντικείμενο | `extra_json.activity` |
 
 ## Διεύθυνση κατοικίας / έδρας
 
 | Κλειδί | Τι τυπώνει | Πηγή |
 |---|---|---|
-| `odos` | Οδός **και** αριθμός | `street` + `street_no` |
-| `poli` | Πόλη | `customers.city` |
-| `tk` | Τ.Κ. | `customers.postal_code` |
+| `odos_arithmos_katoikias` | Οδός **και** αριθμός | `street` + `street_no` |
+| `poli_katoikias` | Πόλη | `customers.city` |
+| `tk_katoikias` | Τ.Κ. | `customers.postal_code` |
 
 ## Διεύθυνση παροχής — εκεί που είναι ο μετρητής
 
@@ -67,27 +67,27 @@
 
 | Κλειδί | Τι τυπώνει | Πηγή |
 |---|---|---|
-| `contact_onomateponymo` | Ονοματεπώνυμο | `extra_json.contact_first_name` + `contact_last_name` |
-| `contact_tilefono` | Τηλέφωνο | `extra_json.contact_phone` |
-| `contact_kinito` | Κινητό | `extra_json.contact_mobile` |
-| `contact_email` | E-mail | `extra_json.contact_email` |
+| `onomateponymo_epikoinonias` | Ονοματεπώνυμο | `extra_json.contact_first_name` + `contact_last_name` |
+| `tilefono_epikoinonias` | Τηλέφωνο | `extra_json.contact_phone` |
+| `kinito_epikoinonias` | Κινητό | `extra_json.contact_mobile` |
+| `email_epikoinonias` | E-mail | `extra_json.contact_email` |
 
 ## Επιχείρηση — μόνο στο `protergia_he_biz`
 
 | Κλειδί | Τι τυπώνει | Πηγή |
 |---|---|---|
-| `nomimos_ekprosopos` | Νόμιμος εκπρόσωπος | `extra_json.rep_first_name` + `rep_last_name` |
+| `onomateponymo_ekprosopou` | Νόμιμος εκπρόσωπος | `extra_json.rep_first_name` + `rep_last_name` |
 | `kad` | Κ.Α.Δ. | `extra_json.kad` |
 
 ## Παροχή
 
 | Κλειδί | Τι τυπώνει | Πηγή |
 |---|---|---|
-| `ar_paroxis` | Αριθμός παροχής | `contracts.supply_number` |
-| `hkasp` | Η.Κ.Α.Σ.Π. | `contracts.supply_number` *(ίδια τιμή με το `ar_paroxis`)* |
-| `ar_metriti` | Αριθμός μετρητή | `contracts.meter_number` |
+| `arithmos_paroxis` | Αριθμός παροχής | `contracts.supply_number` |
+| `hkasp` | Η.Κ.Α.Σ.Π. | `contracts.supply_number` *(ίδια τιμή με το `arithmos_paroxis`)* |
+| `arithmos_metriti` | Αριθμός μετρητή | `contracts.meter_number` |
 | `isxis_paroxis` | Ισχύς παροχής (kVA) | `extra_json.agreed_power` |
-| `teleftaia_endeixi_imeras` | Τελευταία ένδειξη μετρητή | `extra_json.day_indication` |
+| `teleftaia_endeixi_metriti` | Τελευταία ένδειξη μετρητή | `extra_json.day_indication` |
 | `ipistamenos_promitheftis` | Υφιστάμενος προμηθευτής | `extra_json.previous_provider` |
 | `poso_eggiisis` | Ποσό εγγύησης (€) | `extra_json.guarantee` |
 
@@ -95,12 +95,12 @@
 
 | Κλειδί | Τι τυπώνει | Πηγή |
 |---|---|---|
-| `ar_aitisis` | Αριθμός αίτησης (APP-0001) | `contracts.code` |
-| `imerominia` | Ημερομηνία, `ημ/μμ/εεεε` | `contracts.created_at` |
-| `topos_imerominia` | «Πόλη, ημερομηνία» σε μία γραμμή | *υπολογισμένο* |
-| `synergatis` | Επωνυμία εταιρείας | Ρυθμίσεις → Επωνυμία |
-| `politis` | Ον/μο πωλητή | Ο χρήστης που κατέχει τη σύμβαση |
-| `kod_synergati` | Κωδικός συνεργάτη | `extra_json.kod_synergati` |
+| `arithmos_aitisis` | Αριθμός αίτησης (APP-0001) | `contracts.code` |
+| `imerominia_aitisis` | Ημερομηνία, `ημ/μμ/εεεε` | `contracts.created_at` |
+| `topos_imerominia_aitisis` | «Πόλη, ημερομηνία» σε μία γραμμή | *υπολογισμένο* |
+| `eponymia_etaireias_mas` | Επωνυμία εταιρείας | Ρυθμίσεις → Επωνυμία |
+| `onomateponymo_politi` | Ον/μο πωλητή | Ο χρήστης που κατέχει τη σύμβαση |
+| `kodikos_synergati` | Κωδικός συνεργάτη | `extra_json.kod_synergati` |
 
 ---
 
@@ -111,15 +111,15 @@
 
 | Κλειδί | Μπαίνει X όταν |
 |---|---|
-| `cat_oikiaki` | ο πελάτης είναι ιδιώτης |
-| `cat_epaggelmatiki` | ο πελάτης είναι εταιρεία ή ατομική |
-| `act_new` | τύπος ενεργοποίησης = **νέα σύνδεση** |
-| `act_reconnection` | τύπος ενεργοποίησης = **επανασύνδεση** |
-| `metr_imerisia` | μέτρηση = ημερήσια |
-| `metr_imer_nyxt` | μέτρηση = ημερήσια & νυχτερινή |
-| `metr_tilemetroumeni` | μέτρηση = τηλεμετρούμενη |
-| `own_idioktitis` | ιδιότητα = ιδιοκτήτης |
-| `pagia_entoli` | τρόπος πληρωμής = πάγια εντολή |
+| `katigoria_paroxis_oikiaki` | ο πελάτης είναι ιδιώτης |
+| `katigoria_paroxis_epaggelmatiki` | ο πελάτης είναι εταιρεία ή ατομική |
+| `energopoiisi_nea_syndesi` | τύπος ενεργοποίησης = **νέα σύνδεση** |
+| `energopoiisi_epanasyndesi` | τύπος ενεργοποίησης = **επανασύνδεση** |
+| `metrisi_imerisia` | μέτρηση = ημερήσια |
+| `metrisi_imerisia_nyxterini` | μέτρηση = ημερήσια & νυχτερινή |
+| `metrisi_tilemetroumeni` | μέτρηση = τηλεμετρούμενη |
+| `idiotita_idioktitis` | ιδιότητα = ιδιοκτήτης |
+| `pliromi_pagia_entoli` | τρόπος πληρωμής = πάγια εντολή |
 | `ypovoli_ilektronika` | **πάντα** — σταθερά, το CRM υποβάλλει ηλεκτρονικά |
 
 > Η μέτρηση, όταν δεν έχει δηλωθεί στη φόρμα, συμπεραίνεται από τον κωδικό
@@ -132,16 +132,16 @@
 
 Διαθέσιμα αν χρειαστούν σε επόμενη έκδοση του εντύπου:
 
-`eponymo`, `onoma`, `patronymo`, `eponymia`, `afm_etaireias`, `birth_date`,
-`dieuthynsi`, `arithmos`, `nomos`, `dieuthynsi_paroxis`, `odos_paroxis`,
-`arithmos_paroxis`, `nomos_paroxis`, `dieuthynsi_apostolis`, `odos_apostolis`,
-`arithmos_apostolis`, `nomos_apostolis`, `timologio`, `programma`, `diarkeia`,
-`end_date`, `topos`, `gemi`, `nomiki_morfi`, `antikeimeno`, `eidiki_katigoria`,
-`iban`, `anotato_orio`, `ar_koinoxristou`, `contact_adt`, `contact_afm`,
-`own_misthotis`, `metr_esoterikos`, `metr_exoterikos`, `cat_idiotis`,
-`cat_atomiki`, `cat_etaireia`, `act_change`, `act_succession`, `act_renewal`,
-`act_program_change`, `act_any`, `dur_aoristou`, `dur_6`, `dur_12`, `dur_18`,
-`dur_24`, `dur_36`, `ypovoli_taxydromika`
+`eponymo_pelati`, `onoma_pelati`, `patronymo_pelati`, `eponymia_etaireias`, `afm_etaireias`, `imerominia_gennisis`,
+`dieuthynsi_katoikias`, `arithmos_odou_katoikias`, `nomos_katoikias`, `dieuthynsi_paroxis`, `odos_paroxis`,
+`arithmos_odou_paroxis`, `nomos_paroxis`, `dieuthynsi_apostolis`, `odos_apostolis`,
+`arithmos_odou_apostolis`, `nomos_apostolis`, `kodikos_timologiou`, `onoma_programmatos`, `diarkeia_symvasis`,
+`imerominia_liksis`, `topos_aitisis`, `gemi`, `nomiki_morfi`, `antikeimeno_epixeirisis`, `eidiki_katigoria`,
+`iban`, `anotato_orio`, `arithmos_koinoxristou`, `adt_epikoinonias`, `afm_epikoinonias`,
+`idiotita_misthotis`, `thesi_metriti_esoterikos`, `thesi_metriti_exoterikos`, `typos_pelati_idiotis`,
+`typos_pelati_atomiki`, `typos_pelati_etaireia`, `energopoiisi_allagi_paroxou`, `energopoiisi_diadoxi`, `energopoiisi_ananeosi`,
+`energopoiisi_allagi_programmatos`, `energopoiisi_apaiteitai`, `diarkeia_aoristou`, `diarkeia_6_mines`, `diarkeia_12_mines`, `diarkeia_18_mines`,
+`diarkeia_24_mines`, `diarkeia_36_mines`, `ypovoli_taxydromika`
 
 ---
 

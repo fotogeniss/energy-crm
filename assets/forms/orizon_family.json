@@ -2,42 +2,42 @@
  "page_w": 209.9,
  "page_h": 297.0,
  "fields": {
-  "adt": {
+  "adt_pelati": {
    "page": 1,
    "x": 82.1,
    "y": 72.4
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 153.3,
    "y": 72.4
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 44.9,
    "y": 90.3
   },
-  "end_date": {
+  "imerominia_liksis": {
    "page": 1,
    "x": 69.2,
    "y": 99.3
   },
-  "imerominia": {
+  "imerominia_aitisis": {
    "page": 1,
    "x": 180.7,
    "y": 45.2
   },
-  "kod_synergati": {
+  "kodikos_synergati": {
    "page": 3,
    "x": 50.1,
    "y": 146.5
   },
-  "onomateponymo": {
+  "onomateponymo_pelati": {
    "page": 1,
    "x": 46.3,
    "y": 66.3
   },
-  "topos": {
+  "topos_aitisis": {
    "page": 3,
    "x": 25.4,
    "y": 166.0
@@ -51,12 +51,12 @@
   "h": 0
  },
  "labels": {
-  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
-  "adt": "ΑΡΙΘΜΟΣ ΕΓΓΡΑΦΟΥ ΤΑΥΤΟΠΡΟΣΩΠΙΑΣ",
-  "afm": "Α.Φ.Μ.",
-  "kinito": "ΑΡΙΘΜΟΣ ΚΙΝΗΤΟΥ",
-  "imerominia": "ΗΜΕΡΟΜΗΝΙΑ ΛΗΞΗΣ ΣΥΜΒΑΣΗΣ",
-  "kod_synergati": "ΚΩΔΙΚΟΣ ΣΥΝΕΡΓΑΤΗ",
-  "topos": "ΤΟΠΟΣ"
+  "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
+  "adt_pelati": "ΑΡΙΘΜΟΣ ΕΓΓΡΑΦΟΥ ΤΑΥΤΟΠΡΟΣΩΠΙΑΣ",
+  "afm_pelati": "Α.Φ.Μ.",
+  "kinito_pelati": "ΑΡΙΘΜΟΣ ΚΙΝΗΤΟΥ",
+  "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΙΑ ΛΗΞΗΣ ΣΥΜΒΑΣΗΣ",
+  "kodikos_synergati": "ΚΩΔΙΚΟΣ ΣΥΝΕΡΓΑΤΗ",
+  "topos_aitisis": "ΤΟΠΟΣ"
  }
 }

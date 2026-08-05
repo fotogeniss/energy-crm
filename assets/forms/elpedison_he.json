@@ -2,87 +2,87 @@
  "page_w": 210.0,
  "page_h": 297.0,
  "fields": {
-  "eponymo": {
+  "eponymo_pelati": {
    "page": 2,
    "x": 25.5,
    "y": 26.2
   },
-  "onoma": {
+  "onoma_pelati": {
    "page": 2,
    "x": 55.8,
    "y": 26.2
   },
-  "patronymo": {
+  "patronymo_pelati": {
    "page": 2,
    "x": 92.4,
    "y": 26.2
   },
-  "afm": {
+  "afm_pelati": {
    "page": 2,
    "x": 21.4,
    "y": 34.5
   },
-  "doy": {
+  "doy_pelati": {
    "page": 2,
    "x": 53.2,
    "y": 34.5
   },
-  "adt": {
+  "adt_pelati": {
    "page": 2,
    "x": 84.7,
    "y": 34.5
   },
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 2,
    "x": 31.8,
    "y": 42.7
   },
-  "poli": {
+  "poli_katoikias": {
    "page": 2,
    "x": 53.2,
    "y": 42.7
   },
-  "tk": {
+  "tk_katoikias": {
    "page": 2,
    "x": 81.1,
    "y": 42.7
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 2,
    "x": 26.9,
    "y": 50.9
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 2,
    "x": 55.3,
    "y": 50.9
   },
-  "birth_date": {
+  "imerominia_gennisis": {
    "page": 2,
    "x": 79.4,
    "y": 59.2
   },
-  "contact_onomateponymo": {
+  "onomateponymo_epikoinonias": {
    "page": 2,
    "x": 59,
    "y": 74.5
   },
-  "contact_tilefono": {
+  "tilefono_epikoinonias": {
    "page": 2,
    "x": 86,
    "y": 74.5
   },
-  "email": {
+  "email_pelati": {
    "page": 2,
    "x": 32.0,
    "y": 60.0
   },
-  "kod_synergati": {
+  "kodikos_synergati": {
    "page": 2,
    "x": 115.0,
    "y": 68.0
   },
-  "ar_paroxis": {
+  "arithmos_paroxis": {
    "page": 2,
    "x": 115.0,
    "y": 92.0
@@ -110,12 +110,12 @@
    "y": 101.0,
    "size": 7
   },
-  "topos_imerominia": {
+  "topos_imerominia_aitisis": {
    "page": 2,
    "x": 18.0,
    "y": 255.0
   },
-  "act_any": {
+  "energopoiisi_apaiteitai": {
    "page": 2,
    "x": 180.0,
    "y": 106.0,

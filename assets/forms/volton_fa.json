@@ -2,67 +2,67 @@
  "page_w": 209.9,
  "page_h": 297.0,
  "fields": {
-  "onomateponymo": {
+  "onomateponymo_pelati": {
    "page": 1,
    "x": 35.9,
    "y": 176.8
   },
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 1,
    "x": 85.3,
    "y": 250.4
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 133.9,
    "y": 83.9
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 1,
    "x": 26.9,
    "y": 94.7
   },
-  "tk": {
+  "tk_katoikias": {
    "page": 1,
    "x": 105.7,
    "y": 195.5
   },
-  "poli": {
+  "poli_katoikias": {
    "page": 1,
    "x": 146.6,
    "y": 195.5
   },
-  "doy": {
+  "doy_pelati": {
    "page": 1,
    "x": 83.5,
    "y": 91.5
   },
-  "adt": {
+  "adt_pelati": {
    "page": 1,
    "x": 146.5,
    "y": 109.9
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 134.2,
    "y": 183.7
   },
-  "email": {
+  "email_pelati": {
    "page": 1,
    "x": 160.1,
    "y": 94.7
   },
-  "ar_aitisis": {
+  "arithmos_aitisis": {
    "page": 1,
    "x": 169.2,
    "y": 63.3
   },
-  "kod_synergati": {
+  "kodikos_synergati": {
    "page": 1,
    "x": 138.8,
    "y": 68.4
   },
-  "imerominia": {
+  "imerominia_aitisis": {
    "page": 2,
    "x": 42.0,
    "y": 233.0
@@ -77,114 +77,114 @@
    "x": 20.5,
    "y": 202.0
   },
-  "ar_metriti": {
+  "arithmos_metriti": {
    "page": 1,
    "x": 104.6,
    "y": 205.0
   },
-  "timologio": {
+  "kodikos_timologiou": {
    "page": 1,
    "x": 26.6,
    "y": 217.5
   },
-  "programma": {
+  "onoma_programmatos": {
    "page": 1,
    "x": 28.8,
    "y": 220.7
   },
-  "contact_onomateponymo": {
+  "onomateponymo_epikoinonias": {
    "page": 1,
    "x": 35,
    "y": 176.6
   },
-  "contact_afm": {
+  "afm_epikoinonias": {
    "page": 1,
    "x": 21,
    "y": 179.9
   },
-  "contact_adt": {
+  "adt_epikoinonias": {
    "page": 1,
    "x": 96,
    "y": 179.9
   },
-  "contact_tilefono": {
+  "tilefono_epikoinonias": {
    "page": 1,
    "x": 27,
    "y": 183.5
   },
-  "contact_kinito": {
+  "kinito_epikoinonias": {
    "page": 1,
    "x": 87,
    "y": 183.5
   },
-  "contact_email": {
+  "email_epikoinonias": {
    "page": 1,
    "x": 134,
    "y": 183.5
   },
-  "cat_etaireia": {
+  "typos_pelati_etaireia": {
    "page": 1,
    "x": 26,
    "y": 48.5,
    "check": true
   },
-  "cat_idiotis": {
+  "typos_pelati_idiotis": {
    "page": 1,
    "x": 59,
    "y": 48.5,
    "check": true
   },
-  "cat_atomiki": {
+  "typos_pelati_atomiki": {
    "page": 1,
    "x": 108,
    "y": 48.5,
    "check": true
   },
-  "dur_aoristou": {
+  "diarkeia_aoristou": {
    "page": 1,
    "x": 35,
    "y": 263,
    "check": true
   },
-  "dur_12": {
+  "diarkeia_12_mines": {
    "page": 1,
    "x": 62,
    "y": 263,
    "check": true
   },
-  "dur_18": {
+  "diarkeia_18_mines": {
    "page": 1,
    "x": 84,
    "y": 263,
    "check": true
   },
-  "dur_24": {
+  "diarkeia_24_mines": {
    "page": 1,
    "x": 107,
    "y": 263,
    "check": true
   },
-  "topos": {
+  "topos_aitisis": {
    "page": 2,
    "x": 30.0,
    "y": 230.0
   },
-  "eponymia": {
+  "eponymia_etaireias": {
    "page": 1,
    "x": 38.8,
    "y": 109.9
   },
-  "teleftaia_endeixi_imeras": {
+  "teleftaia_endeixi_metriti": {
    "page": 1,
    "x": 36.0,
    "y": 225.5
   },
-  "nomimos_ekprosopos": {
+  "onomateponymo_ekprosopou": {
    "page": 1,
    "x": 36.2,
    "y": 176.8
   },
-  "own_idioktitis": {
+  "idiotita_idioktitis": {
    "page": 1,
    "x": 12.6,
    "y": 229.1,
@@ -204,22 +204,22 @@
   "h": 0
  },
  "labels": {
-  "cat_etaireia": "ΕΤΑΙΡΕΙΑ",
-  "cat_idiotis": "ΙΔΙΩΤΗΣ",
-  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
-  "eponymia": "ΕΠΩΝΥΜΙΑ ΕΤΑΙΡΕΙΑΣ",
-  "teleftaia_endeixi_imeras": "ΤΕΛΕΥΤΑΙΑ ΕΝΔΕΙΞΗ",
-  "poli": "ΠΟΛΗ",
-  "odos": "ΟΔΟΣ",
-  "nomimos_ekprosopos": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
-  "tilefono": "ΤΗΛΕΦΩΝΟ",
-  "kinito": "ΚΙΝΗΤΟ ΤΗΛΕΦΩΝΟ",
-  "email": "EMAIL",
-  "adt": "Α.Δ.Τ.",
-  "afm": "Α.Φ.Μ.",
-  "tk": "Τ.Κ.",
+  "typos_pelati_etaireia": "ΕΤΑΙΡΕΙΑ",
+  "typos_pelati_idiotis": "ΙΔΙΩΤΗΣ",
+  "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
+  "eponymia_etaireias": "ΕΠΩΝΥΜΙΑ ΕΤΑΙΡΕΙΑΣ",
+  "teleftaia_endeixi_metriti": "ΤΕΛΕΥΤΑΙΑ ΕΝΔΕΙΞΗ",
+  "poli_katoikias": "ΠΟΛΗ",
+  "odos_arithmos_katoikias": "ΟΔΟΣ",
+  "onomateponymo_ekprosopou": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
+  "tilefono_pelati": "ΤΗΛΕΦΩΝΟ",
+  "kinito_pelati": "ΚΙΝΗΤΟ ΤΗΛΕΦΩΝΟ",
+  "email_pelati": "EMAIL",
+  "adt_pelati": "Α.Δ.Τ.",
+  "afm_pelati": "Α.Φ.Μ.",
+  "tk_katoikias": "Τ.Κ.",
   "hkasp": "ΗΚΑΣΠ",
-  "own_idioktitis": "ΙΔΙΟΚΤΗΤΗΣ",
+  "idiotita_idioktitis": "ΙΔΙΟΚΤΗΤΗΣ",
   "kad": "ΚΑΔ"
  }
 }

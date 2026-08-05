@@ -2,67 +2,67 @@
  "page_w": 209.9,
  "page_h": 297.0,
  "fields": {
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 1,
    "x": 22.7,
    "y": 66.5
   },
-  "tk": {
+  "tk_katoikias": {
    "page": 1,
    "x": 139.1,
    "y": 66.5
   },
-  "nomos": {
+  "nomos_katoikias": {
    "page": 1,
    "x": 28.6,
    "y": 71.8
   },
-  "poli": {
+  "poli_katoikias": {
    "page": 1,
    "x": 99.1,
    "y": 71.8
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 1,
    "x": 31.9,
    "y": 77.0
   },
-  "adt": {
+  "adt_pelati": {
    "page": 1,
    "x": 101.1,
    "y": 82.4
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 23.8,
    "y": 87.7
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 45.0,
    "y": 106.0
   },
-  "imerominia": {
+  "imerominia_aitisis": {
    "page": 1,
    "x": 37.0,
    "y": 240.8
   },
-  "arithmos": {
+  "arithmos_odou_katoikias": {
    "page": 1,
    "x": 116.6,
    "y": 65.8
   },
-  "email": {
+  "email_pelati": {
    "page": 1,
    "x": 100.7,
    "y": 76.1
   },
-  "onomateponymo": {
+  "onomateponymo_pelati": {
    "page": 1,
    "x": 46.3,
    "y": 60.1
   },
-  "topos": {
+  "topos_aitisis": {
    "page": 2,
    "x": 56.0,
    "y": 98.9
@@ -76,15 +76,15 @@
   "h": 0
  },
  "labels": {
-  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
-  "odos": "ΟΔΟΣ",
-  "poli": "ΠΕΡΙΟΧΗ",
-  "tilefono": "ΤΗΛΕΦΩΝΟ ΕΠΙΚΟΙΝΩΝΙΑΣ",
-  "adt": "ΕΓΓΡΑΦΟΥ ΤΑΥΤΟΠΡΟΣΩΠΙΑΣ",
-  "afm": "Α.Φ.Μ.",
-  "tk": "ΤΚ",
-  "email": "EMAIL",
-  "imerominia": "ΗΜΕΡΟΜΗΝΙΑ",
-  "topos": "17/07/2026"
+  "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
+  "odos_arithmos_katoikias": "ΟΔΟΣ",
+  "poli_katoikias": "ΠΕΡΙΟΧΗ",
+  "tilefono_pelati": "ΤΗΛΕΦΩΝΟ ΕΠΙΚΟΙΝΩΝΙΑΣ",
+  "adt_pelati": "ΕΓΓΡΑΦΟΥ ΤΑΥΤΟΠΡΟΣΩΠΙΑΣ",
+  "afm_pelati": "Α.Φ.Μ.",
+  "tk_katoikias": "ΤΚ",
+  "email_pelati": "EMAIL",
+  "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΙΑ",
+  "topos_aitisis": "17/07/2026"
  }
 }

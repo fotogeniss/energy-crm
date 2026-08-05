@@ -2,62 +2,62 @@
  "page_w": 210.1,
  "page_h": 297.1,
  "fields": {
-  "onomateponymo": {
+  "onomateponymo_pelati": {
    "page": 1,
    "x": 51.5,
    "y": 65.2
   },
-  "dieuthynsi": {
+  "dieuthynsi_katoikias": {
    "page": 1,
    "x": 26.2,
    "y": 74.8
   },
-  "adt": {
+  "adt_pelati": {
    "page": 1,
    "x": 18.3,
    "y": 80.2
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 74.0,
    "y": 143.9
   },
-  "doy": {
+  "doy_pelati": {
    "page": 1,
    "x": 131.6,
    "y": 80.2
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 1,
    "x": 25.8,
    "y": 90.1
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 68.4,
    "y": 91.2
   },
-  "email": {
+  "email_pelati": {
    "page": 1,
    "x": 130.7,
    "y": 91.2
   },
-  "ar_aitisis": {
+  "arithmos_aitisis": {
    "page": 1,
    "x": 33.7,
    "y": 47.8
   },
-  "imerominia": {
+  "imerominia_aitisis": {
    "page": 1,
    "x": 67.5,
    "y": 47.8
   },
-  "programma": {
+  "onoma_programmatos": {
    "page": 1,
    "x": 110.1,
    "y": 47.8
   },
-  "ar_paroxis": {
+  "arithmos_paroxis": {
    "page": 1,
    "x": 23.5,
    "y": 159.6
@@ -67,7 +67,7 @@
    "x": 26.4,
    "y": 164.8
   },
-  "timologio": {
+  "kodikos_timologiou": {
    "page": 1,
    "x": 26.2,
    "y": 173.7
@@ -77,91 +77,91 @@
    "x": 111.2,
    "y": 182.9
   },
-  "cat_etaireia": {
+  "typos_pelati_etaireia": {
    "page": 1,
    "x": 22.3,
    "y": 54.6,
    "check": true
   },
-  "cat_idiotis": {
+  "typos_pelati_idiotis": {
    "page": 1,
    "x": 38.8,
    "y": 54.6,
    "check": true
   },
-  "cat_atomiki": {
+  "typos_pelati_atomiki": {
    "page": 1,
    "x": 71.4,
    "y": 54.6,
    "check": true
   },
-  "dur_aoristou": {
+  "diarkeia_aoristou": {
    "page": 1,
    "x": 25.9,
    "y": 238.6,
    "check": true
   },
-  "dur_6": {
+  "diarkeia_6_mines": {
    "page": 1,
    "x": 44.6,
    "y": 238.6,
    "check": true
   },
-  "dur_12": {
+  "diarkeia_12_mines": {
    "page": 1,
    "x": 65.3,
    "y": 238.6,
    "check": true
   },
-  "dur_18": {
+  "diarkeia_18_mines": {
    "page": 1,
    "x": 85.1,
    "y": 238.6,
    "check": true
   },
-  "dur_24": {
+  "diarkeia_24_mines": {
    "page": 1,
    "x": 104.3,
    "y": 238.6,
    "check": true
   },
-  "dur_36": {
+  "diarkeia_36_mines": {
    "page": 1,
    "x": 125.0,
    "y": 238.6,
    "check": true
   },
-  "contact_onomateponymo": {
+  "onomateponymo_epikoinonias": {
    "page": 1,
    "x": 52.1,
    "y": 140.2
   },
-  "contact_adt": {
+  "adt_epikoinonias": {
    "page": 1,
    "x": 19.5,
    "y": 142.8
   },
-  "contact_afm": {
+  "afm_epikoinonias": {
    "page": 1,
    "x": 74.5,
    "y": 142.8
   },
-  "contact_tilefono": {
+  "tilefono_epikoinonias": {
    "page": 1,
    "x": 25.8,
    "y": 147.4
   },
-  "contact_kinito": {
+  "kinito_epikoinonias": {
    "page": 1,
    "x": 70.4,
    "y": 147.4
   },
-  "contact_email": {
+  "email_epikoinonias": {
    "page": 1,
    "x": 131.2,
    "y": 147.4
   },
-  "teleftaia_endeixi_imeras": {
+  "teleftaia_endeixi_metriti": {
    "page": 1,
    "x": 48.2,
    "y": 178.4
@@ -171,7 +171,7 @@
    "x": 96.2,
    "y": 187.5
   },
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 1,
    "x": 25.9,
    "y": 160.7
@@ -190,15 +190,15 @@
   "h": 0
  },
  "labels": {
-  "cat_atomiki": "ΕΤΑΙΡΕΙΑ ΙΔΙΩΤΗΣ ΑΤΟΜΙΚΗ ΕΠΙΧΕΙΡΗΣΗ",
-  "onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
-  "afm": "Α.Φ.Μ.",
-  "doy": "Δ.Ο.Υ.",
-  "tilefono": "ΤΗΛΕΦΩΝΟ",
-  "kinito": "ΚΙΝΗΤΟ",
-  "email": "EMAIL",
-  "contact_onomateponymo": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
-  "contact_afm": "Α.Φ.Μ.",
+  "typos_pelati_atomiki": "ΕΤΑΙΡΕΙΑ ΙΔΙΩΤΗΣ ΑΤΟΜΙΚΗ ΕΠΙΧΕΙΡΗΣΗ",
+  "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
+  "afm_pelati": "Α.Φ.Μ.",
+  "doy_pelati": "Δ.Ο.Υ.",
+  "tilefono_pelati": "ΤΗΛΕΦΩΝΟ",
+  "kinito_pelati": "ΚΙΝΗΤΟ",
+  "email_pelati": "EMAIL",
+  "onomateponymo_epikoinonias": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
+  "afm_epikoinonias": "Α.Φ.Μ.",
   "poso_eggiisis": "ΕΓΓΥΗΣΗΣ",
   "kad": "Κ.Α.Δ."
  }

@@ -2,32 +2,32 @@
  "page_w": 210.0,
  "page_h": 297.0,
  "fields": {
-  "eponymia": {
+  "eponymia_etaireias": {
    "page": 1,
    "x": 41.6,
    "y": 46.7
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 1,
    "x": 41.3,
    "y": 58.1
   },
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 1,
    "x": 33.0,
    "y": 95.0
   },
-  "poli": {
+  "poli_katoikias": {
    "page": 1,
    "x": 33.3,
    "y": 101.2
   },
-  "nomos": {
+  "nomos_katoikias": {
    "page": 1,
    "x": 155.6,
    "y": 101.6
   },
-  "ar_metriti": {
+  "arithmos_metriti": {
    "page": 1,
    "x": 162.3,
    "y": 133.4
@@ -37,7 +37,7 @@
    "x": 56.9,
    "y": 157.0
   },
-  "ar_paroxis": {
+  "arithmos_paroxis": {
    "page": 1,
    "x": 44.5,
    "y": 184.9
@@ -47,33 +47,33 @@
    "x": 47.2,
    "y": 197.7
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 24.9,
    "y": 58.4
   },
-  "email": {
+  "email_pelati": {
    "page": 1,
    "x": 144.6,
    "y": 64.1
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 84.9,
    "y": 92.7
   },
-  "epaggelma": {
+  "epaggelma_pelati": {
    "page": 1,
    "x": 17.3,
    "y": 59.6
   },
-  "cat_epaggelmatiki": {
+  "katigoria_paroxis_epaggelmatiki": {
    "page": 1,
    "x": 24.7,
    "y": 162.4,
    "check": true
   },
-  "timologio": {
+  "kodikos_timologiou": {
    "page": 1,
    "x": 13.0,
    "y": 185.1
@@ -93,7 +93,7 @@
    "x": 113.6,
    "y": 139.6
   },
-  "antikeimeno": {
+  "antikeimeno_epixeirisis": {
    "page": 1,
    "x": 35.5,
    "y": 162.4
@@ -103,13 +103,13 @@
    "x": 24.9,
    "y": 197.3
   },
-  "pagia_entoli": {
+  "pliromi_pagia_entoli": {
    "page": 1,
    "x": 24.8,
    "y": 203.7,
    "check": true
   },
-  "programma": {
+  "onoma_programmatos": {
    "page": 1,
    "x": 24.9,
    "y": 184.6
@@ -123,27 +123,27 @@
   "h": 0
  },
  "labels": {
-  "eponymia": "ΕΠΩΝΥΜΙΑ - ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
-  "afm": "ΑΦΜ",
+  "eponymia_etaireias": "ΕΠΩΝΥΜΙΑ - ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
+  "afm_pelati": "ΑΦΜ",
   "gemi": "ΑΡ. ΓΕΜΗ",
-  "tilefono": "ΤΗΛΕΦΩΝΟ",
-  "email": "E-MAIL",
+  "tilefono_pelati": "ΤΗΛΕΦΩΝΟ",
+  "email_pelati": "E-MAIL",
   "nomiki_morfi": "ΝΟΜΙΚΗ ΜΟΡΦΗ",
-  "kinito": "ΚΙΝΗΤΟ",
-  "epaggelma": "ΕΠΑΓΓΕΛΜΑΤΙΑ",
-  "odos": "ΔΙΕΥΘΥΝΣΗ",
-  "poli": "ΠΟΛΗ",
-  "nomos": "ΝΟΜΟΣ",
+  "kinito_pelati": "ΚΙΝΗΤΟ",
+  "epaggelma_pelati": "ΕΠΑΓΓΕΛΜΑΤΙΑ",
+  "odos_arithmos_katoikias": "ΔΙΕΥΘΥΝΣΗ",
+  "poli_katoikias": "ΠΟΛΗ",
+  "nomos_katoikias": "ΝΟΜΟΣ",
   "isxis_paroxis": "Σ1¹ (kVA)",
-  "ar_metriti": "ΑΡ. ΜΕΤΡΗΤΗ",
-  "ar_paroxis": "ΕΙΔΟΣ ΜΕΤΡΗΤΗ ΕΣΩΤΕΡΙΚΟΣ ΕΞΩΤΕΡΙΚΟΣ",
+  "arithmos_metriti": "ΑΡ. ΜΕΤΡΗΤΗ",
+  "arithmos_paroxis": "ΕΙΔΟΣ ΜΕΤΡΗΤΗ ΕΣΩΤΕΡΙΚΟΣ ΕΞΩΤΕΡΙΚΟΣ",
   "ipistamenos_promitheftis": "ΠΡΟΗΓ. ΠΡΟΜΗΘΕΥΤΗΣ",
-  "antikeimeno": "ΧΡΗΣΗ",
-  "cat_epaggelmatiki": "ΕΜΠΟΡΙΚΗ ΒΙΟΜΗΧΑΝΙΚΗ ΚΟΙΝΟΧΡΗΣΤΗ ΕΡΓΟΤΑΞΙΑΚΗ ΑΓΡΟΤΙΚΗ ΑΛΛΟ Κ",
-  "timologio": "ΤΙΜΟΛΟΓΙΟ",
+  "antikeimeno_epixeirisis": "ΧΡΗΣΗ",
+  "katigoria_paroxis_epaggelmatiki": "ΕΜΠΟΡΙΚΗ ΒΙΟΜΗΧΑΝΙΚΗ ΚΟΙΝΟΧΡΗΣΤΗ ΕΡΓΟΤΑΞΙΑΚΗ ΑΓΡΟΤΙΚΗ ΑΛΛΟ Κ",
+  "kodikos_timologiou": "ΤΙΜΟΛΟΓΙΟ",
   "eidiki_katigoria": "ΕΙΔΙΚΗ ΚΑΤΗΓΟΡΙΑ (ΕΥΑΛΩΤΟΙ, ΚΟΤ, ΚΛΠ)",
   "poso_eggiisis": "ΠΟΣΟ ΕΓΓΥΗΣΗΣ (€)",
-  "pagia_entoli": "ΠΑΓΙΑ ΕΝΤΟΛΗ ΕΞΟΦΛΗΣΗΣ ΛΟΓΑΡΙΑΣΜΩΝ",
-  "programma": "ΠΡΟΩΘΗΤΙΚΕΣ ΕΝΕΡΓΕΙΕΣ / ΤΥΧΟΝ ΕΙΔΙΚΟΙ ΟΡΟΙ"
+  "pliromi_pagia_entoli": "ΠΑΓΙΑ ΕΝΤΟΛΗ ΕΞΟΦΛΗΣΗΣ ΛΟΓΑΡΙΑΣΜΩΝ",
+  "onoma_programmatos": "ΠΡΟΩΘΗΤΙΚΕΣ ΕΝΕΡΓΕΙΕΣ / ΤΥΧΟΝ ΕΙΔΙΚΟΙ ΟΡΟΙ"
  }
 }

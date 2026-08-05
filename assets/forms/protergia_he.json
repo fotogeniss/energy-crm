@@ -2,98 +2,98 @@
  "page_w": 210.0,
  "page_h": 297.0,
  "fields": {
-  "synergatis": {
+  "eponymia_etaireias_mas": {
    "page": 1,
    "x": 31.4,
    "y": 46.8
   },
-  "ar_aitisis": {
+  "arithmos_aitisis": {
    "page": 1,
    "x": 145.0,
    "y": 45.9
   },
-  "kod_synergati": {
+  "kodikos_synergati": {
    "page": 1,
    "x": 30.2,
    "y": 51.7
   },
-  "imerominia": {
+  "imerominia_aitisis": {
    "page": 2,
    "x": 107.0,
    "y": 17.3
   },
-  "politis": {
+  "onomateponymo_politi": {
    "page": 1,
    "x": 28.5,
    "y": 57.6
   },
-  "onomateponymo": {
+  "onomateponymo_pelati": {
    "page": 1,
    "x": 12.0,
    "y": 83.5,
    "size": 10
   },
-  "odos": {
+  "odos_arithmos_katoikias": {
    "page": 1,
    "x": 23.0,
    "y": 100.3
   },
-  "tk": {
+  "tk_katoikias": {
    "page": 1,
    "x": 108.9,
    "y": 99.4
   },
-  "poli": {
+  "poli_katoikias": {
    "page": 1,
    "x": 136.1,
    "y": 99.4
   },
-  "kinito": {
+  "kinito_pelati": {
    "page": 1,
    "x": 19.1,
    "y": 104.4
   },
-  "email": {
+  "email_pelati": {
    "page": 1,
    "x": 111.5,
    "y": 105.3
   },
-  "epaggelma": {
+  "epaggelma_pelati": {
    "page": 1,
    "x": 24.0,
    "y": 109.9
   },
-  "adt": {
+  "adt_pelati": {
    "page": 1,
    "x": 30.6,
    "y": 122.1
   },
-  "afm": {
+  "afm_pelati": {
    "page": 1,
    "x": 75.4,
    "y": 123.0
   },
-  "doy": {
+  "doy_pelati": {
    "page": 1,
    "x": 116.1,
    "y": 122.1
   },
-  "contact_onomateponymo": {
+  "onomateponymo_epikoinonias": {
    "page": 1,
    "x": 31.0,
    "y": 141.4
   },
-  "contact_tilefono": {
+  "tilefono_epikoinonias": {
    "page": 1,
    "x": 23.0,
    "y": 144.7
   },
-  "contact_kinito": {
+  "kinito_epikoinonias": {
    "page": 1,
    "x": 77.0,
    "y": 144.7
   },
-  "contact_email": {
+  "email_epikoinonias": {
    "page": 1,
    "x": 128.5,
    "y": 144.7
@@ -103,15 +103,15 @@
    "x": 55.0,
    "y": 224.9
   },
-  "ar_paroxis": {
+  "arithmos_paroxis": {
    "page": 1,
    "x": 55.0,
    "y": 195.3
   },
-  "ar_metriti": {
+  "arithmos_metriti": {
    "page": 1,
    "x": 156.0,
-   "y": 195.8
+   "y": 195.3
   },
   "odos_arithmos_paroxis": {
    "page": 1,
@@ -133,55 +133,55 @@
    "x": 19.5,
    "y": 280.3
   },
-  "topos_imerominia": {
+  "topos_imerominia_aitisis": {
    "page": 4,
    "x": 58.0,
    "y": 240.0
   },
-  "cat_oikiaki": {
+  "katigoria_paroxis_oikiaki": {
    "page": 1,
    "x": 78.0,
    "y": 232.5,
    "check": true
   },
-  "act_new": {
+  "energopoiisi_nea_syndesi": {
    "page": 1,
    "x": 105.0,
    "y": 254.0,
    "check": true
   },
-  "act_reconnection": {
+  "energopoiisi_epanasyndesi": {
    "page": 1,
    "x": 171.0,
    "y": 254.9,
    "check": true
   },
-  "teleftaia_endeixi_imeras": {
+  "teleftaia_endeixi_metriti": {
    "page": 1,
    "x": 55.0,
    "y": 263.0
   },
-  "metr_imerisia": {
+  "metrisi_imerisia": {
    "page": 1,
    "x": 77.9,
-   "y": 240.0,
+   "y": 240.5,
    "check": true
   },
-  "metr_imer_nyxt": {
+  "metrisi_imerisia_nyxterini": {
    "page": 1,
    "x": 128.0,
-   "y": 240.0,
+   "y": 240.5,
    "check": true
   },
-  "tilefono": {
+  "tilefono_pelati": {
    "page": 1,
    "x": 117.0,
    "y": 109.9
   },
-  "metr_tilemetroumeni": {
+  "metrisi_tilemetroumeni": {
    "page": 1,
    "x": 157.4,
-   "y": 240.0,
+   "y": 240.5,
    "check": true
   },
   "odos_arithmos_apostolis": {
@@ -223,23 +223,23 @@
   }
  ],
  "labels": {
-  "onomateponymo": "Ονοματεπώνυμο",
-  "odos": "Διεύθυνση",
-  "tk": "Τ.Κ.",
-  "poli": "Πόλη",
-  "email": "E-Mail",
-  "adt": "ΑΔΤ (ή Αρ. Διαβ.)",
-  "afm": "Α.Φ.Μ.",
-  "epaggelma": "Επάγγελμα",
-  "tilefono": "Τηλ. οικίας",
-  "ar_paroxis": "ΑΡΙΘΜΟΣ ΠΑΡΟΧΗΣ",
+  "onomateponymo_pelati": "Ονοματεπώνυμο",
+  "odos_arithmos_katoikias": "Διεύθυνση",
+  "tk_katoikias": "Τ.Κ.",
+  "poli_katoikias": "Πόλη",
+  "email_pelati": "E-Mail",
+  "adt_pelati": "ΑΔΤ (ή Αρ. Διαβ.)",
+  "afm_pelati": "Α.Φ.Μ.",
+  "epaggelma_pelati": "Επάγγελμα",
+  "tilefono_pelati": "Τηλ. οικίας",
+  "arithmos_paroxis": "ΑΡΙΘΜΟΣ ΠΑΡΟΧΗΣ",
   "odos_paroxis": "ΔΙΕΥΘΥΝΣΗ ΠΑΡΟΧΗΣ",
-  "cat_oikiaki": "Οικιακή",
-  "teleftaia_endeixi_imeras": "ΤΕΛΕΥΤΑΙΑ ΕΝΔΕΙΞΗ ΜΕΤΡΗΤΗ",
-  "synergatis": "Ον/μο συνεργάτη",
+  "katigoria_paroxis_oikiaki": "Οικιακή",
+  "teleftaia_endeixi_metriti": "ΤΕΛΕΥΤΑΙΑ ΕΝΔΕΙΞΗ ΜΕΤΡΗΤΗ",
+  "eponymia_etaireias_mas": "Ον/μο συνεργάτη",
   "ipistamenos_promitheftis": "ΥΦΙΣΤΑΜΕΝΟΣ ΠΡΟΜΗΘΕΥΤΗΣ",
   "hkasp": "ΗΚΑΣΠ",
-  "imerominia": "ΗΜΕΡΟΜΗΝΊΑ ΥΠΟΒΟΛΉΣ ΑΊΤΗΣΗΣ",
-  "metr_imerisia": "ΜΕΤΡΗΣΗ"
+  "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΊΑ ΥΠΟΒΟΛΉΣ ΑΊΤΗΣΗΣ",
+  "metrisi_imerisia": "ΜΕΤΡΗΣΗ"
  }
 }

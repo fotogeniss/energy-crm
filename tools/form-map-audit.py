@@ -315,6 +315,34 @@ def ink(page) -> list[tuple[float, float, float, float, str]]:
     return [tuple(m) for m in merged]
 
 
+def overlaps(fields: dict, gap: float = 2.0) -> list[tuple[str, str, int, float, float]]:
+    """
+    Two fill keys aimed at the same box.
+
+    Whichever is drawn second lands on top of the first, so the form shows one
+    value where the provider expects another — and it looks perfectly filled in.
+    Neither the missing-highlight check nor the collision check sees it: the
+    highlight *is* covered, and the anchor is on blank paper.
+
+    Only the renaming made these findable by eye. `afm` and `kad` sitting two
+    tenths of a millimetre apart says nothing; `afm_pelati` and `kad` says the
+    ΑΦΜ and the Κ.Α.Δ. are being printed in the same box.
+    """
+    placed = []
+    for name, entry in fields.items():
+        for pos in placements(entry):
+            placed.append((name, int(pos.get("page", 1)),
+                           float(pos["x"]), float(pos["y"])))
+
+    clashes = []
+    for i, (name, page, x, y) in enumerate(placed):
+        for other, page2, x2, y2 in placed[i + 1:]:
+            if page == page2 and abs(x - x2) < gap and abs(y - y2) < gap:
+                clashes.append((name, other, page, x, y))
+
+    return clashes
+
+
 def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
     fields = json.loads((forms / f"{key}.json").read_text(encoding="utf-8"))["fields"]
     found = marks(pdf)
@@ -342,13 +370,20 @@ def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
             print(f"    σελ {pos.get('page', 1)}  x={float(pos['x']):6.1f} y={float(pos['y']):6.1f}  "
                   f"{name:26} πάνω στο «{word[:26]}» (τελειώνει x={ends:.1f})")
 
+    clashes = overlaps(fields)
+
+    if clashes:
+        print(f"\n    ΔΥΟ ΠΕΔΙΑ ΣΤΗΝ ΙΔΙΑ ΘΕΣΗ: {len(clashes)}")
+        for a, b, page, x, y in sorted(clashes, key=lambda c: (c[2], c[4])):
+            print(f"    σελ {page}  x={x:6.1f} y={y:6.1f}  {a}  ⟷  {b}")
+
     if suggest and named:
         print("\n    -- για επικόλληση στο JSON, μετά από έλεγχο --")
         for m in sorted(named, key=lambda m: (m["page"], m["y"])):
             print(f'    "{m["key"]}": {{ "page": {m["page"]}, '
                   f'"x": {m["x"] + 0.5:.1f}, "y": {m["y"]:.1f} }},')
 
-    return len(missing) + len(over)
+    return len(missing) + len(over) + len(clashes)
 
 
 def main() -> int:
