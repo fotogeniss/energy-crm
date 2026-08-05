@@ -149,10 +149,10 @@ class ECRM_REST {
 	public static function routes(): void {
 		$auth = [ __CLASS__, 'can_use' ];
 
-		register_rest_route( self::NS, '/providers',  [ 'methods' => 'GET',  'callback' => [ __CLASS__, 'get_providers' ], 'permission_callback' => $auth ] );
+		// GET /providers -> EnergyCRM\Http\CatalogueController
 		register_rest_route( self::NS, '/quote/pdf', [ 'methods' => 'POST', 'callback' => [ __CLASS__, 'quote_pdf' ], 'permission_callback' => $auth ] );
 		register_rest_route( self::NS, '/lookup/afm', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'lookup_afm' ], 'permission_callback' => $auth ] );
-		register_rest_route( self::NS, '/search', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'global_search' ], 'permission_callback' => $auth ] );
+		// GET /search -> EnergyCRM\Http\CatalogueController
 		register_rest_route( self::NS, '/team/live', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'team_live' ], 'permission_callback' => self::needs( Capability::MANAGE_TEAM ) ] );
 		// /filters -> EnergyCRM\Http\SavedFiltersController
 		// GET /file/{id} -> EnergyCRM\Http\DocumentsController
@@ -388,54 +388,6 @@ class ECRM_REST {
 		], 200 );
 	}
 
-	/** Scope-aware quick search across contracts + customers (topbar). */
-	public static function global_search( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$q = trim( (string) $req->get_param( 'q' ) );
-		if ( mb_strlen( $q ) < 2 ) {
-			return new WP_REST_Response( [ 'ok' => true, 'results' => [] ], 200 );
-		}
-		$uid       = get_current_user_id();
-		$scope_ids = self::can_manage_team() ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-		$sin       = implode( ',', array_fill( 0, count( $scope_ids ), '%d' ) );
-		$ct = ECRM_DB::table( 'contracts' );
-		$cu = ECRM_DB::table( 'customers' );
-		$pr = ECRM_DB::table( 'providers' );
-
-		$like = '%' . $wpdb->esc_like( $q ) . '%';
-		$params = array_merge(
-			$scope_ids,
-			[ $like, $like, $like, $like, $like, $like, $like ]
-		);
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.id, c.code, c.status, cu.first_name, cu.last_name, cu.company_name, cu.afm, p.name AS provider_name
-			 FROM {$ct} c
-			 LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			 LEFT JOIN {$pr} p  ON p.id = c.provider_id
-			 WHERE c.partner_user_id IN ($sin)
-			   AND ( c.code LIKE %s OR c.supply_number LIKE %s OR cu.first_name LIKE %s OR cu.last_name LIKE %s
-			         OR cu.company_name LIKE %s OR cu.afm LIKE %s OR cu.mobile LIKE %s )
-			 ORDER BY c.updated_at DESC LIMIT 15",
-			$params
-		), ARRAY_A );
-
-		$st  = ECRM_DB::statuses();
-		$out = [];
-		foreach ( (array) $rows as $r ) {
-			$cust = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
-			$out[] = [
-				'id'           => (int) $r['id'],
-				'code'         => $r['code'],
-				'customer'     => $cust ?: '—',
-				'afm'          => $r['afm'],
-				'provider'     => $r['provider_name'],
-				'status'       => $r['status'],
-				'status_label' => $st[ $r['status'] ] ?? $r['status'],
-			];
-		}
-		return new WP_REST_Response( [ 'ok' => true, 'results' => $out ], 200 );
-	}
-
 	/** Per-user saved filters (stored in user meta). */
 
 	public static function lookup_afm( WP_REST_Request $req ): WP_REST_Response {
@@ -534,19 +486,6 @@ class ECRM_REST {
 			'filename' => 'prosfora.pdf',
 			'mime'     => 'application/pdf',
 			'savings'  => round( $savings, 2 ),
-		], 200 );
-	}
-
-	public static function get_providers(): WP_REST_Response {
-		global $wpdb;
-		$pt = ECRM_DB::table( 'providers' );
-		$gt = ECRM_DB::table( 'programs' );
-
-		return new WP_REST_Response( [
-			'providers'        => $wpdb->get_results( "SELECT id, slug, name, energy_types, logo_url FROM {$pt} WHERE active = 1 ORDER BY sort_order, name", ARRAY_A ),
-			'programs'         => $wpdb->get_results( "SELECT id, provider_id, name, energy_type, category, price_type, price_kwh, fixed_charge FROM {$gt} WHERE active = 1 ORDER BY sort_order, name", ARRAY_A ),
-			'statuses'         => ECRM_DB::statuses(),
-			'activation_types' => ECRM_DB::activation_types(),
 		], 200 );
 	}
 

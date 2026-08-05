@@ -366,6 +366,54 @@ final class ContractRepository
     }
 
     /**
+     * The top bar's global search: a few best matches across code, supply
+     * number, customer name, ΑΦΜ and mobile.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function quickSearch(UserScope $scope, string $term, int $limit = 15): array
+    {
+        global $wpdb;
+
+        if ($term === '') {
+            return [];
+        }
+
+        [$clause, $scopeParams] = $this->scopeClause($scope, 'c');
+        $like                   = '%' . $wpdb->esc_like($term) . '%';
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.id, c.code, c.status, c.supply_number,
+                        cu.first_name, cu.last_name, cu.company_name, cu.afm,
+                        p.name AS provider_name
+                 FROM %i c
+                 LEFT JOIN %i cu ON cu.id = c.customer_id
+                 LEFT JOIN %i p  ON p.id  = c.provider_id
+                 WHERE ( c.code LIKE %s OR c.supply_number LIKE %s
+                         OR cu.first_name LIKE %s OR cu.last_name LIKE %s
+                         OR cu.company_name LIKE %s OR cu.afm LIKE %s
+                         OR cu.mobile LIKE %s ){$clause}
+                 ORDER BY c.updated_at DESC
+                 LIMIT " . max(1, $limit),
+                [
+                    $this->table,
+                    Tables::name(Tables::CUSTOMERS),
+                    Tables::name(Tables::PROVIDERS),
+                    $like, $like, $like, $like, $like, $like, $like,
+                    ...$scopeParams,
+                ]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
      * How many contracts sit in each status, for the filter tabs.
      *
      * @return array<string, int>
