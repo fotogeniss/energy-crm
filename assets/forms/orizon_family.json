@@ -4,43 +4,106 @@
  "fields": {
   "adt_pelati": {
    "page": 1,
-   "x": 82.1,
-   "y": 72.4
+   "x": 81.6,
+   "y": 72.2
   },
   "afm_pelati": {
    "page": 1,
-   "x": 153.3,
-   "y": 72.4
-  },
-  "kinito_pelati": {
-   "page": 1,
-   "x": 44.9,
-   "y": 90.3
+   "x": 151.8,
+   "y": 72.2
   },
   "imerominia_liksis": {
    "page": 1,
-   "x": 69.2,
-   "y": 99.3
+   "x": 143.0,
+   "y": 99.1
   },
-  "imerominia_aitisis": {
-   "page": 1,
-   "x": 180.7,
-   "y": 45.2
-  },
+  "imerominia_aitisis": [
+   {
+    "page": 1,
+    "x": 182.3,
+    "y": 45.9,
+    "size": 7
+   },
+   {
+    "page": 3,
+    "x": 182.3,
+    "y": 45.9,
+    "size": 7
+   },
+   {
+    "page": 3,
+    "x": 36.5,
+    "y": 108.8
+   },
+   {
+    "page": 3,
+    "x": 36.5,
+    "y": 170.9
+   }
+  ],
   "kodikos_synergati": {
    "page": 3,
-   "x": 50.1,
-   "y": 146.5
+   "x": 49.6,
+   "y": 146.3
   },
-  "onomateponymo_pelati": {
-   "page": 1,
-   "x": 46.3,
-   "y": 66.3
-  },
+  "onomateponymo_pelati": [
+   {
+    "page": 1,
+    "x": 45.8,
+    "y": 66.1
+   },
+   {
+    "page": 3,
+    "x": 95.5,
+    "y": 98.7
+   }
+  ],
   "topos_aitisis": {
    "page": 3,
-   "x": 25.4,
-   "y": 166.0
+   "x": 24.6,
+   "y": 165.8
+  },
+  "arithmos_kinitou": [
+   {
+    "page": 1,
+    "x": 45.4,
+    "y": 90.1
+   },
+   {
+    "page": 1,
+    "x": 123.9,
+    "y": 204.6
+   }
+  ],
+  "diarkeia_symvasis": {
+   "page": 1,
+   "x": 143.8,
+   "y": 94.6
+  },
+  "onoma_programmatos": {
+   "page": 1,
+   "x": 143.0,
+   "y": 103.6
+  },
+  "arxiki_timi_pagiou": {
+   "page": 1,
+   "x": 149.6,
+   "y": 112.2
+  },
+  "timi_prosforas": {
+   "page": 1,
+   "x": 137.9,
+   "y": 126.5
+  },
+  "pagio_meta_ti_prosfora": {
+   "page": 1,
+   "x": 139.5,
+   "y": 142.9
+  },
+  "onomateponymo_politi": {
+   "page": 3,
+   "x": 61.6,
+   "y": 160.8
   }
  },
  "sig": {
@@ -58,5 +121,6 @@
   "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΙΑ ΛΗΞΗΣ ΣΥΜΒΑΣΗΣ",
   "kodikos_synergati": "ΚΩΔΙΚΟΣ ΣΥΝΕΡΓΑΤΗ",
   "topos_aitisis": "ΤΟΠΟΣ"
- }
+ },
+ "source_is_filled": true
 }
