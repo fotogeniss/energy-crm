@@ -23,7 +23,7 @@ use EnergyCRM\Legacy\Loader as LegacyLoader;
 
 final class Plugin
 {
-    public const VERSION = '0.81.0';
+    public const VERSION = '0.82.0';
 
     private static ?self $instance = null;
 
@@ -95,7 +95,8 @@ final class Plugin
             Services::events(),
             Services::files(),
             Services::leads(),
-            Services::team()
+            Services::team(),
+            Services::signatures()
         ))->register();
 
         if (is_admin()) {

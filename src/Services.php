@@ -27,6 +27,7 @@ use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\LeadRepository;
 use EnergyCRM\Persistence\NetworkRepository;
+use EnergyCRM\Persistence\SignatureRepository;
 use EnergyCRM\Persistence\TaskRepository;
 use EnergyCRM\Persistence\TeamRepository;
 
@@ -52,6 +53,8 @@ final class Services
 
     private static ?TeamRepository $team = null;
 
+    private static ?SignatureRepository $signatures = null;
+
     private function __construct()
     {
     }
@@ -69,6 +72,11 @@ final class Services
     public static function files(): FileRepository
     {
         return self::$files ??= new FileRepository(\ECRM_Files::dir());
+    }
+
+    public static function signatures(): SignatureRepository
+    {
+        return self::$signatures ??= new SignatureRepository();
     }
 
     public static function team(): TeamRepository
@@ -133,5 +141,6 @@ final class Services
         self::$events        = null;
         self::$leads         = null;
         self::$team          = null;
+        self::$signatures    = null;
     }
 }

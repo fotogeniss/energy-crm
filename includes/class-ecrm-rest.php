@@ -246,11 +246,7 @@ class ECRM_REST {
 			'permission_callback' => $auth,
 		] );
 
-		// Public signing endpoints (token-guarded, no login).
-		register_rest_route( self::NS, '/sign/(?P<token>[a-zA-Z0-9]+)', [
-			[ 'methods' => 'GET',  'callback' => [ __CLASS__, 'sign_get' ],  'permission_callback' => '__return_true' ],
-			[ 'methods' => 'POST', 'callback' => [ __CLASS__, 'sign_post' ], 'permission_callback' => '__return_true' ],
-		] );
+		// GET/POST /sign/{token} -> EnergyCRM\Http\SigningController
 	}
 
 	public static function can_use(): bool {
@@ -1248,95 +1244,6 @@ class ECRM_REST {
 		}
 
 		return new WP_REST_Response( [ 'ok' => true, 'url' => $url, 'emailed' => $emailed ], 200 );
-	}
-
-	// Public: fetch minimal contract info for the signing page.
-	public static function sign_get( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$token = preg_replace( '/[^a-zA-Z0-9]/', '', (string) $req['token'] );
-		$sg = ECRM_DB::table( 'signatures' );
-		$ct = ECRM_DB::table( 'contracts' );
-		$cu = ECRM_DB::table( 'customers' );
-		$pr = ECRM_DB::table( 'providers' );
-
-		$row = $wpdb->get_row( $wpdb->prepare(
-			"SELECT s.signed_at, c.code, p.name AS provider, cu.first_name, cu.last_name, cu.company_name
-			 FROM {$sg} s LEFT JOIN {$ct} c ON c.id=s.contract_id
-			 LEFT JOIN {$cu} cu ON cu.id=c.customer_id LEFT JOIN {$pr} p ON p.id=c.provider_id
-			 WHERE s.token=%s", $token
-		), ARRAY_A );
-
-		if ( ! $row ) { return new WP_REST_Response( [ 'ok' => false, 'error' => 'Άκυρος σύνδεσμος.' ], 404 ); }
-		$name = $row['company_name'] ?: trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) );
-		return new WP_REST_Response( [
-			'ok' => true,
-			'signed' => ! empty( $row['signed_at'] ),
-			'code' => $row['code'], 'provider' => $row['provider'], 'customer' => $name,
-		], 200 );
-	}
-
-	// Public: store the signature image.
-	public static function sign_post( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$token = preg_replace( '/[^a-zA-Z0-9]/', '', (string) $req['token'] );
-		$sg = ECRM_DB::table( 'signatures' );
-		$ct = ECRM_DB::table( 'contracts' );
-
-		$rec = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$sg} WHERE token=%s", $token ), ARRAY_A );
-		if ( ! $rec ) { return new WP_REST_Response( [ 'ok' => false, 'error' => 'Άκυρος σύνδεσμος.' ], 404 ); }
-		if ( ! empty( $rec['signed_at'] ) ) { return new WP_REST_Response( [ 'ok' => false, 'error' => 'Έχει ήδη υπογραφεί.' ], 409 ); }
-
-		$p     = $req->get_json_params() ?: $req->get_params();
-		$image = (string) ( $p['image'] ?? '' );
-		$name  = sanitize_text_field( $p['name'] ?? '' );
-		if ( strpos( $image, 'data:image/png;base64,' ) !== 0 || strlen( $image ) < 200 ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Λείπει η υπογραφή.' ], 400 );
-		}
-		if ( strlen( $image ) > 600000 ) { $image = substr( $image, 0, 600000 ); }
-
-		$wpdb->update( $sg, [
-			'signer_name' => $name,
-			'image'       => $image,
-			'signed_at'   => current_time( 'mysql', true ),
-			'ip'          => substr( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ), 0, 60 ),
-		], [ 'id' => (int) $rec['id'] ] );
-
-		self::transition( (int) $rec['contract_id'], 'signed', [
-			'from'    => null,
-			'message' => 'Υπεγράφη από πελάτη' . ( $name ? ' (' . $name . ')' : '' ),
-			'extra'   => [ 'signed_at' => current_time( 'mysql' ), 'signed_ip' => substr( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ), 0, 64 ) ],
-			'inapp'   => false, // notify_signed() below sends the agent in-app notification.
-		] );
-
-		$cid = (int) $rec['contract_id'];
-
-		// Persist the signature as a PNG file so it can be stamped onto the provider form.
-		if ( class_exists( 'ECRM_Files' ) ) {
-			$bin = base64_decode( substr( $image, strlen( 'data:image/png;base64,' ) ), true );
-			if ( $bin !== false && $bin !== '' ) {
-				$saved = ECRM_Files::put_bytes( $bin, 'png', 'image/png', 'signature.png' );
-				if ( $saved ) {
-					$fl = ECRM_DB::table( 'files' );
-					$wpdb->delete( $fl, [ 'contract_id' => $cid, 'doc_kind' => 'signature' ] );
-					$wpdb->insert( $fl, [
-						'contract_id' => $cid,
-						'doc_kind'    => 'signature',
-						'filename'    => 'signature.png',
-						'mime'        => 'image/png',
-						'path'        => $saved['path'],
-						'protected'   => 1,
-					] );
-				}
-			}
-		}
-
-		// Regenerate the attached document so it now carries the signature.
-		self::store_contract_pdf( $cid );
-
-		// In-app notification to the contract owner (and upline).
-		self::notify_signed( $cid, $name );
-
-		return new WP_REST_Response( [ 'ok' => true ], 200 );
 	}
 
 
