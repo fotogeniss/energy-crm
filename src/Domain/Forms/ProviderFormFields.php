@@ -89,6 +89,26 @@ final class ProviderFormFields
         'tilefono_epikoinonias'      => ['contact_phone'],
         'kinito_epikoinonias'        => ['contact_mobile'],
         'email_epikoinonias'         => ['contact_email'],
+
+        // Κινητή τηλεφωνία
+        'arithmos_kinitou'           => ['mobile_msisdn'],
+        'arithmos_sim'               => ['sim_number'],
+        'eidos_syndesis'             => ['mobile_connection'],
+        'typos_epidotisis'           => ['subsidy_type'],
+        'ekptosi_pagiou'             => ['subsidy_amount'],
+        'arxiki_timi_pagiou'         => ['base_price'],
+        'timi_prosforas'             => ['offer_price'],
+        'pagio_meta_ti_prosfora'     => ['price_after'],
+
+        // Ερωτήσεις προς τον πελάτη — κάθε Ναι/Όχι είναι δύο κουτιά στο
+        // έντυπο αλλά μία ερώτηση στην οθόνη.
+        'orio_logariasmou_nai'       => ['bill_cap'],
+        'orio_logariasmou_oxi'       => ['bill_cap'],
+        'mitroo_11_nai'              => ['no_marketing_calls'],
+        'mitroo_11_oxi'              => ['no_marketing_calls'],
+        'synainesi_omilou_nai'       => ['group_data_consent'],
+        'synainesi_omilou_oxi'       => ['group_data_consent'],
+        'enarksi_stin_ypanaxorisi'   => ['waive_withdrawal'],
     ];
 
     /**
@@ -122,6 +142,22 @@ final class ProviderFormFields
         'contact_phone'      => 'Τηλέφωνο Υπεύθυνου Επικοινωνίας',
         'contact_mobile'     => 'Κινητό Υπεύθυνου Επικοινωνίας',
         'contact_email'      => 'Email Υπεύθυνου Επικοινωνίας',
+
+        'mobile_msisdn'      => 'Αριθμός Κινητού',
+        'sim_number'         => 'Αριθμός Κάρτας SIM',
+        'mobile_connection'  => 'Είδος Σύνδεσης',
+        'subsidy_type'       => 'Τύπος Επιδότησης',
+        'subsidy_amount'     => 'Έκπτωση Παγίου (€)',
+        'base_price'         => 'Αρχική Τιμή Παγίου (€)',
+        'offer_price'        => 'Τιμή Προσφοράς ανά Μήνα (€)',
+        'price_after'        => 'Πάγιο μετά τη Λήξη της Προσφοράς (€)',
+
+        // Διατυπωμένες όπως τις θέτει ο συνεργάτης στον πελάτη, όχι όπως τις
+        // γράφει το νομικό κείμενο του εντύπου.
+        'bill_cap'           => 'Θέλει ανώτατο όριο λογαριασμού;',
+        'no_marketing_calls' => 'Να μπει στο μητρώο του άρθρου 11 (να ΜΗΝ δέχεται προωθητικές κλήσεις);',
+        'group_data_consent' => 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;',
+        'waive_withdrawal'   => 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;',
     ];
 
     /**
@@ -136,6 +172,8 @@ final class ProviderFormFields
      */
     private const DROPDOWNS = [
         'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
+        'mobile_connection', 'subsidy_type',
+        'bill_cap', 'no_marketing_calls', 'group_data_consent', 'waive_withdrawal',
     ];
 
     private function __construct()

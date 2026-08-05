@@ -335,6 +335,69 @@ class ECRM_Shortcodes {
 				</div>
 			</section>
 
+			<?php
+			// Κινητή τηλεφωνία. Ένα δικό της τμήμα και όχι πεδία σκορπισμένα
+			// στα υπάρχοντα: η αίτηση κινητής περιγράφει γραμμή, όχι μετρητή,
+			// και τίποτα εδώ δεν έχει νόημα σε ρεύμα ή αέριο.
+			?>
+			<section class="ecrm-card" data-when-energy="mobile">
+				<div class="ecrm-step"><span class="ecrm-step__n">6β</span> Στοιχεία Κινητής</div>
+				<div class="ecrm-grid">
+					<?php $ecrm_field( 'mobile_msisdn', 'Αριθμός Κινητού', 'text', true, '69…' ); ?>
+					<?php $ecrm_field( 'sim_number', 'Αριθμός Κάρτας SIM', 'text', true ); ?>
+					<label class="ecrm-field" data-for="mobile_connection">
+						<span class="ecrm-field__label">Είδος Σύνδεσης</span>
+						<select name="mobile_connection" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="new">Νέα Σύνδεση</option>
+							<option value="port">Φορητότητα</option>
+							<option value="renewal">Ανανέωση</option>
+						</select>
+					</label>
+					<?php $ecrm_field( 'subsidy_type', 'Τύπος Επιδότησης', 'text', true, 'π.χ. Έκπτωση Παγίου' ); ?>
+					<?php $ecrm_field( 'subsidy_amount', 'Έκπτωση Παγίου (€)', 'text', true ); ?>
+				</div>
+
+				<?php
+				// Τρεις τιμές, γιατί η προσφορά αλλάζει δύο φορές: τι κοστίζει
+				// κανονικά, τι πληρώνει όσο τρέχει η προσφορά, και πού
+				// επιστρέφει μετά. Μία τιμή για τα τρία σημαίνει ότι κάποιος
+				// μαθαίνει λάθος τιμή για τον 25ο μήνα.
+				?>
+				<div class="ecrm-subhead">Τιμολόγηση Προγράμματος</div>
+				<div class="ecrm-grid">
+					<?php $ecrm_field( 'base_price', 'Αρχική Τιμή Παγίου (€)', 'text', true ); ?>
+					<?php $ecrm_field( 'offer_price', 'Τιμή Προσφοράς ανά Μήνα (€)', 'text', true ); ?>
+					<?php $ecrm_field( 'price_after', 'Πάγιο μετά τη Λήξη Προσφοράς (€)', 'text', true ); ?>
+				</div>
+
+				<?php
+				// Απαντήσεις του πελάτη, όχι ρυθμίσεις της εταιρείας. Μένουν
+				// κενές μέχρι να ρωτηθεί: κενό κουτί στο έντυπο είναι καλύτερο
+				// από ένα X που κανείς δεν είπε.
+				?>
+				<div class="ecrm-subhead">Ερωτήσεις προς τον πελάτη <span class="ecrm-hint">— απαντά ο ίδιος</span></div>
+				<div class="ecrm-grid">
+					<?php
+					$ecrm_yesno = function ( $name, $label ) {
+						printf(
+							'<label class="ecrm-field" data-for="%1$s"><span class="ecrm-field__label">%2$s</span>'
+							. '<select name="%1$s" class="ecrm-input" data-extra="1">'
+							. '<option value="">—</option><option value="yes">Ναι</option><option value="no">Όχι</option>'
+							. '</select></label>',
+							esc_attr( $name ),
+							esc_html( $label )
+						);
+					};
+					$ecrm_yesno( 'bill_cap', 'Θέλει ανώτατο όριο λογαριασμού;' );
+					$ecrm_field( 'anotato_orio', 'Ανώτατο Όριο (€)', 'text', true );
+					$ecrm_yesno( 'no_marketing_calls', 'Μητρώο άρθρου 11 — να ΜΗΝ δέχεται προωθητικές κλήσεις;' );
+					$ecrm_yesno( 'group_data_consent', 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;' );
+					$ecrm_yesno( 'waive_withdrawal', 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;' );
+					?>
+				</div>
+			</section>
+
 			<!-- Στοιχεία Τιμολόγησης -->
 			<section class="ecrm-card">
 				<div class="ecrm-step"><span class="ecrm-step__n">7</span> Στοιχεία Τιμολόγησης</div>

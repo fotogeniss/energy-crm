@@ -55,6 +55,17 @@
 				var ok = el.getAttribute('data-when').split(',').indexOf(t) !== -1;
 				el.style.display = ok ? '' : 'none';
 			});
+			applyEnergyType();
+		}
+
+		// Sections that only make sense for one kind of supply — the mobile
+		// block asks about a line and a SIM, which mean nothing on a meter.
+		function applyEnergyType() {
+			var e = state.energy_type || 'power';
+			qa('[data-when-energy]').forEach(function (el) {
+				var ok = el.getAttribute('data-when-energy').split(',').indexOf(e) !== -1;
+				el.style.display = ok ? '' : 'none';
+			});
 		}
 
 		function setField(name, val) {
@@ -74,7 +85,7 @@
 				group.querySelectorAll('.ecrm-chip').forEach(function (b) { b.classList.remove('is-on'); });
 				btn.classList.add('is-on');
 				state[field] = btn.getAttribute('data-val');
-				if (field === 'energy_type') renderPrograms();
+				if (field === 'energy_type') { renderPrograms(); applyEnergyType(); }
 				if (field === 'energy_type' || field === 'category') refreshKbDocs();
 				refreshProviderFields();
 			});

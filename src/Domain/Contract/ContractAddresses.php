@@ -54,6 +54,18 @@ final class ContractAddresses
     }
 
     /**
+     * True when the bill goes to the customer's own address.
+     *
+     * Forms that ask this as two boxes — "Ίδια / Διαφορετική" — need the answer
+     * rather than the address, and an address comparison would get it wrong the
+     * moment someone re-typed the same street with a different abbreviation.
+     */
+    public function billingIsHome(): bool
+    {
+        return $this->billing === $this->home;
+    }
+
+    /**
      * Fall back to the home address when the flag says so — and also when the
      * flag says otherwise but nothing was actually entered.
      *

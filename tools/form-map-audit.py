@@ -344,10 +344,14 @@ def overlaps(fields: dict, gap: float = 2.0) -> list[tuple[str, str, int, float,
 
 
 def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
-    fields = json.loads((forms / f"{key}.json").read_text(encoding="utf-8"))["fields"]
+    document = json.loads((forms / f"{key}.json").read_text(encoding="utf-8"))
+    fields = document["fields"]
     found = marks(pdf)
 
+    # A signature is a placement like any other as far as coverage goes; it
+    # lives outside `fields` only because it draws an image rather than text.
     placed = [p for entry in fields.values() for p in placements(entry)]
+    placed += placements(document.get("sig"))
 
     missing = [m for m in found
                if not any(covered(f, m["page"], m["x"], m["y"],
@@ -362,7 +366,14 @@ def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
         print(f"    σελ {m['page']}  x={m['x']:6.1f} y={m['y']:6.1f}  "
               f"[{m['section']:8}] {(m['key'] or '???'):26} « {m['label'][:40]} »")
 
-    over = collisions(pdf, fields)
+    # Some providers only ever sent a completed specimen. There the check is
+    # meaningless and inverted: an anchor that lands on the sample's own answer
+    # is exactly right, and every correct field reports as a collision. The
+    # flag lives in the map so the reason sits next to the form it concerns.
+    over = [] if document.get("source_is_filled") else collisions(pdf, fields)
+
+    if document.get("source_is_filled"):
+        print("\n    (το δείγμα είναι συμπληρωμένο — ο έλεγχος σύγκρουσης δεν ισχύει)")
 
     if over:
         print(f"\n    ΠΑΝΩ ΣΕ ΤΥΠΩΜΕΝΟ ΚΕΙΜΕΝΟ: {len(over)}")

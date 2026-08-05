@@ -281,6 +281,40 @@ class ECRM_FormFill {
 			'diarkeia_24_mines'       => ( $tm === 24 ? 'X' : '' ),
 			'diarkeia_36_mines'       => ( $tm === 36 ? 'X' : '' ),
 
+			// --- Κινητή τηλεφωνία -------------------------------------------
+			// A mobile application describes a line, not a meter: the number
+			// being activated, the SIM it goes on, and the tariff over time.
+			'arithmos_kinitou'        => $xg( 'mobile_msisdn' ),
+			'arithmos_sim'            => $xg( 'sim_number' ),
+			'eidos_syndesis'          => $xg( 'mobile_connection' ),
+			'typos_epidotisis'        => $xg( 'subsidy_type' ),
+			'ekptosi_pagiou'          => $xg( 'subsidy_amount' ),
+			// Three prices because the offer changes twice: what the plan
+			// normally costs, what the customer pays during the offer, and what
+			// it reverts to afterwards. Printing one of them for all three is
+			// how a customer is told the wrong price for month 25.
+			'arxiki_timi_pagiou'      => $xg( 'base_price' ),
+			'timi_prosforas'          => $xg( 'offer_price' ),
+			'pagio_meta_ti_prosfora'  => $xg( 'price_after' ),
+
+			// --- Επιλογές που δηλώνει ο πελάτης ------------------------------
+			// Answers, not settings. Each is a Ναι/Όχι the agent asks and the
+			// customer decides, so an unanswered one prints neither box rather
+			// than guessing — a provider form with a default opinion on the
+			// customer's consent is worse than one with a gap.
+			'orio_logariasmou_nai'    => ( $xg( 'bill_cap' ) === 'yes' ? 'X' : '' ),
+			'orio_logariasmou_oxi'    => ( $xg( 'bill_cap' ) === 'no'  ? 'X' : '' ),
+			'mitroo_11_nai'           => ( $xg( 'no_marketing_calls' ) === 'yes' ? 'X' : '' ),
+			'mitroo_11_oxi'           => ( $xg( 'no_marketing_calls' ) === 'no'  ? 'X' : '' ),
+			'synainesi_omilou_nai'    => ( $xg( 'group_data_consent' ) === 'yes' ? 'X' : '' ),
+			'synainesi_omilou_oxi'    => ( $xg( 'group_data_consent' ) === 'no'  ? 'X' : '' ),
+			'enarksi_stin_ypanaxorisi' => ( $xg( 'waive_withdrawal' ) === 'yes' ? 'X' : '' ),
+
+			// Το ίδιο flag που κρατά η σύμβαση για τη διεύθυνση αποστολής,
+			// ως δύο κουτιά όπως το ζητά το έντυπο.
+			'apostoli_idia_me_katoikias' => ( $addr->billingIsHome() ? 'X' : '' ),
+			'apostoli_diaforetiki'       => ( $addr->billingIsHome() ? '' : 'X' ),
+
 			// «Τρόπος υποβολής αίτησης: Ηλεκτρονικά / Ταχυδρομικά». Constant,
 			// not a field: the CRM produces the application as a PDF and it is
 			// submitted electronically. If that ever stops being true it needs a
