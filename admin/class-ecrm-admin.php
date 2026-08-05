@@ -12,7 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_Admin {
 
 	public static function init(): void {
-		add_action( 'admin_menu', [ __CLASS__, 'menu' ] );
+		// Priority 9: the parent menu must exist in $menu before any submenu is
+		// attached to it. WordPress only creates the implicit "back to parent"
+		// link if it can find the parent at that moment, and a submenu that
+		// registers first leaves the settings page with no entry at all.
+		add_action( 'admin_menu', [ __CLASS__, 'menu' ], 9 );
 		add_action( 'admin_init', [ __CLASS__, 'settings' ] );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'media_enqueue' ] );
 	}
@@ -26,6 +30,19 @@ class ECRM_Admin {
 			[ __CLASS__, 'render_settings' ],
 			'dashicons-buddicons-buddypress-logo',
 			56
+		);
+
+		// Declared explicitly rather than relying on the implicit first entry
+		// WordPress adds: that one is conditional on registration order, and it
+		// would be labelled "Energy CRM → Energy CRM", which tells nobody that
+		// the API key lives behind it.
+		add_submenu_page(
+			'energy-crm',
+			'Energy CRM — Ρυθμίσεις',
+			'Ρυθμίσεις',
+			'manage_options',
+			'energy-crm',
+			[ __CLASS__, 'render_settings' ]
 		);
 	}
 
