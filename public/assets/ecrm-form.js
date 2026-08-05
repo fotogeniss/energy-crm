@@ -329,6 +329,11 @@
 				ADDR_FIELDS.forEach(function (p) { setField(which + '_' + p, c[which + '_' + p]); });
 				toggleAddr(cb);
 			});
+			// Editing shows what was actually recorded, not the default. A
+			// contract saved before consent was captured must not look as
+			// though it had been.
+			var consentEl = q('[data-consent]');
+			if (consentEl) consentEl.checked = !!c.consent_at;
 			if (c.extra) { Object.keys(c.extra).forEach(function (k) { setField(k, c.extra[k]); }); }
 			var modeEl = q('.ecrm-foot__mode strong'); if (modeEl) modeEl.textContent = 'Επεξεργασία #' + (c.code || c.id);
 			var titleEl = q('[data-form-title]'); if (titleEl) titleEl.textContent = 'Επεξεργασία Αίτησης';
@@ -346,6 +351,10 @@
 			root.querySelectorAll('[data-addr-same]').forEach(function (cb) {
 				cb.checked = true; toggleAddr(cb);
 			});
+			// Back to ticked for the next application, matching the markup —
+			// otherwise an agent who unticked it once carries that across every
+			// contract they enter for the rest of the session.
+			var consentReset = q('[data-consent]'); if (consentReset) consentReset.checked = true;
 			qa('.ecrm-provider').forEach(function (x) { x.classList.remove('is-on'); });
 			var lab = q('[data-selprov]'); if (lab) lab.textContent = '';
 			// reset chips to defaults (first chip of each group except where default known)

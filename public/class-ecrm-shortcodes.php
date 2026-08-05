@@ -398,7 +398,19 @@ class ECRM_Shortcodes {
 			</section>
 
 			<footer class="ecrm-foot">
-				<label class="ecrm-consent"><input type="checkbox" data-consent name="consent" value="1"> Ο πελάτης συναινεί στην επεξεργασία των προσωπικών του δεδομένων για τη σύναψη/διαχείριση της σύμβασης (GDPR).</label>
+				<?php
+				// Ticked by default: the agent is with the customer when they
+				// fill this in and consent is part of that conversation, so the
+				// box was being ticked on every single application anyway.
+				//
+				// What it therefore stops being is evidence. It records the
+				// agent's assertion and the agent's IP, not the customer's, and
+				// a field that is always true demonstrates nothing. The consent
+				// that counts is the one the customer ticks themselves on the
+				// signing page (ECRM_Tracking) — their own tick, their own IP,
+				// their own timestamp. That one stays untouched and unticked.
+				?>
+				<label class="ecrm-consent"><input type="checkbox" data-consent name="consent" value="1" checked> Ο πελάτης συναινεί στην επεξεργασία των προσωπικών του δεδομένων για τη σύναψη/διαχείριση της σύμβασης (GDPR).</label>
 				<div class="ecrm-foot__mode">Λειτουργία: <strong>Νέα αίτηση</strong></div>
 				<div class="ecrm-foot__actions">
 					<button type="button" class="ecrm-btn ecrm-btn--ghost" data-save-draft>Προσωρινή Αποθήκευση</button>

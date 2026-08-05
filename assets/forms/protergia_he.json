@@ -115,23 +115,23 @@
   },
   "odos_arithmos_paroxis": {
    "page": 1,
-   "x": 45.0,
+   "x": 55,
    "y": 206.7
   },
   "tk_paroxis": {
    "page": 1,
    "x": 135.5,
-   "y": 206.7
+   "y": 206.2
   },
   "poli_paroxis": {
    "page": 1,
    "x": 166.0,
-   "y": 206.7
+   "y": 206.2
   },
   "hkasp": {
    "page": 1,
-   "x": 19.3,
-   "y": 281.3
+   "x": 19.5,
+   "y": 280.3
   },
   "topos_imerominia": {
    "page": 4,
@@ -141,7 +141,7 @@
   "cat_oikiaki": {
    "page": 1,
    "x": 78.0,
-   "y": 232.0,
+   "y": 232.5,
    "check": true
   },
   "act_new": {
@@ -159,7 +159,7 @@
   "teleftaia_endeixi_imeras": {
    "page": 1,
    "x": 55.0,
-   "y": 262.0
+   "y": 263.0
   },
   "metr_imerisia": {
    "page": 1,
