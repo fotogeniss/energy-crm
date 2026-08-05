@@ -195,17 +195,17 @@ final class ContractDocumentsController implements Controller
         set_time_limit(60);
         $reporting = error_reporting(0);
 
-        try {
-            ob_start();
-            $bytes = $build();
-            ob_end_clean();
-        } catch (Throwable) {
-            if (ob_get_level() > 0) {
-                ob_end_clean();
-            }
+        // Buffering opens outside the try and closes in finally, so it is
+        // balanced on every path. Guarding with ob_get_level() would only be
+        // papering over a start and an end that could get out of step.
+        ob_start();
 
+        try {
+            $bytes = $build();
+        } catch (Throwable) {
             return null;
         } finally {
+            ob_end_clean();
             error_reporting($reporting);
         }
 
