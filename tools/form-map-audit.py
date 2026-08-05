@@ -54,8 +54,9 @@ X_SLACK = 2.0
 Y_SLACK = 8.0
 
 # ECRM_FormFill::BASELINE — the map stores the top of the value, the glyph is
-# drawn this far below it.
-BASELINE_MM = 3.0
+# drawn this far below it. Keep the two in step or the collision check tests a
+# position the renderer never uses.
+BASELINE_MM = 2.5
 
 
 def is_filler(token: str) -> bool:

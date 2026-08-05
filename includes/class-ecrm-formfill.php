@@ -17,7 +17,19 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 class ECRM_FormFill {
 
 	/** Baseline offset (mm) added to a label's top-y so text sits on its line. */
-	const BASELINE = 3.0;
+	/**
+	 * Distance from a field's stored y (the top of the line) down to the text
+	 * baseline, in mm.
+	 *
+	 * Measured, not guessed: the labels Protergia prints are 7pt and every one
+	 * of them puts its baseline 2.51 mm below the top of its box. Matching that
+	 * makes a value sit *on* the dotted rule instead of hanging under it.
+	 *
+	 * It was 3.0, which put every value on every form half a millimetre low —
+	 * individually invisible, collectively the reason the whole sheet read as
+	 * slightly off.
+	 */
+	const BASELINE = 2.5;
 
 	/**
 	 * Resolve a provider name + energy type to a bundled template key.
