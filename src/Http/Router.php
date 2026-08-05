@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Persistence\AnalyticsRepository;
 use EnergyCRM\Persistence\CommissionRepository;
 use EnergyCRM\Persistence\ContractRepository;
@@ -51,6 +52,7 @@ final class Router
         CommissionRepository $commissions,
         AnalyticsRepository $analytics,
         TeamActivityRepository $teamActivity,
+        DocumentQueue $documents,
     ) {
         $this->controllers = [
             new ProviderFormController(),
@@ -78,7 +80,7 @@ final class Router
             new AnalyticsController($scope, $analytics),
             new TeamActivityController($scope, $teamActivity),
             new QuoteController(),
-            new SignLinkController($scope, $contracts),
+            new SignLinkController($scope, $contracts, $documents),
         ];
     }
 

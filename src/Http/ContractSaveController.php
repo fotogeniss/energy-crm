@@ -24,6 +24,7 @@ use EnergyCRM\Domain\Contract\ContractAddresses;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\ContractTerm;
 use EnergyCRM\Domain\Customer\PostalAddress;
+use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use WP_REST_Request;
@@ -121,8 +122,10 @@ final class ContractSaveController implements Controller
 
         $this->recordHistory($contractId, $scope, $existing, $previousCustomer, $contract, $customer);
 
-        // Best effort: the contract is saved whether or not the PDF renders.
-        ECRM_REST::store_contract_pdf($contractId);
+        // Scheduled, not rendered here. Building it inline held a PHP worker
+        // and 256 MB for seconds on every save, drafts included — see
+        // DocumentQueue. Nothing on this screen waits for the file.
+        DocumentQueue::enqueue($contractId);
 
         return new WP_REST_Response([
             'ok'          => true,

@@ -23,6 +23,7 @@ namespace EnergyCRM\Http;
 
 use ECRM_Files;
 use ECRM_REST;
+use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\SignatureRepository;
 use WP_REST_Request;
@@ -130,7 +131,9 @@ final class SigningController implements Controller
         $this->storeSignatureImage($contractId, $image);
 
         // The attached document is regenerated so it carries the signature.
-        ECRM_REST::store_contract_pdf($contractId);
+        // Queued: signatures arrive in bursts when a batch of links goes out,
+        // and the customer's browser should not wait for a render it never sees.
+        DocumentQueue::enqueue($contractId);
         ECRM_REST::notify_signed($contractId, $name);
 
         return new WP_REST_Response(['ok' => true], 200);

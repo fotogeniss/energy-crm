@@ -23,7 +23,7 @@ use EnergyCRM\Legacy\Loader as LegacyLoader;
 
 final class Plugin
 {
-    public const VERSION = '1.1.0';
+    public const VERSION = '1.2.0';
 
     private static ?self $instance = null;
 
@@ -101,8 +101,13 @@ final class Plugin
             Services::dashboard(),
             Services::commissions(),
             Services::analytics(),
-            Services::teamActivity()
+            Services::teamActivity(),
+            Services::documents()
         ))->register();
+
+        // The PDF builder listens for its own scheduled events; without this
+        // the queue fills and nothing ever drains it.
+        Services::documents()->register();
 
         if (is_admin()) {
             (new FormCalibrator())->register();

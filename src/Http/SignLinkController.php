@@ -20,6 +20,7 @@ use ECRM_REST;
 use ECRM_Tracking;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Persistence\ContractRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -31,6 +32,7 @@ final class SignLinkController implements Controller
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
+        private readonly DocumentQueue $documents,
     ) {
     }
 
@@ -76,6 +78,12 @@ final class SignLinkController implements Controller
                 'error' => 'Η σύμβαση δεν μπορεί να σταλεί για υπογραφή από την τρέχουσα κατάστασή της.',
             ], 409);
         }
+
+        // The one moment the stored document has to exist: the customer is
+        // about to be sent to a page that shows it. Saving only schedules the
+        // render, so this closes the window — and does nothing when the cron
+        // already got there first.
+        $this->documents->ensure($id);
 
         $url = ECRM_Tracking::url($id);
 
