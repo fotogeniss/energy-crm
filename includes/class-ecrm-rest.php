@@ -151,7 +151,7 @@ class ECRM_REST {
 
 		// GET /providers -> EnergyCRM\Http\CatalogueController
 		register_rest_route( self::NS, '/quote/pdf', [ 'methods' => 'POST', 'callback' => [ __CLASS__, 'quote_pdf' ], 'permission_callback' => $auth ] );
-		register_rest_route( self::NS, '/lookup/afm', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'lookup_afm' ], 'permission_callback' => $auth ] );
+		// GET /lookup/afm -> EnergyCRM\Http\VatLookupController
 		// GET /search -> EnergyCRM\Http\CatalogueController
 		register_rest_route( self::NS, '/team/live', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'team_live' ], 'permission_callback' => self::needs( Capability::MANAGE_TEAM ) ] );
 		// /filters -> EnergyCRM\Http\SavedFiltersController
@@ -318,62 +318,6 @@ class ECRM_REST {
 			'members' => $members,
 			'count'   => count( $members ),
 			'ts'      => current_time( 'H:i' ),
-		], 200 );
-	}
-
-	/** Per-user saved filters (stored in user meta). */
-
-	public static function lookup_afm( WP_REST_Request $req ): WP_REST_Response {
-		if ( class_exists( 'ECRM_RateLimit' ) && ! ECRM_RateLimit::allow( 'afm', 30, 300 ) ) {
-			return ECRM_RateLimit::too_many();
-		}
-		$afm = preg_replace( '/\D+/', '', (string) $req->get_param( 'afm' ) );
-		if ( class_exists( 'ECRM_Validate' ) && ! ECRM_Validate::afm( $afm ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη έγκυρο ΑΦΜ.' ], 422 );
-		}
-		$url  = 'https://ec.europa.eu/taxation_customs/vies/rest-api/ms/EL/vat/' . rawurlencode( $afm );
-		$resp = wp_remote_get( $url, [ 'timeout' => 12, 'headers' => [ 'Accept' => 'application/json' ] ] );
-		if ( is_wp_error( $resp ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Αποτυχία σύνδεσης στο μητρώο (VIES).' ], 502 );
-		}
-		$code = (int) wp_remote_retrieve_response_code( $resp );
-		$data = json_decode( (string) wp_remote_retrieve_body( $resp ), true );
-		if ( $code !== 200 || ! is_array( $data ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Το μητρώο VIES δεν απάντησε (HTTP ' . $code . ').' ], 502 );
-		}
-		if ( empty( $data['isValid'] ) ) {
-			return new WP_REST_Response( [ 'ok' => true, 'valid' => false, 'afm' => $afm ], 200 );
-		}
-
-		$name    = trim( (string) ( $data['name'] ?? '' ) );
-		$address = trim( (string) ( $data['address'] ?? '' ) );
-		$name    = ( $name === '---' ) ? '' : $name;
-		$address = ( $address === '---' ) ? '' : $address;
-
-		// Best-effort parse of the Greek address string (e.g. "ΟΔΟΣ 12\n15124 ΠΟΛΗ").
-		$parsed = [ 'street' => '', 'street_no' => '', 'postal_code' => '', 'city' => '' ];
-		if ( $address !== '' ) {
-			$flat = preg_replace( '/\s+/', ' ', str_replace( [ "\n", "\r" ], ' ', $address ) );
-			if ( preg_match( '/(\d{5})\s+(.+)$/u', $flat, $mm ) ) {
-				$parsed['postal_code'] = $mm[1];
-				$parsed['city']        = trim( $mm[2] );
-				$flat = trim( str_replace( $mm[0], '', $flat ) );
-			}
-			if ( preg_match( '/^(.*?)\s+(\d+[Α-Ω]?)\s*$/u', $flat, $sm ) ) {
-				$parsed['street']    = trim( $sm[1] );
-				$parsed['street_no'] = trim( $sm[2] );
-			} else {
-				$parsed['street'] = $flat;
-			}
-		}
-
-		return new WP_REST_Response( [
-			'ok'      => true,
-			'valid'   => true,
-			'afm'     => $afm,
-			'name'    => $name,
-			'address' => $address,
-			'parsed'  => $parsed,
 		], 200 );
 	}
 

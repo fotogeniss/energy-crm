@@ -64,6 +64,7 @@ final class Router
             new CatalogueController($scope, $providers, $contracts),
             new DuplicateCheckController($scope, $contracts),
             new ExtractionController(),
+            new VatLookupController(),
         ];
     }
 
