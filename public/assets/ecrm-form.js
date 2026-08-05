@@ -68,9 +68,14 @@
 			});
 		}
 
-		function setField(name, val) {
+		// keepExisting is set when the extraction started on its own. The agent
+		// is typing while it runs, and an answer that arrives late must not
+		// overwrite what they entered in the meantime. Pressing the button is
+		// an explicit "use what you found", so that path still overwrites.
+		function setField(name, val, keepExisting) {
 			var input = root.querySelector('.ecrm-input[name="' + name + '"]');
 			if (!input || val == null || val === '') return;
+			if (keepExisting && input.value.trim() !== '') return;
 			input.value = val;
 			var field = input.closest('.ecrm-field');
 			if (field) { field.classList.add('is-ai'); setTimeout(function () { field.classList.remove('is-ai'); }, 1800); }
@@ -356,6 +361,9 @@
 			state.provider_id = null; state.program_id = null; state.invoice_code = null; state.activation_type = null;
 			state.energy_type = 'power'; state.category = 'home'; state.price_type = 'fixed'; state.customer_type = 'individual';
 			state.files = []; state.filesUploaded = false;
+			// A new application must read its own documents, even if they
+			// happen to be named like the previous customer's.
+			extractedFor = ''; clearTimeout(autoTimer);
 			qa('.ecrm-input').forEach(function (i) { i.value = ''; });
 			// A new application starts with both addresses assumed identical,
 			// which is the common case and matches the column defaults.
@@ -426,9 +434,12 @@
 					'<button type="button" class="ecrm-fileitem__rm" data-i="' + i + '">✕</button>';
 				ul.appendChild(li);
 			});
-			ul.querySelectorAll('.ecrm-kind').forEach(function (s) { s.addEventListener('change', function () { state.files[this.getAttribute('data-i')].kind = this.value; }); });
+			// Changing what a document *is* changes how it should be read, so
+			// it re-arms the automatic pass exactly like adding a file does.
+			ul.querySelectorAll('.ecrm-kind').forEach(function (s) { s.addEventListener('change', function () { state.files[this.getAttribute('data-i')].kind = this.value; scheduleExtraction(); }); });
 			ul.querySelectorAll('.ecrm-fileitem__rm').forEach(function (b) { b.addEventListener('click', function () { state.files.splice(parseInt(this.getAttribute('data-i'), 10), 1); renderFiles(); }); });
 			extractBtn.disabled = state.files.length === 0;
+			scheduleExtraction();
 		}
 
 		pick.addEventListener('click', function () { input.click(); });
@@ -440,11 +451,46 @@
 		drop.addEventListener('drop', function (e) { if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files); });
 
 		// extraction
-		extractBtn.addEventListener('click', function () {
+		//
+		// It starts by itself as soon as the documents settle, instead of
+		// waiting for the button. The reading takes seconds no matter what we
+		// do; what we can decide is whether the agent spends them watching a
+		// spinner or choosing the provider and typing the customer's name. By
+		// the time they reach the fields, these are usually already filled.
+		//
+		// The button stays: it is how you re-read after swapping a document,
+		// and how you insist when the automatic pass left something out.
+		var extractionRunning = false;
+		var extractedFor = '';
+		var autoTimer = null;
+
+		// Identity of the current document set, so an automatic pass never
+		// repeats over files it has already read.
+		function filesSignature() {
+			return state.files.map(function (i) {
+				return i.file.name + ':' + i.file.size + ':' + i.kind;
+			}).join('|');
+		}
+
+		function scheduleExtraction() {
+			clearTimeout(autoTimer);
 			if (!state.files.length) return;
+			if (filesSignature() === extractedFor) return;
+			// Long enough for someone dropping three files in a row to end up
+			// with one reading rather than three.
+			autoTimer = setTimeout(function () { runExtraction(true); }, 1200);
+		}
+
+		function runExtraction(auto) {
+			if (!state.files.length || extractionRunning) return;
+			var signature = filesSignature();
+			if (auto && signature === extractedFor) return;
+			extractionRunning = true;
+			extractedFor = signature;
+
 			var statusEl = q('[data-ai-status]');
 			extractBtn.disabled = true; extractBtn.classList.add('is-loading');
-			statusEl.textContent = 'Ανάλυση εγγράφων με AI…';
+			statusEl.textContent = auto ? 'Διαβάζονται τα έγγραφα…' : 'Ανάλυση εγγράφων με AI…';
 			// The queue lives here rather than on the server: the browser is
 			// already holding the files, so waiting for a free slot costs
 			// nothing and keeps identity documents off the server's disk.
@@ -473,10 +519,16 @@
 
 			send()
 				.then(function (d) {
-					if (!d || !d.ok) { statusEl.textContent = ''; toast((d && d.error) || 'Η εξαγωγή απέτυχε.', false); return; }
+					if (!d || !d.ok) {
+						statusEl.textContent = '';
+						// A failed automatic pass may be retried by the button.
+						if (auto) { extractedFor = ''; }
+						toast((d && d.error) || 'Η εξαγωγή απέτυχε.', false);
+						return;
+					}
 					var filled = 0;
 					Object.keys(d.data || {}).forEach(function (k) {
-						if (d.data[k]) { setField(k, d.data[k]); filled++; }
+						if (d.data[k]) { setField(k, d.data[k], auto); filled++; }
 						if (k === 'invoice_code' && d.data[k]) {
 							var gi = root.querySelector('.ecrm-chips[data-field="invoice_code"]');
 							if (gi) gi.querySelectorAll('.ecrm-chip').forEach(function (b) {
@@ -498,9 +550,21 @@
 					checkDup();
 					refreshKbDocs();
 				})
-				.catch(function () { statusEl.textContent = ''; toast('Σφάλμα δικτύου στην εξαγωγή.', false); })
-				.finally(function () { extractBtn.disabled = false; extractBtn.classList.remove('is-loading'); });
-		});
+				.catch(function () {
+					statusEl.textContent = '';
+					if (auto) { extractedFor = ''; }
+					toast('Σφάλμα δικτύου στην εξαγωγή.', false);
+				})
+				.finally(function () {
+					extractionRunning = false;
+					extractBtn.disabled = state.files.length === 0;
+					extractBtn.classList.remove('is-loading');
+				});
+		}
+
+		// The button re-reads what is there, overwriting: it is a deliberate
+		// "use what you find", unlike the automatic pass.
+		extractBtn.addEventListener('click', function () { runExtraction(false); });
 
 		// save
 		function uploadFiles() {
