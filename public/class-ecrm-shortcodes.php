@@ -264,7 +264,6 @@ class ECRM_Shortcodes {
 			<!-- Στοιχεία Μετρητή -->
 			<section class="ecrm-card">
 				<div class="ecrm-step"><span class="ecrm-step__n">6</span> Στοιχεία Μετρητή</div>
-				<label class="ecrm-syncbar"><input type="checkbox" data-sync="meter_addr"> Ίδια διεύθυνση με τα στοιχεία πελάτη — συγχρονισμός οδού/αριθμού/ΤΚ/πόλης</label>
 				<div class="ecrm-grid">
 					<?php $ecrm_field( 'supply_number', 'Αριθμός Παροχής / ΗΚΑΣΠ' ); ?>
 					<?php $ecrm_field( 'meter_number', 'Αριθμός Μετρητή' ); ?>
@@ -299,13 +298,40 @@ class ECRM_Shortcodes {
 					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
 					<?php $ecrm_field( 'promotion', 'Promotion', 'text', true ); ?>
 				</div>
-				<div class="ecrm-subhead">Διεύθυνση Μετρητή</div>
-				<div class="ecrm-grid">
-					<?php $ecrm_field( 'meter_postal', 'Τ.Κ', 'text', true ); ?>
-					<?php $ecrm_field( 'meter_city', 'Πόλη', 'text', true ); ?>
-					<?php $ecrm_field( 'meter_region', 'Νομός', 'text', true ); ?>
-					<?php $ecrm_field( 'meter_street', 'Οδός', 'text', true ); ?>
-					<?php $ecrm_field( 'meter_street_no', 'Αριθμός', 'text', true ); ?>
+				<?php
+				// Where the meter actually is. Real columns, not the extras bag:
+				// every provider form has a "ΔΙΕΥΘΥΝΣΗ ΠΑΡΟΧΗΣ" box, and until
+				// these were stored properly it printed the customer's home
+				// address — right until the meter is in a rented shop.
+				?>
+				<div class="ecrm-subhead">Διεύθυνση Παροχής <span class="ecrm-hint">— εκεί που βρίσκεται ο μετρητής</span></div>
+				<label class="ecrm-syncbar">
+					<input type="checkbox" name="supply_addr_same" value="1" data-addr-same="supply" checked>
+					Ίδια με τη διεύθυνση του πελάτη
+				</label>
+				<div class="ecrm-grid" data-addr-fields="supply" hidden>
+					<?php $ecrm_field( 'supply_street', 'Οδός' ); ?>
+					<?php $ecrm_field( 'supply_street_no', 'Αριθμός' ); ?>
+					<?php $ecrm_field( 'supply_postal_code', 'Τ.Κ' ); ?>
+					<?php $ecrm_field( 'supply_city', 'Πόλη' ); ?>
+					<?php $ecrm_field( 'supply_region', 'Νομός' ); ?>
+				</div>
+
+				<?php
+				// The box every provider form labels "εφόσον είναι διαφορετική
+				// από τη διεύθυνση κατοικίας". It had no data behind it at all.
+				?>
+				<div class="ecrm-subhead">Διεύθυνση Αποστολής Λογαριασμού</div>
+				<label class="ecrm-syncbar">
+					<input type="checkbox" name="billing_addr_same" value="1" data-addr-same="billing" checked>
+					Ίδια με τη διεύθυνση του πελάτη
+				</label>
+				<div class="ecrm-grid" data-addr-fields="billing" hidden>
+					<?php $ecrm_field( 'billing_street', 'Οδός' ); ?>
+					<?php $ecrm_field( 'billing_street_no', 'Αριθμός' ); ?>
+					<?php $ecrm_field( 'billing_postal_code', 'Τ.Κ' ); ?>
+					<?php $ecrm_field( 'billing_city', 'Πόλη' ); ?>
+					<?php $ecrm_field( 'billing_region', 'Νομός' ); ?>
 				</div>
 			</section>
 

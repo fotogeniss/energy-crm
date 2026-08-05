@@ -20,8 +20,10 @@ use ECRM_REST;
 use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\ContractAddresses;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\ContractTerm;
+use EnergyCRM\Domain\Customer\PostalAddress;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use WP_REST_Request;
@@ -225,6 +227,12 @@ final class ContractSaveController implements Controller
             ),
         ];
 
+        // Where the meter is, and where the bill goes. Each provider form asks
+        // for both and says "εφόσον είναι διαφορετική"; until now the agent
+        // typed the meter address into the extras bag and nothing printed it.
+        $contract += $this->addressFrom($params, ContractAddresses::SUPPLY_PREFIX);
+        $contract += $this->addressFrom($params, ContractAddresses::BILLING_PREFIX);
+
         // GDPR consent: recorded with when and from where, or not at all.
         if (! empty($params['consent'])) {
             $contract['consent_at'] = current_time('mysql');
@@ -236,6 +244,44 @@ final class ContractSaveController implements Controller
         }
 
         return $contract;
+    }
+
+    /**
+     * One of the contract's two extra addresses, read off the request.
+     *
+     * The "same as home" flag is stored rather than inferred, so a blank
+     * address the agent deliberately marked as identical stays distinguishable
+     * from one they simply never filled in. When it is set, the parts are
+     * cleared too — leaving stale values behind is how a corrected address
+     * reappears on the next printed form.
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, mixed>
+     */
+    private function addressFrom(array $params, string $prefix): array
+    {
+        $same = ! empty($params[$prefix . 'addr_same']);
+
+        if ($same) {
+            return [$prefix . 'addr_same' => 1] + (new PostalAddress())->toColumns($prefix);
+        }
+
+        // Only the five address keys are read, and each is scalar by the time
+        // it is cast — the request also carries the extras bag, which is an
+        // array and must never reach sanitize_text_field().
+        $clean = [];
+
+        foreach (['street', 'street_no', 'city', 'postal_code', 'region'] as $part) {
+            $value = $params[$prefix . $part] ?? '';
+
+            $clean[$prefix . $part] = is_scalar($value)
+                ? sanitize_text_field((string) $value)
+                : '';
+        }
+
+        return [$prefix . 'addr_same' => 0]
+            + PostalAddress::fromRow($clean, $prefix)->toColumns($prefix);
     }
 
     /**

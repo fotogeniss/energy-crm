@@ -299,6 +299,9 @@
 			}, 400);
 		}
 
+		var ADDR_PARTS = ['supply', 'billing'];
+		var ADDR_FIELDS = ['street', 'street_no', 'postal_code', 'city', 'region'];
+
 		var CUST_FIELDS = ['afm','doy','postal_code','first_name','last_name','father_name','company_name','adt','birth_date','region','city','street','street_no','phone','mobile','email','supply_number','meter_number','start_date','term_months','end_date'];
 
 		function applyEdit(c) {
@@ -317,6 +320,15 @@
 			renderPrograms();
 			var sel = q('[data-program]'); if (sel && c.program_id) sel.value = c.program_id;
 			CUST_FIELDS.forEach(function (k) { setField(k, c[k]); });
+			ADDR_PARTS.forEach(function (which) {
+				var cb = root.querySelector('[data-addr-same="' + which + '"]');
+				if (!cb) return;
+				// Contracts saved before these columns existed have no value;
+				// they meant "the same", which is what the column defaults to.
+				cb.checked = c[which + '_addr_same'] == null || !!Number(c[which + '_addr_same']);
+				ADDR_FIELDS.forEach(function (p) { setField(which + '_' + p, c[which + '_' + p]); });
+				toggleAddr(cb);
+			});
 			if (c.extra) { Object.keys(c.extra).forEach(function (k) { setField(k, c.extra[k]); }); }
 			var modeEl = q('.ecrm-foot__mode strong'); if (modeEl) modeEl.textContent = 'Επεξεργασία #' + (c.code || c.id);
 			var titleEl = q('[data-form-title]'); if (titleEl) titleEl.textContent = 'Επεξεργασία Αίτησης';
@@ -329,6 +341,11 @@
 			state.energy_type = 'power'; state.category = 'home'; state.price_type = 'fixed'; state.customer_type = 'individual';
 			state.files = []; state.filesUploaded = false;
 			qa('.ecrm-input').forEach(function (i) { i.value = ''; });
+			// A new application starts with both addresses assumed identical,
+			// which is the common case and matches the column defaults.
+			root.querySelectorAll('[data-addr-same]').forEach(function (cb) {
+				cb.checked = true; toggleAddr(cb);
+			});
 			qa('.ecrm-provider').forEach(function (x) { x.classList.remove('is-on'); });
 			var lab = q('[data-selprov]'); if (lab) lab.textContent = '';
 			// reset chips to defaults (first chip of each group except where default known)
@@ -467,6 +484,11 @@
 				if (i.getAttribute('data-extra')) payload.extra[i.name] = i.value;
 				else payload[i.name] = i.value;
 			});
+			// Checkboxes carry no .ecrm-input class, and an unticked one must be
+			// sent as 0 rather than omitted: "not the same" is a real answer.
+			root.querySelectorAll('[data-addr-same]').forEach(function (cb) {
+				payload[cb.name] = cb.checked ? 1 : 0;
+			});
 			var consentEl = q('[data-consent]');
 			payload.consent = consentEl && consentEl.checked ? 1 : 0;
 			return payload;
@@ -479,7 +501,7 @@
 		});
 		applyCustomerType();
 
-		// sync checkboxes: copy customer/rep data into contact, or customer address into meter
+		// sync checkbox: copy customer/rep data into the contact person
 		function setVal(name, val) { var el = root.querySelector('[name="' + name + '"]'); if (el && val != null) el.value = val; }
 		function getVal(name) { var el = root.querySelector('[name="' + name + '"]'); return el ? el.value : ''; }
 		root.querySelectorAll('[data-sync]').forEach(function (cb) {
@@ -494,14 +516,22 @@
 					setVal('contact_email', getVal('rep_email') || getVal('email'));
 					setVal('contact_phone', getVal('rep_phone') || getVal('phone'));
 					setVal('contact_afm', getVal('rep_afm') || getVal('afm'));
-				} else if (what === 'meter_addr') {
-					setVal('meter_postal', getVal('postal_code'));
-					setVal('meter_city', getVal('city'));
-					setVal('meter_region', getVal('region'));
-					setVal('meter_street', getVal('street'));
-					setVal('meter_street_no', getVal('street_no'));
 				}
 			});
+		});
+
+		// Supply / billing address: ticked means "same as the customer's", and
+		// the fields collapse. The flag is what gets saved — an empty address
+		// the agent deliberately marked as identical must stay distinguishable
+		// from one they simply never filled in.
+		function toggleAddr(cb) {
+			var which = cb.getAttribute('data-addr-same');
+			var box = root.querySelector('[data-addr-fields="' + which + '"]');
+			if (box) box.hidden = cb.checked;
+		}
+		root.querySelectorAll('[data-addr-same]').forEach(function (cb) {
+			cb.addEventListener('change', function () { toggleAddr(this); });
+			toggleAddr(cb);
 		});
 
 		// auto-compute Ημ. Λήξης from Έναρξη + Διάρκεια (μήνες)

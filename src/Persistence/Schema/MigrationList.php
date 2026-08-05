@@ -18,6 +18,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddContractAddresses;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureLegacyColumns;
+use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
 
 final class MigrationList
@@ -35,6 +36,7 @@ final class MigrationList
             new EnsureInnoDb(),
             new AddForeignKeys(),
             new AddContractAddresses(),
+            new MoveMeterAddressOutOfExtras(),
         ];
     }
 }

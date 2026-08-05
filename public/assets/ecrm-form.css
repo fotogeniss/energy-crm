@@ -196,6 +196,12 @@
 .ecrm-syncbar { display: flex; align-items: center; gap: 9px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .ecrm-syncbar input { accent-color: #10b981; width: 16px; height: 16px; }
 
+/* Collapsible address blocks. .ecrm-grid sets display:grid, and a class
+   declaration beats the [hidden] attribute, so it has to be said explicitly —
+   same reason as .ecrm-bell__badge[hidden] in ecrm-app.css. */
+.ecrm-grid[hidden] { display: none; }
+.ecrm-subhead .ecrm-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: #cbd5e1; }
+
 /* action banners (PDF / e-sign email / live link) */
 .ecrm-actbanners { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 18px; }
 .ecrm-actbanner { display: flex; align-items: center; gap: 16px; width: 100%; text-align: left; border: none; border-radius: 14px; padding: 16px 20px; cursor: pointer; color: #fff; font-family: inherit; transition: transform .12s, box-shadow .12s; }
