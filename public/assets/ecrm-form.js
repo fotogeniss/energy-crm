@@ -445,10 +445,33 @@
 			var statusEl = q('[data-ai-status]');
 			extractBtn.disabled = true; extractBtn.classList.add('is-loading');
 			statusEl.textContent = 'Ανάλυση εγγράφων με AI…';
-			var fd = new FormData();
-			state.files.forEach(function (item) { fd.append('files[]', item.file); fd.append('kinds[]', item.kind); });
-			fetch(api('/extract'), { method: 'POST', headers: headers(false), body: fd })
-				.then(function (r) { return r.json(); })
+			// The queue lives here rather than on the server: the browser is
+			// already holding the files, so waiting for a free slot costs
+			// nothing and keeps identity documents off the server's disk.
+			// A 503 with retry_after means "not now", not "failed".
+			var waited = 0;
+			function send() {
+				var fd = new FormData();
+				state.files.forEach(function (item) { fd.append('files[]', item.file); fd.append('kinds[]', item.kind); });
+				return fetch(api('/extract'), { method: 'POST', headers: headers(false), body: fd })
+					.then(function (r) { return r.json(); })
+					.then(function (d) {
+						if (d && d.queued) {
+							var wait = Math.max(2, parseInt(d.retry_after, 10) || 8);
+							waited += wait;
+							// Give up rather than retry forever; four minutes is
+							// past the point where something is actually wrong.
+							if (waited > 240) { return { ok: false, error: 'Η εξαγωγή αργεί υπερβολικά. Δοκίμασε ξανά σε λίγο.' }; }
+							statusEl.textContent = 'Στη σειρά… (' + waited + 's)';
+							return new Promise(function (resolve) {
+								setTimeout(function () { resolve(send()); }, wait * 1000);
+							});
+						}
+						return d;
+					});
+			}
+
+			send()
 				.then(function (d) {
 					if (!d || !d.ok) { statusEl.textContent = ''; toast((d && d.error) || 'Η εξαγωγή απέτυχε.', false); return; }
 					var filled = 0;

@@ -16,6 +16,7 @@ namespace EnergyCRM\Http;
 
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Infrastructure\DocumentQueue;
+use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Persistence\AnalyticsRepository;
 use EnergyCRM\Persistence\CommissionRepository;
 use EnergyCRM\Persistence\ContractRepository;
@@ -53,6 +54,7 @@ final class Router
         AnalyticsRepository $analytics,
         TeamActivityRepository $teamActivity,
         DocumentQueue $documents,
+        ExtractionGate $extractionGate,
     ) {
         $this->controllers = [
             new ProviderFormController(),
@@ -73,7 +75,7 @@ final class Router
             new SavedFiltersController($scope),
             new CatalogueController($scope, $providers, $contracts),
             new DuplicateCheckController($scope, $contracts),
-            new ExtractionController(),
+            new ExtractionController($extractionGate),
             new VatLookupController(),
             new DashboardController($scope, $dashboard),
             new CommissionsController($scope, $commissions),

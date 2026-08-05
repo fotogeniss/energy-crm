@@ -17,11 +17,16 @@ namespace EnergyCRM\Http;
 
 use ECRM_Extractor;
 use ECRM_RateLimit;
+use EnergyCRM\Infrastructure\ExtractionGate;
 use WP_REST_Request;
 use WP_REST_Response;
 
 final class ExtractionController implements Controller
 {
+    public function __construct(private readonly ExtractionGate $gate)
+    {
+    }
+
     private const ALLOWED_MIMES = [
         'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf',
     ];
@@ -80,7 +85,29 @@ final class ExtractionController implements Controller
             );
         }
 
-        $result = ECRM_Extractor::extract(array_slice($documents, 0, self::MAX_DOCUMENTS));
+        // Everything above is cheap. Past this line a worker is held for as
+        // long as the model takes, so the site's capacity is what decides
+        // whether this request runs now or the browser tries again.
+        if (! $this->gate->enter()) {
+            $response = new WP_REST_Response([
+                'ok'          => false,
+                'queued'      => true,
+                'retry_after' => $this->gate->retryAfter(),
+                'error'       => 'Γίνονται ήδη αρκετές εξαγωγές. Θα ξαναδοκιμάσει αυτόματα.',
+            ], 503);
+
+            $response->header('Retry-After', (string) $this->gate->retryAfter());
+
+            return $response;
+        }
+
+        try {
+            $result = ECRM_Extractor::extract(array_slice($documents, 0, self::MAX_DOCUMENTS));
+        } finally {
+            // In a finally so a thrown extractor does not hold the slot until
+            // the connection closes.
+            $this->gate->leave();
+        }
 
         return new WP_REST_Response($result, $result['ok'] ? 200 : 502);
     }

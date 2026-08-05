@@ -23,7 +23,7 @@ use EnergyCRM\Legacy\Loader as LegacyLoader;
 
 final class Plugin
 {
-    public const VERSION = '1.2.0';
+    public const VERSION = '1.3.0';
 
     private static ?self $instance = null;
 
@@ -102,7 +102,8 @@ final class Plugin
             Services::commissions(),
             Services::analytics(),
             Services::teamActivity(),
-            Services::documents()
+            Services::documents(),
+            Services::extractionGate()
         ))->register();
 
         // The PDF builder listens for its own scheduled events; without this

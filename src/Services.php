@@ -21,6 +21,7 @@ namespace EnergyCRM;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\WordPressScopeResolver;
 use EnergyCRM\Infrastructure\DocumentQueue;
+use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Infrastructure\SecretStore;
 use EnergyCRM\Persistence\AnalyticsRepository;
 use EnergyCRM\Persistence\CommissionRepository;
@@ -73,6 +74,8 @@ final class Services
 
     private static ?DocumentQueue $documents = null;
 
+    private static ?ExtractionGate $extractionGate = null;
+
     private function __construct()
     {
     }
@@ -90,6 +93,11 @@ final class Services
     public static function files(): FileRepository
     {
         return self::$files ??= new FileRepository(\ECRM_Files::dir());
+    }
+
+    public static function extractionGate(): ExtractionGate
+    {
+        return self::$extractionGate ??= new ExtractionGate();
     }
 
     public static function documents(): DocumentQueue
@@ -195,6 +203,7 @@ final class Services
         self::$commissions   = null;
         self::$analytics     = null;
         self::$teamActivity  = null;
-        self::$documents     = null;
+        self::$documents      = null;
+        self::$extractionGate = null;
     }
 }
