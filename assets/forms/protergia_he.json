@@ -19,8 +19,8 @@
   },
   "imerominia": {
    "page": 2,
-   "x": 66.6,
-   "y": 17.8
+   "x": 107.0,
+   "y": 17.3
   },
   "politis": {
    "page": 1,
@@ -60,7 +60,7 @@
   },
   "epaggelma": {
    "page": 1,
-   "x": 108.5,
+   "x": 24.0,
    "y": 110.3
   },
   "adt": {
@@ -152,14 +152,14 @@
   },
   "act_reconnection": {
    "page": 1,
-   "x": 163.0,
-   "y": 254.0,
+   "x": 171.0,
+   "y": 254.9,
    "check": true
   },
   "teleftaia_endeixi_imeras": {
    "page": 1,
-   "x": 13.0,
-   "y": 263.0
+   "x": 55.0,
+   "y": 262.0
   },
   "metr_imerisia": {
    "page": 1,
@@ -175,7 +175,7 @@
   },
   "tilefono": {
    "page": 1,
-   "x": 150.9,
+   "x": 117.0,
    "y": 110.3
   },
   "metr_tilemetroumeni": {

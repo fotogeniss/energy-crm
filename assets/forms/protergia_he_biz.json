@@ -37,8 +37,8 @@
   },
   "ar_paroxis": {
    "page": 1,
-   "x": 154.1,
-   "y": 141.3
+   "x": 55.0,
+   "y": 196.0
   },
   "kinito": {
    "page": 1,
@@ -52,7 +52,7 @@
   },
   "isxis_paroxis": {
    "page": 1,
-   "x": 37.7,
+   "x": 55.0,
    "y": 248.7
   },
   "hkasp": {
@@ -62,8 +62,8 @@
   },
   "imerominia": {
    "page": 2,
-   "x": 66.6,
-   "y": 17.6
+   "x": 107.0,
+   "y": 17.3
   },
   "poso_eggiisis": {
    "page": 2,
@@ -117,8 +117,8 @@
   },
   "cat_epaggelmatiki": {
    "page": 1,
-   "x": 56.7,
-   "y": 233.7,
+   "x": 77.9,
+   "y": 232.7,
    "check": true
   },
   "teleftaia_endeixi_imeras": {
@@ -133,8 +133,8 @@
   },
   "metr_imer_nyxt": {
    "page": 1,
-   "x": 96.8,
-   "y": 241.3,
+   "x": 128.0,
+   "y": 240.7,
    "check": true
   },
   "kad": {
@@ -174,6 +174,26 @@
    "x": 130.3,
    "y": 25.9,
    "check": true
+  },
+  "contact_onomateponymo": {
+   "page": 1,
+   "x": 31.6,
+   "y": 149.2
+  },
+  "contact_tilefono": {
+   "page": 1,
+   "x": 23.7,
+   "y": 153.4
+  },
+  "contact_kinito": {
+   "page": 1,
+   "x": 86.2,
+   "y": 153.4
+  },
+  "contact_email": {
+   "page": 1,
+   "x": 150.1,
+   "y": 153.4
   }
  },
  "sig": {

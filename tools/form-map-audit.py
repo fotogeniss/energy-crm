@@ -53,6 +53,15 @@ MM = 25.4 / 72
 X_SLACK = 2.0
 Y_SLACK = 8.0
 
+# ECRM_FormFill::BASELINE — the map stores the top of the value, the glyph is
+# drawn this far below it.
+BASELINE_MM = 3.0
+
+
+def is_filler(token: str) -> bool:
+    """Dotted leaders and rule characters: the space a value goes into."""
+    return not re.search(r"[Α-Ωα-ωΆ-ώA-Za-z0-9]", token)
+
 # Section headers, most specific first: "υπευθύνου επικοινωνίας" must be tested
 # before "επικοινωνίας", or it is swallowed by it.
 SECTIONS = [
@@ -233,6 +242,78 @@ def placements(entry) -> list[dict]:
     return [entry] if isinstance(entry, dict) else []
 
 
+def collisions(pdf, fields: dict) -> list[tuple[str, dict, str, float]]:
+    """
+    Anchors that land on top of the form's own printed text.
+
+    A missing field leaves a blank box, which anyone notices. An anchor a few
+    millimetres too far left prints the value *over* the label — "1256" across
+    the words "ΤΕΛΕΥΤΑΙΑ ΕΝΔΕΙΞΗ" — and that looks like a rendering glitch
+    rather than a mapping error, so it survives review. This is the check that
+    catches it.
+
+    Dotted filler is not a collision: those runs of full stops are exactly
+    where a value is supposed to be written.
+
+    @return (field name, placement, word sat on, x where that word ends)
+    """
+    doc = fitz.open(pdf)
+    by_page = {n + 1: ink(doc[n]) for n in range(doc.page_count)}
+
+    hits = []
+    for name, entry in fields.items():
+        for pos in placements(entry):
+            page = int(pos.get("page", 1))
+            x, y = float(pos["x"]), float(pos["y"]) + BASELINE_MM
+
+            over = [c for c in by_page.get(page, [])
+                    if c[0] - 0.3 <= x <= c[2] - 0.3
+                    and c[1] - 1.0 <= y <= c[3] + 1.5]
+
+            if over:
+                hits.append((name, pos, over[0][4], max(c[2] for c in over)))
+
+    return hits
+
+
+def ink(page) -> list[tuple[float, float, float, float, str]]:
+    """
+    Real printed characters on a page, in mm, with the dotted leaders removed.
+
+    Character level rather than word level on purpose. PyMuPDF hands back
+    "οικίας:................................" as one word, and its box covers
+    both the label and the blank it introduces. Testing against that box calls
+    a correctly placed value a collision, and the false alarms bury the true
+    ones. Each glyph carries its own box, so the label ends where it really
+    ends.
+
+    Neighbouring glyphs of the same run are stitched back together so the
+    report names a word rather than a letter.
+    """
+    glyphs = []
+    for block in page.get_text("rawdict")["blocks"]:
+        for line in block.get("lines", []):
+            for span in line.get("spans", []):
+                for ch in span.get("chars", []):
+                    if is_filler(ch["c"]):
+                        continue
+                    x0, y0, x1, y1 = ch["bbox"]
+                    glyphs.append([x0 * MM, y0 * MM, x1 * MM, y1 * MM, ch["c"]])
+
+    glyphs.sort(key=lambda g: (round(g[1], 1), g[0]))
+
+    merged: list[list] = []
+    for g in glyphs:
+        last = merged[-1] if merged else None
+        if last and abs(last[1] - g[1]) < 0.4 and g[0] - last[2] < 0.6:
+            last[2], last[3] = g[2], max(last[3], g[3])
+            last[4] += g[4]
+        else:
+            merged.append(g)
+
+    return [tuple(m) for m in merged]
+
+
 def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
     fields = json.loads((forms / f"{key}.json").read_text(encoding="utf-8"))["fields"]
     found = marks(pdf)
@@ -252,13 +333,21 @@ def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
         print(f"    σελ {m['page']}  x={m['x']:6.1f} y={m['y']:6.1f}  "
               f"[{m['section']:8}] {(m['key'] or '???'):26} « {m['label'][:40]} »")
 
+    over = collisions(pdf, fields)
+
+    if over:
+        print(f"\n    ΠΑΝΩ ΣΕ ΤΥΠΩΜΕΝΟ ΚΕΙΜΕΝΟ: {len(over)}")
+        for name, pos, word, ends in sorted(over, key=lambda h: (h[1].get("page", 1), h[1]["y"])):
+            print(f"    σελ {pos.get('page', 1)}  x={float(pos['x']):6.1f} y={float(pos['y']):6.1f}  "
+                  f"{name:26} πάνω στο «{word[:26]}» (τελειώνει x={ends:.1f})")
+
     if suggest and named:
         print("\n    -- για επικόλληση στο JSON, μετά από έλεγχο --")
         for m in sorted(named, key=lambda m: (m["page"], m["y"])):
             print(f'    "{m["key"]}": {{ "page": {m["page"]}, '
                   f'"x": {m["x"] + 0.5:.1f}, "y": {m["y"]:.1f} }},')
 
-    return len(missing)
+    return len(missing) + len(over)
 
 
 def main() -> int:
