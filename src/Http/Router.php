@@ -19,6 +19,7 @@ use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\FileRepository;
+use EnergyCRM\Persistence\LeadRepository;
 use EnergyCRM\Persistence\TaskRepository;
 
 final class Router
@@ -35,6 +36,7 @@ final class Router
         TaskRepository $tasks,
         EventRepository $events,
         FileRepository $files,
+        LeadRepository $leads,
     ) {
         $this->controllers = [
             new ProviderFormController(),
@@ -46,6 +48,7 @@ final class Router
             new ContractStatusController($scope, $contracts, $files),
             new ContractSaveController($scope, $contracts, $customers),
             new ContractsBulkController($scope, $contracts, $files),
+            new LeadsController($scope, $leads, $contracts, $customers),
         ];
     }
 
