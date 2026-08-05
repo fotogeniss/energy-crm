@@ -168,11 +168,7 @@ class ECRM_REST {
 		register_rest_route( self::NS, '/dashboard',  [ 'methods' => 'GET',  'callback' => [ __CLASS__, 'dashboard' ],     'permission_callback' => $auth ] );
 		// GET/POST /contracts -> ContractsReadController / ContractSaveController
 
-		register_rest_route( self::NS, '/contracts/bulk', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'bulk' ],
-			'permission_callback' => $auth,
-		] );
+		// POST /contracts/bulk -> EnergyCRM\Http\ContractsBulkController
 
 		register_rest_route( self::NS, '/contracts/duplicate', [
 			'methods'             => 'GET',
@@ -289,134 +285,7 @@ class ECRM_REST {
 		return (bool) array_intersect( $ecrm_roles, (array) $u->roles );
 	}
 
-	// ---------------------------------------------------------------------
-	public static function bulk( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$p = $req->get_json_params() ?: $req->get_params();
-		$ids    = array_values( array_filter( array_map( 'intval', (array) ( $p['ids'] ?? [] ) ) ) );
-		$action = sanitize_text_field( (string) ( $p['action'] ?? '' ) );
-		$value  = $p['value'] ?? '';
-		if ( ! $ids ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν επιλέχθηκαν συμβάσεις.' ], 400 );
-		}
-
-		// One endpoint, several operations: the capability depends on which one
-		// the request asked for, so it cannot be settled by the route alone.
-		$required = [
-			'status' => Capability::CHANGE_STATUS,
-			'delete' => Capability::DELETE_CONTRACT,
-			'assign' => Capability::ASSIGN_CONTRACT,
-			'export' => Capability::EXPORT_DATA,
-		];
-		if ( isset( $required[ $action ] ) && ! current_user_can( $required[ $action ] ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν έχεις δικαίωμα για αυτή την ενέργεια.' ], 403 );
-		}
-
-		$uid        = get_current_user_id();
-		$can_manage = self::can_manage_team();
-		$scope_ids  = $can_manage ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-
-		$ct  = ECRM_DB::table( 'contracts' );
-		$in  = implode( ',', array_map( 'intval', $ids ) );
-		$sin = implode( ',', array_fill( 0, count( $scope_ids ), '%d' ) );
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, status, activation_type, partner_user_id FROM {$ct} WHERE id IN ($in) AND partner_user_id IN ($sin)",
-			$scope_ids
-		), ARRAY_A );
-		if ( ! $rows ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Καμία προσβάσιμη σύμβαση.' ], 403 );
-		}
-
-		if ( $action === 'status' ) {
-			$to     = sanitize_text_field( (string) $value );
-			$target = ContractStatus::tryFromSlug( $to );
-			if ( $target === null ) {
-				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη έγκυρη κατάσταση.' ], 400 );
-			}
-			$gated    = class_exists( 'ECRM_Docs' ) && in_array( $to, ECRM_Docs::gate_statuses(), true );
-			$updated  = 0;
-			$skipped  = 0;
-			$rejected = [];
-			foreach ( $rows as $r ) {
-				$id = (int) $r['id'];
-				if ( $r['status'] === $to ) { continue; }
-				if ( $gated && class_exists( 'ECRM_Docs' ) && ECRM_Docs::missing_labels( $id, $r['activation_type'] ?? '' ) ) {
-					$skipped++; continue;
-				}
-
-				// The pipeline may refuse the move; report that instead of
-				// counting it as done.
-				$source = ContractStatus::tryFromSlug( (string) $r['status'] );
-				if ( $source !== null && ! $source->canMoveTo( $target ) ) {
-					$rejected[] = $source->label();
-					continue;
-				}
-
-				if ( self::transition( $id, $to, [
-					'user_id' => (int) $r['partner_user_id'],
-					'from'    => $r['status'],
-					'message' => 'Μαζική αλλαγή κατάστασης',
-				] ) ) {
-					$updated++;
-				} else {
-					$skipped++;
-				}
-			}
-
-			$response = [ 'ok' => true, 'updated' => $updated, 'skipped' => $skipped ];
-			if ( $rejected ) {
-				$response['rejected'] = count( $rejected );
-				$response['notice']   = sprintf(
-					'%d σύμβαση/εις δεν άλλαξαν: δεν επιτρέπεται μετάβαση από «%s» σε «%s».',
-					count( $rejected ),
-					implode( '», «', array_unique( $rejected ) ),
-					$target->label()
-				);
-			}
-			return new WP_REST_Response( $response, 200 );
-		}
-
-		if ( $action === 'delete' ) {
-			$okids = array_map( function ( $r ) { return (int) $r['id']; }, $rows );
-			$list  = implode( ',', $okids );
-
-			// Documents first: the row is the only pointer to the file on disk.
-			\EnergyCRM\Services::files()->purgeForContracts( $okids );
-
-			$wpdb->query( "DELETE FROM " . ECRM_DB::table( 'events' )        . " WHERE contract_id IN ($list)" );
-			$wpdb->query( "DELETE FROM " . ECRM_DB::table( 'signatures' )    . " WHERE contract_id IN ($list)" );
-			$wpdb->query( "DELETE FROM " . ECRM_DB::table( 'notifications' ) . " WHERE contract_id IN ($list)" );
-			$wpdb->query( "DELETE FROM {$ct} WHERE id IN ($list)" );
-			return new WP_REST_Response( [ 'ok' => true, 'updated' => count( $okids ) ], 200 );
-		}
-
-		if ( $action === 'assign' ) {
-			$target = (int) $value;
-			if ( ! $can_manage || ! in_array( $target, ECRM_DB::visible_user_ids( $uid ), true ) ) {
-				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη επιτρεπτή ανάθεση.' ], 403 );
-			}
-			$okids = implode( ',', array_map( function ( $r ) { return (int) $r['id']; }, $rows ) );
-			$wpdb->query( $wpdb->prepare( "UPDATE {$ct} SET partner_user_id = %d WHERE id IN ($okids)", $target ) );
-			return new WP_REST_Response( [ 'ok' => true, 'updated' => count( $rows ) ], 200 );
-		}
-
-		if ( $action === 'export' ) {
-			if ( ! class_exists( 'ZipArchive' ) ) {
-				return new WP_REST_Response( [ 'ok' => false, 'error' => 'Λείπει η επέκταση ZipArchive.' ], 500 );
-			}
-			$okids = array_map( function ( $r ) { return (int) $r['id']; }, $rows );
-			$data  = ECRM_Export::contracts_dataset( '', '', $okids, $scope_ids );
-			$bytes = ECRM_Export::build_xlsx( $data['headers'], $data['rows'] );
-			return new WP_REST_Response( [
-				'ok' => true, 'b64' => base64_encode( $bytes ),
-				'filename' => 'symvaseis-epilogi-' . gmdate( 'Ymd-Hi' ) . '.xlsx',
-				'mime' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-				'count' => count( $data['rows'] ),
-			], 200 );
-		}
-
-		return new WP_REST_Response( [ 'ok' => false, 'error' => 'Άγνωστη ενέργεια.' ], 400 );
-	}
+	// POST /contracts/bulk -> EnergyCRM\Http\ContractsBulkController
 
 	/**
 	 * ΑΦΜ → trader name/address via the EU VIES public REST service.

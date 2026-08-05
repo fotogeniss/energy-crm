@@ -177,6 +177,77 @@ final class ContractRepository
     }
 
     /**
+     * The subset of the given ids the actor may actually act on.
+     *
+     * Bulk operations start here: whatever the client sent, only what comes
+     * back is touched. Ids outside the scope are dropped rather than refused,
+     * so a stale selection does not block the rest of the batch.
+     *
+     * @param list<int> $contractIds
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function reachableAmong(array $contractIds, UserScope $scope): array
+    {
+        global $wpdb;
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', $contractIds))));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        [$clause, $scopeParams] = $this->scopeClause($scope);
+        $placeholders           = implode(',', array_fill(0, count($ids), '%d'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT id, status, activation_type, partner_user_id, customer_id
+                 FROM %i WHERE id IN ({$placeholders}){$clause}",
+                [$this->table, ...$ids, ...$scopeParams]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
+     * Delete several contracts at once, within scope.
+     *
+     * @param list<int> $contractIds
+     *
+     * @return int Rows removed.
+     */
+    public function deleteMany(array $contractIds, UserScope $scope): int
+    {
+        global $wpdb;
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', $contractIds))));
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        [$clause, $scopeParams] = $this->scopeClause($scope);
+        $placeholders           = implode(',', array_fill(0, count($ids), '%d'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $affected = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM %i WHERE id IN ({$placeholders}){$clause}",
+                [$this->table, ...$ids, ...$scopeParams]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $affected === false ? 0 : (int) $affected;
+    }
+
+    /**
      * Delete a contract the actor may reach.
      *
      * Documents must be purged first: the row is the only pointer to the file

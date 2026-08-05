@@ -45,6 +45,7 @@ final class Router
             new ContractsReadController($scope, $contracts, $events, $files),
             new ContractStatusController($scope, $contracts, $files),
             new ContractSaveController($scope, $contracts, $customers),
+            new ContractsBulkController($scope, $contracts, $files),
         ];
     }
 
