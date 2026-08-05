@@ -26,6 +26,7 @@ use EnergyCRM\Persistence\LeadRepository;
 use EnergyCRM\Persistence\ProviderRepository;
 use EnergyCRM\Persistence\SignatureRepository;
 use EnergyCRM\Persistence\TaskRepository;
+use EnergyCRM\Persistence\TeamActivityRepository;
 use EnergyCRM\Persistence\TeamRepository;
 
 final class Router
@@ -49,11 +50,12 @@ final class Router
         DashboardRepository $dashboard,
         CommissionRepository $commissions,
         AnalyticsRepository $analytics,
+        TeamActivityRepository $teamActivity,
     ) {
         $this->controllers = [
             new ProviderFormController(),
             new NotificationsController($scope),
-            new RenewalsController($scope, $contracts),
+            new RenewalsController($scope, $contracts, $events),
             new CustomersController($scope, $customers),
             new TasksController($scope, $tasks, $contracts),
             new ContractsReadController($scope, $contracts, $events, $files),
@@ -74,6 +76,9 @@ final class Router
             new DashboardController($scope, $dashboard),
             new CommissionsController($scope, $commissions),
             new AnalyticsController($scope, $analytics),
+            new TeamActivityController($scope, $teamActivity),
+            new QuoteController(),
+            new SignLinkController($scope, $contracts),
         ];
     }
 

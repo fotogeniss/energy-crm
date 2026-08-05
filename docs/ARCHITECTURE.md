@@ -56,10 +56,15 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 | 4β | Διαγραφή φυσικών αρχείων όταν σβήνεται σύμβαση | ✅ |
 | 4γ | Καθαρισμός ορφανών + foreign keys με `ON DELETE` | ✅ |
 | 5 | Ρητή μηχανή καταστάσεων συμβολαίου (επιτρεπόμενες μεταβάσεις) | ✅ |
-| 6 | Σπάσιμο του `class-ecrm-rest.php` σε controllers ανά resource, με `args` schema | ⬜ |
+| 6 | Σπάσιμο του `class-ecrm-rest.php` σε controllers ανά resource, με `args` schema | ✅ |
 | 7 | Διαφοροποίηση ρόλων (Συνεργάτης / Πωλητής / Καταχωρητής) σε πραγματικά capabilities | ✅ |
 | 8 | Secrets εκτός `wp_options`· retention policy για `extracted_json` | ✅ |
 | 9 | Frontend: build step, σπάσιμο του `ecrm-app.js`, τέλος στο χειροκίνητο `innerHTML` | ⬜ |
+| 10 | Κύκλος ζωής συμβολαίου (`transition`, ειδοποιήσεις) εκτός `ECRM_REST`· container αντί για 14 ορίσματα στον `Router` | ⬜ |
+
+Το βήμα 6 έκλεισε: καμία διαδρομή δεν δηλώνεται πλέον στο `class-ecrm-rest.php`.
+Ό,τι απέμεινε εκεί δεν είναι REST — είναι ο κύκλος ζωής του συμβολαίου, και
+φεύγει στο βήμα 10.
 
 ## Ορατότητα και ιεραρχία
 

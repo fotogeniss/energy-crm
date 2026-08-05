@@ -17,7 +17,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use EnergyCRM\Access\Capability;
 use EnergyCRM\Domain\Contract\ContractStatus;
 
 class ECRM_REST {
@@ -35,13 +34,9 @@ class ECRM_REST {
 
 	/** Record the "contract created" entry in the event log. */
 	public static function log_creation( int $contract_id, int $user_id, string $status ): void {
-		global $wpdb;
-		$wpdb->insert( ECRM_DB::table( 'events' ), [
-			'contract_id' => $contract_id,
-			'user_id'     => $user_id,
-			'type'        => 'created',
-			'to_status'   => $status,
-			'message'     => 'Αποθήκευση αίτησης',
+		\EnergyCRM\Services::events()->record( $contract_id, $user_id, 'created', [
+			'to_status' => $status,
+			'message'   => 'Αποθήκευση αίτησης',
 		] );
 	}
 
@@ -129,31 +124,22 @@ class ECRM_REST {
 	}
 
 	/**
-	 * Permission callback requiring a specific capability.
+	 * No routes remain here.
 	 *
-	 * Every route keeps `can_use` as the floor; the ones that create, destroy
-	 * or expose money on top of that name what they need. See
-	 * EnergyCRM\Access\Capability.
+	 * Every endpoint now lives in a controller under src/Http, registered by
+	 * EnergyCRM\Http\Router. The map below is kept as a finding aid — it is the
+	 * only place that lists the whole HTTP surface next to its old home.
+	 *
+	 * What is left in this class is not REST at all: transition(), the
+	 * notification helpers and store_contract_pdf() are the contract lifecycle,
+	 * and they are the next thing to move.
 	 */
-	private static function needs( string $capability ): callable {
-		return static function () use ( $capability ) {
-			return self::can_use() && current_user_can( $capability );
-		};
-	}
-
-	/** True when the current user holds the capability. */
-	public static function allows( string $capability ): bool {
-		return current_user_can( $capability );
-	}
-
 	public static function routes(): void {
-		$auth = [ __CLASS__, 'can_use' ];
-
 		// GET /providers -> EnergyCRM\Http\CatalogueController
-		register_rest_route( self::NS, '/quote/pdf', [ 'methods' => 'POST', 'callback' => [ __CLASS__, 'quote_pdf' ], 'permission_callback' => $auth ] );
+		// POST /quote/pdf -> EnergyCRM\Http\QuoteController
 		// GET /lookup/afm -> EnergyCRM\Http\VatLookupController
 		// GET /search -> EnergyCRM\Http\CatalogueController
-		register_rest_route( self::NS, '/team/live', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'team_live' ], 'permission_callback' => self::needs( Capability::MANAGE_TEAM ) ] );
+		// GET /team/live -> EnergyCRM\Http\TeamActivityController
 		// /filters -> EnergyCRM\Http\SavedFiltersController
 		// GET /file/{id} -> EnergyCRM\Http\DocumentsController
 		// POST /extract -> EnergyCRM\Http\ExtractionController
@@ -199,164 +185,11 @@ class ECRM_REST {
 		// Δεν επανεγγράφονται εδώ: μια διαδρομή σε δύο σημεία σημαίνει ότι
 		// κερδίζει σιωπηλά όποια δηλωθεί τελευταία.
 
-		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/renew', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'renew_contract' ],
-			'permission_callback' => $auth,
-		] );
+		// POST /contracts/{id}/renew -> EnergyCRM\Http\RenewalsController::renew
 
-		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/sign-link', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'create_sign_link' ],
-			'permission_callback' => $auth,
-		] );
+		// POST /contracts/{id}/sign-link -> EnergyCRM\Http\SignLinkController
 
 		// GET/POST /sign/{token} -> EnergyCRM\Http\SigningController
-	}
-
-	public static function can_use(): bool {
-		if ( ! is_user_logged_in() ) {
-			return false;
-		}
-		if ( current_user_can( 'manage_options' ) ) {
-			return true;
-		}
-		$u = wp_get_current_user();
-		$ecrm_roles = class_exists( 'ECRM_DB' ) ? array_keys( ECRM_DB::roles() ) : [];
-		return (bool) array_intersect( $ecrm_roles, (array) $u->roles );
-	}
-
-	/** Live team activity dashboard (manager-gated). */
-	public static function team_live( WP_REST_Request $req ): WP_REST_Response {
-		if ( ! self::can_manage_team() ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μόνο για υπεύθυνους ομάδας.' ], 403 );
-		}
-		global $wpdb;
-		$uid = get_current_user_id();
-		$ids = ECRM_DB::visible_user_ids( $uid );
-		if ( ! $ids ) { $ids = [ $uid ]; }
-		$ct  = ECRM_DB::table( 'contracts' );
-		$tk  = ECRM_DB::table( 'tasks' );
-
-		$in    = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-		$today = current_time( 'Y-m-d' );
-		$month = current_time( 'Y-m-01' );
-
-		$crows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT partner_user_id AS uid,
-			        SUM( DATE(created_at) = %s ) AS today,
-			        SUM( created_at >= %s ) AS month,
-			        SUM( status = 'pending' ) AS pending,
-			        SUM( status = 'routed' ) AS routed,
-			        SUM( status = 'active' ) AS active,
-			        MAX( updated_at ) AS last_activity
-			 FROM {$ct} WHERE partner_user_id IN ($in) GROUP BY partner_user_id",
-			array_merge( [ $today, $month ], $ids )
-		), ARRAY_A );
-		$cmap = [];
-		foreach ( (array) $crows as $r ) { $cmap[ (int) $r['uid'] ] = $r; }
-
-		$trows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT assigned_to AS uid, COUNT(*) AS open_tasks FROM {$tk} WHERE status='open' AND assigned_to IN ($in) GROUP BY assigned_to",
-			$ids
-		), ARRAY_A );
-		$tmap = [];
-		foreach ( (array) $trows as $r ) { $tmap[ (int) $r['uid'] ] = (int) $r['open_tasks']; }
-
-		$roles  = ECRM_DB::roles();
-		$now_ts = current_time( 'timestamp' );
-		$members = [];
-		$tot = [ 'today' => 0, 'month' => 0, 'pending' => 0, 'routed' => 0, 'active' => 0, 'online' => 0 ];
-
-		foreach ( $ids as $mid ) {
-			$u = get_userdata( $mid );
-			if ( ! $u ) { continue; }
-			$role = '';
-			foreach ( (array) $u->roles as $rr ) { if ( isset( $roles[ $rr ] ) ) { $role = $roles[ $rr ]; break; } }
-			$c = $cmap[ $mid ] ?? [];
-			$last = $c['last_activity'] ?? '';
-			$last_ts = $last ? strtotime( $last ) : 0;
-			$online = ( $last_ts && ( $now_ts - $last_ts ) < 1800 ); // active in last 30'
-			$row = [
-				'id'         => (int) $mid,
-				'name'       => $u->display_name,
-				'role'       => $role ?: '—',
-				'is_self'    => ( $mid === $uid ),
-				'today'      => (int) ( $c['today'] ?? 0 ),
-				'month'      => (int) ( $c['month'] ?? 0 ),
-				'pending'    => (int) ( $c['pending'] ?? 0 ),
-				'routed'     => (int) ( $c['routed'] ?? 0 ),
-				'active'     => (int) ( $c['active'] ?? 0 ),
-				'open_tasks' => $tmap[ $mid ] ?? 0,
-				'last'       => $last,
-				'online'     => $online,
-			];
-			$members[] = $row;
-			$tot['today']   += $row['today'];
-			$tot['month']   += $row['month'];
-			$tot['pending'] += $row['pending'];
-			$tot['routed']  += $row['routed'];
-			$tot['active']  += $row['active'];
-			if ( $online ) { $tot['online']++; }
-		}
-
-		// Sort: most active today first, then month.
-		usort( $members, function ( $a, $b ) {
-			return ( $b['today'] <=> $a['today'] ) ?: ( $b['month'] <=> $a['month'] );
-		} );
-
-		return new WP_REST_Response( [
-			'ok'      => true,
-			'totals'  => $tot,
-			'members' => $members,
-			'count'   => count( $members ),
-			'ts'      => current_time( 'H:i' ),
-		], 200 );
-	}
-
-	public static function quote_pdf( WP_REST_Request $req ): WP_REST_Response {
-		$p = $req->get_json_params() ?: $req->get_params();
-		$f = function ( $k ) use ( $p ) { return isset( $p[ $k ] ) ? (float) $p[ $k ] : 0.0; };
-
-		$consumption    = max( 0, $f( 'consumption' ) );     // annual kWh
-		$current_price  = max( 0, $f( 'current_price' ) );   // €/kWh
-		$current_fixed  = max( 0, $f( 'current_fixed' ) );   // €/month
-		$offered_price  = max( 0, $f( 'offered_price' ) );
-		$offered_fixed  = max( 0, $f( 'offered_fixed' ) );
-
-		$current_annual = $consumption * $current_price + 12 * $current_fixed;
-		$offered_annual = $consumption * $offered_price + 12 * $offered_fixed;
-		$savings        = $current_annual - $offered_annual;
-		$pct            = $current_annual > 0 ? ( 100 * $savings / $current_annual ) : 0;
-
-		$meta = [
-			'customer'       => sanitize_text_field( (string) ( $p['customer_name'] ?? '' ) ),
-			'provider'       => sanitize_text_field( (string) ( $p['provider_name'] ?? '' ) ),
-			'program'        => sanitize_text_field( (string) ( $p['program_name'] ?? '' ) ),
-			'energy'         => ECRM_DB::energy_label( sanitize_text_field( (string) ( $p['energy'] ?? 'power' ) ) ),
-			'consumption'    => $consumption,
-			'current_price'  => $current_price,
-			'current_fixed'  => $current_fixed,
-			'offered_price'  => $offered_price,
-			'offered_fixed'  => $offered_fixed,
-			'current_annual' => $current_annual,
-			'offered_annual' => $offered_annual,
-			'savings'        => $savings,
-			'pct'            => $pct,
-		];
-
-		try {
-			$bytes = ECRM_PDF::build_quote( $meta );
-		} catch ( \Throwable $e ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'PDF: ' . $e->getMessage() ], 500 );
-		}
-		return new WP_REST_Response( [
-			'ok'       => true,
-			'b64'      => base64_encode( $bytes ),
-			'filename' => 'prosfora.pdf',
-			'mime'     => 'application/pdf',
-			'savings'  => round( $savings, 2 ),
-		], 200 );
 	}
 
 	// ---------------------------------------------------------------------
@@ -520,53 +353,6 @@ class ECRM_REST {
 		return true;
 	}
 
-	// ---------------------------------------------------------------------
-	// E-signature: create a public signing link
-	// ---------------------------------------------------------------------
-	public static function create_sign_link( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$id  = (int) $req['id'];
-		$uid = get_current_user_id();
-		$ct  = ECRM_DB::table( 'contracts' );
-		$ids = ECRM_DB::visible_user_ids( $uid );
-		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$ct} WHERE id=%d AND partner_user_id IN ($ph)", array_merge( [ $id ], $ids ) ) );
-		if ( ! $exists ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.' ], 404 );
-		}
-
-		// Unified e-signature: the customer signs straight from the tracking page.
-		// Status uses the single canonical value the tracking page expects, and
-		// the link we hand back / email is the stateless tracking URL.
-		self::transition( $id, 'pending_signature', [
-			'user_id' => $uid,
-			'message' => 'Αποστολή για υπογραφή — αναμονή υπογραφής πελάτη',
-		] );
-
-		$url = class_exists( 'ECRM_Tracking' ) ? ECRM_Tracking::url( $id ) : add_query_arg( 'ecrm_track', '', home_url( '/' ) );
-
-		// Optionally email the link to the customer.
-		$p = $req->get_json_params() ?: $req->get_params();
-		$emailed = false;
-		if ( ! empty( $p['email'] ) ) {
-			$cu = ECRM_DB::table( 'customers' );
-			$row = $wpdb->get_row( $wpdb->prepare(
-				"SELECT cu.email, cu.first_name, cu.last_name, cu.company_name FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id=c.customer_id WHERE c.id=%d", $id
-			), ARRAY_A );
-			$to = is_email( $row['email'] ?? '' ) ? $row['email'] : '';
-			if ( $to ) {
-				$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' );
-				$name    = trim( ( $row['company_name'] ?: ( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) ) ) );
-				$subject = 'Υπογραφή σύμβασης - ' . $company;
-				$body    = sprintf( "Αγαπητέ/ή %s,\n\nΠαρακαλούμε υπογράψτε τη σύμβασή σας ηλεκτρονικά στον παρακάτω σύνδεσμο:\n%s\n\nΜε εκτίμηση,\n%s", $name ?: 'πελάτη', $url, $company );
-				$emailed = wp_mail( $to, $subject, $body );
-			}
-		}
-
-		return new WP_REST_Response( [ 'ok' => true, 'url' => $url, 'emailed' => $emailed ], 200 );
-	}
-
 	/** Insert a single in-app notification. */
 	public static function notify( int $user_id, string $type, string $title, string $body = '', int $contract_id = 0 ): void {
 		if ( $user_id <= 0 ) { return; }
@@ -629,54 +415,5 @@ class ECRM_REST {
 		foreach ( self::upline_of( $owner ) as $mid ) {
 			self::notify( $mid, 'signed', $title, $body, $contract_id );
 		}
-	}
-
-	public static function renew_contract( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$id  = (int) $req['id'];
-		$uid = get_current_user_id();
-		$ct  = ECRM_DB::table( 'contracts' );
-		$ids = ECRM_DB::visible_user_ids( $uid );
-		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		$src = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$ct} WHERE id=%d AND partner_user_id IN ($ph)", array_merge( [ $id ], $ids ) ), ARRAY_A );
-		if ( ! $src ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε.' ], 404 );
-		}
-
-		// New term starts when the old one ends (or today if already past).
-		$start = ( $src['end_date'] && strtotime( $src['end_date'] ) > time() ) ? $src['end_date'] : gmdate( 'Y-m-d' );
-		$term  = (int) $src['term_months'];
-		$end   = $term > 0 ? gmdate( 'Y-m-d', strtotime( $start . ' +' . $term . ' months' ) ) : null;
-
-		$new = [
-			'partner_user_id' => $uid,
-			'customer_id'     => $src['customer_id'],
-			'provider_id'     => $src['provider_id'],
-			'program_id'      => $src['program_id'],
-			'energy_type'     => $src['energy_type'],
-			'category'        => $src['category'],
-			'price_type'      => $src['price_type'],
-			'customer_type'   => $src['customer_type'],
-			'activation_type' => 'renewal',
-			'supply_number'   => $src['supply_number'],
-			'meter_number'    => $src['meter_number'],
-			'invoice_code'    => $src['invoice_code'],
-			'status'          => 'draft',
-			'notes'           => 'Ανανέωση από ' . $src['code'],
-			'extra_json'      => $src['extra_json'],
-			'start_date'      => $start,
-			'term_months'     => $term ?: null,
-			'end_date'        => $end,
-		];
-		$wpdb->insert( $ct, $new );
-		$new_id = (int) $wpdb->insert_id;
-		$wpdb->update( $ct, [ 'code' => sprintf( 'APP-%04d', $new_id ) ], [ 'id' => $new_id ] );
-		$wpdb->insert( ECRM_DB::table( 'events' ), [
-			'contract_id' => $new_id, 'user_id' => $uid, 'type' => 'created',
-			'to_status' => 'draft', 'message' => 'Ανανέωση από ' . $src['code'],
-		] );
-
-		return new WP_REST_Response( [ 'ok' => true, 'contract_id' => $new_id ], 200 );
 	}
 }

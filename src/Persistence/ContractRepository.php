@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\ContractCode;
 
 final class ContractRepository
 {
@@ -174,6 +175,27 @@ final class ContractRepository
         $wpdb->insert($this->table, $row);
 
         return (int) $wpdb->insert_id;
+    }
+
+    /**
+     * Stamp the human reference on a freshly created contract.
+     *
+     * The code is derived from the row id, so it can only be written after the
+     * insert. Every creation path calls this rather than formatting its own,
+     * which is how the format stays identical across screens.
+     *
+     * @return string The code written, or an empty string when the row was
+     *                outside the scope or the id was not real.
+     */
+    public function assignCode(int $contractId, UserScope $scope): string
+    {
+        if ($contractId <= 0) {
+            return '';
+        }
+
+        $code = ContractCode::forId($contractId);
+
+        return $this->update($contractId, $scope, ['code' => $code]) ? $code : '';
     }
 
     /**

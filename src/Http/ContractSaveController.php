@@ -114,9 +114,7 @@ final class ContractSaveController implements Controller
                 return new WP_REST_Response(['ok' => false, 'error' => 'Η αποθήκευση απέτυχε.'], 500);
             }
 
-            $this->contracts->update($contractId, $scope, [
-                'code' => sprintf('APP-%04d', $contractId),
-            ]);
+            $this->contracts->assignCode($contractId, $scope);
         }
 
         $this->recordHistory($contractId, $scope, $existing, $previousCustomer, $contract, $customer);

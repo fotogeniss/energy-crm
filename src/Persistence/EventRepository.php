@@ -50,4 +50,40 @@ final class EventRepository
 
         return $rows;
     }
+
+    /**
+     * Append an entry to a contract's history.
+     *
+     * The log is append-only by design: it is the record of who did what, and
+     * there is deliberately no method here that edits or removes an entry.
+     *
+     * @param string               $type    'created', 'status_change', 'note'…
+     * @param array<string, mixed> $details from_status, to_status, message.
+     */
+    public function record(int $contractId, int $userId, string $type, array $details = []): void
+    {
+        global $wpdb;
+
+        if ($contractId <= 0) {
+            return;
+        }
+
+        $wpdb->insert($this->table, [
+            'contract_id' => $contractId,
+            'user_id'     => max(0, $userId),
+            'type'        => $type,
+            // Null rather than an empty string: a missing previous status and a
+            // status of "" are different claims about what happened.
+            'from_status' => $this->orNull($details['from_status'] ?? null),
+            'to_status'   => $this->orNull($details['to_status'] ?? null),
+            'message'     => $this->orNull($details['message'] ?? null),
+        ]);
+    }
+
+    private function orNull(mixed $value): ?string
+    {
+        $text = trim((string) ($value ?? ''));
+
+        return $text === '' ? null : $text;
+    }
 }
