@@ -34,11 +34,11 @@ final class ExtractionGate
     /**
      * How many extractions may be in flight across the whole site.
      *
-     * A measured extraction of two photographs takes about eighteen seconds,
-     * nearly all of it spent waiting on the model. Four slots therefore clear
-     * roughly thirteen readings a minute, and forty agents at once would leave
-     * the last one waiting three minutes — past the point where the browser
-     * gives up. Twelve brings that under a minute.
+     * Measured: two photographs take about seven and a half seconds once the
+     * browser has scaled them down — it was eighteen while full-size phone
+     * images were being uploaded. Twelve slots therefore clear roughly ninety
+     * readings a minute, so forty agents pressing at the same moment are all
+     * served inside half a minute and the queue never becomes visible.
      *
      * Twelve blocked workers sounds worse than it is: a worker parked on an
      * HTTP response holds its memory but almost no processor, which is not

@@ -86,7 +86,13 @@ class ECRM_Extractor {
 		];
 
 		$resp = wp_remote_post( self::API_URL, [
-			'timeout' => 60,
+			// Measured at ~7.5s for two scaled-down documents; ten would still
+			// leave room for the largest applications. Thirty is the ceiling
+			// for a call that has gone wrong, and it matters because a stuck
+			// call holds one of the extraction slots for its whole length —
+			// at sixty it held one for a minute over a request that was never
+			// going to answer.
+			'timeout' => 30,
 			'headers' => [
 				'content-type'      => 'application/json',
 				'x-api-key'         => $api_key,
