@@ -16,4 +16,11 @@ parameters:
         - admin
         - public
 
+    # The bundled tfpdf ships its font metrics as PHP files holding arrays with
+    # thousands of entries. Parsing those exhausts the memory limit and buys
+    # nothing: no code of ours references them by name.
+    excludePaths:
+        analyseAndScan:
+            - includes/lib/*
+
     treatPhpDocTypesAsCertain: false
