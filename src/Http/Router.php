@@ -56,6 +56,7 @@ final class Router
             new TeamController($scope, $team),
             new ImportController(),
             new SigningController($signatures),
+            new DocumentsController($scope, $contracts, $files),
         ];
     }
 

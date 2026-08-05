@@ -159,11 +159,7 @@ class ECRM_REST {
 			[ 'methods' => 'POST', 'callback' => [ __CLASS__, 'filters_save' ], 'permission_callback' => $auth ],
 		] );
 		register_rest_route( self::NS, '/filters/(?P<idx>\\d+)', [ 'methods' => 'DELETE', 'callback' => [ __CLASS__, 'filters_delete' ], 'permission_callback' => $auth ] );
-		register_rest_route( self::NS, '/file/(?P<id>\\d+)', [
-			'methods'             => 'GET',
-			'callback'            => [ 'ECRM_Files', 'serve' ],
-			'permission_callback' => '__return_true', // access enforced by signed token + ownership inside serve()
-		] );
+		// GET /file/{id} -> EnergyCRM\Http\DocumentsController
 		register_rest_route( self::NS, '/extract',    [ 'methods' => 'POST', 'callback' => [ __CLASS__, 'extract' ],       'permission_callback' => $auth ] );
 		register_rest_route( self::NS, '/dashboard',  [ 'methods' => 'GET',  'callback' => [ __CLASS__, 'dashboard' ],     'permission_callback' => $auth ] );
 		// GET/POST /contracts -> ContractsReadController / ContractSaveController
@@ -192,11 +188,7 @@ class ECRM_REST {
 			'permission_callback' => $auth,
 		] );
 
-		register_rest_route( self::NS, '/contracts/(?P<id>\\d+)/files', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'upload_files' ],
-			'permission_callback' => $auth,
-		] );
+		// POST /contracts/{id}/files -> EnergyCRM\Http\DocumentsController
 
 		// DELETE /contracts/{id} -> EnergyCRM\Http\ContractStatusController
 
@@ -1244,57 +1236,6 @@ class ECRM_REST {
 		}
 
 		return new WP_REST_Response( [ 'ok' => true, 'url' => $url, 'emailed' => $emailed ], 200 );
-	}
-
-
-	// ---------------------------------------------------------------------
-	// Attach uploaded documents (ID, bill) to a contract -> WP media library
-	// ---------------------------------------------------------------------
-	public static function upload_files( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$id  = (int) $req['id'];
-		$uid = get_current_user_id();
-		$ct  = ECRM_DB::table( 'contracts' );
-		$ids = ECRM_DB::visible_user_ids( $uid );
-		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		$own = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$ct} WHERE id=%d AND partner_user_id IN ($ph)", array_merge( [ $id ], $ids ) ) );
-		if ( ! $own ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.' ], 404 );
-		}
-
-		$fp = $req->get_file_params();
-		if ( empty( $fp['files'] ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν ανέβηκαν αρχεία.' ], 400 );
-		}
-		$incoming = self::normalize_files( $fp['files'] );
-		$kinds    = (array) $req->get_param( 'kinds' );
-
-		$allowed = [ 'image/jpeg', 'image/png', 'image/webp', 'application/pdf' ];
-		$fl      = ECRM_DB::table( 'files' );
-		$saved   = [];
-		$i       = 0;
-
-		foreach ( $incoming as $file ) {
-			$stored = ECRM_Files::store( $file, $allowed );
-			if ( ! $stored ) { $i++; continue; }
-
-			$kind = sanitize_text_field( $kinds[ $i ] ?? 'other' );
-			$wpdb->insert( $fl, [
-				'contract_id' => $id,
-				'attachment_id' => null,
-				'doc_kind'    => $kind,
-				'filename'    => $stored['filename'],
-				'mime'        => $stored['mime'],
-				'path'        => $stored['path'],
-				'protected'   => 1,
-			] );
-			$file_id = (int) $wpdb->insert_id;
-			$saved[] = [ 'id' => $file_id, 'filename' => $stored['filename'], 'url' => ECRM_Files::url( $file_id ), 'kind' => $kind ];
-			$i++;
-		}
-
-		return new WP_REST_Response( [ 'ok' => true, 'saved' => count( $saved ), 'files' => $saved ], 200 );
 	}
 
 	/** Insert a single in-app notification. */

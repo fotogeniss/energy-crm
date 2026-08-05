@@ -67,6 +67,32 @@ final class FileRepository
     }
 
     /**
+     * Record a stored document against a contract.
+     *
+     * `protected` is always 1: everything written since the secure directory
+     * exists lives there, and the flag is what tells serve() to stream it
+     * through the signed endpoint instead of looking for a media attachment.
+     *
+     * @return int The new file id, or 0 when the insert failed.
+     */
+    public function attach(int $contractId, string $kind, string $filename, string $mime, string $path): int
+    {
+        global $wpdb;
+
+        $wpdb->insert($this->table, [
+            'contract_id'   => $contractId,
+            'attachment_id' => null,
+            'doc_kind'      => $kind,
+            'filename'      => $filename,
+            'mime'          => $mime,
+            'path'          => $path,
+            'protected'     => 1,
+        ]);
+
+        return (int) $wpdb->insert_id;
+    }
+
+    /**
      * Remove every document belonging to the given contracts, bytes included.
      *
      * @param list<int> $contractIds
