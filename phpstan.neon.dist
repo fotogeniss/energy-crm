@@ -16,12 +16,13 @@ parameters:
         - admin
         - public
 
-    # The bundled tfpdf ships its font metrics as PHP files holding arrays with
-    # thousands of entries. Parsing those exhausts the memory limit and buys
-    # nothing: no code of ours references them by name.
+    # Only the font metrics: they are PHP files holding arrays with thousands of
+    # entries, they cost a great deal of memory to parse, and nothing of ours
+    # names them. tfpdf.php itself must stay scanned — it defines the class the
+    # calibration sheet extends.
     excludePaths:
         analyseAndScan:
-            - includes/lib/*
+            - includes/lib/tfpdf/font/*
 
     treatPhpDocTypesAsCertain: false
 

@@ -96,6 +96,13 @@ final class ContractsBulkController implements Controller
             'delete' => $this->delete($rows, $scope),
             'assign' => $this->assign($rows, (int) $request['value'], $scope),
             'export' => $this->export($rows, $scope),
+            // Unreachable: the route's enum rejects anything else before we get
+            // here. Spelled out anyway, because a future action added to the
+            // schema and forgotten here should fail loudly, not fall through.
+            default  => new WP_REST_Response(
+                ['ok' => false, 'error' => 'Άγνωστη ενέργεια.'],
+                400
+            ),
         };
     }
 
