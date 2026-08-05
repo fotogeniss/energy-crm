@@ -17,6 +17,7 @@ namespace EnergyCRM\Http;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
+use EnergyCRM\Persistence\DashboardRepository;
 use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\LeadRepository;
@@ -43,6 +44,7 @@ final class Router
         TeamRepository $team,
         SignatureRepository $signatures,
         ProviderRepository $providers,
+        DashboardRepository $dashboard,
     ) {
         $this->controllers = [
             new ProviderFormController(),
@@ -65,6 +67,7 @@ final class Router
             new DuplicateCheckController($scope, $contracts),
             new ExtractionController(),
             new VatLookupController(),
+            new DashboardController($scope, $dashboard),
         ];
     }
 

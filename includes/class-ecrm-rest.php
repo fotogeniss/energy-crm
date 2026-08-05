@@ -157,7 +157,7 @@ class ECRM_REST {
 		// /filters -> EnergyCRM\Http\SavedFiltersController
 		// GET /file/{id} -> EnergyCRM\Http\DocumentsController
 		// POST /extract -> EnergyCRM\Http\ExtractionController
-		register_rest_route( self::NS, '/dashboard',  [ 'methods' => 'GET',  'callback' => [ __CLASS__, 'dashboard' ],     'permission_callback' => $auth ] );
+		// GET /dashboard -> EnergyCRM\Http\DashboardController
 		// GET/POST /contracts -> ContractsReadController / ContractSaveController
 
 		// POST /contracts/bulk -> EnergyCRM\Http\ContractsBulkController
@@ -891,66 +891,5 @@ class ECRM_REST {
 		] );
 
 		return new WP_REST_Response( [ 'ok' => true, 'contract_id' => $new_id ], 200 );
-	}
-
-	// ---------------------------------------------------------------------
-	// Dashboard
-	// ---------------------------------------------------------------------
-	public static function dashboard(): WP_REST_Response {
-		global $wpdb;
-		$ct  = ECRM_DB::table( 'contracts' );
-		$pr  = ECRM_DB::table( 'providers' );
-		$ev  = ECRM_DB::table( 'events' );
-		$uid = get_current_user_id();
-
-		$today_start = gmdate( 'Y-m-d 00:00:00' );
-		$month_start = gmdate( 'Y-m-01 00:00:00' );
-
-		$today   = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND created_at>=%s", $uid, $today_start ) );
-		$pending = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND status='pending'", $uid ) );
-		$routed  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND status='routed'", $uid ) );
-		$month   = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND created_at>=%s", $uid, $month_start ) );
-
-		// Per-provider this month
-		$by_provider = $wpdb->get_results( $wpdb->prepare(
-			"SELECT p.name, COUNT(*) c FROM {$ct} ct LEFT JOIN {$pr} p ON p.id=ct.provider_id
-			 WHERE ct.partner_user_id=%d AND ct.created_at>=%s GROUP BY ct.provider_id ORDER BY c DESC",
-			$uid, $month_start
-		), ARRAY_A );
-
-		// Monthly counts (current year)
-		$year     = (int) gmdate( 'Y' );
-		$rows     = $wpdb->get_results( $wpdb->prepare(
-			"SELECT MONTH(created_at) m, COUNT(*) c FROM {$ct} WHERE partner_user_id=%d AND YEAR(created_at)=%d GROUP BY MONTH(created_at)",
-			$uid, $year
-		), ARRAY_A );
-		$monthly = array_fill( 1, 12, 0 );
-		foreach ( $rows as $r ) { $monthly[ (int) $r['m'] ] = (int) $r['c']; }
-
-		// Live feed (recent events)
-		$feed = $wpdb->get_results( $wpdb->prepare(
-			"SELECT e.type, e.to_status, e.message, e.created_at, c.code
-			 FROM {$ev} e LEFT JOIN {$ct} c ON c.id=e.contract_id
-			 WHERE c.partner_user_id=%d ORDER BY e.created_at DESC LIMIT 8",
-			$uid
-		), ARRAY_A );
-
-		// Gamification: tiers by monthly volume
-		$tiers = [ 'Bronze' => 15, 'Silver' => 40, 'Gold' => 80, 'Platinum' => 150, 'Diamond' => 300 ];
-		$current_tier = 'Χωρίς level';
-		$next_tier    = 'Bronze';
-		$next_at      = 15;
-		foreach ( $tiers as $name => $th ) {
-			if ( $month >= $th ) { $current_tier = $name; } else { $next_tier = $name; $next_at = $th; break; }
-		}
-
-		return new WP_REST_Response( [
-			'user'        => wp_get_current_user()->display_name,
-			'cards'       => [ 'today' => $today, 'pending' => $pending, 'routed' => $routed, 'month' => $month ],
-			'by_provider' => $by_provider,
-			'monthly'     => array_values( $monthly ),
-			'feed'        => $feed,
-			'level'       => [ 'current' => $current_tier, 'next' => $next_tier, 'next_at' => $next_at, 'remaining' => max( 0, $next_at - $month ) ],
-		], 200 );
 	}
 }
