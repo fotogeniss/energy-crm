@@ -189,11 +189,8 @@ class ECRM_REST {
 		// POST /import/apply -> EnergyCRM\Http\ImportController
 
 		// GET /commissions -> EnergyCRM\Http\CommissionsController
-		register_rest_route( self::NS, '/analytics', [
-			'methods'             => 'GET',
-			'callback'            => [ __CLASS__, 'analytics' ],
-			'permission_callback' => self::needs( Capability::VIEW_ANALYTICS ),
-		] );
+
+		// GET /analytics -> EnergyCRM\Http\AnalyticsController
 
 		// /customers και /customers/check -> EnergyCRM\Http\CustomersController
 
@@ -526,129 +523,6 @@ class ECRM_REST {
 	// ---------------------------------------------------------------------
 	// E-signature: create a public signing link
 	// ---------------------------------------------------------------------
-	public static function analytics( WP_REST_Request $req ): WP_REST_Response {
-		global $wpdb;
-		$ct  = ECRM_DB::table( 'contracts' );
-		$cu  = ECRM_DB::table( 'customers' );
-		$pr  = ECRM_DB::table( 'providers' );
-		$ev  = ECRM_DB::table( 'events' );
-		$uid = get_current_user_id();
-
-		$scope = sanitize_text_field( (string) $req->get_param( 'scope' ) );
-		$can_team = current_user_can( 'ecrm_manage_team' ) || current_user_can( 'manage_options' );
-		$ids = ( $scope === 'team' && $can_team ) ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
-
-		// --- funnel by status ---
-		$status_rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT status, COUNT(*) c FROM {$ct} WHERE partner_user_id IN ($ph) GROUP BY status",
-			$ids
-		), ARRAY_A );
-		$by_status = []; $total = 0;
-		foreach ( $status_rows as $r ) { $by_status[ $r['status'] ] = (int) $r['c']; $total += (int) $r['c']; }
-		$labels = ECRM_DB::statuses();
-		$funnel = [];
-		foreach ( $labels as $slug => $lbl ) {
-			$funnel[] = [ 'status' => $slug, 'label' => $lbl, 'count' => $by_status[ $slug ] ?? 0 ];
-		}
-
-		$won       = ( $by_status['routed'] ?? 0 ) + ( $by_status['active'] ?? 0 ) + ( $by_status['resolved'] ?? 0 );
-		$lost      = ( $by_status['cancelled'] ?? 0 ) + ( $by_status['terminated'] ?? 0 );
-		$conv_rate = $total ? round( 100 * $won / $total, 1 ) : 0.0;
-		$canc_rate = $total ? round( 100 * $lost / $total, 1 ) : 0.0;
-
-		// --- avg time to activation (days) from created_at → first 'active' event ---
-		$avg_days = $wpdb->get_var( $wpdb->prepare(
-			"SELECT AVG(DATEDIFF(e.activated, c.created_at))
-			 FROM {$ct} c
-			 JOIN ( SELECT contract_id, MIN(created_at) activated FROM {$ev}
-			        WHERE to_status='active' GROUP BY contract_id ) e ON e.contract_id = c.id
-			 WHERE c.partner_user_id IN ($ph)",
-			$ids
-		) );
-		$avg_days = $avg_days !== null ? round( (float) $avg_days, 1 ) : null;
-
-		// --- by provider (top) ---
-		$by_provider = $wpdb->get_results( $wpdb->prepare(
-			"SELECT p.name, COUNT(*) c FROM {$ct} ct LEFT JOIN {$pr} p ON p.id=ct.provider_id
-			 WHERE ct.partner_user_id IN ($ph) GROUP BY ct.provider_id ORDER BY c DESC LIMIT 8",
-			$ids
-		), ARRAY_A );
-
-		// --- by energy type ---
-		$by_energy_raw = $wpdb->get_results( $wpdb->prepare(
-			"SELECT energy_type, COUNT(*) c FROM {$ct} WHERE partner_user_id IN ($ph) GROUP BY energy_type ORDER BY c DESC",
-			$ids
-		), ARRAY_A );
-		$by_energy = [];
-		foreach ( $by_energy_raw as $r ) { $by_energy[] = [ 'label' => ECRM_DB::energy_label( (string) $r['energy_type'] ), 'count' => (int) $r['c'] ]; }
-
-		// --- by region (top) ---
-		$by_region = $wpdb->get_results( $wpdb->prepare(
-			"SELECT COALESCE(NULLIF(cu.region,''),'—') name, COUNT(*) c
-			 FROM {$ct} ct LEFT JOIN {$cu} cu ON cu.id=ct.customer_id
-			 WHERE ct.partner_user_id IN ($ph) GROUP BY name ORDER BY c DESC LIMIT 8",
-			$ids
-		), ARRAY_A );
-
-		// --- monthly trend (current year) ---
-		$year = (int) gmdate( 'Y' );
-		$mrows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT MONTH(created_at) m, COUNT(*) c FROM {$ct} WHERE partner_user_id IN ($ph) AND YEAR(created_at)=%d GROUP BY MONTH(created_at)",
-			array_merge( $ids, [ $year ] )
-		), ARRAY_A );
-		$monthly = array_fill( 1, 12, 0 );
-		foreach ( $mrows as $r ) { $monthly[ (int) $r['m'] ] = (int) $r['c']; }
-
-		// --- leaderboard (team scope): payable contracts + commission per partner ---
-		$leaderboard = [];
-		if ( $scope === 'team' && $can_team ) {
-			$payable = ECRM_DB::payable_statuses();
-			$sph     = implode( ',', array_fill( 0, count( $payable ), '%s' ) );
-			$prows   = $wpdb->get_results( $wpdb->prepare(
-				"SELECT partner_user_id, provider_id, program_id, energy_type, category, status
-				 FROM {$ct} WHERE partner_user_id IN ($ph) AND status IN ($sph) LIMIT 5000",
-				array_merge( $ids, $payable )
-			), ARRAY_A );
-			$has_rules = class_exists( 'ECRM_Commissions' );
-			$agg = [];
-			foreach ( $prows as $r ) {
-				$pu = (int) $r['partner_user_id'];
-				if ( ! isset( $agg[ $pu ] ) ) { $agg[ $pu ] = [ 'count' => 0, 'amount' => 0.0 ]; }
-				$agg[ $pu ]['count']++;
-				$agg[ $pu ]['amount'] += $has_rules ? ECRM_Commissions::amount_for( $r ) : 0.0;
-			}
-			uasort( $agg, function ( $a, $b ) { return $b['amount'] <=> $a['amount']; } );
-			foreach ( $agg as $pu => $v ) {
-				$u = get_userdata( $pu );
-				$leaderboard[] = [
-					'name'   => $u ? $u->display_name : ( '#' . $pu ),
-					'count'  => $v['count'],
-					'amount' => round( $v['amount'], 2 ),
-				];
-				if ( count( $leaderboard ) >= 15 ) { break; }
-			}
-		}
-
-		return new WP_REST_Response( [
-			'ok'          => true,
-			'scope'       => ( $scope === 'team' && $can_team ) ? 'team' : 'own',
-			'can_team'    => $can_team,
-			'total'       => $total,
-			'won'         => $won,
-			'lost'        => $lost,
-			'conv_rate'   => $conv_rate,
-			'canc_rate'   => $canc_rate,
-			'avg_days'    => $avg_days,
-			'funnel'      => $funnel,
-			'by_provider' => $by_provider,
-			'by_energy'   => $by_energy,
-			'by_region'   => $by_region,
-			'monthly'     => array_values( $monthly ),
-			'leaderboard' => $leaderboard,
-		], 200 );
-	}
-
 	public static function create_sign_link( WP_REST_Request $req ): WP_REST_Response {
 		global $wpdb;
 		$id  = (int) $req['id'];
