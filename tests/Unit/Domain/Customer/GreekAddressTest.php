@@ -31,7 +31,9 @@ final class GreekAddressTest extends TestCase
 
     public function testAMultiWordTownStaysWhole(): void
     {
-        self::assertSame('ΠΑΡΑΔΕΙΣΟΣ ΑΜΑΡΟΥΣΙΟΥ', GreekAddress::parse('ΑΡΤΕΜΙΔΟΣ 8 15125 ΠΑΡΑΔΕΙΣΟΣ ΑΜΑΡΟΥΣΙΟΥ')['city']);
+        $parsed = GreekAddress::parse('ΑΡΤΕΜΙΔΟΣ 8 15125 ΠΑΡΑΔΕΙΣΟΣ ΑΜΑΡΟΥΣΙΟΥ');
+
+        self::assertSame('ΠΑΡΑΔΕΙΣΟΣ ΑΜΑΡΟΥΣΙΟΥ', $parsed['city']);
     }
 
     /**

@@ -66,6 +66,18 @@
     <rule ref="WordPress.Security.EscapeOutput.ExceptionNotEscaped">
         <exclude-pattern>src/Persistence/*</exclude-pattern>
     </rule>
+
+    <!--
+        SlowDBQuery warns about querying users by meta. That is a fair warning
+        in general and the wrong one here: the deep-hierarchy problem was solved
+        in step 3 with a materialized path, and what remains in TeamRepository is
+        a one-level lookup over a handful of rows. Removing the last meta query
+        would mean a users table of our own, which is a bigger decision than a
+        lint rule should force.
+    -->
+    <rule ref="WordPress.DB.SlowDBQuery">
+        <exclude-pattern>src/Persistence/TeamRepository.php</exclude-pattern>
+    </rule>
     <rule ref="WordPress.WP.GlobalVariablesOverride"/>
     <rule ref="WordPress.PHP.NoSilencedErrors"/>
     <rule ref="WordPress.PHP.DontExtract"/>

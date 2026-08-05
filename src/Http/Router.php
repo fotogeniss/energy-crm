@@ -61,7 +61,7 @@ final class Router
             new LeadsController($scope, $leads, $contracts, $customers),
             new TeamController($scope, $team),
             new ImportController(),
-            new SigningController($signatures),
+            new SigningController($signatures, $files),
             new DocumentsController($scope, $contracts, $files),
             new ContractDocumentsController($scope, $contracts, $files),
             new SavedFiltersController($scope),

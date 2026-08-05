@@ -21,9 +21,9 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
-use ECRM_DB;
 use ECRM_Files;
 use ECRM_REST;
+use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\SignatureRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -36,8 +36,10 @@ final class SigningController implements Controller
     /** Roughly 450 KB of base64: ample for a signature, useless as an upload. */
     private const MAX_IMAGE_BYTES = 600000;
 
-    public function __construct(private readonly SignatureRepository $signatures)
-    {
+    public function __construct(
+        private readonly SignatureRepository $signatures,
+        private readonly FileRepository $files,
+    ) {
     }
 
     public function routes(): void
@@ -105,7 +107,7 @@ final class SigningController implements Controller
 
         $image = substr($image, 0, self::MAX_IMAGE_BYTES);
         $name  = (string) $request['name'];
-        $ip    = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        $ip    = sanitize_text_field(wp_unslash((string) ($_SERVER['REMOTE_ADDR'] ?? '')));
 
         // Returns false when another request signed it first.
         if (! $this->signatures->sign($token, $name, $image, $ip)) {
@@ -142,8 +144,6 @@ final class SigningController implements Controller
      */
     private function storeSignatureImage(int $contractId, string $image): void
     {
-        global $wpdb;
-
         $binary = base64_decode(substr($image, strlen(self::PNG_PREFIX)), true);
 
         if ($binary === false || $binary === '') {
@@ -156,16 +156,12 @@ final class SigningController implements Controller
             return;
         }
 
-        $files = ECRM_DB::table('files');
-
-        $wpdb->delete($files, ['contract_id' => $contractId, 'doc_kind' => 'signature']);
-        $wpdb->insert($files, [
-            'contract_id' => $contractId,
-            'doc_kind'    => 'signature',
-            'filename'    => 'signature.png',
-            'mime'        => 'image/png',
-            'path'        => $saved['path'],
-            'protected'   => 1,
-        ]);
+        $this->files->replaceKind(
+            $contractId,
+            'signature',
+            'signature.png',
+            'image/png',
+            $saved['path']
+        );
     }
 }

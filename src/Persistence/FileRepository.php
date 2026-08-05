@@ -93,6 +93,23 @@ final class FileRepository
     }
 
     /**
+     * Replace the single document of a given kind on a contract.
+     *
+     * Used for the signature: a contract has one, and re-signing must not leave
+     * the previous drawing behind.
+     *
+     * @return int The new file id, or 0 when the insert failed.
+     */
+    public function replaceKind(int $contractId, string $kind, string $filename, string $mime, string $path): int
+    {
+        global $wpdb;
+
+        $wpdb->delete($this->table, ['contract_id' => $contractId, 'doc_kind' => $kind]);
+
+        return $this->attach($contractId, $kind, $filename, $mime, $path);
+    }
+
+    /**
      * Remove every document belonging to the given contracts, bytes included.
      *
      * @param list<int> $contractIds
