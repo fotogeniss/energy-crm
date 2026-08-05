@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Persistence\Schema;
 
+use EnergyCRM\Persistence\Schema\Migrations\AddContractAddresses;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureLegacyColumns;
@@ -33,6 +34,7 @@ final class MigrationList
             new PurgeOrphanFiles(),
             new EnsureInnoDb(),
             new AddForeignKeys(),
+            new AddContractAddresses(),
         ];
     }
 }

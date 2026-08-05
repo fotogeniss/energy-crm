@@ -110,13 +110,16 @@ class ECRM_FormFill {
 		$name = trim( (string) ( $c['first_name'] ?? '' ) . ' ' . (string) ( $c['last_name'] ?? '' ) );
 		if ( ! empty( $c['company_name'] ) ) { $name = (string) $c['company_name']; }
 
+		// The three addresses every provider form asks for. Usually identical,
+		// which is why one used to be enough; different exactly when it matters
+		// (a meter in a rented shop, bills going to the accountant).
+		$addr = \EnergyCRM\Domain\Contract\ContractAddresses::from( $c );
+
 		$street = trim( (string) ( $c['street'] ?? '' ) . ' ' . (string) ( $c['street_no'] ?? '' ) );
 
 		// Full one-line address for forms that have a single "ΔΙΕΥΘΥΝΣΗ" field
 		// (street + number, city, postal code) — used where there is no separate city/TK box.
-		$addr_full = $street;
-		if ( ! empty( $c['city'] ) )        { $addr_full = trim( $addr_full . ( $addr_full ? ', ' : '' ) . (string) $c['city'] ); }
-		if ( ! empty( $c['postal_code'] ) ) { $addr_full = trim( $addr_full . ' ' . (string) $c['postal_code'] ); }
+		$addr_full = $addr->home->oneLine();
 
 		$partner = '';
 		if ( ! empty( $c['partner_user_id'] ) ) {
@@ -159,9 +162,30 @@ class ECRM_FormFill {
 			'ar_paroxis'     => (string) ( $c['supply_number'] ?? '' ),
 			'hkasp'          => (string) ( $c['supply_number'] ?? '' ),
 			'ar_metriti'     => (string) ( $c['meter_number'] ?? '' ),
-			'odos_paroxis'   => $addr_full,
-			'poli_paroxis'   => (string) ( $c['city'] ?? '' ),
-			'tk_paroxis'     => (string) ( $c['postal_code'] ?? '' ),
+
+			// --- Διεύθυνση παροχής: where the meter is ---------------------
+			// Four keys because the forms disagree about how much goes in one
+			// box: some print everything on one line, some split off the number,
+			// some have Τ.Κ. and ΠΟΛΗ beside the street. Picking the wrong one
+			// prints the town twice.
+			'dieuthynsi_paroxis'   => $addr->supply->oneLine(),   // + ΤΚ + πόλη
+			'odos_arithmos_paroxis' => trim( $addr->supply->street . ' ' . $addr->supply->streetNo ),
+			'odos_paroxis'         => $addr->supply->street,
+			'arithmos_paroxis'     => $addr->supply->streetNo,
+			'poli_paroxis'         => $addr->supply->city,
+			'tk_paroxis'           => $addr->supply->postalCode,
+			'nomos_paroxis'        => $addr->supply->region,
+
+			// --- Διεύθυνση αποστολής λογαριασμού --------------------------
+			// The box every form labels "εφόσον είναι διαφορετική από τη
+			// διεύθυνση κατοικίας". Until now it had no data behind it at all.
+			'dieuthynsi_apostolis'   => $addr->billing->oneLine(),
+			'odos_arithmos_apostolis' => trim( $addr->billing->street . ' ' . $addr->billing->streetNo ),
+			'odos_apostolis'         => $addr->billing->street,
+			'arithmos_apostolis'     => $addr->billing->streetNo,
+			'poli_apostolis'         => $addr->billing->city,
+			'tk_apostolis'           => $addr->billing->postalCode,
+			'nomos_apostolis'        => $addr->billing->region,
 			'timologio'      => (string) ( $c['invoice_code'] ?? '' ),
 			'programma'      => (string) ( $c['program_name'] ?? '' ),
 			'diarkeia'       => $diarkeia,
@@ -260,6 +284,38 @@ class ECRM_FormFill {
 			return [ 'ok' => false, 'error' => 'Δεν υπάρχει ακόμη πρότυπο εντύπου για αυτόν τον πάροχο/τύπο παροχής.' ];
 		}
 
+		return self::render( $key, $c, $sig_path );
+	}
+
+	/**
+	 * Normalise a field entry into a list of placements.
+	 *
+	 * A field is usually printed once, so the map writes one object. But the
+	 * same value legitimately appears in several boxes — the application code
+	 * and signature date repeat on every page of a nine-page contract, and an
+	 * e-mail can be asked for twice on one page. Those write a list instead.
+	 *
+	 * @param array<string, mixed>|list<array<string, mixed>> $entry
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function placements( $entry ): array {
+		if ( ! is_array( $entry ) ) {
+			return [];
+		}
+
+		// A list of placements, rather than one placement: a numeric first key.
+		return isset( $entry[0] ) && is_array( $entry[0] ) ? array_values( $entry ) : [ $entry ];
+	}
+
+	/**
+	 * Draw the template pages and overlay the values.
+	 *
+	 * @param array<string, mixed> $c
+	 *
+	 * @return array{ok:bool,error?:string,bytes?:string,filename?:string}
+	 */
+	private static function render( string $key, array $c, ?string $sig_path ): array {
 		$dir  = ECRM_DIR . 'assets/forms/';
 		$mapf = $dir . $key . '.json';
 		if ( ! file_exists( $dir . $key . '-1.jpg' ) || ! file_exists( $mapf ) ) {
@@ -299,17 +355,20 @@ class ECRM_FormFill {
 				$pdf->Image( $dir . $key . '-' . $p . '.jpg', 0, 0, $w, $h );
 
 				$pdf->SetTextColor( 0, 0, 150 );
-				foreach ( $map['fields'] as $field => $pos ) {
-					if ( (int) ( $pos['page'] ?? 1 ) !== $p ) { continue; }
+				foreach ( $map['fields'] as $field => $placements ) {
 					$val = $values[ $field ] ?? '';
 					if ( $val === '' ) { continue; }
-					if ( ! empty( $pos['check'] ) ) {
-						$pdf->SetFont( 'DejaVu', '', 10 );
-						$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, 'X' );
-						continue;
+
+					foreach ( self::placements( $placements ) as $pos ) {
+						if ( (int) ( $pos['page'] ?? 1 ) !== $p ) { continue; }
+						if ( ! empty( $pos['check'] ) ) {
+							$pdf->SetFont( 'DejaVu', '', 10 );
+							$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, 'X' );
+							continue;
+						}
+						$pdf->SetFont( 'DejaVu', '', (float) ( $pos['size'] ?? 8.5 ) );
+						$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, (string) $val );
 					}
-					$pdf->SetFont( 'DejaVu', '', (float) ( $pos['size'] ?? 8.5 ) );
-					$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, (string) $val );
 				}
 
 				if ( $sig_path && file_exists( $sig_path ) ) {
