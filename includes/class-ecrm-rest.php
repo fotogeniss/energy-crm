@@ -212,17 +212,9 @@ class ECRM_REST {
 
 		// GET /network -> EnergyCRM\Http\TeamController
 
-		register_rest_route( self::NS, '/import/parse', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'import_parse' ],
-			'permission_callback' => self::needs( Capability::IMPORT_DATA ),
-		] );
+		// POST /import/parse -> EnergyCRM\Http\ImportController
 
-		register_rest_route( self::NS, '/import/apply', [
-			'methods'             => 'POST',
-			'callback'            => [ __CLASS__, 'import_apply' ],
-			'permission_callback' => self::needs( Capability::IMPORT_DATA ),
-		] );
+		// POST /import/apply -> EnergyCRM\Http\ImportController
 
 		register_rest_route( self::NS, '/commissions', [
 			'methods'             => 'GET',
@@ -1003,41 +995,6 @@ class ECRM_REST {
 			'mime'     => 'application/pdf',
 			'b64'      => base64_encode( $res['bytes'] ),
 		], 200 );
-	}
-
-
-	// ---------------------------------------------------------------------
-	// Import provider Excel/CSV -> parse, then apply status updates
-	// ---------------------------------------------------------------------
-	private static function can_import(): bool {
-		return current_user_can( 'ecrm_manage_team' ) || current_user_can( 'manage_options' );
-	}
-
-	public static function import_parse( WP_REST_Request $req ): WP_REST_Response {
-		if ( ! self::can_import() ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν έχεις δικαίωμα εισαγωγής.' ], 403 );
-		}
-		$files = $req->get_file_params();
-		$f = $files['file'] ?? null;
-		if ( ! $f || ( $f['error'] ?? 1 ) !== UPLOAD_ERR_OK ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν ανέβηκε αρχείο.' ], 400 );
-		}
-		$res = ECRM_Import::parse( $f['tmp_name'], $f['name'] ?? 'file.xlsx' );
-		return new WP_REST_Response( $res, $res['ok'] ? 200 : 400 );
-	}
-
-	public static function import_apply( WP_REST_Request $req ): WP_REST_Response {
-		if ( ! self::can_import() ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν έχεις δικαίωμα εισαγωγής.' ], 403 );
-		}
-		$p     = $req->get_json_params() ?: $req->get_params();
-		$pairs = is_array( $p['pairs'] ?? null ) ? $p['pairs'] : [];
-		$dry   = ! empty( $p['dry'] );
-		if ( ! $pairs ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν δόθηκαν εγγραφές.' ], 400 );
-		}
-		$report = ECRM_Import::apply( $pairs, $dry );
-		return new WP_REST_Response( $report, 200 );
 	}
 
 

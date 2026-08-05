@@ -52,6 +52,7 @@ final class Router
             new ContractsBulkController($scope, $contracts, $files),
             new LeadsController($scope, $leads, $contracts, $customers),
             new TeamController($scope, $team),
+            new ImportController(),
         ];
     }
 
