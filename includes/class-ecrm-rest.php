@@ -156,7 +156,7 @@ class ECRM_REST {
 		register_rest_route( self::NS, '/team/live', [ 'methods' => 'GET', 'callback' => [ __CLASS__, 'team_live' ], 'permission_callback' => self::needs( Capability::MANAGE_TEAM ) ] );
 		// /filters -> EnergyCRM\Http\SavedFiltersController
 		// GET /file/{id} -> EnergyCRM\Http\DocumentsController
-		register_rest_route( self::NS, '/extract',    [ 'methods' => 'POST', 'callback' => [ __CLASS__, 'extract' ],       'permission_callback' => $auth ] );
+		// POST /extract -> EnergyCRM\Http\ExtractionController
 		register_rest_route( self::NS, '/dashboard',  [ 'methods' => 'GET',  'callback' => [ __CLASS__, 'dashboard' ],     'permission_callback' => $auth ] );
 		// GET/POST /contracts -> ContractsReadController / ContractSaveController
 
@@ -420,60 +420,6 @@ class ECRM_REST {
 			'mime'     => 'application/pdf',
 			'savings'  => round( $savings, 2 ),
 		], 200 );
-	}
-
-	// ---------------------------------------------------------------------
-	// Extraction
-	// ---------------------------------------------------------------------
-	public static function extract( WP_REST_Request $req ): WP_REST_Response {
-		$files = $req->get_file_params();
-		$kinds = (array) $req->get_param( 'kinds' );
-
-		if ( empty( $files['files'] ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν ανέβηκαν αρχεία.' ], 400 );
-		}
-
-		$incoming = self::normalize_files( $files['files'] );
-		$allowed  = [ 'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf' ];
-		$prepared = [];
-		$i        = 0;
-
-		foreach ( $incoming as $file ) {
-			if ( ( $file['error'] ?? UPLOAD_ERR_OK ) !== UPLOAD_ERR_OK ) { $i++; continue; }
-			$type = $file['type'] ?? '';
-			$ft   = wp_check_filetype( $file['name'] ?? '' );
-			$mime = in_array( $type, $allowed, true ) ? $type : ( $ft['type'] ?? '' );
-			if ( ! in_array( $mime, $allowed, true ) ) { $i++; continue; }
-			$prepared[] = [ 'path' => $file['tmp_name'], 'mime' => $mime, 'kind' => sanitize_text_field( $kinds[ $i ] ?? 'other' ) ];
-			$i++;
-		}
-
-		if ( empty( $prepared ) ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη υποστηριζόμενα αρχεία (μόνο PDF/JPG/PNG).' ], 400 );
-		}
-		if ( count( $prepared ) > 10 ) {
-			$prepared = array_slice( $prepared, 0, 10 );
-		}
-
-		$result = ECRM_Extractor::extract( $prepared );
-		return new WP_REST_Response( $result, $result['ok'] ? 200 : 502 );
-	}
-
-	private static function normalize_files( array $f ): array {
-		if ( ! is_array( $f['name'] ?? null ) ) {
-			return [ $f ];
-		}
-		$out = [];
-		foreach ( $f['name'] as $idx => $name ) {
-			$out[] = [
-				'name'     => $name,
-				'type'     => $f['type'][ $idx ] ?? '',
-				'tmp_name' => $f['tmp_name'][ $idx ] ?? '',
-				'error'    => $f['error'][ $idx ] ?? UPLOAD_ERR_OK,
-				'size'     => $f['size'][ $idx ] ?? 0,
-			];
-		}
-		return $out;
 	}
 
 	// ---------------------------------------------------------------------

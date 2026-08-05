@@ -63,6 +63,7 @@ final class Router
             new SavedFiltersController($scope),
             new CatalogueController($scope, $providers, $contracts),
             new DuplicateCheckController($scope, $contracts),
+            new ExtractionController(),
         ];
     }
 
