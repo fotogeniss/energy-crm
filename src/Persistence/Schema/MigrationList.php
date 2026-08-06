@@ -19,6 +19,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddContractListIndexes;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureLegacyColumns;
+use EnergyCRM\Persistence\Schema\Migrations\FixProviderEnergyTypes;
 use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
 
@@ -39,6 +40,7 @@ final class MigrationList
             new AddContractAddresses(),
             new MoveMeterAddressOutOfExtras(),
             new AddContractListIndexes(),
+            new FixProviderEnergyTypes(),
         ];
     }
 }

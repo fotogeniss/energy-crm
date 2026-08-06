@@ -208,11 +208,13 @@
 				var b = document.createElement('button');
 				b.type = 'button'; b.className = 'ecrm-provider'; b.setAttribute('data-pid', p.id);
 				b.setAttribute('data-pname', p.name);
+				b.setAttribute('data-energy', p.energy_types || '');
 				b.innerHTML = p.logo_url ? '<img src="' + p.logo_url + '" alt="' + p.name + '">' : '<span>' + p.name + '</span>';
 				b.addEventListener('click', function () {
 					wrap.querySelectorAll('.ecrm-provider').forEach(function (x) { x.classList.remove('is-on'); });
 					b.classList.add('is-on'); state.provider_id = parseInt(p.id, 10);
 					var lab = q('[data-selprov]'); if (lab) lab.textContent = 'Επιλεγμένος πάροχος: ' + p.name;
+					limitEnergyToProvider();
 					renderPrograms();
 					refreshKbDocs();
 					refreshProviderFields();
@@ -247,7 +249,44 @@
 				btn.classList.add('is-on'); state.provider_id = pid;
 				var lab = q('[data-selprov]'); if (lab) lab.textContent = 'Επιλεγμένος πάροχος: ' + (btn.getAttribute('data-pname') || '');
 			}
+			limitEnergyToProvider();
 			refreshKbDocs();
+		}
+
+		// Only offer what the provider actually sells. Orizon is a mobile
+		// operator; the energy suppliers do not do mobile. Leaving all three
+		// chips available meant an agent could pick Orizon with the default
+		// "Ηλεκτρισμός" still selected and get a mobile application filled in
+		// from a meter — or no form at all, with no explanation.
+		function limitEnergyToProvider() {
+			var chips = root.querySelectorAll('.ecrm-chips[data-field="energy_type"] .ecrm-chip');
+			var btn = root.querySelector('.ecrm-provider.is-on');
+			var offered = btn ? (btn.getAttribute('data-energy') || '').split(',').filter(Boolean) : [];
+
+			// No provider chosen yet, or one with nothing declared: show all
+			// rather than an empty row the agent cannot get past.
+			var all = offered.length === 0;
+			var allowed = [];
+
+			chips.forEach(function (c) {
+				var v = c.getAttribute('data-val');
+				var ok = all || offered.indexOf(v) !== -1;
+				c.hidden = !ok;
+				c.disabled = !ok;
+				if (ok) allowed.push(c);
+			});
+
+			// If what was selected is no longer on offer, move to the first
+			// thing that is. Silently leaving an impossible choice selected is
+			// how the wrong form gets printed.
+			var current = root.querySelector('.ecrm-chips[data-field="energy_type"] .ecrm-chip.is-on');
+			if (allowed.length && (!current || current.hidden)) {
+				chips.forEach(function (c) { c.classList.remove('is-on'); });
+				allowed[0].classList.add('is-on');
+				state.energy_type = allowed[0].getAttribute('data-val');
+				applyEnergyType();
+				renderPrograms();
+			}
 		}
 
 		function setChip(field, val) {

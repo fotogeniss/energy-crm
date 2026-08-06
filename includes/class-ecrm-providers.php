@@ -18,15 +18,17 @@ class ECRM_Providers {
 	 */
 	private static function defaults(): array {
 		return [
-			[ 'slug' => 'dei',       'name' => 'ΔΕΗ',          'energy_types' => 'power,gas,mobile', 'logo_url' => 'https://www.dei.gr/media/ik1eyjgg/deh-darkmode-80px.svg' ],
+			[ 'slug' => 'dei',       'name' => 'ΔΕΗ',          'energy_types' => 'power,gas',        'logo_url' => 'https://www.dei.gr/media/ik1eyjgg/deh-darkmode-80px.svg' ],
 			[ 'slug' => 'protergia', 'name' => 'PROTERGIA',    'energy_types' => 'power,gas',        'logo_url' => 'https://www.protergia.gr/assets/images/icons/protergia_logo.png' ],
 			[ 'slug' => 'heron',     'name' => 'ΗΡΩΝ',         'energy_types' => 'power,gas',        'logo_url' => 'https://heron.gr/media/myeprd3l/heron-logo-header-bg.svg' ],
-			[ 'slug' => 'nrg',       'name' => 'NRG',          'energy_types' => 'power,gas,mobile', 'logo_url' => 'https://www.nrg.gr/themes/custom/nrg/media/logo2021-vertical.svg' ],
+			[ 'slug' => 'nrg',       'name' => 'NRG',          'energy_types' => 'power,gas',        'logo_url' => 'https://www.nrg.gr/themes/custom/nrg/media/logo2021-vertical.svg' ],
 			[ 'slug' => 'enerwave',  'name' => 'Enerwave',     'energy_types' => 'power',            'logo_url' => 'https://www.enerwave.gr/uploads/sites/126315/siteimage-logonormal.png' ],
 			[ 'slug' => 'volton',    'name' => 'VOLTON',       'energy_types' => 'power,gas',        'logo_url' => '' ],
 			[ 'slug' => 'fysiko',    'name' => 'Φυσικό Αέριο Ελλάδος', 'energy_types' => 'gas',      'logo_url' => 'https://fysikoaerioellados.gr/sites/default/files/logo.svg' ],
 			[ 'slug' => 'zenith',    'name' => 'Ζενίθ',        'energy_types' => 'gas,power',        'logo_url' => 'https://zenith.gr/media/x4bjo31r/logo-footer.svg?width=80' ],
-			[ 'slug' => 'orizon',    'name' => 'Orizon',       'energy_types' => 'power,gas,mobile', 'logo_url' => 'https://orizon.gr/wp-content/uploads/2025/04/logo-orizon.svg' ],
+			// Η Orizon είναι αποκλειστικά κινητή τηλεφωνία· και τα τρία της
+			// έντυπα (ενεργοποίηση, φορητότητα, συνδυαστική) περιγράφουν γραμμή.
+			[ 'slug' => 'orizon',    'name' => 'Orizon',       'energy_types' => 'mobile',           'logo_url' => 'https://orizon.gr/wp-content/uploads/2025/04/logo-orizon.svg' ],
 		];
 	}
 
