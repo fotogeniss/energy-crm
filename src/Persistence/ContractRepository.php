@@ -81,9 +81,20 @@ final class ContractRepository
 
     private string $table;
 
-    public function __construct(?string $table = null)
-    {
-        $this->table = $table ?? Tables::name(Tables::CONTRACTS);
+    /** Customer columns arrive here through joins, so they need translating too. */
+    private CustomerFields $fields;
+
+    /** And the contract's own encrypted part, the values inside extra_json. */
+    private ContractFields $extras;
+
+    public function __construct(
+        ?string $table = null,
+        ?CustomerFields $fields = null,
+        ?ContractFields $extras = null,
+    ) {
+        $this->table  = $table ?? Tables::name(Tables::CONTRACTS);
+        $this->fields = $fields ?? CustomerFields::default();
+        $this->extras = $extras ?? ContractFields::default();
     }
 
     /** @return array<string, mixed>|null */
@@ -108,7 +119,7 @@ final class ContractRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $row ?: null;
+        return $row ? $this->extras->fromStorage($row) : null;
     }
 
     public function exists(int $contractId, UserScope $scope): bool
@@ -131,7 +142,7 @@ final class ContractRepository
             return false;
         }
 
-        $data = $this->filterWritable($data);
+        $data = $this->extras->forStorage($this->filterWritable($data));
 
         if ($data === []) {
             return $this->exists($contractId, $scope);
@@ -179,7 +190,7 @@ final class ContractRepository
     {
         global $wpdb;
 
-        $row = $this->filterWritable($data);
+        $row = $this->extras->forStorage($this->filterWritable($data));
 
         // Ownership is assigned here, never taken from the request.
         $row['partner_user_id'] = $scope->actorId();
@@ -366,10 +377,14 @@ final class ContractRepository
         }
 
         if ($term !== '') {
-            $like         = '%' . $wpdb->esc_like($term) . '%';
+            $like = '%' . $wpdb->esc_like($term) . '%';
+
+            // See CustomerRepository::search() — the ΑΦΜ is matched both as a
+            // column and as its hash, because it may be stored either way.
             $conditions[] = '( cu.first_name LIKE %s OR cu.last_name LIKE %s OR cu.company_name LIKE %s'
-                . ' OR cu.afm LIKE %s OR c.supply_number LIKE %s OR c.code LIKE %s )';
-            $params       = [...$params, $like, $like, $like, $like, $like, $like];
+                . ' OR cu.afm LIKE %s OR c.supply_number LIKE %s OR c.code LIKE %s'
+                . ' OR cu.' . CustomerFields::INDEX_COLUMN . ' = %s )';
+            $params       = [...$params, $like, $like, $like, $like, $like, $like, $this->fields->index($term)];
         }
 
         $where = implode(' AND ', $conditions);
@@ -396,7 +411,7 @@ final class ContractRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $rows;
+        return $this->fields->fromStorageAll($rows);
     }
 
     /**
@@ -423,8 +438,11 @@ final class ContractRepository
         ];
 
         if (strlen($afm) >= 9) {
-            $match[]  = 'cu.afm = %s';
-            $params[] = $afm;
+            // The hash rather than the column: randomised encryption means the
+            // same ΑΦΜ never equals itself, and a duplicate check that quietly
+            // stops matching reads as "no duplicate exists".
+            $match[]  = 'cu.' . CustomerFields::INDEX_COLUMN . ' = %s';
+            $params[] = $this->fields->index($afm);
         }
 
         if ($supply !== '') {
@@ -462,7 +480,7 @@ final class ContractRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $rows;
+        return $this->fields->fromStorageAll($rows);
     }
 
     /**
@@ -495,7 +513,8 @@ final class ContractRepository
                  WHERE ( c.code LIKE %s OR c.supply_number LIKE %s
                          OR cu.first_name LIKE %s OR cu.last_name LIKE %s
                          OR cu.company_name LIKE %s OR cu.afm LIKE %s
-                         OR cu.mobile LIKE %s ){$clause}
+                         OR cu.mobile LIKE %s
+                         OR cu." . CustomerFields::INDEX_COLUMN . " = %s ){$clause}
                  ORDER BY c.updated_at DESC
                  LIMIT " . max(1, $limit),
                 [
@@ -503,6 +522,7 @@ final class ContractRepository
                     Tables::name(Tables::CUSTOMERS),
                     Tables::name(Tables::PROVIDERS),
                     $like, $like, $like, $like, $like, $like, $like,
+                    $this->fields->index($term),
                     ...$scopeParams,
                 ]
             ),
@@ -510,7 +530,7 @@ final class ContractRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $rows;
+        return $this->fields->fromStorageAll($rows);
     }
 
     /**
@@ -581,7 +601,7 @@ final class ContractRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $row ?: null;
+        return $row ? $this->extras->fromStorage($this->fields->fromStorage($row)) : null;
     }
 
     /**

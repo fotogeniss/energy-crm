@@ -388,6 +388,30 @@ class ECRM_Tracking {
 
 	// --- Public page --------------------------------------------------------
 
+	/**
+	 * What the customer ticks before signing.
+	 *
+	 * The previous wording covered "processing for concluding the contract",
+	 * which is true and incomplete: the photograph of their ID card and their
+	 * bill is sent to an external AI service that reads the ΑΦΜ, ΑΔΤ, date of
+	 * birth and address off it, so the application can be filled in without
+	 * retyping. A recipient the customer is never told about is exactly what
+	 * Articles 13–14 exist to prevent, and consent given without knowing it
+	 * is not informed consent.
+	 *
+	 * Filterable because the final wording is the company lawyer's call, not
+	 * the developer's — and because a wording change should never require
+	 * editing a template.
+	 */
+	public static function consent_text(): string {
+		$default = 'Συναινώ στην επεξεργασία των προσωπικών μου δεδομένων για τη σύναψη/διαχείριση '
+			. 'της σύμβασης και αποδέχομαι την ηλεκτρονική υπογραφή ως δεσμευτική. Ενημερώθηκα ότι τα '
+			. 'έγγραφα που υποβάλλονται (ταυτότητα, λογαριασμός) αναγνωρίζονται αυτόματα από εξωτερική '
+			. 'υπηρεσία τεχνητής νοημοσύνης για τη συμπλήρωση της αίτησης.';
+
+		return (string) apply_filters( 'ecrm_consent_text', $default );
+	}
+
 	public static function maybe_render(): void {
 		$token = isset( $_GET['ecrm_track'] ) ? preg_replace( '/[^A-Za-z0-9\-]/', '', wp_unslash( $_GET['ecrm_track'] ) ) : '';
 		if ( ! $token ) {
@@ -401,6 +425,8 @@ class ECRM_Tracking {
 		// invalid/expired link (bad signature — e.g. site salts changed) from a
 		// reachability problem (REST API blocked for anonymous visitors).
 		$token_ok = ( self::verify( $token ) !== null );
+
+		$consent_text = self::consent_text();
 
 		nocache_headers();
 		header( 'Content-Type: text/html; charset=utf-8' );
@@ -483,6 +509,7 @@ class ECRM_Tracking {
 (function(){
 	var REST = <?php echo wp_json_encode( $rest ); ?>;
 	var TOKEN_OK = <?php echo $token_ok ? 'true' : 'false'; ?>;
+	var CONSENT_TEXT = <?php echo wp_json_encode( $consent_text ); ?>;
 	var SIGN = REST + '/sign';
 	var content = document.getElementById('content');
 
@@ -561,7 +588,7 @@ class ECRM_Tracking {
 					'<p class="lead">Υπογράψτε στο πλαίσιο με το δάχτυλο ή το ποντίκι για να ολοκληρωθεί η αίτησή σας.</p>'+
 					'<canvas class="pad is-empty" id="pad"></canvas>'+
 					'<div class="padbar"><small>Σχεδιάστε την υπογραφή σας παραπάνω</small><button type="button" class="btn btn--clear" id="clear">Καθαρισμός</button></div>'+
-					'<label class="consent"><input type="checkbox" id="consent"> Συναινώ στην επεξεργασία των προσωπικών μου δεδομένων για τη σύναψη/διαχείριση της σύμβασης και αποδέχομαι την ηλεκτρονική υπογραφή ως δεσμευτική.</label>'+
+					'<label class="consent"><input type="checkbox" id="consent"> '+esc(CONSENT_TEXT)+'</label>'+
 					'<button type="button" class="btn btn--sign" id="dosign" disabled>Υπογραφή & Αποστολή</button>'+
 				'</div>';
 		} else if (d.signed) {

@@ -495,7 +495,7 @@ class ECRM_Shortcodes {
 				// signing page (ECRM_Tracking) — their own tick, their own IP,
 				// their own timestamp. That one stays untouched and unticked.
 				?>
-				<label class="ecrm-consent"><input type="checkbox" data-consent name="consent" value="1" checked> Ο πελάτης συναινεί στην επεξεργασία των προσωπικών του δεδομένων για τη σύναψη/διαχείριση της σύμβασης (GDPR).</label>
+				<label class="ecrm-consent"><input type="checkbox" data-consent name="consent" value="1" checked> Ο πελάτης ενημερώθηκε και συναινεί στην επεξεργασία των προσωπικών του δεδομένων για τη σύναψη/διαχείριση της σύμβασης (GDPR), συμπεριλαμβανομένης της αυτόματης ανάγνωσης των εγγράφων που υποβάλλει (ταυτότητα, λογαριασμός) από εξωτερική υπηρεσία τεχνητής νοημοσύνης.</label>
 				<div class="ecrm-foot__mode">Λειτουργία: <strong>Νέα αίτηση</strong></div>
 				<div class="ecrm-foot__actions">
 					<button type="button" class="ecrm-btn ecrm-btn--ghost" data-save-draft>Προσωρινή Αποθήκευση</button>

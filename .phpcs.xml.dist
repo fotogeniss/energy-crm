@@ -17,6 +17,27 @@
     <file>tests</file>
     <file>energy-crm.php</file>
 
+    <!--
+        Both of these are configuration, not code: they define the constants
+        WordPress expects, before WordPress exists to be asked. Side effects
+        and a global are the interface, not an oversight. wp-config.php has
+        the same shape for the same reason.
+    -->
+    <rule ref="PSR1.Files.SideEffects">
+        <exclude-pattern>tests/Integration/bootstrap.php</exclude-pattern>
+        <exclude-pattern>tests/Integration/wp-tests-config.php</exclude-pattern>
+    </rule>
+
+    <!--
+        Integration tests query the database directly on purpose: the whole
+        point is to compare what a repository returns against what is actually
+        on disk. Going through the repository on both sides would test nothing.
+        Caching advice is equally beside the point in a test.
+    -->
+    <rule ref="WordPress.DB.DirectDatabaseQuery">
+        <exclude-pattern>tests/Integration/*</exclude-pattern>
+    </rule>
+
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/node_modules/*</exclude-pattern>
 

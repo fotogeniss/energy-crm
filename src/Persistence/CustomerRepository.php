@@ -45,10 +45,16 @@ final class CustomerRepository
 
     private string $contractsTable;
 
-    public function __construct(?string $table = null, ?string $contractsTable = null)
-    {
+    private CustomerFields $fields;
+
+    public function __construct(
+        ?string $table = null,
+        ?string $contractsTable = null,
+        ?CustomerFields $fields = null,
+    ) {
         $this->table          = $table ?? Tables::name(Tables::CUSTOMERS);
         $this->contractsTable = $contractsTable ?? Tables::name(Tables::CONTRACTS);
+        $this->fields         = $fields ?? CustomerFields::default();
     }
 
     /** @return array<string, mixed>|null */
@@ -67,7 +73,7 @@ final class CustomerRepository
                 ARRAY_A
             );
 
-            return $row ?: null;
+            return $row ? $this->fields->fromStorage($row) : null;
         }
 
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
@@ -84,7 +90,7 @@ final class CustomerRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $row ?: null;
+        return $row ? $this->fields->fromStorage($row) : null;
     }
 
     public function isReachable(int $customerId, UserScope $scope): bool
@@ -110,10 +116,15 @@ final class CustomerRepository
         }
 
         if ($term !== '') {
-            $like         = '%' . $wpdb->esc_like($term) . '%';
+            $like = '%' . $wpdb->esc_like($term) . '%';
+
+            // The ΑΦΜ is matched two ways because it may be stored two ways.
+            // LIKE still finds a plaintext column; once encrypted it matches
+            // nothing, and only a full ΑΦΜ can be found — through its hash.
             $conditions[] = "( CONCAT_WS(' ', cu.first_name, cu.last_name, cu.company_name) LIKE %s"
-                . ' OR cu.afm LIKE %s OR cu.phone LIKE %s )';
-            $params       = [...$params, $like, $like, $like];
+                . ' OR cu.afm LIKE %s OR cu.phone LIKE %s OR cu.'
+                . CustomerFields::INDEX_COLUMN . ' = %s )';
+            $params       = [...$params, $like, $like, $like, $this->fields->index($term)];
         }
 
         $where = implode(' AND ', $conditions);
@@ -137,7 +148,7 @@ final class CustomerRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $rows;
+        return $this->fields->fromStorageAll($rows);
     }
 
     /**
@@ -160,8 +171,11 @@ final class CustomerRepository
         }
 
         if ($afm !== '') {
-            $match[]  = 'cu.afm = %s';
-            $params[] = $afm;
+            // The hash, not the column: encryption is randomised, so the same
+            // ΑΦΜ never equals itself twice. The hash is maintained whether or
+            // not encryption is on, so this behaves the same either way.
+            $match[]  = 'cu.' . CustomerFields::INDEX_COLUMN . ' = %s';
+            $params[] = $this->fields->index($afm);
         }
 
         if ($supply !== '') {
@@ -196,7 +210,7 @@ final class CustomerRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $rows;
+        return $this->fields->fromStorageAll($rows);
     }
 
     /**
@@ -214,7 +228,7 @@ final class CustomerRepository
             return false;
         }
 
-        return $wpdb->update($this->table, $data, ['id' => $customerId]) !== false;
+        return $wpdb->update($this->table, $this->fields->forStorage($data), ['id' => $customerId]) !== false;
     }
 
     /**
@@ -226,7 +240,7 @@ final class CustomerRepository
     {
         global $wpdb;
 
-        $wpdb->insert($this->table, $this->filterWritable($data));
+        $wpdb->insert($this->table, $this->fields->forStorage($this->filterWritable($data)));
 
         return (int) $wpdb->insert_id;
     }

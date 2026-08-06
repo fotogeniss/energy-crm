@@ -40,12 +40,30 @@ class ECRM_DB {
 		$charset = $wpdb->get_charset_collate();
 		$p       = $wpdb->prefix . 'ecrm_';
 
+		/*
+		 * No `--` comments inside these statements. Ever.
+		 *
+		 * dbDelta does not parse SQL; it reads the CREATE TABLE line by line and
+		 * treats everything after the column name as that column's definition —
+		 * trailing comment included. It then emits
+		 *
+		 *     ALTER TABLE ... CHANGE COLUMN `afm` afm VARCHAR(20) NULL, -- ΑΦΜ
+		 *
+		 * which MySQL rejects. Every column change this plugin has ever needed
+		 * failed exactly this way, silently, because $wpdb hides errors in
+		 * production. That is the real reason the schema kept "losing" columns
+		 * and why the EnsureLegacyColumns migration had to exist.
+		 *
+		 * Column vocabulary belongs above the statement, where it costs nothing.
+		 */
+
 		// --- providers ------------------------------------------------------
+		// energy_types: comma list of power|gas.
 		dbDelta( "CREATE TABLE {$p}providers (
 			id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			slug         VARCHAR(64)  NOT NULL,
 			name         VARCHAR(128) NOT NULL,
-			energy_types VARCHAR(32)  NOT NULL DEFAULT 'power,gas',  -- comma list: power|gas
+			energy_types VARCHAR(32)  NOT NULL DEFAULT 'power,gas',
 			logo_url     VARCHAR(255) NULL,
 			active       TINYINT(1)   NOT NULL DEFAULT 1,
 			sort_order   INT          NOT NULL DEFAULT 0,
@@ -55,13 +73,16 @@ class ECRM_DB {
 		) {$charset};" );
 
 		// --- programs -------------------------------------------------------
+		// energy_type: power|gas
+		// category:    home|business|communal
+		// price_type:  fixed|special|variable|dynamic
 		dbDelta( "CREATE TABLE {$p}programs (
 			id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			provider_id  BIGINT UNSIGNED NOT NULL,
 			name         VARCHAR(160) NOT NULL,
-			energy_type  VARCHAR(8)   NOT NULL DEFAULT 'power',     -- power|gas
-			category     VARCHAR(16)  NOT NULL DEFAULT 'home',      -- home|business|communal
-			price_type   VARCHAR(16)  NOT NULL DEFAULT 'fixed',     -- fixed|special|variable|dynamic
+			energy_type  VARCHAR(8)   NOT NULL DEFAULT 'power',
+			category     VARCHAR(16)  NOT NULL DEFAULT 'home',
+			price_type   VARCHAR(16)  NOT NULL DEFAULT 'fixed',
 			active       TINYINT(1)   NOT NULL DEFAULT 1,
 			sort_order   INT          NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id),
@@ -70,22 +91,31 @@ class ECRM_DB {
 		) {$charset};" );
 
 		// --- customers ------------------------------------------------------
+		// customer_type: individual|sole_prop|company
+		// afm ΑΦΜ · doy ΔΟΥ · father_name πατρώνυμο · adt ΑΔΤ ή διαβατήριο
+		// region Νομός · city Πόλη · street Οδός · street_no Αριθμός · postal_code ΤΚ
+		//
+		// afm, adt, street, street_no and postal_code are wider than their
+		// contents need because CustomerFields may store them encrypted, and
+		// ciphertext is several times longer than the value. A column too
+		// narrow for it truncates instead of failing on a non-strict server,
+		// which loses the value permanently. See WidenEncryptedColumns.
 		dbDelta( "CREATE TABLE {$p}customers (
 			id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-			customer_type VARCHAR(16) NOT NULL DEFAULT 'individual', -- individual|sole_prop|company
-			afm           VARCHAR(20)  NULL,   -- ΑΦΜ
-			doy           VARCHAR(80)  NULL,   -- ΔΟΥ
+			customer_type VARCHAR(16) NOT NULL DEFAULT 'individual',
+			afm           VARCHAR(255) NULL,
+			doy           VARCHAR(80)  NULL,
 			first_name    VARCHAR(120) NULL,
 			last_name     VARCHAR(120) NULL,
-			father_name   VARCHAR(120) NULL,   -- πατρώνυμο
+			father_name   VARCHAR(120) NULL,
 			company_name  VARCHAR(200) NULL,
-			adt           VARCHAR(40)  NULL,   -- ΑΔΤ / διαβατήριο
+			adt           VARCHAR(255) NULL,
 			birth_date    DATE         NULL,
-			region        VARCHAR(120) NULL,   -- Νομός
-			city          VARCHAR(120) NULL,   -- Πόλη
-			street        VARCHAR(180) NULL,   -- Οδός
-			street_no     VARCHAR(20)  NULL,   -- Αριθμός
-			postal_code   VARCHAR(12)  NULL,   -- ΤΚ
+			region        VARCHAR(120) NULL,
+			city          VARCHAR(120) NULL,
+			street        VARCHAR(512) NULL,
+			street_no     VARCHAR(255) NULL,
+			postal_code   VARCHAR(255) NULL,
 			phone         VARCHAR(40)  NULL,
 			mobile        VARCHAR(40)  NULL,
 			email         VARCHAR(160) NULL,
@@ -97,25 +127,35 @@ class ECRM_DB {
 		) {$charset};" );
 
 		// --- contracts (applications) --------------------------------------
+		// code:            human ref, e.g. APP-0001
+		// partner_user_id: WP user — ο συνεργάτης
+		// energy_type:     power|gas
+		// activation_type: change_provider|succession|reconnection|renewal|
+		//                  new_connection|program_change
+		// supply_number:   ΗΚΑΣΠ / αριθμός παροχής
+		// meter_number:    αριθμός μετρητή
+		// invoice_code:    ΤΙΜΟΛΟΓΙΟ (Γ1 κλπ)
+		// extracted_json:  raw AI extraction payload, kept for audit
+		// extra_json:      extended fields (legal rep, contact, meter extras)
 		dbDelta( "CREATE TABLE {$p}contracts (
 			id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-			code            VARCHAR(32)  NULL,   -- human ref e.g. APP-0001
-			partner_user_id BIGINT UNSIGNED NULL, -- WP user (the συνεργάτης)
+			code            VARCHAR(32)  NULL,
+			partner_user_id BIGINT UNSIGNED NULL,
 			customer_id     BIGINT UNSIGNED NULL,
 			provider_id     BIGINT UNSIGNED NULL,
 			program_id      BIGINT UNSIGNED NULL,
-			energy_type     VARCHAR(8)  NOT NULL DEFAULT 'power',  -- power|gas
+			energy_type     VARCHAR(8)  NOT NULL DEFAULT 'power',
 			category        VARCHAR(16) NOT NULL DEFAULT 'home',
 			price_type      VARCHAR(16) NULL,
 			customer_type   VARCHAR(16) NOT NULL DEFAULT 'individual',
-			activation_type VARCHAR(24) NULL,    -- change_provider|succession|reconnection|renewal|new_connection|program_change
-			supply_number   VARCHAR(40) NULL,    -- ΗΚΑΣΠ / αριθμός παροχής
-			meter_number    VARCHAR(40) NULL,    -- αριθμός μετρητή
-			invoice_code    VARCHAR(20) NULL,    -- ΤΙΜΟΛΟΓΙΟ (Γ1 κλπ)
+			activation_type VARCHAR(24) NULL,
+			supply_number   VARCHAR(40) NULL,
+			meter_number    VARCHAR(40) NULL,
+			invoice_code    VARCHAR(20) NULL,
 			status          VARCHAR(24) NOT NULL DEFAULT 'draft',
 			notes           TEXT NULL,
-			extracted_json  LONGTEXT NULL,       -- raw AI extraction payload (audit)
-			extra_json      LONGTEXT NULL,       -- extended fields (legal rep, contact, meter extras)
+			extracted_json  LONGTEXT NULL,
+			extra_json      LONGTEXT NULL,
 			start_date      DATE NULL,
 			term_months     INT NULL,
 			end_date        DATE NULL,
@@ -129,11 +169,13 @@ class ECRM_DB {
 		) {$charset};" );
 
 		// --- files ----------------------------------------------------------
+		// attachment_id: WP media id, for documents still in the library
+		// doc_kind:      id_card|provider_bill|other
 		dbDelta( "CREATE TABLE {$p}files (
 			id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			contract_id BIGINT UNSIGNED NULL,
-			attachment_id BIGINT UNSIGNED NULL, -- WP media id if stored in library
-			doc_kind    VARCHAR(24) NOT NULL DEFAULT 'other', -- id_card|provider_bill|other
+			attachment_id BIGINT UNSIGNED NULL,
+			doc_kind    VARCHAR(24) NOT NULL DEFAULT 'other',
 			filename    VARCHAR(255) NULL,
 			mime        VARCHAR(80)  NULL,
 			path        VARCHAR(500) NULL,
@@ -142,7 +184,6 @@ class ECRM_DB {
 			KEY contract_id (contract_id)
 		) {$charset};" );
 
-		// --- events (status history / audit) -------------------------------
 		// --- commission rules ----------------------------------------------
 		dbDelta( "CREATE TABLE {$p}commission_rules (
 			id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -172,13 +213,16 @@ class ECRM_DB {
 			KEY contract_id (contract_id)
 		) {$charset};" );
 
+		// --- payouts --------------------------------------------------------
+		// period: e.g. 2026-06, or 'all'
+		// status: pending|paid
 		dbDelta( "CREATE TABLE {$p}payouts (
 			id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			partner_user_id BIGINT UNSIGNED NOT NULL,
-			period          VARCHAR(16) NULL,           -- e.g. 2026-06 or 'all'
+			period          VARCHAR(16) NULL,
 			cnt             INT NOT NULL DEFAULT 0,
 			amount          DECIMAL(10,2) NOT NULL DEFAULT 0,
-			status          VARCHAR(16) NOT NULL DEFAULT 'pending', -- pending|paid
+			status          VARCHAR(16) NOT NULL DEFAULT 'pending',
 			note            VARCHAR(255) NULL,
 			created_by      BIGINT UNSIGNED NULL,
 			created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -188,6 +232,9 @@ class ECRM_DB {
 			KEY status (status)
 		) {$charset};" );
 
+		// --- tasks ----------------------------------------------------------
+		// priority: low|normal|high
+		// status:   open|done
 		dbDelta( "CREATE TABLE {$p}tasks (
 			id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			contract_id  BIGINT UNSIGNED NULL,
@@ -197,8 +244,8 @@ class ECRM_DB {
 			title        VARCHAR(255) NOT NULL,
 			note         TEXT NULL,
 			due_at       DATETIME NULL,
-			priority     VARCHAR(8) NOT NULL DEFAULT 'normal', -- low|normal|high
-			status       VARCHAR(16) NOT NULL DEFAULT 'open',  -- open|done
+			priority     VARCHAR(8) NOT NULL DEFAULT 'normal',
+			status       VARCHAR(16) NOT NULL DEFAULT 'open',
 			created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			done_at      DATETIME NULL,
 			PRIMARY KEY (id),
@@ -208,15 +255,19 @@ class ECRM_DB {
 			KEY due_at (due_at)
 		) {$charset};" );
 
+		// --- leads ----------------------------------------------------------
+		// source:      phone|chatbot|referral|walk_in|social|other
+		// energy_type: power|gas|mobile|'' (όλα)
+		// stage:       new|contacted|callback|qualified|won|lost
 		dbDelta( "CREATE TABLE {$p}leads (
 			id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			partner_user_id BIGINT UNSIGNED NULL,
 			name          VARCHAR(160) NOT NULL,
 			phone         VARCHAR(40) NULL,
 			email         VARCHAR(160) NULL,
-			source        VARCHAR(32) NULL,   -- phone|chatbot|referral|walk_in|social|other
-			energy_type   VARCHAR(16) NULL,   -- power|gas|mobile|''
-			stage         VARCHAR(16) NOT NULL DEFAULT 'new', -- new|contacted|callback|qualified|won|lost
+			source        VARCHAR(32) NULL,
+			energy_type   VARCHAR(16) NULL,
+			stage         VARCHAR(16) NOT NULL DEFAULT 'new',
 			callback_at   DATETIME NULL,
 			interest      VARCHAR(255) NULL,
 			notes         LONGTEXT NULL,
@@ -230,13 +281,17 @@ class ECRM_DB {
 			KEY callback_at (callback_at)
 		) {$charset};" );
 
+		// --- knowledge base --------------------------------------------------
+		// energy_type:   power|gas|'' (όλα)
+		// section:       docs|guarantees|charges|other
+		// customer_type: home|business|'' (όλα)
 		dbDelta( "CREATE TABLE {$p}kb_entries (
 			id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			provider_id   BIGINT UNSIGNED NULL,
 			provider_name VARCHAR(120) NULL,
-			energy_type   VARCHAR(16) NULL,   -- power|gas|'' (όλα)
-			section       VARCHAR(24) NOT NULL DEFAULT 'docs', -- docs|guarantees|charges|other
-			customer_type VARCHAR(16) NULL,   -- home|business|'' (όλα)
+			energy_type   VARCHAR(16) NULL,
+			section       VARCHAR(24) NOT NULL DEFAULT 'docs',
+			customer_type VARCHAR(16) NULL,
 			title         VARCHAR(255) NOT NULL,
 			body          LONGTEXT NULL,
 			sort_order    INT NOT NULL DEFAULT 0,
@@ -248,11 +303,13 @@ class ECRM_DB {
 			KEY section (section)
 		) {$charset};" );
 
+		// --- events (status history / audit) ---------------------------------
+		// type: status_change|note|created|extracted
 		dbDelta( "CREATE TABLE {$p}events (
 			id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			contract_id BIGINT UNSIGNED NOT NULL,
 			user_id     BIGINT UNSIGNED NULL,
-			type        VARCHAR(40) NOT NULL,  -- status_change|note|created|extracted
+			type        VARCHAR(40) NOT NULL,
 			from_status VARCHAR(24) NULL,
 			to_status   VARCHAR(24) NULL,
 			message     TEXT NULL,
@@ -261,11 +318,13 @@ class ECRM_DB {
 			KEY contract_id (contract_id)
 		) {$charset};" );
 
+		// --- notifications ---------------------------------------------------
+		// type: signed|status|system
 		dbDelta( "CREATE TABLE {$p}notifications (
 			id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			user_id     BIGINT UNSIGNED NOT NULL,
 			contract_id BIGINT UNSIGNED NULL,
-			type        VARCHAR(40) NOT NULL,  -- signed|status|system
+			type        VARCHAR(40) NOT NULL,
 			title       VARCHAR(190) NOT NULL,
 			body        TEXT NULL,
 			read_at     DATETIME NULL,

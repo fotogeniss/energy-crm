@@ -17,9 +17,13 @@ namespace EnergyCRM;
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Admin\FormCalibrator;
+use EnergyCRM\Admin\PrivacyTools;
 use EnergyCRM\Http\Router;
+use EnergyCRM\Infrastructure\DocumentProtection;
 use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
+use EnergyCRM\Persistence\PersonalDataEraser;
+use EnergyCRM\Persistence\PersonalDataExporter;
 
 final class Plugin
 {
@@ -87,6 +91,7 @@ final class Plugin
 
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
+        (new DocumentProtection(Services::files()))->register();
         (new Router(
             Services::scopeResolver(),
             Services::contracts(),
@@ -112,6 +117,13 @@ final class Plugin
 
         if (is_admin()) {
             (new FormCalibrator())->register();
+
+            // Tools → Export/Erase Personal Data. Admin-only, and admin-ajax
+            // counts as admin, which is where WordPress actually runs them.
+            (new PrivacyTools(
+                new PersonalDataExporter(),
+                new PersonalDataEraser(Services::files())
+            ))->register();
         }
 
         LegacyLoader::boot();

@@ -7,8 +7,11 @@
  *     + web.config so the web server refuses direct access;
  *   - serves files only through an authenticated REST endpoint that verifies a
  *     short-lived signed token AND that the requesting user may see the file's
- *     contract;
- *   - migrates legacy publicly-stored files into the protected dir.
+ *     contract.
+ *
+ * Moving the legacy publicly-stored files into that dir used to live here too.
+ * It is now automatic and batched — see EnergyCRM\Infrastructure\DocumentProtection
+ * and FileRepository::protectBatch().
  *
  * @package EnergyCRM
  */
@@ -171,40 +174,4 @@ class ECRM_Files {
 		exit;
 	}
 
-	// --- Legacy migration ---------------------------------------------------
-
-	/**
-	 * Move legacy publicly-stored files into the protected dir.
-	 * @return array{moved:int, failed:int}
-	 */
-	public static function secure_legacy(): array {
-		global $wpdb;
-		$fl   = ECRM_DB::table( 'files' );
-		$rows = $wpdb->get_results( "SELECT id, attachment_id, path, mime FROM {$fl} WHERE protected = 0 OR protected IS NULL", ARRAY_A );
-		$moved = 0; $failed = 0;
-		foreach ( (array) $rows as $r ) {
-			$src = '';
-			if ( ! empty( $r['attachment_id'] ) ) {
-				$p = get_attached_file( (int) $r['attachment_id'] );
-				if ( $p && file_exists( $p ) ) { $src = $p; }
-			}
-			if ( ! $src ) { $failed++; continue; }
-
-			$ext  = pathinfo( $src, PATHINFO_EXTENSION ) ?: 'bin';
-			$dest = trailingslashit( self::dir() ) . 'doc_' . wp_generate_password( 24, false ) . '.' . $ext;
-			if ( @copy( $src, $dest ) ) { // phpcs:ignore
-				@chmod( $dest, 0640 ); // phpcs:ignore
-				$wpdb->update( $fl, [ 'path' => $dest, 'protected' => 1 ], [ 'id' => (int) $r['id'] ] );
-				// Remove the public copy (attachment + original).
-				if ( ! empty( $r['attachment_id'] ) ) {
-					wp_delete_attachment( (int) $r['attachment_id'], true );
-					$wpdb->update( $fl, [ 'attachment_id' => null ], [ 'id' => (int) $r['id'] ] );
-				}
-				$moved++;
-			} else {
-				$failed++;
-			}
-		}
-		return [ 'moved' => $moved, 'failed' => $failed ];
-	}
 }

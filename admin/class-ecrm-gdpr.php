@@ -29,28 +29,6 @@ class ECRM_GDPR {
 		add_submenu_page( 'energy-crm', 'GDPR', 'GDPR', 'manage_options', 'energy-crm-gdpr', [ __CLASS__, 'render' ] );
 	}
 
-	/** Gather everything we hold about a customer. */
-	private static function collect( int $customer_id ): ?array {
-		global $wpdb;
-		$cu = ECRM_DB::table( 'customers' );
-		$ct = ECRM_DB::table( 'contracts' );
-		$fl = ECRM_DB::table( 'files' );
-		$ev = ECRM_DB::table( 'events' );
-
-		$customer = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$cu} WHERE id = %d", $customer_id ), ARRAY_A );
-		if ( ! $customer ) { return null; }
-
-		$contracts = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$ct} WHERE customer_id = %d", $customer_id ), ARRAY_A );
-		$cids = wp_list_pluck( $contracts, 'id' );
-		$files = $events = [];
-		if ( $cids ) {
-			$in = implode( ',', array_map( 'intval', $cids ) );
-			$files  = $wpdb->get_results( "SELECT id, contract_id, doc_kind, filename, mime, created_at FROM {$fl} WHERE contract_id IN ($in)", ARRAY_A );
-			$events = $wpdb->get_results( "SELECT id, contract_id, type, from_status, to_status, message, created_at FROM {$ev} WHERE contract_id IN ($in)", ARRAY_A );
-		}
-		return [ 'customer' => $customer, 'contracts' => $contracts, 'files' => $files, 'events' => $events ];
-	}
-
 	public static function render(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { return; }
 		global $wpdb;
@@ -63,12 +41,10 @@ class ECRM_GDPR {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $txt ) . '</p></div>';
 		}
 		if ( isset( $_GET['secured'] ) ) {
-			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( sprintf( 'Ασφαλίστηκαν %d αρχεία (απέτυχαν %d).', (int) $_GET['secured'], (int) ( $_GET['failed'] ?? 0 ) ) ) . '</p></div>';
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( sprintf( 'Ασφαλίστηκαν %d αρχεία.', (int) $_GET['secured'] ) ) . '</p></div>';
 		}
 
-		// Security: re-secure any legacy publicly-stored documents.
-		echo '<div class="notice notice-warning"><p><strong>Ασφάλεια αρχείων.</strong> Μετακίνηση παλαιών δημόσιων εγγράφων σε προστατευμένη αποθήκευση. ';
-		echo '<a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ecrm_secure_files' ), 'ecrm_secure_files' ) ) . '" onclick="return confirm(\'Μετακίνηση όλων των παλαιών αρχείων σε προστατευμένη αποθήκευση;\')">Ασφάλιση παλαιών αρχείων</a></p></div>';
+		self::render_file_security_notice();
 
 		$q = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
 		echo '<form method="get" style="margin:14px 0;"><input type="hidden" name="page" value="energy-crm-gdpr">';
@@ -80,13 +56,21 @@ class ECRM_GDPR {
 			return;
 		}
 
+		// The ΑΦΜ may be plaintext or ciphertext depending on the install, so
+		// it is matched both ways. See EnergyCRM\Persistence\CustomerFields.
+		$fields = \EnergyCRM\Persistence\CustomerFields::default();
+		$index  = \EnergyCRM\Persistence\CustomerFields::INDEX_COLUMN;
+
 		$like = '%' . $wpdb->esc_like( $q ) . '%';
 		$rows = $wpdb->get_results( $wpdb->prepare(
 			"SELECT id, first_name, last_name, company_name, afm, email, mobile FROM {$cu}
 			 WHERE afm LIKE %s OR first_name LIKE %s OR last_name LIKE %s OR company_name LIKE %s
+			   OR {$index} = %s
 			 ORDER BY id DESC LIMIT 50",
-			$like, $like, $like, $like
+			$like, $like, $like, $like, $fields->index( $q )
 		), ARRAY_A );
+
+		$rows = $fields->fromStorageAll( (array) $rows );
 
 		echo '<table class="widefat striped"><thead><tr><th>#</th><th>Όνομα/Επωνυμία</th><th>ΑΦΜ</th><th>Επικοινωνία</th><th>Ενέργειες</th></tr></thead><tbody>';
 		if ( ! $rows ) {
@@ -109,11 +93,39 @@ class ECRM_GDPR {
 		echo '</tbody></table></div>';
 	}
 
+	/**
+	 * State of the legacy-document backlog.
+	 *
+	 * Securing them runs on cron now, so the useful thing to show is whether
+	 * any are left — not a button that looks the same whether the work is done
+	 * or was never started. See EnergyCRM\Infrastructure\DocumentProtection.
+	 */
+	private static function render_file_security_notice(): void {
+		$pending = self::protection()->pending();
+
+		if ( $pending === 0 ) {
+			echo '<div class="notice notice-success"><p><strong>Ασφάλεια αρχείων.</strong> Όλα τα έγγραφα βρίσκονται σε προστατευμένη αποθήκευση.</p></div>';
+			return;
+		}
+
+		echo '<div class="notice notice-warning"><p><strong>Ασφάλεια αρχείων.</strong> ';
+		echo esc_html( sprintf( '%d έγγραφα είναι ακόμη δημόσια προσβάσιμα.', $pending ) );
+		echo ' Μεταφέρονται αυτόματα ανά ώρα, σε παρτίδες. ';
+		echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ecrm_secure_files' ), 'ecrm_secure_files' ) ) . '">Μεταφορά τώρα</a></p></div>';
+	}
+
+	private static function protection(): \EnergyCRM\Infrastructure\DocumentProtection {
+		return new \EnergyCRM\Infrastructure\DocumentProtection( \EnergyCRM\Services::files() );
+	}
+
 	public static function export(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_gdpr_export' );
-		$id   = (int) ( $_GET['id'] ?? 0 );
-		$data = self::collect( $id );
+		$id = (int) ( $_GET['id'] ?? 0 );
+
+		// What counts as "everything we hold" is decided in one place, shared
+		// with erasure. See EnergyCRM\Persistence\PersonalDataTables.
+		$data = ( new \EnergyCRM\Persistence\PersonalDataExporter() )->export( $id );
 		if ( ! $data ) { wp_die( 'Δεν βρέθηκε.' ); }
 
 		$payload = [
@@ -131,50 +143,29 @@ class ECRM_GDPR {
 	public static function erase(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_gdpr_erase' );
-		global $wpdb;
 		$id = (int) ( $_POST['id'] ?? 0 );
 		if ( ! $id ) { self::back(); }
 
-		$cu = ECRM_DB::table( 'customers' );
-		$ct = ECRM_DB::table( 'contracts' );
-
-		// 1) Delete attached documents (media + DB rows) for this customer's contracts.
-		$cids = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM {$ct} WHERE customer_id = %d", $id ) );
-		if ( $cids ) {
-			// One implementation of "remove a document and its bytes", shared
-			// with contract deletion. See EnergyCRM\Persistence\FileRepository.
-			\EnergyCRM\Services::files()->purgeForContracts( array_map( 'intval', $cids ) );
-			// Strip PII echoed into contract notes/extracted data.
-			$wpdb->query( "UPDATE {$ct} SET notes = NULL, extracted_json = NULL, consent_ip = NULL WHERE customer_id = " . (int) $id );
-		}
-
-		// 2) Anonymize the customer record (keep id + region for non-personal stats).
-		$wpdb->update( $cu, [
-			'first_name'  => '—',
-			'last_name'   => 'ΔΙΑΓΡΑΦΗ',
-			'father_name' => null,
-			'company_name'=> null,
-			'afm'         => null,
-			'doy'         => null,
-			'adt'         => null,
-			'birth_date'  => null,
-			'email'       => null,
-			'phone'       => null,
-			'mobile'      => null,
-			'street'      => null,
-			'street_no'   => null,
-			'postal_code' => null,
-			'city'        => null,
-		], [ 'id' => $id ] );
+		// Which columns in which tables hold personal data is not this screen's
+		// business to remember. See EnergyCRM\Persistence\PersonalDataEraser.
+		$eraser = new \EnergyCRM\Persistence\PersonalDataEraser( \EnergyCRM\Services::files() );
+		$eraser->erase( $id );
 
 		self::back( 'erased' );
 	}
 
+	/**
+	 * "Do it now" — one larger slice, still bounded.
+	 *
+	 * Unbounded would mean an admin request copying an unknown number of files
+	 * while the site serves everyone else, and a timeout that reports nothing.
+	 * Whatever is left stays with the hourly job.
+	 */
 	public static function secure_files(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_secure_files' );
-		$res = class_exists( 'ECRM_Files' ) ? ECRM_Files::secure_legacy() : [ 'moved' => 0, 'failed' => 0 ];
-		wp_safe_redirect( add_query_arg( [ 'secured' => (int) $res['moved'], 'failed' => (int) $res['failed'] ], admin_url( 'admin.php?page=energy-crm-gdpr' ) ) );
+		$report = self::protection()->sweep( 200 );
+		wp_safe_redirect( add_query_arg( 'secured', (int) $report['protected'], admin_url( 'admin.php?page=energy-crm-gdpr' ) ) );
 		exit;
 	}
 

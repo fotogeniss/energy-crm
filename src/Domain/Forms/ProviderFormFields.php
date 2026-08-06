@@ -166,6 +166,28 @@ final class ProviderFormFields
     ];
 
     /**
+     * Inputs that describe the supply, not the person.
+     *
+     * Used on erasure: the extras bag is free-form, so anything *not* named
+     * here is treated as personal and removed. Getting this list wrong in the
+     * safe direction costs a meter reading; getting it wrong the other way
+     * leaves an IBAN behind, which is why the default is to delete.
+     *
+     * Deliberately absent, though they may look technical: ΚΑΔ, ΓΕΜΗ, νομική
+     * μορφή and αντικείμενο δραστηριότητας identify a business customer the
+     * same way a name identifies a private one; ειδική κατηγορία records that
+     * someone is vulnerable or on a social tariff; and the yes/no answers are
+     * that person's own choices.
+     *
+     * @var list<string>
+     */
+    private const NON_PERSONAL_INPUTS = [
+        'anotato_orio', 'ar_koinoxristou', 'agreed_power', 'day_indication', 'guarantee',
+        'previous_provider', 'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
+        'mobile_connection', 'subsidy_type', 'subsidy_amount', 'base_price', 'offer_price', 'price_after',
+    ];
+
+    /**
      * Inputs rendered as a single-choice dropdown.
      *
      * On paper these are a row of boxes, so the caption next to any one of them
@@ -184,6 +206,12 @@ final class ProviderFormFields
 
     private function __construct()
     {
+    }
+
+    /** Whether an extras-bag key must not survive erasure. */
+    public static function isPersonalInput(string $input): bool
+    {
+        return ! in_array($input, self::NON_PERSONAL_INPUTS, true);
     }
 
     /**

@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Integration suite: a real WordPress against a throwaway database.
+
+    Separate from phpunit.xml.dist because these tests need a different
+    bootstrap, and PHPUnit takes one per configuration file.
+
+    The WordPress test bootstrap DROPS EVERY TABLE in the database it is
+    pointed at, on every run. tests/Integration/bootstrap.php refuses to start
+    unless a dedicated database has been named. See docs/TESTING.md.
+-->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
-         bootstrap="tests/bootstrap.php"
+         bootstrap="tests/Integration/bootstrap.php"
          cacheDirectory=".phpunit.cache"
          colors="true"
          failOnRisky="true"
          failOnWarning="true"
-         failOnNotice="true"
-         failOnDeprecation="true"
-         failOnPhpunitDeprecation="true"
          beStrictAboutOutputDuringTests="true"
          beStrictAboutCoverageMetadata="false">
 
-    <!--
-        Unit only. The integration suite boots a real WordPress and needs its
-        own bootstrap, which PHPUnit allows one of per configuration file — so
-        it lives in phpunit-integration.xml.dist rather than here.
-    -->
     <testsuites>
-        <testsuite name="unit">
-            <directory>tests/Unit</directory>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
 
