@@ -79,18 +79,32 @@ class ECRM_Providers {
 				);
 				$provider_id = (int) $wpdb->insert_id;
 
-				// One starter program per provider so the form is usable out of the box.
+				// One starter program per energy the provider sells, so the form
+				// is usable out of the box. Without a program the dropdown
+				// reads "—" and the agent has nothing to pick.
+				$starters = [];
+
 				if ( str_contains( $row['energy_types'], 'power' ) ) {
+					$starters[] = [ 'Σταθερό Οικιακό', 'power' ];
+				}
+				if ( str_contains( $row['energy_types'], 'mobile' ) ) {
+					// Two: the combined offer decides which form is printed, so
+					// it has to be selectable rather than typed from memory.
+					$starters[] = [ 'Κινητή — Βασικό', 'mobile' ];
+					$starters[] = [ 'Κινητή — Συνδυαστική Προσφορά (Family)', 'mobile' ];
+				}
+
+				foreach ( $starters as $i => [ $name, $energy ] ) {
 					$wpdb->insert(
 						$programs,
 						[
 							'provider_id' => $provider_id,
-							'name'        => 'Σταθερό Οικιακό',
-							'energy_type' => 'power',
+							'name'        => $name,
+							'energy_type' => $energy,
 							'category'    => 'home',
 							'price_type'  => 'fixed',
 							'active'      => 1,
-							'sort_order'  => 0,
+							'sort_order'  => $i,
 						],
 						[ '%d', '%s', '%s', '%s', '%s', '%d', '%d' ]
 					);

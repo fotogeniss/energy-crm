@@ -58,13 +58,47 @@
 			applyEnergyType();
 		}
 
-		// Sections that only make sense for one kind of supply — the mobile
-		// block asks about a line and a SIM, which mean nothing on a meter.
+		// Anything that only makes sense for one kind of supply: whole sections
+		// (the mobile block asks about a line and a SIM), whole rows (Γ-tariff
+		// codes are electricity), and single options (Κοινόχρηστο is a meter in
+		// a stairwell; Φορητότητα only exists on a phone number).
 		function applyEnergyType() {
 			var e = state.energy_type || 'power';
+			var groups = [];
+
 			qa('[data-when-energy]').forEach(function (el) {
 				var ok = el.getAttribute('data-when-energy').split(',').indexOf(e) !== -1;
 				el.style.display = ok ? '' : 'none';
+
+				// A hidden option that stays selected is the dangerous case: it
+				// is invisible and still decides which form gets printed.
+				if (el.classList.contains('ecrm-chip')) {
+					el.disabled = !ok;
+					var group = el.closest('.ecrm-chips');
+					if (group && groups.indexOf(group) === -1) groups.push(group);
+				}
+			});
+
+			groups.forEach(function (group) {
+				var on = group.querySelector('.ecrm-chip.is-on');
+				if (on && on.style.display !== 'none') return;
+
+				var first = Array.prototype.filter.call(
+					group.querySelectorAll('.ecrm-chip'),
+					function (c) { return c.style.display !== 'none'; }
+				)[0];
+
+				group.querySelectorAll('.ecrm-chip').forEach(function (c) { c.classList.remove('is-on'); });
+
+				var field = group.getAttribute('data-field');
+				if (first) {
+					first.classList.add('is-on');
+					state[field] = first.getAttribute('data-val');
+				} else if (on) {
+					// Nothing on offer at all — better empty than a leftover
+					// answer nobody can see.
+					state[field] = null;
+				}
 			});
 		}
 
@@ -268,10 +302,12 @@
 			var all = offered.length === 0;
 			var allowed = [];
 
+			// style.display rather than the hidden attribute, to match how every
+			// other conditional part of this form is shown and hidden.
 			chips.forEach(function (c) {
 				var v = c.getAttribute('data-val');
 				var ok = all || offered.indexOf(v) !== -1;
-				c.hidden = !ok;
+				c.style.display = ok ? '' : 'none';
 				c.disabled = !ok;
 				if (ok) allowed.push(c);
 			});
@@ -280,13 +316,16 @@
 			// thing that is. Silently leaving an impossible choice selected is
 			// how the wrong form gets printed.
 			var current = root.querySelector('.ecrm-chips[data-field="energy_type"] .ecrm-chip.is-on');
-			if (allowed.length && (!current || current.hidden)) {
+			if (allowed.length && (!current || current.style.display === 'none')) {
 				chips.forEach(function (c) { c.classList.remove('is-on'); });
 				allowed[0].classList.add('is-on');
 				state.energy_type = allowed[0].getAttribute('data-val');
-				applyEnergyType();
 				renderPrograms();
 			}
+
+			// Always, not only when the choice moved: the rows and options that
+			// depend on the energy have to match whatever is selected now.
+			applyEnergyType();
 		}
 
 		function setChip(field, val) {

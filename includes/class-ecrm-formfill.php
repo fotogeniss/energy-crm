@@ -54,11 +54,14 @@ class ECRM_FormFill {
 		if ( $has( 'zenith' ) || $has( 'ζενιθ' ) || $has( 'zeniθ' ) )      { return 'zenith_he'; }
 		if ( $has( 'orizon' ) || $has( 'οριζον' ) ) {
 			$prog = self::norm( $program );
-			// "family" plan → its own form; new-connection (ενεργοποίηση) → activation
-			// contract; otherwise the standard portability (φορητότητα) form.
+			// Η συνδυαστική προσφορά είναι χαρακτηριστικό του προγράμματος, όχι
+			// του τρόπου ενεργοποίησης, γι' αυτό ελέγχεται πρώτη.
 			if ( strpos( $prog, 'family' ) !== false || strpos( $prog, 'φαμιλυ' ) !== false ) { return 'orizon_family'; }
-			if ( $activation_type === 'new_connection' )                                       { return 'orizon_activation'; }
-			return 'orizon_port';
+			if ( $activation_type === 'portability' )                                          { return 'orizon_port'; }
+			// Ό,τι δεν είναι φορητότητα ξεκινά νέα γραμμή. Προεπιλογή η
+			// ενεργοποίηση, ώστε ημιτελής επιλογή να μη βγάζει έντυπο
+			// φορητότητας για αριθμό που δεν υπάρχει ακόμα.
+			return 'orizon_activation';
 		}
 
 		return '';

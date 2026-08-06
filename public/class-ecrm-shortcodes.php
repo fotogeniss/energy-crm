@@ -83,16 +83,22 @@ class ECRM_Shortcodes {
 					</div>
 				</div>
 
+				<?php
+				// data-when-energy: σε ποια είδη παροχής ανήκει η επιλογή.
+				// Χωρίς αυτό, ο συνεργάτης που διάλεγε κινητή έβλεπε «Γ1/Γ21»,
+				// «Σταθερό/Κυμαινόμενο» και «Επανασύνδεση» — έννοιες ρεύματος
+				// που δεν σημαίνουν τίποτα σε γραμμή κινητής.
+				?>
 				<div class="ecrm-row">
 					<span class="ecrm-row__label">Κατηγορία</span>
 					<div class="ecrm-chips" data-field="category">
 						<?php $first = true; foreach ( $cats as $v => $l ) : ?>
-							<button type="button" class="ecrm-chip <?php echo $first ? 'is-on' : ''; ?>" data-val="<?php echo esc_attr( $v ); ?>"><?php echo esc_html( $l ); ?></button>
+							<button type="button" class="ecrm-chip <?php echo $first ? 'is-on' : ''; ?>" data-val="<?php echo esc_attr( $v ); ?>"<?php echo $v === 'communal' ? ' data-when-energy="power,gas"' : ''; ?>><?php echo esc_html( $l ); ?></button>
 						<?php $first = false; endforeach; ?>
 					</div>
 				</div>
 
-				<div class="ecrm-row">
+				<div class="ecrm-row" data-when-energy="power,gas">
 					<span class="ecrm-row__label">Χρώμα</span>
 					<div class="ecrm-chips" data-field="price_type">
 						<?php $first = true; foreach ( $pts as $v => $l ) : ?>
@@ -101,7 +107,8 @@ class ECRM_Shortcodes {
 					</div>
 				</div>
 
-				<div class="ecrm-row">
+				<?php // Τα Γ-τιμολόγια είναι κωδικοί ρεύματος. ?>
+				<div class="ecrm-row" data-when-energy="power">
 					<span class="ecrm-row__label">Τιμολόγιο</span>
 					<div class="ecrm-chips" data-field="invoice_code">
 						<button type="button" class="ecrm-chip" data-val="Γ1">Γ1</button>
@@ -125,11 +132,25 @@ class ECRM_Shortcodes {
 					</div>
 				</div>
 
+				<?php
+				// Η διαδοχή, η επανασύνδεση και η αλλαγή παρόχου περιγράφουν
+				// μετρητή. Το αντίστοιχο της αλλαγής παρόχου στην κινητή είναι
+				// η φορητότητα, και έχει δικό της έντυπο.
+				$act_energy = [
+					'change_provider' => 'power,gas',
+					'succession'      => 'power,gas',
+					'reconnection'    => 'power,gas',
+					'program_change'  => 'power,gas',
+					'portability'     => 'mobile',
+				];
+				?>
 				<div class="ecrm-row">
 					<span class="ecrm-row__label">Ενεργοποίηση</span>
 					<div class="ecrm-chips ecrm-chips--wrap" data-field="activation_type">
 						<?php foreach ( $acts as $v => $l ) : ?>
-							<button type="button" class="ecrm-chip" data-val="<?php echo esc_attr( $v ); ?>"><?php echo esc_html( strtoupper( $l ) ); ?></button>
+							<button type="button" class="ecrm-chip" data-val="<?php echo esc_attr( $v ); ?>"<?php
+								echo isset( $act_energy[ $v ] ) ? ' data-when-energy="' . esc_attr( $act_energy[ $v ] ) . '"' : '';
+							?>><?php echo esc_html( strtoupper( $l ) ); ?></button>
 						<?php endforeach; ?>
 					</div>
 				</div>
