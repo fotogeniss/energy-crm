@@ -309,6 +309,9 @@ class ECRM_FormFill {
 			'synainesi_omilou_nai'    => ( $xg( 'group_data_consent' ) === 'yes' ? 'X' : '' ),
 			'synainesi_omilou_oxi'    => ( $xg( 'group_data_consent' ) === 'no'  ? 'X' : '' ),
 			'enarksi_stin_ypanaxorisi' => ( $xg( 'waive_withdrawal' ) === 'yes' ? 'X' : '' ),
+			// Μονό κουτί, όχι Ναι/Όχι: το έντυπο γράφει «Δηλώνω ότι ΔΕΝ
+			// επιθυμώ», οπότε το X σημαίνει άρνηση καταχώρησης.
+			'mi_katachorisi_katalogous' => ( $xg( 'no_directory_listing' ) === 'yes' ? 'X' : '' ),
 
 			// Το ίδιο flag που κρατά η σύμβαση για τη διεύθυνση αποστολής,
 			// ως δύο κουτιά όπως το ζητά το έντυπο.

@@ -224,6 +224,11 @@ def covered(field: dict, page: int, x: float, y: float, x1: float, y1: float) ->
     "ΑΡΙΘΜΟΣ ΠΑΡΟΧΗΣ" — the value belongs to the *right* of the mark, so a field
     sitting outside the rectangle is correct rather than missing. What matters
     is the line: same page, same height, at or after the mark's left edge.
+
+    This once had an exception letting a tick sit to the *left* of its mark. It
+    was written to explain an Orizon checkbox that would not come out covered —
+    and the checkbox was simply mapped to the wrong box. Loosening the check to
+    accommodate a mistake would have hidden it, so the exception is gone.
     """
     return (int(field.get("page", 1)) == page
             and float(field["x"]) >= x - X_SLACK

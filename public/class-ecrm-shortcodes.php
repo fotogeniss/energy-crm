@@ -394,6 +394,7 @@ class ECRM_Shortcodes {
 					$ecrm_yesno( 'no_marketing_calls', 'Μητρώο άρθρου 11 — να ΜΗΝ δέχεται προωθητικές κλήσεις;' );
 					$ecrm_yesno( 'group_data_consent', 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;' );
 					$ecrm_yesno( 'waive_withdrawal', 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;' );
+					$ecrm_yesno( 'no_directory_listing', 'Να ΜΗΝ καταχωρηθεί στους τηλεφωνικούς καταλόγους;' );
 					?>
 				</div>
 			</section>

@@ -272,8 +272,35 @@
   },
   "apostoli_diaforetiki": {
    "page": 4,
-   "x": 64.6,
-   "y": 138.6,
+   "x": 141.8,
+   "y": 137.6,
+   "check": true
+  },
+  "arxiki_timi_pagiou": {
+   "page": 1,
+   "x": 147.1,
+   "y": 214.0
+  },
+  "timi_prosforas": {
+   "page": 1,
+   "x": 135.1,
+   "y": 229.3
+  },
+  "pagio_meta_ti_prosfora": {
+   "page": 1,
+   "x": 135.1,
+   "y": 244.6
+  },
+  "mi_katachorisi_katalogous": {
+   "page": 5,
+   "x": 12.1,
+   "y": 240.5,
+   "check": true
+  },
+  "apostoli_idia_me_katoikias": {
+   "page": 4,
+   "x": 64.4,
+   "y": 137.6,
    "check": true
   }
  },
