@@ -177,7 +177,7 @@ final class ProviderFormFields
      */
     private const DROPDOWNS = [
         'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
-        'mobile_connection', 'subsidy_type',
+        'mobile_connection',
         'bill_cap', 'no_marketing_calls', 'group_data_consent', 'waive_withdrawal',
         'no_directory_listing',
     ];

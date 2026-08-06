@@ -348,6 +348,29 @@ def overlaps(fields: dict, gap: float = 2.0) -> list[tuple[str, str, int, float,
     return clashes
 
 
+def dirty_background(key: str, forms: Path, placed: list[dict]) -> list[str]:
+    """
+    Pages whose background image was made from a *completed* form.
+
+    The templates are rendered as a picture of the blank form with our values
+    drawn over it. When the only PDF a provider ever sent was a filled specimen,
+    that picture carries somebody else's answers — and every application printed
+    from it shows a stranger's name and prices under the real ones.
+
+    There is no way to tell from the JPEG alone, so this leans on what the map
+    already records: a source marked as filled, and fields placed on the pages
+    that came from it. It cannot be fixed here either. It needs a blank PDF.
+    """
+    document = json.loads((forms / f"{key}.json").read_text(encoding="utf-8"))
+
+    if not document.get("source_is_filled"):
+        return []
+
+    pages = sorted({int(p.get("page", 1)) for p in placed})
+
+    return [f"{key}-{n}.jpg" for n in pages]
+
+
 def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
     document = json.loads((forms / f"{key}.json").read_text(encoding="utf-8"))
     fields = document["fields"]
@@ -378,7 +401,13 @@ def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
     over = [] if document.get("source_is_filled") else collisions(pdf, fields)
 
     if document.get("source_is_filled"):
-        print("\n    (το δείγμα είναι συμπληρωμένο — ο έλεγχος σύγκρουσης δεν ισχύει)")
+        images = dirty_background(key, forms, placed)
+        print("\n    ⚠ ΤΟ ΔΕΙΓΜΑ ΕΙΝΑΙ ΣΥΜΠΛΗΡΩΜΕΝΟ")
+        print("      Ο έλεγχος σύγκρουσης δεν ισχύει, και — πιο σοβαρά — αν τα")
+        print("      υπόβαθρα φτιάχτηκαν από αυτό, κάθε έντυπο τυπώνει από κάτω")
+        print(f"      τα στοιχεία του δείγματος. Έλεγξε: {', '.join(images[:4])}"
+              + (" …" if len(images) > 4 else ""))
+        print("      Λύση: κενό PDF από τον πάροχο και αναδημιουργία υποβάθρων.")
 
     if over:
         print(f"\n    ΠΑΝΩ ΣΕ ΤΥΠΩΜΕΝΟ ΚΕΙΜΕΝΟ: {len(over)}")

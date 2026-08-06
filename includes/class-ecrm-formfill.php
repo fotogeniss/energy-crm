@@ -32,6 +32,24 @@ class ECRM_FormFill {
 	const BASELINE = 2.5;
 
 	/**
+	 * Dropdown codes as the provider's form expects to read them.
+	 *
+	 * A select stores a code — "port", "ae" — and printing that on paper hands
+	 * the provider a word from our database instead of an answer. Anything not
+	 * listed prints as typed, so a free-text field is unaffected.
+	 */
+	const MOBILE_CONNECTIONS = [
+		'new'     => 'Νέα Σύνδεση',
+		'port'    => 'Φορητότητα',
+		'renewal' => 'Ανανέωση',
+	];
+
+	/** @param array<string,string> $labels */
+	private static function choice_label( string $code, array $labels ): string {
+		return $labels[ $code ] ?? $code;
+	}
+
+	/**
 	 * Resolve a provider name + energy type to a bundled template key.
 	 * Returns '' when we don't have a template for that combination yet.
 	 */
@@ -289,7 +307,9 @@ class ECRM_FormFill {
 			// being activated, the SIM it goes on, and the tariff over time.
 			'arithmos_kinitou'        => $xg( 'mobile_msisdn' ),
 			'arithmos_sim'            => $xg( 'sim_number' ),
-			'eidos_syndesis'          => $xg( 'mobile_connection' ),
+			// Ο πάροχος διαβάζει το έντυπο, όχι τη βάση μας: το κουτί πρέπει να
+			// γράφει «Φορητότητα», όχι «port».
+			'eidos_syndesis'          => self::choice_label( $xg( 'mobile_connection' ), self::MOBILE_CONNECTIONS ),
 			'typos_epidotisis'        => $xg( 'subsidy_type' ),
 			'ekptosi_pagiou'          => $xg( 'subsidy_amount' ),
 			// Three prices because the offer changes twice: what the plan
