@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Unit\Infrastructure;
 
 use EnergyCRM\Infrastructure\FieldCipher;
+use EnergyCRM\Infrastructure\MissingCipher;
 use PHPUnit\Framework\TestCase;
 
 final class FieldCipherTest extends TestCase
@@ -18,8 +19,34 @@ final class FieldCipherTest extends TestCase
         return new FieldCipher($salt);
     }
 
+    /**
+     * Skipped, never quietly passed.
+     *
+     * Without sodium there is nothing to assert about encryption, and a green
+     * tick here would say the opposite. The behaviour that matters on such a
+     * machine is tested separately: it refuses rather than stores plaintext.
+     */
+    private function requireSodium(): void
+    {
+        if (! FieldCipher::isAvailable()) {
+            self::markTestSkipped('Η επέκταση sodium λείπει από αυτή την PHP.');
+        }
+    }
+
+    public function testWithoutSodiumEncryptingRefusesInsteadOfStoringPlaintext(): void
+    {
+        if (FieldCipher::isAvailable()) {
+            self::markTestSkipped('Αυτή η PHP έχει sodium· ο έλεγχος αφορά εγκαταστάσεις χωρίς.');
+        }
+
+        $this->expectException(MissingCipher::class);
+        $this->cipher()->encrypt('123456789');
+    }
+
     public function testAValueSurvivesTheRoundTrip(): void
     {
+        $this->requireSodium();
+
         $cipher = $this->cipher();
 
         self::assertSame('123456789', $cipher->decrypt($cipher->encrypt('123456789')));
@@ -28,6 +55,8 @@ final class FieldCipherTest extends TestCase
 
     public function testTheStoredValueDoesNotContainThePlaintext(): void
     {
+        $this->requireSodium();
+
         $stored = $this->cipher()->encrypt('123456789');
 
         self::assertStringNotContainsString('123456789', $stored);
@@ -37,6 +66,8 @@ final class FieldCipherTest extends TestCase
     /** Randomised encryption: the same input must not produce the same bytes. */
     public function testTheSameValueEncryptsDifferentlyEachTime(): void
     {
+        $this->requireSodium();
+
         $cipher = $this->cipher();
 
         self::assertNotSame($cipher->encrypt('123456789'), $cipher->encrypt('123456789'));
@@ -54,6 +85,8 @@ final class FieldCipherTest extends TestCase
 
     public function testEncryptingTwiceIsRefused(): void
     {
+        $this->requireSodium();
+
         $cipher = $this->cipher();
         $once   = $cipher->encrypt('123456789');
 
@@ -68,6 +101,8 @@ final class FieldCipherTest extends TestCase
     /** Wrong salts mean unrecoverable, and an empty field beats corrupt bytes. */
     public function testAValueFromDifferentSaltsDecryptsToNothing(): void
     {
+        $this->requireSodium();
+
         $stored = $this->cipher('the-original-salt')->encrypt('123456789');
 
         self::assertSame('', $this->cipher('someone-regenerated-the-salts')->decrypt($stored));
@@ -101,6 +136,8 @@ final class FieldCipherTest extends TestCase
     /** Derived apart from the encryption key, so one leak does not cost both. */
     public function testTheIndexIsNotDerivedFromTheEncryptionKey(): void
     {
+        $this->requireSodium();
+
         $cipher = $this->cipher();
         $index  = $cipher->blindIndex('123456789');
 

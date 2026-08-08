@@ -16,6 +16,10 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Domain\Contract;
 
+use DateTimeImmutable;
+use DateTimeZone;
+use Exception;
+
 final class ContractTerm
 {
     private function __construct()
@@ -41,16 +45,22 @@ final class ContractTerm
             return null;
         }
 
-        $from = strtotime($start);
-
-        if ($from === false) {
+        // One clock, start to finish.
+        //
+        // This used to read the start with strtotime() — local time — and write
+        // the result with gmdate() — UTC. On a server east of Greenwich, which
+        // is every Greek host, midnight local is the previous day in UTC, so
+        // every end date printed on a contract was a day early. It passed for
+        // a long time because the machine it was written on ran UTC.
+        try {
+            $from = new DateTimeImmutable($start, new DateTimeZone('UTC'));
+        } catch (Exception) {
             return null;
         }
 
         // Calendar months, not 30-day blocks: a 12-month contract signed on the
-        // 3rd ends on the 3rd, whatever the month lengths in between.
-        $to = strtotime('+' . $months . ' months', $from);
-
-        return $to === false ? null : gmdate('Y-m-d', $to);
+        // 3rd ends on the 3rd, whatever the month lengths in between. A 31st
+        // rolls forward the way PHP rolls it — February has no 31st.
+        return $from->modify('+' . $months . ' months')->format('Y-m-d');
     }
 }

@@ -1,126 +1,128 @@
 {
- "page_w": 209.9,
+ "page_w": 210.0,
  "page_h": 297.0,
  "fields": {
-  "adt_pelati": {
-   "page": 1,
-   "x": 81.6,
-   "y": 72.2
-  },
-  "afm_pelati": {
-   "page": 1,
-   "x": 151.8,
-   "y": 72.2
-  },
-  "imerominia_liksis": {
-   "page": 1,
-   "x": 143.0,
-   "y": 99.1
-  },
   "imerominia_aitisis": [
    {
     "page": 1,
-    "x": 182.3,
-    "y": 45.9,
+    "x": 187.7,
+    "y": 48.1,
+    "size": 7
+   },
+   {
+    "page": 2,
+    "x": 187.7,
+    "y": 48.1,
     "size": 7
    },
    {
     "page": 3,
-    "x": 182.3,
-    "y": 45.9,
+    "x": 187.7,
+    "y": 48.1,
+    "size": 7
+   },
+   {
+    "page": 4,
+    "x": 187.7,
+    "y": 48.1,
     "size": 7
    },
    {
     "page": 3,
-    "x": 36.5,
-    "y": 108.8
+    "x": 37.0,
+    "y": 249.6
    },
    {
-    "page": 3,
-    "x": 36.5,
-    "y": 170.9
+    "page": 4,
+    "x": 37.0,
+    "y": 119.3
    }
   ],
-  "kodikos_synergati": {
-   "page": 3,
-   "x": 49.6,
-   "y": 146.3
-  },
   "onomateponymo_pelati": [
    {
     "page": 1,
-    "x": 45.8,
-    "y": 66.1
+    "x": 46.4,
+    "y": 69.6
    },
    {
     "page": 3,
-    "x": 95.5,
-    "y": 98.7
+    "x": 96.9,
+    "y": 237.5,
+    "size": 7.5
    }
   ],
-  "topos_aitisis": {
-   "page": 3,
-   "x": 24.6,
-   "y": 165.8
-  },
-  "arithmos_kinitou": [
-   {
-    "page": 1,
-    "x": 45.4,
-    "y": 90.1
-   },
-   {
-    "page": 1,
-    "x": 123.9,
-    "y": 204.6
-   }
-  ],
-  "diarkeia_symvasis": {
+  "adt_pelati": {
    "page": 1,
-   "x": 143.8,
-   "y": 94.6
+   "x": 82.6,
+   "y": 75.7
   },
-  "onoma_programmatos": {
+  "afm_pelati": {
    "page": 1,
-   "x": 143.0,
-   "y": 103.6
+   "x": 151.4,
+   "y": 75.7
   },
-  "arxiki_timi_pagiou": {
+  "arithmos_kinitou": {
    "page": 1,
-   "x": 149.6,
-   "y": 112.2
+   "x": 102.2,
+   "y": 93.7
   },
-  "timi_prosforas": {
+  "imerominia_liksis": {
    "page": 1,
-   "x": 137.9,
-   "y": 126.5
+   "x": 102.2,
+   "y": 106.6
   },
-  "pagio_meta_ti_prosfora": {
+  "programma_5gb": {
    "page": 1,
-   "x": 139.5,
-   "y": 142.9
+   "x": 51.9,
+   "y": 117.1,
+   "check": true,
+   "size": 6.5
+  },
+  "programma_10gb_5gb": {
+   "page": 1,
+   "x": 87.7,
+   "y": 117.1,
+   "check": true,
+   "size": 6.5
+  },
+  "programma_40gb": {
+   "page": 1,
+   "x": 126.5,
+   "y": 117.1,
+   "check": true,
+   "size": 6.5
+  },
+  "programma_unlimited": {
+   "page": 1,
+   "x": 164.7,
+   "y": 117.1,
+   "check": true,
+   "size": 6.5
+  },
+  "kodikos_synergati": {
+   "page": 4,
+   "x": 49.9,
+   "y": 78.2
   },
   "onomateponymo_politi": {
-   "page": 3,
-   "x": 61.6,
-   "y": 160.8
+   "page": 4,
+   "x": 62.7,
+   "y": 99.1
+  },
+  "topos_aitisis": {
+   "page": 4,
+   "x": 25.0,
+   "y": 109.2
   }
  },
- "sig": {
-  "page": 3,
-  "x": 16.0,
-  "y": 90.0,
-  "w": 46,
-  "h": 0
- },
- "labels": {
-  "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ",
-  "adt_pelati": "ΑΡΙΘΜΟΣ ΕΓΓΡΑΦΟΥ ΤΑΥΤΟΠΡΟΣΩΠΙΑΣ",
-  "afm_pelati": "Α.Φ.Μ.",
-  "kinito_pelati": "ΑΡΙΘΜΟΣ ΚΙΝΗΤΟΥ",
-  "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΙΑ ΛΗΞΗΣ ΣΥΜΒΑΣΗΣ",
-  "kodikos_synergati": "ΚΩΔΙΚΟΣ ΣΥΝΕΡΓΑΤΗ",
-  "topos_aitisis": "ΤΟΠΟΣ"
- },
- "source_is_filled": true
+ "sigs": [
+  {
+   "page": 3,
+   "x": 140.0,
+   "y": 234.4,
+   "w": 28,
+   "h": 6.0
+  }
+ ],
+ "source_is_filled": false
 }

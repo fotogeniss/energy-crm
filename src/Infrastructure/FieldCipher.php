@@ -55,12 +55,30 @@ final class FieldCipher
         return str_starts_with($stored, self::PREFIX);
     }
 
+    /** Whether this PHP build can encrypt at all. */
+    public static function isAvailable(): bool
+    {
+        return function_exists('sodium_crypto_secretbox')
+            && function_exists('sodium_crypto_secretbox_open');
+    }
+
+    /**
+     * @throws MissingCipher When encryption was asked for and cannot be done.
+     */
     public function encrypt(string $plaintext): string
     {
         // Encrypting an empty column would turn "we never asked" into bytes
         // that look like an answer, and NULL is how the schema says unknown.
-        if ($plaintext === '' || ! function_exists('sodium_crypto_secretbox')) {
+        if ($plaintext === '') {
             return $plaintext;
+        }
+
+        // Returning the plaintext here — which this used to do — is the worst
+        // available answer. The column fills with readable ΑΦΜ while the site
+        // owner, having switched encryption on, believes the opposite. A
+        // failure nobody can see is not a safe default; refusing is.
+        if (! self::isAvailable()) {
+            throw MissingCipher::sodiumUnavailable();
         }
 
         // Encrypting twice is a bug that only shows itself on read, when the

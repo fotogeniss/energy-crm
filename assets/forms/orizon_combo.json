@@ -1,0 +1,224 @@
+{
+ "page_w": 210.0,
+ "page_h": 297.0,
+ "fields": {
+  "imerominia_aitisis": [
+   {
+    "page": 1,
+    "x": 101.3,
+    "y": 61.3,
+    "size": 7
+   },
+   {
+    "page": 2,
+    "x": 101.3,
+    "y": 61.3,
+    "size": 7
+   },
+   {
+    "page": 3,
+    "x": 101.3,
+    "y": 61.3,
+    "size": 7
+   },
+   {
+    "page": 4,
+    "x": 101.3,
+    "y": 61.3,
+    "size": 7
+   },
+   {
+    "page": 5,
+    "x": 101.3,
+    "y": 61.3,
+    "size": 7
+   },
+   {
+    "page": 6,
+    "x": 101.3,
+    "y": 61.3,
+    "size": 7
+   },
+   {
+    "page": 7,
+    "x": 101.3,
+    "y": 61.3,
+    "size": 7
+   },
+   {
+    "page": 6,
+    "x": 36.2,
+    "y": 233.7
+   },
+   {
+    "page": 7,
+    "x": 36.2,
+    "y": 81.0
+   }
+  ],
+  "onomateponymo_pelati": [
+   {
+    "page": 1,
+    "x": 45.3,
+    "y": 84.6
+   },
+   {
+    "page": 3,
+    "x": 45.3,
+    "y": 63.8
+   }
+  ],
+  "adt_pelati": [
+   {
+    "page": 1,
+    "x": 79.5,
+    "y": 91.3
+   },
+   {
+    "page": 3,
+    "x": 79.5,
+    "y": 68.9
+   }
+  ],
+  "afm_pelati": [
+   {
+    "page": 1,
+    "x": 137.3,
+    "y": 91.3
+   },
+   {
+    "page": 3,
+    "x": 137.3,
+    "y": 68.9
+   }
+  ],
+  "doy_pelati": [
+   {
+    "page": 1,
+    "x": 184.4,
+    "y": 91.3,
+    "size": 7
+   },
+   {
+    "page": 3,
+    "x": 19.3,
+    "y": 74.0
+   }
+  ],
+  "xristis_kyrios": [
+   {
+    "page": 1,
+    "x": 67.2,
+    "y": 98.1,
+    "check": true
+   },
+   {
+    "page": 3,
+    "x": 67.2,
+    "y": 95.2,
+    "check": true
+   }
+  ],
+  "xristis_defterevon": [
+   {
+    "page": 1,
+    "x": 151.1,
+    "y": 98.1,
+    "check": true
+   },
+   {
+    "page": 3,
+    "x": 151.1,
+    "y": 95.2,
+    "check": true
+   }
+  ],
+  "arithmos_kinitou": {
+   "page": 1,
+   "x": 102.2,
+   "y": 125.0
+  },
+  "imerominia_liksis": {
+   "page": 1,
+   "x": 102.2,
+   "y": 138.7
+  },
+  "programma_5gb": {
+   "page": 1,
+   "x": 51.9,
+   "y": 148.0,
+   "check": true,
+   "size": 6.5
+  },
+  "programma_10gb_5gb": {
+   "page": 1,
+   "x": 87.7,
+   "y": 148.0,
+   "check": true,
+   "size": 6.5
+  },
+  "programma_40gb": {
+   "page": 1,
+   "x": 127.5,
+   "y": 148.0,
+   "check": true,
+   "size": 6.5
+  },
+  "programma_unlimited": {
+   "page": 1,
+   "x": 164.7,
+   "y": 148.0,
+   "check": true,
+   "size": 6.5
+  },
+  "arithmos_paroxis": {
+   "page": 3,
+   "x": 165.0,
+   "y": 74.0
+  },
+  "onoma_programmatos": {
+   "page": 3,
+   "x": 34.5,
+   "y": 79.1
+  },
+  "topos_aitisis": [
+   {
+    "page": 6,
+    "x": 24.0,
+    "y": 240.4
+   },
+   {
+    "page": 7,
+    "x": 24.0,
+    "y": 74.3
+   }
+  ],
+  "kodikos_synergati": {
+   "page": 7,
+   "x": 48.4,
+   "y": 54.3
+  },
+  "onomateponymo_politi": {
+   "page": 7,
+   "x": 60.7,
+   "y": 67.6
+  }
+ },
+ "sigs": [
+  {
+   "page": 6,
+   "x": 62.0,
+   "y": 243.2,
+   "w": 28,
+   "h": 6.0
+  },
+  {
+   "page": 6,
+   "x": 68.0,
+   "y": 249.9,
+   "w": 28,
+   "h": 6.0
+  }
+ ],
+ "source_is_filled": false
+}
