@@ -52,6 +52,11 @@ class ECRM_FormFill {
 	/**
 	 * Resolve a provider name + energy type to a bundled template key.
 	 * Returns '' when we don't have a template for that combination yet.
+	 *
+	 * This answers "which contract", never "which sheets". For energy that is
+	 * the same question; for mobile it is not, and template_keys() is the one
+	 * to ask. $program and $activation_type are kept because callers pass them
+	 * and a provider may yet need them to pick between contracts.
 	 */
 	public static function template_key( string $provider_name, string $energy_type, string $customer_type = '', string $program = '', string $activation_type = '' ): string {
 		$p = self::norm( $provider_name );
@@ -70,16 +75,11 @@ class ECRM_FormFill {
 		if ( $has( 'enerwave' ) && $e === 'power' )                       { return 'enerwave_he'; }
 		if ( $has( 'enerwave' ) && $e === 'gas' )                         { return 'enerwave_fa'; }
 		if ( $has( 'zenith' ) || $has( 'ζενιθ' ) || $has( 'zeniθ' ) )      { return 'zenith_he'; }
+		// Η Orizon είναι κινητή τηλεφωνία: ένα συμβόλαιο, πολλά έντυπα. Εδώ
+		// επιστρέφεται μόνο η σύμβαση — ποια φύλλα τη συνοδεύουν το αποφασίζει
+		// το MobilePaperwork, μέσω του template_keys().
 		if ( $has( 'orizon' ) || $has( 'οριζον' ) ) {
-			$prog = self::norm( $program );
-			// Η συνδυαστική προσφορά είναι χαρακτηριστικό του προγράμματος, όχι
-			// του τρόπου ενεργοποίησης, γι' αυτό ελέγχεται πρώτη.
-			if ( strpos( $prog, 'family' ) !== false || strpos( $prog, 'φαμιλυ' ) !== false ) { return 'orizon_family'; }
-			if ( $activation_type === 'portability' )                                          { return 'orizon_port'; }
-			// Ό,τι δεν είναι φορητότητα ξεκινά νέα γραμμή. Προεπιλογή η
-			// ενεργοποίηση, ώστε ημιτελής επιλογή να μη βγάζει έντυπο
-			// φορητότητας για αριθμό που δεν υπάρχει ακόμα.
-			return 'orizon_activation';
+			return \EnergyCRM\Domain\Forms\MobilePaperwork::CONTRACT;
 		}
 
 		return '';
@@ -358,12 +358,89 @@ class ECRM_FormFill {
 	 * @return array{ok:bool,error?:string,bytes?:string,filename?:string}
 	 */
 	public static function fill( array $c, ?string $sig_path = null ): array {
-		$key = self::template_key( (string) ( $c['provider_name'] ?? $c['provider'] ?? '' ), (string) ( $c['energy_type'] ?? '' ), (string) ( $c['customer_type'] ?? '' ), (string) ( $c['program_name'] ?? '' ), (string) ( $c['activation_type'] ?? '' ) );
-		if ( $key === '' ) {
+		$keys = self::template_keys( $c );
+		if ( ! $keys ) {
 			return [ 'ok' => false, 'error' => 'Δεν υπάρχει ακόμη πρότυπο εντύπου για αυτόν τον πάροχο/τύπο παροχής.' ];
 		}
 
-		return self::render( $key, $c, $sig_path );
+		// The first sheet is the contract itself — what "the document" has always
+		// meant to callers that expect exactly one.
+		return self::render( $keys[0], $c, $sig_path );
+	}
+
+	/**
+	 * Every template this application needs, not just the first.
+	 *
+	 * Electricity and gas are one application, one form. Mobile is not: the
+	 * contract is always printed, and the customer's choices add sheets of
+	 * their own — a porting request, or one of the two combined-offer forms.
+	 * Handing the provider the contract alone gets the application rejected.
+	 *
+	 * @param array<string, mixed> $c Joined contract+customer row.
+	 *
+	 * @return list<string>
+	 */
+	public static function template_keys( array $c ): array {
+		$key = self::template_key(
+			(string) ( $c['provider_name'] ?? $c['provider'] ?? '' ),
+			(string) ( $c['energy_type'] ?? '' ),
+			(string) ( $c['customer_type'] ?? '' ),
+			(string) ( $c['program_name'] ?? '' ),
+			(string) ( $c['activation_type'] ?? '' )
+		);
+
+		if ( $key === '' ) {
+			return [];
+		}
+
+		if ( $key !== \EnergyCRM\Domain\Forms\MobilePaperwork::CONTRACT ) {
+			return [ $key ];
+		}
+
+		$x = self::extras( $c );
+
+		return \EnergyCRM\Domain\Forms\MobilePaperwork::forApplication(
+			(string) ( $x['request_type'] ?? '' ),
+			(string) ( $x['mobile_offer'] ?? '' )
+		);
+	}
+
+	/**
+	 * Render every sheet the application needs.
+	 *
+	 * One failure does not cancel the rest: an agent who can print three of
+	 * four forms is better off than one who gets an error page, and the
+	 * failure is reported alongside so it cannot pass unnoticed.
+	 *
+	 * @param array<string, mixed> $c
+	 *
+	 * @return list<array{key:string, ok:bool, error?:string, bytes?:string, filename?:string}>
+	 */
+	public static function fill_all( array $c, ?string $sig_path = null ): array {
+		$out = [];
+
+		foreach ( self::template_keys( $c ) as $key ) {
+			$out[] = [ 'key' => $key ] + self::render( $key, $c, $sig_path );
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The contract's extras bag, decoded.
+	 *
+	 * @param array<string, mixed> $c
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function extras( array $c ): array {
+		if ( empty( $c['extra_json'] ) ) {
+			return [];
+		}
+
+		$d = json_decode( (string) $c['extra_json'], true );
+
+		return is_array( $d ) ? $d : [];
 	}
 
 	/**

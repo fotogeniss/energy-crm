@@ -304,14 +304,21 @@ class ECRM_REST {
 
 		// Prefer the official provider form (what the user prints/downloads); if the
 		// provider has no template, fall back to the internal contract summary.
-		$bytes = '';
+		$bytes        = '';
+		$extra_sheets = [];
 		if ( class_exists( 'ECRM_FormFill' ) ) {
 			try {
 				ob_start();
-				$ff = ECRM_FormFill::fill( $row );
+				$sheets = ECRM_FormFill::fill_all( $row );
 				ob_end_clean();
-				if ( ! empty( $ff['ok'] ) && ! empty( $ff['bytes'] ) ) {
-					$bytes = $ff['bytes'];
+				foreach ( $sheets as $sheet ) {
+					if ( empty( $sheet['ok'] ) || empty( $sheet['bytes'] ) ) { continue; }
+					// The first sheet is the contract; the rest ride with it.
+					if ( $bytes === '' ) {
+						$bytes = $sheet['bytes'];
+						continue;
+					}
+					$extra_sheets[] = $sheet;
 				}
 			} catch ( \Throwable $e ) {
 				if ( ob_get_level() > 0 ) { ob_end_clean(); }
@@ -335,21 +342,68 @@ class ECRM_REST {
 		if ( $at > 0 ) { $bytes = substr( $bytes, $at ); }
 
 		if ( ! class_exists( 'ECRM_Files' ) ) { return false; }
-		$code  = $row['code'] ?: ( 'symvasi-' . $id );
-		$saved = ECRM_Files::put_bytes( $bytes, 'pdf', 'application/pdf', $code . '.pdf' );
+		$code = $row['code'] ?: ( 'symvasi-' . $id );
+
+		self::forget_generated_documents( $id );
+
+		if ( ! self::keep_generated_document( $id, 'contract', $code . '.pdf', $bytes ) ) {
+			return false;
+		}
+
+		// Mobile applications travel as a set: the contract plus whatever the
+		// customer's choices added. Those extra sheets are stored beside it so
+		// the agent prints the whole application, not just its first form.
+		foreach ( $extra_sheets as $sheet ) {
+			$kind = substr( 'form_' . $sheet['key'], 0, 24 );
+			self::keep_generated_document( $id, $kind, $code . '-' . $sheet['key'] . '.pdf', $sheet['bytes'] );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Remove the documents a previous save generated, bytes included.
+	 *
+	 * Only ever the generated ones: anything the customer or the agent
+	 * uploaded has its own doc_kind and must survive a re-save untouched.
+	 */
+	private static function forget_generated_documents( int $contract_id ): void {
+		global $wpdb;
+		$fl = ECRM_DB::table( 'files' );
+
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT id, path FROM {$fl}
+			 WHERE contract_id = %d AND ( doc_kind = 'contract' OR doc_kind LIKE 'form\\_%' )",
+			$contract_id
+		), ARRAY_A );
+
+		foreach ( (array) $rows as $r ) {
+			// Deleting the row without the file is how the orphans this plugin
+			// had to sweep up were made in the first place.
+			$path = (string) ( $r['path'] ?? '' );
+			if ( $path !== '' && file_exists( $path ) ) {
+				wp_delete_file( $path );
+			}
+			$wpdb->delete( $fl, [ 'id' => (int) $r['id'] ] );
+		}
+	}
+
+	/** Store one generated PDF against the contract. */
+	private static function keep_generated_document( int $contract_id, string $kind, string $filename, string $bytes ): bool {
+		global $wpdb;
+
+		$saved = ECRM_Files::put_bytes( $bytes, 'pdf', 'application/pdf', $filename );
 		if ( ! $saved ) { return false; }
 
-		$fl = ECRM_DB::table( 'files' );
-		// Replace any previous auto-generated contract PDF.
-		$wpdb->delete( $fl, [ 'contract_id' => $id, 'doc_kind' => 'contract' ] );
-		$wpdb->insert( $fl, [
-			'contract_id' => $id,
-			'doc_kind'    => 'contract',
+		$wpdb->insert( ECRM_DB::table( 'files' ), [
+			'contract_id' => $contract_id,
+			'doc_kind'    => $kind,
 			'filename'    => $saved['filename'],
 			'mime'        => $saved['mime'],
 			'path'        => $saved['path'],
 			'protected'   => 1,
 		] );
+
 		return true;
 	}
 

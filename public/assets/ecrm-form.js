@@ -56,7 +56,29 @@
 				el.style.display = ok ? '' : 'none';
 			});
 			applyEnergyType();
+			applyMobileOffer();
 		}
+
+		// The electricity half of a COMBO offer: asked for only when that offer
+		// is the one chosen. Hidden rather than always-present because a supply
+		// number has no business on an ordinary mobile application, and a value
+		// left behind in a hidden field is a value that reaches the printed form.
+		function applyMobileOffer() {
+			var sel = root.querySelector('[name="mobile_offer"]');
+			var offer = sel ? sel.value : '';
+
+			qa('[data-when-offer]').forEach(function (el) {
+				var ok = el.getAttribute('data-when-offer').split(',').indexOf(offer) !== -1;
+				el.hidden = !ok;
+				if (!ok) {
+					el.querySelectorAll('input, select, textarea').forEach(function (f) { f.value = ''; });
+				}
+			});
+		}
+
+		root.addEventListener('change', function (ev) {
+			if (ev.target && ev.target.name === 'mobile_offer') applyMobileOffer();
+		});
 
 		// Anything that only makes sense for one kind of supply: whole sections
 		// (the mobile block asks about a line and a SIM), whole rows (Γ-tariff
@@ -124,7 +146,7 @@
 				group.querySelectorAll('.ecrm-chip').forEach(function (b) { b.classList.remove('is-on'); });
 				btn.classList.add('is-on');
 				state[field] = btn.getAttribute('data-val');
-				if (field === 'energy_type') { renderPrograms(); applyEnergyType(); }
+				if (field === 'energy_type') { renderPrograms(); applyEnergyType(); applyMobileOffer(); }
 				if (field === 'energy_type' || field === 'category') refreshKbDocs();
 				refreshProviderFields();
 			});

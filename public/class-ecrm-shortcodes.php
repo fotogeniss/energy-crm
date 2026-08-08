@@ -283,7 +283,13 @@ class ECRM_Shortcodes {
 			</section>
 
 			<!-- Στοιχεία Μετρητή -->
-			<section class="ecrm-card">
+			<?php
+			// Παροχή, μετρητής, ισχύς, τιμολόγιο, προηγούμενος πάροχος: κάθε
+			// πεδίο εδώ περιγράφει ρολόι σε τοίχο. Σε αίτηση κινητής δεν
+			// υπάρχει τίποτα από αυτά να συμπληρωθεί, και το τμήμα έμενε
+			// ορατό επειδή ήταν το μόνο χωρίς δήλωση είδους παροχής.
+			?>
+			<section class="ecrm-card" data-when-energy="power,gas">
 				<div class="ecrm-step"><span class="ecrm-step__n">6</span> Στοιχεία Μετρητή</div>
 				<div class="ecrm-grid">
 					<?php $ecrm_field( 'supply_number', 'Αριθμός Παροχής / ΗΚΑΣΠ' ); ?>
@@ -364,19 +370,54 @@ class ECRM_Shortcodes {
 			<section class="ecrm-card" data-when-energy="mobile">
 				<div class="ecrm-step"><span class="ecrm-step__n">6β</span> Στοιχεία Κινητής</div>
 				<div class="ecrm-grid">
-					<?php $ecrm_field( 'mobile_msisdn', 'Αριθμός Κινητού', 'text', true, '69…' ); ?>
-					<?php $ecrm_field( 'sim_number', 'Αριθμός Κάρτας SIM', 'text', true ); ?>
-					<label class="ecrm-field" data-for="mobile_connection">
-						<span class="ecrm-field__label">Είδος Σύνδεσης</span>
-						<select name="mobile_connection" class="ecrm-input" data-extra="1">
+					<?php
+					// Ο τύπος αίτησης καθορίζει ΠΟΣΑ έντυπα θα τυπωθούν, όχι
+					// μόνο ποιο κουτάκι θα σημειωθεί: η φορητότητα προσθέτει τη
+					// δική της αίτηση δίπλα στη σύμβαση. Δύο επιλογές εδώ, τρία
+					// κουτιά στο χαρτί — η αριθμοδότηση είναι νέα σύνδεση, και
+					// η ανανέωση δεν ξεκινά από αυτή την οθόνη.
+					?>
+					<label class="ecrm-field" data-for="request_type">
+						<span class="ecrm-field__label">Τύπος Αίτησης</span>
+						<select name="request_type" class="ecrm-input" data-extra="1">
 							<option value="">—</option>
-							<option value="new">Νέα Σύνδεση</option>
-							<option value="port">Φορητότητα</option>
-							<option value="renewal">Ανανέωση</option>
+							<option value="new_number">Αριθμοδότηση</option>
+							<option value="portability">Φορητότητα</option>
 						</select>
 					</label>
+
+					<?php
+					// Μία επιλογή και όχι δύο διακόπτες: οι δύο προσφορές δίνουν
+					// την ίδια τιμή για διαφορετικό λόγο — η συνδυαστική δένει
+					// κινητή με κινητή, το COMBO κινητή με ρεύμα — και δεν
+					// συνδυάζονται. Δύο ανεξάρτητα κουτάκια θα επέτρεπαν να
+					// τσεκαριστούν και τα δύο.
+					?>
+					<label class="ecrm-field" data-for="mobile_offer">
+						<span class="ecrm-field__label">Συνδυαστική Έκπτωση</span>
+						<select name="mobile_offer" class="ecrm-input" data-extra="1">
+							<option value="">Καμία</option>
+							<option value="family">Συνδυαστική Προσφορά (κινητή + κινητή)</option>
+							<option value="combo">COMBO Έκπτωση Ρεύματος (κινητή + ρεύμα)</option>
+						</select>
+					</label>
+
+					<?php $ecrm_field( 'mobile_msisdn', 'Αριθμός Κινητού', 'text', true, '69…' ); ?>
+					<?php $ecrm_field( 'sim_number', 'Αριθμός Κάρτας SIM', 'text', true ); ?>
 					<?php $ecrm_field( 'subsidy_type', 'Τύπος Επιδότησης', 'text', true, 'π.χ. Έκπτωση Παγίου' ); ?>
-					<?php $ecrm_field( 'subsidy_amount', 'Έκπτωση Παγίου (€)', 'text', true ); ?>
+					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
+				</div>
+
+				<?php
+				// Το COMBO είναι το μόνο σημείο όπου η κινητή αγγίζει το ρεύμα:
+				// το έντυπό του ζητά την παροχή και το πρόγραμμα ενέργειας του
+				// ίδιου πελάτη. Εμφανίζεται μόνο όταν επιλεγεί, γιατί σε κάθε
+				// άλλη περίπτωση είναι ακριβώς το είδος πεδίου που δεν έχει
+				// θέση σε αίτηση κινητής.
+				?>
+				<div class="ecrm-grid" data-when-offer="combo" hidden>
+					<?php $ecrm_field( 'combo_supply_number', 'Αριθμός Παροχής / ΗΚΑΣΠ Ρεύματος', 'text', true ); ?>
+					<?php $ecrm_field( 'combo_energy_program', 'Πρόγραμμα Ρεύματος', 'text', true ); ?>
 				</div>
 
 				<?php
