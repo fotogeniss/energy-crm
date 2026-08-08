@@ -7,6 +7,63 @@
 
 ---
 
+## 2026-08-09
+
+### Οι τιμές των προγραμμάτων Orizon δεν έφταναν ποτέ στο τυπωμένο έντυπο
+
+**Το πρόβλημα.** `MobilePlans::fillValues()` και `MobilePaperwork::connectionTicks()`
+υπήρχαν από πριν αλλά καμία κλήση δεν τα έφτανε: το `ECRM_FormFill::values()`
+δεν τα ήξερε. Κάθε έντυπο Orizon τυπωνόταν χωρίς πρόγραμμα, χωρίς τιμές και
+χωρίς σημειωμένο είδος σύνδεσης.
+
+**Γιατί δεν αρκούσε μόνο η κλήση.** Λείπε ο κρίκος «ποιο από τα 4 πλάνα είναι
+αυτή η σύμβαση». Η σύμβαση κρατά `program_id` → όνομα προγράμματος, και η βάση
+σπερνόταν (σε δύο σημεία: `ECRM_Providers::seed()` και το migration
+`SeedMobilePrograms`) με δύο **γενικά** placeholder προγράμματα κινητής
+(«Κινητή — Βασικό», «...Family») που δεν αντιστοιχούν σε κανένα από τα
+πραγματικά πλάνα του `MobilePlans`. Αντιστοίχιση με βάση το όνομα θα ήταν
+εύθραυστη εξ ορισμού: μια μετονομασία στο wp-admin σπάει σιωπηλά την τυπωμένη
+τιμή, χωρίς κανένα σφάλμα να το δείξει.
+
+**Η αλλαγή.**
+
+- Νέα στήλη `programs.code` (migration `0012_add_program_code_column`) —
+  σταθερό αναγνωριστικό πλάνου, ξένο προς το wp-admin, γεμίζει μόνο από
+  `MobilePlans::codes()`.
+- Migration `0013_seed_orizon_plans`: απενεργοποιεί (`active=0`, όχι διαγραφή)
+  τα δύο γενικά placeholder προγράμματα που στάλθηκαν με το `0009`, και
+  εισάγει τα τέσσερα πραγματικά πλάνα (5GB / 10GB+5GB / 40GB / unlimited) με
+  το αντίστοιχο `code`. Πειράζει μόνο ό,τι στάλθηκε από εμάς — πρόγραμμα που ο
+  χρήστης έχει ήδη μετονομάσει ή του έχει δώσει `code` με άλλο τρόπο μένει
+  ανέγγιχτο, ίδια λογική με το `FixProviderEnergyTypes`.
+- `ECRM_Providers::seed()` ενημερώθηκε ώστε νέες εγκαταστάσεις να σπέρνουν
+  κατευθείαν τα τέσσερα πραγματικά πλάνα από το `MobilePlans::options()`, όχι
+  τα γενικά.
+- `ContractRepository::findDetailed()` και `ECRM_REST::store_contract_pdf()`
+  προστέθηκε `g.code AS program_code` στο SELECT — αυτά είναι τα δύο σημεία
+  που τροφοδοτούν το `ECRM_FormFill::fill()`/`fill_all()`.
+- `ECRM_FormFill::values()`: όταν `energy_type === 'mobile'`, υπολογίζει
+  `$combined` από το `mobile_offer` και κάνει merge
+  `MobilePlans::fillValues($c['program_code'], $combined) + MobilePaperwork::connectionTicks($request_type)`
+  πάνω από τη βασική λίστα τιμών — οι τιμές καταλόγου υπερισχύουν των παλιών
+  χειροκίνητων πεδίων `base_price/offer_price/price_after` για κινητή. Άγνωστο
+  ή κενό `program_code` επιστρέφει άδειο array (τυπώνει χωρίς πρόγραμμα, δεν
+  μαντεύει τιμή).
+
+**Τι μένει ανοιχτό.** Τα πεδία `base_price/offer_price/price_after` στη φόρμα
+κινητής μένουν εκεί, αχρησιμοποίητα πλέον για Orizon — καθαρισμός τους ανήκει
+στο σημείο 3 του `ORIZON-TODO.md` (πεδία ρεύματος στη φόρμα κινητής), όχι εδώ.
+Καμία πραγματική εκτύπωση δεν έχει ακόμη δοκιμαστεί με τα νέα δεδομένα
+(σημείο 7 του ίδιου αρχείου).
+
+**Αρχεία:** `src/Persistence/Schema/Migrations/AddProgramCodeColumn.php`,
+`src/Persistence/Schema/Migrations/SeedOrizonPlans.php`,
+`src/Persistence/Schema/MigrationList.php`, `includes/class-ecrm-db.php`,
+`includes/class-ecrm-providers.php`, `includes/class-ecrm-formfill.php`,
+`includes/class-ecrm-rest.php`, `src/Persistence/ContractRepository.php`.
+
+---
+
 ## 2026-08-08
 
 ### Η ημερομηνία λήξης έβγαινε μία μέρα νωρίτερα σε κάθε ελληνικό server

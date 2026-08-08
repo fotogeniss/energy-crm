@@ -85,28 +85,33 @@ class ECRM_Providers {
 				$starters = [];
 
 				if ( str_contains( $row['energy_types'], 'power' ) ) {
-					$starters[] = [ 'Σταθερό Οικιακό', 'power' ];
+					$starters[] = [ 'Σταθερό Οικιακό', '', 'power' ];
 				}
 				if ( str_contains( $row['energy_types'], 'mobile' ) ) {
-					// Two: the combined offer decides which form is printed, so
-					// it has to be selectable rather than typed from memory.
-					$starters[] = [ 'Κινητή — Βασικό', 'mobile' ];
-					$starters[] = [ 'Κινητή — Συνδυαστική Προσφορά (Family)', 'mobile' ];
+					// Τα τέσσερα πραγματικά πλάνα, με το code που διαβάζει το
+					// ECRM_FormFill για να τυπώσει τη σωστή τιμή — όχι τα δύο
+					// γενικά placeholder που καμία τιμή δεν μπορεί ποτέ να
+					// συνδεθεί μαζί τους. Μία πηγή αλήθειας: αν η Orizon
+					// αλλάξει πλάνα, αλλάζει το MobilePlans και ακολουθεί εδώ.
+					foreach ( \EnergyCRM\Domain\Forms\MobilePlans::options() as $code => $label ) {
+						$starters[] = [ $label, $code, 'mobile' ];
+					}
 				}
 
-				foreach ( $starters as $i => [ $name, $energy ] ) {
+				foreach ( $starters as $i => [ $name, $code, $energy ] ) {
 					$wpdb->insert(
 						$programs,
 						[
 							'provider_id' => $provider_id,
 							'name'        => $name,
+							'code'        => $code !== '' ? $code : null,
 							'energy_type' => $energy,
 							'category'    => 'home',
 							'price_type'  => 'fixed',
 							'active'      => 1,
 							'sort_order'  => $i,
 						],
-						[ '%d', '%s', '%s', '%s', '%s', '%d', '%d' ]
+						[ '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%d' ]
 					);
 				}
 			}

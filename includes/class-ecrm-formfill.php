@@ -172,7 +172,20 @@ class ECRM_FormFill {
 		$ct = (string) ( $c['customer_type'] ?? '' );
 		$at = (string) ( $c['activation_type'] ?? '' );
 
-		return [
+		// Κινητή: το πρόγραμμα δεν είναι ελεύθερη τιμή σαν το ρεύμα, είναι ένα
+		// από τα τέσσερα σταθερά πλάνα της Orizon. Η αντιστοίχιση γίνεται πάνω
+		// στο programs.code, όχι στο όνομα — άσχετο με το πώς το λένε στο
+		// wp-admin, ώστε μια μετονομασία να μην αχρηστεύει σιωπηλά μια
+		// τυπωμένη τιμή. Άγνωστος ή κενός κωδικός τυπώνει χωρίς πρόγραμμα αντί
+		// να μαντέψει μία από τις τέσσερις τιμές.
+		$mobile = [];
+		if ( ( $c['energy_type'] ?? '' ) === 'mobile' ) {
+			$combined = in_array( $xg( 'mobile_offer' ), [ 'family', 'combo' ], true );
+			$mobile   = \EnergyCRM\Domain\Forms\MobilePlans::fillValues( (string) ( $c['program_code'] ?? '' ), $combined )
+				+ \EnergyCRM\Domain\Forms\MobilePaperwork::connectionTicks( $xg( 'request_type' ) );
+		}
+
+		return $mobile + [
 			'onomateponymo_pelati'    => $name,
 			'eponymo_pelati'          => (string) ( $c['last_name'] ?? '' ),
 			'onoma_pelati'            => (string) ( $c['first_name'] ?? '' ),

@@ -76,10 +76,15 @@ class ECRM_DB {
 		// energy_type: power|gas
 		// category:    home|business|communal
 		// price_type:  fixed|special|variable|dynamic
+		// code: σταθερό αναγνωριστικό πλάνου (π.χ. MobilePlans::P_5GB), ανεξάρτητο
+		// από το name — έτσι μια μετονομασία στο wp-admin δεν σπάει ποτέ την
+		// αντιστοίχιση προγράμματος → τυπωμένη τιμή. NULL για προγράμματα χωρίς
+		// σταθερό κατάλογο τιμών (π.χ. ρεύμα/αέριο με ελεύθερη τιμολόγηση).
 		dbDelta( "CREATE TABLE {$p}programs (
 			id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			provider_id  BIGINT UNSIGNED NOT NULL,
 			name         VARCHAR(160) NOT NULL,
+			code         VARCHAR(32)  NULL,
 			energy_type  VARCHAR(8)   NOT NULL DEFAULT 'power',
 			category     VARCHAR(16)  NOT NULL DEFAULT 'home',
 			price_type   VARCHAR(16)  NOT NULL DEFAULT 'fixed',
@@ -87,7 +92,8 @@ class ECRM_DB {
 			sort_order   INT          NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id),
 			KEY provider_id (provider_id),
-			KEY energy_type (energy_type)
+			KEY energy_type (energy_type),
+			KEY code (code)
 		) {$charset};" );
 
 		// --- customers ------------------------------------------------------

@@ -579,7 +579,7 @@ final class ContractRepository
         /** @var array<string, mixed>|null $row */
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT c.*, p.name AS provider_name, g.name AS program_name,
+                "SELECT c.*, p.name AS provider_name, g.name AS program_name, g.code AS program_code,
                         cu.first_name, cu.last_name, cu.father_name, cu.company_name,
                         cu.afm, cu.doy, cu.adt, cu.birth_date, cu.region, cu.city,
                         cu.street, cu.street_no, cu.postal_code, cu.phone, cu.mobile, cu.email
