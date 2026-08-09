@@ -17,11 +17,6 @@
    "x": 30.2,
    "y": 51.7
   },
-  "imerominia_aitisis": {
-   "page": 2,
-   "x": 107.0,
-   "y": 17.3
-  },
   "onomateponymo_politi": {
    "page": 1,
    "x": 28.5,
@@ -103,6 +98,11 @@
    "x": 55.0,
    "y": 224.9
   },
+  "isxis_paroxis": {
+   "page": 1,
+   "x": 55.0,
+   "y": 247.8
+  },
   "arithmos_paroxis": {
    "page": 1,
    "x": 55.0,
@@ -132,11 +132,6 @@
    "page": 1,
    "x": 19.5,
    "y": 280.3
-  },
-  "topos_imerominia_aitisis": {
-   "page": 4,
-   "x": 36.0,
-   "y": 244.6
   },
   "katigoria_paroxis_oikiaki": {
    "page": 1,
@@ -199,23 +194,66 @@
    "x": 134.8,
    "y": 163.4
   },
+  "imerominia_aitisis": {
+   "page": 2,
+   "x": 107.0,
+   "y": 14.3
+  },
   "ypovoli_ilektronika": {
    "page": 2,
    "x": 130.3,
-   "y": 25.9,
+   "y": 21.5,
    "check": true
+  },
+  "poso_eggiisis": {
+   "page": 2,
+   "x": 46.0,
+   "y": 101.8
+  },
+  "topos_imerominia_aitisis": {
+   "page": 3,
+   "x": 36.0,
+   "y": 244.6
+  },
+  "synainesi_omilou_nai": {
+   "page": 3,
+   "x": 51.3,
+   "y": 198.1,
+   "check": true,
+   "size": 9
+  },
+  "synainesi_omilou_oxi": {
+   "page": 3,
+   "x": 62.0,
+   "y": 198.1,
+   "check": true,
+   "size": 9
+  },
+  "synainesi_erevnas_nai": {
+   "page": 3,
+   "x": 67.6,
+   "y": 208.2,
+   "check": true,
+   "size": 9
+  },
+  "synainesi_erevnas_oxi": {
+   "page": 3,
+   "x": 77.6,
+   "y": 208.2,
+   "check": true,
+   "size": 9
   }
  },
  "sigs": [
   {
-   "page": 4,
+   "page": 3,
    "x": 150.0,
    "y": 142.0,
    "w": 42,
    "h": 0
   },
   {
-   "page": 4,
+   "page": 3,
    "x": 110.0,
    "y": 236.0,
    "w": 42,
@@ -240,6 +278,11 @@
   "ipistamenos_promitheftis": "ΥΦΙΣΤΑΜΕΝΟΣ ΠΡΟΜΗΘΕΥΤΗΣ",
   "hkasp": "ΗΚΑΣΠ",
   "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΊΑ ΥΠΟΒΟΛΉΣ ΑΊΤΗΣΗΣ",
-  "metrisi_imerisia": "ΜΕΤΡΗΣΗ"
+  "metrisi_imerisia": "ΜΕΤΡΗΣΗ",
+  "topos_imerominia_aitisis": "ΗΜΕΡΟΜΗΝΙΑ/ΤΟΠΟΣ",
+  "poso_eggiisis": "ΕΓΓΥΗΣΗ (€)",
+  "synainesi_omilou_nai": "ΝΑΙ",
+  "synainesi_erevnas_nai": "ΝΑΙ",
+  "isxis_paroxis": "ΙΣΧΥΣ ΠΑΡΟΧΗΣ (kVA)"
  }
 }

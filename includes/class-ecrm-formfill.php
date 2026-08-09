@@ -44,8 +44,13 @@ class ECRM_FormFill {
 	 *
 	 * This answers "which contract", never "which sheets". For energy that is
 	 * the same question; for mobile it is not, and template_keys() is the one
-	 * to ask. $program and $activation_type are kept because callers pass them
-	 * and a provider may yet need them to pick between contracts.
+	 * to ask.
+	 *
+	 * $program is the program's `code`, not its name: a name is free text an
+	 * operator can edit, and Protergia now prints a different sheet per tariff,
+	 * so the wrong match here means the customer signs a form naming a tariff
+	 * they did not buy. $activation_type is kept because callers pass it and a
+	 * provider may yet need it to pick between contracts.
 	 */
 	public static function template_key( string $provider_name, string $energy_type, string $customer_type = '', string $program = '', string $activation_type = '' ): string {
 		$p = self::norm( $provider_name );
@@ -56,7 +61,15 @@ class ECRM_FormFill {
 
 		if ( $has( 'volton' ) && $e === 'power' )                         { return 'volton_he'; }
 		if ( $has( 'volton' ) && $e === 'gas' )                           { return 'volton_fa'; }
-		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power' ) { return $biz ? 'protergia_he_biz' : 'protergia_he'; }
+		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power' && ! $biz ) {
+			// Ένα τιμολόγιο, ένα έντυπο. Όταν η σύμβαση δεν κρατάει κάποιο από
+			// τα τέσσερα (παλιές συμβάσεις, ή πρόγραμμα που έφτιαξε ο χρήστης),
+			// τυπώνει το παλιό ενιαίο έντυπο — αυτό πάνω στο οποίο πουλήθηκε.
+			$sheet = \EnergyCRM\Domain\Forms\ProtergiaHomePlans::templateKey( $program );
+
+			return $sheet !== '' ? $sheet : 'protergia_he';
+		}
+		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power' ) { return 'protergia_he_biz'; }
 		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'gas' )   { return 'protergia_fa'; }
 		if ( $has( 'nrg' ) && $e === 'power' )                            { return $biz ? 'nrg_he_biz' : 'nrg_he'; }
 		if ( $has( 'nrg' ) && $e === 'gas' )                              { return 'nrg_fa'; }
@@ -109,7 +122,7 @@ class ECRM_FormFill {
 
 	/** True when a filled provider form is available for this contract row. */
 	public static function available( array $c ): bool {
-		return self::template_key( (string) ( $c['provider_name'] ?? $c['provider'] ?? '' ), (string) ( $c['energy_type'] ?? '' ), (string) ( $c['customer_type'] ?? '' ), (string) ( $c['program_name'] ?? '' ), (string) ( $c['activation_type'] ?? '' ) ) !== '';
+		return self::template_key( (string) ( $c['provider_name'] ?? $c['provider'] ?? '' ), (string) ( $c['energy_type'] ?? '' ), (string) ( $c['customer_type'] ?? '' ), (string) ( $c['program_code'] ?? '' ), (string) ( $c['activation_type'] ?? '' ) ) !== '';
 	}
 
 	/**
@@ -346,6 +359,8 @@ class ECRM_FormFill {
 			'mitroo_11_oxi'           => ( $xg( 'no_marketing_calls' ) === 'no'  ? 'X' : '' ),
 			'synainesi_omilou_nai'    => ( $xg( 'group_data_consent' ) === 'yes' ? 'X' : '' ),
 			'synainesi_omilou_oxi'    => ( $xg( 'group_data_consent' ) === 'no'  ? 'X' : '' ),
+			'synainesi_erevnas_nai'   => ( $xg( 'survey_consent' ) === 'yes' ? 'X' : '' ),
+			'synainesi_erevnas_oxi'   => ( $xg( 'survey_consent' ) === 'no'  ? 'X' : '' ),
 			'enarksi_stin_ypanaxorisi' => ( $xg( 'waive_withdrawal' ) === 'yes' ? 'X' : '' ),
 			// Μονό κουτί, όχι Ναι/Όχι: το έντυπο γράφει «Δηλώνω ότι ΔΕΝ
 			// επιθυμώ», οπότε το X σημαίνει άρνηση καταχώρησης.
@@ -406,7 +421,7 @@ class ECRM_FormFill {
 			(string) ( $c['provider_name'] ?? $c['provider'] ?? '' ),
 			(string) ( $c['energy_type'] ?? '' ),
 			(string) ( $c['customer_type'] ?? '' ),
-			(string) ( $c['program_name'] ?? '' ),
+			(string) ( $c['program_code'] ?? '' ),
 			(string) ( $c['activation_type'] ?? '' )
 		);
 

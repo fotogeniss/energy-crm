@@ -25,6 +25,7 @@ use EnergyCRM\Persistence\Schema\Migrations\FixProviderEnergyTypes;
 use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
 use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
 use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaHomePlans;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
 use EnergyCRM\Persistence\Schema\Migrations\WidenEncryptedColumns;
 
@@ -51,6 +52,7 @@ final class MigrationList
             new WidenEncryptedColumns(),
             new AddProgramCodeColumn(),
             new SeedOrizonPlans(),
+            new SeedProtergiaHomePlans(),
         ];
     }
 }

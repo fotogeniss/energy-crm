@@ -191,10 +191,12 @@
 			return b ? (b.getAttribute('data-pname') || '').trim() : '';
 		}
 
-		function programName() {
-			var s = root.querySelector('[data-program]');
-			if (!s || s.selectedIndex < 0) return '';
-			return (s.options[s.selectedIndex].textContent || '').trim();
+		// The programme's code, not the name shown in the dropdown: the server
+		// picks which provider sheet to print from it, and a name is free text
+		// somebody can rename in the admin without meaning to change the form.
+		function programCode() {
+			var pr = programsCache.filter(function (p) { return parseInt(p.id, 10) === state.program_id; })[0];
+			return pr && pr.code ? String(pr.code) : '';
 		}
 
 		function refreshProviderFields() {
@@ -207,7 +209,7 @@
 			var qs = '?provider=' + encodeURIComponent(name) +
 				'&energy=' + encodeURIComponent(state.energy_type || 'power') +
 				'&customer_type=' + encodeURIComponent(state.customer_type || 'individual') +
-				'&program=' + encodeURIComponent(programName()) +
+				'&program=' + encodeURIComponent(programCode()) +
 				'&activation_type=' + encodeURIComponent(state.activation_type || '');
 
 			if (provFieldsCache[qs]) { paintProviderFields(card, provFieldsCache[qs]); return; }

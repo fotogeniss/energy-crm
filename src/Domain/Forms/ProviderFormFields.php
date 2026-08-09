@@ -109,6 +109,8 @@ final class ProviderFormFields
         'mitroo_11_oxi'              => ['no_marketing_calls'],
         'synainesi_omilou_nai'       => ['group_data_consent'],
         'synainesi_omilou_oxi'       => ['group_data_consent'],
+        'synainesi_erevnas_nai'      => ['survey_consent'],
+        'synainesi_erevnas_oxi'      => ['survey_consent'],
         'enarksi_stin_ypanaxorisi'   => ['waive_withdrawal'],
         'mi_katachorisi_katalogous'  => ['no_directory_listing'],
     ];
@@ -157,6 +159,7 @@ final class ProviderFormFields
         'bill_cap'           => 'Θέλει ανώτατο όριο λογαριασμού;',
         'no_marketing_calls' => 'Να μπει στο μητρώο του άρθρου 11 (να ΜΗΝ δέχεται προωθητικές κλήσεις);',
         'group_data_consent' => 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;',
+        'survey_consent'     => 'Δέχεται τηλεφωνικές έρευνες ικανοποίησης πελατών;',
         'waive_withdrawal'   => 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;',
         'no_directory_listing' => 'Να ΜΗΝ καταχωρηθεί στους τηλεφωνικούς καταλόγους;',
     ];
@@ -202,8 +205,8 @@ final class ProviderFormFields
      */
     private const DROPDOWNS = [
         'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
-        'bill_cap', 'no_marketing_calls', 'group_data_consent', 'waive_withdrawal',
-        'no_directory_listing',
+        'bill_cap', 'no_marketing_calls', 'group_data_consent', 'survey_consent',
+        'waive_withdrawal', 'no_directory_listing',
     ];
 
     private function __construct()

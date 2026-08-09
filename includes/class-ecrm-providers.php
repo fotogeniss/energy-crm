@@ -84,7 +84,14 @@ class ECRM_Providers {
 				// reads "—" and the agent has nothing to pick.
 				$starters = [];
 
-				if ( str_contains( $row['energy_types'], 'power' ) ) {
+				if ( $row['slug'] === 'protergia' ) {
+					// Η Protergia δίνει τέσσερα οικιακά έντυπα, ένα ανά τιμολόγιο.
+					// Ένα γενικό «Σταθερό Οικιακό» χωρίς code δεν αντιστοιχεί σε
+					// κανένα από αυτά, άρα δεν θα μπορούσε ποτέ να τυπωθεί σωστά.
+					foreach ( \EnergyCRM\Domain\Forms\ProtergiaHomePlans::all() as $code => $plan ) {
+						$starters[] = [ $plan['label'], $code, 'power', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'] ];
+					}
+				} elseif ( str_contains( $row['energy_types'], 'power' ) ) {
 					$starters[] = [ 'Σταθερό Οικιακό', '', 'power' ];
 				}
 				if ( str_contains( $row['energy_types'], 'mobile' ) ) {
@@ -98,20 +105,23 @@ class ECRM_Providers {
 					}
 				}
 
-				foreach ( $starters as $i => [ $name, $code, $energy ] ) {
+				foreach ( $starters as $i => $starter ) {
+					[ $name, $code, $energy ] = $starter;
+
 					$wpdb->insert(
 						$programs,
 						[
-							'provider_id' => $provider_id,
-							'name'        => $name,
-							'code'        => $code !== '' ? $code : null,
-							'energy_type' => $energy,
-							'category'    => 'home',
-							'price_type'  => 'fixed',
-							'active'      => 1,
-							'sort_order'  => $i,
-						],
-						[ '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%d' ]
+							'provider_id'  => $provider_id,
+							'name'         => $name,
+							'code'         => $code !== '' ? $code : null,
+							'energy_type'  => $energy,
+							'category'     => 'home',
+							'price_type'   => $starter[3] ?? 'fixed',
+							'fixed_charge' => $starter[4] ?? null,
+							'price_kwh'    => $starter[5] ?? null,
+							'active'       => 1,
+							'sort_order'   => $i,
+						]
 					);
 				}
 			}
