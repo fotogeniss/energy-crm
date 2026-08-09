@@ -16,6 +16,7 @@ namespace EnergyCRM\Http;
 
 use ECRM_DB;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Forms\MobilePlans;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\ProviderRepository;
 use WP_REST_Request;
@@ -62,6 +63,11 @@ final class CatalogueController implements Controller
             'programs'         => $this->providers->activePrograms(),
             'statuses'         => ECRM_DB::statuses(),
             'activation_types' => ECRM_DB::activation_types(),
+            // The published Orizon price list, so the screen can show what a
+            // mobile plan actually prints instead of leaving an editable box
+            // next to a figure the paper form fixes in advance. No PII, no DB
+            // read — the same static table the renderer already uses.
+            'mobile_pricing'   => MobilePlans::pricingTable(),
         ], 200);
     }
 

@@ -464,11 +464,28 @@ class ECRM_Shortcodes {
 				// επιστρέφει μετά. Μία τιμή για τα τρία σημαίνει ότι κάποιος
 				// μαθαίνει λάθος τιμή για τον 25ο μήνα.
 				?>
-				<div class="ecrm-subhead">Τιμολόγηση Προγράμματος</div>
+				<?php
+				// Το πλάνο έχει σταθερή, δημοσιευμένη τιμή — δεν είναι κάτι που
+				// διαπραγματεύεται ο συνεργάτης. readonly ώστε να φαίνεται η
+				// πραγματική τιμή που θα τυπωθεί αντί για κενά κουτιά που θα
+				// αγνοηθούν σιωπηλά (values.php πάντα προτιμά το MobilePlans
+				// όταν υπάρχει έγκυρο program_code). Γεμίζουν από JS
+				// (updateMobilePricing) όταν αλλάζει πρόγραμμα ή προσφορά.
+				?>
+				<div class="ecrm-subhead">Τιμολόγηση Προγράμματος <span class="ecrm-hint">— υπολογίζεται αυτόματα από το πρόγραμμα</span></div>
 				<div class="ecrm-grid">
-					<?php $ecrm_field( 'base_price', 'Αρχική Τιμή Παγίου (€)', 'text', true ); ?>
-					<?php $ecrm_field( 'offer_price', 'Τιμή Προσφοράς ανά Μήνα (€)', 'text', true ); ?>
-					<?php $ecrm_field( 'price_after', 'Πάγιο μετά τη Λήξη Προσφοράς (€)', 'text', true ); ?>
+					<label class="ecrm-field" data-for="base_price">
+						<span class="ecrm-field__label">Αρχική Τιμή Παγίου (€)</span>
+						<input type="text" name="base_price" class="ecrm-input" data-extra="1" readonly autocomplete="off">
+					</label>
+					<label class="ecrm-field" data-for="offer_price">
+						<span class="ecrm-field__label">Τιμή Προσφοράς ανά Μήνα (€)</span>
+						<input type="text" name="offer_price" class="ecrm-input" data-extra="1" readonly autocomplete="off">
+					</label>
+					<label class="ecrm-field" data-for="price_after">
+						<span class="ecrm-field__label">Πάγιο μετά τη Λήξη Προσφοράς (€)</span>
+						<input type="text" name="price_after" class="ecrm-input" data-extra="1" readonly autocomplete="off">
+					</label>
 				</div>
 			</section>
 

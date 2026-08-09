@@ -96,9 +96,7 @@ final class ProviderFormFields
         // Κινητή τηλεφωνία
         'arithmos_kinitou'           => ['mobile_msisdn'],
         'arithmos_sim'               => ['sim_number'],
-        'eidos_syndesis'             => ['mobile_connection'],
         'typos_epidotisis'           => ['subsidy_type'],
-        'ekptosi_pagiou'             => ['subsidy_amount'],
         'arxiki_timi_pagiou'         => ['base_price'],
         'timi_prosforas'             => ['offer_price'],
         'pagio_meta_ti_prosfora'     => ['price_after'],
@@ -149,9 +147,7 @@ final class ProviderFormFields
 
         'mobile_msisdn'      => 'Αριθμός Κινητού',
         'sim_number'         => 'Αριθμός Κάρτας SIM',
-        'mobile_connection'  => 'Είδος Σύνδεσης',
         'subsidy_type'       => 'Τύπος Επιδότησης',
-        'subsidy_amount'     => 'Έκπτωση Παγίου (€)',
         'base_price'         => 'Αρχική Τιμή Παγίου (€)',
         'offer_price'        => 'Τιμή Προσφοράς ανά Μήνα (€)',
         'price_after'        => 'Πάγιο μετά τη Λήξη της Προσφοράς (€)',
@@ -190,7 +186,7 @@ final class ProviderFormFields
     private const NON_PERSONAL_INPUTS = [
         'anotato_orio', 'ar_koinoxristou', 'agreed_power', 'day_indication', 'guarantee',
         'previous_provider', 'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
-        'mobile_connection', 'subsidy_type', 'subsidy_amount', 'base_price', 'offer_price', 'price_after',
+        'subsidy_type', 'base_price', 'offer_price', 'price_after',
         'request_type', 'mobile_offer',
     ];
 
@@ -206,7 +202,6 @@ final class ProviderFormFields
      */
     private const DROPDOWNS = [
         'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
-        'mobile_connection',
         'bill_cap', 'no_marketing_calls', 'group_data_consent', 'waive_withdrawal',
         'no_directory_listing',
     ];

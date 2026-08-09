@@ -44,6 +44,7 @@
 			contract_id: 0, customer_id: 0, extracted_json: null, files: []
 		};
 		var programsCache = [];
+		var mobilePricing = {};
 		var providersLoaded = false;
 		var pendingProvider = null;
 		var q = function (sel) { return root.querySelector(sel); };
@@ -74,6 +75,33 @@
 					el.querySelectorAll('input, select, textarea').forEach(function (f) { f.value = ''; });
 				}
 			});
+
+			updateMobilePricing();
+		}
+
+		// Στοιχεία Κινητής shows the plan's price as read-only text, not an
+		// editable box: MobilePlans::fillValues() always wins over whatever an
+		// agent typed there, so an editable field just invited a number that
+		// would never print. Runs off the same code the print pipeline reads
+		// (programsCache[].code -> mobilePricing), so the screen cannot drift
+		// from the paper.
+		function updateMobilePricing() {
+			var base = root.querySelector('[name="base_price"]');
+			var offer = root.querySelector('[name="offer_price"]');
+			var after = root.querySelector('[name="price_after"]');
+			if (!base || !offer || !after) return;
+
+			var program = programsCache.filter(function (p) { return parseInt(p.id, 10) === state.program_id; })[0];
+			var pricing = program && program.code ? mobilePricing[program.code] : null;
+
+			if (!pricing) { base.value = ''; offer.value = ''; after.value = ''; return; }
+
+			var offerSel = root.querySelector('[name="mobile_offer"]');
+			var combined = offerSel && (offerSel.value === 'family' || offerSel.value === 'combo');
+
+			base.value = pricing.list;
+			offer.value = combined ? pricing.offerCombined : pricing.offer;
+			after.value = combined ? pricing.afterCombined : pricing.after;
 		}
 
 		root.addEventListener('change', function (ev) {
@@ -253,7 +281,7 @@
 		// providers + programs
 		fetch(api('/providers'), { headers: headers() })
 			.then(function (r) { return r.json(); })
-			.then(function (d) { programsCache = d.programs || []; renderProviders(d.providers || []); providersLoaded = true; if (pendingProvider) { selectProvider(pendingProvider); pendingProvider = null; } renderPrograms(); })
+			.then(function (d) { programsCache = d.programs || []; mobilePricing = d.mobile_pricing || {}; renderProviders(d.providers || []); providersLoaded = true; if (pendingProvider) { selectProvider(pendingProvider); pendingProvider = null; } renderPrograms(); })
 			.catch(function () { q('[data-providers]').innerHTML = '<div class="ecrm-empty">Δεν φόρτωσαν οι πάροχοι.</div>'; });
 
 		function renderProviders(list) {
@@ -293,6 +321,7 @@
 				// Orizon splits its forms by programme, so the field list can
 				// change without the provider changing.
 				refreshProviderFields();
+				updateMobilePricing();
 			};
 		}
 
@@ -451,6 +480,12 @@
 			var consentEl = q('[data-consent]');
 			if (consentEl) consentEl.checked = !!c.consent_at;
 			if (c.extra) { Object.keys(c.extra).forEach(function (k) { setField(k, c.extra[k]); }); }
+			// mobile_offer lives in the extras bag and is only restored above —
+			// applyCustomerType() ran earlier against whatever the select's
+			// default was, so a saved Family/COMBO contract would reopen with
+			// its own combo fields hidden. Re-run now that the real value is in
+			// place; this also recomputes the read-only price boxes.
+			applyMobileOffer();
 			var modeEl = q('.ecrm-foot__mode strong'); if (modeEl) modeEl.textContent = 'Επεξεργασία #' + (c.code || c.id);
 			var titleEl = q('[data-form-title]'); if (titleEl) titleEl.textContent = 'Επεξεργασία Αίτησης';
 			root.scrollIntoView ? root.scrollIntoView({ behavior: 'smooth', block: 'start' }) : window.scrollTo(0, 0);

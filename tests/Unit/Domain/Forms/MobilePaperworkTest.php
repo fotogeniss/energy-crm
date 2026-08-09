@@ -121,4 +121,30 @@ final class MobilePaperworkTest extends TestCase
             array_values(MobilePlans::options())
         );
     }
+
+    /**
+     * The screen's read-only price boxes and the printed form must agree —
+     * both are read from the same table, but a typo in one of the two
+     * projections would show the agent a number the paper does not print.
+     */
+    public function testThePricingTableAgreesWithWhatPrints(): void
+    {
+        foreach (MobilePlans::codes() as $code) {
+            $pricing = MobilePlans::pricingTable()[$code];
+
+            $plain    = MobilePlans::fillValues($code, false);
+            $combined = MobilePlans::fillValues($code, true);
+
+            self::assertSame($pricing['offer'], $plain['timi_prosforas']);
+            self::assertSame($pricing['after'], $plain['pagio_meta_ti_prosfora']);
+            self::assertSame($pricing['offerCombined'], $combined['timi_prosforas']);
+            self::assertSame($pricing['afterCombined'], $combined['pagio_meta_ti_prosfora']);
+            self::assertSame($pricing['list'], $plain['arxiki_timi_pagiou']);
+        }
+    }
+
+    public function testThePricingTableHasNothingForAnUnknownPlan(): void
+    {
+        self::assertArrayNotHasKey('orizon_100gb', MobilePlans::pricingTable());
+    }
 }

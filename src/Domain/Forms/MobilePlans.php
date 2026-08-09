@@ -131,6 +131,29 @@ final class MobilePlans
         return $combined ? self::PLANS[$plan]['offerCombined'] : self::PLANS[$plan]['offer'];
     }
 
+    /**
+     * The published price table, keyed by plan code — for the screen to show
+     * what will actually print, instead of leaving an editable box next to a
+     * figure the paper form fixes in advance.
+     *
+     * @return array<string, array{
+     *   list: string, offer: string, offerCombined: string, after: string, afterCombined: string
+     * }>
+     */
+    public static function pricingTable(): array
+    {
+        return array_map(
+            static fn (array $p): array => [
+                'list'          => self::euro($p['list']),
+                'offer'         => self::euro($p['offer']),
+                'offerCombined' => self::euro($p['offerCombined']),
+                'after'         => self::euro($p['after']),
+                'afterCombined' => self::euro($p['afterCombined']),
+            ],
+            self::PLANS
+        );
+    }
+
     /** Written the way the form writes it, so the sheet reads consistently. */
     private static function euro(int $amount): string
     {

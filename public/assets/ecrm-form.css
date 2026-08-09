@@ -127,6 +127,11 @@
 }
 .ecrm-textarea { height: auto; padding: 10px 12px; resize: vertical; width: 100%; }
 .ecrm-input:focus, .ecrm-textarea:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,.18); }
+/* Read-only: system-computed value, not a box to type into (e.g. the Orizon
+   plan's fixed price) — visibly different so an agent doesn't hunt for why
+   typing does nothing. */
+.ecrm-input[readonly] { background: #f8fafc; color: #64748b; cursor: default; }
+.ecrm-input[readonly]:focus { box-shadow: none; border-color: var(--line); }
 /* AI-filled pulse */
 .ecrm-field.is-ai .ecrm-input { background: #fff7e6; border-color: var(--amber); animation: ecrm-pulse 1.6s ease; }
 @keyframes ecrm-pulse { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,.4); } 100% { box-shadow: 0 0 0 8px rgba(245,158,11,0); } }

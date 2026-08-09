@@ -31,23 +31,12 @@ class ECRM_FormFill {
 	 */
 	const BASELINE = 2.5;
 
-	/**
-	 * Dropdown codes as the provider's form expects to read them.
-	 *
-	 * A select stores a code — "port", "ae" — and printing that on paper hands
-	 * the provider a word from our database instead of an answer. Anything not
-	 * listed prints as typed, so a free-text field is unaffected.
-	 */
-	const MOBILE_CONNECTIONS = [
-		'new'     => 'Νέα Σύνδεση',
-		'port'    => 'Φορητότητα',
-		'renewal' => 'Ανανέωση',
-	];
-
-	/** @param array<string,string> $labels */
-	private static function choice_label( string $code, array $labels ): string {
-		return $labels[ $code ] ?? $code;
-	}
+	// Νεκρός κώδικας από τα παλιά έντυπα κινητής (πριν τον ξανασχεδιασμό Orizon):
+	// υπήρχαν εδώ ένα MOBILE_CONNECTIONS const + choice_label() για το
+	// 'eidos_syndesis'/'mobile_connection' και ένα 'ekptosi_pagiou' => $xg('subsidy_amount').
+	// Κανένα από τα δύο δεν έχει πεδίο εισαγωγής στη φόρμα ούτε χρησιμοποιείται
+	// από κανένα από τα τρέχοντα assets/forms/*.json (επιβεβαιωμένο με grep σε
+	// όλα τα αρχεία) — αφαιρέθηκαν 2026-08-09, βλ. CHANGELOG.md.
 
 	/**
 	 * Resolve a provider name + energy type to a bundled template key.
@@ -321,11 +310,7 @@ class ECRM_FormFill {
 			// being activated, the SIM it goes on, and the tariff over time.
 			'arithmos_kinitou'        => $xg( 'mobile_msisdn' ),
 			'arithmos_sim'            => $xg( 'sim_number' ),
-			// Ο πάροχος διαβάζει το έντυπο, όχι τη βάση μας: το κουτί πρέπει να
-			// γράφει «Φορητότητα», όχι «port».
-			'eidos_syndesis'          => self::choice_label( $xg( 'mobile_connection' ), self::MOBILE_CONNECTIONS ),
 			'typos_epidotisis'        => $xg( 'subsidy_type' ),
-			'ekptosi_pagiou'          => $xg( 'subsidy_amount' ),
 			// Three prices because the offer changes twice: what the plan
 			// normally costs, what the customer pays during the offer, and what
 			// it reverts to afterwards. Printing one of them for all three is
