@@ -333,6 +333,16 @@ class ECRM_FormFill {
 			'timi_prosforas'          => $xg( 'offer_price' ),
 			'pagio_meta_ti_prosfora'  => $xg( 'price_after' ),
 
+			// --- COMBO: το ηλεκτρικό σκέλος -----------------------------------
+			// Το έντυπο COMBO ζητά, σε δικές του θέσεις, την παροχή και το
+			// πρόγραμμα ρεύματος του ίδιου πελάτη — ξεχωριστά κλειδιά από τα
+			// 'arithmos_paroxis'/'onoma_programmatos' που ήδη χρησιμοποιεί η
+			// σύμβαση ρεύματος (και, τώρα, το ίδιο το πρόγραμμα κινητής): αν
+			// μοιράζονταν όνομα, το COMBO θα τύπωνε το πρόγραμμα κινητής στο
+			// κουτί του ρεύματος στη σελίδα 3.
+			'combo_arithmos_paroxis'   => $xg( 'combo_supply_number' ),
+			'combo_onoma_programmatos' => $xg( 'combo_energy_program' ),
+
 			// --- Επιλογές που δηλώνει ο πελάτης ------------------------------
 			// Answers, not settings. Each is a Ναι/Όχι the agent asks and the
 			// customer decides, so an unanswered one prints neither box rather
@@ -517,6 +527,7 @@ class ECRM_FormFill {
 			$pdf->fontpath = __DIR__ . '/lib/tfpdf/font/';
 			$pdf->SetAutoPageBreak( false );
 			$pdf->AddFont( 'DejaVu', '', 'DejaVuSans.ttf', true );
+			$pdf->AddFont( 'DejaVu', 'B', 'DejaVuSans-Bold.ttf', true );
 
 			$p = 1;
 			while ( file_exists( $dir . $key . '-' . $p . '.jpg' ) ) {
@@ -531,7 +542,12 @@ class ECRM_FormFill {
 					foreach ( self::placements( $placements ) as $pos ) {
 						if ( (int) ( $pos['page'] ?? 1 ) !== $p ) { continue; }
 						if ( ! empty( $pos['check'] ) ) {
-							$pdf->SetFont( 'DejaVu', '', 10 );
+							// Size/bold are per-field opt-ins (default: 10, regular —
+							// unchanged from before this existed) so that turning one
+							// checkbox bold on one template cannot shift how every
+							// other provider's forms have already been printed.
+							$style = ! empty( $pos['bold'] ) ? 'B' : '';
+							$pdf->SetFont( 'DejaVu', $style, (float) ( $pos['size'] ?? 10 ) );
 							$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, 'X' );
 							continue;
 						}

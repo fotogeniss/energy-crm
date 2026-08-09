@@ -73,31 +73,35 @@
   },
   "programma_5gb": {
    "page": 1,
-   "x": 51.9,
+   "x": 80.7,
    "y": 117.1,
    "check": true,
-   "size": 6.5
+   "size": 11,
+   "bold": false
   },
   "programma_10gb_5gb": {
    "page": 1,
-   "x": 87.7,
+   "x": 125.5,
    "y": 117.1,
    "check": true,
-   "size": 6.5
+   "size": 11,
+   "bold": false
   },
   "programma_40gb": {
    "page": 1,
-   "x": 126.5,
+   "x": 157.8,
    "y": 117.1,
    "check": true,
-   "size": 6.5
+   "size": 11,
+   "bold": false
   },
   "programma_unlimited": {
    "page": 1,
-   "x": 164.7,
+   "x": 197.6,
    "y": 117.1,
    "check": true,
-   "size": 6.5
+   "size": 11,
+   "bold": false
   },
   "kodikos_synergati": {
    "page": 4,

@@ -36,3 +36,6 @@ Thumbs.db
 
 # Provider source forms — large, reissued periodically, not ours to version.
 /tools/source-forms/
+
+# Test PDFs from tools/test-orizon-print.php — regenerated on every run.
+/tools/output/
