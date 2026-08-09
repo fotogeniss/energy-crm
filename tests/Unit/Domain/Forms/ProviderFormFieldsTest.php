@@ -41,6 +41,9 @@ final class ProviderFormFieldsTest extends TestCase
             ['company_type'],
             ['activity'],
             ['eidiki_katigoria'],
+            // Ρεύματος στοιχείο μέσα σε αίτηση κινητής (COMBO): παραμένει
+            // προσωπικό γιατί δένει με τη διεύθυνση του πελάτη, ORIZON-TODO.md #6.
+            ['combo_supply_number'],
         ];
     }
 
@@ -64,6 +67,8 @@ final class ProviderFormFieldsTest extends TestCase
             ['meter_reading_type'],
             ['payment_method'],
             ['offer_price'],
+            ['request_type'],
+            ['mobile_offer'],
         ];
     }
 

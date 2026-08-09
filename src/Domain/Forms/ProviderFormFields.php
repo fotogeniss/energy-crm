@@ -179,12 +179,19 @@ final class ProviderFormFields
      * someone is vulnerable or on a social tariff; and the yes/no answers are
      * that person's own choices.
      *
+     * `request_type` and `mobile_offer` are product choices (new number vs.
+     * porting, which discount route), not facts about a person — erasing them
+     * destroys sales-history reporting for no privacy benefit. `combo_supply_number`
+     * stays personal on purpose: it is the electricity meter's own supply
+     * number, tied to an address (ORIZON-TODO.md #6).
+     *
      * @var list<string>
      */
     private const NON_PERSONAL_INPUTS = [
         'anotato_orio', 'ar_koinoxristou', 'agreed_power', 'day_indication', 'guarantee',
         'previous_provider', 'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
         'mobile_connection', 'subsidy_type', 'subsidy_amount', 'base_price', 'offer_price', 'price_after',
+        'request_type', 'mobile_offer',
     ];
 
     /**

@@ -375,7 +375,15 @@ class ECRM_FormFill {
 	}
 
 	/**
-	 * Fill the provider form for a contract row.
+	 * Fill every sheet the application needs, as one document.
+	 *
+	 * Electricity and gas are one form, so this used to mean "render the
+	 * first (only) template". Mobile is not: a porting request or a combined-
+	 * offer form rides along with the contract (ORIZON-TODO.md #5), and a
+	 * partner who prints "the application" and gets only the contract has an
+	 * application the provider will reject as incomplete. Merged into one
+	 * PDF rather than a list of files, so the download button keeps its
+	 * existing one-click behaviour.
 	 *
 	 * @param array       $c        Joined contract+customer row.
 	 * @param string|null $sig_path Optional absolute path to a signature PNG.
@@ -387,9 +395,7 @@ class ECRM_FormFill {
 			return [ 'ok' => false, 'error' => 'Δεν υπάρχει ακόμη πρότυπο εντύπου για αυτόν τον πάροχο/τύπο παροχής.' ];
 		}
 
-		// The first sheet is the contract itself — what "the document" has always
-		// meant to callers that expect exactly one.
-		return self::render( $keys[0], $c, $sig_path );
+		return self::render_merged( $keys, $c, $sig_path );
 	}
 
 	/**
@@ -489,24 +495,89 @@ class ECRM_FormFill {
 	}
 
 	/**
-	 * Draw the template pages and overlay the values.
+	 * Draw every page of one template into an already-open document.
+	 *
+	 * Shared by render() (one file per template, used when each Orizon sheet
+	 * is stored separately) and renderMerged() (one file per application,
+	 * used for the download button) so the two paths cannot silently drift
+	 * apart on how a page gets drawn.
+	 *
+	 * @param array<string, mixed> $map
+	 * @param array<string, mixed> $values
+	 */
+	private static function draw_pages( $pdf, string $dir, string $key, array $map, array $values, ?string $sig_path ): void {
+		$w = (float) ( $map['page_w'] ?? 210 );
+		$h = (float) ( $map['page_h'] ?? 297 );
+		$orient = ( $w > $h ) ? 'L' : 'P';
+
+		$p = 1;
+		while ( file_exists( $dir . $key . '-' . $p . '.jpg' ) ) {
+			$pdf->AddPage( $orient, [ $w, $h ] );
+			$pdf->Image( $dir . $key . '-' . $p . '.jpg', 0, 0, $w, $h );
+
+			$pdf->SetTextColor( 0, 0, 150 );
+			foreach ( $map['fields'] as $field => $placements ) {
+				$val = $values[ $field ] ?? '';
+				if ( $val === '' ) { continue; }
+
+				foreach ( self::placements( $placements ) as $pos ) {
+					if ( (int) ( $pos['page'] ?? 1 ) !== $p ) { continue; }
+					if ( ! empty( $pos['check'] ) ) {
+						// Size/bold are per-field opt-ins (default: 10, regular —
+						// unchanged from before this existed) so that turning one
+						// checkbox bold on one template cannot shift how every
+						// other provider's forms have already been printed.
+						$style = ! empty( $pos['bold'] ) ? 'B' : '';
+						$pdf->SetFont( 'DejaVu', $style, (float) ( $pos['size'] ?? 10 ) );
+						$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, 'X' );
+						continue;
+					}
+					$pdf->SetFont( 'DejaVu', '', (float) ( $pos['size'] ?? 8.5 ) );
+					$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, (string) $val );
+				}
+			}
+
+			if ( $sig_path && file_exists( $sig_path ) ) {
+				// Support multiple signature stamps per template (e.g. a customer
+				// signs in two places). Falls back to the single legacy "sig" key.
+				$sigs = ( ! empty( $map['sigs'] ) && is_array( $map['sigs'] ) )
+					? $map['sigs']
+					: ( ! empty( $map['sig'] ) ? [ $map['sig'] ] : [] );
+				foreach ( $sigs as $s ) {
+					if ( ! is_array( $s ) || (int) ( $s['page'] ?? 0 ) !== $p ) { continue; }
+					$pdf->Image( $sig_path, (float) $s['x'], (float) $s['y'], (float) ( $s['w'] ?? 40 ), (float) ( $s['h'] ?? 0 ) );
+				}
+			}
+			$p++;
+		}
+	}
+
+	/**
+	 * Load one template's field map, or throw if it's missing/broken.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function load_map( string $dir, string $key ): array {
+		$mapf = $dir . $key . '.json';
+		if ( ! file_exists( $dir . $key . '-1.jpg' ) || ! file_exists( $mapf ) ) {
+			throw new \RuntimeException( 'Λείπει το αρχείο προτύπου για ' . $key . '.' );
+		}
+		$map = json_decode( (string) file_get_contents( $mapf ), true );
+		if ( ! is_array( $map ) || empty( $map['fields'] ) ) {
+			throw new \RuntimeException( 'Άκυρος χάρτης πεδίων για ' . $key . '.' );
+		}
+		return $map;
+	}
+
+	/**
+	 * Draw one template into its own document.
 	 *
 	 * @param array<string, mixed> $c
 	 *
 	 * @return array{ok:bool,error?:string,bytes?:string,filename?:string}
 	 */
 	private static function render( string $key, array $c, ?string $sig_path ): array {
-		$dir  = ECRM_DIR . 'assets/forms/';
-		$mapf = $dir . $key . '.json';
-		if ( ! file_exists( $dir . $key . '-1.jpg' ) || ! file_exists( $mapf ) ) {
-			return [ 'ok' => false, 'error' => 'Λείπει το αρχείο προτύπου για ' . $key . '.' ];
-		}
-		$map = json_decode( (string) file_get_contents( $mapf ), true );
-		if ( ! is_array( $map ) || empty( $map['fields'] ) ) {
-			return [ 'ok' => false, 'error' => 'Άκυρος χάρτης πεδίων.' ];
-		}
-
-		$values = self::values( $c );
+		$dir = ECRM_DIR . 'assets/forms/';
 
 		// Each template page is bundled as a background image (assets/forms/{key}-{n}.jpg);
 		// we overlay the Greek values with tFPDF (DejaVu Unicode). No PDF-import library is
@@ -518,6 +589,7 @@ class ECRM_FormFill {
 		$er = error_reporting();
 		error_reporting( 0 );
 		try {
+			$map = self::load_map( $dir, $key );
 			ob_start();
 
 			$w = (float) ( $map['page_w'] ?? 210 );
@@ -530,46 +602,7 @@ class ECRM_FormFill {
 			$pdf->AddFont( 'DejaVu', '', 'DejaVuSans.ttf', true );
 			$pdf->AddFont( 'DejaVu', 'B', 'DejaVuSans-Bold.ttf', true );
 
-			$p = 1;
-			while ( file_exists( $dir . $key . '-' . $p . '.jpg' ) ) {
-				$pdf->AddPage( $orient, [ $w, $h ] );
-				$pdf->Image( $dir . $key . '-' . $p . '.jpg', 0, 0, $w, $h );
-
-				$pdf->SetTextColor( 0, 0, 150 );
-				foreach ( $map['fields'] as $field => $placements ) {
-					$val = $values[ $field ] ?? '';
-					if ( $val === '' ) { continue; }
-
-					foreach ( self::placements( $placements ) as $pos ) {
-						if ( (int) ( $pos['page'] ?? 1 ) !== $p ) { continue; }
-						if ( ! empty( $pos['check'] ) ) {
-							// Size/bold are per-field opt-ins (default: 10, regular —
-							// unchanged from before this existed) so that turning one
-							// checkbox bold on one template cannot shift how every
-							// other provider's forms have already been printed.
-							$style = ! empty( $pos['bold'] ) ? 'B' : '';
-							$pdf->SetFont( 'DejaVu', $style, (float) ( $pos['size'] ?? 10 ) );
-							$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, 'X' );
-							continue;
-						}
-						$pdf->SetFont( 'DejaVu', '', (float) ( $pos['size'] ?? 8.5 ) );
-						$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, (string) $val );
-					}
-				}
-
-				if ( $sig_path && file_exists( $sig_path ) ) {
-					// Support multiple signature stamps per template (e.g. a customer
-					// signs in two places). Falls back to the single legacy "sig" key.
-					$sigs = ( ! empty( $map['sigs'] ) && is_array( $map['sigs'] ) )
-						? $map['sigs']
-						: ( ! empty( $map['sig'] ) ? [ $map['sig'] ] : [] );
-					foreach ( $sigs as $s ) {
-						if ( ! is_array( $s ) || (int) ( $s['page'] ?? 0 ) !== $p ) { continue; }
-						$pdf->Image( $sig_path, (float) $s['x'], (float) $s['y'], (float) ( $s['w'] ?? 40 ), (float) ( $s['h'] ?? 0 ) );
-					}
-				}
-				$p++;
-			}
+			self::draw_pages( $pdf, $dir, $key, $map, self::values( $c ), $sig_path );
 
 			$bytes = $pdf->Output( '', 'S' );
 			ob_end_clean();
@@ -587,6 +620,65 @@ class ECRM_FormFill {
 		if ( $at > 0 ) { $bytes = substr( $bytes, $at ); }
 
 		$fname = 'entypo-' . $key . '-' . ( $c['code'] ?? '' ) . '.pdf';
+		return [ 'ok' => true, 'bytes' => $bytes, 'filename' => $fname ];
+	}
+
+	/**
+	 * Draw every template an application needs into one document.
+	 *
+	 * tFPDF draws pages, it does not import existing PDFs — so "merge" here
+	 * means keeping a single document open across every template, exactly
+	 * like a multi-page contract already spans several pages of one file.
+	 * Each AddPage() states its own size, so templates are free to differ in
+	 * page dimensions without the earlier ones being affected.
+	 *
+	 * @param list<string>          $keys
+	 * @param array<string, mixed>  $c
+	 *
+	 * @return array{ok:bool,error?:string,bytes?:string,filename?:string}
+	 */
+	private static function render_merged( array $keys, array $c, ?string $sig_path ): array {
+		$dir    = ECRM_DIR . 'assets/forms/';
+		$values = self::values( $c );
+
+		require_once ECRM_DIR . 'includes/lib/tfpdf/tfpdf.php';
+
+		@ini_set( 'memory_limit', '256M' );
+		@set_time_limit( 60 );
+		$er = error_reporting();
+		error_reporting( 0 );
+		try {
+			ob_start();
+
+			// The constructor's size is only a default: every AddPage() below
+			// states its own, so this never has to match any real template.
+			$pdf = new tFPDF( 'P', 'mm', [ 210, 297 ] );
+			$pdf->fontpath = __DIR__ . '/lib/tfpdf/font/';
+			$pdf->SetAutoPageBreak( false );
+			$pdf->AddFont( 'DejaVu', '', 'DejaVuSans.ttf', true );
+			$pdf->AddFont( 'DejaVu', 'B', 'DejaVuSans-Bold.ttf', true );
+
+			foreach ( $keys as $key ) {
+				$map = self::load_map( $dir, $key );
+				self::draw_pages( $pdf, $dir, $key, $map, $values, $sig_path );
+			}
+
+			$bytes = $pdf->Output( '', 'S' );
+			ob_end_clean();
+		} catch ( \Throwable $e ) {
+			if ( ob_get_level() > 0 ) { ob_end_clean(); }
+			error_reporting( $er );
+			return [ 'ok' => false, 'error' => 'Σφάλμα δημιουργίας εντύπου: ' . $e->getMessage() ];
+		}
+		error_reporting( $er );
+
+		$at = strpos( (string) $bytes, '%PDF-' );
+		if ( $at === false ) {
+			return [ 'ok' => false, 'error' => 'Το έντυπο δεν δημιουργήθηκε σωστά. Πρώτα bytes: ' . substr( (string) $bytes, 0, 300 ) ];
+		}
+		if ( $at > 0 ) { $bytes = substr( $bytes, $at ); }
+
+		$fname = 'aitisi-' . ( $c['code'] ?? '' ) . '.pdf';
 		return [ 'ok' => true, 'bytes' => $bytes, 'filename' => $fname ];
 	}
 }

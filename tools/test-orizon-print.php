@@ -80,6 +80,12 @@ function ecrm_test_row(array $extra): array
     return array_merge($base, $extra);
 }
 
+/** Page count from raw PDF bytes — no library, just counting page objects. */
+function ecrm_pdf_page_count(string $bytes): int
+{
+    return substr_count($bytes, '/Type /Page') - substr_count($bytes, '/Type /Pages');
+}
+
 $scenarios = [
     // 1. Φορητότητα + Συνδυαστική (mobile+mobile): σύμβαση + αίτηση
     //    φορητότητας + έντυπο Family. Πλάνο 5GB.
@@ -147,6 +153,8 @@ foreach ($scenarios as $name => $row) {
         $exit = 1;
     }
 
+    $pagesExpected = 0;
+
     foreach ($sheets as $sheet) {
         $key = (string) $sheet['key'];
 
@@ -156,10 +164,36 @@ foreach ($scenarios as $name => $row) {
             continue;
         }
 
-        $bytes    = (string) $sheet['bytes'];
-        $filename = $outputDir . '/' . $name . '__' . $key . '.pdf';
+        $bytes         = (string) $sheet['bytes'];
+        $pages         = ecrm_pdf_page_count($bytes);
+        $pagesExpected += $pages;
+        $filename      = $outputDir . '/' . $name . '__' . $key . '.pdf';
         file_put_contents($filename, $bytes);
-        echo "    [{$key}] OK, " . strlen($bytes) . ' bytes -> ' . basename($filename) . "\n";
+        echo "    [{$key}] OK, {$pages} σελίδες, " . strlen($bytes) . ' bytes -> ' . basename($filename) . "\n";
+    }
+
+    // ORIZON-TODO #5: the download button hands over every sheet merged into
+    // one file, not just the contract. Checked against the sheets rendered
+    // above rather than a hardcoded page count, so this stays correct even
+    // if a template gains or loses a page later.
+    $merged = ECRM_FormFill::fill($row);
+
+    if (empty($merged['ok'])) {
+        echo '  [merged] ΣΦΑΛΜΑ: ' . ($merged['error'] ?? '?') . "\n";
+        $exit = 1;
+    } else {
+        $mergedBytes = (string) $merged['bytes'];
+        $pagesGot    = ecrm_pdf_page_count($mergedBytes);
+        $pagesMatch  = $pagesGot === $pagesExpected;
+        $filename    = $outputDir . '/' . $name . '__merged.pdf';
+        file_put_contents($filename, $mergedBytes);
+        echo "  [merged] OK, {$pagesGot} σελίδες (αναμένονταν {$pagesExpected})"
+            . ($pagesMatch ? '  OK' : '  ΔΙΑΦΟΡΕΤΙΚΟ') . ', ' . strlen($mergedBytes) . ' bytes -> '
+            . basename($filename) . "\n";
+
+        if (! $pagesMatch) {
+            $exit = 1;
+        }
     }
 
     echo "\n";
