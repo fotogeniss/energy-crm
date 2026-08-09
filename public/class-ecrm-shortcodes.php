@@ -183,11 +183,29 @@ class ECRM_Shortcodes {
 
 			<?php
 			// Helper to print a field. $extra=true marks it for the extra_json bag.
-			$ecrm_field = function ( $name, $label, $type = 'text', $extra = false, $ph = '' ) {
+			// $energy_when, when non-empty, adds data-when-energy so a field can be
+			// scoped to power/gas or mobile without a wrapper element around it.
+			$ecrm_field = function ( $name, $label, $type = 'text', $extra = false, $ph = '', $energy_when = '' ) {
 				printf(
-					'<label class="ecrm-field" data-for="%1$s"><span class="ecrm-field__label">%2$s</span><input type="%3$s" name="%1$s" class="ecrm-input"%4$s autocomplete="off" placeholder="%5$s"></label>',
+					'<label class="ecrm-field" data-for="%1$s"%6$s><span class="ecrm-field__label">%2$s</span><input type="%3$s" name="%1$s" class="ecrm-input"%4$s autocomplete="off" placeholder="%5$s"></label>',
 					esc_attr( $name ), esc_html( $label ), esc_attr( $type ),
-					$extra ? ' data-extra="1"' : '', esc_attr( $ph )
+					$extra ? ' data-extra="1"' : '', esc_attr( $ph ),
+					$energy_when !== '' ? ' data-when-energy="' . esc_attr( $energy_when ) . '"' : ''
+				);
+			};
+
+			// Yes/No select, used by the customer-facing questions in Στοιχεία
+			// Τιμολόγησης. Defined here (not inline where it's used) because it
+			// used to live inside the mobile section and moved out with the
+			// fields it belongs to — see ORIZON-TODO.md #3.
+			$ecrm_yesno = function ( $name, $label ) {
+				printf(
+					'<label class="ecrm-field" data-for="%1$s"><span class="ecrm-field__label">%2$s</span>'
+					. '<select name="%1$s" class="ecrm-input" data-extra="1">'
+					. '<option value="">—</option><option value="yes">Ναι</option><option value="no">Όχι</option>'
+					. '</select></label>',
+					esc_attr( $name ),
+					esc_html( $label )
 				);
 			};
 			?>
@@ -250,6 +268,17 @@ class ECRM_Shortcodes {
 				<div class="ecrm-grid" data-provform-grid></div>
 			</section>
 
+			<?php
+			// Νόμιμος εκπρόσωπος και υπεύθυνος επικοινωνίας περιγράφουν μια
+			// επιχειρηματική σύμβαση ρεύματος/αερίου· κανένα από τα τέσσερα
+			// έντυπα Orizon δεν τα ζητά (επιβεβαιωμένο με grep στα JSON), οπότε
+			// κρύβονται στην κινητή. Το εξωτερικό div είναι απαραίτητο για το
+			// πρώτο section: το δικό του data-when (τύπος πελάτη) δεν μπορεί
+			// να συνυπάρξει με data-when-energy στο ίδιο στοιχείο, γιατί το JS
+			// applyCustomerType() καλεί applyEnergyType() αμέσως μετά και το
+			// δεύτερο θα σκέπαζε το πρώτο.
+			?>
+			<div data-when-energy="power,gas">
 			<!-- Νόμιμος Εκπρόσωπος (εταιρείες) -->
 			<section class="ecrm-card" data-when="company,sole_prop">
 				<div class="ecrm-step"><span class="ecrm-step__n">4</span> Νόμιμος Εκπρόσωπος</div>
@@ -265,9 +294,10 @@ class ECRM_Shortcodes {
 					<?php $ecrm_field( 'rep_email', 'Email', 'email', true ); ?>
 				</div>
 			</section>
+			</div>
 
 			<!-- Υπεύθυνος Επικοινωνίας -->
-			<section class="ecrm-card">
+			<section class="ecrm-card" data-when-energy="power,gas">
 				<div class="ecrm-step"><span class="ecrm-step__n">5</span> Υπεύθυνος Επικοινωνίας</div>
 				<label class="ecrm-syncbar"><input type="checkbox" data-sync="contact"> Ίδια στοιχεία με τον πελάτη / εκπρόσωπο — αυτόματος συγχρονισμός</label>
 				<div class="ecrm-grid">
@@ -322,7 +352,7 @@ class ECRM_Shortcodes {
 						</select>
 					</label>
 					<?php $ecrm_field( 'eidiki_katigoria', 'Ειδική Κατηγορία', 'text', true, 'Ευάλωτος / Κ.Ο.Τ.' ); ?>
-					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
+					<?php // Η εγγύηση μετακόμισε στα Στοιχεία Τιμολόγησης — τη ζητά και η κινητή, όχι μόνο ρεύμα/αέριο. ?>
 					<?php $ecrm_field( 'promotion', 'Promotion', 'text', true ); ?>
 				</div>
 				<?php
@@ -405,19 +435,27 @@ class ECRM_Shortcodes {
 					<?php $ecrm_field( 'mobile_msisdn', 'Αριθμός Κινητού', 'text', true, '69…' ); ?>
 					<?php $ecrm_field( 'sim_number', 'Αριθμός Κάρτας SIM', 'text', true ); ?>
 					<?php $ecrm_field( 'subsidy_type', 'Τύπος Επιδότησης', 'text', true, 'π.χ. Έκπτωση Παγίου' ); ?>
-					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
 				</div>
 
 				<?php
 				// Το COMBO είναι το μόνο σημείο όπου η κινητή αγγίζει το ρεύμα:
 				// το έντυπό του ζητά την παροχή και το πρόγραμμα ενέργειας του
-				// ίδιου πελάτη. Εμφανίζεται μόνο όταν επιλεγεί, γιατί σε κάθε
-				// άλλη περίπτωση είναι ακριβώς το είδος πεδίου που δεν έχει
-				// θέση σε αίτηση κινητής.
+				// ίδιου πελάτη, και ποιος από τους δύο είναι ο κύριος χρήστης
+				// της γραμμής (orizon_combo.json: xristis_kyrios/xristis_defterevon).
+				// Εμφανίζεται μόνο όταν επιλεγεί, γιατί σε κάθε άλλη περίπτωση
+				// είναι ακριβώς το είδος πεδίου που δεν έχει θέση σε αίτηση κινητής.
 				?>
 				<div class="ecrm-grid" data-when-offer="combo" hidden>
 					<?php $ecrm_field( 'combo_supply_number', 'Αριθμός Παροχής / ΗΚΑΣΠ Ρεύματος', 'text', true ); ?>
 					<?php $ecrm_field( 'combo_energy_program', 'Πρόγραμμα Ρεύματος', 'text', true ); ?>
+					<label class="ecrm-field" data-for="combo_user_role">
+						<span class="ecrm-field__label">Χρήστης Γραμμής</span>
+						<select name="combo_user_role" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="main">Κύριος Χρήστης</option>
+							<option value="secondary">Δευτερεύων Χρήστης</option>
+						</select>
+					</label>
 				</div>
 
 				<?php
@@ -432,56 +470,52 @@ class ECRM_Shortcodes {
 					<?php $ecrm_field( 'offer_price', 'Τιμή Προσφοράς ανά Μήνα (€)', 'text', true ); ?>
 					<?php $ecrm_field( 'price_after', 'Πάγιο μετά τη Λήξη Προσφοράς (€)', 'text', true ); ?>
 				</div>
-
-				<?php
-				// Απαντήσεις του πελάτη, όχι ρυθμίσεις της εταιρείας. Μένουν
-				// κενές μέχρι να ρωτηθεί: κενό κουτί στο έντυπο είναι καλύτερο
-				// από ένα X που κανείς δεν είπε.
-				?>
-				<div class="ecrm-subhead">Ερωτήσεις προς τον πελάτη <span class="ecrm-hint">— απαντά ο ίδιος</span></div>
-				<div class="ecrm-grid">
-					<?php
-					$ecrm_yesno = function ( $name, $label ) {
-						printf(
-							'<label class="ecrm-field" data-for="%1$s"><span class="ecrm-field__label">%2$s</span>'
-							. '<select name="%1$s" class="ecrm-input" data-extra="1">'
-							. '<option value="">—</option><option value="yes">Ναι</option><option value="no">Όχι</option>'
-							. '</select></label>',
-							esc_attr( $name ),
-							esc_html( $label )
-						);
-					};
-					$ecrm_yesno( 'bill_cap', 'Θέλει ανώτατο όριο λογαριασμού;' );
-					$ecrm_field( 'anotato_orio', 'Ανώτατο Όριο (€)', 'text', true );
-					$ecrm_yesno( 'no_marketing_calls', 'Μητρώο άρθρου 11 — να ΜΗΝ δέχεται προωθητικές κλήσεις;' );
-					$ecrm_yesno( 'group_data_consent', 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;' );
-					$ecrm_yesno( 'waive_withdrawal', 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;' );
-					$ecrm_yesno( 'no_directory_listing', 'Να ΜΗΝ καταχωρηθεί στους τηλεφωνικούς καταλόγους;' );
-					?>
-				</div>
 			</section>
 
 			<!-- Στοιχεία Τιμολόγησης -->
 			<section class="ecrm-card">
 				<div class="ecrm-step"><span class="ecrm-step__n">7</span> Στοιχεία Τιμολόγησης</div>
 				<div class="ecrm-grid">
-					<label class="ecrm-field" data-for="payment_method">
+					<label class="ecrm-field" data-for="payment_method" data-when-energy="power,gas">
 						<span class="ecrm-field__label">Τρόπος Πληρωμής</span>
 						<select name="payment_method" class="ecrm-input" data-extra="1">
 							<option value="">—</option><option value="standing_order">Πάγια Εντολή</option><option value="manual">Με την παραλαβή</option>
 						</select>
 					</label>
-					<label class="ecrm-field" data-for="bill_delivery">
+					<label class="ecrm-field" data-for="bill_delivery" data-when-energy="power,gas">
 						<span class="ecrm-field__label">Τρόπος Αποστολής Λογαριασμού</span>
 						<select name="bill_delivery" class="ecrm-input" data-extra="1">
 							<option value="">—</option><option value="email">Email</option><option value="post">Ταχυδρομικώς</option><option value="both">Και τα δύο</option>
 						</select>
 					</label>
-					<?php // Το IBAN ζητείται μόνο για πάγια εντολή· τα έντυπα το τυπώνουν δίπλα στο σχετικό κουτί. ?>
+					<?php // Το IBAN ζητείται μόνο για πάγια εντολή· τα έντυπα το τυπώνουν δίπλα στο σχετικό κουτί. Παραμένει χωρίς guard — σημείο 8, εκκρεμεί απάντηση παρόχου. ?>
 					<?php $ecrm_field( 'iban', 'IBAN (πάγια εντολή)', 'text', true, 'GR..' ); ?>
-					<?php $ecrm_field( 'anotato_orio', 'Ανώτατο Όριο Λογαριασμού (€)', 'text', true ); ?>
-					<?php $ecrm_field( 'ar_koinoxristou', 'Αρ. Κοινόχρηστου Μετρητή', 'text', true ); ?>
+					<?php // Χωρίς guard: το orizon_mobile.json ζητά κι αυτό εγγύηση, όχι μόνο ρεύμα/αέριο. ?>
+					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
+					<?php $ecrm_field( 'ar_koinoxristou', 'Αρ. Κοινόχρηστου Μετρητή', 'text', true, '', 'power,gas' ); ?>
 				</div>
+
+				<?php
+				// Απαντήσεις του πελάτη, όχι ρυθμίσεις της εταιρείας. Μόνο
+				// ρεύμα/αέριο: κανένα από τα τέσσερα έντυπα Orizon δεν τυπώνει
+				// αυτά τα κλειδιά (επιβεβαιωμένο με grep σε όλα τα JSON) — πριν
+				// ζούσαν μέσα στο τμήμα κινητής, όπου ήταν ακριβώς ανάποδα
+				// ορατά: φαινόντουσαν μόνο όταν δεν εξυπηρετούσαν κανέναν.
+				?>
+				<div data-when-energy="power,gas">
+					<div class="ecrm-subhead">Ερωτήσεις προς τον πελάτη <span class="ecrm-hint">— απαντά ο ίδιος</span></div>
+					<div class="ecrm-grid">
+						<?php
+						$ecrm_yesno( 'bill_cap', 'Θέλει ανώτατο όριο λογαριασμού;' );
+						$ecrm_field( 'anotato_orio', 'Ανώτατο Όριο (€)', 'text', true );
+						$ecrm_yesno( 'no_marketing_calls', 'Μητρώο άρθρου 11 — να ΜΗΝ δέχεται προωθητικές κλήσεις;' );
+						$ecrm_yesno( 'group_data_consent', 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;' );
+						$ecrm_yesno( 'waive_withdrawal', 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;' );
+						$ecrm_yesno( 'no_directory_listing', 'Να ΜΗΝ καταχωρηθεί στους τηλεφωνικούς καταλόγους;' );
+						?>
+					</div>
+				</div>
+
 				<div class="ecrm-subhead">Διάρκεια Σύμβασης</div>
 				<div class="ecrm-grid">
 					<?php $ecrm_field( 'start_date', 'Ημ. Έναρξης', 'date' ); ?>

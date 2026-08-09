@@ -182,7 +182,8 @@ class ECRM_FormFill {
 		if ( ( $c['energy_type'] ?? '' ) === 'mobile' ) {
 			$combined = in_array( $xg( 'mobile_offer' ), [ 'family', 'combo' ], true );
 			$mobile   = \EnergyCRM\Domain\Forms\MobilePlans::fillValues( (string) ( $c['program_code'] ?? '' ), $combined )
-				+ \EnergyCRM\Domain\Forms\MobilePaperwork::connectionTicks( $xg( 'request_type' ) );
+				+ \EnergyCRM\Domain\Forms\MobilePaperwork::connectionTicks( $xg( 'request_type' ) )
+				+ \EnergyCRM\Domain\Forms\MobilePaperwork::comboUserTicks( $xg( 'combo_user_role' ) );
 		}
 
 		return $mobile + [

@@ -59,6 +59,10 @@ final class MobilePaperwork
     public const OFFER_COMBO  = 'combo';
     public const OFFER_NONE   = '';
 
+    /** COMBO only: which of the two people on the line is being described. */
+    public const COMBO_USER_MAIN      = 'main';
+    public const COMBO_USER_SECONDARY = 'secondary';
+
     private function __construct()
     {
     }
@@ -116,6 +120,24 @@ final class MobilePaperwork
             self::REQUEST_PORTABILITY => ['energopoiisi_foritotita' => 'X'],
             self::REQUEST_NEW_NUMBER  => ['energopoiisi_nea_syndesi' => 'X'],
             default                   => [],
+        };
+    }
+
+    /**
+     * Which ΚΥΡΙΟΣ/ΔΕΥΤΕΡΕΥΩΝ ΧΡΗΣΤΗΣ box to tick on the COMBO form.
+     *
+     * Only orizon_combo.json has these two fields, so this is a no-op for any
+     * other template — the caller doesn't need to know that, it just merges
+     * in whatever comes back.
+     *
+     * @return array<string, string> fill key => 'X'
+     */
+    public static function comboUserTicks(string $role): array
+    {
+        return match ($role) {
+            self::COMBO_USER_MAIN      => ['xristis_kyrios' => 'X'],
+            self::COMBO_USER_SECONDARY => ['xristis_defterevon' => 'X'],
+            default                    => [],
         };
     }
 }
