@@ -86,6 +86,13 @@ function ecrm_protergia_row(string $programCode, string $programName): array
         'street_no'          => '1',
         'postal_code'        => '11111',
         'region'             => 'Αττικής',
+        // Οι δύο σημαίες, ρητά 0: θέλουμε να δούμε τυπωμένες τρεις
+        // *διαφορετικές* διευθύνσεις. Χωρίς αυτές ισχύει ο κανόνας «απούσα
+        // στήλη = ίδια με του πελάτη» (ContractAddresses::isFlaggedSame) και
+        // το έντυπο βγάζει τρεις φορές τη διεύθυνση κατοικίας — σωστό, αλλά
+        // δεν ελέγχει τίποτα.
+        'supply_addr_same'   => 0,
+        'billing_addr_same'  => 0,
         'supply_number'      => '12345678901',
         'meter_number'       => 'Μ0000001',
         'supply_street'      => 'Παροχής',

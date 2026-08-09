@@ -37,5 +37,9 @@ Thumbs.db
 # Provider source forms — large, reissued periodically, not ours to version.
 /tools/source-forms/
 
-# Test PDFs from tools/test-orizon-print.php — regenerated on every run.
+# Test PDFs from tools/test-*-print.php — regenerated on every run.
 /tools/output/
+
+# Προσωρινό μήνυμα commit. Τα ελληνικά πολυγραμμικά μηνύματα δεν περνούν με
+# -m μέσα από το cmd.exe, οπότε γράφονται εδώ και δίνονται με `git commit -F`.
+.commit-msg.tmp.txt
