@@ -205,7 +205,9 @@ final class ContractRepository
      *
      * The code is derived from the row id, so it can only be written after the
      * insert. Every creation path calls this rather than formatting its own,
-     * which is how the format stays identical across screens.
+     * which is how the format stays identical across screens. The prefix comes
+     * from the contract's own provider, so a code read aloud on the phone says
+     * which provider it belongs to without anyone opening the row.
      *
      * @return string The code written, or an empty string when the row was
      *                outside the scope or the id was not real.
@@ -216,9 +218,26 @@ final class ContractRepository
             return '';
         }
 
-        $code = ContractCode::forId($contractId);
+        $code = ContractCode::forId($contractId, $this->providerPrefix($contractId));
 
         return $this->update($contractId, $scope, ['code' => $code]) ? $code : '';
+    }
+
+    /** The owning provider's slug, upper-cased for the code prefix; '' when none. */
+    private function providerPrefix(int $contractId): string
+    {
+        global $wpdb;
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $slug = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT p.slug FROM %i c LEFT JOIN %i p ON p.id = c.provider_id WHERE c.id = %d',
+                [$this->table, Tables::name(Tables::PROVIDERS), $contractId]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $slug !== null ? (string) $slug : '';
     }
 
     /**

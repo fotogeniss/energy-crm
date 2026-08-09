@@ -33,4 +33,27 @@ final class ContractCodeTest extends TestCase
         self::assertSame('APP-0000', ContractCode::forId(0));
         self::assertSame('APP-0000', ContractCode::forId(-5));
     }
+
+    /**
+     * Five agents reading codes to each other on the phone need to know which
+     * provider a code belongs to from the code alone — a flat APP- sequence
+     * shared by every provider does not tell them that.
+     */
+    public function testTheProviderPrefixReplacesTheGenericOne(): void
+    {
+        self::assertSame('ORIZON-0035', ContractCode::forId(35, 'orizon'));
+        self::assertSame('PROTERGIA-0012', ContractCode::forId(12, 'protergia'));
+    }
+
+    /** No provider on the row (e.g. a bare lead) falls back to the old scheme. */
+    public function testNoProviderFallsBackToTheGenericPrefix(): void
+    {
+        self::assertSame('APP-0007', ContractCode::forId(7, ''));
+    }
+
+    /** The slug's own casing must not leak into the printed code. */
+    public function testThePrefixIsAlwaysUppercase(): void
+    {
+        self::assertSame('VOLTON-0001', ContractCode::forId(1, 'volton'));
+    }
 }

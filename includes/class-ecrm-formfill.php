@@ -225,7 +225,13 @@ class ECRM_FormFill {
 			'kodikos_timologiou'       => (string) ( $c['invoice_code'] ?? '' ),
 			'onoma_programmatos'       => (string) ( $c['program_name'] ?? '' ),
 			'diarkeia_symvasis'        => $diarkeia,
-			'arithmos_aitisis'         => (string) ( $c['code'] ?? '' ),
+			// «Κωδικός Αίτησης» στο επίσημο έντυπο του παρόχου είναι δικό ΤΟΥ
+			// πεδίο, όχι δικό μας stamp: τύπωνε τον εσωτερικό κωδικό της CRM
+			// (π.χ. APP-0035) εκεί, κάτι που δεν σημαίνει τίποτα για τον
+			// πάροχο. Ο κωδικός παραμένει ως έχει στη βάση/CRM (λίστες,
+			// αναζήτηση, δικό μας contract PDF) — απλώς δεν τυπώνεται πια στο
+			// έντυπο του παρόχου. Αφορά 5 πρότυπα: orizon_mobile, protergia_he,
+			// volton_fa, volton_he, zenith_he.
 			'imerominia_aitisis'       => $created ? gmdate( 'd/m/Y', $created ) : '',
 			'imerominia_liksis'        => ! empty( $c['end_date'] ) ? gmdate( 'd/m/Y', strtotime( (string) $c['end_date'] ) ) : '',
 			'topos_aitisis'            => (string) ( $c['city'] ?? '' ),
