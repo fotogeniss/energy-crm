@@ -1,19 +1,18 @@
 <?php
 
 /**
- * What `transition()` actually does, written down before it moves.
+ * What a status change actually does.
  *
- * This is a characterisation suite, not a specification. Every assertion here
- * describes the behaviour as it is today, deliberately — including the corners
- * that look odd — because the next step of the roadmap lifts this logic out of
- * ECRM_REST and into src/, and the only safe way to move code is to be able to
- * prove afterwards that it still behaves the same.
+ * Written as a characterisation suite the day before the code moved: every
+ * assertion described `ECRM_REST::transition()` as it stood, deliberately,
+ * including the corners that look odd. The move out to ContractLifecycle then
+ * changed exactly one thing in this file — the name of what gets called — and
+ * nothing else. That is what made it safe to make.
  *
- * It earns its place regardless of that move. `transition()` is the single
- * riskiest function in the plugin: it writes the status, appends to the event
- * log, fires the in-app notification, fires the SMS, and schedules a cron job —
- * and every signature in the system passes through it. None of that was covered
- * by anything.
+ * It earns its place regardless. This is the single riskiest path in the
+ * plugin: it writes the status, appends to the event log, fires the in-app
+ * notification, fires the SMS, and schedules a cron job — and every signature
+ * in the system passes through it. None of that was covered by anything.
  *
  * Two things make it safe to run: SMS is off unless `sms_enabled` is '1', which
  * no test sets, and the in-app notification only fires for `pending`, where the
@@ -30,14 +29,20 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
-use ECRM_REST;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\AutoProcess;
+use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\Tables;
+use EnergyCRM\Services;
 
 final class ContractLifecycleTest extends IntegrationTestCase
 {
     private ContractRepository $contracts;
+
+    private ContractLifecycle $lifecycle;
+
+    private AutoProcess $autoProcess;
 
     private int $partner;
 
@@ -48,7 +53,14 @@ final class ContractLifecycleTest extends IntegrationTestCase
         parent::setUp();
 
         $this->contracts = new ContractRepository();
-        $this->partner   = $this->makePartner();
+
+        // The same instances the plugin wired up at boot, on purpose: the
+        // scheduling test depends on AutoProcess having registered its listener
+        // for the lifecycle's status-changed action.
+        $this->lifecycle   = Services::lifecycle();
+        $this->autoProcess = Services::autoProcess();
+
+        $this->partner = $this->makePartner();
 
         $this->contractId = $this->contracts->create(
             ['status' => 'new', 'supply_number' => '12345678901', 'energy_type' => 'power'],
@@ -60,14 +72,14 @@ final class ContractLifecycleTest extends IntegrationTestCase
 
     public function testAPermittedMoveIsApplied(): void
     {
-        self::assertTrue(ECRM_REST::transition($this->contractId, 'processing'));
+        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'processing'));
         self::assertSame('processing', $this->statusOnDisk());
     }
 
     /** An unknown slug is refused before anything is written. */
     public function testAStatusThatDoesNotExistChangesNothing(): void
     {
-        self::assertFalse(ECRM_REST::transition($this->contractId, 'not_a_status'));
+        self::assertFalse($this->lifecycle->moveTo($this->contractId, 'not_a_status'));
 
         self::assertSame('new', $this->statusOnDisk());
         self::assertSame([], $this->eventsFor($this->contractId));
@@ -81,9 +93,9 @@ final class ContractLifecycleTest extends IntegrationTestCase
      */
     public function testAMoveThePipelineForbidsIsRefused(): void
     {
-        ECRM_REST::transition($this->contractId, 'cancelled');
+        $this->lifecycle->moveTo($this->contractId, 'cancelled');
 
-        self::assertFalse(ECRM_REST::transition($this->contractId, 'signed'));
+        self::assertFalse($this->lifecycle->moveTo($this->contractId, 'signed'));
         self::assertSame('cancelled', $this->statusOnDisk());
     }
 
@@ -96,20 +108,20 @@ final class ContractLifecycleTest extends IntegrationTestCase
      */
     public function testMovingToTheStatusItAlreadyHasSucceedsSilently(): void
     {
-        self::assertTrue(ECRM_REST::transition($this->contractId, 'new'));
+        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'new'));
         self::assertSame([], $this->eventsFor($this->contractId));
     }
 
     /** `force` is how a caller says "log it anyway", e.g. to re-run side effects. */
     public function testForceWritesTheEventEvenWithoutAChange(): void
     {
-        self::assertTrue(ECRM_REST::transition($this->contractId, 'new', ['force' => true]));
+        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'new', ['force' => true]));
         self::assertCount(1, $this->eventsFor($this->contractId));
     }
 
     public function testTheEventRecordsWhoMovedItAndFromWhere(): void
     {
-        ECRM_REST::transition($this->contractId, 'processing', [
+        $this->lifecycle->moveTo($this->contractId, 'processing', [
             'user_id' => $this->partner,
             'message' => 'Χειροκίνητη μετάβαση',
         ]);
@@ -133,7 +145,7 @@ final class ContractLifecycleTest extends IntegrationTestCase
      */
     public function testAnUnknownOriginIsStoredAsNull(): void
     {
-        ECRM_REST::transition($this->contractId, 'processing', ['from' => null]);
+        $this->lifecycle->moveTo($this->contractId, 'processing', ['from' => null]);
 
         self::assertNull($this->eventsFor($this->contractId)[0]['from_status']);
     }
@@ -141,7 +153,7 @@ final class ContractLifecycleTest extends IntegrationTestCase
     /** `extra` is how the signature audit columns are written in the same UPDATE. */
     public function testExtraColumnsAreWrittenAlongsideTheStatus(): void
     {
-        ECRM_REST::transition($this->contractId, 'signed', [
+        $this->lifecycle->moveTo($this->contractId, 'signed', [
             'extra' => ['signed_ip' => '198.51.100.7'],
         ]);
 
@@ -160,10 +172,10 @@ final class ContractLifecycleTest extends IntegrationTestCase
      */
     public function testSigningSchedulesTheAutomaticMoveToProcessing(): void
     {
-        ECRM_REST::transition($this->contractId, 'signed');
+        $this->lifecycle->moveTo($this->contractId, 'signed');
 
         self::assertIsInt(
-            wp_next_scheduled(ECRM_REST::AUTO_PROCESS_HOOK, [$this->contractId]),
+            wp_next_scheduled(AutoProcess::HOOK, [$this->contractId]),
             'Nothing will ever move this contract on by itself.'
         );
     }
@@ -172,7 +184,7 @@ final class ContractLifecycleTest extends IntegrationTestCase
     {
         add_filter('ecrm_auto_process_delay', static fn (): int => 42);
 
-        self::assertSame(42, ECRM_REST::auto_process_delay());
+        self::assertSame(42, AutoProcess::delay());
 
         remove_all_filters('ecrm_auto_process_delay');
     }
@@ -188,7 +200,7 @@ final class ContractLifecycleTest extends IntegrationTestCase
     {
         $this->markSignedAt($this->contractId, '-1 hour');
 
-        ECRM_REST::run_auto_process();
+        $this->autoProcess->run();
 
         self::assertSame('processing', $this->statusOnDisk());
     }
@@ -198,7 +210,7 @@ final class ContractLifecycleTest extends IntegrationTestCase
     {
         $this->markSignedAt($this->contractId, 'now');
 
-        ECRM_REST::run_auto_process();
+        $this->autoProcess->run();
 
         self::assertSame('signed', $this->statusOnDisk());
     }
@@ -214,9 +226,9 @@ final class ContractLifecycleTest extends IntegrationTestCase
     {
         $this->markSignedAt($this->contractId, '-1 hour');
 
-        ECRM_REST::transition($this->contractId, 'routed', ['from' => 'signed']);
+        $this->lifecycle->moveTo($this->contractId, 'routed', ['from' => 'signed']);
 
-        ECRM_REST::run_auto_process();
+        $this->autoProcess->run();
 
         self::assertSame('routed', $this->statusOnDisk());
     }

@@ -95,6 +95,10 @@ final class Plugin
         (new DocumentProtection(Services::files()))->register();
         (new Router(...ControllerFactory::all()))->register();
 
+        // Signed contracts advance themselves after a delay: a one-off event per
+        // signature, plus a sweep that heals a missed one.
+        Services::autoProcess()->register();
+
         // The PDF builder listens for its own scheduled events; without this
         // the queue fills and nothing ever drains it.
         Services::documents()->register();

@@ -16,11 +16,12 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_Audit;
-use ECRM_REST;
 use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractAddresses;
+use EnergyCRM\Domain\Contract\ContractLifecycle;
+use EnergyCRM\Domain\Contract\ExtraFields;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\ContractTerm;
 use EnergyCRM\Domain\Customer\PostalAddress;
@@ -43,6 +44,7 @@ final class ContractSaveController implements Controller
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
         private readonly CustomerRepository $customers,
+        private readonly ContractLifecycle $lifecycle,
     ) {
     }
 
@@ -220,7 +222,7 @@ final class ContractSaveController implements Controller
                 ? sanitize_textarea_field((string) $params['notes']) : null,
             'extracted_json'  => isset($params['extracted_json'])
                 ? wp_kses_post((string) $params['extracted_json']) : null,
-            'extra_json'      => ECRM_REST::sanitize_extra_bag($params['extra'] ?? null),
+            'extra_json'      => ExtraFields::toJson($params['extra'] ?? null),
             'start_date'      => $start !== '' ? $start : null,
             'term_months'     => $months > 0 ? $months : null,
             'end_date'        => ContractTerm::endDate(
@@ -304,7 +306,7 @@ final class ContractSaveController implements Controller
         array $customer,
     ): void {
         if ($existing === null) {
-            ECRM_REST::log_creation($contractId, $scope->actorId(), (string) $contract['status']);
+            $this->lifecycle->logCreation($contractId, $scope->actorId(), (string) $contract['status']);
 
             return;
         }

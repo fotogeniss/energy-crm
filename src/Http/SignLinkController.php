@@ -16,10 +16,10 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_Admin;
-use ECRM_REST;
 use ECRM_Tracking;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Persistence\ContractRepository;
 use WP_REST_Request;
@@ -33,6 +33,7 @@ final class SignLinkController implements Controller
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
         private readonly DocumentQueue $documents,
+        private readonly ContractLifecycle $lifecycle,
     ) {
     }
 
@@ -64,7 +65,7 @@ final class SignLinkController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
         }
 
-        $moved = ECRM_REST::transition($id, self::TARGET_STATUS, [
+        $moved = $this->lifecycle->moveTo($id, self::TARGET_STATUS, [
             'user_id' => $scope->actorId(),
             'message' => 'Αποστολή για υπογραφή — αναμονή υπογραφής πελάτη',
         ]);

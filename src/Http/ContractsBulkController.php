@@ -21,10 +21,10 @@ namespace EnergyCRM\Http;
 
 use ECRM_Docs;
 use ECRM_Export;
-use ECRM_REST;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\FileRepository;
@@ -45,6 +45,7 @@ final class ContractsBulkController implements Controller
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
         private readonly FileRepository $files,
+        private readonly ContractLifecycle $lifecycle,
     ) {
     }
 
@@ -144,7 +145,7 @@ final class ContractsBulkController implements Controller
                 continue;
             }
 
-            $moved = ECRM_REST::transition($id, $target->value, [
+            $moved = $this->lifecycle->moveTo($id, $target->value, [
                 'user_id' => (int) $row['partner_user_id'],
                 'from'    => $from,
                 'message' => 'Μαζική αλλαγή κατάστασης',

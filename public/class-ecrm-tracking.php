@@ -256,21 +256,18 @@ class ECRM_Tracking {
 		}
 
 		// Advance status + record the signature audit fields, via the centralized
-		// transition (logs the event and fires the configured customer messaging).
-		if ( class_exists( 'ECRM_REST' ) ) {
-			ECRM_REST::transition( $id, 'signed', [
-				'from'    => (string) $row['status'],
-				'message' => 'Ο πελάτης υπέγραψε ηλεκτρονικά από τον σύνδεσμο παρακολούθησης' . ( $ip ? ' (IP ' . $ip . ')' : '' ),
-				'extra'   => [ 'signed_at' => $now, 'signed_ip' => $ip ],
-				'inapp'   => false, // notify_signed() below handles the in-app notification.
-			] );
-		} else {
-			$wpdb->update( $ct, [ 'status' => 'signed', 'signed_at' => $now, 'signed_ip' => $ip, 'updated_at' => $now ], [ 'id' => $id ] );
-			$wpdb->insert( ECRM_DB::table( 'events' ), [
-				'contract_id' => $id, 'user_id' => 0, 'type' => 'signed',
-				'message' => 'Ο πελάτης υπέγραψε ηλεκτρονικά από τον σύνδεσμο παρακολούθησης' . ( $ip ? ' (IP ' . $ip . ')' : '' ),
-			] );
-		}
+		// lifecycle (logs the event and fires the configured customer messaging).
+		//
+		// The hand-rolled fallback that used to sit here, for the case where
+		// ECRM_REST was missing, is gone: it wrote a different event type for the
+		// same act, so the one path nobody could reach was also the only one that
+		// logged it wrong.
+		\EnergyCRM\Services::lifecycle()->moveTo( $id, 'signed', [
+			'from'    => (string) $row['status'],
+			'message' => 'Ο πελάτης υπέγραψε ηλεκτρονικά από τον σύνδεσμο παρακολούθησης' . ( $ip ? ' (IP ' . $ip . ')' : '' ),
+			'extra'   => [ 'signed_at' => $now, 'signed_ip' => $ip ],
+			'inapp'   => false, // notify_signed() below handles the in-app notification.
+		] );
 
 		// Refresh the attached provider-form PDF (now carries the signature) + in-app notification.
 		if ( class_exists( 'ECRM_REST' ) ) {

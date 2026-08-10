@@ -4,9 +4,9 @@
  * POST   /contracts/{id}/status  move a contract along the pipeline
  * DELETE /contracts/{id}         remove it, documents included
  *
- * The transition itself still runs through ECRM_REST::transition(), which owns
- * the event log, the in-app notification and the SMS. That is a service, not a
- * route — it moves under src/ on its own turn.
+ * The transition itself belongs to ContractLifecycle, which owns the event log,
+ * the in-app notification and the SMS. This controller decides whether the
+ * caller may ask; the lifecycle decides what asking means.
  *
  * @package EnergyCRM
  */
@@ -16,9 +16,9 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_Docs;
-use ECRM_REST;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\FileRepository;
@@ -31,6 +31,7 @@ final class ContractStatusController implements Controller
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
         private readonly FileRepository $files,
+        private readonly ContractLifecycle $lifecycle,
     ) {
     }
 
@@ -110,7 +111,7 @@ final class ContractStatusController implements Controller
             }
         }
 
-        ECRM_REST::transition($id, $target->value, [
+        $this->lifecycle->moveTo($id, $target->value, [
             'user_id' => $scope->actorId(),
             'from'    => $from,
             'message' => (string) $request['message'] ?: null,

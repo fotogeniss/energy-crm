@@ -23,6 +23,7 @@ namespace EnergyCRM\Http;
 
 use ECRM_Files;
 use ECRM_REST;
+use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\SignatureRepository;
@@ -40,6 +41,7 @@ final class SigningController implements Controller
     public function __construct(
         private readonly SignatureRepository $signatures,
         private readonly FileRepository $files,
+        private readonly ContractLifecycle $lifecycle,
     ) {
     }
 
@@ -117,7 +119,7 @@ final class SigningController implements Controller
 
         $contractId = (int) $record['contract_id'];
 
-        ECRM_REST::transition($contractId, 'signed', [
+        $this->lifecycle->moveTo($contractId, 'signed', [
             'from'    => null,
             'message' => 'Υπεγράφη από πελάτη' . ($name !== '' ? ' (' . $name . ')' : ''),
             'extra'   => [

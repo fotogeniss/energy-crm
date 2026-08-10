@@ -18,7 +18,7 @@ use ECRM_DB;
 use ECRM_Files;
 use ECRM_Notifications;
 use ECRM_Providers;
-use ECRM_REST;
+use EnergyCRM\Domain\Contract\AutoProcess;
 use EnergyCRM\Infrastructure\DocumentProtection;
 use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
@@ -58,8 +58,7 @@ final class Installer
         ECRM_Notifications::unschedule();
         Retention::unschedule();
         DocumentProtection::unschedule();
-        wp_clear_scheduled_hook(ECRM_REST::AUTO_PROCESS_HOOK);
-        wp_clear_scheduled_hook(ECRM_REST::AUTO_PROCESS_HOOK . '_sweep');
+        AutoProcess::unschedule();
         flush_rewrite_rules();
     }
 

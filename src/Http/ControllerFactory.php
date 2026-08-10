@@ -48,22 +48,23 @@ final class ControllerFactory
      */
     public static function all(): array
     {
-        $scope = Services::scopeResolver();
+        $scope     = Services::scopeResolver();
+        $lifecycle = Services::lifecycle();
 
         return [
             // Contracts — read, write, status, bulk, documents.
             new ContractsReadController($scope, Services::contracts(), Services::events(), Services::files()),
-            new ContractSaveController($scope, Services::contracts(), Services::customers()),
-            new ContractStatusController($scope, Services::contracts(), Services::files()),
-            new ContractsBulkController($scope, Services::contracts(), Services::files()),
+            new ContractSaveController($scope, Services::contracts(), Services::customers(), $lifecycle),
+            new ContractStatusController($scope, Services::contracts(), Services::files(), $lifecycle),
+            new ContractsBulkController($scope, Services::contracts(), Services::files(), $lifecycle),
             new ContractDocumentsController($scope, Services::contracts(), Services::files()),
             new DocumentsController($scope, Services::contracts(), Services::files()),
             new DuplicateCheckController($scope, Services::contracts()),
             new RenewalsController($scope, Services::contracts(), Services::events()),
 
             // Signing — the two public routes and the link that creates them.
-            new SigningController(Services::signatures(), Services::files()),
-            new SignLinkController($scope, Services::contracts(), Services::documents()),
+            new SigningController(Services::signatures(), Services::files(), $lifecycle),
+            new SignLinkController($scope, Services::contracts(), Services::documents(), $lifecycle),
 
             // People.
             new CustomersController($scope, Services::customers()),

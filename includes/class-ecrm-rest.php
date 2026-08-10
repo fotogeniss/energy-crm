@@ -17,49 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use EnergyCRM\Domain\Contract\ContractStatus;
-
 class ECRM_REST {
 
 	const NS = 'ecrm/v1';
-
-	/**
-	 * Public entry point for the extended-fields bag, used by
-	 * EnergyCRM\Http\ContractSaveController. Moves under src/ with the rest of
-	 * the contract-writing logic.
-	 */
-	public static function sanitize_extra_bag( $extra ): ?string {
-		return self::sanitize_extra( $extra );
-	}
-
-	/** Record the "contract created" entry in the event log. */
-	public static function log_creation( int $contract_id, int $user_id, string $status ): void {
-		\EnergyCRM\Services::events()->record( $contract_id, $user_id, 'created', [
-			'to_status' => $status,
-			'message'   => 'Αποθήκευση αίτησης',
-		] );
-	}
-
-	/** Sanitize the extended fields bag and JSON-encode it. */
-	private static function sanitize_extra( $extra ): ?string {
-		if ( ! is_array( $extra ) || ! $extra ) {
-			return null;
-		}
-		$clean = [];
-		foreach ( $extra as $k => $v ) {
-			$key = sanitize_key( $k );
-			if ( $key === '' ) { continue; }
-			$clean[ $key ] = sanitize_text_field( (string) $v );
-		}
-		return $clean ? wp_json_encode( $clean ) : null;
-	}
-
-	const AUTO_PROCESS_HOOK = 'ecrm_auto_process';
-
-	/** Seconds to wait after signing before auto-advancing to "processing". */
-	public static function auto_process_delay(): int {
-		return (int) apply_filters( 'ecrm_auto_process_delay', 5 * MINUTE_IN_SECONDS );
-	}
 
 	public static function init(): void {
 		add_action( 'rest_api_init', [ __CLASS__, 'routes' ] );
@@ -67,51 +27,7 @@ class ECRM_REST {
 		// UI always reflects the latest data right after a save.
 		add_filter( 'rest_post_dispatch', [ __CLASS__, 'no_cache_headers' ], 10, 3 );
 
-		// Auto-advance signed contracts to "processing" after a delay.
-		add_action( self::AUTO_PROCESS_HOOK, [ __CLASS__, 'run_auto_process' ] );
-		add_filter( 'cron_schedules', [ __CLASS__, 'cron_schedules' ] );
-		// Self-healing safety sweep (in case a one-off event was missed).
-		if ( ! wp_next_scheduled( self::AUTO_PROCESS_HOOK . '_sweep' ) ) {
-			wp_schedule_event( time() + 300, 'ecrm_5min', self::AUTO_PROCESS_HOOK . '_sweep' );
-		}
-		add_action( self::AUTO_PROCESS_HOOK . '_sweep', [ __CLASS__, 'run_auto_process' ] );
-	}
-
-	/** Add a 5-minute cron interval. */
-	public static function cron_schedules( $schedules ) {
-		if ( ! isset( $schedules['ecrm_5min'] ) ) {
-			$schedules['ecrm_5min'] = [ 'interval' => 300, 'display' => 'Every 5 minutes (Energy CRM)' ];
-		}
-		return $schedules;
-	}
-
-	/**
-	 * Promote contracts that were signed at least `auto_process_delay()` ago from
-	 * "signed" to "processing". Only touches rows still in "signed", so it never
-	 * overrides an agent who already moved the contract forward.
-	 */
-	public static function run_auto_process( $only_id = 0 ): void {
-		global $wpdb;
-		$ct    = ECRM_DB::table( 'contracts' );
-		$delay = self::auto_process_delay();
-		// signed_at is stored in site-local time via current_time('mysql'); compare locally.
-		$cutoff_local = date( 'Y-m-d H:i:s', current_time( 'timestamp' ) - $delay );
-
-		$sql  = "SELECT id FROM {$ct} WHERE status = 'signed' AND signed_at IS NOT NULL AND signed_at <= %s";
-		$args = [ $cutoff_local ];
-		if ( (int) $only_id > 0 ) {
-			$sql   .= ' AND id = %d';
-			$args[] = (int) $only_id;
-		}
-		$sql .= ' LIMIT 200';
-
-		$ids = $wpdb->get_col( $wpdb->prepare( $sql, $args ) );
-		foreach ( $ids as $id ) {
-			self::transition( (int) $id, 'processing', [
-				'from'    => 'signed',
-				'message' => 'Αυτόματη μετάβαση σε επεξεργασία (' . round( $delay / 60 ) . ' λεπτά μετά την υπογραφή)',
-			] );
-		}
+		// The auto-processing cron moved to AutoProcess, registered by Plugin.
 	}
 
 	public static function no_cache_headers( $response, $server, $request ) {
@@ -130,9 +46,10 @@ class ECRM_REST {
 	 * EnergyCRM\Http\Router. The map below is kept as a finding aid — it is the
 	 * only place that lists the whole HTTP surface next to its old home.
 	 *
-	 * What is left in this class is not REST at all: transition(), the
-	 * notification helpers and store_contract_pdf() are the contract lifecycle,
-	 * and they are the next thing to move.
+	 * What is left in this class is not REST either: store_contract_pdf() and the
+	 * notification helpers. The status transition and the auto-processing cron
+	 * left in step 10 — see EnergyCRM\Domain\Contract\ContractLifecycle and
+	 * AutoProcess. Those two are the last of it.
 	 */
 	public static function routes(): void {
 		// GET /providers -> EnergyCRM\Http\CatalogueController
@@ -190,81 +107,6 @@ class ECRM_REST {
 		// POST /contracts/{id}/sign-link -> EnergyCRM\Http\SignLinkController
 
 		// GET/POST /sign/{token} -> EnergyCRM\Http\SigningController
-	}
-
-	// ---------------------------------------------------------------------
-	// Change status (+ log event), ownership-guarded
-	// ---------------------------------------------------------------------
-	/**
-	 * Centralized contract status transition.
-	 *
-	 * Every status change in the system should go through here so the lifecycle
-	 * behaves identically everywhere: it updates the status (+ updated_at, plus any
-	 * extra columns such as signature audit fields), records a status_change event,
-	 * and fires the in-app + customer (SMS/Viber) notifications.
-	 *
-	 * @param int    $id   Contract id.
-	 * @param string $to   Target status slug (must exist in ECRM_DB::statuses()).
-	 * @param array  $opts user_id, from, message, extra(array of cols), inapp(bool),
-	 *                     sms(bool), force(bool).
-	 * @return bool True if applied (or already at target), false on invalid status.
-	 */
-	public static function transition( int $id, string $to, array $opts = [] ): bool {
-		global $wpdb;
-		$ct     = ECRM_DB::table( 'contracts' );
-		$target = ContractStatus::tryFromSlug( $to );
-		if ( $target === null ) {
-			return false;
-		}
-
-		$from = array_key_exists( 'from', $opts )
-			? (string) $opts['from']
-			: (string) $wpdb->get_var( $wpdb->prepare( "SELECT status FROM {$ct} WHERE id = %d", $id ) );
-
-		if ( $from === $to && empty( $opts['force'] ) ) {
-			return true;
-		}
-
-		// Refuse moves the pipeline does not allow — reviving a cancelled
-		// contract, or rewinding a signed one past its own signature.
-		$current = ContractStatus::tryFromSlug( $from );
-		if ( $current !== null && ! $current->canMoveTo( $target ) ) {
-			return false;
-		}
-
-		$data = [ 'status' => $to, 'updated_at' => current_time( 'mysql' ) ];
-		if ( ! empty( $opts['extra'] ) && is_array( $opts['extra'] ) ) {
-			$data = array_merge( $data, $opts['extra'] );
-		}
-		$wpdb->update( $ct, $data, [ 'id' => $id ] );
-
-		$wpdb->insert( ECRM_DB::table( 'events' ), [
-			'contract_id' => $id,
-			'user_id'     => (int) ( $opts['user_id'] ?? 0 ),
-			'type'        => 'status_change',
-			'from_status' => ( $from !== '' ? $from : null ),
-			'to_status'   => $to,
-			'message'     => array_key_exists( 'message', $opts ) ? $opts['message'] : null,
-		] );
-
-		if ( ( $opts['inapp'] ?? true ) && class_exists( 'ECRM_Notifications' ) ) {
-			ECRM_Notifications::notify_status_change( $id, $to, (int) ( $opts['user_id'] ?? 0 ) );
-		}
-		if ( ( $opts['sms'] ?? true ) && class_exists( 'ECRM_Messaging' ) ) {
-			ECRM_Messaging::on_status_change( $id, $to );
-		}
-
-		// When a contract is signed, queue its automatic move to "processing" so it
-		// lands in the back-office queue a few minutes later without manual action.
-		// The contract id is passed as an arg so several signatures within the same
-		// window each get their own event (WP de-dupes identical no-arg events).
-		if ( $to === 'signed' ) {
-			$delay = self::auto_process_delay();
-			if ( $delay > 0 ) {
-				wp_schedule_single_event( time() + $delay + 5, self::AUTO_PROCESS_HOOK, [ (int) $id ] );
-			}
-		}
-		return true;
 	}
 
 	public static function can_manage_team(): bool {
