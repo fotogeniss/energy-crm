@@ -81,6 +81,17 @@ set PATH=%PATH%;C:\Program Files\Git\cmd
 Αυτή η γραμμή είναι σύνταξη του cmd και **αποτυγχάνει στο PowerShell** — εκεί
 θα ήταν `$env:PATH += ";C:\Program Files\Git\cmd"`. Μην την αντιγράψεις τυφλά.
 
+**Πολυγραμμικά μηνύματα commit: πάντα με `-F`, ποτέ με `-m`.** Το PowerShell τα
+δέχεται με συνέχιση `>>`· το cmd.exe **όχι** — κρατά μόνο την πρώτη γραμμή και
+προσπαθεί να εκτελέσει τις υπόλοιπες ως εντολές. Γράψε το μήνυμα σε
+`.commit-msg.tmp.txt` (είναι ήδη στο `.gitignore`) και:
+
+```
+git commit -F .commit-msg.tmp.txt
+```
+
+Δουλεύει και στα δύο shells, και λύνει μαζί και τα ελληνικά.
+
 `composer check` = phpcs + phpstan (level 6) + phpunit. Ο pre-commit hook το
 τρέχει και μπλοκάρει το commit αν αποτύχει. **Πρέπει να είναι πράσινο.**
 
