@@ -59,13 +59,37 @@ final class ContractDocumentsController implements Controller
             'methods'             => 'GET',
             'callback'            => [$this, 'export'],
             'permission_callback' => Guards::needs(Capability::EXPORT_DATA),
+            /*
+             * "No filter" is the normal case here, and every optional argument
+             * below has to say so in a way WordPress accepts. It did not:
+             * validation runs before the permission callback, so a schema that
+             * rejects its own defaults answers 400 to everyone, always.
+             *
+             *   - `from`/`to` defaulted to '' against a pattern that demands a
+             *     date. Asking for an export without a date range — the usual
+             *     way to ask — was rejected before the handler ran.
+             *   - `partner` is declared integer, and the export dialog sends
+             *     `partner=` for "everyone". An empty string is not an integer.
+             *
+             * Both are widened rather than tightened at the caller: the query
+             * string is already out there in browsers, and a stricter schema
+             * would keep failing it.
+             */
             'args'                => [
                 'scope'   => ['type' => 'string', 'default' => 'own', 'enum' => ['own', 'team']],
-                'partner' => ['type' => 'integer', 'default' => 0, 'minimum' => 0],
+                'partner' => [
+                    'type'              => 'integer',
+                    'default'           => 0,
+                    'minimum'           => 0,
+                    'validate_callback' => static fn (mixed $value): bool =>
+                        $value === '' || rest_is_integer($value),
+                    // Replaces the minimum, which the custom validator skips.
+                    'sanitize_callback' => 'absint',
+                ],
                 'status'  => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field'],
                 'q'       => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field'],
-                'from'    => ['type' => 'string', 'default' => '', 'pattern' => '^\d{4}-\d{2}-\d{2}$'],
-                'to'      => ['type' => 'string', 'default' => '', 'pattern' => '^\d{4}-\d{2}-\d{2}$'],
+                'from'    => ['type' => 'string', 'default' => '', 'pattern' => '^(\d{4}-\d{2}-\d{2})?$'],
+                'to'      => ['type' => 'string', 'default' => '', 'pattern' => '^(\d{4}-\d{2}-\d{2})?$'],
             ],
         ]);
     }

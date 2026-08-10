@@ -100,6 +100,7 @@ class ECRM_App {
 
 		ob_start();
 		?>
+		<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $style is a whole attribute fragment, ' style="…"', whose only variable part went through esc_attr() where it was built. Escaping it here would escape the attribute syntax itself. ?>
 		<div class="ecrm ecrm-app" id="ecrm-app" lang="el" data-view="dashboard" data-collapsed="0"<?php echo $style; ?>>
 
 			<div class="ecrm-backdrop" data-mobnav-close></div>

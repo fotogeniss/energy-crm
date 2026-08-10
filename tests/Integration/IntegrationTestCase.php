@@ -26,8 +26,10 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use EnergyCRM\Access\Roles;
 use EnergyCRM\Persistence\Tables;
 use PHPUnit\Framework\TestCase;
+use WP_User;
 
 abstract class IntegrationTestCase extends TestCase
 {
@@ -122,6 +124,32 @@ abstract class IntegrationTestCase extends TestCase
         ]);
 
         self::assertIsInt($userId, 'Could not create a test user.');
+
+        return $userId;
+    }
+
+    /**
+     * A partner who also holds a CRM role, so the REST guards let them in.
+     *
+     * Separate from makePartner() on purpose: most of this suite calls
+     * repositories directly and has no use for capabilities, while anything
+     * going through a route needs them or never reaches the handler.
+     */
+    protected function makeCrmUser(string $role = Roles::SELLER): int
+    {
+        self::assertNotNull(
+            get_role($role),
+            "The role {$role} is not registered — did activation run Roles::sync()?"
+        );
+
+        $userId = $this->makePartner();
+
+        $user = get_user_by('id', $userId);
+        self::assertInstanceOf(WP_User::class, $user);
+
+        // Replaces 'subscriber' rather than adding to it: a CRM user is one
+        // thing, and two roles would make current_user_can() answer for both.
+        $user->set_role($role);
 
         return $userId;
     }

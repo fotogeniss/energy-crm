@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use EnergyCRM\Http\Guards;
+
 class ECRM_KB {
 
 	public static function init(): void {
@@ -21,15 +23,19 @@ class ECRM_KB {
 	}
 
 	public static function routes(): void {
+		// ECRM_REST::can_use() went away with the routes that moved to
+		// src/Http, and this reference was left pointing at nothing: PHP 8
+		// throws from call_user_func, so both endpoints answered 500 to
+		// everyone. Guards::crmUser() is the same floor, defined once.
 		register_rest_route( ECRM_REST::NS, '/kb', [
 			'methods'             => 'GET',
 			'callback'            => [ __CLASS__, 'list_entries' ],
-			'permission_callback' => [ 'ECRM_REST', 'can_use' ],
+			'permission_callback' => Guards::crmUser(),
 		] );
 		register_rest_route( ECRM_REST::NS, '/kb/ask', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'ask' ],
-			'permission_callback' => [ 'ECRM_REST', 'can_use' ],
+			'permission_callback' => Guards::crmUser(),
 		] );
 	}
 

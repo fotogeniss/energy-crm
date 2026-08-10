@@ -14,14 +14,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use EnergyCRM\Http\Guards;
+
 class ECRM_Assistant {
 
 	public static function init(): void {
 		add_action( 'rest_api_init', function () {
+			// See the note in ECRM_KB::routes(): ECRM_REST::can_use() no longer
+			// exists, so this route answered 500 rather than checking anything.
 			register_rest_route( ECRM_REST::NS, '/assistant', [
 				'methods'             => 'POST',
 				'callback'            => [ __CLASS__, 'chat' ],
-				'permission_callback' => [ 'ECRM_REST', 'can_use' ],
+				'permission_callback' => Guards::crmUser(),
 			] );
 		} );
 	}

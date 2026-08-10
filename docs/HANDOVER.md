@@ -224,9 +224,10 @@ bootstrap **αρνείται να τρέξει** αν η βάση δοκιμών
 
 ### 6γ. Γενικές εκκρεμότητες του project
 
-- **Integration tests για τους REST controllers** μέσω `WP_REST_Server` —
-  τώρα ελέγχονται τα repositories, όχι τα `permission_callback` όπως τα βλέπει
-  ο browser. Το πιο πολύτιμο επόμενο βήμα.
+- ~~Integration tests για τους REST controllers~~ — έγινε 2026-08-10.
+  `RestRouteGuardTest` + `ContractRestAccessTest`, 37 tests πράσινα. Βρήκαν δύο
+  πραγματικά σφάλματα (νεκρή `ECRM_REST::can_use`· `/contracts/export` που
+  απαντούσε 400 σε όλους). Βλ. CHANGELOG 2026-08-10.
 - Βήμα 10 του roadmap: κύκλος ζωής συμβολαίου εκτός `ECRM_REST`, container
   αντί για 16 ορίσματα στον `Router`.
 - Βήμα 9: frontend build step, τέλος στο χειροκίνητο `innerHTML`.

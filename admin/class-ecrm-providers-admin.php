@@ -124,7 +124,7 @@ JS;
 			echo '<td>' . (int) $r['programs'] . '</td>';
 			echo '<td>' . ( $r['active'] ? '✔' : '—' ) . '</td>';
 			echo '<td>' . (int) $r['sort_order'] . '</td>';
-			echo '<td><a class="button button-small" href="' . $edit . '">Επεξεργασία</a></td>';
+			echo '<td><a class="button button-small" href="' . $edit . '">Επεξεργασία</a></td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $edit went through esc_url() where it was built, a few lines up.
 			echo '</tr>';
 		}
 		echo '</tbody></table>';
@@ -162,7 +162,7 @@ JS;
 
 	private static function render_provider_edit( array $p ): void {
 		$back = esc_url( admin_url( 'admin.php?page=energy-crm-providers' ) );
-		echo '<p><a href="' . $back . '">&larr; Πίσω στη λίστα</a></p>';
+		echo '<p><a href="' . $back . '">&larr; Πίσω στη λίστα</a></p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $back went through esc_url() on the line above.
 		self::render_provider_form( $p );
 
 		// Delete provider
@@ -189,7 +189,7 @@ JS;
 		foreach ( (array) $rows as $g ) {
 			echo '<tr>';
 			echo '<td><strong>' . esc_html( $g['name'] ) . '</strong></td>';
-			echo '<td>' . ( ECRM_DB::energy_label( (string) $g['energy_type'] ) ) . '</td>';
+			echo '<td>' . ( ECRM_DB::energy_label( (string) $g['energy_type'] ) ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- energy_label() returns one of three literal labels and falls back to a literal; the stored value never reaches the page.
 			echo '<td>' . esc_html( $cats[ $g['category'] ] ?? $g['category'] ) . '</td>';
 			echo '<td>' . esc_html( $pts[ $g['price_type'] ] ?? $g['price_type'] ) . '</td>';
 			echo '<td>' . ( $g['price_kwh'] !== null && $g['price_kwh'] !== '' ? esc_html( number_format( (float) $g['price_kwh'], 5 ) ) : '—' ) . '</td>';
@@ -197,7 +197,7 @@ JS;
 			echo '<td>' . ( $g['active'] ? '✔' : '—' ) . '</td>';
 			echo '<td><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" onsubmit="return confirm(\'Διαγραφή προγράμματος;\');" style="display:inline">';
 			wp_nonce_field( 'ecrm_delete_program' );
-			echo '<input type="hidden" name="action" value="ecrm_delete_program"><input type="hidden" name="id" value="' . (int) $g['id'] . '"><input type="hidden" name="provider_id" value="' . $provider_id . '">';
+			echo '<input type="hidden" name="action" value="ecrm_delete_program"><input type="hidden" name="id" value="' . (int) $g['id'] . '"><input type="hidden" name="provider_id" value="' . (int) $provider_id . '">';
 			echo '<button class="button button-small button-link-delete">Διαγραφή</button></form></td>';
 			echo '</tr>';
 		}

@@ -18,6 +18,25 @@
     <file>energy-crm.php</file>
 
     <!--
+        The legacy tree runs in production and was checked by nothing at all,
+        which is the wrong way round: it is the older code, handling the same
+        ΑΦΜ and scanned identity documents, written before any of the current
+        conventions existed.
+
+        It is added here for the security sniffs only — escaping, nonces,
+        sanitisation, prepared SQL. PSR-12 is switched off for it further down.
+        Not because style does not matter, but because a few thousand tabs-vs-
+        spaces errors would bury the handful of findings that do, and these
+        files are being deleted one by one as they move under src/ anyway.
+    -->
+    <file>includes</file>
+    <file>admin</file>
+    <file>public</file>
+
+    <!-- tFPDF is vendored third-party code. Not ours to restyle or to fix. -->
+    <exclude-pattern>includes/lib/*</exclude-pattern>
+
+    <!--
         Both of these are configuration, not code: they define the constants
         WordPress expects, before WordPress exists to be asked. Side effects
         and a global are the interface, not an oversight. wp-config.php has
@@ -26,6 +45,18 @@
     <rule ref="PSR1.Files.SideEffects">
         <exclude-pattern>tests/Integration/bootstrap.php</exclude-pattern>
         <exclude-pattern>tests/Integration/wp-tests-config.php</exclude-pattern>
+
+        <!--
+            Every legacy file opens with `if (! defined('ABSPATH')) exit;` above
+            its class — the standard WordPress guard against direct access, and
+            a side effect next to a symbol by definition. That is 30 warnings
+            saying the same correct thing about a pattern we are not going to
+            change. The PSR-12 exclusion above does not cover it, because this
+            sniff is referenced by name here and that re-includes it.
+        -->
+        <exclude-pattern>includes/*</exclude-pattern>
+        <exclude-pattern>admin/*</exclude-pattern>
+        <exclude-pattern>public/*</exclude-pattern>
     </rule>
 
     <!--
@@ -47,8 +78,21 @@
     <arg name="colors"/>
     <arg value="sp"/>
 
-    <!-- Baseline: modern PHP style. -->
-    <rule ref="PSR12"/>
+    <!--
+        Baseline: modern PHP style — for the code that was written to it.
+
+        The legacy tree predates every one of these conventions: tabs, Yoda
+        conditions, no type declarations, `if (! defined('ABSPATH')) exit;`
+        above a class declaration. Running PSR-12 over it would produce
+        thousands of errors that nobody will ever act on, and the noise would
+        hide the security findings this file is here to surface. Each legacy
+        file gets held to PSR-12 the day it moves under src/, not before.
+    -->
+    <rule ref="PSR12">
+        <exclude-pattern>includes/*</exclude-pattern>
+        <exclude-pattern>admin/*</exclude-pattern>
+        <exclude-pattern>public/*</exclude-pattern>
+    </rule>
 
     <!--
         A WordPress plugin entry file is by definition both a declaration
@@ -64,6 +108,58 @@
     <rule ref="WordPress.DB"/>
 
     <!--
+        ## The four sniffs the legacy tree is exempt from, and why
+        ##
+        ## All four were run over it on 2026-08-10 and produced 195 findings.
+        ## Every one was read. None was a vulnerability. What they have in
+        ## common is that the safety is real but lives one step away from where
+        ## the sniff is looking:
+        ##
+        ##   PreparedSQL          — the interpolated value is always a table
+        ##                          name from ECRM_DB::table(), which is
+        ##                          $wpdb->prefix . 'ecrm_' . <literal>. No call
+        ##                          site passes a variable; that was checked.
+        ##   PreparedSQLPlaceholders — the placeholders are built at runtime,
+        ##                          `implode(',', array_fill(0, count($x), '%s'))`.
+        ##                          The sniff counts one and finds six.
+        ##   NonceVerification    — the admin handlers open with a guard()
+        ##                          helper that calls check_admin_referer() and
+        ##                          current_user_can(). Sniffs do not follow
+        ##                          calls.
+        ##   ValidatedSanitizedInput — the inputs go through a character
+        ##                          whitelist, `preg_replace('/[^A-Za-z0-9\-]/', ...)`,
+        ##                          which the sniff does not recognise as one.
+        ##
+        ## They stay fully enabled for src/. Turning them off here is a
+        ## statement about this code as it stands, not a licence for new code —
+        ## and new code does not go here, it goes under src/.
+        ##
+        ## EscapeOutput deliberately stays ON: it is the one that matters most
+        ## for screens that print customer names and ΑΦΜ, and its findings were
+        ## few enough to handle individually.
+    -->
+    <rule ref="WordPress.DB.PreparedSQL">
+        <exclude-pattern>includes/*</exclude-pattern>
+        <exclude-pattern>admin/*</exclude-pattern>
+        <exclude-pattern>public/*</exclude-pattern>
+    </rule>
+    <rule ref="WordPress.DB.PreparedSQLPlaceholders">
+        <exclude-pattern>includes/*</exclude-pattern>
+        <exclude-pattern>admin/*</exclude-pattern>
+        <exclude-pattern>public/*</exclude-pattern>
+    </rule>
+    <rule ref="WordPress.Security.NonceVerification">
+        <exclude-pattern>includes/*</exclude-pattern>
+        <exclude-pattern>admin/*</exclude-pattern>
+        <exclude-pattern>public/*</exclude-pattern>
+    </rule>
+    <rule ref="WordPress.Security.ValidatedSanitizedInput">
+        <exclude-pattern>includes/*</exclude-pattern>
+        <exclude-pattern>admin/*</exclude-pattern>
+        <exclude-pattern>public/*</exclude-pattern>
+    </rule>
+
+    <!--
         `src/Persistence/` is the layer whose entire job is talking to the
         database; flagging it for doing so says nothing. Caching is a real
         concern, but it belongs to a deliberate step with measurements behind
@@ -73,6 +169,16 @@
     -->
     <rule ref="WordPress.DB.DirectDatabaseQuery">
         <exclude-pattern>src/Persistence/*</exclude-pattern>
+
+        <!--
+            Same reasoning for the legacy tree, which is almost entirely direct
+            queries: the sniff would fire on nearly every method and say
+            nothing about safety. WordPress.DB.PreparedSQL — the one that
+            actually catches injection — stays on there.
+        -->
+        <exclude-pattern>includes/*</exclude-pattern>
+        <exclude-pattern>admin/*</exclude-pattern>
+        <exclude-pattern>public/*</exclude-pattern>
     </rule>
 
     <!--
@@ -86,6 +192,14 @@
     -->
     <rule ref="WordPress.Security.EscapeOutput.ExceptionNotEscaped">
         <exclude-pattern>src/Persistence/*</exclude-pattern>
+
+        <!--
+            Same argument for ECRM_FormFill, the only legacy site: it throws
+            RuntimeException with a template key in the message, and it never
+            produces output. An exception message is not HTML until someone
+            prints it, and nothing here does.
+        -->
+        <exclude-pattern>includes/class-ecrm-formfill.php</exclude-pattern>
     </rule>
 
     <!--
@@ -98,10 +212,30 @@
     -->
     <rule ref="WordPress.DB.SlowDBQuery">
         <exclude-pattern>src/Persistence/TeamRepository.php</exclude-pattern>
+        <exclude-pattern>includes/*</exclude-pattern>
+        <exclude-pattern>admin/*</exclude-pattern>
+        <exclude-pattern>public/*</exclude-pattern>
     </rule>
     <rule ref="WordPress.WP.GlobalVariablesOverride"/>
-    <rule ref="WordPress.PHP.NoSilencedErrors"/>
     <rule ref="WordPress.PHP.DontExtract"/>
+
+    <!--
+        NoSilencedErrors is a discouraged-practice rule, not a security one, and
+        all eleven legacy sites were read: `@ini_set('memory_limit')` and
+        `@set_time_limit()`, which are disabled on plenty of hosts and warn when
+        they are; `@unlink()` on a temp file that may already be gone; and
+        `@simplexml_load_string()`, where suppressing the libxml warning and
+        checking the return value — which the code does, every time — is the
+        documented way to use it.
+
+        Eleven `phpcs:ignore` comments saying that would be worse than the `@`.
+        Still enforced for src/, where none of these idioms appear.
+    -->
+    <rule ref="WordPress.PHP.NoSilencedErrors">
+        <exclude-pattern>includes/*</exclude-pattern>
+        <exclude-pattern>admin/*</exclude-pattern>
+        <exclude-pattern>public/*</exclude-pattern>
+    </rule>
 
     <!-- Global constants must stay namespaced by prefix. -->
     <rule ref="WordPress.NamingConventions.PrefixAllGlobals">

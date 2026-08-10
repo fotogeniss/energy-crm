@@ -17,6 +17,9 @@ class ECRM_PDF {
 
 	private static function boot(): void {
 		if ( ! defined( 'FPDF_FONTPATH' ) ) {
+			// The name is tFPDF's, not ours: the library reads this exact
+			// constant. Prefixing it would simply mean the fonts are not found.
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound
 			define( 'FPDF_FONTPATH', ECRM_DIR . 'includes/lib/tfpdf/font/' );
 		}
 		require_once ECRM_DIR . 'includes/lib/tfpdf/tfpdf.php';
