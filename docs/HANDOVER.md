@@ -70,17 +70,26 @@ composer check
 τα tests κρυπτογράφησης παραλείπονται και η ζώνη ώρας διαφέρει. Και τα δύο PHP
 φανέρωσαν πραγματικά bugs, αλλά το έγκυρο είναι του Local.
 
-**Το git δεν είναι στο PATH.** Πριν από εντολές git:
+**Το git.** Σε **PowerShell** δουλεύει κατευθείαν, χωρίς τίποτα. Σε σκέτο **cmd**,
+αν δεν το βρίσκει:
 
 ```
 set PATH=%PATH%;C:\Program Files\Git\cmd
 ```
 
+Αυτή η γραμμή είναι σύνταξη του cmd και **αποτυγχάνει στο PowerShell** — εκεί
+θα ήταν `$env:PATH += ";C:\Program Files\Git\cmd"`. Μην την αντιγράψεις τυφλά.
+
 `composer check` = phpcs + phpstan (level 6) + phpunit. Ο pre-commit hook το
 τρέχει και μπλοκάρει το commit αν αποτύχει. **Πρέπει να είναι πράσινο.**
 
-Σημερινή κατάσταση: 143 tests, 1 skipped (ο έλεγχος «χωρίς sodium», που δεν
-έχει νόημα σε PHP με sodium), phpstan καθαρό, phpcs καθαρό.
+Κατάσταση 2026-08-10: 164 unit tests + 38 integration, phpstan καθαρό, phpcs
+καθαρό — και πλέον το phpcs καλύπτει και τον legacy κώδικα (βλ. CHANGELOG).
+
+Προσοχή στα skipped: σε PHP **χωρίς** sodium παραλείπονται 6 tests, όλα
+κρυπτογράφησης. Αν δεις «6 skipped», έτρεξες με το λάθος PHP και τα tests που
+προστατεύουν τα ΑΦΜ **δεν εκτελέστηκαν**. Από το Site shell του Local πρέπει να
+μείνει 1.
 
 ---
 
