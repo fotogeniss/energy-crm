@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use EnergyCRM\Http\Controller;
+use EnergyCRM\Http\ControllerFactory;
 use WP_REST_Request;
 
 final class RestRouteGuardTest extends IntegrationTestCase
@@ -86,6 +88,48 @@ final class RestRouteGuardTest extends IntegrationTestCase
             self::LEAST_PLAUSIBLE_ROUTE_COUNT,
             count($routes),
             'Too few routes registered for this to be the real surface — has rest_api_init run?'
+        );
+    }
+
+    /**
+     * A controller that exists but is never wired up serves nothing.
+     *
+     * The route count above has a floor, not an exact figure, so dropping one
+     * controller from ControllerFactory would leave every other test in this
+     * file green — the routes it should have registered simply would not be
+     * there to fail. Nothing would notice until a user did.
+     *
+     * So the source tree is the expectation: every *Controller in src/Http must
+     * appear in the factory's list. A new controller file is covered the moment
+     * it is saved, without anyone remembering to extend a list here.
+     */
+    public function testEveryControllerInTheSourceTreeIsWiredUp(): void
+    {
+        $wired = array_map(
+            static fn (Controller $controller): string => $controller::class,
+            ControllerFactory::all()
+        );
+
+        $onDisk = [];
+
+        foreach (glob(dirname(__DIR__, 2) . '/src/Http/*Controller.php') ?: [] as $path) {
+            // The Controller interface itself matches the glob; is_subclass_of
+            // is false for a type against itself, which filters it out.
+            $class = 'EnergyCRM\\Http\\' . basename($path, '.php');
+
+            if (is_subclass_of($class, Controller::class)) {
+                $onDisk[] = $class;
+            }
+        }
+
+        sort($wired);
+        sort($onDisk);
+
+        self::assertSame(
+            $onDisk,
+            $wired,
+            'ControllerFactory::all() and src/Http have drifted apart. '
+            . 'A controller missing from the factory registers no routes at all.'
         );
     }
 

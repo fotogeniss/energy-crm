@@ -18,6 +18,7 @@ use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Admin\FormCalibrator;
 use EnergyCRM\Admin\PrivacyTools;
+use EnergyCRM\Http\ControllerFactory;
 use EnergyCRM\Http\Router;
 use EnergyCRM\Infrastructure\DocumentProtection;
 use EnergyCRM\Infrastructure\Retention;
@@ -92,24 +93,7 @@ final class Plugin
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
         (new DocumentProtection(Services::files()))->register();
-        (new Router(
-            Services::scopeResolver(),
-            Services::contracts(),
-            Services::customers(),
-            Services::tasks(),
-            Services::events(),
-            Services::files(),
-            Services::leads(),
-            Services::team(),
-            Services::signatures(),
-            Services::providers(),
-            Services::dashboard(),
-            Services::commissions(),
-            Services::analytics(),
-            Services::teamActivity(),
-            Services::documents(),
-            Services::extractionGate()
-        ))->register();
+        (new Router(...ControllerFactory::all()))->register();
 
         // The PDF builder listens for its own scheduled events; without this
         // the queue fills and nothing ever drains it.

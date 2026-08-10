@@ -3,9 +3,12 @@
 /**
  * Registers every controller on rest_api_init.
  *
- * The list below is the map of the HTTP surface. As resources move out of
- * ECRM_REST they are added here and deleted there — a route must never live in
- * both, or WordPress silently keeps whichever registered last.
+ * That is the whole job. Which controllers exist, and what each one needs to be
+ * built, is ControllerFactory's business — this class only knows that it holds
+ * some and that WordPress wants them at a particular moment.
+ *
+ * A route must never live both here and in ECRM_REST: WordPress silently keeps
+ * whichever registered last.
  *
  * @package EnergyCRM
  */
@@ -14,23 +17,6 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
-use EnergyCRM\Access\ScopeResolver;
-use EnergyCRM\Infrastructure\DocumentQueue;
-use EnergyCRM\Infrastructure\ExtractionGate;
-use EnergyCRM\Persistence\AnalyticsRepository;
-use EnergyCRM\Persistence\CommissionRepository;
-use EnergyCRM\Persistence\ContractRepository;
-use EnergyCRM\Persistence\CustomerRepository;
-use EnergyCRM\Persistence\DashboardRepository;
-use EnergyCRM\Persistence\EventRepository;
-use EnergyCRM\Persistence\FileRepository;
-use EnergyCRM\Persistence\LeadRepository;
-use EnergyCRM\Persistence\ProviderRepository;
-use EnergyCRM\Persistence\SignatureRepository;
-use EnergyCRM\Persistence\TaskRepository;
-use EnergyCRM\Persistence\TeamActivityRepository;
-use EnergyCRM\Persistence\TeamRepository;
-
 final class Router
 {
     public const NAMESPACE = 'ecrm/v1';
@@ -38,52 +24,13 @@ final class Router
     /** @var list<Controller> */
     private array $controllers;
 
-    public function __construct(
-        ScopeResolver $scope,
-        ContractRepository $contracts,
-        CustomerRepository $customers,
-        TaskRepository $tasks,
-        EventRepository $events,
-        FileRepository $files,
-        LeadRepository $leads,
-        TeamRepository $team,
-        SignatureRepository $signatures,
-        ProviderRepository $providers,
-        DashboardRepository $dashboard,
-        CommissionRepository $commissions,
-        AnalyticsRepository $analytics,
-        TeamActivityRepository $teamActivity,
-        DocumentQueue $documents,
-        ExtractionGate $extractionGate,
-    ) {
-        $this->controllers = [
-            new ProviderFormController(),
-            new NotificationsController($scope),
-            new RenewalsController($scope, $contracts, $events),
-            new CustomersController($scope, $customers),
-            new TasksController($scope, $tasks, $contracts),
-            new ContractsReadController($scope, $contracts, $events, $files),
-            new ContractStatusController($scope, $contracts, $files),
-            new ContractSaveController($scope, $contracts, $customers),
-            new ContractsBulkController($scope, $contracts, $files),
-            new LeadsController($scope, $leads, $contracts, $customers),
-            new TeamController($scope, $team),
-            new ImportController(),
-            new SigningController($signatures, $files),
-            new DocumentsController($scope, $contracts, $files),
-            new ContractDocumentsController($scope, $contracts, $files),
-            new SavedFiltersController($scope),
-            new CatalogueController($scope, $providers, $contracts),
-            new DuplicateCheckController($scope, $contracts),
-            new ExtractionController($extractionGate),
-            new VatLookupController(),
-            new DashboardController($scope, $dashboard),
-            new CommissionsController($scope, $commissions),
-            new AnalyticsController($scope, $analytics),
-            new TeamActivityController($scope, $teamActivity),
-            new QuoteController(),
-            new SignLinkController($scope, $contracts, $documents),
-        ];
+    /**
+     * Variadic rather than an array so the type is checked per controller: a
+     * list<Controller> promised in a docblock is a promise, and this is a fact.
+     */
+    public function __construct(Controller ...$controllers)
+    {
+        $this->controllers = array_values($controllers);
     }
 
     public function register(): void

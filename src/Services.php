@@ -11,6 +11,12 @@
  * constructor. Every remaining call site here is a to-do item, and when the
  * legacy classes are gone this file goes with them.
  *
+ * One sanctioned exception, and only one: `Http\ControllerFactory`. A
+ * composition root is the place that knows how everything is assembled, so
+ * asking it to receive its dependencies is asking the wrong question — the
+ * arguments have to stop somewhere. Anywhere else, a `Services::` call inside
+ * `src/` is a bug.
+ *
  * @package EnergyCRM
  */
 
