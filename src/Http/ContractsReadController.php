@@ -4,9 +4,10 @@
  * GET /contracts       the list, with per-status counts for the tabs
  * GET /contracts/{id}  one contract with its events, files and checklist
  *
- * Reads only. The writes — save, status, bulk, delete — stay in ECRM_REST for
- * now and move next; splitting the two keeps this change reviewable and means
- * a mistake here cannot corrupt anything.
+ * Reads only. The writes live in ContractSaveController, ContractStatusController
+ * and ContractsBulkController. The split was originally so that this controller
+ * could land while the writes were still in ECRM_REST; it is worth keeping now
+ * for its own sake, because a mistake on this side cannot corrupt anything.
  *
  * @package EnergyCRM
  */

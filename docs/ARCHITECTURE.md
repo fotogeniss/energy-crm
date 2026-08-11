@@ -63,13 +63,20 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 | 7 | Διαφοροποίηση ρόλων (Συνεργάτης / Πωλητής / Καταχωρητής) σε πραγματικά capabilities | ✅ |
 | 8 | Secrets εκτός `wp_options`· retention policy για `extracted_json` | ✅ |
 | 9 | Frontend: build step, σπάσιμο του `ecrm-app.js`, τέλος στο χειροκίνητο `innerHTML` | ⬜ |
-| 10 | Κύκλος ζωής συμβολαίου (`transition`, ειδοποιήσεις) εκτός `ECRM_REST`· container αντί για 16 ορίσματα στον `Router` | ⬜ |
+| 10 | Κύκλος ζωής συμβολαίου (`transition`, ειδοποιήσεις) εκτός `ECRM_REST`· container αντί για 16 ορίσματα στον `Router` | ✅ |
 
-Το βήμα 6 έκλεισε: καμία διαδρομή δεν δηλώνεται πλέον στο `class-ecrm-rest.php`.
-Ό,τι απέμεινε εκεί δεν είναι REST, και φεύγει στο βήμα 10. Έχουν ήδη φύγει ο
-κύκλος ζωής, το auto-process, η παραγωγή εγγράφων και οι ειδοποιήσεις· η
-`can_manage_team()` διαγράφηκε ως νεκρή. Απομένει το
-`NS`/`init`/`no_cache_headers`/`routes`.
+**Το `class-ecrm-rest.php` δεν υπάρχει πια.** Ο μονόλιθος άδειασε σε επτά
+κινήσεις: οι διαδρομές σε controllers (βήμα 6), μετά ο κύκλος ζωής, το
+auto-process, η παραγωγή εγγράφων και οι ειδοποιήσεις σε δικές τους κλάσεις, η
+νεκρή `can_manage_team()` στα σκουπίδια, και τέλος το `NS` στον `Router` — που
+είναι και ο σωστός ιδιοκτήτης, αφού αυτός δηλώνει τις διαδρομές. Ο `no-cache`
+πήγε μαζί του.
+
+Η σειρά που το έκανε ασφαλές, και αξίζει να επαναληφθεί σε κάθε επόμενο legacy
+αρχείο: **characterisation tests πρώτα πάνω στον παλιό κώδικα, σε δικό τους
+commit· μετά νέες κλάσεις με το παλιό ως λεπτό περιτύλιγμα· μετά τα σημεία
+κλήσης· τέλος η διαγραφή.** Κριτήριο επιτυχίας: τα tests αλλάζουν **μόνο** στο
+ποιον καλούν.
 
 **Οι ειδοποιήσεις πήγαν σε δικές τους κλάσεις, όχι στο `ECRM_Notifications`.** Η
 προηγούμενη διατύπωση εδώ έλεγε «συγχώνευση στο υπάρχον `ECRM_Notifications`, όχι
@@ -83,6 +90,57 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 σε έξι αρχεία, εκ των οποίων έξι `register_rest_route` σε `ECRM_Tracking`,
 `ECRM_KB` και `ECRM_Assistant` — και τα τρία ζωντανά στον `Loader`. Ο πλήρης
 πίνακας στο `HANDOVER.md` §6β.3.
+
+## Η HTTP επιφάνεια
+
+Όλα κάτω από `ecrm/v1` (`Router::NAMESPACE`). Ο πίνακας ζούσε ως σχόλιο μέσα στο
+`ECRM_REST::routes()` και μεταφέρθηκε εδώ όταν σβήστηκε το αρχείο: ήταν το μόνο
+σημείο που απαριθμούσε ολόκληρη την επιφάνεια, και δεν έπρεπε να χαθεί επειδή
+έτυχε να ζει σε αρχείο που έφυγε.
+
+| Διαδρομή | Controller |
+|---|---|
+| `GET /providers`, `GET /search` | `CatalogueController` |
+| `GET /dashboard` | `DashboardController` |
+| `GET /analytics` | `AnalyticsController` |
+| `GET /commissions` | `CommissionsController` |
+| `GET/POST /contracts` | `ContractsReadController` / `ContractSaveController` |
+| `GET /contracts/{id}` | `ContractsReadController::show` |
+| `POST /contracts/bulk` | `ContractsBulkController` |
+| `GET /contracts/duplicate` | `DuplicateCheckController` |
+| `POST /contracts/{id}/status`, `DELETE /contracts/{id}` | `ContractStatusController` |
+| `GET /contracts/{id}/pdf`, `/provider-form`, `GET /contracts/export` | `ContractDocumentsController` |
+| `POST /contracts/{id}/files`, `GET /file/{id}` | `DocumentsController` |
+| `POST /contracts/{id}/renew`, `/renewals` | `RenewalsController` |
+| `POST /contracts/{id}/sign-link` | `SignLinkController` |
+| `GET/POST /sign/{token}` | `SigningController` |
+| `/customers`, `/customers/check` | `CustomersController` |
+| `/leads` | `LeadsController` |
+| `GET/POST /team`, `POST /team/{id}`, `GET /network` | `TeamController` |
+| `GET /team/live` | `TeamActivityController` |
+| `/notifications`, `/notifications/read` | `NotificationsController` |
+| `/filters` | `SavedFiltersController` |
+| `POST /import/parse`, `/import/apply` | `ImportController` |
+| `POST /extract` | `ExtractionController` |
+| `GET /lookup/afm` | `VatLookupController` |
+| `POST /quote/pdf` | `QuoteController` |
+
+**Τέσσερις διαδρομές δεν είναι controllers ακόμη** — τις δηλώνουν legacy κλάσεις
+απευθείας, με `Router::NAMESPACE`:
+
+| Διαδρομή | Πού δηλώνεται |
+|---|---|
+| `/track/{token}`, `/track/{token}/sign`, `/track/{token}/upload` | `ECRM_Tracking` |
+| `/kb`, `/kb/ask` | `ECRM_KB` |
+| `/assistant` | `ECRM_Assistant` |
+
+**Μια διαδρομή δεν δηλώνεται ποτέ σε δύο σημεία.** Το WordPress κρατά σιωπηλά
+όποια καταχωρηθεί τελευταία, οπότε το διπλό `register_rest_route` δεν βγάζει
+σφάλμα — αλλάζει απλώς ποιος απαντά.
+
+**Ο no-cache είναι του `Router`.** Κάθε απάντηση κάτω από το `ecrm/v1` παίρνει
+`no-store`, μέσω `rest_post_dispatch`. Ο έλεγχος προθέματος κρατά τις κεφαλίδες
+μακριά από κάθε άλλο REST API του site.
 
 ## Χωρητικότητα
 

@@ -28,7 +28,7 @@ class ECRM_PDF {
 	/**
 	 * Build the PDF for a contract row (already ownership-checked by caller).
 	 *
-	 * @param array $c Joined contract+customer row (see ECRM_REST::get_contract).
+	 * @param array $c Joined contract+customer row (see ContractRepository::findDetailed).
 	 * @return string Raw PDF bytes.
 	 */
 	public static function build( array $c, ?string $sig_path = null, array $sign_meta = [] ): string {
@@ -265,7 +265,7 @@ class ECRM_PDF {
 	/**
 	 * Build a savings/quote PDF for a sales offer.
 	 *
-	 * @param array $m Computed figures (see ECRM_REST::quote_pdf).
+	 * @param array $m Computed figures (see EnergyCRM\Http\QuoteController).
 	 * @return string Raw PDF bytes.
 	 */
 	public static function build_quote( array $m ): string {
