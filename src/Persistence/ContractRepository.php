@@ -1,11 +1,19 @@
 <?php
 
 /**
- * The only place contracts are read from or written to.
+ * Contracts, one at a time: found, created, changed, deleted.
  *
- * Every method takes a UserScope. There is no overload without one, so a query
- * that ignores ownership cannot be written here — and since nothing outside
- * this class touches the contracts table, it cannot be written anywhere.
+ * The list queries — search, quickSearch, countsByStatus, expiring,
+ * possibleDuplicates — moved to ContractQueries when this file passed 930 lines
+ * against a limit of ~200. The cut runs between *finding many* and *changing
+ * one*. Five wrappers remain below, delegating, until their callers move; they
+ * are marked and they go in the next commit.
+ *
+ * The guarantee that used to read "nothing outside this class touches the
+ * contracts table" now spans two classes, and holds the same way in both: every
+ * method takes a UserScope, and the ones that deliberately do not are listed
+ * and argued in one place each. The scope fragment itself is shared rather than
+ * copied — see ScopeClause, and the reason it is a class.
  *
  * Writes are scoped in the WHERE clause rather than by a preceding SELECT, so
  * the check and the write are a single statement and cannot drift apart.
@@ -87,14 +95,24 @@ final class ContractRepository
     /** And the contract's own encrypted part, the values inside extra_json. */
     private ContractFields $extras;
 
+    /**
+     * The list queries, which moved out.
+     *
+     * Held so the five wrappers below can delegate while their callers are
+     * still pointed here. Both they and this property go when the callers move.
+     */
+    private ContractQueries $queries;
+
     public function __construct(
         ?string $table = null,
         ?CustomerFields $fields = null,
         ?ContractFields $extras = null,
+        ?ContractQueries $queries = null,
     ) {
-        $this->table  = $table ?? Tables::name(Tables::CONTRACTS);
-        $this->fields = $fields ?? CustomerFields::default();
-        $this->extras = $extras ?? ContractFields::default();
+        $this->table   = $table ?? Tables::name(Tables::CONTRACTS);
+        $this->fields  = $fields ?? CustomerFields::default();
+        $this->extras  = $extras ?? ContractFields::default();
+        $this->queries = $queries ?? new ContractQueries($this->table, $this->fields);
     }
 
     /** @return array<string, mixed>|null */
@@ -544,6 +562,13 @@ final class ContractRepository
         return $result !== false;
     }
 
+    /*
+     * The five below are wrappers, kept only until their callers move in the
+     * next commit. The work is in EnergyCRM\Persistence\ContractQueries, and
+     * the notes explaining each query live there now — the versions here would
+     * be a second copy to fall out of step.
+     */
+
     /**
      * The contracts list, with the joined names the UI shows.
      *
@@ -551,129 +576,17 @@ final class ContractRepository
      */
     public function search(UserScope $scope, string $status = '', string $term = '', int $limit = 200): array
     {
-        global $wpdb;
-
-        [$clause, $scopeParams] = $this->scopeClause($scope, 'c');
-
-        $params     = [
-            $this->table,
-            Tables::name(Tables::CUSTOMERS),
-            Tables::name(Tables::PROVIDERS),
-            Tables::name(Tables::PROGRAMS),
-            ...$scopeParams,
-        ];
-        $conditions = ['1 = 1' . $clause];
-
-        if ($status !== '') {
-            $conditions[] = 'c.status = %s';
-            $params[]     = $status;
-        }
-
-        if ($term !== '') {
-            $like = '%' . $wpdb->esc_like($term) . '%';
-
-            // See CustomerRepository::search() — the ΑΦΜ is matched both as a
-            // column and as its hash, because it may be stored either way.
-            $conditions[] = '( cu.first_name LIKE %s OR cu.last_name LIKE %s OR cu.company_name LIKE %s'
-                . ' OR cu.afm LIKE %s OR c.supply_number LIKE %s OR c.code LIKE %s'
-                . ' OR cu.' . CustomerFields::INDEX_COLUMN . ' = %s )';
-            $params       = [...$params, $like, $like, $like, $like, $like, $like, $this->fields->index($term)];
-        }
-
-        $where = implode(' AND ', $conditions);
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        /** @var list<array<string, mixed>> $rows */
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT c.id, c.code, c.status, c.energy_type, c.category, c.invoice_code,
-                        c.supply_number, c.created_at, c.updated_at, c.partner_user_id,
-                        p.name AS provider_name, p.slug AS provider_slug,
-                        p.logo_url AS provider_logo, g.name AS program_name,
-                        cu.first_name, cu.last_name, cu.company_name, cu.afm, cu.phone
-                 FROM %i c
-                 LEFT JOIN %i cu ON cu.id = c.customer_id
-                 LEFT JOIN %i p  ON p.id  = c.provider_id
-                 LEFT JOIN %i g  ON g.id  = c.program_id
-                 WHERE {$where}
-                 ORDER BY c.updated_at DESC
-                 LIMIT " . max(1, $limit),
-                $params
-            ),
-            ARRAY_A
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        return $this->fields->fromStorageAll($rows);
+        return $this->queries->search($scope, $status, $term, $limit);
     }
 
     /**
-     * Contracts already on file for a ΑΦΜ or supply number — across the whole
-     * company, on purpose.
-     *
-     * The one query here that ignores scope, and it has to. A second
-     * application for a supply another partner already signed is exactly the
-     * collision worth warning about, and scoping the search would hide it. The
-     * caller masks what it returns: outside the actor's scope, only the fact of
-     * a clash is disclosed, never the customer or the colleague.
+     * Contracts already on file for a ΑΦΜ or supply number, company-wide.
      *
      * @return list<array<string, mixed>>
      */
     public function possibleDuplicates(string $afm, string $supply, int $excludeId = 0): array
     {
-        global $wpdb;
-
-        $match  = [];
-        $params = [
-            $this->table,
-            Tables::name(Tables::CUSTOMERS),
-            Tables::name(Tables::PROVIDERS),
-        ];
-
-        if (strlen($afm) >= 9) {
-            // The hash rather than the column: randomised encryption means the
-            // same ΑΦΜ never equals itself, and a duplicate check that quietly
-            // stops matching reads as "no duplicate exists".
-            $match[]  = 'cu.' . CustomerFields::INDEX_COLUMN . ' = %s';
-            $params[] = $this->fields->index($afm);
-        }
-
-        if ($supply !== '') {
-            $match[]  = 'c.supply_number = %s';
-            $params[] = $supply;
-        }
-
-        if ($match === []) {
-            return [];
-        }
-
-        $where = '( ' . implode(' OR ', $match) . ' )';
-
-        if ($excludeId > 0) {
-            $where   .= ' AND c.id <> %d';
-            $params[] = $excludeId;
-        }
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        /** @var list<array<string, mixed>> $rows */
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT c.id, c.code, c.status, c.supply_number, c.partner_user_id,
-                        cu.first_name, cu.last_name, cu.company_name, cu.afm,
-                        p.name AS provider_name
-                 FROM %i c
-                 LEFT JOIN %i cu ON cu.id = c.customer_id
-                 LEFT JOIN %i p  ON p.id  = c.provider_id
-                 WHERE {$where}
-                 ORDER BY c.updated_at DESC
-                 LIMIT 8",
-                $params
-            ),
-            ARRAY_A
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        return $this->fields->fromStorageAll($rows);
+        return $this->queries->possibleDuplicates($afm, $supply, $excludeId);
     }
 
     /**
@@ -684,46 +597,7 @@ final class ContractRepository
      */
     public function quickSearch(UserScope $scope, string $term, int $limit = 15): array
     {
-        global $wpdb;
-
-        if ($term === '') {
-            return [];
-        }
-
-        [$clause, $scopeParams] = $this->scopeClause($scope, 'c');
-        $like                   = '%' . $wpdb->esc_like($term) . '%';
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        /** @var list<array<string, mixed>> $rows */
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT c.id, c.code, c.status, c.supply_number,
-                        cu.first_name, cu.last_name, cu.company_name, cu.afm,
-                        p.name AS provider_name
-                 FROM %i c
-                 LEFT JOIN %i cu ON cu.id = c.customer_id
-                 LEFT JOIN %i p  ON p.id  = c.provider_id
-                 WHERE ( c.code LIKE %s OR c.supply_number LIKE %s
-                         OR cu.first_name LIKE %s OR cu.last_name LIKE %s
-                         OR cu.company_name LIKE %s OR cu.afm LIKE %s
-                         OR cu.mobile LIKE %s
-                         OR cu." . CustomerFields::INDEX_COLUMN . " = %s ){$clause}
-                 ORDER BY c.updated_at DESC
-                 LIMIT " . max(1, $limit),
-                [
-                    $this->table,
-                    Tables::name(Tables::CUSTOMERS),
-                    Tables::name(Tables::PROVIDERS),
-                    $like, $like, $like, $like, $like, $like, $like,
-                    $this->fields->index($term),
-                    ...$scopeParams,
-                ]
-            ),
-            ARRAY_A
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        return $this->fields->fromStorageAll($rows);
+        return $this->queries->quickSearch($scope, $term, $limit);
     }
 
     /**
@@ -733,28 +607,7 @@ final class ContractRepository
      */
     public function countsByStatus(UserScope $scope): array
     {
-        global $wpdb;
-
-        [$clause, $params] = $this->scopeClause($scope);
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        /** @var list<array<string, mixed>> $rows */
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT status, COUNT(*) AS total FROM %i WHERE 1 = 1{$clause} GROUP BY status",
-                [$this->table, ...$params]
-            ),
-            ARRAY_A
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        $counts = [];
-
-        foreach ($rows as $row) {
-            $counts[(string) $row['status']] = (int) $row['total'];
-        }
-
-        return $counts;
+        return $this->queries->countsByStatus($scope);
     }
 
     /**
@@ -825,36 +678,7 @@ final class ContractRepository
      */
     public function expiring(UserScope $scope, int $withinDays): array
     {
-        global $wpdb;
-
-        $customers = Tables::name(Tables::CUSTOMERS);
-        $providers = Tables::name(Tables::PROVIDERS);
-
-        [$clause, $params] = $this->scopeClause($scope, 'c');
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        /** @var list<array<string, mixed>> $rows */
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT c.id, c.code, c.status, c.end_date, c.term_months,
-                        DATEDIFF(c.end_date, NOW()) AS days_left,
-                        p.name AS provider_name, p.logo_url AS provider_logo,
-                        cu.first_name, cu.last_name, cu.company_name, cu.phone
-                 FROM %i c
-                 LEFT JOIN %i cu ON cu.id = c.customer_id
-                 LEFT JOIN %i p  ON p.id  = c.provider_id
-                 WHERE c.end_date IS NOT NULL
-                   AND c.status NOT IN ('cancelled', 'draft')
-                   AND DATEDIFF(c.end_date, NOW()) <= %d{$clause}
-                 ORDER BY c.end_date ASC
-                 LIMIT 300",
-                [$this->table, $customers, $providers, $withinDays, ...$params]
-            ),
-            ARRAY_A
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        return $rows;
+        return $this->queries->expiring($scope, $withinDays);
     }
 
     /**
@@ -893,23 +717,16 @@ final class ContractRepository
     /**
      * SQL fragment restricting rows to the scope, plus its bound values.
      *
-     * Administrators get an empty fragment; everyone else gets an IN list that
-     * UserScope guarantees is non-empty.
+     * The body moved to ScopeClause when the list queries left, because two
+     * classes needed it and a copied authorization clause is a second place to
+     * get it quietly wrong. This stays as the name the rest of the file already
+     * calls.
      *
      * @return array{0: string, 1: list<int>}
      */
     private function scopeClause(UserScope $scope, string $alias = ''): array
     {
-        if ($scope->isAdministrator()) {
-            return ['', []];
-        }
-
-        $column = ($alias === '' ? '' : $alias . '.') . 'partner_user_id';
-
-        return [
-            ' AND ' . $column . ' IN (' . $scope->placeholders() . ')',
-            $scope->userIds(),
-        ];
+        return ScopeClause::forScope($scope, $alias);
     }
 
     /**
