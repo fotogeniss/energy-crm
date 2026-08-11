@@ -29,6 +29,7 @@ use EnergyCRM\Access\WordPressScopeResolver;
 use EnergyCRM\Domain\Contract\AutoProcess;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractDocuments;
+use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Infrastructure\ProviderFormRenderer;
@@ -42,6 +43,7 @@ use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\LeadRepository;
 use EnergyCRM\Persistence\NetworkRepository;
+use EnergyCRM\Persistence\NotificationRepository;
 use EnergyCRM\Persistence\ProviderRepository;
 use EnergyCRM\Persistence\SignatureRepository;
 use EnergyCRM\Persistence\TaskRepository;
@@ -86,6 +88,10 @@ final class Services
 
     private static ?ContractDocuments $contractDocuments = null;
 
+    private static ?ContractNotices $contractNotices = null;
+
+    private static ?NotificationRepository $notifications = null;
+
     private static ?ExtractionGate $extractionGate = null;
 
     private static ?ContractLifecycle $lifecycle = null;
@@ -128,6 +134,19 @@ final class Services
             self::files(),
             new ProviderFormRenderer()
         );
+    }
+
+    public static function contractNotices(): ContractNotices
+    {
+        return self::$contractNotices ??= new ContractNotices(
+            self::contracts(),
+            self::notifications()
+        );
+    }
+
+    public static function notifications(): NotificationRepository
+    {
+        return self::$notifications ??= new NotificationRepository();
     }
 
     public static function teamActivity(): TeamActivityRepository

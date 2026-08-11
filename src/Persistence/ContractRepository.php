@@ -346,11 +346,11 @@ final class ContractRepository
 
     /*
      * ---------------------------------------------------------------------
-     * The unscoped four — and why they alone take no UserScope
+     * The unscoped five — and why they alone take no UserScope
      * ---------------------------------------------------------------------
      *
      * Everything above refuses to run without saying on whose behalf it runs.
-     * These four deliberately do not, and the exception is narrow enough to
+     * These five deliberately do not, and the exception is narrow enough to
      * state exactly:
      *
      *   - The status transition is reached through ContractLifecycle, whose
@@ -364,6 +364,12 @@ final class ContractRepository
      *     of this system at all. Its two REST callers resolve the contract
      *     through findDetailed() first, so the scope check happens where there
      *     is somebody to check.
+     *   - The notice subject is read to answer "who should be told, and what do
+     *     we call this contract". All three of its callers are the customer:
+     *     uploading a document through a tracking link, or signing. None of
+     *     them is a user of this system, so there is nobody to scope to — and
+     *     scoping it to the *recipient* would be backwards, since working out
+     *     the recipient is what the read is for.
      *
      * The group was named for the lifecycle when it held three, and the note
      * said that a fourth was the moment to ask whether the exception was still
@@ -372,6 +378,12 @@ final class ContractRepository
      * of nobody" — cron and an unauthenticated customer both. Renamed to say
      * so, because a group whose name no longer describes its members is how a
      * narrow exception turns into a general one without anybody deciding to.
+     *
+     * The fifth arrived on 2026-08-11 and was measured against that same test
+     * before it was let in: its callers are an anonymous customer, so it has no
+     * actor either. It was admitted deliberately, in preference to leaving a
+     * fifth hand-written contracts+customers join in the codebase — the shape
+     * that had just cost three separate PII leaks.
      *
      * What would make this stop being an exception is a member that *does*
      * have an actor. There is no such member, and adding one is the thing to
@@ -465,6 +477,45 @@ final class ContractRepository
     public function detailedForDocument(int $contractId): ?array
     {
         return $this->detailed($contractId, '', []);
+    }
+
+    /**
+     * The five columns an in-app notice needs: who owns the contract, what it
+     * is called, and what to call the customer.
+     *
+     * Deliberately not detailedForDocument(): this runs on every signature and
+     * every document upload, which is a hot path at 20-40 concurrent requests,
+     * and that one joins providers and programs to print a form.
+     *
+     * It still goes through fromStorage(). None of these columns is in
+     * CustomerFields::ENCRYPTED today, so the call is a no-op — which is the
+     * reason to make it now rather than later. The day a name or a company name
+     * is encrypted, every read that went through here keeps working and only
+     * the ones that skipped it start printing `ecrm1:…` into the bell. That is
+     * exactly how the three leaks closed on 2026-08-10 came about.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function noticeSubject(int $contractId): ?array
+    {
+        global $wpdb;
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var array<string, mixed>|null $row */
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT c.code, c.partner_user_id,
+                        cu.first_name, cu.last_name, cu.company_name
+                 FROM %i c
+                 LEFT JOIN %i cu ON cu.id = c.customer_id
+                 WHERE c.id = %d',
+                [$this->table, Tables::name(Tables::CUSTOMERS), $contractId]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $row ? $this->fields->fromStorage($row) : null;
     }
 
     /**

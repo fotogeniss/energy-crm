@@ -25,6 +25,42 @@ final class NotificationRepository
     }
 
     /**
+     * Write one notice for one recipient.
+     *
+     * The write side this class was missing: it could read the bell, count it
+     * and clear it, but the only thing that filled it was a raw insert in
+     * ECRM_REST.
+     *
+     * A user id of zero is dropped rather than written. The column is NOT NULL,
+     * so a row for user zero is one nobody can ever read and nobody can ever
+     * mark read — it would sit in the table forever, counted by nothing.
+     *
+     * A contract id of zero is stored as NULL, because a notice is allowed to
+     * be about nothing in particular and a foreign key to contract zero is not.
+     */
+    public function add(
+        int $userId,
+        string $type,
+        string $title,
+        string $body = '',
+        int $contractId = 0
+    ): void {
+        global $wpdb;
+
+        if ($userId <= 0) {
+            return;
+        }
+
+        $wpdb->insert($this->table, [
+            'user_id'     => $userId,
+            'contract_id' => $contractId > 0 ? $contractId : null,
+            'type'        => $type,
+            'title'       => $title,
+            'body'        => $body,
+        ]);
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function recentFor(int $userId, int $limit = 30): array
