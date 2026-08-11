@@ -239,9 +239,12 @@ bootstrap **αρνείται να τρέξει** αν η βάση δοκιμών
    mount δεν επιτρέπει unlink. **Ποτέ μην τρέχεις git από εκεί** — ακόμη και
    αθώα εντολή αφήνει lock που μπλοκάρει κάθε επόμενη.
 
-3. **`tests/Integration/ContractNotificationsTest.php` — γραμμένο, ΔΕΝ ΕΧΕΙ
-   ΤΡΕΞΕΙ ΠΟΤΕ.** Έντεκα characterisation tests πάνω στις `ECRM_REST::notify*`
-   ως έχουν. Είναι το δίχτυ για το επόμενο βήμα και **δεν έχει επαληθευτεί**:
+3. **`tests/Integration/ContractNotificationsTest.php` — γραμμένο, staged,
+   ΔΕΝ ΕΧΕΙ ΤΡΕΞΕΙ ΠΟΤΕ.** Έντεκα characterisation tests πάνω στις
+   `ECRM_REST::notify*` ως έχουν. Θα το δεις στο `git status` ως νέο αρχείο στο
+   index, αδέσμευτο επίτηδες: staged ώστε να μην το πάρει ένα `git clean`,
+   αδέσμευτο ώστε να μη μπει στο ιστορικό test που δεν έχει τρέξει. Είναι το
+   δίχτυ για το επόμενο βήμα και **δεν έχει επαληθευτεί**:
 
    ```
    composer test:integration -- --filter ContractNotificationsTest
