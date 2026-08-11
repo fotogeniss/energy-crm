@@ -46,9 +46,9 @@ class ECRM_REST {
 	 * EnergyCRM\Http\Router. The map below is kept as a finding aid — it is the
 	 * only place that lists the whole HTTP surface next to its old home.
 	 *
-	 * What is left in this class is not REST either, and is down to two things:
-	 * NS and can_manage_team(). The status transition, the auto-processing cron,
-	 * the document build and the notifications all left in step 10 — see
+	 * What is left in this class is not REST either, and is down to one thing:
+	 * NS. The status transition, the auto-processing cron, the document build
+	 * and the notifications all left in step 10 — see
 	 * EnergyCRM\Domain\Contract\ContractLifecycle, AutoProcess,
 	 * EnergyCRM\Infrastructure\ContractDocuments and
 	 * EnergyCRM\Infrastructure\ContractNotices.
@@ -56,6 +56,12 @@ class ECRM_REST {
 	 * The notifications went into classes of their own rather than merging into
 	 * ECRM_Notifications: that one sends email, these write the rows behind the
 	 * bell. notify() is now NotificationRepository::add().
+	 *
+	 * can_manage_team() did not move anywhere: it was dead. Its only caller was
+	 * ECRM_Leads::scope_ids(), itself private and called by nothing since the
+	 * /leads routes became LeadsController. The live answer to the same question
+	 * is Access\WordPressScopeResolver, which asks the same two capabilities and
+	 * returns a UserScope instead of a bare bool.
 	 *
 	 * NS outlives the rest of this file. Six register_rest_route calls across
 	 * ECRM_Tracking, ECRM_KB and ECRM_Assistant still read it, plus four
@@ -120,7 +126,4 @@ class ECRM_REST {
 		// GET/POST /sign/{token} -> EnergyCRM\Http\SigningController
 	}
 
-	public static function can_manage_team(): bool {
-		return current_user_can( 'ecrm_manage_team' ) || current_user_can( 'manage_options' );
-	}
 }

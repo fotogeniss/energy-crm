@@ -38,10 +38,4 @@ class ECRM_Leads {
 	public static function sources(): array {
 		return [ 'phone' => 'Τηλέφωνο', 'chatbot' => 'Chatbot', 'referral' => 'Σύσταση', 'walk_in' => 'Επίσκεψη', 'social' => 'Social', 'other' => 'Άλλο' ];
 	}
-
-	/** User ids in scope for the current user. */
-	private static function scope_ids(): array {
-		$uid = get_current_user_id();
-		return ECRM_REST::can_manage_team() ? ECRM_DB::visible_user_ids( $uid ) : [ $uid ];
-	}
 }
