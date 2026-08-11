@@ -505,8 +505,13 @@ class ECRM_Shortcodes {
 							<option value="">—</option><option value="email">Email</option><option value="post">Ταχυδρομικώς</option><option value="both">Και τα δύο</option>
 						</select>
 					</label>
-					<?php // Το IBAN ζητείται μόνο για πάγια εντολή· τα έντυπα το τυπώνουν δίπλα στο σχετικό κουτί. Παραμένει χωρίς guard — σημείο 8, εκκρεμεί απάντηση παρόχου. ?>
-					<?php $ecrm_field( 'iban', 'IBAN (πάγια εντολή)', 'text', true, 'GR..' ); ?>
+					<?php
+					// Το πεδίο IBAN αφαιρέθηκε 2026-08-11. Κανένα από τα 20 έντυπα
+					// δεν είχε θέση να το τυπώσει, οπότε ζητούσαμε τραπεζικό
+					// λογαριασμό που δεν πήγαινε πουθενά. Το αποδεικτικό
+					// λογαριασμού παραμένει ως είδος ανεβασμένου εγγράφου, όταν
+					// το ζητά ο πάροχος.
+					?>
 					<?php // Χωρίς guard: το orizon_mobile.json ζητά κι αυτό εγγύηση, όχι μόνο ρεύμα/αέριο. ?>
 					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
 					<?php $ecrm_field( 'ar_koinoxristou', 'Αρ. Κοινόχρηστου Μετρητή', 'text', true, '', 'power,gas' ); ?>

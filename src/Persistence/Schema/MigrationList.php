@@ -19,6 +19,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddContractListIndexes;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerAfmIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
+use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureLegacyColumns;
 use EnergyCRM\Persistence\Schema\Migrations\FixProviderEnergyTypes;
@@ -53,6 +54,7 @@ final class MigrationList
             new AddProgramCodeColumn(),
             new SeedOrizonPlans(),
             new SeedProtergiaHomePlans(),
+            new DropIbanFromExtras(),
         ];
     }
 }

@@ -267,7 +267,6 @@ class ECRM_FormFill {
 			'nomiki_morfi'            => $xg( 'company_type' ),
 			'antikeimeno_epixeirisis' => $xg( 'activity' ),
 			'eidiki_katigoria'        => $xg( 'eidiki_katigoria' ),
-			'iban'                    => $xg( 'iban' ),
 			'anotato_orio'            => $xg( 'anotato_orio' ),
 			'arithmos_koinoxristou'   => $xg( 'ar_koinoxristou' ),
 
