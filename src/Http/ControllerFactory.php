@@ -57,7 +57,12 @@ final class ControllerFactory
             new ContractSaveController($scope, Services::contracts(), Services::customers(), $lifecycle),
             new ContractStatusController($scope, Services::contracts(), Services::files(), $lifecycle),
             new ContractsBulkController($scope, Services::contracts(), Services::files(), $lifecycle),
-            new ContractDocumentsController($scope, Services::contracts(), Services::files()),
+            new ContractDocumentsController(
+                $scope,
+                Services::contracts(),
+                Services::files(),
+                Services::contractDocuments()
+            ),
             new DocumentsController($scope, Services::contracts(), Services::files()),
             new DuplicateCheckController($scope, Services::contracts()),
             new RenewalsController($scope, Services::contracts(), Services::events()),

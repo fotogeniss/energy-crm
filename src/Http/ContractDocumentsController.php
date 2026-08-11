@@ -18,9 +18,9 @@ namespace EnergyCRM\Http;
 use ECRM_Export;
 use ECRM_FormFill;
 use ECRM_PDF;
-use ECRM_REST;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\FileRepository;
 use Throwable;
@@ -33,6 +33,7 @@ final class ContractDocumentsController implements Controller
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
         private readonly FileRepository $files,
+        private readonly ContractDocuments $documents,
     ) {
     }
 
@@ -104,7 +105,7 @@ final class ContractDocumentsController implements Controller
         }
 
         if ($request['store']) {
-            $stored = ECRM_REST::store_contract_pdf($id);
+            $stored = $this->documents->store($id);
 
             return new WP_REST_Response(
                 $stored

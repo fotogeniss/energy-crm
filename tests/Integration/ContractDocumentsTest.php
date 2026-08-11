@@ -4,9 +4,9 @@
  * What storing a contract's document actually does.
  *
  * Characterisation, written before the code moved: every assertion here
- * describes `ECRM_REST::store_contract_pdf()` exactly as it stood, so that the
- * move out of ECRM_REST could change one thing in this file — the name of what
- * gets called — and nothing else.
+ * described `ECRM_REST::store_contract_pdf()` exactly as it stood. The move out
+ * to ContractDocuments then changed one thing in this file — the name of what
+ * gets called — and nothing else. That is what made it safe to make.
  *
  * It earns its place regardless. This method decides what the customer signs
  * and what the provider receives, it deletes files off disk, and nothing
@@ -45,9 +45,10 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Integration;
 
 use ECRM_Files;
-use ECRM_REST;
+use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\Tables;
+use EnergyCRM\Services;
 
 final class ContractDocumentsTest extends IntegrationTestCase
 {
@@ -61,6 +62,8 @@ final class ContractDocumentsTest extends IntegrationTestCase
      */
     private const PROVIDER = 'Δοκιμαστικός Πάροχος';
 
+    private ContractDocuments $documents;
+
     private int $providerId;
 
     private int $contractId;
@@ -71,6 +74,10 @@ final class ContractDocumentsTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // The instance the plugin wired up at boot, so the test exercises the
+        // same object graph the cron job and the signing page reach.
+        $this->documents = Services::contractDocuments();
 
         $this->filesBefore = $this->storageContents();
         $this->providerId  = $this->makeProvider();
@@ -88,7 +95,7 @@ final class ContractDocumentsTest extends IntegrationTestCase
 
     public function testTheDocumentIsStoredAgainstTheContract(): void
     {
-        self::assertTrue(ECRM_REST::store_contract_pdf($this->contractId));
+        self::assertTrue($this->documents->store($this->contractId));
 
         $documents = $this->documentsFor($this->contractId);
 
@@ -105,14 +112,14 @@ final class ContractDocumentsTest extends IntegrationTestCase
      */
     public function testTheStoredDocumentIsFlaggedProtected(): void
     {
-        ECRM_REST::store_contract_pdf($this->contractId);
+        $this->documents->store($this->contractId);
 
         self::assertSame('1', (string) $this->documentsFor($this->contractId)[0]['protected']);
     }
 
     public function testTheBytesOnDiskAreAPdf(): void
     {
-        ECRM_REST::store_contract_pdf($this->contractId);
+        $this->documents->store($this->contractId);
 
         $path = (string) $this->documentsFor($this->contractId)[0]['path'];
 
@@ -123,7 +130,7 @@ final class ContractDocumentsTest extends IntegrationTestCase
     /** The agent recognises the file by the contract code, not by a hash. */
     public function testTheFilenameIsTheContractCode(): void
     {
-        ECRM_REST::store_contract_pdf($this->contractId);
+        $this->documents->store($this->contractId);
 
         self::assertSame('ECRM-TEST-1.pdf', $this->documentsFor($this->contractId)[0]['filename']);
     }
@@ -133,7 +140,7 @@ final class ContractDocumentsTest extends IntegrationTestCase
     {
         $id = $this->makeContract(['code' => '']);
 
-        ECRM_REST::store_contract_pdf($id);
+        $this->documents->store($id);
 
         self::assertSame('symvasi-' . $id . '.pdf', $this->documentsFor($id)[0]['filename']);
     }
@@ -147,11 +154,11 @@ final class ContractDocumentsTest extends IntegrationTestCase
      */
     public function testARebuildReplacesTheDocumentAndDeletesTheOldBytes(): void
     {
-        ECRM_REST::store_contract_pdf($this->contractId);
+        $this->documents->store($this->contractId);
 
         $first = $this->documentsFor($this->contractId)[0];
 
-        ECRM_REST::store_contract_pdf($this->contractId);
+        $this->documents->store($this->contractId);
 
         $documents = $this->documentsFor($this->contractId);
 
@@ -171,8 +178,8 @@ final class ContractDocumentsTest extends IntegrationTestCase
     {
         $uploaded = $this->attachDocument($this->contractId, 'id_card');
 
-        ECRM_REST::store_contract_pdf($this->contractId);
-        ECRM_REST::store_contract_pdf($this->contractId);
+        $this->documents->store($this->contractId);
+        $this->documents->store($this->contractId);
 
         $kinds = array_column($this->documentsFor($this->contractId), 'doc_kind');
 
@@ -182,7 +189,7 @@ final class ContractDocumentsTest extends IntegrationTestCase
 
     public function testAContractThatDoesNotExistStoresNothing(): void
     {
-        self::assertFalse(ECRM_REST::store_contract_pdf($this->contractId + 100000));
+        self::assertFalse($this->documents->store($this->contractId + 100000));
 
         self::assertSame([], $this->documentsFor($this->contractId + 100000));
     }

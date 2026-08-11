@@ -46,10 +46,13 @@ class ECRM_REST {
 	 * EnergyCRM\Http\Router. The map below is kept as a finding aid — it is the
 	 * only place that lists the whole HTTP surface next to its old home.
 	 *
-	 * What is left in this class is not REST either: store_contract_pdf() and the
-	 * notification helpers. The status transition and the auto-processing cron
-	 * left in step 10 — see EnergyCRM\Domain\Contract\ContractLifecycle and
-	 * AutoProcess. Those two are the last of it.
+	 * What is left in this class is not REST either: the notification helpers,
+	 * and can_manage_team(). The status transition, the auto-processing cron and
+	 * the document build all left in step 10 — see
+	 * EnergyCRM\Domain\Contract\ContractLifecycle, AutoProcess and
+	 * EnergyCRM\Infrastructure\ContractDocuments. The notifications are next,
+	 * and they are a merge into the existing ECRM_Notifications rather than a
+	 * move; after that this file is deleted.
 	 */
 	public static function routes(): void {
 		// GET /providers -> EnergyCRM\Http\CatalogueController
@@ -111,20 +114,6 @@ class ECRM_REST {
 
 	public static function can_manage_team(): bool {
 		return current_user_can( 'ecrm_manage_team' ) || current_user_can( 'manage_options' );
-	}
-
-	/**
-	 * Generate the contract PDF and store it against the contract.
-	 *
-	 * A wrapper on its way out: the work moved to
-	 * EnergyCRM\Infrastructure\ContractDocuments in step 10c. It stays only
-	 * long enough for the four call sites to be pointed at the new class one at
-	 * a time, which is the whole reason the move was safe to make.
-	 *
-	 * @return bool true on success.
-	 */
-	public static function store_contract_pdf( int $id ): bool {
-		return \EnergyCRM\Services::contractDocuments()->store( $id );
 	}
 
 	/** Insert a single in-app notification. */

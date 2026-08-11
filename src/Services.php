@@ -117,7 +117,7 @@ final class Services
 
     public static function documents(): DocumentQueue
     {
-        return self::$documents ??= new DocumentQueue(self::files());
+        return self::$documents ??= new DocumentQueue(self::files(), self::contractDocuments());
     }
 
     public static function contractDocuments(): ContractDocuments

@@ -25,15 +25,11 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Infrastructure;
 
-use ECRM_REST;
 use EnergyCRM\Persistence\FileRepository;
 
 final class DocumentQueue
 {
     public const HOOK = 'ecrm_build_contract_pdf';
-
-    /** The document kind ECRM_REST::store_contract_pdf() writes. */
-    private const KIND = 'contract';
 
     /**
      * Long enough that a burst of saves spreads over several cron ticks rather
@@ -42,8 +38,10 @@ final class DocumentQueue
      */
     private const DELAY = 30;
 
-    public function __construct(private readonly FileRepository $files)
-    {
+    public function __construct(
+        private readonly FileRepository $files,
+        private readonly ContractDocuments $documents,
+    ) {
     }
 
     public function register(): void
@@ -68,7 +66,7 @@ final class DocumentQueue
 
     public function onScheduled(int $contractId): void
     {
-        ECRM_REST::store_contract_pdf($contractId);
+        $this->documents->store($contractId);
     }
 
     /**
@@ -86,13 +84,13 @@ final class DocumentQueue
             return true;
         }
 
-        return ECRM_REST::store_contract_pdf($contractId);
+        return $this->documents->store($contractId);
     }
 
     private function exists(int $contractId): bool
     {
         foreach ($this->files->forContract($contractId) as $file) {
-            if (($file['doc_kind'] ?? '') !== self::KIND) {
+            if (($file['doc_kind'] ?? '') !== ContractDocuments::KIND) {
                 continue;
             }
 

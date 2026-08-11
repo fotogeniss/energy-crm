@@ -269,9 +269,11 @@ class ECRM_Tracking {
 			'inapp'   => false, // notify_signed() below handles the in-app notification.
 		] );
 
-		// Refresh the attached provider-form PDF (now carries the signature) + in-app notification.
+		// Rebuild the attached provider form, so the stored copy reflects the
+		// contract as it stands at the moment of signing.
+		\EnergyCRM\Services::contractDocuments()->store( $id );
+
 		if ( class_exists( 'ECRM_REST' ) ) {
-			ECRM_REST::store_contract_pdf( $id );
 			ECRM_REST::notify_signed( $id, (string) ( $row['first_name'] ?? '' ) );
 		}
 
