@@ -50,9 +50,16 @@ class ECRM_REST {
 	 * and can_manage_team(). The status transition, the auto-processing cron and
 	 * the document build all left in step 10 — see
 	 * EnergyCRM\Domain\Contract\ContractLifecycle, AutoProcess and
-	 * EnergyCRM\Infrastructure\ContractDocuments. The notifications are next,
-	 * and they are a merge into the existing ECRM_Notifications rather than a
-	 * move; after that this file is deleted.
+	 * EnergyCRM\Infrastructure\ContractDocuments.
+	 *
+	 * The notifications are next, and they are a move into classes of their own,
+	 * not a merge into ECRM_Notifications: that one sends email, these write the
+	 * rows behind the bell. notify() becomes NotificationRepository::add().
+	 *
+	 * NS outlives the rest of this file. Six register_rest_route calls across
+	 * ECRM_Tracking, ECRM_KB and ECRM_Assistant still read it, plus four
+	 * rest_url callers — all ten have to point at Router::NAMESPACE (same value)
+	 * before this file can be deleted. See HANDOVER.md §6β.3.
 	 */
 	public static function routes(): void {
 		// GET /providers -> EnergyCRM\Http\CatalogueController

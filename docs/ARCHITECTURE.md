@@ -67,10 +67,21 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 
 Το βήμα 6 έκλεισε: καμία διαδρομή δεν δηλώνεται πλέον στο `class-ecrm-rest.php`.
 Ό,τι απέμεινε εκεί δεν είναι REST, και φεύγει στο βήμα 10. Έχουν ήδη φύγει ο
-κύκλος ζωής, το auto-process και η παραγωγή εγγράφων· απομένουν οι ειδοποιήσεις
-(συγχώνευση στο υπάρχον `ECRM_Notifications`, όχι νέα κλάση), η
-`can_manage_team()` και τα `NS`/`init`/`no_cache_headers`/`routes`. Προσοχή στο
-`NS`: το `ECRM_Tracking` το χρησιμοποιεί σε τρία `register_rest_route`.
+κύκλος ζωής, το auto-process και η παραγωγή εγγράφων· απομένουν οι ειδοποιήσεις,
+η `can_manage_team()` και τα `NS`/`init`/`no_cache_headers`/`routes`.
+
+**Οι ειδοποιήσεις πάνε σε δικές τους κλάσεις, όχι στο `ECRM_Notifications`.** Η
+προηγούμενη διατύπωση εδώ έλεγε «συγχώνευση στο υπάρχον `ECRM_Notifications`, όχι
+νέα κλάση». Αποσύρθηκε 2026-08-11: οι δύο μοιράζονται μόνο το όνομα. Το
+`ECRM_Notifications` στέλνει **email**· οι `ECRM_REST::notify*` γράφουν γραμμές
+στον πίνακα `notifications` — το καμπανάκι της οθόνης. Συγχώνευση θα έβαζε δύο
+μηχανισμούς σε ένα αρχείο. Το in-app έχει ήδη σπίτι: το `NotificationRepository`
+έχει `recentFor`/`unreadCount`/`markRead` και **καμία μέθοδο εγγραφής**.
+
+Προσοχή στο `NS`: **δεν** το χρησιμοποιεί μόνο το `ECRM_Tracking`. Δέκα χρήσεις
+σε έξι αρχεία, εκ των οποίων έξι `register_rest_route` σε `ECRM_Tracking`,
+`ECRM_KB` και `ECRM_Assistant` — και τα τρία ζωντανά στον `Loader`. Ο πλήρης
+πίνακας στο `HANDOVER.md` §6β.3.
 
 ## Χωρητικότητα
 
