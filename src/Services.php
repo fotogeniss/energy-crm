@@ -140,7 +140,8 @@ final class Services
     {
         return self::$contractNotices ??= new ContractNotices(
             self::contracts(),
-            self::notifications()
+            self::notifications(),
+            self::network()
         );
     }
 

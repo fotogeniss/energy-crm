@@ -18,11 +18,11 @@
  * upline matters because commission flows up the same tree: a manager who is
  * not told their team signed something finds out at payout time.
  *
- * The walk up the chain is still a loop, one get_user_meta per level. That is
- * an N+1 on a hot path — it runs on every signature and every document upload —
- * and it is replaced by the materialized path in the very next commit. It is
- * left alone here on purpose, so that the move and the optimisation are two
- * diffs and the tests can prove that only the second one changed the answer.
+ * The walk up the chain is one read of the stored path, not one per level. It
+ * used to be a loop over `ecrm_parent`, up to fifty `get_user_meta` calls on a
+ * path that runs on every signature and every document upload. That is the same
+ * N+1 step 3 removed from `visible_user_ids()`, and it is removed here the same
+ * way — the materialized path already holds the whole ancestry in one value.
  *
  * @package EnergyCRM
  */
@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Infrastructure;
 
+use EnergyCRM\Access\NetworkPath;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\NotificationRepository;
@@ -40,17 +41,10 @@ final class ContractNotices
     /** A customer whose name we could not work out is still a customer. */
     private const FALLBACK_NAME = 'Ο πελάτης';
 
-    /**
-     * Depth guard for a parent chain that loops or is absurdly deep.
-     *
-     * The same 50 as NetworkRepository::MAX_DEPTH, and for the same reason: a
-     * cycle in ecrm_parent would otherwise spin until the request times out.
-     */
-    private const MAX_DEPTH = 50;
-
     public function __construct(
         private readonly ContractRepository $contracts,
         private readonly NotificationRepository $notifications,
+        private readonly NetworkRepository $network,
     ) {
     }
 
@@ -125,32 +119,35 @@ final class ContractNotices
     /**
      * The managers above a user, nearest first, the user themselves excluded.
      *
-     * Moved unchanged from ECRM_REST::upline_of(). The next commit replaces the
-     * whole body with NetworkPath::ids() over the stored path — note that the
-     * path *includes* the subject, so the replacement has to drop its last
-     * element or the owner is notified twice.
+     * The stored path runs the other way round from the answer this method owes
+     * its caller: "/1/7/23/" is root first and *includes* 23. Hence the two
+     * adjustments, both of which matter —
+     *
+     *   - `array_slice(..., 0, -1)` drops the subject. Without it the owner is
+     *     told twice about their own contract, once as owner and once as their
+     *     own manager, on every signature and every upload.
+     *   - `array_reverse` restores nearest-first, so the rows are written in the
+     *     order they always were.
+     *
+     * A user id of zero has no path — NetworkPath::root() rejects it — so it is
+     * turned away here. The old loop returned an empty array for the same input,
+     * and a contract whose partner_user_id never got set is exactly the kind of
+     * row that reaches this method through an anonymous signing link.
+     *
+     * The depth guard against a looping `ecrm_parent` did not go away, it moved
+     * down: NetworkRepository::computePath() stops on a repeated id, and
+     * NetworkPath::isValid() refuses a path that contains one.
      *
      * @return list<int>
      */
     private function uplineOf(int $userId): array
     {
-        $managers = [];
-        $current  = $userId;
-        $depth    = 0;
-
-        while ($current > 0 && $depth < self::MAX_DEPTH) {
-            $depth++;
-
-            $parentId = (int) get_user_meta($current, NetworkRepository::PARENT_META, true);
-
-            if ($parentId <= 0 || in_array($parentId, $managers, true)) {
-                break;
-            }
-
-            $managers[] = $parentId;
-            $current    = $parentId;
+        if ($userId <= 0) {
+            return [];
         }
 
-        return $managers;
+        $lineage = NetworkPath::ids($this->network->pathFor($userId));
+
+        return array_reverse(array_slice($lineage, 0, -1));
     }
 }
