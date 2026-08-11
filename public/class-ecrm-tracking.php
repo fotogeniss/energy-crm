@@ -25,17 +25,17 @@ class ECRM_Tracking {
 	}
 
 	public static function routes(): void {
-		register_rest_route( ECRM_REST::NS, '/track/(?P<token>[A-Za-z0-9\-]+)', [
+		register_rest_route( \EnergyCRM\Http\Router::NAMESPACE, '/track/(?P<token>[A-Za-z0-9\-]+)', [
 			'methods'             => 'GET',
 			'callback'            => [ __CLASS__, 'rest_get' ],
 			'permission_callback' => '__return_true',
 		] );
-		register_rest_route( ECRM_REST::NS, '/track/(?P<token>[A-Za-z0-9\-]+)/sign', [
+		register_rest_route( \EnergyCRM\Http\Router::NAMESPACE, '/track/(?P<token>[A-Za-z0-9\-]+)/sign', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'rest_sign' ],
 			'permission_callback' => '__return_true',
 		] );
-		register_rest_route( ECRM_REST::NS, '/track/(?P<token>[A-Za-z0-9\-]+)/upload', [
+		register_rest_route( \EnergyCRM\Http\Router::NAMESPACE, '/track/(?P<token>[A-Za-z0-9\-]+)/upload', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'rest_upload' ],
 			'permission_callback' => '__return_true',
@@ -405,7 +405,7 @@ class ECRM_Tracking {
 		if ( ! $token ) {
 			return;
 		}
-		$rest    = esc_url_raw( rest_url( ECRM_REST::NS . '/track/' . $token ) );
+		$rest    = esc_url_raw( rest_url( \EnergyCRM\Http\Router::NAMESPACE . '/track/' . $token ) );
 		$accent  = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'accent_color', '#f59e0b' ) : '#f59e0b';
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '';
 

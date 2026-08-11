@@ -79,7 +79,7 @@ class ECRM_Files {
 		$uid = get_current_user_id();
 		return add_query_arg(
 			[ 't' => self::sign( $file_id, $uid ) ],
-			rest_url( ECRM_REST::NS . '/file/' . $file_id )
+			rest_url( \EnergyCRM\Http\Router::NAMESPACE . '/file/' . $file_id )
 		);
 	}
 

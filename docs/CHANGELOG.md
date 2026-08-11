@@ -7,6 +7,39 @@
 
 ---
 
+## 2026-08-11 (7)
+
+### Και οι δέκα χρήσεις του NS δείχνουν στον Router (βήμα 10ε, μέρος α)
+
+Καμία αλλαγή συμπεριφοράς: `ECRM_REST::NS` και `Router::NAMESPACE` είναι και τα
+δύο `'ecrm/v1'`, επαληθευμένο πριν την αλλαγή. Άλλαξε μόνο ποιος το λέει.
+
+| Αρχείο | Χρήσεις |
+|---|---|
+| `public/class-ecrm-tracking.php` | 3 × `register_rest_route`, 1 × `rest_url` |
+| `includes/class-ecrm-kb.php` | 2 × `register_rest_route` |
+| `includes/class-ecrm-assistant.php` | 1 × `register_rest_route` |
+| `includes/class-ecrm-files.php` | 1 × `rest_url` |
+| `public/class-ecrm-sign-page.php` | 1 × `rest_url` |
+| `public/class-ecrm-shortcodes.php` | 1 × `rest_url` |
+
+**Γιατί χωριστό commit.** Είναι το σημείο που η καταγραφή κόστισε περισσότερο σε
+όλη τη σειρά: μέχρι τις 2026-08-11 τρία έγγραφα έλεγαν «το `ECRM_Tracking` σε
+τρία `register_rest_route`». Οι πραγματικές χρήσεις ήταν δέκα, σε έξι αρχεία, και
+τα `ECRM_KB` και `ECRM_Assistant` είναι **και τα δύο ζωντανά** στον `Loader`.
+Διαγραφή του αρχείου με μόνο το Tracking στραμμένο θα έριχνε fatal σε κάθε
+`rest_api_init` — δηλαδή σε ολόκληρο το plugin, στην πρώτη φόρτωση.
+
+Με τη στροφή χωριστά, η διαγραφή γίνεται diff που ή φορτώνει ή δεν φορτώνει.
+Χωρίς ενδιάμεση κατάσταση όπου μισοί καλούντες έχουν μετακομίσει.
+
+**Τι μένει για τη διαγραφή.** Το `NS` δεν έχει πλέον αναγνώστη έξω από το αρχείο·
+η μόνη χρήση είναι το `self::NS` μέσα στην `no_cache_headers()`. Εκείνη ανήκει
+στον `Router` — είναι HTTP, όχι legacy — και το `ECRM_REST` πρέπει να βγει από
+`Loader::files()` **και** `modules()`.
+
+---
+
 ## 2026-08-11 (6)
 
 ### Η can_manage_team() δεν μετακόμισε — ήταν νεκρή (βήμα 10δ, μέρος ε)

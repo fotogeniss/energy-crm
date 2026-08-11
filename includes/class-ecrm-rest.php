@@ -63,10 +63,17 @@ class ECRM_REST {
 	 * is Access\WordPressScopeResolver, which asks the same two capabilities and
 	 * returns a UserScope instead of a bare bool.
 	 *
-	 * NS outlives the rest of this file. Six register_rest_route calls across
-	 * ECRM_Tracking, ECRM_KB and ECRM_Assistant still read it, plus four
-	 * rest_url callers — all ten have to point at Router::NAMESPACE (same value)
-	 * before this file can be deleted. See HANDOVER.md §6β.3.
+	 * NS has no readers left outside this file. All ten — six
+	 * register_rest_route across ECRM_Tracking, ECRM_KB and ECRM_Assistant, and
+	 * four rest_url in ECRM_Files, ECRM_Sign_Page, ECRM_Shortcodes and again
+	 * ECRM_Tracking — now read Router::NAMESPACE, which carries the same value.
+	 * The only use left is self::NS inside no_cache_headers() below.
+	 *
+	 * That makes this file deletable in one diff, which is the point of doing
+	 * the redirect on its own: the deletion either loads or it does not, with no
+	 * half state where some callers have moved and others have not. What the
+	 * deletion still has to carry: no_cache_headers() belongs to Router (it is
+	 * HTTP), and ECRM_REST has to come out of Loader::files() and modules().
 	 */
 	public static function routes(): void {
 		// GET /providers -> EnergyCRM\Http\CatalogueController

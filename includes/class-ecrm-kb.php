@@ -27,12 +27,12 @@ class ECRM_KB {
 		// src/Http, and this reference was left pointing at nothing: PHP 8
 		// throws from call_user_func, so both endpoints answered 500 to
 		// everyone. Guards::crmUser() is the same floor, defined once.
-		register_rest_route( ECRM_REST::NS, '/kb', [
+		register_rest_route( \EnergyCRM\Http\Router::NAMESPACE, '/kb', [
 			'methods'             => 'GET',
 			'callback'            => [ __CLASS__, 'list_entries' ],
 			'permission_callback' => Guards::crmUser(),
 		] );
-		register_rest_route( ECRM_REST::NS, '/kb/ask', [
+		register_rest_route( \EnergyCRM\Http\Router::NAMESPACE, '/kb/ask', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'ask' ],
 			'permission_callback' => Guards::crmUser(),

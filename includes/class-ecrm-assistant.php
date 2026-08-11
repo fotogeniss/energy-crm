@@ -22,7 +22,7 @@ class ECRM_Assistant {
 		add_action( 'rest_api_init', function () {
 			// See the note in ECRM_KB::routes(): ECRM_REST::can_use() no longer
 			// exists, so this route answered 500 rather than checking anything.
-			register_rest_route( ECRM_REST::NS, '/assistant', [
+			register_rest_route( \EnergyCRM\Http\Router::NAMESPACE, '/assistant', [
 				'methods'             => 'POST',
 				'callback'            => [ __CLASS__, 'chat' ],
 				'permission_callback' => Guards::crmUser(),

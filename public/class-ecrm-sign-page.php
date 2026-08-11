@@ -40,7 +40,7 @@ class ECRM_Sign_Page {
 			}
 		}
 
-		$rest  = esc_url_raw( rest_url( ECRM_REST::NS . '/sign/' . $token ) );
+		$rest  = esc_url_raw( rest_url( \EnergyCRM\Http\Router::NAMESPACE . '/sign/' . $token ) );
 		$accent = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'accent_color', '#f59e0b' ) : '#f59e0b';
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '';
 

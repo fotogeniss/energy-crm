@@ -32,7 +32,7 @@ class ECRM_Shortcodes {
 		}
 
 		wp_localize_script( 'ecrm-form', 'ECRM', [
-			'rest'     => esc_url_raw( rest_url( ECRM_REST::NS ) ),
+			'rest'     => esc_url_raw( rest_url( \EnergyCRM\Http\Router::NAMESPACE ) ),
 			'nonce'    => wp_create_nonce( 'wp_rest' ),
 			'statuses' => ECRM_DB::statuses(),
 			'caps'     => $caps,
