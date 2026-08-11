@@ -22,8 +22,8 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_Files;
-use ECRM_REST;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
+use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\SignatureRepository;
@@ -42,6 +42,7 @@ final class SigningController implements Controller
         private readonly SignatureRepository $signatures,
         private readonly FileRepository $files,
         private readonly ContractLifecycle $lifecycle,
+        private readonly ContractNotices $notices,
     ) {
     }
 
@@ -126,7 +127,7 @@ final class SigningController implements Controller
                 'signed_at' => current_time('mysql'),
                 'signed_ip' => substr($ip, 0, 64),
             ],
-            // notify_signed() below is the one that reaches the agent.
+            // The notices->signed() call below is the one that reaches the agent.
             'inapp'   => false,
         ]);
 
@@ -136,7 +137,7 @@ final class SigningController implements Controller
         // Queued: signatures arrive in bursts when a batch of links goes out,
         // and the customer's browser should not wait for a render it never sees.
         DocumentQueue::enqueue($contractId);
-        ECRM_REST::notify_signed($contractId, $name);
+        $this->notices->signed($contractId, $name);
 
         return new WP_REST_Response(['ok' => true], 200);
     }

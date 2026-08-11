@@ -4,9 +4,13 @@
  * Who gets told when something happens to a contract.
  *
  * Characterisation, written before the code moved: every assertion here
- * describes `ECRM_REST::notify()`, `notify_document()` and `notify_signed()`
- * exactly as they stand, so that the move can change one thing in this file —
+ * described `ECRM_REST::notify()`, `notify_document()` and `notify_signed()`
+ * exactly as they stood, so that the move could change one thing in this file —
  * the name of what gets called — and nothing else.
+ *
+ * It did. The calls now read `ContractNotices` and `NotificationRepository::add()`
+ * directly, the ECRM_REST wrappers are gone, and not one assertion moved across
+ * the three commits of step 10d.
  *
  * ## Why this is worth pinning
  *
@@ -33,10 +37,10 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
-use ECRM_REST;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\Tables;
+use EnergyCRM\Services;
 
 final class ContractNotificationsTest extends IntegrationTestCase
 {
@@ -63,7 +67,7 @@ final class ContractNotificationsTest extends IntegrationTestCase
 
     public function testTheOwnerIsToldTheirCustomerSigned(): void
     {
-        ECRM_REST::notify_signed($this->contractId, 'Γιώργος');
+        Services::contractNotices()->signed($this->contractId, 'Γιώργος');
 
         $rows = $this->notificationsFor($this->owner);
 
@@ -80,7 +84,7 @@ final class ContractNotificationsTest extends IntegrationTestCase
      */
     public function testEveryoneAboveTheOwnerIsToldAsWell(): void
     {
-        ECRM_REST::notify_signed($this->contractId, 'Γιώργος');
+        Services::contractNotices()->signed($this->contractId, 'Γιώργος');
 
         self::assertCount(1, $this->notificationsFor($this->manager));
         self::assertCount(1, $this->notificationsFor($this->director));
@@ -88,7 +92,7 @@ final class ContractNotificationsTest extends IntegrationTestCase
 
     public function testTheSignedNoticeNamesTheContractAndTheCustomer(): void
     {
-        ECRM_REST::notify_signed($this->contractId, 'Γιώργος');
+        Services::contractNotices()->signed($this->contractId, 'Γιώργος');
 
         $row = $this->notificationsFor($this->owner)[0];
 
@@ -100,14 +104,14 @@ final class ContractNotificationsTest extends IntegrationTestCase
     /** The signer's name is added when the signing page knows it. */
     public function testTheSignersNameIsIncludedWhenThereIsOne(): void
     {
-        ECRM_REST::notify_signed($this->contractId, 'Γιώργος');
+        Services::contractNotices()->signed($this->contractId, 'Γιώργος');
 
         self::assertStringContainsString('(Γιώργος)', (string) $this->notificationsFor($this->owner)[0]['body']);
     }
 
     public function testADocumentUploadTellsTheOwnerAndTheUpline(): void
     {
-        ECRM_REST::notify_document($this->contractId, 'Ταυτότητα');
+        Services::contractNotices()->documentUploaded($this->contractId, 'Ταυτότητα');
 
         foreach ([$this->owner, $this->manager, $this->director] as $userId) {
             $rows = $this->notificationsFor($userId);
@@ -119,7 +123,7 @@ final class ContractNotificationsTest extends IntegrationTestCase
 
     public function testTheDocumentNoticeNamesTheDocument(): void
     {
-        ECRM_REST::notify_document($this->contractId, 'Ταυτότητα');
+        Services::contractNotices()->documentUploaded($this->contractId, 'Ταυτότητα');
 
         $row = $this->notificationsFor($this->owner)[0];
 
@@ -130,14 +134,14 @@ final class ContractNotificationsTest extends IntegrationTestCase
     /** Without a label it still says something happened, just not what. */
     public function testAnUnlabelledDocumentStillProducesANotice(): void
     {
-        ECRM_REST::notify_document($this->contractId);
+        Services::contractNotices()->documentUploaded($this->contractId);
 
         self::assertStringContainsString('ανέβασε έγγραφο', (string) $this->notificationsFor($this->owner)[0]['body']);
     }
 
     public function testAContractThatDoesNotExistNotifiesNobody(): void
     {
-        ECRM_REST::notify_signed($this->contractId + 100000);
+        Services::contractNotices()->signed($this->contractId + 100000);
 
         self::assertSame([], $this->notificationsFor($this->owner));
     }
@@ -150,7 +154,7 @@ final class ContractNotificationsTest extends IntegrationTestCase
      */
     public function testANotificationForNobodyIsNotWritten(): void
     {
-        ECRM_REST::notify(0, 'signed', 'Τίτλος', 'Κείμενο', $this->contractId);
+        Services::notifications()->add(0, 'signed', 'Τίτλος', 'Κείμενο', $this->contractId);
 
         global $wpdb;
 
@@ -165,7 +169,7 @@ final class ContractNotificationsTest extends IntegrationTestCase
     /** An unread notice is one with no read_at, which is what the bell counts. */
     public function testANewNoticeStartsUnread(): void
     {
-        ECRM_REST::notify($this->owner, 'signed', 'Τίτλος', 'Κείμενο', $this->contractId);
+        Services::notifications()->add($this->owner, 'signed', 'Τίτλος', 'Κείμενο', $this->contractId);
 
         self::assertNull($this->notificationsFor($this->owner)[0]['read_at']);
     }

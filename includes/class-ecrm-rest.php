@@ -46,10 +46,10 @@ class ECRM_REST {
 	 * EnergyCRM\Http\Router. The map below is kept as a finding aid — it is the
 	 * only place that lists the whole HTTP surface next to its old home.
 	 *
-	 * What is left in this class is not REST either: three notification
-	 * wrappers, and can_manage_team(). The status transition, the auto-processing
-	 * cron, the document build and now the notifications all left in step 10 —
-	 * see EnergyCRM\Domain\Contract\ContractLifecycle, AutoProcess,
+	 * What is left in this class is not REST either, and is down to two things:
+	 * NS and can_manage_team(). The status transition, the auto-processing cron,
+	 * the document build and the notifications all left in step 10 — see
+	 * EnergyCRM\Domain\Contract\ContractLifecycle, AutoProcess,
 	 * EnergyCRM\Infrastructure\ContractDocuments and
 	 * EnergyCRM\Infrastructure\ContractNotices.
 	 *
@@ -122,26 +122,5 @@ class ECRM_REST {
 
 	public static function can_manage_team(): bool {
 		return current_user_can( 'ecrm_manage_team' ) || current_user_can( 'manage_options' );
-	}
-
-	/*
-	 * The three below are wrappers, kept only until their callers move in the
-	 * next commit. The work is in EnergyCRM\Infrastructure\ContractNotices and
-	 * EnergyCRM\Persistence\NotificationRepository::add().
-	 */
-
-	/** Insert a single in-app notification. */
-	public static function notify( int $user_id, string $type, string $title, string $body = '', int $contract_id = 0 ): void {
-		\EnergyCRM\Services::notifications()->add( $user_id, $type, $title, $body, $contract_id );
-	}
-
-	/** Notify the contract owner (and upline) that a document was uploaded. */
-	public static function notify_document( int $contract_id, string $doc_label = '' ): void {
-		\EnergyCRM\Services::contractNotices()->documentUploaded( $contract_id, $doc_label );
-	}
-
-	/** Notify the contract owner (and upline) that the customer signed. */
-	public static function notify_signed( int $contract_id, string $signer = '' ): void {
-		\EnergyCRM\Services::contractNotices()->signed( $contract_id, $signer );
 	}
 }

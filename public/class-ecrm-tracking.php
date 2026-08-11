@@ -259,16 +259,14 @@ class ECRM_Tracking {
 			'from'    => (string) $row['status'],
 			'message' => 'Ο πελάτης υπέγραψε ηλεκτρονικά από τον σύνδεσμο παρακολούθησης' . ( $ip ? ' (IP ' . $ip . ')' : '' ),
 			'extra'   => [ 'signed_at' => $now, 'signed_ip' => $ip ],
-			'inapp'   => false, // notify_signed() below handles the in-app notification.
+			'inapp'   => false, // The contractNotices() call below handles the in-app notification.
 		] );
 
 		// Rebuild the attached provider form, so the stored copy reflects the
 		// contract as it stands at the moment of signing.
 		\EnergyCRM\Services::contractDocuments()->store( $id );
 
-		if ( class_exists( 'ECRM_REST' ) ) {
-			ECRM_REST::notify_signed( $id, (string) ( $row['first_name'] ?? '' ) );
-		}
+		\EnergyCRM\Services::contractNotices()->signed( $id, (string) ( $row['first_name'] ?? '' ) );
 
 		// Notify the seller.
 		if ( ! empty( $row['partner_user_id'] ) ) {
@@ -367,9 +365,7 @@ class ECRM_Tracking {
 			'contract_id' => $id, 'user_id' => 0, 'type' => 'note',
 			'message'     => 'Ο πελάτης ανέβασε δικαιολογητικό: ' . $label,
 		] );
-		if ( class_exists( 'ECRM_REST' ) && method_exists( 'ECRM_REST', 'notify_document' ) ) {
-			ECRM_REST::notify_document( $id, $label );
-		}
+		\EnergyCRM\Services::contractNotices()->documentUploaded( $id, $label );
 
 		return new WP_REST_Response( [
 			'ok'      => true,

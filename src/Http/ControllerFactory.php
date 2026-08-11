@@ -68,7 +68,12 @@ final class ControllerFactory
             new RenewalsController($scope, Services::contracts(), Services::events()),
 
             // Signing — the two public routes and the link that creates them.
-            new SigningController(Services::signatures(), Services::files(), $lifecycle),
+            new SigningController(
+                Services::signatures(),
+                Services::files(),
+                $lifecycle,
+                Services::contractNotices()
+            ),
             new SignLinkController($scope, Services::contracts(), Services::documents(), $lifecycle),
 
             // People.
