@@ -114,139 +114,17 @@ class ECRM_REST {
 	}
 
 	/**
-	 * Generate the contract PDF and store it as a 'contract' document attached to
-	 * the contract (replacing any previous one). Best-effort: never throws.
+	 * Generate the contract PDF and store it against the contract.
+	 *
+	 * A wrapper on its way out: the work moved to
+	 * EnergyCRM\Infrastructure\ContractDocuments in step 10c. It stays only
+	 * long enough for the four call sites to be pointed at the new class one at
+	 * a time, which is the whole reason the move was safe to make.
 	 *
 	 * @return bool true on success.
 	 */
 	public static function store_contract_pdf( int $id ): bool {
-		global $wpdb;
-		$ct = ECRM_DB::table( 'contracts' );
-		$cu = ECRM_DB::table( 'customers' );
-		$pr = ECRM_DB::table( 'providers' );
-		$pg = ECRM_DB::table( 'programs' );
-
-		$row = $wpdb->get_row( $wpdb->prepare(
-			"SELECT c.*, p.name AS provider_name, g.name AS program_name, g.code AS program_code,
-				cu.first_name, cu.last_name, cu.father_name, cu.company_name, cu.afm, cu.doy,
-				cu.adt, cu.birth_date, cu.region, cu.city, cu.street, cu.street_no, cu.postal_code,
-				cu.phone, cu.mobile, cu.email
-			FROM {$ct} c
-			LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			LEFT JOIN {$pr} p  ON p.id  = c.provider_id
-			LEFT JOIN {$pg} g  ON g.id  = c.program_id
-			WHERE c.id = %d", $id
-		), ARRAY_A );
-		if ( ! $row ) { return false; }
-
-		@ini_set( 'memory_limit', '256M' );
-		@set_time_limit( 60 );
-		$er = error_reporting();
-		error_reporting( 0 );
-
-		// Prefer the official provider form (what the user prints/downloads); if the
-		// provider has no template, fall back to the internal contract summary.
-		$bytes        = '';
-		$extra_sheets = [];
-		if ( class_exists( 'ECRM_FormFill' ) ) {
-			try {
-				ob_start();
-				$sheets = ECRM_FormFill::fill_all( $row );
-				ob_end_clean();
-				foreach ( $sheets as $sheet ) {
-					if ( empty( $sheet['ok'] ) || empty( $sheet['bytes'] ) ) { continue; }
-					// The first sheet is the contract; the rest ride with it.
-					if ( $bytes === '' ) {
-						$bytes = $sheet['bytes'];
-						continue;
-					}
-					$extra_sheets[] = $sheet;
-				}
-			} catch ( \Throwable $e ) {
-				if ( ob_get_level() > 0 ) { ob_end_clean(); }
-			}
-		}
-		if ( $bytes === '' ) {
-			try {
-				ob_start();
-				$bytes = ECRM_PDF::build( $row );
-				ob_end_clean();
-			} catch ( \Throwable $e ) {
-				if ( ob_get_level() > 0 ) { ob_end_clean(); }
-				error_reporting( $er );
-				return false;
-			}
-		}
-		error_reporting( $er );
-
-		$at = strpos( (string) $bytes, '%PDF-' );
-		if ( $at === false ) { return false; }
-		if ( $at > 0 ) { $bytes = substr( $bytes, $at ); }
-
-		if ( ! class_exists( 'ECRM_Files' ) ) { return false; }
-		$code = $row['code'] ?: ( 'symvasi-' . $id );
-
-		self::forget_generated_documents( $id );
-
-		if ( ! self::keep_generated_document( $id, 'contract', $code . '.pdf', $bytes ) ) {
-			return false;
-		}
-
-		// Mobile applications travel as a set: the contract plus whatever the
-		// customer's choices added. Those extra sheets are stored beside it so
-		// the agent prints the whole application, not just its first form.
-		foreach ( $extra_sheets as $sheet ) {
-			$kind = substr( 'form_' . $sheet['key'], 0, 24 );
-			self::keep_generated_document( $id, $kind, $code . '-' . $sheet['key'] . '.pdf', $sheet['bytes'] );
-		}
-
-		return true;
-	}
-
-	/**
-	 * Remove the documents a previous save generated, bytes included.
-	 *
-	 * Only ever the generated ones: anything the customer or the agent
-	 * uploaded has its own doc_kind and must survive a re-save untouched.
-	 */
-	private static function forget_generated_documents( int $contract_id ): void {
-		global $wpdb;
-		$fl = ECRM_DB::table( 'files' );
-
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, path FROM {$fl}
-			 WHERE contract_id = %d AND ( doc_kind = 'contract' OR doc_kind LIKE 'form\\_%' )",
-			$contract_id
-		), ARRAY_A );
-
-		foreach ( (array) $rows as $r ) {
-			// Deleting the row without the file is how the orphans this plugin
-			// had to sweep up were made in the first place.
-			$path = (string) ( $r['path'] ?? '' );
-			if ( $path !== '' && file_exists( $path ) ) {
-				wp_delete_file( $path );
-			}
-			$wpdb->delete( $fl, [ 'id' => (int) $r['id'] ] );
-		}
-	}
-
-	/** Store one generated PDF against the contract. */
-	private static function keep_generated_document( int $contract_id, string $kind, string $filename, string $bytes ): bool {
-		global $wpdb;
-
-		$saved = ECRM_Files::put_bytes( $bytes, 'pdf', 'application/pdf', $filename );
-		if ( ! $saved ) { return false; }
-
-		$wpdb->insert( ECRM_DB::table( 'files' ), [
-			'contract_id' => $contract_id,
-			'doc_kind'    => $kind,
-			'filename'    => $saved['filename'],
-			'mime'        => $saved['mime'],
-			'path'        => $saved['path'],
-			'protected'   => 1,
-		] );
-
-		return true;
+		return \EnergyCRM\Services::contractDocuments()->store( $id );
 	}
 
 	/** Insert a single in-app notification. */

@@ -346,11 +346,11 @@ final class ContractRepository
 
     /*
      * ---------------------------------------------------------------------
-     * The lifecycle three — and why they alone take no UserScope
+     * The unscoped four — and why they alone take no UserScope
      * ---------------------------------------------------------------------
      *
      * Everything above refuses to run without saying on whose behalf it runs.
-     * These three deliberately do not, and the exception is narrow enough to
+     * These four deliberately do not, and the exception is narrow enough to
      * state exactly:
      *
      *   - The status transition is reached through ContractLifecycle, whose
@@ -359,10 +359,23 @@ final class ContractRepository
      *     make the caller believe the check lives here.
      *   - The automatic sweep runs from cron, on behalf of nobody. There is no
      *     actor to scope it to, which is the whole point of it existing.
+     *   - The document build has both problems at once: it runs from cron, and
+     *     it runs for the customer following a signing link, who is not a user
+     *     of this system at all. Its two REST callers resolve the contract
+     *     through findDetailed() first, so the scope check happens where there
+     *     is somebody to check.
      *
-     * They are grouped here, named for the lifecycle, and there are three of
-     * them. If a fourth appears, that is the moment to ask whether the
-     * exception is still an exception.
+     * The group was named for the lifecycle when it held three, and the note
+     * said that a fourth was the moment to ask whether the exception was still
+     * an exception. It arrived on 2026-08-10 and the question was asked. The
+     * answer: the shared property was never "lifecycle", it was "runs on behalf
+     * of nobody" — cron and an unauthenticated customer both. Renamed to say
+     * so, because a group whose name no longer describes its members is how a
+     * narrow exception turns into a general one without anybody deciding to.
+     *
+     * What would make this stop being an exception is a member that *does*
+     * have an actor. There is no such member, and adding one is the thing to
+     * refuse.
      */
 
     /** The status a contract is in right now; '' when there is no such row. */
@@ -436,6 +449,22 @@ final class ContractRepository
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         return array_values(array_map('intval', $ids));
+    }
+
+    /**
+     * The contract as the document builder needs it: everything the provider's
+     * form prints, decrypted, with no actor to scope it to.
+     *
+     * Identical to findDetailed() but for the missing ownership clause — the
+     * same query, the same translation back out of storage. That is the point
+     * of it existing rather than the raw SQL it replaced: the stored form and
+     * the downloaded one are now filled from the same row, read the same way.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function detailedForDocument(int $contractId): ?array
+    {
+        return $this->detailed($contractId, '', []);
     }
 
     /**
@@ -684,9 +713,28 @@ final class ContractRepository
      */
     public function findDetailed(int $contractId, UserScope $scope): ?array
     {
-        global $wpdb;
-
         [$clause, $params] = $this->scopeClause($scope, 'c');
+
+        return $this->detailed($contractId, $clause, $params);
+    }
+
+    /**
+     * The join behind findDetailed(), with the ownership clause left to the
+     * caller.
+     *
+     * Shared rather than copied, and that is the whole point: the line that
+     * closes it — `fromStorage()` on both the customer's columns and the
+     * extras bag — is what turns stored ciphertext back into a ΑΦΜ. A second
+     * copy of this query is a second place to forget it, which is exactly what
+     * ECRM_REST::store_contract_pdf() had done.
+     *
+     * @param list<mixed> $params
+     *
+     * @return array<string, mixed>|null
+     */
+    private function detailed(int $contractId, string $clause, array $params): ?array
+    {
+        global $wpdb;
 
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var array<string, mixed>|null $row */

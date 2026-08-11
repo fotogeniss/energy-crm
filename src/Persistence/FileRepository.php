@@ -110,6 +110,58 @@ final class FileRepository
     }
 
     /**
+     * Remove the documents a build produced, bytes included.
+     *
+     * Which kinds count as generated is the caller's to say. Everything the
+     * customer or the agent uploaded has its own doc_kind and must survive a
+     * rebuild untouched: losing a scanned ID card because somebody pressed
+     * save twice would be unrecoverable, since the original was never anywhere
+     * else.
+     *
+     * Two details that are not decoration. The prefix goes through esc_like(),
+     * so the underscore in `form_` matches an underscore rather than any
+     * character. And the delete names the ids that were read, not the
+     * condition they were read by — a second build starting in between would
+     * otherwise have its fresh rows deleted by this one.
+     *
+     * @return int Number of rows removed.
+     */
+    public function purgeGenerated(int $contractId, string $kind, string $sheetPrefix): int
+    {
+        global $wpdb;
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT id, path, attachment_id FROM %i
+                 WHERE contract_id = %d AND (doc_kind = %s OR doc_kind LIKE %s)',
+                $this->table,
+                $contractId,
+                $kind,
+                $wpdb->esc_like($sheetPrefix) . '%'
+            ),
+            ARRAY_A
+        );
+
+        if ($rows === []) {
+            return 0;
+        }
+
+        $this->deleteBytes($rows);
+
+        $ids          = array_map(static fn (array $row): int => (int) $row['id'], $rows);
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $wpdb->query(
+            $wpdb->prepare("DELETE FROM {$this->table} WHERE id IN ({$placeholders})", $ids)
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return count($ids);
+    }
+
+    /**
      * Remove every document belonging to the given contracts, bytes included.
      *
      * @param list<int> $contractIds

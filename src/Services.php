@@ -28,6 +28,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\WordPressScopeResolver;
 use EnergyCRM\Domain\Contract\AutoProcess;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
+use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Infrastructure\SecretStore;
@@ -82,6 +83,8 @@ final class Services
 
     private static ?DocumentQueue $documents = null;
 
+    private static ?ContractDocuments $contractDocuments = null;
+
     private static ?ExtractionGate $extractionGate = null;
 
     private static ?ContractLifecycle $lifecycle = null;
@@ -115,6 +118,11 @@ final class Services
     public static function documents(): DocumentQueue
     {
         return self::$documents ??= new DocumentQueue(self::files());
+    }
+
+    public static function contractDocuments(): ContractDocuments
+    {
+        return self::$contractDocuments ??= new ContractDocuments(self::contracts(), self::files());
     }
 
     public static function teamActivity(): TeamActivityRepository
@@ -225,9 +233,10 @@ final class Services
         self::$commissions   = null;
         self::$analytics     = null;
         self::$teamActivity  = null;
-        self::$documents      = null;
-        self::$extractionGate = null;
-        self::$lifecycle      = null;
-        self::$autoProcess    = null;
+        self::$documents         = null;
+        self::$contractDocuments = null;
+        self::$extractionGate    = null;
+        self::$lifecycle         = null;
+        self::$autoProcess       = null;
     }
 }
