@@ -67,6 +67,42 @@ final class FileRepository
     }
 
     /**
+     * The newest document of a kind whose bytes are actually there.
+     *
+     * Newest by id, which is insertion order: the signing page inserts a fresh
+     * row every time, so a re-signed contract has several and the last one is
+     * the drawing that counts. A row whose file is missing is skipped rather
+     * than returned — handing back a path that does not exist only moves the
+     * failure somewhere less obvious.
+     *
+     * The same containment check as deletion: a path is only handed out if it
+     * resolves inside the protected directory. The caller embeds it in a PDF,
+     * so a tampered row would otherwise be a way to read a file off the disk.
+     */
+    public function latestPathOfKind(int $contractId, string $kind): ?string
+    {
+        global $wpdb;
+
+        /** @var list<string> $paths */
+        $paths = $wpdb->get_col(
+            $wpdb->prepare(
+                'SELECT path FROM %i WHERE contract_id = %d AND doc_kind = %s ORDER BY id DESC',
+                $this->table,
+                $contractId,
+                $kind
+            )
+        );
+
+        foreach ($paths as $path) {
+            if ($path !== '' && $this->isInsideStorage($path)) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Record a stored document against a contract.
      *
      * `protected` is always 1: everything written since the secure directory

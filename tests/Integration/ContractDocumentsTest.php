@@ -26,10 +26,10 @@
  *     after the customer signs does not carry the signature — the one thing
  *     that rebuild exists to add.
  *
- * Both are invisible from here because the evidence ends up inside a
- * compressed PDF stream. They get their own tests once the renderer is a
- * collaborator that can be asked what it was handed. Pinning today's behaviour
- * first is what makes that change safe to make.
+ * Both were invisible from here because the evidence ends up inside a
+ * compressed PDF stream. SheetRenderer is an interface for exactly that
+ * reason: with a collaborator, "was it handed the signature?" and "was the row
+ * decrypted?" have answers. Those tests are at the bottom of this file.
  *
  * ## Files outlive the transaction
  *
@@ -46,6 +46,9 @@ namespace EnergyCRM\Tests\Integration;
 
 use ECRM_Files;
 use EnergyCRM\Infrastructure\ContractDocuments;
+use EnergyCRM\Infrastructure\FieldCipher;
+use EnergyCRM\Infrastructure\SheetRenderer;
+use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\Tables;
 use EnergyCRM\Services;
@@ -194,7 +197,92 @@ final class ContractDocumentsTest extends IntegrationTestCase
         self::assertSame([], $this->documentsFor($this->contractId + 100000));
     }
 
+    // --- What the renderer is handed ---------------------------------------
+
+    /**
+     * The signature reaches the form.
+     *
+     * It did not, for as long as the feature existed. ECRM_Tracking rebuilds
+     * the document immediately after the customer signs, with a comment saying
+     * the copy "now carries the signature" — and called fill_all() without a
+     * path to it. The provider therefore received an unsigned application while
+     * the agent, whose download route does pass one, saw a signed one.
+     */
+    public function testTheRendererIsHandedTheSignatureTheContractCarries(): void
+    {
+        $signature = $this->attachDocument($this->contractId, 'signature');
+        $renderer  = new RecordingSheetRenderer();
+
+        $this->documentsWith($renderer)->store($this->contractId);
+
+        self::assertSame($signature, $renderer->calls[0]['signaturePath']);
+    }
+
+    public function testTheRendererIsHandedNothingWhenNobodyHasSigned(): void
+    {
+        $renderer = new RecordingSheetRenderer();
+
+        $this->documentsWith($renderer)->store($this->contractId);
+
+        self::assertNull($renderer->calls[0]['signaturePath']);
+    }
+
+    /**
+     * Signing again does not resurrect the first drawing.
+     *
+     * The signing page inserts a row per signature rather than replacing one,
+     * so a contract signed twice has two. The one that counts is the last.
+     */
+    public function testTheSignatureHandedOverIsTheMostRecentOne(): void
+    {
+        $this->attachDocument($this->contractId, 'signature');
+        $latest   = $this->attachDocument($this->contractId, 'signature');
+        $renderer = new RecordingSheetRenderer();
+
+        $this->documentsWith($renderer)->store($this->contractId);
+
+        self::assertSame($latest, $renderer->calls[0]['signaturePath']);
+    }
+
+    /**
+     * The row reaches the renderer readable.
+     *
+     * The old code read the contract with its own copy of findDetailed()'s
+     * query and skipped the translation back out of storage, so with
+     * encryption on the stored form printed `ecrm1:…` where the ΑΦΜ belongs.
+     * The assertion on disk is not decoration: without it this test would pass
+     * just as happily if encryption had quietly not been applied at all.
+     */
+    public function testTheRendererIsHandedTheTaxNumberInPlaintext(): void
+    {
+        $this->encryptionOn();
+
+        $contractId = $this->makeContract(['code' => 'ECRM-TEST-2']);
+        $customerId = (int) $this->storedRow(Tables::CONTRACTS, $contractId)['customer_id'];
+
+        self::assertTrue(
+            FieldCipher::isEncrypted((string) $this->storedRow(Tables::CUSTOMERS, $customerId)['afm']),
+            'Nothing was encrypted, so this test proves nothing.'
+        );
+
+        $renderer = new RecordingSheetRenderer();
+
+        $this->documentsWith($renderer)->store($contractId);
+
+        $handed = $renderer->calls[0]['contract'];
+
+        self::assertSame('123456789', $handed['afm']);
+        self::assertSame('ΑΒ123456', $handed['adt']);
+        self::assertSame('Αγίου Δημητρίου', $handed['street']);
+    }
+
     // --- Fixtures ----------------------------------------------------------
+
+    /** The same class the plugin wires up, with the renderer swapped out. */
+    private function documentsWith(SheetRenderer $renderer): ContractDocuments
+    {
+        return new ContractDocuments(new ContractRepository(), Services::files(), $renderer);
+    }
 
     /**
      * @param array<string, mixed> $overrides

@@ -66,8 +66,11 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 | 10 | Κύκλος ζωής συμβολαίου (`transition`, ειδοποιήσεις) εκτός `ECRM_REST`· container αντί για 16 ορίσματα στον `Router` | ⬜ |
 
 Το βήμα 6 έκλεισε: καμία διαδρομή δεν δηλώνεται πλέον στο `class-ecrm-rest.php`.
-Ό,τι απέμεινε εκεί δεν είναι REST — είναι ο κύκλος ζωής του συμβολαίου, και
-φεύγει στο βήμα 10.
+Ό,τι απέμεινε εκεί δεν είναι REST, και φεύγει στο βήμα 10. Έχουν ήδη φύγει ο
+κύκλος ζωής, το auto-process και η παραγωγή εγγράφων· απομένουν οι ειδοποιήσεις
+(συγχώνευση στο υπάρχον `ECRM_Notifications`, όχι νέα κλάση), η
+`can_manage_team()` και τα `NS`/`init`/`no_cache_headers`/`routes`. Προσοχή στο
+`NS`: το `ECRM_Tracking` το χρησιμοποιεί σε τρία `register_rest_route`.
 
 ## Χωρητικότητα
 
@@ -200,9 +203,12 @@ Yoda conditions είναι κατάλοιπα της PHP 5.x.
 Κρατάμε από το WPCS ό,τι πιάνει πραγματικά bugs: `WordPress.Security`
 (escaping, nonces, sanitization) και `WordPress.DB` (prepared statements).
 
-Ο legacy κώδικας σε `includes/`, `admin/`, `public/` δεν ελέγχεται ακόμη — θα
-μπει στο ruleset καθώς μεταναστεύει. Το `.editorconfig` κρατά tabs εκεί και
-spaces στο `src/`, ώστε να μη γεμίσουν τα diffs με αλλαγές κενών.
+Ο legacy κώδικας σε `includes/`, `admin/`, `public/` μπήκε στο ruleset τις
+2026-08-10, αλλά **μόνο για τους sniffs ασφαλείας** — escaping, nonces,
+sanitisation, prepared SQL. Το PSR-12 μένει κλειστό εκεί: μερικές χιλιάδες
+ευρήματα για tabs και Yoda conditions θα έθαβαν τη χούφτα που μετράει, και τα
+αρχεία σβήνονται ένα-ένα καθώς μεταναστεύουν. Το `.editorconfig` κρατά tabs
+εκεί και spaces στο `src/`, ώστε να μη γεμίσουν τα diffs με αλλαγές κενών.
 
 ## Development
 

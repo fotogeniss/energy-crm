@@ -138,7 +138,7 @@ final class ContractDocumentsController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
         }
 
-        $result = ECRM_FormFill::fill($row, $this->latestSignaturePath($id));
+        $result = ECRM_FormFill::fill($row, $this->files->latestPathOfKind($id, 'signature'));
 
         if (empty($result['ok'])) {
             return new WP_REST_Response(
@@ -186,24 +186,6 @@ final class ContractDocumentsController implements Controller
             'count'    => count($data['rows']),
             'b64'      => base64_encode(ECRM_Export::build_xlsx($data['headers'], $data['rows'])),
         ], 200);
-    }
-
-    /** The signature drawn on this contract, if one has been collected. */
-    private function latestSignaturePath(int $contractId): ?string
-    {
-        foreach (array_reverse($this->files->forContract($contractId)) as $file) {
-            if (($file['doc_kind'] ?? '') !== 'signature') {
-                continue;
-            }
-
-            $path = (string) ($file['path'] ?? '');
-
-            if ($path !== '' && file_exists($path)) {
-                return $path;
-            }
-        }
-
-        return null;
     }
 
     /**

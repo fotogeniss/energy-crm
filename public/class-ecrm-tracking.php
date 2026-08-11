@@ -225,21 +225,14 @@ class ECRM_Tracking {
 		}
 
 		// Build a signed contract PDF (full customer + application data + signature).
+		//
+		// The joined row comes from the repository rather than from a fourth copy
+		// of the same query written here. The copy that used to sit in this spot
+		// selected the encrypted customer columns and handed them straight to the
+		// renderer, so with ECRM_ENCRYPT_PII on this document — the signed one —
+		// printed ciphertext where the ΑΦΜ belongs.
 		if ( class_exists( 'ECRM_PDF' ) ) {
-			$cu = ECRM_DB::table( 'customers' );
-			$pr = ECRM_DB::table( 'providers' );
-			$pg = ECRM_DB::table( 'programs' );
-			$full = $wpdb->get_row( $wpdb->prepare(
-				"SELECT c.*, p.name AS provider_name, g.name AS program_name,
-				        cu.first_name, cu.last_name, cu.father_name, cu.company_name, cu.afm, cu.doy,
-				        cu.adt, cu.birth_date, cu.region, cu.city, cu.street, cu.street_no, cu.postal_code,
-				        cu.phone, cu.mobile, cu.email
-				 FROM {$ct} c
-				 LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-				 LEFT JOIN {$pr} p  ON p.id  = c.provider_id
-				 LEFT JOIN {$pg} g  ON g.id  = c.program_id
-				 WHERE c.id = %d", $id
-			), ARRAY_A );
+			$full = \EnergyCRM\Services::contracts()->detailedForDocument( $id );
 			try {
 				$pdf = ECRM_PDF::build( $full ?: $row, $sig_path ?: null, [ 'date' => gmdate( 'd/m/Y H:i' ), 'ip' => $ip ] );
 				if ( $pdf && class_exists( 'ECRM_Files' ) ) {

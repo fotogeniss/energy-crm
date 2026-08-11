@@ -31,6 +31,7 @@ use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\ExtractionGate;
+use EnergyCRM\Infrastructure\ProviderFormRenderer;
 use EnergyCRM\Infrastructure\SecretStore;
 use EnergyCRM\Persistence\AnalyticsRepository;
 use EnergyCRM\Persistence\CommissionRepository;
@@ -122,7 +123,11 @@ final class Services
 
     public static function contractDocuments(): ContractDocuments
     {
-        return self::$contractDocuments ??= new ContractDocuments(self::contracts(), self::files());
+        return self::$contractDocuments ??= new ContractDocuments(
+            self::contracts(),
+            self::files(),
+            new ProviderFormRenderer()
+        );
     }
 
     public static function teamActivity(): TeamActivityRepository
