@@ -1,19 +1,26 @@
 <?php
 
 /**
- * Contracts, one at a time: found, created, changed, deleted.
+ * One contract, scoped: found, created, changed, handed over, deleted.
  *
- * The list queries — search, quickSearch, countsByStatus, expiring,
- * possibleDuplicates — moved to ContractQueries when this file passed 930 lines
- * against a limit of ~200. The cut runs between *finding many* and *changing
- * one*. Five wrappers remain below, delegating, until their callers move; they
- * are marked and they go in the next commit.
+ * What this class is left holding is the part that always needs an actor. The
+ * rest of the 930 lines it used to be went to neighbours, each named for the
+ * property that groups its members:
+ *
+ *   - ContractQueries   the lists behind the screens
+ *   - ContractDetails   the joined view, and the only copy of that join
+ *   - ContractTransitions the status rows and the cron sweep — no actor
+ *   - WritableColumns   which columns a caller may write
+ *   - ScopeClause       the ownership fragment, one copy
+ *
+ * Wrappers remain below for the methods whose callers still arrive here; they
+ * are marked, and they go when the callers move.
  *
  * The guarantee that used to read "nothing outside this class touches the
- * contracts table" now spans two classes, and holds the same way in both: every
- * method takes a UserScope, and the ones that deliberately do not are listed
- * and argued in one place each. The scope fragment itself is shared rather than
- * copied — see ScopeClause, and the reason it is a class.
+ * contracts table" now spans five, and holds the same way in each: a method
+ * either takes a UserScope, or is one of the ones ARCHITECTURE.md admits under
+ * «Αναγνώσεις χωρίς actor» — a list short enough to read and a test a sixth
+ * would have to pass.
  *
  * Writes are scoped in the WHERE clause rather than by a preceding SELECT, so
  * the check and the write are a single statement and cannot drift apart.
@@ -42,51 +49,6 @@ use EnergyCRM\Domain\Contract\ContractCode;
 
 final class ContractRepository
 {
-    /**
-     * Columns a caller may write.
-     *
-     * `partner_user_id` is absent on purpose: ownership changes are a distinct,
-     * audited operation (`reassign()`), never a side effect of a save.
-     */
-    private const WRITABLE = [
-        'customer_id',
-        'provider_id',
-        'program_id',
-        'energy_type',
-        'category',
-        'price_type',
-        'customer_type',
-        'activation_type',
-        'supply_number',
-        'meter_number',
-        'invoice_code',
-        'status',
-        'notes',
-        'extracted_json',
-        'extra_json',
-        'start_date',
-        'term_months',
-        'end_date',
-        'supply_addr_same',
-        'supply_street',
-        'supply_street_no',
-        'supply_city',
-        'supply_postal_code',
-        'supply_region',
-        'billing_addr_same',
-        'billing_street',
-        'billing_street_no',
-        'billing_city',
-        'billing_postal_code',
-        'billing_region',
-        'consent_at',
-        'consent_ip',
-        'signed_at',
-        'signed_ip',
-        'payout_id',
-        'code',
-    ];
-
     private string $table;
 
     /** Customer columns arrive here through joins, so they need translating too. */
@@ -96,23 +58,31 @@ final class ContractRepository
     private ContractFields $extras;
 
     /**
-     * The list queries, which moved out.
+     * The three that moved out.
      *
-     * Held so the five wrappers below can delegate while their callers are
-     * still pointed here. Both they and this property go when the callers move.
+     * Held so the wrappers below can delegate while their callers are still
+     * pointed here. They and these properties go when the callers move.
      */
     private ContractQueries $queries;
+
+    private ContractDetails $details;
+
+    private ContractTransitions $transitions;
 
     public function __construct(
         ?string $table = null,
         ?CustomerFields $fields = null,
         ?ContractFields $extras = null,
         ?ContractQueries $queries = null,
+        ?ContractDetails $details = null,
+        ?ContractTransitions $transitions = null,
     ) {
-        $this->table   = $table ?? Tables::name(Tables::CONTRACTS);
-        $this->fields  = $fields ?? CustomerFields::default();
-        $this->extras  = $extras ?? ContractFields::default();
-        $this->queries = $queries ?? new ContractQueries($this->table, $this->fields);
+        $this->table       = $table ?? Tables::name(Tables::CONTRACTS);
+        $this->fields      = $fields ?? CustomerFields::default();
+        $this->extras      = $extras ?? ContractFields::default();
+        $this->queries     = $queries ?? new ContractQueries($this->table, $this->fields);
+        $this->details     = $details ?? new ContractDetails($this->table, $this->fields, $this->extras);
+        $this->transitions = $transitions ?? new ContractTransitions($this->table);
     }
 
     /** @return array<string, mixed>|null */
@@ -160,7 +130,7 @@ final class ContractRepository
             return false;
         }
 
-        $data = $this->extras->forStorage($this->filterWritable($data));
+        $data = $this->extras->forStorage(WritableColumns::filter($data));
 
         if ($data === []) {
             return $this->exists($contractId, $scope);
@@ -208,7 +178,7 @@ final class ContractRepository
     {
         global $wpdb;
 
-        $row = $this->extras->forStorage($this->filterWritable($data));
+        $row = $this->extras->forStorage(WritableColumns::filter($data));
 
         // Ownership is assigned here, never taken from the request.
         $row['partner_user_id'] = $scope->actorId();
@@ -363,61 +333,19 @@ final class ContractRepository
     }
 
     /*
-     * ---------------------------------------------------------------------
-     * The unscoped five — and why they alone take no UserScope
-     * ---------------------------------------------------------------------
+     * The five below take no UserScope, and the wrappers keep that shape while
+     * their callers still arrive here. They now live in ContractTransitions and
+     * ContractDetails, grouped by the property that admits them rather than
+     * explained by a comment in the middle of this file.
      *
-     * Everything above refuses to run without saying on whose behalf it runs.
-     * These five deliberately do not, and the exception is narrow enough to
-     * state exactly:
-     *
-     *   - The status transition is reached through ContractLifecycle, whose
-     *     callers have already resolved the contract through a scoped read.
-     *     Adding a second scope check there would not make it safer; it would
-     *     make the caller believe the check lives here.
-     *   - The automatic sweep runs from cron, on behalf of nobody. There is no
-     *     actor to scope it to, which is the whole point of it existing.
-     *   - The document build has both problems at once: it runs from cron, and
-     *     it runs for the customer following a signing link, who is not a user
-     *     of this system at all. Its two REST callers resolve the contract
-     *     through findDetailed() first, so the scope check happens where there
-     *     is somebody to check.
-     *   - The notice subject is read to answer "who should be told, and what do
-     *     we call this contract". All three of its callers are the customer:
-     *     uploading a document through a tracking link, or signing. None of
-     *     them is a user of this system, so there is nobody to scope to — and
-     *     scoping it to the *recipient* would be backwards, since working out
-     *     the recipient is what the read is for.
-     *
-     * The group was named for the lifecycle when it held three, and the note
-     * said that a fourth was the moment to ask whether the exception was still
-     * an exception. It arrived on 2026-08-10 and the question was asked. The
-     * answer: the shared property was never "lifecycle", it was "runs on behalf
-     * of nobody" — cron and an unauthenticated customer both. Renamed to say
-     * so, because a group whose name no longer describes its members is how a
-     * narrow exception turns into a general one without anybody deciding to.
-     *
-     * The fifth arrived on 2026-08-11 and was measured against that same test
-     * before it was let in: its callers are an anonymous customer, so it has no
-     * actor either. It was admitted deliberately, in preference to leaving a
-     * fifth hand-written contracts+customers join in the codebase — the shape
-     * that had just cost three separate PII leaks.
-     *
-     * What would make this stop being an exception is a member that *does*
-     * have an actor. There is no such member, and adding one is the thing to
-     * refuse.
+     * The policy — why they are allowed no actor, and the test a sixth would
+     * have to pass — is in ARCHITECTURE.md under «Αναγνώσεις χωρίς actor».
      */
 
     /** The status a contract is in right now; '' when there is no such row. */
     public function statusOf(int $contractId): string
     {
-        global $wpdb;
-
-        $status = $wpdb->get_var(
-            $wpdb->prepare('SELECT status FROM %i WHERE id = %d', $this->table, $contractId)
-        );
-
-        return $status === null ? '' : (string) $status;
+        return $this->transitions->statusOf($contractId);
     }
 
     /**
@@ -434,18 +362,7 @@ final class ContractRepository
      */
     public function applyTransition(int $contractId, string $status, array $extraColumns = []): void
     {
-        global $wpdb;
-
-        if ($contractId <= 0) {
-            return;
-        }
-
-        $wpdb->update(
-            $this->table,
-            ['status' => $status, 'updated_at' => current_time('mysql')]
-                + $this->filterWritable($extraColumns),
-            ['id' => $contractId]
-        );
+        $this->transitions->applyTransition($contractId, $status, $extraColumns);
     }
 
     /**
@@ -459,26 +376,7 @@ final class ContractRepository
      */
     public function idsSignedBefore(string $cutoffLocalTime, int $onlyId = 0, int $limit = 200): array
     {
-        global $wpdb;
-
-        $onlyClause = $onlyId > 0 ? ' AND id = %d' : '';
-        $params     = $onlyId > 0
-            ? [$this->table, $cutoffLocalTime, $onlyId, $limit]
-            : [$this->table, $cutoffLocalTime, $limit];
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        /** @var list<string> $ids */
-        $ids = $wpdb->get_col(
-            $wpdb->prepare(
-                "SELECT id FROM %i
-                  WHERE status = 'signed' AND signed_at IS NOT NULL AND signed_at <= %s{$onlyClause}
-                  LIMIT %d",
-                $params
-            )
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        return array_values(array_map('intval', $ids));
+        return $this->transitions->idsSignedBefore($cutoffLocalTime, $onlyId, $limit);
     }
 
     /**
@@ -494,7 +392,7 @@ final class ContractRepository
      */
     public function detailedForDocument(int $contractId): ?array
     {
-        return $this->detailed($contractId, '', []);
+        return $this->details->forDocument($contractId);
     }
 
     /**
@@ -516,24 +414,7 @@ final class ContractRepository
      */
     public function noticeSubject(int $contractId): ?array
     {
-        global $wpdb;
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        /** @var array<string, mixed>|null $row */
-        $row = $wpdb->get_row(
-            $wpdb->prepare(
-                'SELECT c.code, c.partner_user_id,
-                        cu.first_name, cu.last_name, cu.company_name
-                 FROM %i c
-                 LEFT JOIN %i cu ON cu.id = c.customer_id
-                 WHERE c.id = %d',
-                [$this->table, Tables::name(Tables::CUSTOMERS), $contractId]
-            ),
-            ARRAY_A
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        return $row ? $this->fields->fromStorage($row) : null;
+        return $this->details->noticeSubject($contractId);
     }
 
     /**
@@ -617,56 +498,7 @@ final class ContractRepository
      */
     public function findDetailed(int $contractId, UserScope $scope): ?array
     {
-        [$clause, $params] = $this->scopeClause($scope, 'c');
-
-        return $this->detailed($contractId, $clause, $params);
-    }
-
-    /**
-     * The join behind findDetailed(), with the ownership clause left to the
-     * caller.
-     *
-     * Shared rather than copied, and that is the whole point: the line that
-     * closes it — `fromStorage()` on both the customer's columns and the
-     * extras bag — is what turns stored ciphertext back into a ΑΦΜ. A second
-     * copy of this query is a second place to forget it, which is exactly what
-     * ECRM_REST::store_contract_pdf() had done.
-     *
-     * @param list<mixed> $params
-     *
-     * @return array<string, mixed>|null
-     */
-    private function detailed(int $contractId, string $clause, array $params): ?array
-    {
-        global $wpdb;
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        /** @var array<string, mixed>|null $row */
-        $row = $wpdb->get_row(
-            $wpdb->prepare(
-                "SELECT c.*, p.name AS provider_name, g.name AS program_name, g.code AS program_code,
-                        cu.first_name, cu.last_name, cu.father_name, cu.company_name,
-                        cu.afm, cu.doy, cu.adt, cu.birth_date, cu.region, cu.city,
-                        cu.street, cu.street_no, cu.postal_code, cu.phone, cu.mobile, cu.email
-                 FROM %i c
-                 LEFT JOIN %i cu ON cu.id = c.customer_id
-                 LEFT JOIN %i p  ON p.id  = c.provider_id
-                 LEFT JOIN %i g  ON g.id  = c.program_id
-                 WHERE c.id = %d{$clause}",
-                [
-                    $this->table,
-                    Tables::name(Tables::CUSTOMERS),
-                    Tables::name(Tables::PROVIDERS),
-                    Tables::name(Tables::PROGRAMS),
-                    $contractId,
-                    ...$params,
-                ]
-            ),
-            ARRAY_A
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        return $row ? $this->extras->fromStorage($this->fields->fromStorage($row)) : null;
+        return $this->details->findDetailed($contractId, $scope);
     }
 
     /**
@@ -729,19 +561,4 @@ final class ContractRepository
         return ScopeClause::forScope($scope, $alias);
     }
 
-    /**
-     * @param array<string, mixed> $data
-     *
-     * @return array<string, mixed>
-     */
-    private function filterWritable(array $data): array
-    {
-        $unknown = array_values(array_diff(array_keys($data), self::WRITABLE));
-
-        if ($unknown !== []) {
-            throw UnknownColumns::forEntity('σύμβαση', $unknown);
-        }
-
-        return $data;
-    }
 }
