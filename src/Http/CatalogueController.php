@@ -17,7 +17,7 @@ namespace EnergyCRM\Http;
 use ECRM_DB;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Forms\MobilePlans;
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ProviderRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -30,7 +30,7 @@ final class CatalogueController implements Controller
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly ProviderRepository $providers,
-        private readonly ContractRepository $contracts,
+        private readonly ContractQueries $queries,
     ) {
     }
 
@@ -96,7 +96,7 @@ final class CatalogueController implements Controller
                     'status_label' => $statuses[$row['status']] ?? $row['status'],
                 ];
             },
-            $this->contracts->quickSearch($this->scopes->forCurrentUser(), $term)
+            $this->queries->quickSearch($this->scopes->forCurrentUser(), $term)
         );
 
         return new WP_REST_Response(['ok' => true, 'results' => $results], 200);

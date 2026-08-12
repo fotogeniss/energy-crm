@@ -13,9 +13,6 @@
  *   - WritableColumns   which columns a caller may write
  *   - ScopeClause       the ownership fragment, one copy
  *
- * Wrappers remain below for the methods whose callers still arrive here; they
- * are marked, and they go when the callers move.
- *
  * The guarantee that used to read "nothing outside this class touches the
  * contracts table" now spans five, and holds the same way in each: a method
  * either takes a UserScope, or is one of the ones ARCHITECTURE.md admits under
@@ -51,38 +48,19 @@ final class ContractRepository
 {
     private string $table;
 
-    /** Customer columns arrive here through joins, so they need translating too. */
-    private CustomerFields $fields;
-
-    /** And the contract's own encrypted part, the values inside extra_json. */
+    /**
+     * The contract's own encrypted part: the values inside extra_json.
+     *
+     * CustomerFields is not needed here any more. It was for the joined customer
+     * columns, and every query that joins customers now lives in
+     * ContractDetails or ContractQueries.
+     */
     private ContractFields $extras;
 
-    /**
-     * The three that moved out.
-     *
-     * Held so the wrappers below can delegate while their callers are still
-     * pointed here. They and these properties go when the callers move.
-     */
-    private ContractQueries $queries;
-
-    private ContractDetails $details;
-
-    private ContractTransitions $transitions;
-
-    public function __construct(
-        ?string $table = null,
-        ?CustomerFields $fields = null,
-        ?ContractFields $extras = null,
-        ?ContractQueries $queries = null,
-        ?ContractDetails $details = null,
-        ?ContractTransitions $transitions = null,
-    ) {
-        $this->table       = $table ?? Tables::name(Tables::CONTRACTS);
-        $this->fields      = $fields ?? CustomerFields::default();
-        $this->extras      = $extras ?? ContractFields::default();
-        $this->queries     = $queries ?? new ContractQueries($this->table, $this->fields);
-        $this->details     = $details ?? new ContractDetails($this->table, $this->fields, $this->extras);
-        $this->transitions = $transitions ?? new ContractTransitions($this->table);
+    public function __construct(?string $table = null, ?ContractFields $extras = null)
+    {
+        $this->table  = $table ?? Tables::name(Tables::CONTRACTS);
+        $this->extras = $extras ?? ContractFields::default();
     }
 
     /** @return array<string, mixed>|null */
@@ -333,89 +311,19 @@ final class ContractRepository
     }
 
     /*
-     * The five below take no UserScope, and the wrappers keep that shape while
-     * their callers still arrive here. They now live in ContractTransitions and
-     * ContractDetails, grouped by the property that admits them rather than
-     * explained by a comment in the middle of this file.
+     * The eleven wrappers that stood here are gone. Their callers now hold the
+     * narrower collaborator they actually needed:
      *
-     * The policy — why they are allowed no actor, and the test a sixth would
-     * have to pass — is in ARCHITECTURE.md under «Αναγνώσεις χωρίς actor».
+     *   ContractQueries      search, quickSearch, countsByStatus, expiring,
+     *                        possibleDuplicates
+     *   ContractDetails      findDetailed, forDocument, noticeSubject
+     *   ContractTransitions  statusOf, applyTransition, idsSignedBefore
+     *
+     * Five of the six controllers that came through here turned out to use
+     * nothing else from this class, so they no longer receive it at all — they
+     * had been handed create(), update(), delete() and reassign() in order to
+     * run a search.
      */
-
-    /** The status a contract is in right now; '' when there is no such row. */
-    public function statusOf(int $contractId): string
-    {
-        return $this->transitions->statusOf($contractId);
-    }
-
-    /**
-     * Write the new status, and whatever columns come with it.
-     *
-     * `updated_at` is set here rather than left to the caller, because a status
-     * change that does not touch it is a change nobody can find afterwards.
-     *
-     * The extra columns pass through the writable filter, which the old inline
-     * version did not do: they are internal today (`signed_at`, `signed_ip`),
-     * but "internal" is a property of the callers, and callers change.
-     *
-     * @param array<string, mixed> $extraColumns
-     */
-    public function applyTransition(int $contractId, string $status, array $extraColumns = []): void
-    {
-        $this->transitions->applyTransition($contractId, $status, $extraColumns);
-    }
-
-    /**
-     * Contracts still sitting in `signed` whose signature is older than the cutoff.
-     *
-     * The cutoff is site-local time, because `signed_at` is written with
-     * current_time('mysql'). Comparing against UTC would quietly do nothing for
-     * as many hours as the site is offset by.
-     *
-     * @return list<int>
-     */
-    public function idsSignedBefore(string $cutoffLocalTime, int $onlyId = 0, int $limit = 200): array
-    {
-        return $this->transitions->idsSignedBefore($cutoffLocalTime, $onlyId, $limit);
-    }
-
-    /**
-     * The contract as the document builder needs it: everything the provider's
-     * form prints, decrypted, with no actor to scope it to.
-     *
-     * Identical to findDetailed() but for the missing ownership clause — the
-     * same query, the same translation back out of storage. That is the point
-     * of it existing rather than the raw SQL it replaced: the stored form and
-     * the downloaded one are now filled from the same row, read the same way.
-     *
-     * @return array<string, mixed>|null
-     */
-    public function detailedForDocument(int $contractId): ?array
-    {
-        return $this->details->forDocument($contractId);
-    }
-
-    /**
-     * The five columns an in-app notice needs: who owns the contract, what it
-     * is called, and what to call the customer.
-     *
-     * Deliberately not detailedForDocument(): this runs on every signature and
-     * every document upload, which is a hot path at 20-40 concurrent requests,
-     * and that one joins providers and programs to print a form.
-     *
-     * It still goes through fromStorage(). None of these columns is in
-     * CustomerFields::ENCRYPTED today, so the call is a no-op — which is the
-     * reason to make it now rather than later. The day a name or a company name
-     * is encrypted, every read that went through here keeps working and only
-     * the ones that skipped it start printing `ecrm1:…` into the bell. That is
-     * exactly how the three leaks closed on 2026-08-10 came about.
-     *
-     * @return array<string, mixed>|null
-     */
-    public function noticeSubject(int $contractId): ?array
-    {
-        return $this->details->noticeSubject($contractId);
-    }
 
     /**
      * Move a contract to another partner. Both the contract and the new owner
@@ -441,76 +349,6 @@ final class ContractRepository
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         return $result !== false;
-    }
-
-    /*
-     * The five below are wrappers, kept only until their callers move in the
-     * next commit. The work is in EnergyCRM\Persistence\ContractQueries, and
-     * the notes explaining each query live there now — the versions here would
-     * be a second copy to fall out of step.
-     */
-
-    /**
-     * The contracts list, with the joined names the UI shows.
-     *
-     * @return list<array<string, mixed>>
-     */
-    public function search(UserScope $scope, string $status = '', string $term = '', int $limit = 200): array
-    {
-        return $this->queries->search($scope, $status, $term, $limit);
-    }
-
-    /**
-     * Contracts already on file for a ΑΦΜ or supply number, company-wide.
-     *
-     * @return list<array<string, mixed>>
-     */
-    public function possibleDuplicates(string $afm, string $supply, int $excludeId = 0): array
-    {
-        return $this->queries->possibleDuplicates($afm, $supply, $excludeId);
-    }
-
-    /**
-     * The top bar's global search: a few best matches across code, supply
-     * number, customer name, ΑΦΜ and mobile.
-     *
-     * @return list<array<string, mixed>>
-     */
-    public function quickSearch(UserScope $scope, string $term, int $limit = 15): array
-    {
-        return $this->queries->quickSearch($scope, $term, $limit);
-    }
-
-    /**
-     * How many contracts sit in each status, for the filter tabs.
-     *
-     * @return array<string, int>
-     */
-    public function countsByStatus(UserScope $scope): array
-    {
-        return $this->queries->countsByStatus($scope);
-    }
-
-    /**
-     * A single contract joined with everything the detail view renders.
-     *
-     * @return array<string, mixed>|null
-     */
-    public function findDetailed(int $contractId, UserScope $scope): ?array
-    {
-        return $this->details->findDetailed($contractId, $scope);
-    }
-
-    /**
-     * Contracts whose term ends within the given window.
-     *
-     * Drafts and cancellations are excluded: neither is up for renewal.
-     *
-     * @return list<array<string, mixed>>
-     */
-    public function expiring(UserScope $scope, int $withinDays): array
-    {
-        return $this->queries->expiring($scope, $withinDays);
     }
 
     /**

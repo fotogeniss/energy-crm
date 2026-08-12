@@ -32,7 +32,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Infrastructure;
 
 use EnergyCRM\Access\NetworkPath;
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\NotificationRepository;
 
@@ -42,7 +42,7 @@ final class ContractNotices
     private const FALLBACK_NAME = 'Ο πελάτης';
 
     public function __construct(
-        private readonly ContractRepository $contracts,
+        private readonly ContractDetails $details,
         private readonly NotificationRepository $notifications,
         private readonly NetworkRepository $network,
     ) {
@@ -51,7 +51,7 @@ final class ContractNotices
     /** The customer attached a supporting document through their link. */
     public function documentUploaded(int $contractId, string $label = ''): void
     {
-        $row = $this->contracts->noticeSubject($contractId);
+        $row = $this->details->noticeSubject($contractId);
 
         if ($row === null) {
             return;
@@ -69,7 +69,7 @@ final class ContractNotices
     /** The customer signed the contract electronically. */
     public function signed(int $contractId, string $signer = ''): void
     {
-        $row = $this->contracts->noticeSubject($contractId);
+        $row = $this->details->noticeSubject($contractId);
 
         if ($row === null) {
             return;

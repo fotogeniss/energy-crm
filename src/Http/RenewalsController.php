@@ -18,6 +18,7 @@ namespace EnergyCRM\Http;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ContractTerm;
+use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\EventRepository;
 use WP_REST_Request;
@@ -49,6 +50,7 @@ final class RenewalsController implements Controller
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
+        private readonly ContractQueries $queries,
         private readonly EventRepository $events,
     ) {
     }
@@ -97,7 +99,7 @@ final class RenewalsController implements Controller
         return new WP_REST_Response([
             'ok'   => true,
             'days' => (int) $request['days'],
-            'rows' => $this->contracts->expiring($scope, (int) $request['days']),
+            'rows' => $this->queries->expiring($scope, (int) $request['days']),
         ], 200);
     }
 

@@ -36,7 +36,10 @@ use EnergyCRM\Infrastructure\ProviderFormRenderer;
 use EnergyCRM\Infrastructure\SecretStore;
 use EnergyCRM\Persistence\AnalyticsRepository;
 use EnergyCRM\Persistence\CommissionRepository;
+use EnergyCRM\Persistence\ContractDetails;
+use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractTransitions;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\DashboardRepository;
 use EnergyCRM\Persistence\EventRepository;
@@ -90,6 +93,12 @@ final class Services
 
     private static ?ContractNotices $contractNotices = null;
 
+    private static ?ContractQueries $contractQueries = null;
+
+    private static ?ContractDetails $contractDetails = null;
+
+    private static ?ContractTransitions $contractTransitions = null;
+
     private static ?NotificationRepository $notifications = null;
 
     private static ?ExtractionGate $extractionGate = null;
@@ -130,7 +139,7 @@ final class Services
     public static function contractDocuments(): ContractDocuments
     {
         return self::$contractDocuments ??= new ContractDocuments(
-            self::contracts(),
+            self::contractDetails(),
             self::files(),
             new ProviderFormRenderer()
         );
@@ -139,7 +148,7 @@ final class Services
     public static function contractNotices(): ContractNotices
     {
         return self::$contractNotices ??= new ContractNotices(
-            self::contracts(),
+            self::contractDetails(),
             self::notifications(),
             self::network()
         );
@@ -210,14 +219,37 @@ final class Services
         return self::$contracts ??= new ContractRepository();
     }
 
+    /** The list queries behind the screens. */
+    public static function contractQueries(): ContractQueries
+    {
+        return self::$contractQueries ??= new ContractQueries();
+    }
+
+    /**
+     * The joined view of one contract — and the only copy of that join.
+     *
+     * Handed out on its own so that a caller which only needs the join does not
+     * receive the whole repository, writes included.
+     */
+    public static function contractDetails(): ContractDetails
+    {
+        return self::$contractDetails ??= new ContractDetails();
+    }
+
+    /** The status rows and the cron sweep. Takes no UserScope — see ARCHITECTURE. */
+    public static function contractTransitions(): ContractTransitions
+    {
+        return self::$contractTransitions ??= new ContractTransitions();
+    }
+
     public static function lifecycle(): ContractLifecycle
     {
-        return self::$lifecycle ??= new ContractLifecycle(self::contracts(), self::events());
+        return self::$lifecycle ??= new ContractLifecycle(self::contractTransitions(), self::events());
     }
 
     public static function autoProcess(): AutoProcess
     {
-        return self::$autoProcess ??= new AutoProcess(self::contracts(), self::lifecycle());
+        return self::$autoProcess ??= new AutoProcess(self::contractTransitions(), self::lifecycle());
     }
 
     public static function customers(): CustomerRepository

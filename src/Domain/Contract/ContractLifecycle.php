@@ -15,9 +15,11 @@
  * ## Authorisation is not here
  *
  * `moveTo()` takes a bare contract id and trusts it. That is deliberate and it
- * is the reason ContractRepository grew three unscoped methods: the callers
- * resolve the contract through a scoped read first, and the sweep runs from
- * cron on behalf of nobody at all. What is enforced here is the *pipeline* —
+ * is why its two database methods live in ContractTransitions, which takes no
+ * UserScope: the callers resolve the contract through a scoped read first, and
+ * the sweep runs from cron on behalf of nobody at all. The policy admitting
+ * them is in ARCHITECTURE.md under «Αναγνώσεις χωρίς actor». What is enforced
+ * here is the *pipeline* —
  * which move is legal — not who may make it.
  *
  * @package EnergyCRM
@@ -29,7 +31,7 @@ namespace EnergyCRM\Domain\Contract;
 
 use ECRM_Messaging;
 use ECRM_Notifications;
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractTransitions;
 use EnergyCRM\Persistence\EventRepository;
 
 final class ContractLifecycle
@@ -45,7 +47,7 @@ final class ContractLifecycle
     public const STATUS_CHANGED = 'ecrm_contract_status_changed';
 
     public function __construct(
-        private readonly ContractRepository $contracts,
+        private readonly ContractTransitions $transitions,
         private readonly EventRepository $events,
     ) {
     }
@@ -78,7 +80,7 @@ final class ContractLifecycle
         // pass null because they genuinely do not.
         $from = array_key_exists('from', $options)
             ? (string) $options['from']
-            : $this->contracts->statusOf($contractId);
+            : $this->transitions->statusOf($contractId);
 
         // Already there. True, because the caller asked for a state and the
         // contract is in it — but nothing is logged, since nothing happened.
@@ -94,7 +96,7 @@ final class ContractLifecycle
             return false;
         }
 
-        $this->contracts->applyTransition($contractId, $to, (array) ($options['extra'] ?? []));
+        $this->transitions->applyTransition($contractId, $to, (array) ($options['extra'] ?? []));
 
         $this->events->record($contractId, (int) ($options['user_id'] ?? 0), 'status_change', [
             'from_status' => $from,

@@ -21,7 +21,7 @@ use ECRM_PDF;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Infrastructure\ContractDocuments;
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\FileRepository;
 use Throwable;
 use WP_REST_Request;
@@ -31,7 +31,7 @@ final class ContractDocumentsController implements Controller
 {
     public function __construct(
         private readonly ScopeResolver $scopes,
-        private readonly ContractRepository $contracts,
+        private readonly ContractDetails $details,
         private readonly FileRepository $files,
         private readonly ContractDocuments $documents,
     ) {
@@ -98,7 +98,7 @@ final class ContractDocumentsController implements Controller
     public function contractPdf(WP_REST_Request $request): WP_REST_Response
     {
         $id  = (int) $request['id'];
-        $row = $this->contracts->findDetailed($id, $this->scopes->forCurrentUser());
+        $row = $this->details->findDetailed($id, $this->scopes->forCurrentUser());
 
         if ($row === null) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
@@ -132,7 +132,7 @@ final class ContractDocumentsController implements Controller
     public function providerForm(WP_REST_Request $request): WP_REST_Response
     {
         $id  = (int) $request['id'];
-        $row = $this->contracts->findDetailed($id, $this->scopes->forCurrentUser());
+        $row = $this->details->findDetailed($id, $this->scopes->forCurrentUser());
 
         if ($row === null) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);

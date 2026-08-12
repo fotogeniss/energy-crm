@@ -48,7 +48,7 @@ use ECRM_Files;
 use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Infrastructure\FieldCipher;
 use EnergyCRM\Infrastructure\SheetRenderer;
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\Tables;
 use EnergyCRM\Services;
@@ -281,7 +281,7 @@ final class ContractDocumentsTest extends IntegrationTestCase
     /** The same class the plugin wires up, with the renderer swapped out. */
     private function documentsWith(SheetRenderer $renderer): ContractDocuments
     {
-        return new ContractDocuments(new ContractRepository(), Services::files(), $renderer);
+        return new ContractDocuments(new ContractDetails(), Services::files(), $renderer);
     }
 
     /**

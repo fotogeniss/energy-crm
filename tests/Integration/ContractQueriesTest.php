@@ -3,10 +3,14 @@
 /**
  * The five list queries behind the screens, pinned before they move.
  *
- * Characterisation: every assertion here describes ContractRepository::search(),
+ * Characterisation: every assertion here described ContractRepository::search(),
  * quickSearch(), countsByStatus(), expiring() and possibleDuplicates() exactly
- * as they stand, so that the split into ContractQueries can change one thing —
+ * as they stood, so that the split into ContractQueries could change one thing —
  * the name of what gets called — and nothing else.
+ *
+ * It did. The five now live in ContractQueries and are called there directly;
+ * ContractRepository is kept only to build the fixtures. Not one assertion
+ * moved across the split.
  *
  * ## Why these five and why now
  *
@@ -39,11 +43,15 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Integration;
 
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 
 final class ContractQueriesTest extends IntegrationTestCase
 {
+    private ContractQueries $queries;
+
+    /** Only for the fixtures: creating a contract is not this class's subject. */
     private ContractRepository $contracts;
 
     private CustomerRepository $customers;
@@ -56,6 +64,7 @@ final class ContractQueriesTest extends IntegrationTestCase
     {
         parent::setUp();
 
+        $this->queries   = new ContractQueries();
         $this->contracts = new ContractRepository();
         $this->customers = new CustomerRepository();
 
@@ -71,7 +80,7 @@ final class ContractQueriesTest extends IntegrationTestCase
         $this->contractFor($this->alice, ['status' => 'new']);
         $this->contractFor($this->alice, ['status' => 'signed']);
 
-        $counts = $this->contracts->countsByStatus(UserScope::forSelf($this->alice));
+        $counts = $this->queries->countsByStatus(UserScope::forSelf($this->alice));
 
         self::assertSame(2, $counts['new']);
         self::assertSame(1, $counts['signed']);
@@ -87,7 +96,7 @@ final class ContractQueriesTest extends IntegrationTestCase
     {
         $this->contractFor($this->alice, ['status' => 'new']);
 
-        $counts = $this->contracts->countsByStatus(UserScope::forSelf($this->alice));
+        $counts = $this->queries->countsByStatus(UserScope::forSelf($this->alice));
 
         self::assertArrayNotHasKey('cancelled', $counts);
     }
@@ -97,7 +106,7 @@ final class ContractQueriesTest extends IntegrationTestCase
         $this->contractFor($this->alice, ['status' => 'new']);
         $this->contractFor($this->bob, ['status' => 'new']);
 
-        $counts = $this->contracts->countsByStatus(UserScope::forSelf($this->alice));
+        $counts = $this->queries->countsByStatus(UserScope::forSelf($this->alice));
 
         self::assertSame(1, $counts['new']);
     }
@@ -108,7 +117,7 @@ final class ContractQueriesTest extends IntegrationTestCase
         $this->contractFor($this->alice, ['status' => 'new']);
         $this->contractFor($this->bob, ['status' => 'new']);
 
-        $counts = $this->contracts->countsByStatus(UserScope::forAdministrator($this->alice));
+        $counts = $this->queries->countsByStatus(UserScope::forAdministrator($this->alice));
 
         self::assertSame(2, $counts['new']);
     }
@@ -120,7 +129,7 @@ final class ContractQueriesTest extends IntegrationTestCase
         $this->contractFor($this->alice, ['status' => 'new']);
         $signed = $this->contractFor($this->alice, ['status' => 'signed']);
 
-        $rows = $this->contracts->search(UserScope::forSelf($this->alice), 'signed');
+        $rows = $this->queries->search(UserScope::forSelf($this->alice), 'signed');
 
         self::assertCount(1, $rows);
         self::assertSame($signed, (int) $rows[0]['id']);
@@ -131,7 +140,7 @@ final class ContractQueriesTest extends IntegrationTestCase
         $wanted = $this->contractFor($this->alice, ['status' => 'new', 'code' => 'ECRM-Q-1']);
         $this->contractFor($this->alice, ['status' => 'new', 'code' => 'ECRM-Q-2']);
 
-        $rows = $this->contracts->search(UserScope::forSelf($this->alice), '', 'ECRM-Q-1');
+        $rows = $this->queries->search(UserScope::forSelf($this->alice), '', 'ECRM-Q-1');
 
         self::assertCount(1, $rows);
         self::assertSame($wanted, (int) $rows[0]['id']);
@@ -142,7 +151,7 @@ final class ContractQueriesTest extends IntegrationTestCase
         $wanted = $this->contractFor($this->alice, ['status' => 'new'], $this->customerData());
         $this->contractFor($this->alice, ['status' => 'new']);
 
-        $rows = $this->contracts->search(UserScope::forSelf($this->alice), '', 'Παπαδόπουλος');
+        $rows = $this->queries->search(UserScope::forSelf($this->alice), '', 'Παπαδόπουλος');
 
         self::assertCount(1, $rows);
         self::assertSame($wanted, (int) $rows[0]['id']);
@@ -158,7 +167,7 @@ final class ContractQueriesTest extends IntegrationTestCase
     {
         $this->contractFor($this->alice, ['status' => 'new'], $this->customerData());
 
-        $rows = $this->contracts->search(UserScope::forSelf($this->alice), '', '%');
+        $rows = $this->queries->search(UserScope::forSelf($this->alice), '', '%');
 
         self::assertSame([], $rows);
     }
@@ -170,7 +179,7 @@ final class ContractQueriesTest extends IntegrationTestCase
     {
         $this->contractFor($this->alice, ['status' => 'new']);
 
-        self::assertSame([], $this->contracts->quickSearch(UserScope::forSelf($this->alice), ''));
+        self::assertSame([], $this->queries->quickSearch(UserScope::forSelf($this->alice), ''));
     }
 
     public function testTheGlobalSearchFindsBySupplyNumber(): void
@@ -181,7 +190,7 @@ final class ContractQueriesTest extends IntegrationTestCase
         ]);
         $this->contractFor($this->alice, ['status' => 'new', 'supply_number' => '50000000002']);
 
-        $rows = $this->contracts->quickSearch(UserScope::forSelf($this->alice), '50000000001');
+        $rows = $this->queries->quickSearch(UserScope::forSelf($this->alice), '50000000001');
 
         self::assertCount(1, $rows);
         self::assertSame($wanted, (int) $rows[0]['id']);
@@ -191,7 +200,7 @@ final class ContractQueriesTest extends IntegrationTestCase
     {
         $this->contractFor($this->bob, ['status' => 'new', 'code' => 'ECRM-Q-BOB']);
 
-        $rows = $this->contracts->quickSearch(UserScope::forSelf($this->alice), 'ECRM-Q-BOB');
+        $rows = $this->queries->quickSearch(UserScope::forSelf($this->alice), 'ECRM-Q-BOB');
 
         self::assertSame([], $rows);
     }
@@ -208,7 +217,7 @@ final class ContractQueriesTest extends IntegrationTestCase
 
         $wanted = $this->contractFor($this->alice, ['status' => 'new'], $this->customerData('987654321'));
 
-        $rows = $this->contracts->quickSearch(UserScope::forSelf($this->alice), '987654321');
+        $rows = $this->queries->quickSearch(UserScope::forSelf($this->alice), '987654321');
 
         self::assertCount(1, $rows);
         self::assertSame($wanted, (int) $rows[0]['id']);
@@ -221,7 +230,7 @@ final class ContractQueriesTest extends IntegrationTestCase
 
         $this->contractFor($this->alice, ['status' => 'new'], $this->customerData('987654321'));
 
-        $rows = $this->contracts->quickSearch(UserScope::forSelf($this->alice), '987654321');
+        $rows = $this->queries->quickSearch(UserScope::forSelf($this->alice), '987654321');
 
         self::assertSame('987654321', (string) $rows[0]['afm']);
     }
@@ -235,7 +244,7 @@ final class ContractQueriesTest extends IntegrationTestCase
             'end_date' => $this->daysFromToday(10),
         ]);
 
-        $rows = $this->contracts->expiring(UserScope::forSelf($this->alice), 30);
+        $rows = $this->queries->expiring(UserScope::forSelf($this->alice), 30);
 
         self::assertCount(1, $rows);
         self::assertSame($wanted, (int) $rows[0]['id']);
@@ -248,14 +257,14 @@ final class ContractQueriesTest extends IntegrationTestCase
             'end_date' => $this->daysFromToday(90),
         ]);
 
-        self::assertSame([], $this->contracts->expiring(UserScope::forSelf($this->alice), 30));
+        self::assertSame([], $this->queries->expiring(UserScope::forSelf($this->alice), 30));
     }
 
     public function testAContractWithNoEndDateIsNeverUpForRenewal(): void
     {
         $this->contractFor($this->alice, ['status' => 'active']);
 
-        self::assertSame([], $this->contracts->expiring(UserScope::forSelf($this->alice), 30));
+        self::assertSame([], $this->queries->expiring(UserScope::forSelf($this->alice), 30));
     }
 
     /**
@@ -269,14 +278,14 @@ final class ContractQueriesTest extends IntegrationTestCase
         $this->contractFor($this->alice, ['status' => 'draft', 'end_date' => $this->daysFromToday(10)]);
         $this->contractFor($this->alice, ['status' => 'cancelled', 'end_date' => $this->daysFromToday(10)]);
 
-        self::assertSame([], $this->contracts->expiring(UserScope::forSelf($this->alice), 30));
+        self::assertSame([], $this->queries->expiring(UserScope::forSelf($this->alice), 30));
     }
 
     public function testTheRenewalListStaysInsideTheScope(): void
     {
         $this->contractFor($this->bob, ['status' => 'active', 'end_date' => $this->daysFromToday(10)]);
 
-        self::assertSame([], $this->contracts->expiring(UserScope::forSelf($this->alice), 30));
+        self::assertSame([], $this->queries->expiring(UserScope::forSelf($this->alice), 30));
     }
 
     // --- possibleDuplicates ------------------------------------------------
@@ -296,7 +305,7 @@ final class ContractQueriesTest extends IntegrationTestCase
             'supply_number' => '50000000009',
         ]);
 
-        $rows = $this->contracts->possibleDuplicates('', '50000000009');
+        $rows = $this->queries->possibleDuplicates('', '50000000009');
 
         self::assertCount(1, $rows);
         self::assertSame($theirs, (int) $rows[0]['id']);
@@ -309,7 +318,7 @@ final class ContractQueriesTest extends IntegrationTestCase
             'supply_number' => '50000000010',
         ]);
 
-        self::assertSame([], $this->contracts->possibleDuplicates('', '50000000010', $mine));
+        self::assertSame([], $this->queries->possibleDuplicates('', '50000000010', $mine));
     }
 
     /** Too few digits to be a ΑΦΜ is not a search, it is a keystroke. */
@@ -317,14 +326,14 @@ final class ContractQueriesTest extends IntegrationTestCase
     {
         $this->contractFor($this->alice, ['status' => 'new'], $this->customerData());
 
-        self::assertSame([], $this->contracts->possibleDuplicates('12345', ''));
+        self::assertSame([], $this->queries->possibleDuplicates('12345', ''));
     }
 
     public function testWithNeitherATaxNumberNorASupplyNothingIsClaimed(): void
     {
         $this->contractFor($this->alice, ['status' => 'new'], $this->customerData());
 
-        self::assertSame([], $this->contracts->possibleDuplicates('', ''));
+        self::assertSame([], $this->queries->possibleDuplicates('', ''));
     }
 
     // --- Fixtures ----------------------------------------------------------

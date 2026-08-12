@@ -46,7 +46,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Infrastructure;
 
 use ECRM_Files;
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\FileRepository;
 
 final class ContractDocuments
@@ -69,7 +69,7 @@ final class ContractDocuments
     private const SIGNATURE_KIND = 'signature';
 
     public function __construct(
-        private readonly ContractRepository $contracts,
+        private readonly ContractDetails $details,
         private readonly FileRepository $files,
         private readonly SheetRenderer $renderer,
     ) {
@@ -87,7 +87,7 @@ final class ContractDocuments
      */
     public function store(int $contractId): bool
     {
-        $contract = $this->contracts->detailedForDocument($contractId);
+        $contract = $this->details->forDocument($contractId);
 
         if ($contract === null) {
             return false;

@@ -50,22 +50,19 @@ final class ControllerFactory
     {
         $scope     = Services::scopeResolver();
         $lifecycle = Services::lifecycle();
+        $queries   = Services::contractQueries();
+        $details   = Services::contractDetails();
 
         return [
             // Contracts — read, write, status, bulk, documents.
-            new ContractsReadController($scope, Services::contracts(), Services::events(), Services::files()),
+            new ContractsReadController($scope, $queries, $details, Services::events(), Services::files()),
             new ContractSaveController($scope, Services::contracts(), Services::customers(), $lifecycle),
             new ContractStatusController($scope, Services::contracts(), Services::files(), $lifecycle),
             new ContractsBulkController($scope, Services::contracts(), Services::files(), $lifecycle),
-            new ContractDocumentsController(
-                $scope,
-                Services::contracts(),
-                Services::files(),
-                Services::contractDocuments()
-            ),
+            new ContractDocumentsController($scope, $details, Services::files(), Services::contractDocuments()),
             new DocumentsController($scope, Services::contracts(), Services::files()),
-            new DuplicateCheckController($scope, Services::contracts()),
-            new RenewalsController($scope, Services::contracts(), Services::events()),
+            new DuplicateCheckController($scope, $queries),
+            new RenewalsController($scope, Services::contracts(), $queries, Services::events()),
 
             // Signing — the two public routes and the link that creates them.
             new SigningController(
@@ -74,7 +71,7 @@ final class ControllerFactory
                 $lifecycle,
                 Services::contractNotices()
             ),
-            new SignLinkController($scope, Services::contracts(), Services::documents(), $lifecycle),
+            new SignLinkController($scope, $details, Services::documents(), $lifecycle),
 
             // People.
             new CustomersController($scope, Services::customers()),
@@ -93,7 +90,7 @@ final class ControllerFactory
             new SavedFiltersController($scope),
 
             // Catalogue and form metadata.
-            new CatalogueController($scope, Services::providers(), Services::contracts()),
+            new CatalogueController($scope, Services::providers(), $queries),
             new ProviderFormController(),
 
             // Tools.

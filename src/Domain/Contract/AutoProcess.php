@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Domain\Contract;
 
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractTransitions;
 
 final class AutoProcess
 {
@@ -40,7 +40,7 @@ final class AutoProcess
     private const SCHEDULING_MARGIN = 5;
 
     public function __construct(
-        private readonly ContractRepository $contracts,
+        private readonly ContractTransitions $transitions,
         private readonly ContractLifecycle $lifecycle,
     ) {
     }
@@ -122,7 +122,7 @@ final class AutoProcess
         $delay  = self::delay();
         $cutoff = gmdate('Y-m-d H:i:s', (int) current_time('timestamp') - $delay);
 
-        foreach ($this->contracts->idsSignedBefore($cutoff, (int) $onlyId) as $contractId) {
+        foreach ($this->transitions->idsSignedBefore($cutoff, (int) $onlyId) as $contractId) {
             $this->lifecycle->moveTo($contractId, ContractStatus::Processing->value, [
                 'from'    => ContractStatus::Signed->value,
                 'message' => sprintf(

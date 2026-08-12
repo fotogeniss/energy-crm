@@ -22,7 +22,8 @@ use ECRM_Files;
 use ECRM_Tracking;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractDetails;
+use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\FileRepository;
 use WP_REST_Request;
@@ -32,7 +33,8 @@ final class ContractsReadController implements Controller
 {
     public function __construct(
         private readonly ScopeResolver $scopes,
-        private readonly ContractRepository $contracts,
+        private readonly ContractQueries $queries,
+        private readonly ContractDetails $details,
         private readonly EventRepository $events,
         private readonly FileRepository $files,
     ) {
@@ -75,7 +77,7 @@ final class ContractsReadController implements Controller
             $scope = $scope->toSelfOnly();
         }
 
-        $rows = $this->contracts->search(
+        $rows = $this->queries->search(
             $scope,
             (string) $request['status'],
             trim((string) $request['q'])
@@ -92,7 +94,7 @@ final class ContractsReadController implements Controller
     public function show(WP_REST_Request $request): WP_REST_Response
     {
         $id  = (int) $request['id'];
-        $row = $this->contracts->findDetailed($id, $this->scopes->forCurrentUser());
+        $row = $this->details->findDetailed($id, $this->scopes->forCurrentUser());
 
         if ($row === null) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
@@ -166,7 +168,7 @@ final class ContractsReadController implements Controller
             $counts[$status] = 0;
         }
 
-        foreach ($this->contracts->countsByStatus($scope) as $status => $total) {
+        foreach ($this->queries->countsByStatus($scope) as $status => $total) {
             $counts[$status] = $total;
             $counts['all']  += $total;
         }

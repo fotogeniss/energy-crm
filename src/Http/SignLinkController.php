@@ -21,7 +21,7 @@ use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\DocumentQueue;
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractDetails;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -31,7 +31,7 @@ final class SignLinkController implements Controller
 
     public function __construct(
         private readonly ScopeResolver $scopes,
-        private readonly ContractRepository $contracts,
+        private readonly ContractDetails $details,
         private readonly DocumentQueue $documents,
         private readonly ContractLifecycle $lifecycle,
     ) {
@@ -59,7 +59,7 @@ final class SignLinkController implements Controller
         }
 
         $id       = (int) $request['id'];
-        $contract = $this->contracts->findDetailed($id, $scope);
+        $contract = $this->details->findDetailed($id, $scope);
 
         if ($contract === null) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);

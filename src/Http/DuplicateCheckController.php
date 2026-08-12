@@ -21,7 +21,7 @@ namespace EnergyCRM\Http;
 use ECRM_DB;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
-use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ContractQueries;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -29,7 +29,7 @@ final class DuplicateCheckController implements Controller
 {
     public function __construct(
         private readonly ScopeResolver $scopes,
-        private readonly ContractRepository $contracts,
+        private readonly ContractQueries $queries,
     ) {
     }
 
@@ -60,7 +60,7 @@ final class DuplicateCheckController implements Controller
         $labels  = ECRM_DB::statuses();
         $matches = array_map(
             fn (array $row): array => $this->present($row, $scope, $afm, $labels),
-            $this->contracts->possibleDuplicates($afm, $supply, (int) $request['exclude'])
+            $this->queries->possibleDuplicates($afm, $supply, (int) $request['exclude'])
         );
 
         return new WP_REST_Response(['ok' => true, 'matches' => $matches], 200);
