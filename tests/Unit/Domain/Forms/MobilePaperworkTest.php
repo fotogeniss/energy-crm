@@ -59,12 +59,59 @@ final class MobilePaperworkTest extends TestCase
         self::assertTrue(P::isOfferValid(P::OFFER_NONE));
     }
 
-    /** The screen offers two choices where the paper has three boxes. */
-    public function testANewNumberTicksNewConnectionOnTheForm(): void
+    /**
+     * The screen offers two choices where the paper has three boxes.
+     *
+     * These assertions changed on 2026-08-12, and the reason is the point of
+     * the test. The method used to return only the key it wanted ticked; the
+     * electricity fill map writes `energopoiisi_ananeosi` from
+     * `activation_type`, and the two are merged with `+`, which lets the left
+     * side win only for keys it actually contains. A mobile contract carrying
+     * activation_type 'renewal' therefore printed ΦΟΡΗΤΟΤΗΤΑ **and**
+     * ΑΝΑΝΕΩΣΗ — a signed application saying two contradictory things.
+     *
+     * So the shape asserted here is the whole group, empty values included.
+     * The empty ones are the load-bearing part.
+     */
+    public function testTheConnectionBoxesAreAnsweredAsAGroup(): void
     {
-        self::assertSame(['energopoiisi_nea_syndesi' => 'X'], P::connectionTicks(P::REQUEST_NEW_NUMBER));
-        self::assertSame(['energopoiisi_foritotita' => 'X'], P::connectionTicks(P::REQUEST_PORTABILITY));
-        self::assertSame([], P::connectionTicks(''));
+        self::assertSame(
+            [
+                'energopoiisi_foritotita'  => '',
+                'energopoiisi_nea_syndesi' => 'X',
+                'energopoiisi_ananeosi'    => '',
+            ],
+            P::connectionTicks(P::REQUEST_NEW_NUMBER)
+        );
+
+        self::assertSame(
+            [
+                'energopoiisi_foritotita'  => 'X',
+                'energopoiisi_nea_syndesi' => '',
+                'energopoiisi_ananeosi'    => '',
+            ],
+            P::connectionTicks(P::REQUEST_PORTABILITY)
+        );
+    }
+
+    /**
+     * ΑΝΑΝΕΩΣΗ is never ticked, whatever arrives.
+     *
+     * Its own test because it is the one the CRM cannot produce and the paper
+     * can: no screen offers it, so any X in that box came from somewhere that
+     * was not asked.
+     */
+    public function testRenewalIsNeverTicked(): void
+    {
+        foreach ([P::REQUEST_NEW_NUMBER, P::REQUEST_PORTABILITY, '', 'renewal', 'ό,τι να ναι'] as $requestType) {
+            self::assertSame('', P::connectionTicks($requestType)['energopoiisi_ananeosi']);
+        }
+    }
+
+    /** An unrecognised request type ticks nothing, rather than guessing. */
+    public function testAnUnknownRequestTypeTicksNothing(): void
+    {
+        self::assertSame(['', '', ''], array_values(P::connectionTicks('')));
     }
 
     /**

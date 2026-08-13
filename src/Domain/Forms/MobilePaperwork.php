@@ -106,21 +106,37 @@ final class MobilePaperwork
     }
 
     /**
-     * Which box to tick under ΕΙΔΟΣ ΣΥΝΔΕΣΗΣ on the contract.
+     * The state of **all three** ΕΙΔΟΣ ΣΥΝΔΕΣΗΣ boxes on the contract.
      *
      * The screen offers two choices where the paper has three: a new number is
-     * a new connection. ΑΝΑΝΕΩΣΗ stays on the paper because the provider's form
-     * has it, but nothing in the CRM produces it.
+     * a new connection, and ΑΝΑΝΕΩΣΗ is never offered at all.
      *
-     * @return array<string, string> fill key => 'X'
+     * ## Why it answers for the box it never ticks
+     *
+     * This used to return only the one key it wanted set, and the docblock said
+     * ΑΝΑΝΕΩΣΗ was safe because "nothing in the CRM produces it". That was
+     * wrong, and it printed a contradictory application: the electricity fill
+     * map in ECRM_FormFill::values() writes `energopoiisi_ananeosi` from
+     * `activation_type`, which a mobile contract can perfectly well be carrying
+     * — a renewal, for instance. The two maps are merged with `+`, so the left
+     * side wins **only for keys it contains**. A key omitted here is a key that
+     * map still owns.
+     *
+     * The first real print showed ΦΟΡΗΤΟΤΗΤΑ and ΑΝΑΝΕΩΣΗ ticked together: an
+     * application telling the provider two contradictory things, signed.
+     *
+     * So the answer is the whole group, empty values included. Saying "not
+     * this one" is the only thing that actually stops the other map.
+     *
+     * @return array<string, string> fill key => 'X' or ''
      */
     public static function connectionTicks(string $requestType): array
     {
-        return match ($requestType) {
-            self::REQUEST_PORTABILITY => ['energopoiisi_foritotita' => 'X'],
-            self::REQUEST_NEW_NUMBER  => ['energopoiisi_nea_syndesi' => 'X'],
-            default                   => [],
-        };
+        return [
+            'energopoiisi_foritotita'  => $requestType === self::REQUEST_PORTABILITY ? 'X' : '',
+            'energopoiisi_nea_syndesi' => $requestType === self::REQUEST_NEW_NUMBER ? 'X' : '',
+            'energopoiisi_ananeosi'    => '',
+        ];
     }
 
     /**
