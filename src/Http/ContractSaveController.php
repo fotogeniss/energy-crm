@@ -92,6 +92,22 @@ final class ContractSaveController implements Controller
             ], 422);
         }
 
+        // The address is not required — customerFrom() drops empty fields, so
+        // reaching this line means one was typed. Refused rather than stored,
+        // because the two places it goes are both silent about it: it prints
+        // onto the provider's form as though it were an address, and
+        // SignLinkController answers `emailed: false` when is_email() rejects
+        // it, so the agent sees a saved contract and the customer never gets
+        // the signature link. A save that stops with a message is the only
+        // version of this the agent finds out about.
+        if (isset($customer['email']) && ! is_email($customer['email'])) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Μη έγκυρη διεύθυνση email. Διόρθωσέ την ή άφησέ την κενή.',
+                'field' => 'email',
+            ], 422);
+        }
+
         $customerId = $this->resolveCustomer($request, $scope, $existing, $customer);
 
         if ($customerId === false) {
