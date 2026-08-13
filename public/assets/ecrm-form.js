@@ -295,7 +295,11 @@
 				b.type = 'button'; b.className = 'ecrm-provider'; b.setAttribute('data-pid', p.id);
 				b.setAttribute('data-pname', p.name);
 				b.setAttribute('data-energy', p.energy_types || '');
-				b.innerHTML = p.logo_url ? '<img src="' + p.logo_url + '" alt="' + p.name + '">' : '<span>' + p.name + '</span>';
+				// Providers are admin-only (manage_options) and logo_url already
+				// passes esc_url_raw() on save, so this is defence in depth rather
+				// than a hole being closed. It also keeps the file's own rule
+				// intact: nothing reaches innerHTML without esc().
+				b.innerHTML = p.logo_url ? '<img src="' + esc(p.logo_url) + '" alt="' + esc(p.name) + '">' : '<span>' + esc(p.name) + '</span>';
 				b.addEventListener('click', function () {
 					wrap.querySelectorAll('.ecrm-provider').forEach(function (x) { x.classList.remove('is-on'); });
 					b.classList.add('is-on'); state.provider_id = parseInt(p.id, 10);
@@ -628,7 +632,10 @@
 				var kindSel = '<select class="ecrm-kind" data-i="' + i + '">' +
 					kindOpts.map(function (o) { return '<option value="' + o[0] + '"' + (item.kind === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
 					'</select>';
-				li.innerHTML = '<span class="ecrm-fileitem__name">' + item.file.name + '</span>' + kindSel +
+				// The name of a file the user just picked themselves, so this was
+				// only ever self-inflicted — but an unescaped name is an unescaped
+				// name, and the guard test does not grant exceptions for intent.
+				li.innerHTML = '<span class="ecrm-fileitem__name">' + esc(item.file.name) + '</span>' + kindSel +
 					'<button type="button" class="ecrm-fileitem__rm" data-i="' + i + '">✕</button>';
 				ul.appendChild(li);
 			});
