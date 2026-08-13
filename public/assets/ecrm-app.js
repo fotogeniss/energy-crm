@@ -1,4 +1,6 @@
-import { api, can, esc, H, toast } from './ecrm-util.js';
+import { api, can, esc, fetch, H, toast } from './ecrm-util.js';
+import { loadCommissions } from './ecrm-view-commissions.js';
+import { loadAnalytics } from './ecrm-view-analytics.js';
 import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from './ecrm-format.js';
 
 /* Energy CRM — app shell.
@@ -11,21 +13,6 @@ import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from './ec
 	if (!app || typeof ECRM === 'undefined') return;
 
 	var MONTHS = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
-
-	// Force fresh data: never serve our API GETs from the browser/proxy cache.
-	// (Function declaration shadows the global fetch for the whole module.)
-	var _origFetch = window.fetch.bind(window);
-	function fetch(url, opts) {
-		opts = opts || {};
-		try {
-			var base = ECRM.rest.replace(/\/$/, '');
-			if (typeof url === 'string' && url.indexOf(base) === 0) {
-				opts.cache = 'no-store';
-				opts.headers = Object.assign({ 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }, opts.headers || {});
-			}
-		} catch (e) {}
-		return _origFetch(url, opts);
-	}
 
 	// Copy text to clipboard with a fallback for non-secure (HTTP) contexts where
 	// navigator.clipboard is unavailable. Returns a Promise<boolean> of success.
@@ -1242,142 +1229,8 @@ import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from './ec
 	}
 
 		// ---- commissions ------------------------------------------------------
-	var commScope = 'own';
-	function loadCommissions() {
-		var view = app.querySelector('.ecrm-view[data-view="commissions"]');
-		fetch(api('/commissions') + '?scope=' + encodeURIComponent(commScope), { headers: H() })
-			.then(function (r) { return r.json(); })
-			.then(function (d) {
-				if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
-				view.innerHTML = commissionsHTML(d);
-				view.querySelectorAll('[data-cscope]').forEach(function (b) { b.addEventListener('click', function () { commScope = this.getAttribute('data-cscope'); loadCommissions(); }); });
-			})
-			.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
-	}
-
-	function commissionsHTML(d) {
-		var months = d.months || [];
-		var range = months.length ? (months[months.length - 1].label + ' → ' + months[0].label) : '—';
-		var avg = d.count ? (d.total / d.count) : 0;
-
-		var hist = months.length
-			? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Περίοδος</th><th>Συμβόλαια</th><th>Κατάσταση</th><th style="text-align:right">Σύνολο</th></tr></thead><tbody>' +
-				months.map(function (m) {
-					return '<tr><td><strong>' + esc(m.label) + '</strong></td><td>' + m.count + ' συμβόλαια</td>' +
-						'<td><span class="ecrm-badge ecrm-badge--routed">Καταχωρημένο</span></td>' +
-						'<td style="text-align:right" class="ecrm-mono">' + Number(m.amount).toFixed(0) + ' €</td></tr>';
-				}).join('') + '</tbody></table></div>'
-			: '<div class="ecrm-empty">Δεν υπάρχουν εκκαθαρίσεις ακόμα.</div>';
-
-		return '' +
-			'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Προμήθειες</div><h2 class="ecrm-title">Οι εκκαθαρίσεις μου</h2>' +
-			'<p class="ecrm-sub">Ιστορικό και συνολικά έσοδα από επιτυχημένες συμβάσεις</p></div>' +
-			'<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (commScope==="own"?" is-on":"") + '" data-cscope="own">Δικά μου</button><button type="button" class="ecrm-scope__b' + (commScope==="team"?" is-on":"") + '" data-cscope="team">Ομάδας</button></div></header>' +
-
-			// dark hero
-			'<div class="ecrm-payhero">' +
-			'<div class="ecrm-payhero__main"><div class="ecrm-payhero__eyebrow">💰 ΣΥΝΟΛΙΚΑ ΕΣΟΔΑ · ' + range + '</div>' +
-			'<div class="ecrm-payhero__big">' + Number(d.total).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ' €</div>' +
-			'<div class="ecrm-payhero__sub">Από ' + months.length + ' εκκαθαρίσεις</div></div>' +
-			'<div class="ecrm-payhero__side"><div class="ecrm-payhero__k">ΚΟΡΥΦΑΙΟΣ ΜΗΝΑΣ</div><div class="ecrm-payhero__v">' + esc(d.best_label || '—') + '</div>' +
-			'<div class="ecrm-payhero__k" style="margin-top:12px">ΣΕ ΑΝΑΜΟΝΗ</div><div class="ecrm-payhero__v">~' + Number(d.pending_est).toFixed(0) + ' €</div></div></div>' +
-
-			// three stat cards
-			'<div class="ecrm-stats">' +
-			'<div class="ecrm-stat is-routed"><div class="ecrm-stat__k">✓ Καταχωρημένες</div><div class="ecrm-stat__v">' + (d.count || 0) + '</div></div>' +
-			'<div class="ecrm-stat is-today"><div class="ecrm-stat__k">💶 Πληρωμένα</div><div class="ecrm-stat__v">' + Number(d.paid_total || 0).toFixed(0) + ' €</div></div>' +
-			'<div class="ecrm-stat is-pending"><div class="ecrm-stat__k">🧾 Προς πληρωμή</div><div class="ecrm-stat__v">' + Number(d.unpaid_total || 0).toFixed(0) + ' €</div></div></div>' +
-
-			// history
-			'<div class="ecrm-card"><div class="ecrm-step">Ιστορικό εκκαθαρίσεων <span class="ecrm-step__hint">μέσος όρος ' + avg.toFixed(0) + ' € / σύμβαση</span></div>' + hist + '</div>';
-	}
 
 		// ---- analytics (managers) --------------------------------------------
-	var analyticsScope = 'team';
-	function loadAnalytics() {
-		var view = app.querySelector('.ecrm-view[data-view="analytics"]');
-		fetch(api('/analytics') + '?scope=' + encodeURIComponent(analyticsScope), { headers: H() })
-			.then(function (r) { return r.json(); })
-			.then(function (d) {
-				if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
-				analyticsScope = d.scope; // server may downgrade team→own
-				view.innerHTML = analyticsHTML(d);
-				view.querySelectorAll('[data-ascope]').forEach(function (b) { b.addEventListener('click', function () { analyticsScope = this.getAttribute('data-ascope'); loadAnalytics(); }); });
-			})
-			.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
-	}
-
-	function barList(items, accentClass) {
-		var max = 1; items.forEach(function (it) { if (it.count > max) max = it.count; });
-		if (!items.length) return '<div class="ecrm-empty">—</div>';
-		return '<div class="ecrm-barlist">' + items.map(function (it) {
-			var pct = Math.round(100 * it.count / max);
-			return '<div class="ecrm-barrow"><div class="ecrm-barrow__lbl">' + esc(it.label || it.name || '—') + '</div>' +
-				'<div class="ecrm-barrow__track"><div class="ecrm-barrow__fill ' + (accentClass || '') + '" style="width:' + pct + '%"></div></div>' +
-				'<div class="ecrm-barrow__val">' + it.count + '</div></div>';
-		}).join('') + '</div>';
-	}
-
-	function analyticsHTML(d) {
-		var scopeToggle = d.can_team
-			? '<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (analyticsScope==="own"?" is-on":"") + '" data-ascope="own">Δικά μου</button><button type="button" class="ecrm-scope__b' + (analyticsScope==="team"?" is-on":"") + '" data-ascope="team">Ομάδας</button></div>'
-			: '';
-
-		var kpis =
-			'<div class="ecrm-stats">' +
-			'<div class="ecrm-stat is-routed"><div class="ecrm-stat__k">Σύνολο αιτήσεων</div><div class="ecrm-stat__v">' + (d.total || 0) + '</div></div>' +
-			'<div class="ecrm-stat is-today"><div class="ecrm-stat__k">✓ Conversion</div><div class="ecrm-stat__v">' + Number(d.conv_rate || 0).toFixed(1) + '%</div></div>' +
-			'<div class="ecrm-stat is-pending"><div class="ecrm-stat__k">✕ Ακυρώσεις</div><div class="ecrm-stat__v">' + Number(d.canc_rate || 0).toFixed(1) + '%</div></div>' +
-			'<div class="ecrm-stat is-today"><div class="ecrm-stat__k">⌛ Μέσος χρόνος ενεργ.</div><div class="ecrm-stat__v">' + (d.avg_days == null ? '—' : (Number(d.avg_days).toFixed(1) + ' ημ.')) + '</div></div>' +
-			'</div>';
-
-		// funnel (only stages with any count, in pipeline order)
-		var funnel = (d.funnel || []).filter(function (f) { return f.count > 0; });
-		var funnelMax = 1; funnel.forEach(function (f) { if (f.count > funnelMax) funnelMax = f.count; });
-		var funnelHTML = funnel.length
-			? '<div class="ecrm-barlist">' + funnel.map(function (f) {
-				var pct = Math.round(100 * f.count / funnelMax);
-				return '<div class="ecrm-barrow"><div class="ecrm-barrow__lbl"><span class="ecrm-badge ecrm-badge--' + esc(f.status) + '">' + esc(f.label) + '</span></div>' +
-					'<div class="ecrm-barrow__track"><div class="ecrm-barrow__fill" style="width:' + pct + '%"></div></div>' +
-					'<div class="ecrm-barrow__val">' + f.count + '</div></div>';
-			}).join('') + '</div>'
-			: '<div class="ecrm-empty">Καμία αίτηση.</div>';
-
-		// monthly trend
-		var months = ['Ιαν','Φεβ','Μαρ','Απρ','Μαϊ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
-		var mvals = d.monthly || [];
-		var mmax = 1; mvals.forEach(function (v) { if (v > mmax) mmax = v; });
-		var trend = '<div class="ecrm-trend">' + mvals.map(function (v, i) {
-			var h = Math.round(100 * v / mmax);
-			return '<div class="ecrm-trend__col" title="' + months[i] + ': ' + v + '"><div class="ecrm-trend__bar" style="height:' + Math.max(3, h) + '%"></div><div class="ecrm-trend__lbl">' + months[i] + '</div></div>';
-		}).join('') + '</div>';
-
-		// leaderboard
-		var lb = (d.leaderboard || []);
-		var lbHTML = lb.length
-			? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>#</th><th>Συνεργάτης</th><th>Συμβάσεις</th><th style="text-align:right">Προμήθεια €</th></tr></thead><tbody>' +
-				lb.map(function (r, i) {
-					var medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : (i + 1)));
-					return '<tr><td>' + medal + '</td><td><strong>' + esc(r.name) + '</strong></td><td>' + r.count + '</td>' +
-						'<td style="text-align:right" class="ecrm-mono">' + Number(r.amount).toFixed(0) + ' €</td></tr>';
-				}).join('') + '</tbody></table></div>'
-			: '<div class="ecrm-empty">Διαθέσιμο σε προβολή «Ομάδας».</div>';
-
-		return '' +
-			'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Διοίκηση</div><h2 class="ecrm-title">Στατιστικά</h2>' +
-			'<p class="ecrm-sub">Funnel, αποδοτικότητα και κατανομές</p></div>' + scopeToggle + '</header>' +
-			kpis +
-			'<div class="ecrm-cols">' +
-			'<div class="ecrm-card"><div class="ecrm-step">Funnel καταστάσεων</div>' + funnelHTML + '</div>' +
-			'<div class="ecrm-card"><div class="ecrm-step">Ανά πάροχο</div>' + barList(d.by_provider || [], 'is-prov') + '</div>' +
-			'</div>' +
-			'<div class="ecrm-cols">' +
-			'<div class="ecrm-card"><div class="ecrm-step">Ανά υπηρεσία</div>' + barList(d.by_energy || [], 'is-energy') + '</div>' +
-			'<div class="ecrm-card"><div class="ecrm-step">Ανά νομό</div>' + barList(d.by_region || [], 'is-region') + '</div>' +
-			'</div>' +
-			'<div class="ecrm-card"><div class="ecrm-step">Τάση μήνα (' + new Date().getFullYear() + ')</div>' + trend + '</div>' +
-			'<div class="ecrm-card"><div class="ecrm-step">🏆 Κατάταξη συνεργατών</div>' + lbHTML + '</div>';
-	}
 
 		// ---- tasks / callbacks ------------------------------------------------
 	var tasksState = { filter: 'open', scope: 'own' };

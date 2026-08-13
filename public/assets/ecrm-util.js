@@ -51,6 +51,47 @@ export function can(capability) {
 }
 
 /**
+ * Never serve our own API responses from the browser or proxy cache.
+ *
+ * An agent who changes a contract's status and clicks back to the list must
+ * see the new status, not the one the browser kept. Only our REST base is
+ * touched; everything else passes through untouched, which is why this can
+ * safely shadow the global fetch in the modules that import it.
+ *
+ * It lived in the app shell and moved here when the views started splitting
+ * out - each one needs it, and a second copy would be a second thing to keep
+ * in step. ecrm-form.js and ecrm-litsa.js still call the global fetch; giving
+ * them this one is a behaviour change and wants its own commit.
+ */
+var _origFetch = window.fetch.bind(window);
+
+export function fetch(url, opts) {
+	opts = opts || {};
+
+	try {
+		var base = ECRM.rest.replace(/\/$/, '');
+
+		if (typeof url === 'string' && url.indexOf(base) === 0) {
+			opts.cache = 'no-store';
+			opts.headers = Object.assign({ 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }, opts.headers || {});
+		}
+	} catch (e) {}
+
+	return _origFetch(url, opts);
+}
+
+/**
+ * The container a view renders into.
+ *
+ * Here rather than passed in from the router: a view module that looks up its
+ * own container needs nothing from the shell but the call, which is what keeps
+ * the extraction of the next one a move rather than a rewrite.
+ */
+export function viewEl(name) {
+	return document.querySelector('#ecrm-app .ecrm-view[data-view="' + name + '"]');
+}
+
+/**
  * The one-line message at the bottom of the screen.
  *
  * Creates its own node on first use, so no view has to remember to render a
