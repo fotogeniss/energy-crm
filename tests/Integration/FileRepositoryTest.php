@@ -20,8 +20,10 @@
  *   - purgeOrphans(), unprotectedCount(), protectBatch() — no test touches any
  *     of the three.
  *
- * This file covers those five, plus one thing found while writing it rather
- * than fixed: see testReplaceKindOrphansTheBytesOfTheRowItDeletes().
+ * This file covers those five, plus one thing found while writing it and
+ * fixed in the same commit: replaceKind() deleted a row without unlinking
+ * its bytes. See testReplaceKindDeletesTheBytesOfTheRowItReplaces() and the
+ * docblock on replaceKind() itself.
  *
  * @package EnergyCRM
  */
@@ -141,22 +143,22 @@ final class FileRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * Found while writing this net, not fixed here.
+     * Found while writing this net, fixed in the same commit.
      *
      * Every other removal path in this class — purgeGenerated(),
-     * purgeForContracts(), purgeOrphans() — calls deleteBytes() before it
-     * deletes rows. replaceKind() does not: it deletes the old row and inserts
-     * a new one, and the bytes the old row pointed at are never unlinked. That
-     * is exactly "a caller removing half" — the failure mode the class header
+     * purgeForContracts(), purgeOrphans() — called deleteBytes() before it
+     * deleted rows. replaceKind() did not: it deleted the old row and inserted
+     * a new one, leaving the bytes the old row pointed at never unlinked. That
+     * was exactly "a caller removing half" — the failure mode the class header
      * says this class exists to prevent.
      *
      * SigningController::storeSignatureImage() calls replaceKind() on every
-     * re-sign, so a customer who signs twice leaves the first drawing on disk,
-     * referenced by nothing. purgeOrphans() cannot sweep it up either: there is
-     * no dangling row afterwards, just a file that no row has pointed at since
-     * the delete. This test documents that as it stands today.
+     * re-sign, so a customer signing twice would have left the first drawing
+     * on disk, referenced by nothing — invisible to purgeOrphans() too, since
+     * there was never a dangling row, just a file nothing pointed at after the
+     * delete. This is the regression test for that fix.
      */
-    public function testReplaceKindOrphansTheBytesOfTheRowItDeletes(): void
+    public function testReplaceKindDeletesTheBytesOfTheRowItReplaces(): void
     {
         $contractId = $this->makeContract();
 
@@ -165,10 +167,7 @@ final class FileRepositoryTest extends IntegrationTestCase
 
         $this->files->replaceKind($contractId, 'signature', 'second.png', 'image/png', $this->putBytes());
 
-        self::assertFileExists(
-            $oldPath,
-            'This asserts current behaviour, not desired behaviour — see the docblock above.'
-        );
+        self::assertFileDoesNotExist($oldPath);
     }
 
     // --- purgeForContracts() ---------------------------------------------------

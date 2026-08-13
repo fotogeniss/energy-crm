@@ -132,13 +132,30 @@ final class FileRepository
      * Replace the single document of a given kind on a contract.
      *
      * Used for the signature: a contract has one, and re-signing must not leave
-     * the previous drawing behind.
+     * the previous drawing behind — on disk as well as in the row. It did not,
+     * until FileRepositoryTest caught it: the old row was deleted but its bytes
+     * were not, unlike every other removal path in this class. The bytes go
+     * first now, the same as purgeGenerated(), purgeForContracts() and
+     * purgeOrphans().
      *
      * @return int The new file id, or 0 when the insert failed.
      */
     public function replaceKind(int $contractId, string $kind, string $filename, string $mime, string $path): int
     {
         global $wpdb;
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT id, path, attachment_id FROM %i WHERE contract_id = %d AND doc_kind = %s',
+                $this->table,
+                $contractId,
+                $kind
+            ),
+            ARRAY_A
+        );
+
+        $this->deleteBytes($rows);
 
         $wpdb->delete($this->table, ['contract_id' => $contractId, 'doc_kind' => $kind]);
 
