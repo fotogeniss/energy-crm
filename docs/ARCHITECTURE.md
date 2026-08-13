@@ -62,7 +62,7 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 | 6 | Σπάσιμο του `class-ecrm-rest.php` σε controllers ανά resource, με `args` schema | ✅ |
 | 7 | Διαφοροποίηση ρόλων (Συνεργάτης / Πωλητής / Καταχωρητής) σε πραγματικά capabilities | ✅ |
 | 8 | Secrets εκτός `wp_options`· retention policy για `extracted_json` | ✅ |
-| 9 | Frontend: build step, σπάσιμο του `ecrm-app.js`, τέλος στο χειροκίνητο `innerHTML` | ⬜ |
+| 9 | Frontend: build step, σπάσιμο του `ecrm-app.js`, τέλος στη συρραφή HTML με `+` (**συντηρησιμότητα, όχι ασφάλεια** — δες HANDOVER §6.0) | ⬜ |
 | 10 | Κύκλος ζωής συμβολαίου (`transition`, ειδοποιήσεις) εκτός `ECRM_REST`· container αντί για 16 ορίσματα στον `Router` | ✅ |
 
 **Το `class-ecrm-rest.php` δεν υπάρχει πια.** Ο μονόλιθος άδειασε σε επτά
