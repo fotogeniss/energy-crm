@@ -16,8 +16,39 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class ECRM_Shortcodes {
 
+	/** Handles whose files are ES modules and must be tagged as such. */
+	private const MODULE_HANDLES = [ 'ecrm-form', 'ecrm-app', 'ecrm-litsa' ];
+
 	public static function init(): void {
 		add_shortcode( 'energy_crm_new_contract', [ __CLASS__, 'new_contract' ] );
+		add_filter( 'script_loader_tag', [ __CLASS__, 'tag_module_scripts' ], 10, 2 );
+	}
+
+	/**
+	 * Emit type="module" for the front-end scripts.
+	 *
+	 * They import a shared helper module, which the browser only honours when
+	 * the entry point is itself a module. There is no bundler on purpose: no
+	 * node_modules, no build artifact, and therefore no way to deploy a stale
+	 * one. Requires at least is 6.2, so wp_enqueue_script_module() (6.5) is not
+	 * available to us; the tag filter works on every supported version.
+	 *
+	 * Two things this does not break. Module scripts are deferred, and these
+	 * are already enqueued in the footer with a dependency chain, so the order
+	 * ecrm-form to ecrm-app to ecrm-litsa is preserved. And the ECRM object
+	 * from wp_localize_script is printed as a classic inline script before
+	 * them, so it exists by the time any module body runs.
+	 */
+	public static function tag_module_scripts( string $tag, string $handle ): string {
+		if ( ! in_array( $handle, self::MODULE_HANDLES, true ) ) {
+			return $tag;
+		}
+
+		// A theme without html5 script support gets type="text/javascript"
+		// printed for it, and two type attributes is not valid markup.
+		$tag = (string) preg_replace( '/\s+type=([\'"])[^\'"]*\1/', '', $tag );
+
+		return str_replace( '<script ', '<script type="module" ', $tag );
 	}
 
 	public static function enqueue_form_assets(): void {

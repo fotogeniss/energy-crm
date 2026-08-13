@@ -1,3 +1,5 @@
+import { api, esc, toast } from './ecrm-util.js';
+
 /* Energy CRM — app shell.
  * Client-side routing between views + dashboard & contracts rendering.
  * Depends on ECRM (rest, nonce) and window.ECRMForm (form init). */
@@ -9,7 +11,6 @@
 
 	var MONTHS = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
 
-	function api(path) { return ECRM.rest.replace(/\/$/, '') + path; }
 	function H() { return { 'X-WP-Nonce': ECRM.nonce }; }
 
 	// Hiding a control the user may not use. The server checks again regardless.
@@ -29,7 +30,6 @@
 		} catch (e) {}
 		return _origFetch(url, opts);
 	}
-	function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 	function timeAgo(iso) {
 		if (!iso) return '';
 		var d = new Date(iso.replace(' ', 'T') + 'Z'), s = (Date.now() - d.getTime()) / 1000;
@@ -37,13 +37,6 @@
 		if (s < 3600) return Math.floor(s / 60) + 'λ πριν';
 		if (s < 86400) return Math.floor(s / 3600) + 'ω πριν';
 		return Math.floor(s / 86400) + 'μ πριν';
-	}
-	function toast(msg, ok) {
-		var t = document.getElementById('ecrm-toast');
-		if (!t) { t = document.createElement('div'); t.id = 'ecrm-toast'; t.className = 'ecrm-toast'; document.body.appendChild(t); }
-		t.textContent = msg;
-		t.className = 'ecrm-toast is-show ' + (ok === false ? 'is-err' : 'is-ok');
-		setTimeout(function () { t.className = 'ecrm-toast'; }, 4000);
 	}
 
 	// Copy text to clipboard with a fallback for non-secure (HTTP) contexts where

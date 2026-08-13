@@ -1,10 +1,11 @@
+import { api, esc, toast } from './ecrm-util.js';
+
 /* Energy CRM — New Contract form behaviour.
  * Exposes window.ECRMForm.init(rootEl) so it can run standalone OR inside the
  * app shell. Scoped to a root element via data-* hooks (no global ids). */
 (function () {
 	'use strict';
 
-	function api(path) { return ECRM.rest.replace(/\/$/, '') + path; }
 	var _editFn = null, _resetFn = null;
 
 	// Force fresh data: never serve our API calls from cache.
@@ -25,14 +26,6 @@
 		if (json) h['Content-Type'] = 'application/json';
 		return h;
 	}
-	function toast(msg, ok) {
-		var t = document.getElementById('ecrm-toast');
-		if (!t) { t = document.createElement('div'); t.id = 'ecrm-toast'; t.className = 'ecrm-toast'; document.body.appendChild(t); }
-		t.textContent = msg;
-		t.className = 'ecrm-toast is-show ' + (ok === false ? 'is-err' : 'is-ok');
-		setTimeout(function () { t.className = 'ecrm-toast'; }, 4000);
-	}
-	function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
 	function initForm(root) {
 		if (!root || root.__ecrmInit) return;

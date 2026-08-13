@@ -56,15 +56,19 @@ final class FrontendEscapingTest extends TestCase
     /**
      * Every unescaped interpolation that a human has looked at and cleared.
      *
-     * Format: `file.js:line expression`. Keep the reason beside each one —
-     * a bare list decays into a place to append and move on.
+     * Format: `file.js expression`. Deliberately without a line number: one
+     * would churn every time an unrelated edit shifted the file, and a list
+     * that cries wolf is a list people silence. Grep for the expression.
+     *
+     * Keep the reason beside each one — a bare list decays into a place to
+     * append and move on.
      */
     private const APPROVED = [
         // Both are keys of an array literal written three lines above the
         // render, holding hardcoded Greek labels and CSS class names. No
         // server data can reach them.
-        'ecrm-app.js:276 x.cls',
-        'ecrm-app.js:276 x.k',
+        'ecrm-app.js x.cls',
+        'ecrm-app.js x.k',
     ];
 
     /**
@@ -82,6 +86,9 @@ final class FrontendEscapingTest extends TestCase
         'unmatched_total', 'threshold', 'age_days', 'days_left', 'amount',
         'window', 'pending_est', 'total', 'page', 'pages', 'sort_order', 'v', 'n',
     ];
+
+    /** The one module that may define the shared helpers. */
+    private const UTIL_MODULE = 'ecrm-util.js';
 
     /** A line is only inspected if it is building markup. */
     private const HTML_HINT = '/[\'"]<|<\/|<div|<span|<option|<button|<li|<img'
@@ -140,25 +147,57 @@ final class FrontendEscapingTest extends TestCase
     }
 
     /**
-     * esc() itself still escapes the four characters everything else assumes.
+     * esc() is defined once, and still escapes what every caller assumes.
      *
-     * Each file carries its own copy, and a copy is a thing that can drift.
+     * It used to be defined three times, one copy per file, and this test
+     * asserted the copies had not drifted — a guard papering over a
+     * duplication instead of the duplication being fixed. ecrm-util.js is the
+     * fix; this is what keeps it the only copy.
      */
-    public function testEveryFileDefinesAnEscHelperCoveringTheSameCharacters(): void
+    public function testEscIsDefinedExactlyOnceAndStillCoversTheSameCharacters(): void
     {
+        $definitions = [];
+
         foreach ($this->scriptFiles() as $name => $path) {
             $source = (string) file_get_contents($path);
 
-            self::assertMatchesRegularExpression(
-                '/function esc\s*\(/',
-                $source,
-                "{$name} has no esc() of its own."
-            );
+            if (preg_match('/function esc\s*\(/', $source) === 1) {
+                $definitions[] = $name;
+            }
+        }
 
-            self::assertStringContainsString(
-                'replace(/[&<>"]/g',
+        self::assertSame(
+            [self::UTIL_MODULE],
+            $definitions,
+            'esc() must be defined in ' . self::UTIL_MODULE . ' and imported everywhere else. '
+            . 'A second copy is a copy that can drift.'
+        );
+
+        self::assertStringContainsString(
+            'replace(/[&<>"]/g',
+            (string) file_get_contents($this->scriptFiles()[self::UTIL_MODULE]),
+            'esc() no longer covers & < > " — every innerHTML in the codebase assumed it did.'
+        );
+    }
+
+    /** Whatever calls esc() must have imported it, not found it on a global. */
+    public function testEveryScriptThatEscapesImportsTheHelper(): void
+    {
+        foreach ($this->scriptFiles() as $name => $path) {
+            if ($name === self::UTIL_MODULE) {
+                continue;
+            }
+
+            $source = (string) file_get_contents($path);
+
+            if (! str_contains($source, 'esc(')) {
+                continue;
+            }
+
+            self::assertMatchesRegularExpression(
+                '/^import \{[^}]*\besc\b[^}]*\} from \x27\.\/' . preg_quote(self::UTIL_MODULE, '/') . '\x27;/m',
                 $source,
-                "{$name}'s esc() no longer covers & < > \" — every innerHTML in it assumed it did."
+                "{$name} calls esc() without importing it from " . self::UTIL_MODULE . '.'
             );
         }
     }
@@ -243,7 +282,7 @@ final class FrontendEscapingTest extends TestCase
                     continue;
                 }
 
-                $hit = $name . ':' . ($index + 1) . ' ' . $expression;
+                $hit = $name . ' ' . $expression;
 
                 // The same expression twice on one line is one thing to review.
                 if (! in_array($hit, $hits, true)) {

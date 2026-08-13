@@ -1,3 +1,5 @@
+import { api, esc } from './ecrm-util.js';
+
 /* Energy CRM — "Λίτσα" assistant.
  * Floating chat that relays to /wp-json/ecrm/v1/assistant. History persists
  * in localStorage so it survives reloads. Depends on the ECRM global. */
@@ -14,10 +16,8 @@
 	var history = load();
 	var busy = false;
 
-	function api(p) { return ECRM.rest.replace(/\/$/, '') + p; }
 	function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
 	function save() { try { localStorage.setItem(KEY, JSON.stringify(history.slice(-40))); } catch (e) {} }
-	function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
 	function render() {
 		if (!history.length) {
