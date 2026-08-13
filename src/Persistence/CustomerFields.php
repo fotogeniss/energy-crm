@@ -67,6 +67,20 @@ final class CustomerFields
     {
     }
 
+    /**
+     * The encrypted columns, for callers that must build SQL over them.
+     *
+     * Exposed rather than copied. A second list somewhere else would agree
+     * today and diverge the first time a column is added here — the same
+     * failure WritableColumns exists to prevent.
+     *
+     * @return list<string>
+     */
+    public static function encryptedColumns(): array
+    {
+        return self::ENCRYPTED;
+    }
+
     /** Wired from the wp-config salts, the same source SecretStore uses. */
     public static function default(): self
     {
@@ -115,6 +129,55 @@ final class CustomerFields
         }
 
         return $customer;
+    }
+
+    /**
+     * Encrypt the columns of a row that is *already stored*, leaving the blind
+     * index alone.
+     *
+     * forStorage() is for a row arriving from a form: it derives `afm_hash`
+     * from the plaintext ΑΦΜ it was handed, then encrypts. Handing it a row
+     * read back out of the database would hash the **ciphertext** and write
+     * that over a correct index. Nothing would error. The next duplicate check
+     * would simply match no rows, an agent would read that as "no duplicate
+     * exists", and the same customer would be filed twice — the failure this
+     * whole mechanism was built to avoid.
+     *
+     * So the backfill comes in here instead. The index is already complete for
+     * every existing row (migration 0010) and there is nothing to maintain.
+     *
+     * Deliberately **not** gated on isEnabled(): this is an explicit operation
+     * with an explicit caller, not a write that should quietly follow a switch.
+     *
+     * Returns only what changed, so a row with nothing to do is skipped rather
+     * than rewritten — an idle UPDATE bumps `updated_at`, which is what the
+     * contracts list sorts by.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array<string, string> Columns to write; empty when already done.
+     *
+     * @throws \EnergyCRM\Infrastructure\MissingCipher When this PHP cannot encrypt.
+     */
+    public function encryptStoredColumns(array $row): array
+    {
+        $changes = [];
+
+        foreach (self::ENCRYPTED as $column) {
+            if (! isset($row[$column]) || ! is_string($row[$column]) || $row[$column] === '') {
+                continue;
+            }
+
+            $stored = $row[$column];
+
+            if (FieldCipher::isEncrypted($stored)) {
+                continue;
+            }
+
+            $changes[$column] = $this->cipher->encrypt($stored);
+        }
+
+        return $changes;
     }
 
     /**

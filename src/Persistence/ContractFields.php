@@ -61,6 +61,32 @@ final class ContractFields
     }
 
     /**
+     * Encrypt the personal values inside a bag that is *already stored*.
+     *
+     * The counterpart to CustomerFields::encryptStoredColumns(), and simpler:
+     * there is no blind index over the extras, so there is nothing here that a
+     * second pass could corrupt.
+     *
+     * Not gated on isEnabled(), for the same reason as its counterpart — the
+     * caller is a backfill that has already decided.
+     *
+     * Null rather than the unchanged string, so the caller writes nothing when
+     * there is nothing to do. A bag whose personal values are already
+     * ciphertext, one that holds no personal keys at all, and one that will not
+     * parse all return null.
+     *
+     * @return string|null The bag to store, or null when unchanged.
+     *
+     * @throws \EnergyCRM\Infrastructure\MissingCipher When this PHP cannot encrypt.
+     */
+    public function encryptStoredExtras(string $json): ?string
+    {
+        $encrypted = $this->map($json, fn (string $value): string => $this->cipher->encrypt($value));
+
+        return is_string($encrypted) && $encrypted !== $json ? $encrypted : null;
+    }
+
+    /**
      * @param array<string, mixed> $row
      *
      * @return array<string, mixed>

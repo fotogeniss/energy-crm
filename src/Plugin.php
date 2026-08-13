@@ -21,10 +21,12 @@ use EnergyCRM\Admin\PrivacyTools;
 use EnergyCRM\Http\ControllerFactory;
 use EnergyCRM\Http\Router;
 use EnergyCRM\Infrastructure\DocumentProtection;
+use EnergyCRM\Infrastructure\PiiBackfill;
 use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 use EnergyCRM\Persistence\PersonalDataEraser;
 use EnergyCRM\Persistence\PersonalDataExporter;
+use EnergyCRM\Persistence\PiiBackfillRepository;
 
 final class Plugin
 {
@@ -93,6 +95,13 @@ final class Plugin
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
         (new DocumentProtection(Services::files()))->register();
+
+        // Scheduled unconditionally, and inert until ECRM_ENCRYPT_PII is on.
+        // Registering only when the flag is set would mean the sweep never
+        // starts on the site that turns encryption on later — which is every
+        // site, since the flag is opt-in.
+        (new PiiBackfill(PiiBackfillRepository::default()))->register();
+
         (new Router(...ControllerFactory::all()))->register();
 
         // Signed contracts advance themselves after a delay: a one-off event per

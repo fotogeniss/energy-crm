@@ -23,6 +23,7 @@ class ECRM_GDPR {
 		add_action( 'admin_post_ecrm_gdpr_export', [ __CLASS__, 'export' ] );
 		add_action( 'admin_post_ecrm_gdpr_erase',  [ __CLASS__, 'erase' ] );
 		add_action( 'admin_post_ecrm_secure_files', [ __CLASS__, 'secure_files' ] );
+		add_action( 'admin_post_ecrm_backfill_pii', [ __CLASS__, 'backfill_pii' ] );
 	}
 
 	public static function menu(): void {
@@ -43,8 +44,12 @@ class ECRM_GDPR {
 		if ( isset( $_GET['secured'] ) ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( sprintf( 'Ασφαλίστηκαν %d αρχεία.', (int) $_GET['secured'] ) ) . '</p></div>';
 		}
+		if ( isset( $_GET['encrypted'] ) ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( sprintf( 'Κρυπτογραφήθηκαν %d εγγραφές.', (int) $_GET['encrypted'] ) ) . '</p></div>';
+		}
 
 		self::render_file_security_notice();
+		self::render_pii_backfill_notice();
 
 		$q = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
 		echo '<form method="get" style="margin:14px 0;"><input type="hidden" name="page" value="energy-crm-gdpr">';
@@ -118,6 +123,62 @@ class ECRM_GDPR {
 		return new \EnergyCRM\Infrastructure\DocumentProtection( \EnergyCRM\Services::files() );
 	}
 
+	/**
+	 * State of the encryption backfill.
+	 *
+	 * ECRM_ENCRYPT_PII only ever governed new writes, so a site that switches
+	 * it on keeps every existing ΑΦΜ, ΑΔΤ and address in plaintext until this
+	 * has run. That gap is invisible from anywhere else in wp-admin — the
+	 * screens all read through the decrypting layer and look identical either
+	 * way — which is the whole reason it is reported here.
+	 *
+	 * See EnergyCRM\Infrastructure\PiiBackfill.
+	 */
+	private static function render_pii_backfill_notice(): void {
+		$backfill = self::backfill();
+		$blocked  = $backfill->blockedReason();
+
+		// Encryption off is the default and not worth nagging about. Sodium
+		// missing while encryption is on is a real problem and says so.
+		if ( null !== $blocked ) {
+			if ( ! \EnergyCRM\Persistence\CustomerFields::isEnabled() ) {
+				return;
+			}
+
+			echo '<div class="notice notice-error"><p><strong>Κρυπτογράφηση προσωπικών δεδομένων.</strong> ';
+			echo esc_html( $blocked );
+			echo '</p></div>';
+			return;
+		}
+
+		$pending = $backfill->pending();
+
+		if ( 0 === $pending['customers'] && 0 === $pending['contracts'] ) {
+			echo '<div class="notice notice-success"><p><strong>Κρυπτογράφηση προσωπικών δεδομένων.</strong> Δεν έμεινε τίποτα σε καθαρό κείμενο.</p></div>';
+			return;
+		}
+
+		echo '<div class="notice notice-warning"><p><strong>Κρυπτογράφηση προσωπικών δεδομένων.</strong> ';
+		echo esc_html(
+			sprintf(
+				'Απομένουν %d πελάτες και έως %d συμβόλαια προς έλεγχο.',
+				$pending['customers'],
+				$pending['contracts']
+			)
+		);
+		echo ' Μετατρέπονται αυτόματα ανά ώρα, σε παρτίδες. ';
+		echo '<a class="button" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ecrm_backfill_pii' ), 'ecrm_backfill_pii' ) ) . '">Μετατροπή τώρα</a></p>';
+
+		// The number for the contracts is rows the walk has not reached, not
+		// rows still holding plaintext. Saying so beats an admin concluding the
+		// job is stuck because the figure does not drop the way the other does.
+		echo '<p class="description">Ο αριθμός των συμβολαίων είναι όσα δεν έχει προσπελάσει ακόμη η σάρωση — όχι όσα κρατούν καθαρό κείμενο. Τα περισσότερα δεν χρειάζονται καμία αλλαγή.</p></div>';
+	}
+
+	private static function backfill(): \EnergyCRM\Infrastructure\PiiBackfill {
+		return new \EnergyCRM\Infrastructure\PiiBackfill( \EnergyCRM\Persistence\PiiBackfillRepository::default() );
+	}
+
 	public static function export(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_gdpr_export' );
@@ -166,6 +227,36 @@ class ECRM_GDPR {
 		check_admin_referer( 'ecrm_secure_files' );
 		$report = self::protection()->sweep( 200 );
 		wp_safe_redirect( add_query_arg( 'secured', (int) $report['protected'], admin_url( 'admin.php?page=energy-crm-gdpr' ) ) );
+		exit;
+	}
+
+	/**
+	 * "Do it now" — one larger slice, still bounded.
+	 *
+	 * This exists for the supervised run, not for convenience. Waiting on an
+	 * hourly job of a hundred rows is fine for a backlog nobody is watching;
+	 * it is the wrong tool for the afternoon somebody switches encryption on
+	 * in production and wants to see the first few hundred rows convert while
+	 * they are looking at the screen.
+	 *
+	 * Bounded for the same reason as secure_files(): an unbounded admin request
+	 * rewriting an unknown number of rows ends in a timeout that reports
+	 * nothing, and "did it finish?" is exactly the question you cannot afford
+	 * to be unsure about here. Whatever is left stays with the hourly job.
+	 */
+	public static function backfill_pii(): void {
+		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
+		check_admin_referer( 'ecrm_backfill_pii' );
+
+		$report = self::backfill()->sweep( 500 );
+
+		wp_safe_redirect(
+			add_query_arg(
+				'encrypted',
+				(int) $report['customers'] + (int) $report['contracts'],
+				admin_url( 'admin.php?page=energy-crm-gdpr' )
+			)
+		);
 		exit;
 	}
 
