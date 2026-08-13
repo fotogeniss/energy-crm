@@ -35,6 +35,21 @@ export function api(path) {
 	return ECRM.rest.replace(/\/$/, '') + path;
 }
 
+/** The nonce header every write needs. */
+export function H() {
+	return { 'X-WP-Nonce': ECRM.nonce };
+}
+
+/**
+ * Hiding a control the user may not use.
+ *
+ * Presentation only. Every one of these is enforced again on the server,
+ * because anything that reaches the browser is a suggestion.
+ */
+export function can(capability) {
+	return !!(ECRM.caps && ECRM.caps[capability]);
+}
+
 /**
  * The one-line message at the bottom of the screen.
  *

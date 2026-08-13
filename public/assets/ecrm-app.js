@@ -1,4 +1,5 @@
-import { api, esc, toast } from './ecrm-util.js';
+import { api, can, esc, H, toast } from './ecrm-util.js';
+import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from './ecrm-format.js';
 
 /* Energy CRM — app shell.
  * Client-side routing between views + dashboard & contracts rendering.
@@ -10,11 +11,6 @@ import { api, esc, toast } from './ecrm-util.js';
 	if (!app || typeof ECRM === 'undefined') return;
 
 	var MONTHS = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
-
-	function H() { return { 'X-WP-Nonce': ECRM.nonce }; }
-
-	// Hiding a control the user may not use. The server checks again regardless.
-	function can(capability) { return !!(ECRM.caps && ECRM.caps[capability]); }
 
 	// Force fresh data: never serve our API GETs from the browser/proxy cache.
 	// (Function declaration shadows the global fetch for the whole module.)
@@ -29,14 +25,6 @@ import { api, esc, toast } from './ecrm-util.js';
 			}
 		} catch (e) {}
 		return _origFetch(url, opts);
-	}
-	function timeAgo(iso) {
-		if (!iso) return '';
-		var d = new Date(iso.replace(' ', 'T') + 'Z'), s = (Date.now() - d.getTime()) / 1000;
-		if (s < 60) return 'μόλις τώρα';
-		if (s < 3600) return Math.floor(s / 60) + 'λ πριν';
-		if (s < 86400) return Math.floor(s / 3600) + 'ω πριν';
-		return Math.floor(s / 86400) + 'μ πριν';
 	}
 
 	// Copy text to clipboard with a fallback for non-secure (HTTP) contexts where
@@ -308,35 +296,6 @@ import { api, esc, toast } from './ecrm-util.js';
 
 	// ---- contracts list ---------------------------------------------------
 	var contractsState = { status: '', q: '', scope: 'own', page: 1, pageSize: 12 };
-
-	function up(str) { try { return String(str).toLocaleUpperCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) { return String(str).toUpperCase(); } }
-	function energyLabel(t) { return t === 'gas' ? 'Φυσικό Αέριο' : (t === 'mobile' ? 'Κινητή Τηλεφωνία' : 'Ηλεκτρισμός'); }
-	function svgIcon(name) {
-		var p = {
-			phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.6a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z"/>',
-			viber: '<path d="M12 3c4.5 0 8 3.2 8 7.4 0 4.2-3.5 7.4-8 7.4-.7 0-1.4-.1-2-.2L5 19l1-3.2C4.7 14.5 4 12.6 4 10.4 4 6.2 7.5 3 12 3z"/><path d="M9.5 8c.6 1.8 2 3.2 3.8 3.8"/>',
-			mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>',
-			edit: '<path d="M11 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/>',
-			trash: '<path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>'
-		};
-		return '<svg class="ecrm-bico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (p[name] || '') + '</svg>';
-	}
-	function fmtDate(iso) {
-		if (!iso) return '';
-		var d = new Date(iso.replace(' ', 'T') + 'Z');
-		var p = function (n) { return (n < 10 ? '0' : '') + n; };
-		return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
-	}
-	function initials(name) {
-		var parts = (name || '').trim().split(/\s+/).filter(Boolean);
-		var s = (parts[0] ? parts[0][0] : '') + (parts[1] ? parts[1][0] : '');
-		return (s || (name || '?')[0] || '?').toUpperCase();
-	}
-	function tint(str) {
-		var h = 0; str = str || '';
-		for (var i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) % 360; }
-		return h;
-	}
 
 	function loadContracts() {
 		var view = app.querySelector('.ecrm-view[data-view="contracts"]');
