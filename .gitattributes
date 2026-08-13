@@ -1,0 +1,35 @@
+# Line endings are decided here, once, instead of by whichever editor last
+# touched a file.
+#
+# Without this, opening a test in an IDE that saves CRLF makes git report the
+# whole file as changed — ContractNotificationsTest.php showed up as 233
+# insertions and 233 deletions with not one character different, three times in
+# one day, and each time it had to be kept out of a commit by hand. A diff that
+# is pure noise is a diff people stop reading.
+#
+# eol=lf because the index already stores LF for everything, and the targets
+# are a Linux web server and Composer.
+
+* text=auto eol=lf
+
+*.php    text eol=lf
+*.js     text eol=lf
+*.css    text eol=lf
+*.md     text eol=lf
+*.json   text eol=lf
+*.xml    text eol=lf
+*.dist   text eol=lf
+*.neon   text eol=lf
+*.txt    text eol=lf
+
+# Form backgrounds and anything else git must not touch a byte of.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.svg    binary
+*.ico    binary
+*.pdf    binary
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
