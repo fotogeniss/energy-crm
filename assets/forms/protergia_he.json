@@ -199,6 +199,12 @@
    "x": 134.8,
    "y": 163.4
   },
+  "pliromi_pagia_entoli": {
+   "page": 1,
+   "x": 113.2,
+   "y": 173.7,
+   "check": true
+  },
   "ypovoli_ilektronika": {
    "page": 2,
    "x": 130.3,
@@ -240,6 +246,7 @@
   "ipistamenos_promitheftis": "ΥΦΙΣΤΑΜΕΝΟΣ ΠΡΟΜΗΘΕΥΤΗΣ",
   "hkasp": "ΗΚΑΣΠ",
   "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΊΑ ΥΠΟΒΟΛΉΣ ΑΊΤΗΣΗΣ",
-  "metrisi_imerisia": "ΜΕΤΡΗΣΗ"
+  "metrisi_imerisia": "ΜΕΤΡΗΣΗ",
+  "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης"
  }
 }

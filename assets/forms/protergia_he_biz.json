@@ -157,6 +157,12 @@
    "x": 104.8,
    "y": 170.3
   },
+  "pliromi_pagia_entoli": {
+   "page": 1,
+   "x": 113.2,
+   "y": 178.4,
+   "check": true
+  },
   "energopoiisi_nea_syndesi": {
    "page": 1,
    "x": 103.3,
@@ -229,6 +235,7 @@
   "metrisi_imerisia_nyxterini": "Ημερήσια & Νυχτερινή",
   "hkasp": "ΗΚΑΣΠ",
   "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΊΑ ΥΠΟΒΟΛΉΣ ΑΊΤΗΣΗΣ",
-  "poso_eggiisis": "ΕΓΓΎΗΣΗ (€)"
+  "poso_eggiisis": "ΕΓΓΎΗΣΗ (€)",
+  "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης"
  }
 }

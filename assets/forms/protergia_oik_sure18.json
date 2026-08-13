@@ -194,6 +194,12 @@
    "x": 134.8,
    "y": 163.4
   },
+  "pliromi_pagia_entoli": {
+   "page": 1,
+   "x": 113.2,
+   "y": 173.6,
+   "check": true
+  },
   "imerominia_aitisis": {
    "page": 2,
    "x": 107.0,
@@ -283,6 +289,7 @@
   "poso_eggiisis": "ΕΓΓΥΗΣΗ (€)",
   "synainesi_omilou_nai": "ΝΑΙ",
   "synainesi_erevnas_nai": "ΝΑΙ",
-  "isxis_paroxis": "ΙΣΧΥΣ ΠΑΡΟΧΗΣ (kVA)"
+  "isxis_paroxis": "ΙΣΧΥΣ ΠΑΡΟΧΗΣ (kVA)",
+  "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης"
  }
 }

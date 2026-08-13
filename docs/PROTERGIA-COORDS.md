@@ -110,6 +110,7 @@ python tools/form-map-audit.py --sources tools/source-forms --only protergia_he
 | 1 | 23.2 | 163.4 | `odos_arithmos_apostolis` | κείμενο | Διεύθυνση |
 | 1 | 109.6 | 163.4 | `tk_apostolis` | κείμενο | ΤΚ |
 | 1 | 134.8 | 163.4 | `poli_apostolis` | κείμενο | Πόλη |
+| 1 | 113.2 | 173.7 | `pliromi_pagia_entoli` | ☑ X | Πάγιαεντολήεξόφλησης |
 | 1 | 55.0 | 195.3 | `arithmos_paroxis` | κείμενο | ΠΑΡΟΧΗΣ |
 | 1 | 156.0 | 195.3 | `arithmos_metriti` | κείμενο | ΜΕΤΡΗΤΗ |
 | 1 | 135.5 | 206.2 | `tk_paroxis` | κείμενο | ΤΚ |
@@ -156,6 +157,7 @@ python tools/form-map-audit.py --sources tools/source-forms --only protergia_he
 | 1 | 81.7 | 170.3 | `tk_apostolis` | κείμενο | ΤΚ |
 | 1 | 104.8 | 170.3 | `poli_apostolis` | κείμενο | Πόλη |
 | 1 | 164.8 | 170.3 | `email_pelati [2]` | κείμενο 7pt | Mail |
+| 1 | 113.2 | 178.4 | `pliromi_pagia_entoli` | ☑ X | Πάγιαεντολήεξόφλησης |
 | 1 | 55.0 | 196.0 | `arithmos_paroxis` | κείμενο | ΠΑΡΟΧΗΣ |
 | 1 | 130.7 | 202.6 | `arithmos_metriti` | κείμενο |  |
 | 1 | 18.2 | 213.4 | `odos_arithmos_paroxis` | κείμενο |  |
