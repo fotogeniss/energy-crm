@@ -590,7 +590,7 @@ class ECRM_FormFill {
 		require_once ECRM_DIR . 'includes/lib/tfpdf/tfpdf.php';
 
 		@ini_set( 'memory_limit', '256M' );
-		@set_time_limit( 60 );
+		\EnergyCRM\Infrastructure\TimeLimit::atLeast( 60 );
 		$er = error_reporting();
 		error_reporting( 0 );
 		try {
@@ -649,7 +649,7 @@ class ECRM_FormFill {
 		require_once ECRM_DIR . 'includes/lib/tfpdf/tfpdf.php';
 
 		@ini_set( 'memory_limit', '256M' );
-		@set_time_limit( 60 );
+		\EnergyCRM\Infrastructure\TimeLimit::atLeast( 60 );
 		$er = error_reporting();
 		error_reporting( 0 );
 		try {

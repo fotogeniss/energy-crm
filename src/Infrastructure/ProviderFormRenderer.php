@@ -42,7 +42,7 @@ final class ProviderFormRenderer implements SheetRenderer
     public function render(array $contract, ?string $signaturePath): array
     {
         ini_set('memory_limit', self::MEMORY);
-        set_time_limit(self::SECONDS);
+        TimeLimit::atLeast(self::SECONDS);
 
         $sheets = [];
 

@@ -21,6 +21,7 @@ use ECRM_PDF;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Infrastructure\ContractDocuments;
+use EnergyCRM\Infrastructure\TimeLimit;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\FileRepository;
 use Throwable;
@@ -199,7 +200,7 @@ final class ContractDocumentsController implements Controller
      */
     private static function render(callable $build): ?string
     {
-        set_time_limit(60);
+        TimeLimit::atLeast(60);
         $reporting = error_reporting(0);
 
         // Buffering opens outside the try and closes in finally, so it is
