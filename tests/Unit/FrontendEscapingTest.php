@@ -66,9 +66,12 @@ final class FrontendEscapingTest extends TestCase
     private const APPROVED = [
         // Both are keys of an array literal written three lines above the
         // render, holding hardcoded Greek labels and CSS class names. No
-        // server data can reach them.
-        'ecrm-app.js x.cls',
-        'ecrm-app.js x.k',
+        // server data can reach them. They moved out of the shell with
+        // dashboardHTML() — which is the guard working: the file name is part
+        // of the key, so an approved site cannot drift to another file
+        // unnoticed.
+        'ecrm-view-dashboard.js x.cls',
+        'ecrm-view-dashboard.js x.k',
     ];
 
     /**
