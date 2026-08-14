@@ -1,6 +1,10 @@
 import { api, can, esc, fetch, H, toast } from '@energy-crm/util';
+import { wire } from '@energy-crm/navigate';
 import { loadCommissions } from '@energy-crm/view-commissions';
 import { loadAnalytics } from '@energy-crm/view-analytics';
+import { loadLeads } from '@energy-crm/view-leads';
+import { loadRenewals } from '@energy-crm/view-renewals';
+import { loadTasks } from '@energy-crm/view-tasks';
 import { loadCalc } from '@energy-crm/view-calc';
 import { loadCustomers } from '@energy-crm/view-customers';
 import { loadDashboard } from '@energy-crm/view-dashboard';
@@ -566,6 +570,11 @@ import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from '@ene
 			.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
 	}
 
+	// The three the views are allowed to call, handed over once. They are
+	// declared above rather than imported, so this is the only place the
+	// direction of the dependency is decided — see ecrm-navigate.js.
+	wire({ go: go, openDetail: openDetail, openEdit: openEdit });
+
 	function field(label, val) {
 		return '<div class="ecrm-dl"><dt>' + esc(label) + '</dt><dd>' + (val ? esc(val) : '—') + '</dd></div>';
 	}
@@ -896,125 +905,6 @@ import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from '@ene
 		// ---- analytics (managers) --------------------------------------------
 
 		// ---- tasks / callbacks ------------------------------------------------
-	var tasksState = { filter: 'open', scope: 'own' };
-	var taskTeamCache = null;
-	function loadTasks() {
-		var view = app.querySelector('.ecrm-view[data-view="tasks"]');
-		fetch(api('/tasks') + '?scope=' + tasksState.scope + '&filter=' + tasksState.filter, { headers: H() })
-			.then(function (r) { return r.json(); })
-			.then(function (d) {
-				if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
-				if (d.can_team && taskTeamCache === null) {
-					fetch(api('/team'), { headers: H() }).then(function (r) { return r.json(); })
-						.then(function (t) { taskTeamCache = (t && t.members) || (t && t.rows) || []; renderTasks(view, d); })
-						.catch(function () { taskTeamCache = []; renderTasks(view, d); });
-				} else { renderTasks(view, d); }
-			})
-			.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
-	}
-
-	function taskDue(t) {
-		if (!t.due_at) return '<span class="ecrm-muted">—</span>';
-		var cls = t.overdue ? 'is-overdue' : '';
-		return '<span class="ecrm-taskdue ' + cls + '">' + esc(fmtDate(t.due_at)) + (t.overdue ? ' • εκπρόθεσμη' : '') + '</span>';
-	}
-
-	function renderTasks(view, d) {
-		var tabs = [['open','Ανοιχτές'],['today','Σήμερα'],['overdue','Εκπρόθεσμες'],['done','Ολοκληρωμένες']];
-		var tabsHTML = tabs.map(function (t) {
-			return '<button type="button" class="ecrm-tab' + (tasksState.filter === t[0] ? ' is-on' : '') + '" data-tfilter="' + t[0] + '">' + t[1] + '</button>';
-		}).join('');
-
-		var scopeToggle = d.can_team
-			? '<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (tasksState.scope==="own"?" is-on":"") + '" data-tscope="own">Δικά μου</button><button type="button" class="ecrm-scope__b' + (tasksState.scope==="team"?" is-on":"") + '" data-tscope="team">Ομάδας</button></div>'
-			: '';
-
-		var assigneeField = '';
-		if (d.can_team && taskTeamCache && taskTeamCache.length) {
-			var opts = '<option value="">— Ανάθεση σε εμένα —</option>' + taskTeamCache.map(function (m) {
-				var idv = m.id || m.ID || m.user_id; var nm = m.name || m.display_name || ('#' + idv);
-				return idv ? '<option value="' + idv + '">' + esc(nm) + '</option>' : '';
-			}).join('');
-			assigneeField = '<select class="ecrm-input" data-task-assignee>' + opts + '</select>';
-		}
-
-		var addForm = '<div class="ecrm-card"><div class="ecrm-step">Νέα εργασία</div>' +
-			'<div class="ecrm-taskform">' +
-			'<input type="text" class="ecrm-input" data-task-title placeholder="Π.χ. Επανάκληση πελάτη για υπογραφή">' +
-			'<input type="datetime-local" class="ecrm-input" data-task-due>' +
-			'<select class="ecrm-input" data-task-prio><option value="normal">Κανονική</option><option value="high">Υψηλή</option><option value="low">Χαμηλή</option></select>' +
-			assigneeField +
-			'<button type="button" class="ecrm-btn ecrm-btn--primary" data-task-add>Προσθήκη</button>' +
-			'</div></div>';
-
-		var tasks = d.tasks || [];
-		var rows = tasks.length ? tasks.map(function (t) {
-			var prioDot = '<span class="ecrm-prio ecrm-prio--' + esc(t.priority) + '" title="' + esc(t.priority) + '"></span>';
-			var link = t.contract_id ? '<a href="#" class="ecrm-tasklink" data-task-open="' + t.contract_id + '">' + esc(t.contract_code || ('#' + t.contract_id)) + '</a>' : '';
-			var sub = [t.customer, link, (d.team ? t.assignee : '')].filter(Boolean).join(' · ');
-			var done = t.status === 'done';
-			return '<li class="ecrm-task' + (done ? ' is-done' : '') + (t.overdue ? ' is-overdue' : '') + '">' +
-				'<button type="button" class="ecrm-task__check" data-task-toggle="' + t.id + '" data-done="' + (done ? '1' : '0') + '" aria-label="Ολοκλήρωση">' + (done ? '✓' : '') + '</button>' +
-				prioDot +
-				'<div class="ecrm-task__body"><div class="ecrm-task__title">' + esc(t.title) + '</div>' +
-				(sub ? '<div class="ecrm-task__sub">' + sub + '</div>' : '') +
-				(t.note ? '<div class="ecrm-task__note">' + esc(t.note) + '</div>' : '') + '</div>' +
-				'<div class="ecrm-task__due">' + taskDue(t) + '</div>' +
-				'<button type="button" class="ecrm-task__rm" data-task-del="' + t.id + '" aria-label="Διαγραφή">✕</button>' +
-				'</li>';
-		}).join('') : '<div class="ecrm-empty">Καμία εργασία.</div>';
-
-		view.innerHTML =
-			'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Παρακολούθηση</div><h2 class="ecrm-title">Εργασίες</h2>' +
-			'<p class="ecrm-sub">Υπενθυμίσεις & επανακλήσεις</p></div>' + scopeToggle + '</header>' +
-			addForm +
-			'<div class="ecrm-card"><div class="ecrm-tabs">' + tabsHTML + '</div><ul class="ecrm-tasklist">' + rows + '</ul></div>';
-
-		// wiring
-		view.querySelectorAll('[data-tfilter]').forEach(function (b) { b.addEventListener('click', function () { tasksState.filter = this.getAttribute('data-tfilter'); loadTasks(); }); });
-		view.querySelectorAll('[data-tscope]').forEach(function (b) { b.addEventListener('click', function () { tasksState.scope = this.getAttribute('data-tscope'); loadTasks(); }); });
-		view.querySelectorAll('[data-task-open]').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); openDetail(+this.getAttribute('data-task-open')); }); });
-
-		var addBtn = view.querySelector('[data-task-add]');
-		if (addBtn) addBtn.addEventListener('click', function () {
-			var title = view.querySelector('[data-task-title]').value.trim();
-			if (!title) { toast('Συμπλήρωσε τίτλο.', false); return; }
-			var body = {
-				title: title,
-				due_at: view.querySelector('[data-task-due]').value,
-				priority: view.querySelector('[data-task-prio]').value
-			};
-			var asg = view.querySelector('[data-task-assignee]');
-			if (asg && asg.value) body.assigned_to = +asg.value;
-			var b = this; b.disabled = true;
-			fetch(api('/tasks'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(body) })
-				.then(function (r) { return r.json(); })
-				.then(function (res) { if (res && res.ok) { toast('Προστέθηκε εργασία.'); loadTasks(); } else { toast((res && res.error) || 'Αποτυχία.', false); b.disabled = false; } })
-				.catch(function () { toast('Σφάλμα δικτύου.', false); b.disabled = false; });
-		});
-
-		view.querySelectorAll('[data-task-toggle]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				var id = this.getAttribute('data-task-toggle');
-				var to = this.getAttribute('data-done') === '1' ? 'open' : 'done';
-				fetch(api('/tasks/' + id), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ status: to }) })
-					.then(function (r) { return r.json(); })
-					.then(function () { loadTasks(); })
-					.catch(function () { toast('Σφάλμα δικτύου.', false); });
-			});
-		});
-
-		view.querySelectorAll('[data-task-del]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				if (!confirm('Διαγραφή εργασίας;')) return;
-				var id = this.getAttribute('data-task-del');
-				fetch(api('/tasks/' + id), { method: 'DELETE', headers: H() })
-					.then(function (r) { return r.json(); })
-					.then(function () { loadTasks(); })
-					.catch(function () { toast('Σφάλμα δικτύου.', false); });
-			});
-		});
-	}
 
 		// ---- quote / savings calculator --------------------------------------
 
@@ -1024,142 +914,7 @@ import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from '@ene
 	var kbT;
 
 		// ---- leads / funnel ---------------------------------------------------
-	var leadsState = { stage: '', q: '', editing: null, showForm: false };
 	var leadsT;
-	function loadLeads() {
-		var view = app.querySelector('.ecrm-view[data-view="leads"]');
-		var qs = '?stage=' + encodeURIComponent(leadsState.stage) + '&q=' + encodeURIComponent(leadsState.q);
-		fetch(api('/leads') + qs, { headers: H() })
-			.then(function (r) { return r.json(); })
-			.then(function (d) {
-				if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
-				renderLeads(view, d);
-			})
-			.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
-	}
-
-	function leadCbInput(v) {
-		if (!v) return '';
-		// 'YYYY-MM-DD HH:MM:SS' -> 'YYYY-MM-DDTHH:MM'
-		return v.replace(' ', 'T').slice(0, 16);
-	}
-
-	function renderLeads(view, d) {
-		var stages = d.stages || {}, sources = d.sources || {}, counts = d.counts || {};
-		var sChips = [['', 'Όλα']].concat(Object.keys(stages).map(function (k) { return [k, stages[k]]; }))
-			.map(function (e) {
-				var n = e[0] === '' ? '' : (counts[e[0]] ? ' (' + counts[e[0]] + ')' : '');
-				return '<button type="button" class="ecrm-chip2' + (leadsState.stage === e[0] ? ' is-on' : '') + '" data-lstage="' + esc(e[0]) + '">' + esc(e[1]) + n + '</button>';
-			}).join('');
-
-		var ed = leadsState.editing || {};
-		var opts = function (map, sel) { return '<option value="">—</option>' + Object.keys(map).map(function (k) { return '<option value="' + esc(k) + '"' + (sel === k ? ' selected' : '') + '>' + esc(map[k]) + '</option>'; }).join(''); };
-		var energyMap = { power: 'Ρεύμα', gas: 'Αέριο', mobile: 'Κινητή' };
-
-		var form = !leadsState.showForm ? '' :
-			'<div class="ecrm-card ecrm-leadform">' +
-				'<div class="ecrm-leadform__grid">' +
-					'<label class="ecrm-field"><span class="ecrm-field__label">Όνομα *</span><input class="ecrm-input" data-lf="name" value="' + esc(ed.name || '') + '"></label>' +
-					'<label class="ecrm-field"><span class="ecrm-field__label">Τηλέφωνο</span><input class="ecrm-input" data-lf="phone" value="' + esc(ed.phone || '') + '"></label>' +
-					'<label class="ecrm-field"><span class="ecrm-field__label">Email</span><input class="ecrm-input" data-lf="email" value="' + esc(ed.email || '') + '"></label>' +
-					'<label class="ecrm-field"><span class="ecrm-field__label">Πηγή</span><select class="ecrm-input" data-lf="source">' + opts(sources, ed.source) + '</select></label>' +
-					'<label class="ecrm-field"><span class="ecrm-field__label">Ενδιαφέρον για</span><select class="ecrm-input" data-lf="energy_type">' + opts(energyMap, ed.energy_type) + '</select></label>' +
-					'<label class="ecrm-field"><span class="ecrm-field__label">Στάδιο</span><select class="ecrm-input" data-lf="stage">' + Object.keys(stages).map(function (k) { return '<option value="' + k + '"' + ((ed.stage || 'new') === k ? ' selected' : '') + '>' + esc(stages[k]) + '</option>'; }).join('') + '</select></label>' +
-					'<label class="ecrm-field"><span class="ecrm-field__label">Επανάκληση</span><input type="datetime-local" class="ecrm-input" data-lf="callback_at" value="' + esc(leadCbInput(ed.callback_at)) + '"></label>' +
-					'<label class="ecrm-field ecrm-field--wide"><span class="ecrm-field__label">Σημείωση ενδιαφέροντος</span><input class="ecrm-input" data-lf="interest" value="' + esc(ed.interest || '') + '" placeholder="π.χ. αλλαγή παρόχου ρεύματος, 2 παροχές"></label>' +
-					'<label class="ecrm-field ecrm-field--wide"><span class="ecrm-field__label">Σημειώσεις</span><textarea class="ecrm-textarea" data-lf="notes" rows="2">' + esc(ed.notes || '') + '</textarea></label>' +
-				'</div>' +
-				'<div class="ecrm-leadform__bar"><button type="button" class="ecrm-btn ecrm-btn--primary" data-lsave>' + (ed.id ? 'Αποθήκευση' : 'Προσθήκη lead') + '</button>' +
-					'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-lcancel>Άκυρο</button></div>' +
-			'</div>';
-
-		var now = Date.now();
-		var cards = (d.leads || []).map(function (l) {
-			var cb = '';
-			if (l.callback_at) {
-				var due = new Date(l.callback_at.replace(' ', 'T') + 'Z').getTime();
-				var overdue = due <= now && l.stage !== 'won' && l.stage !== 'lost';
-				cb = '<span class="ecrm-leadcb' + (overdue ? ' is-over' : '') + '">📞 ' + esc(fmtDate(l.callback_at)) + '</span>';
-			}
-			var tel = l.phone ? '<a class="ecrm-leadtel" href="tel:' + esc(l.phone) + '">' + esc(l.phone) + '</a>' : '';
-			var conv = (l.stage === 'won' && l.contract_id) ?
-				'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-lopen="' + l.contract_id + '">Άνοιγμα σύμβασης</button>' :
-				'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-lconv="' + l.id + '">➜ Μετατροπή σε σύμβαση</button>';
-			return '<div class="ecrm-leadcard ecrm-stage-' + esc(l.stage) + '">' +
-				'<div class="ecrm-leadcard__top"><div><strong>' + esc(l.name) + '</strong> ' + (l.energy_type ? '<span class="ecrm-muted">· ' + esc(energyMap[l.energy_type] || l.energy_type) + '</span>' : '') +
-					'<div class="ecrm-leadmeta">' + tel + (l.source_label ? ' <span class="ecrm-muted">· ' + esc(l.source_label) + '</span>' : '') + '</div></div>' +
-					'<span class="ecrm-leadstage">' + esc(l.stage_label) + '</span></div>' +
-				(l.interest ? '<div class="ecrm-leadint">' + esc(l.interest) + '</div>' : '') +
-				'<div class="ecrm-leadcard__bar">' + cb +
-					'<span class="ecrm-leadcard__actions">' + conv +
-						'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-ledit="' + l.id + '">Επεξεργασία</button>' +
-						'<button type="button" class="ecrm-iconbtn" data-ldel="' + l.id + '" title="Διαγραφή">🗑</button>' +
-					'</span></div>' +
-			'</div>';
-		}).join('');
-		if (!(d.leads || []).length) cards = '<div class="ecrm-card"><div class="ecrm-empty">Δεν υπάρχουν leads' + (leadsState.stage ? ' σε αυτό το στάδιο' : '') + '.</div></div>';
-
-		view.innerHTML =
-			'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Πριν τη σύμβαση</div><h2 class="ecrm-title">Leads</h2>' +
-			'<p class="ecrm-sub">Υποψήφιοι πελάτες & επανακλήσεις</p></div>' +
-			'<button type="button" class="ecrm-btn ecrm-btn--primary" data-lnew>＋ Νέο Lead</button></header>' +
-			'<div class="ecrm-leadfilters"><div class="ecrm-search"><input type="search" class="ecrm-input" placeholder="Αναζήτηση ονόματος, τηλεφώνου, ενδιαφέροντος…" value="' + esc(leadsState.q) + '" data-lq></div></div>' +
-			'<div class="ecrm-kbfilter ecrm-leadstages">' + sChips + '</div>' +
-			form +
-			'<div class="ecrm-leadlist">' + cards + '</div>';
-
-		// wiring
-		view.querySelector('[data-lnew]').addEventListener('click', function () { leadsState.editing = {}; leadsState.showForm = true; renderLeads(view, d); });
-		var lq = view.querySelector('[data-lq]');
-		lq.addEventListener('input', function () { leadsState.q = this.value; clearTimeout(leadsT); leadsT = setTimeout(loadLeads, 300); });
-		if (leadsState.q) { lq.focus(); lq.setSelectionRange(lq.value.length, lq.value.length); }
-		view.querySelectorAll('[data-lstage]').forEach(function (b) { b.addEventListener('click', function () { leadsState.stage = this.getAttribute('data-lstage'); loadLeads(); }); });
-
-		if (leadsState.showForm) {
-			view.querySelector('[data-lcancel]').addEventListener('click', function () { leadsState.showForm = false; leadsState.editing = null; renderLeads(view, d); });
-			view.querySelector('[data-lsave]').addEventListener('click', function () {
-				var body = {};
-				view.querySelectorAll('[data-lf]').forEach(function (el) { body[el.getAttribute('data-lf')] = el.value; });
-				if (!body.name || !body.name.trim()) { toast('Το όνομα είναι υποχρεωτικό.', false); return; }
-				var url = api('/leads') + (leadsState.editing && leadsState.editing.id ? '/' + leadsState.editing.id : '');
-				fetch(url, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(body) })
-					.then(function (r) { return r.json(); })
-					.then(function (res) { if (res && res.ok) { toast('Αποθηκεύτηκε.'); leadsState.showForm = false; leadsState.editing = null; loadLeads(); } else { toast((res && res.error) || 'Αποτυχία.', false); } })
-					.catch(function () { toast('Σφάλμα δικτύου.', false); });
-			});
-		}
-
-		view.querySelectorAll('[data-ledit]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				var id = +this.getAttribute('data-ledit');
-				var lead = (d.leads || []).filter(function (x) { return x.id === id; })[0];
-				if (lead) { leadsState.editing = lead; leadsState.showForm = true; renderLeads(view, d); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-			});
-		});
-		view.querySelectorAll('[data-ldel]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				if (!confirm('Διαγραφή lead;')) return;
-				fetch(api('/leads/' + this.getAttribute('data-ldel')), { method: 'DELETE', headers: H() })
-					.then(function (r) { return r.json(); }).then(function (res) { if (res && res.ok) loadLeads(); });
-			});
-		});
-		view.querySelectorAll('[data-lconv]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				if (!confirm('Δημιουργία πρόχειρης σύμβασης από αυτό το lead;')) return;
-				var bb = this; bb.disabled = true;
-				fetch(api('/leads/' + this.getAttribute('data-lconv') + '/convert'), { method: 'POST', headers: H() })
-					.then(function (r) { return r.json(); })
-					.then(function (res) {
-						if (res && res.ok && res.contract_id) { toast('Δημιουργήθηκε πρόχειρη σύμβαση.'); go('contracts'); setTimeout(function () { openDetail(res.contract_id); }, 60); }
-						else { bb.disabled = false; toast((res && res.error) || 'Αποτυχία.', false); }
-					})
-					.catch(function () { bb.disabled = false; toast('Σφάλμα δικτύου.', false); });
-			});
-		});
-		view.querySelectorAll('[data-lopen]').forEach(function (b) {
-			b.addEventListener('click', function () { var id = +this.getAttribute('data-lopen'); go('contracts'); setTimeout(function () { openDetail(id); }, 60); });
-		});
-	}
 
 		// ---- customers --------------------------------------------------------
 
@@ -1199,61 +954,6 @@ import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from '@ene
 	}
 
 		// ---- λήξεις / ανανεώσεις ----------------------------------------------
-	var renewState = { scope: 'own' };
-	function loadRenewals() {
-		var view = app.querySelector('.ecrm-view[data-view="renewals"]');
-		fetch(api('/renewals') + '?scope=' + renewState.scope, { headers: H() })
-			.then(function (r) { return r.json(); })
-			.then(function (d) { if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; } renderRenewals(view, d); })
-			.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
-	}
-
-	function renderRenewals(view, d) {
-		var rows = d.rows || [];
-		var body = rows.map(function (r) {
-			var pill, cls;
-			if (r.expired) { pill = 'Έληξε πριν ' + Math.abs(r.days_left) + 'η'; cls = 'is-expired'; }
-			else if (r.days_left <= 30) { pill = 'Λήγει σε ' + r.days_left + 'η'; cls = 'is-soon'; }
-			else { pill = 'Λήγει σε ' + r.days_left + 'η'; cls = ''; }
-			return '<tr>' +
-				'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span><span>' + esc(r.customer) + '</span></span></td>' +
-				'<td><span class="ecrm-code">' + esc(r.code || '') + '</span></td>' +
-				'<td>' + esc(r.provider_name || '—') + '</td>' +
-				'<td>' + (r.end_date ? fmtDate(r.end_date) : '—') + '</td>' +
-				'<td><span class="ecrm-agepill ' + cls + '">' + pill + '</span></td>' +
-				'<td><button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-renew="' + r.id + '">' + svgIcon('edit') + ' Ανανέωση</button></td>' +
-				'</tr>';
-		}).join('');
-		var table = rows.length
-			? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th>Κωδικός</th><th>Πάροχος</th><th>Λήξη</th><th>Κατάσταση</th><th></th></tr></thead><tbody>' + body + '</tbody></table></div>'
-			: '<div class="ecrm-emptybox ecrm-emptybox--big"><span class="ecrm-emptybox__ico">✓</span><div class="ecrm-emptybox__txt">Καμία σύμβαση δεν λήγει σύντομα.</div></div>';
-		view.innerHTML =
-			'<header class="ecrm-head ecrm-head--row"><div class="ecrm-titlewrap"><span class="ecrm-pageicon">' +
-			'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></span>' +
-			'<div><h2 class="ecrm-title">Λήξεις & Ανανεώσεις</h2><p class="ecrm-sub">' + (d.count || 0) + ' συμβάσεις λήγουν έως ' + d.window + ' ημέρες · ' + (d.soon || 0) + ' άμεσα</p></div></div>' +
-			'<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (renewState.scope==="own"?" is-on":"") + '" data-rscope="own">Δικά μου</button><button type="button" class="ecrm-scope__b' + (renewState.scope==="team"?" is-on":"") + '" data-rscope="team">Ομάδας</button></div></header>' +
-			'<div class="ecrm-card">' + table + '</div>';
-
-		view.querySelectorAll('[data-rscope]').forEach(function (b) { b.addEventListener('click', function () { renewState.scope = this.getAttribute('data-rscope'); loadRenewals(); }); });
-		view.querySelectorAll('[data-renew]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				var id = this.getAttribute('data-renew'); var btn = this; btn.disabled = true;
-				fetch(api('/contracts/' + id + '/renew'), { method: 'POST', headers: H(true) })
-					.then(function (r) { return r.json(); })
-					.then(function (d) {
-						btn.disabled = false;
-						if (d && d.ok && d.contract_id) {
-							toast('Δημιουργήθηκε ανανέωση — άνοιξε για επεξεργασία.');
-							// load the new draft into the form
-							fetch(api('/contracts/' + d.contract_id), { headers: H() })
-								.then(function (r) { return r.json(); })
-								.then(function (dd) { var c = dd.contract || dd; openEdit(c); });
-						} else { toast((d && d.error) || 'Αποτυχία.', false); }
-					})
-					.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
-			});
-		});
-	}
 
 		// ---- boot -------------------------------------------------------------
 	// Back/forward navigation via URL hash.
