@@ -9,7 +9,7 @@
  * Text Domain:       energy-crm
  * Domain Path:       /languages
  * Requires PHP:      8.2
- * Requires at least: 6.2
+ * Requires at least: 6.5
  *
  * @package EnergyCRM
  */

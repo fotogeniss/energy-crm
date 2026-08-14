@@ -1,4 +1,4 @@
-import { api, esc } from './ecrm-util.js';
+import { api, esc } from '@energy-crm/util';
 
 /* Energy CRM — "Λίτσα" assistant.
  * Floating chat that relays to /wp-json/ecrm/v1/assistant. History persists

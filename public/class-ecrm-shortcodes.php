@@ -16,44 +16,117 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class ECRM_Shortcodes {
 
-	/** Handles whose files are ES modules and must be tagged as such. */
-	private const MODULE_HANDLES = [ 'ecrm-form', 'ecrm-app', 'ecrm-litsa' ];
+	/**
+	 * Every front-end module, as `import specifier => file`.
+	 *
+	 * The specifiers are bare on purpose. A relative import — './ecrm-util.js'
+	 * — is a URL the browser caches on its own terms, and WordPress has no way
+	 * to put a version on it: only the entry point got ?ver, so an edited
+	 * helper stayed stale until somebody thought to hard-reload. That cost two
+	 * rounds of a verification that looked like it had passed. A bare specifier
+	 * is resolved through the import map instead, and the map carries a version
+	 * for *every* file in the graph.
+	 *
+	 * @var array<string, string>
+	 */
+	private const MODULES = [
+		'@energy-crm/util'             => 'ecrm-util.js',
+		'@energy-crm/format'           => 'ecrm-format.js',
+		'@energy-crm/view-commissions' => 'ecrm-view-commissions.js',
+		'@energy-crm/view-analytics'   => 'ecrm-view-analytics.js',
+		'@energy-crm/form'             => 'ecrm-form.js',
+		'@energy-crm/app'              => 'ecrm-app.js',
+		'@energy-crm/litsa'            => 'ecrm-litsa.js',
+	];
+
+	/** What each module imports, so the map carries the whole graph. */
+	private const MODULE_DEPS = [
+		'@energy-crm/util'             => [],
+		'@energy-crm/format'           => [],
+		'@energy-crm/view-commissions' => [ '@energy-crm/util' ],
+		'@energy-crm/view-analytics'   => [ '@energy-crm/util' ],
+		'@energy-crm/form'             => [ '@energy-crm/util' ],
+		'@energy-crm/app'              => [
+			'@energy-crm/util',
+			'@energy-crm/format',
+			'@energy-crm/view-commissions',
+			'@energy-crm/view-analytics',
+		],
+		'@energy-crm/litsa'            => [ '@energy-crm/util' ],
+	];
 
 	public static function init(): void {
 		add_shortcode( 'energy_crm_new_contract', [ __CLASS__, 'new_contract' ] );
-		add_filter( 'script_loader_tag', [ __CLASS__, 'tag_module_scripts' ], 10, 2 );
 	}
 
 	/**
-	 * Emit type="module" for the front-end scripts.
+	 * Register every module with a version taken from the file itself.
 	 *
-	 * They import a shared helper module, which the browser only honours when
-	 * the entry point is itself a module. There is no bundler on purpose: no
-	 * node_modules, no build artifact, and therefore no way to deploy a stale
-	 * one. Requires at least is 6.2, so wp_enqueue_script_module() (6.5) is not
-	 * available to us; the tag filter works on every supported version.
+	 * filemtime() rather than ECRM_VERSION: the plugin version changes on a
+	 * release, and a helper edited between releases would otherwise keep its
+	 * old URL. The whole point of this exercise is that a changed file is a
+	 * changed URL, without anyone having to remember anything.
 	 *
-	 * Two things this does not break. Module scripts are deferred, and these
-	 * are already enqueued in the footer with a dependency chain, so the order
-	 * ecrm-form to ecrm-app to ecrm-litsa is preserved. And the ECRM object
-	 * from wp_localize_script is printed as a classic inline script before
-	 * them, so it exists by the time any module body runs.
+	 * Idempotent — WordPress ignores a second registration of the same id, and
+	 * both entry points call this.
 	 */
-	public static function tag_module_scripts( string $tag, string $handle ): string {
-		if ( ! in_array( $handle, self::MODULE_HANDLES, true ) ) {
-			return $tag;
+	private static function register_modules(): void {
+		$dir = ECRM_DIR . 'public/assets/';
+
+		foreach ( self::MODULES as $id => $file ) {
+			$path    = $dir . $file;
+			$version = file_exists( $path ) ? (string) filemtime( $path ) : ECRM_VERSION;
+
+			wp_register_script_module(
+				$id,
+				ECRM_URL . 'public/assets/' . $file,
+				self::MODULE_DEPS[ $id ] ?? [],
+				$version
+			);
+		}
+	}
+
+	/**
+	 * The configuration object every module reads before it does anything.
+	 *
+	 * wp_localize_script() does not work with script modules — there is no
+	 * module equivalent — so this is printed as a classic inline script. That
+	 * is not a workaround so much as the guarantee: a classic script runs while
+	 * the document is still parsing, and modules are deferred until after, so
+	 * ECRM is always defined before any module body starts.
+	 *
+	 * @param array<string, mixed> $data
+	 */
+	private static function print_config( array $data ): void {
+		// The app shell calls enqueue_form_assets() and the standalone form
+		// shortcode does too; on a page with both, the hook would be added
+		// twice and window.ECRM assigned twice.
+		static $done = false;
+
+		if ( $done ) {
+			return;
 		}
 
-		// A theme without html5 script support gets type="text/javascript"
-		// printed for it, and two type attributes is not valid markup.
-		$tag = (string) preg_replace( '/\s+type=([\'"])[^\'"]*\1/', '', $tag );
+		$done = true;
 
-		return str_replace( '<script ', '<script type="module" ', $tag );
+		add_action(
+			'wp_footer',
+			static function () use ( $data ): void {
+				wp_print_inline_script_tag(
+					'window.ECRM = ' . wp_json_encode( $data ) . ';',
+					[ 'id' => 'ecrm-config' ]
+				);
+			},
+			1
+		);
 	}
 
 	public static function enqueue_form_assets(): void {
 		wp_enqueue_style( 'ecrm-form', ECRM_URL . 'public/assets/ecrm-form.css', [], ECRM_VERSION );
-		wp_enqueue_script( 'ecrm-form', ECRM_URL . 'public/assets/ecrm-form.js', [], ECRM_VERSION, true );
+
+		self::register_modules();
+		wp_enqueue_script_module( '@energy-crm/form' );
+
 		// Capabilities are sent so the UI can hide what the user cannot do.
 		// This is presentation only — every one of them is enforced again on
 		// the server, because anything reaching the browser is a suggestion.
@@ -62,7 +135,7 @@ class ECRM_Shortcodes {
 			$caps[ $capability ] = current_user_can( $capability );
 		}
 
-		wp_localize_script( 'ecrm-form', 'ECRM', [
+		self::print_config( [
 			'rest'     => esc_url_raw( rest_url( \EnergyCRM\Http\Router::NAMESPACE ) ),
 			'nonce'    => wp_create_nonce( 'wp_rest' ),
 			'statuses' => ECRM_DB::statuses(),

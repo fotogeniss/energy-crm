@@ -10,7 +10,7 @@
  * does not have.
  */
 
-import { api, esc, fetch, H, viewEl } from './ecrm-util.js';
+import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
 
 var analyticsScope = 'team';
 export function loadAnalytics() {

@@ -1,4 +1,4 @@
-import { api, esc, toast } from './ecrm-util.js';
+import { api, esc, toast } from '@energy-crm/util';
 
 /* Energy CRM — New Contract form behaviour.
  * Exposes window.ECRMForm.init(rootEl) so it can run standalone OR inside the

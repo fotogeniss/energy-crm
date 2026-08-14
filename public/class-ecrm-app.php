@@ -29,8 +29,13 @@ class ECRM_App {
 		// Form assets (also defines window.ECRMForm) + shell assets.
 		ECRM_Shortcodes::enqueue_form_assets();
 		wp_enqueue_style( 'ecrm-app', ECRM_URL . 'public/assets/ecrm-app.css', [ 'ecrm-form' ], ECRM_VERSION );
-		wp_enqueue_script( 'ecrm-app', ECRM_URL . 'public/assets/ecrm-app.js', [ 'ecrm-form' ], ECRM_VERSION, true );
-		wp_enqueue_script( 'ecrm-litsa', ECRM_URL . 'public/assets/ecrm-litsa.js', [ 'ecrm-form' ], ECRM_VERSION, true );
+
+		// Enqueued after the form module, and module tags execute in document
+		// order, so window.ECRMForm exists before the shell asks for it. The
+		// shell only reads it inside handlers anyway, with one exception: a
+		// page opened straight at #new-contract calls it during startup.
+		wp_enqueue_script_module( '@energy-crm/app' );
+		wp_enqueue_script_module( '@energy-crm/litsa' );
 
 		global $wpdb;
 		$user   = wp_get_current_user();

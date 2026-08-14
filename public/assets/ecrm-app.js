@@ -1,7 +1,7 @@
-import { api, can, esc, fetch, H, toast } from './ecrm-util.js';
-import { loadCommissions } from './ecrm-view-commissions.js';
-import { loadAnalytics } from './ecrm-view-analytics.js';
-import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from './ecrm-format.js';
+import { api, can, esc, fetch, H, toast } from '@energy-crm/util';
+import { loadCommissions } from '@energy-crm/view-commissions';
+import { loadAnalytics } from '@energy-crm/view-analytics';
+import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint, up } from '@energy-crm/format';
 
 /* Energy CRM — app shell.
  * Client-side routing between views + dashboard & contracts rendering.

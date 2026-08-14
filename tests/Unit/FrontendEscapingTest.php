@@ -90,6 +90,16 @@ final class FrontendEscapingTest extends TestCase
     /** The one module that may define the shared helpers. */
     private const UTIL_MODULE = 'ecrm-util.js';
 
+    /**
+     * How the rest of the codebase asks for it.
+     *
+     * A bare specifier, not './ecrm-util.js', because WordPress can only put a
+     * version on a module it resolves through the import map — and a relative
+     * import is not one. That is not a style choice: the relative form left an
+     * edited helper cached until somebody hard-reloaded, twice.
+     */
+    private const UTIL_SPECIFIER = '@energy-crm/util';
+
     /** A line is only inspected if it is building markup. */
     private const HTML_HINT = '/[\'"]<|<\/|<div|<span|<option|<button|<li|<img'
         . '|<td|<tr|<a |<strong|<select|<ul|<details|<summary|<input|<p |<h\d/';
@@ -195,9 +205,9 @@ final class FrontendEscapingTest extends TestCase
             }
 
             self::assertMatchesRegularExpression(
-                '/^import \{[^}]*\besc\b[^}]*\} from \x27\.\/' . preg_quote(self::UTIL_MODULE, '/') . '\x27;/m',
+                '/^import \{[^}]*\besc\b[^}]*\} from \x27' . preg_quote(self::UTIL_SPECIFIER, '/') . '\x27;/m',
                 $source,
-                "{$name} calls esc() without importing it from " . self::UTIL_MODULE . '.'
+                "{$name} calls esc() without importing it from " . self::UTIL_SPECIFIER . '.'
             );
         }
     }

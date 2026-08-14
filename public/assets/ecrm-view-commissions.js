@@ -7,7 +7,7 @@
  * has to clear too.
  */
 
-import { api, esc, fetch, H, viewEl } from './ecrm-util.js';
+import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
 
 var commScope = 'own';
 export function loadCommissions() {
