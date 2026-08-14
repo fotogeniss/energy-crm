@@ -23,6 +23,65 @@ export function loadTasks() {
 		})
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
 }
+/**
+ * Ο πελάτης της εργασίας, από τις στήλες που ήδη έρχονται.
+ *
+ * Το /tasks κάνει LEFT JOIN στον πελάτη και επιστρέφει first_name, last_name
+ * και company_name — ποτέ έτοιμο «customer». Το ίδιο σύνθεμα με τη λίστα
+ * συμβάσεων, γιατί ο κανόνας (εταιρεία αν υπάρχει, αλλιώς ονοματεπώνυμο)
+ * είναι ο ίδιος και πρέπει να διαβάζεται ίδιος.
+ *
+ * Καμία από τις τρεις στήλες δεν είναι κρυπτογραφημένη — δες
+ * CustomerFields::ENCRYPTED, που καλύπτει ΑΦΜ, ΑΔΤ και διεύθυνση. Αν κάποτε
+ * μπει το όνομα εκεί μέσα, εδώ θα φανεί ciphertext στην οθόνη.
+ */
+function taskCustomer(t) {
+	return t.company_name || ((t.first_name || '') + ' ' + (t.last_name || '')).trim();
+}
+
+/**
+ * Το όνομα του αναδόχου, από την ήδη φορτωμένη λίστα ομάδας.
+ *
+ * Η γραμμή φέρνει assigned_to, δηλαδή id. Το όνομα υπάρχει ήδη στο
+ * taskTeamCache που φορτώνεται για το dropdown ανάθεσης, οπότε δεν χρειάζεται
+ * ούτε δεύτερη κλήση ούτε νέο πεδίο στο API.
+ */
+function taskAssignee(t) {
+	var id = +(t.assigned_to || 0);
+
+	if (!id || !taskTeamCache) return '';
+
+	for (var i = 0; i < taskTeamCache.length; i++) {
+		var m = taskTeamCache[i];
+		if (+(m.id || m.ID || m.user_id) === id) return m.name || m.display_name || '';
+	}
+
+	return '';
+}
+
+/**
+ * Ο υπότιτλος: πελάτης · σύμβαση · ανάδοχος.
+ *
+ * Κάθε κομμάτι περνάει από esc() ΤΗ ΣΤΙΓΜΗ που μπαίνει, όχι στο τέλος — το
+ * link είναι ήδη markup και ένα esc() στο τελικό string θα το τύπωνε ως
+ * κείμενο. Αυτό είναι ακριβώς το σχήμα που ο FrontendEscapingTest ΔΕΝ βλέπει:
+ * μια τοπική μεταβλητή, όχι ιδιότητα αντικειμένου. Το λέει και το δικό του
+ * docblock. Όποιος προσθέσει τέταρτο κομμάτι εδώ, το κάνει χωρίς δίχτυ.
+ */
+function taskSub(t, link, teamWide) {
+	var parts = [];
+	var customer = taskCustomer(t);
+
+	if (customer) parts.push(esc(customer));
+	if (link) parts.push(link);
+
+	var who = teamWide ? taskAssignee(t) : '';
+
+	if (who) parts.push(esc(who));
+
+	return parts.join(' · ');
+}
+
 function taskDue(t) {
 	if (!t.due_at) return '<span class="ecrm-muted">—</span>';
 	var cls = t.overdue ? 'is-overdue' : '';
@@ -56,11 +115,11 @@ function renderTasks(view, d) {
 		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-task-add>Προσθήκη</button>' +
 		'</div></div>';
 
-	var tasks = d.tasks || [];
+	var tasks = d.rows || [];
 	var rows = tasks.length ? tasks.map(function (t) {
 		var prioDot = '<span class="ecrm-prio ecrm-prio--' + esc(t.priority) + '" title="' + esc(t.priority) + '"></span>';
 		var link = t.contract_id ? '<a href="#" class="ecrm-tasklink" data-task-open="' + t.contract_id + '">' + esc(t.contract_code || ('#' + t.contract_id)) + '</a>' : '';
-		var sub = [t.customer, link, (d.team ? t.assignee : '')].filter(Boolean).join(' · ');
+		var sub = taskSub(t, link, d.can_team);
 		var done = t.status === 'done';
 		return '<li class="ecrm-task' + (done ? ' is-done' : '') + (t.overdue ? ' is-overdue' : '') + '">' +
 			'<button type="button" class="ecrm-task__check" data-task-toggle="' + t.id + '" data-done="' + (done ? '1' : '0') + '" aria-label="Ολοκλήρωση">' + (done ? '✓' : '') + '</button>' +
