@@ -92,6 +92,16 @@ export function viewEl(name) {
 }
 
 /**
+ * The application root, for the few things that are not inside a view.
+ *
+ * An overlay or a toast belongs to the app, not to whichever screen happened
+ * to open it — appending to a view would take it down with the next render.
+ */
+export function root() {
+	return document.getElementById('ecrm-app');
+}
+
+/**
  * The one-line message at the bottom of the screen.
  *
  * Creates its own node on first use, so no view has to remember to render a
