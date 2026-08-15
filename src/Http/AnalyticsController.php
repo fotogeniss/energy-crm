@@ -78,12 +78,44 @@ final class AnalyticsController implements Controller
             'canc_rate'   => $funnel['canc_rate'],
             'avg_days'    => $this->analytics->averageDaysToActivation($scope),
             'funnel'      => $funnel['funnel'],
-            'by_provider' => $this->analytics->topProviders($scope),
+            'by_provider' => $this->labelled($this->analytics->topProviders($scope)),
             'by_energy'   => $byEnergy,
-            'by_region'   => $this->analytics->topRegions($scope),
+            'by_region'   => $this->labelled($this->analytics->topRegions($scope)),
             'monthly'     => array_values($this->analytics->monthlyTotals($scope, (int) gmdate('Y'))),
             'leaderboard' => $asTeam ? $this->leaderboard($scope) : [],
         ], 200);
+    }
+
+    /**
+     * Οι δύο κατανομές που έρχονται ωμές από το SQL, στο σχήμα που διαβάζει η οθόνη.
+     *
+     * Οι topProviders() και topRegions() κάνουν `SELECT ... name, COUNT(*) c`,
+     * δηλαδή δίνουν `c`. Η barList() του ecrm-view-analytics.js διαβάζει
+     * `it.count`, οπότε μέχρι τις 2026-08-14 οι δύο πίνακες «Ανά πάροχο» και
+     * «Ανά νομό» έβγαζαν `100 * undefined / 1` = NaN για το πλάτος της μπάρας
+     * και τύπωναν τη λέξη «undefined» στη στήλη της τιμής. Καμία εξαίρεση,
+     * κανένα κόκκινο στο console.
+     *
+     * Το `by_energy` από δίπλα έκανε ήδη ακριβώς αυτή τη μετάφραση — το
+     * «λείπει μόνο εδώ ενώ δίπλα δουλεύει» του HANDOVER §6β, σε δύο γραμμές
+     * της ίδιας απάντησης.
+     *
+     * Η μετάφραση γίνεται εδώ και όχι στο repository επειδή το ίδιο σχήμα
+     * (`name`, `c`) το διαβάζει σωστά το dashboard από άλλη μέθοδο· αλλαγή
+     * στο SQL θα έσπαγε εκείνη την οθόνη για να φτιάξει αυτήν.
+     *
+     * @param  list<array<string, mixed>> $rows
+     * @return list<array{label: string, count: int}>
+     */
+    private function labelled(array $rows): array
+    {
+        return array_map(
+            static fn (array $row): array => [
+                'label' => (string) $row['name'],
+                'count' => (int) $row['c'],
+            ],
+            $rows
+        );
     }
 
     /**

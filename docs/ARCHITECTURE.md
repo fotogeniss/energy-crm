@@ -62,8 +62,22 @@ includes|admin|public/  Legacy ECRM_* — αδειάζουν σταδιακά
 | 6 | Σπάσιμο του `class-ecrm-rest.php` σε controllers ανά resource, με `args` schema | ✅ |
 | 7 | Διαφοροποίηση ρόλων (Συνεργάτης / Πωλητής / Καταχωρητής) σε πραγματικά capabilities | ✅ |
 | 8 | Secrets εκτός `wp_options`· retention policy για `extracted_json` | ✅ |
-| 9 | Frontend: build step, σπάσιμο του `ecrm-app.js`, τέλος στη συρραφή HTML με `+` (**συντηρησιμότητα, όχι ασφάλεια** — δες HANDOVER §6.0) | ⬜ |
+| 9 | Frontend: σπάσιμο του `ecrm-app.js` σε ES modules (**συντηρησιμότητα, όχι ασφάλεια** — δες HANDOVER §6.0) | ✅ |
 | 10 | Κύκλος ζωής συμβολαίου (`transition`, ειδοποιήσεις) εκτός `ECRM_REST`· container αντί για 16 ορίσματα στον `Router` | ✅ |
+
+**Το Βήμα 9 έκλεισε 2026-08-14, αλλά όχι όπως γραφόταν εδώ.** Η αρχική
+διατύπωση υποσχόταν τρία πράγματα και έγινε το ένα, συνειδητά:
+
+- *σπάσιμο του `ecrm-app.js`* — έγινε: 2096 → 251 γραμμές, 23 modules γύρω του.
+- *build step* — **δεν έγινε, και δεν πρέπει.** Αντικαταστάθηκε από native ES
+  modules με import map και cache-busting από `filemtime()`. Δεν υπάρχει
+  `package.json`, άρα δεν υπάρχει build artifact, άρα δεν υπάρχει τρόπος να
+  σταλεί μπαγιάτικο. Το τίμημα είναι ότι κανένας JS linter δεν τρέχει.
+- *τέλος στη συρραφή HTML με `+`* — **δεν έγινε, και απορρίφθηκε ρητά** στις
+  2026-08-13: 4292 γραμμές ξαναγραμμένες χωρίς κανένα JS test είναι
+  μεγαλύτερο ρίσκο από αυτό που λύνουν. Η απάντηση που δόθηκε αντ' αυτού
+  είναι ο `FrontendEscapingTest`, που απαιτεί κάθε interpolation χωρίς `esc()`
+  να είναι σε ρητή εγκεκριμένη λίστα.
 
 **Το `class-ecrm-rest.php` δεν υπάρχει πια.** Ο μονόλιθος άδειασε σε επτά
 κινήσεις: οι διαδρομές σε controllers (βήμα 6), μετά ο κύκλος ζωής, το
@@ -98,6 +112,14 @@ commit· μετά νέες κλάσεις με το παλιό ως λεπτό �
 σημείο που απαριθμούσε ολόκληρη την επιφάνεια, και δεν έπρεπε να χαθεί επειδή
 έτυχε να ζει σε αρχείο που έφυγε.
 
+**Είκοσι έξι controllers δηλώνουν διαδρομές** (μέτρηση 2026-08-14· οι
+`Controller`, `ControllerFactory`, `Guards` και `Router` δεν δηλώνουν καμία).
+Ο πίνακας είχε **είκοσι τέσσερις** μέχρι τις 2026-08-14: έλειπαν το
+`TasksController` και το `ProviderFormController`. Ένας πίνακας που υπάρχει
+επειδή είναι η μόνη πλήρης απαρίθμηση δεν αντέχει να συντηρείται από μνήμη —
+`ls src/Http/*.php` και `grep -l register_rest_route` το λένε σε δύο
+δευτερόλεπτα.
+
 | Διαδρομή | Controller |
 |---|---|
 | `GET /providers`, `GET /search` | `CatalogueController` |
@@ -119,11 +141,13 @@ commit· μετά νέες κλάσεις με το παλιό ως λεπτό �
 | `GET/POST /team`, `POST /team/{id}`, `GET /network` | `TeamController` |
 | `GET /team/live` | `TeamActivityController` |
 | `/notifications`, `/notifications/read` | `NotificationsController` |
+| `GET/POST /tasks`, `POST/DELETE /tasks/{id}` | `TasksController` |
 | `/filters` | `SavedFiltersController` |
 | `POST /import/parse`, `/import/apply` | `ImportController` |
 | `POST /extract` | `ExtractionController` |
 | `GET /lookup/afm` | `VatLookupController` |
 | `POST /quote/pdf` | `QuoteController` |
+| `GET /forms/fields` | `ProviderFormController` |
 
 **Τέσσερις διαδρομές δεν είναι controllers ακόμη** — τις δηλώνουν legacy κλάσεις
 απευθείας, με `Router::NAMESPACE`:

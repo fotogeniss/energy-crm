@@ -15,15 +15,41 @@ export function loadRenewals() {
 		.then(function (d) { if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; } renderRenewals(view, d); })
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
 }
+/**
+ * Ο πελάτης της γραμμής, από τις στήλες που ήδη έρχονται.
+ *
+ * Το /renewals επιστρέφει τις ωμές γραμμές της ContractQueries::expiring(), που
+ * κάνει LEFT JOIN στον πελάτη και δίνει first_name, last_name και
+ * company_name — ποτέ έτοιμο «customer». Μέχρι τις 2026-08-14 η οθόνη διάβαζε
+ * r.customer, οπότε η στήλη Πελάτης ήταν ΠΑΝΤΑ κενή — χωρίς εξαίρεση,
+ * γιατί esc(undefined) είναι κενό string.
+ *
+ * Ο ίδιος κανόνας με τη λίστα συμβάσεων και με το taskCustomer() των
+ * Εργασιών: εταιρεία αν υπάρχει, αλλιώς ονοματεπώνυμο.
+ *
+ * Καμία από τις τρεις στήλες δεν είναι στο CustomerFields::ENCRYPTED.
+ */
+function renewalCustomer(r) {
+	return r.company_name || ((r.first_name || '') + ' ' + (r.last_name || '')).trim();
+}
+
 function renderRenewals(view, d) {
 	var rows = d.rows || [];
+	var soon = 0;
 	var body = rows.map(function (r) {
+		// Το SQL δίνει days_left (DATEDIFF), όχι έτοιμο 'expired'. Η οθόνη
+		// διάβαζε r.expired, που δεν στέλνεται ποτέ: κάθε ληγμένη σύμβαση
+		// έγραφε «Λήγει σε -12η» με το χρώμα του «σύντομα».
+		var left = +r.days_left;
+		var expired = left < 0;
+		var customer = renewalCustomer(r);
 		var pill, cls;
-		if (r.expired) { pill = 'Έληξε πριν ' + Math.abs(r.days_left) + 'η'; cls = 'is-expired'; }
-		else if (r.days_left <= 30) { pill = 'Λήγει σε ' + r.days_left + 'η'; cls = 'is-soon'; }
-		else { pill = 'Λήγει σε ' + r.days_left + 'η'; cls = ''; }
+		if (expired) { pill = 'Έληξε πριν ' + Math.abs(left) + 'η'; cls = 'is-expired'; }
+		else if (left <= 30) { pill = 'Λήγει σε ' + left + 'η'; cls = 'is-soon'; }
+		else { pill = 'Λήγει σε ' + left + 'η'; cls = ''; }
+		if (left <= 30) soon++;
 		return '<tr>' +
-			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span><span>' + esc(r.customer) + '</span></span></td>' +
+			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(customer) + '">' + esc(initials(customer)) + '</span><span>' + esc(customer) + '</span></span></td>' +
 			'<td><span class="ecrm-code">' + esc(r.code || '') + '</span></td>' +
 			'<td>' + esc(r.provider_name || '—') + '</td>' +
 			'<td>' + (r.end_date ? fmtDate(r.end_date) : '—') + '</td>' +
@@ -37,7 +63,7 @@ function renderRenewals(view, d) {
 	view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div class="ecrm-titlewrap"><span class="ecrm-pageicon">' +
 		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></span>' +
-		'<div><h2 class="ecrm-title">Λήξεις & Ανανεώσεις</h2><p class="ecrm-sub">' + (d.count || 0) + ' συμβάσεις λήγουν έως ' + d.window + ' ημέρες · ' + (d.soon || 0) + ' άμεσα</p></div></div>' +
+		'<div><h2 class="ecrm-title">Λήξεις & Ανανεώσεις</h2><p class="ecrm-sub">' + rows.length + ' συμβάσεις λήγουν έως ' + (d.days || 0) + ' ημέρες · ' + soon + ' άμεσα</p></div></div>' +
 		'<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (renewState.scope==="own"?" is-on":"") + '" data-rscope="own">Δικά μου</button><button type="button" class="ecrm-scope__b' + (renewState.scope==="team"?" is-on":"") + '" data-rscope="team">Ομάδας</button></div></header>' +
 		'<div class="ecrm-card">' + table + '</div>';
 

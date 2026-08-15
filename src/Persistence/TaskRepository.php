@@ -84,6 +84,32 @@ final class TaskRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
+        // Whether the row is late — decided here, not in the browser.
+        //
+        // Το ecrm-view-tasks.js διαβάζει `t.overdue` σε τρία σημεία (κόκκινο
+        // pill, η λέξη «εκπρόθεσμη», και η επισήμανση της γραμμής) και ΚΑΝΕΙΣ
+        // δεν το έστελνε ποτέ: η λέξη «overdue» υπήρχε μόνο ως τιμή φίλτρου.
+        // Και τα τρία ήταν νεκρά από τη μέρα που γράφτηκαν. Βρέθηκε στις
+        // 2026-08-14 ανοίγοντας την οθόνη — εργασία με λήξη 20/06/2026 καθόταν
+        // στη λίστα σαν κανονική.
+        //
+        // Υπολογίζεται δίπλα στο WHERE που ορίζει το ΙΔΙΟ πράγμα για την
+        // καρτέλα «Εκπρόθεσμες», ώστε η καρτέλα και η σήμανση να μη μπορούν να
+        // διαφωνήσουν. Παραγωγή του στη JavaScript θα ξανάφερνε ακριβώς αυτό
+        // το ρίσκο: το φίλτρο συγκρίνει με current_time('mysql'), δηλαδή ώρα
+        // του site, ενώ ο browser θα συνέκρινε με το δικό του ρολόι.
+        //
+        // Πραγματικό bool, όχι το '1'/'0' string που θα γύριζε υπολογισμένη
+        // στήλη SQL μέσω $wpdb: στη JavaScript το string '0' είναι truthy, που
+        // θα σήμαινε ΚΑΘΕ εργασία εκπρόθεσμη αντί για καμία.
+        $now = current_time('mysql');
+
+        foreach ($rows as $i => $row) {
+            $rows[$i]['overdue'] = ($row['status'] ?? '') !== 'done'
+                && ! empty($row['due_at'])
+                && (string) $row['due_at'] < $now;
+        }
+
         return $rows;
     }
 

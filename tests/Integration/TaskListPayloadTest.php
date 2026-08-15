@@ -3,7 +3,7 @@
 /**
  * Το /tasks στέλνει ό,τι διαβάζει η οθόνη Εργασίες.
  *
- * Στις 15 Αυγούστου η οθόνη έλεγε «Καμία εργασία» ό,τι κι αν υπήρχε στη βάση.
+ * Στις 14 Αυγούστου η οθόνη έλεγε «Καμία εργασία» ό,τι κι αν υπήρχε στη βάση.
  * Ο controller απαντούσε `rows`, το `ecrm-view-tasks.js` διάβαζε `d.tasks`, και
  * `undefined || []` είναι κενός πίνακας — χωρίς σφάλμα, χωρίς κόκκινο στο
  * console, με 199 unit και 165 integration tests πράσινα. Το ίδιο και με το
@@ -130,6 +130,56 @@ final class TaskListPayloadTest extends IntegrationTestCase
         self::assertNull($row['contract_id']);
     }
 
+    /**
+     * Η εργασία που άργησε το λέει μόνη της.
+     *
+     * Το `overdue` ΔΕΝ είναι στήλη και δεν ήταν ποτέ στην απάντηση: η λέξη
+     * υπήρχε μόνο ως τιμή φίλτρου. Η οθόνη όμως το διάβαζε σε τρία σημεία —
+     * κόκκινο pill, η λέξη «εκπρόθεσμη», και η επισήμανση της γραμμής — οπότε
+     * και τα τρία ήταν νεκρά από τη μέρα που γράφτηκαν.
+     *
+     * Δεν το έπιασε η σάρωση κλειδιών της 14ης Αυγούστου, επειδή εκείνη
+     * σύγκρινε τα κλειδιά του ΦΑΚΕΛΟΥ της απάντησης (ok/rows/can_team) και όχι
+     * τα κλειδιά της ΓΡΑΜΜΗΣ. Το έπιασε το άνοιγμα της οθόνης: εργασία με
+     * λήξη 20/06/2026 καθόταν στη λίστα σαν κανονική.
+     */
+    public function testATaskPastItsDueDateComesBackMarkedOverdue(): void
+    {
+        $this->addTask('Άργησε', 0, gmdate('Y-m-d H:i:s', strtotime('-3 days')));
+
+        self::assertTrue($this->getTasks()['rows'][0]['overdue']);
+    }
+
+    public function testATaskDueLaterIsNotOverdue(): void
+    {
+        $this->addTask('Αύριο', 0, gmdate('Y-m-d H:i:s', strtotime('+3 days')));
+
+        self::assertFalse($this->getTasks()['rows'][0]['overdue']);
+    }
+
+    /** Χωρίς ημερομηνία δεν υπάρχει «άργησε». */
+    public function testATaskWithNoDueDateIsNotOverdue(): void
+    {
+        $this->addTask('Κάποτε');
+
+        self::assertFalse($this->getTasks()['rows'][0]['overdue']);
+    }
+
+    /**
+     * Πραγματικό bool, όχι το '1'/'0' που θα γύριζε υπολογισμένη στήλη SQL.
+     *
+     * Αυτό το test φυλάει μια συγκεκριμένη «βελτιστοποίηση»: τη μεταφορά του
+     * υπολογισμού μέσα στο SELECT. Το $wpdb θα γύριζε τότε το string '0', και
+     * στη JavaScript το '0' είναι **truthy** — κάθε εργασία θα φαινόταν
+     * εκπρόθεσμη αντί για καμία. Ίδια οικογένεια σφάλματος, ανάποδο πρόσημο.
+     */
+    public function testTheOverdueFlagIsABooleanAndNotAString(): void
+    {
+        $this->addTask('Αύριο', 0, gmdate('Y-m-d H:i:s', strtotime('+3 days')));
+
+        self::assertIsBool($this->getTasks()['rows'][0]['overdue']);
+    }
+
     // --- Fixtures ----------------------------------------------------------
 
     /** @return array<string, mixed> */
@@ -145,13 +195,17 @@ final class TaskListPayloadTest extends IntegrationTestCase
         return $data;
     }
 
-    private function addTask(string $title, int $contractId = 0): void
+    private function addTask(string $title, int $contractId = 0, string $dueAt = ''): void
     {
         $request = new WP_REST_Request('POST', self::ROUTE);
         $request->set_param('title', $title);
 
         if ($contractId > 0) {
             $request->set_param('contract_id', $contractId);
+        }
+
+        if ($dueAt !== '') {
+            $request->set_param('due_at', $dueAt);
         }
 
         $response = rest_do_request($request);

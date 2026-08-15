@@ -1,0 +1,80 @@
+[33mcommit 1af5704acdb13a9a3dac2b36b7bd5c349a442cf8[m
+Author: Konstantinos <fotogeniss@gmail.com>
+Date:   Sat Aug 15 00:24:03 2026 +0300
+
+    Σάρωση κλειδιών API ↔ JS: δύο οθόνες που δεν έδειχναν ποτέ σωστά
+    
+    Το bug των Εργασιών ήταν υπόλοιπο της μετακόμισης των διαδρομών στους
+    controllers, και δεν ήταν το μοναδικό. Σαρώθηκαν και τα 24 αρχεία .js του
+    public/assets απέναντι στους 26 controllers: 22 καθαρά, 2 όχι.
+    
+    /renewals — πέντε αναγνώσεις σε μία οθόνη:
+    
+      d.window    ο controller στέλνει `days`. Ο υπότιτλος τύπωνε κυριολεκτικά
+                  «λήγουν έως undefined ημέρες», σε κάθε φόρτωση.
+      d.count     δεν στέλνεται. Πάντα «0 συμβάσεις», με γεμάτο πίνακα από κάτω.
+      d.soon      δεν στέλνεται. Πάντα «0 άμεσα».
+      r.customer  δεν στέλνεται. Η expiring() δίνει first_name/last_name/
+                  company_name. Η στήλη Πελάτης ήταν ΠΑΝΤΑ κενή, με «?» στο
+                  αβαταράκι, γιατί esc(undefined) είναι κενό string.
+      r.expired   δεν στέλνεται. Ληγμένη σύμβαση έγραφε «Λήγει σε -12η» με το
+                  χρώμα του «σύντομα» αντί για «Έληξε πριν 12η».
+    
+    Διορθώθηκαν στην JS: ο server στέλνει ήδη ό,τι χρειάζεται η οθόνη, με άλλα
+    ονόματα. Το renewalCustomer() συνθέτει το όνομα με τον ίδιο κανόνα που ήδη
+    χρησιμοποιούν η λίστα συμβάσεων και το taskCustomer(), και το expired βγαίνει
+    από το πρόσημο του days_left. Η ContractQueries::expiring() δεν αγγίχτηκε —
+    έχει έξι characterisation tests και καμία assertion δεν άλλαξε.
+    
+    /analytics — η ασυμφωνία δίπλα στον σωστό κώδικα:
+    
+    Η barList() σχεδιάζει τρεις κατανομές και διαβάζει it.count και από τις τρεις.
+    Η by_energy περνούσε από array_map σε label/count. Οι by_provider και
+    by_region πήγαιναν ωμές από το SQL, που κάνει COUNT(*) c. Αποτέλεσμα
+    width:NaN% στις μπάρες και η λέξη «undefined» στη στήλη τιμής, σε οθόνη
+    διοίκησης, με τη σουίτα πράσινη.
+    
+    Η διόρθωση μπήκε στον controller (labelled()) και όχι στο repository: το
+    dashboard διαβάζει το ίδιο ωμό σχήμα (p.c) από άλλη μέθοδο, και σωστά.
+    Αλλαγή στο SQL θα έσπαγε εκείνη την οθόνη για να φτιάξει αυτήν.
+    
+    Δύο schema tests στο μοτίβο του TaskListPayloadTest — assertSame σε ΟΛΟΚΛΗΡΟ
+    τον πίνακα κλειδιών, γιατί το assertArrayHasKey ανά ένα δεν πιάνει
+    μετονομασία. Το AnalyticsPayloadTest διατρέχει και τις τρεις κατανομές:
+    έλεγχος μόνο στη by_energy θα ήταν πράσινος όσο οι άλλες δύο ήταν σπασμένες.
+    
+    Καταγραφή, στο ίδιο commit επειδή το ίδιο πέρασμα τα βρήκε:
+    
+      - «19 modules στο public/assets» → είναι 24 αρχεία .js (μέτρηση, όχι εκτίμηση)
+      - «18 modules γύρω από το ecrm-app.js» → είναι 23
+      - Ο πίνακας «Η HTTP επιφάνεια» παρέλειπε δύο από τους 26 controllers:
+        TasksController και ProviderFormController
+      - Το τέταρτο «σημείο XSS» του §6.0 δείχνει στο app.js:1486, κώδικα που δεν
+        υπάρχει πια — οι Εργασίες βγήκαν στο ecrm-view-tasks.js
+      - «Ο υπότιτλος της εργασίας… Εκκρεμεί» — δεν εκκρεμεί
+      - Το Βήμα 9 ήταν ⬜ ενώ είχε τελειώσει, και υποσχόταν τρία πράγματα από τα
+        οποία έγινε ένα· τα άλλα δύο ήταν συνειδητές απορρίψεις και γράφτηκαν ως
+        τέτοιες αντί να θαφτούν κάτω από ένα ✅
+      - Η διόρθωση των Εργασιών γραφόταν παντού ως «15 Αυγούστου». Τα mtime των
+        ίδιων των αρχείων λένε 14 Αυγούστου.
+    
+    Σουίτα μετά, από την έξοδο του check:all: 199 unit (1 skipped, 682
+    assertions) + 178 integration (1104 assertions), phpcs 198 αρχεία,
+    phpstan 124. Η integration ανέβηκε από 169 — ακριβώς οι εννιά νέες μέθοδοι.
+    
+    Το AnalyticsPayloadTest απέτυχε με τέσσερα 403 στην πρώτη εκτέλεση: το
+    /analytics είναι η μόνη από τις τρεις διαδρομές με Guards::needs(
+    VIEW_ANALYTICS), που το matrix() δίνει μόνο στον PARTNER, ενώ ο
+    προεπιλεγμένος makeCrmUser() φτιάχνει SELLER. Αποτυχία σε φύλακα δεν μοιάζει
+    με αποτυχία φύλακα — ο λόγος είναι γραμμένος δίπλα στη γραμμή.
+
+ docs/ARCHITECTURE.md                       |  26 [32m+++[m[31m-[m
+ docs/CHANGELOG.md                          | 133 [32m++++++++++++++++++++[m
+ docs/HANDOVER.md                           |  30 [32m+++[m[31m--[m
+ docs/NEXT-SESSION.md                       |  66 [32m++++++[m[31m----[m
+ public/assets/ecrm-view-renewals.js        |  36 [32m+++++[m[31m-[m
+ src/Http/AnalyticsController.php           |  36 [32m+++++[m[31m-[m
+ tests/Integration/AnalyticsPayloadTest.php | 194 [32m+++++++++++++++++++++++++++++[m
+ tests/Integration/RenewalsPayloadTest.php  | 182 [32m+++++++++++++++++++++++++++[m
+ tests/Integration/TaskListPayloadTest.php  |   2 [32m+[m[31m-[m
+ 9 files changed, 667 insertions(+), 38 deletions(-)
