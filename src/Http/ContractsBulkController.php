@@ -66,7 +66,22 @@ final class ContractsBulkController implements Controller
                     'required' => true,
                     'enum'     => ['status', 'delete', 'assign', 'export'],
                 ],
-                'value' => ['type' => 'string', 'default' => ''],
+                // Πολύμορφο εξ ορισμού: slug κατάστασης για το 'status',
+                // id χρήστη για το 'assign', αχρησιμοποίητο για τα άλλα δύο.
+                //
+                // Δηλωνόταν σκέτο string, και το ecrm-view-contracts.js στέλνει
+                // `value: +v` — ΑΡΙΘΜΟ. Ο validator του WP απορρίπτει αριθμό σε
+                // πεδίο string, οπότε η μαζική «Ανάθεση» γύριζε 400 και ΔΕΝ
+                // δούλεψε ποτέ. Καμία εξαίρεση στο PHP log: το 400 φεύγει πριν
+                // φτάσει στον handler.
+                //
+                // Διορθώνεται εδώ και όχι στη JS, επειδή η ίδια η handle() κάνει
+                // `(int) $request['value']` για το assign: η γραμμή αυτή λέει
+                // ότι το πεδίο κουβαλάει αριθμό, και ένα schema που τον
+                // απαγορεύει διαφωνεί με τον κώδικα που το διαβάζει. Αλλαγή
+                // μόνο στη JS θα άφηνε το API να απορρίπτει απολύτως λογικό
+                // payload, και ο επόμενος client θα το ξαναέτρωγε.
+                'value' => ['type' => ['string', 'integer'], 'default' => ''],
             ],
         ]);
     }
