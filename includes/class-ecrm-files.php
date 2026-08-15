@@ -11,7 +11,7 @@
  *
  * Moving the legacy publicly-stored files into that dir used to live here too.
  * It is now automatic and batched — see EnergyCRM\Infrastructure\DocumentProtection
- * and FileRepository::protectBatch().
+ * and UnprotectedDocuments::protectBatch().
  *
  * @package EnergyCRM
  */

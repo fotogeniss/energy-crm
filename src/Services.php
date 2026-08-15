@@ -43,6 +43,7 @@ use EnergyCRM\Persistence\ContractTransitions;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\DashboardRepository;
 use EnergyCRM\Persistence\EventRepository;
+use EnergyCRM\Persistence\DocumentStorage;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\LeadRepository;
 use EnergyCRM\Persistence\NetworkRepository;
@@ -50,6 +51,7 @@ use EnergyCRM\Persistence\NotificationRepository;
 use EnergyCRM\Persistence\ProviderRepository;
 use EnergyCRM\Persistence\SignatureRepository;
 use EnergyCRM\Persistence\TaskRepository;
+use EnergyCRM\Persistence\UnprotectedDocuments;
 use EnergyCRM\Persistence\TeamActivityRepository;
 use EnergyCRM\Persistence\TeamRepository;
 
@@ -64,6 +66,8 @@ final class Services
     private static ?NetworkRepository $network = null;
 
     private static ?FileRepository $files = null;
+
+    private static ?UnprotectedDocuments $unprotectedDocuments = null;
 
     private static ?SecretStore $secrets = null;
 
@@ -124,6 +128,20 @@ final class Services
     public static function files(): FileRepository
     {
         return self::$files ??= new FileRepository(\ECRM_Files::dir());
+    }
+
+    /**
+     * Η μετακόμιση των παλαιών εγγράφων από τη media library.
+     *
+     * Δικός της provider και όχι μέσω του `files()`: είναι η μόνη υπηρεσία με
+     * ημερομηνία λήξης — όταν κάθε site αδειάσει το backlog του, σβήνεται
+     * ολόκληρη, και τότε αυτή η γραμμή είναι το μόνο που πρέπει να φύγει.
+     */
+    public static function unprotectedDocuments(): UnprotectedDocuments
+    {
+        return self::$unprotectedDocuments ??= new UnprotectedDocuments(
+            new DocumentStorage(\ECRM_Files::dir())
+        );
     }
 
     public static function extractionGate(): ExtractionGate
@@ -279,6 +297,7 @@ final class Services
         self::$customers     = null;
         self::$network       = null;
         self::$files         = null;
+        self::$unprotectedDocuments = null;
         self::$secrets       = null;
         self::$tasks         = null;
         self::$events        = null;

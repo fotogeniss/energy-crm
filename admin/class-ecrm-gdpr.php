@@ -120,7 +120,7 @@ class ECRM_GDPR {
 	}
 
 	private static function protection(): \EnergyCRM\Infrastructure\DocumentProtection {
-		return new \EnergyCRM\Infrastructure\DocumentProtection( \EnergyCRM\Services::files() );
+		return new \EnergyCRM\Infrastructure\DocumentProtection( \EnergyCRM\Services::unprotectedDocuments() );
 	}
 
 	/**

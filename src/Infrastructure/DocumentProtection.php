@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Infrastructure;
 
-use EnergyCRM\Persistence\FileRepository;
+use EnergyCRM\Persistence\UnprotectedDocuments;
 
 final class DocumentProtection
 {
@@ -42,7 +42,7 @@ final class DocumentProtection
      */
     private const BATCH = 25;
 
-    public function __construct(private readonly FileRepository $files)
+    public function __construct(private readonly UnprotectedDocuments $documents)
     {
     }
 
@@ -68,7 +68,7 @@ final class DocumentProtection
      */
     public function pending(): int
     {
-        return $this->files->unprotectedCount();
+        return $this->documents->count();
     }
 
     /**
@@ -78,7 +78,7 @@ final class DocumentProtection
      */
     public function sweep(int $limit = self::BATCH): array
     {
-        return $this->files->protectBatch($limit);
+        return $this->documents->protectBatch($limit);
     }
 
     /**

@@ -28,16 +28,6 @@ final class FileRepository
 
     private DocumentStorage $storage;
 
-    /**
-     * Το ένα μισό της παλιάς κλάσης που έφυγε, ακόμη προσβάσιμο από εδώ.
-     *
-     * Λεπτό περιτύλιγμα κατά τη μετακόμιση: οι δύο δημόσιες μέθοδοι παρακάτω
-     * απλώς προωθούν, ώστε κανένας καλών και κανένα test να μη χρειαστεί να
-     * αλλάξει στο ίδιο commit με το σπάσιμο. Φεύγει μόλις στραφεί το
-     * `DocumentProtection`.
-     */
-    private UnprotectedDocuments $unprotected;
-
     public function __construct(
         string $storageDir,
         ?string $table = null,
@@ -46,7 +36,6 @@ final class FileRepository
         $this->table          = $table ?? Tables::name(Tables::FILES);
         $this->contractsTable = $contractsTable ?? Tables::name(Tables::CONTRACTS);
         $this->storage        = new DocumentStorage($storageDir);
-        $this->unprotected    = new UnprotectedDocuments($this->storage, $this->table);
     }
 
     /**
@@ -306,24 +295,6 @@ final class FileRepository
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         return count($ids);
-    }
-
-    /**
-     * @deprecated Μετακόμισε στο UnprotectedDocuments::count(). Περιτύλιγμα.
-     */
-    public function unprotectedCount(): int
-    {
-        return $this->unprotected->count();
-    }
-
-    /**
-     * @deprecated Μετακόμισε στο UnprotectedDocuments::protectBatch(). Περιτύλιγμα.
-     *
-     * @return array{protected:int, missing:int, failed:int, skipped:int}
-     */
-    public function protectBatch(int $limit = 25): array
-    {
-        return $this->unprotected->protectBatch($limit);
     }
 
     /**

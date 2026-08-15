@@ -94,7 +94,7 @@ final class Plugin
 
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
-        (new DocumentProtection(Services::files()))->register();
+        (new DocumentProtection(Services::unprotectedDocuments()))->register();
 
         // Scheduled unconditionally, and inert until ECRM_ENCRYPT_PII is on.
         // Registering only when the flag is set would mean the sweep never
