@@ -19,10 +19,14 @@
  * not assertArrayHasKey one at a time — an assertArrayHasKey pass does not
  * notice that supply_number landed under meter_number's key.
  *
- * Nothing here is broken on purpose and nothing here is fixed. This is the
- * "before" picture the FileRepository split and the ContractRepository split
- * both started from — characterisation first, in its own commit, splitting
- * only after.
+ * Test 2 found the destructive full-overwrite bug (CHANGELOG 2026-08-16 (3)),
+ * and the manual repro on crm-test confirmed it reaches the screen
+ * (CHANGELOG 2026-08-16 (4)). CHANGELOG 2026-08-16 (5) fixed it: contractFrom()
+ * and addressFrom() now omit a column/block entirely on an edit that didn't
+ * send it, and resolveCustomer() keeps the existing customer_id instead of
+ * defaulting to 0. Test 2 was rewritten from "pin whichever behaviour is
+ * real" into a regression test for that fix, and test 7 was added to pin the
+ * address-block half of it. Both would fail again on the old code.
  *
  * @package EnergyCRM
  */
@@ -44,6 +48,25 @@ final class ContractSaveMappingTest extends IntegrationTestCase
 
     /** Passes the check-digit test — never masks a mapping failure as a 422. */
     private const VALID_AFM = '090003373';
+
+    /**
+     * Στήλες contracts που ελέγχει το test 2 — ό,τι μπορεί να γράψει η
+     * contractFrom() εκτός consent. Μια λίστα, όχι επανάληψη ενσωματωμένη σε
+     * δύο σημεία, ώστε το "πριν" και το "μετά" να προβάλλονται με τον ίδιο
+     * ακριβώς κατάλογο στηλών.
+     *
+     * @var list<string>
+     */
+    private const CONTRACT_TRACKED_COLUMNS = [
+        'customer_id', 'provider_id', 'program_id', 'energy_type', 'category',
+        'price_type', 'customer_type', 'activation_type', 'supply_number',
+        'meter_number', 'invoice_code', 'status', 'notes', 'extracted_json',
+        'extra_json', 'start_date', 'term_months', 'end_date',
+        'supply_addr_same', 'supply_street', 'supply_street_no', 'supply_city',
+        'supply_postal_code', 'supply_region',
+        'billing_addr_same', 'billing_street', 'billing_street_no', 'billing_city',
+        'billing_postal_code', 'billing_region',
+    ];
 
     protected function setUp(): void
     {
@@ -218,36 +241,21 @@ final class ContractSaveMappingTest extends IntegrationTestCase
     /**
      * 2. Επεξεργασία: αλλάζει ό,τι στάλθηκε, δεν πειράζει ό,τι δεν στάλθηκε.
      *
-     * Αυτό είναι η ΥΠΟΘΕΣΗ που ελέγχει το test — όχι επιβεβαιωμένη συμπεριφορά.
-     * Το CHANGELOG 2026-08-16 (2) καταγράφει ότι «όλη η διαδρομή επεξεργασίας
-     * … contracts->update() … δεν τρέχει ποτέ» στα υπάρχοντα tests: τα πέντε
-     * του ContractSaveValidationTest μόνο δημιουργούν, ποτέ δεν επεξεργάζονται.
+     * Αυτό ΗΤΑΝ η υπόθεση που ήλεγχε το test, πριν επιβεβαιωθεί το αντίθετο
+     * (CHANGELOG 2026-08-16 (3): πράσινο με την υπόθεση της πλήρους
+     * αντικατάστασης, όχι με την τιτλοφράση) και πριν αναπαραχθεί στην οθόνη
+     * (2026-08-16 (4)). Η διόρθωση στο 2026-08-16 (5) έκανε το contractFrom()
+     * να παραλείπει εντελώς μια στήλη που δεν στάλθηκε σε ένα edit — αντί να
+     * τη γράφει σε default/NULL — και το resolveCustomer() να κρατά το
+     * υπάρχον customer_id αντί να το μηδενίζει. Αυτό το test είναι τώρα
+     * regression test για εκείνη τη διόρθωση, όχι πια χαρακτηρισμός μιας
+     * άγνωστης συμπεριφοράς: γράφτηκε ξανά ώστε να κοκκινίσει αν η παλιά
+     * καταστροφική συμπεριφορά ξαναεμφανιστεί.
      *
-     * Η ανάγνωση του κώδικα (όχι μνήμη — ΟΛΟΚΛΗΡΗ η save(), γραμμή προς γραμμή)
-     * δείχνει κάτι που αξίζει να ελεγχθεί πριν πιστευτεί προς οποιαδήποτε
-     * κατεύθυνση: η contractFrom($params, $customerId) χτίζεται ΚΑΘΕ φορά από
-     * την αρχή, ΧΩΡΙΣ ποτέ να διαβάσει το $existing. Κάθε κλειδί που λείπει
-     * από το αίτημα δεν μένει ως είχε — παίρνει το default του κώδικα
-     * ('power', 'home', 'individual', 'draft', ή null), και το UPDATE γράφει
-     * ΟΛΑ τα κλειδιά, ό,τι στάλθηκε ή όχι.
-     *
-     * Δύο ενδεχόμενα, ρητά:
-     *   (α) ΠΡΑΣΙΝΟ ΜΕ ΤΗΝ ΤΙΤΛΟΦΡΑΣΗ: κάτι που δεν εντοπίστηκε στην ανάγνωση
-     *       προστατεύει τα μη σταλμένα πεδία, και ο τίτλος του test περιγράφει
-     *       σωστά τη συμπεριφορά.
-     *   (β) ΠΡΑΣΙΝΟ ΜΕ ΤΗΝ ΥΠΟΘΕΣΗ ΤΗΣ ΠΛΗΡΟΥΣ ΑΝΤΙΚΑΤΑΣΤΑΣΗΣ (αυτό που
-     *       ελέγχουν οι παρακάτω assertions): κάθε επεξεργασία που δεν στέλνει
-     *       ΚΑΙ τα 30 πεδία ξαναγράφει τα υπόλοιπα σε default/NULL — μαζί με
-     *       το customer_id, που γίνεται NULL όταν δεν σταλεί. Αν η οθόνη
-     *       πράγματι στέλνει πάντα ολόκληρη τη φόρμα, αυτό δεν εκδηλώνεται
-     *       ποτέ στην πράξη — αλλά ΚΑΝΕΝΑ test δεν το είχε ελέγξει μέχρι τώρα,
-     *       και το ίδιο μοτίβο (assumption "μάλλον κάνει coercion/preserve")
-     *       ήταν ακριβώς αυτό που άφησε τη μαζική Ανάθεση σπασμένη.
-     *
-     * Αν το αποτέλεσμα είναι το (β), αυτό ΔΕΝ διορθώνεται εδώ — καταγράφεται,
-     * όπως κάθε άλλο εύρημα σάρωσης, και αναφέρεται πριν αγγιχτεί κώδικας.
+     * Η προηγούμενη γραμμή-προς-γραμμή τεκμηρίωση της ανάλυσης μένει στο
+     * CHANGELOG 2026-08-16 (3)/(4)/(5) — δεν επαναλαμβάνεται εδώ.
      */
-    public function testEditingWithOnlyOneFieldSentAndWhatHappensToTheRest(): void
+    public function testEditingWithOnlyOneFieldSentPreservesEverythingElse(): void
     {
         $providerId = $this->makeProvider();
         $programId  = $this->makeProgram($providerId);
@@ -285,6 +293,8 @@ final class ContractSaveMappingTest extends IntegrationTestCase
 
         self::assertSame(200, $created->get_status());
 
+        $rowBefore = $this->storedRow('contracts', $contractId);
+
         // Η ΜΟΝΗ αλλαγή που στέλνεται: το contract_id για να στοχεύσει την
         // ίδια γραμμή, και ένα πεδίο. ΤΙΠΟΤΑ άλλο — ούτε καν customer_id.
         $edited = $this->save([
@@ -299,56 +309,25 @@ final class ContractSaveMappingTest extends IntegrationTestCase
         // Το ΜΟΝΟ πεδίο που η αίτηση πράγματι έστειλε.
         self::assertSame('Ενημερωμένη σημείωση', $row['notes'], 'Το πεδίο που στάλθηκε δεν άλλαξε.');
 
-        // Η υπόθεση της πλήρους αντικατάστασης, ρητά ανά πεδίο — ό,τι δεν
-        // στάλθηκε δεν κράτησε την προηγούμενη τιμή του.
-        $expectedAfterEdit = [
-            'customer_id'      => null,
-            'provider_id'      => null,
-            'program_id'       => null,
-            'energy_type'      => 'power',
-            'category'         => 'home',
-            'price_type'       => null,
-            'customer_type'    => 'individual',
-            'activation_type'  => null,
-            'supply_number'    => null,
-            'meter_number'     => null,
-            'invoice_code'     => null,
-            'status'           => 'draft',
-            'notes'            => 'Ενημερωμένη σημείωση',
-            'extracted_json'   => null,
-            'extra_json'       => null,
-            'start_date'       => null,
-            'term_months'      => null,
-            'end_date'         => null,
-
-            'supply_addr_same'   => '0',
-            'supply_street'      => '',
-            'supply_street_no'   => '',
-            'supply_city'        => '',
-            'supply_postal_code' => '',
-            'supply_region'      => '',
-
-            'billing_addr_same'   => '0',
-            'billing_street'      => '',
-            'billing_street_no'   => '',
-            'billing_city'        => '',
-            'billing_postal_code' => '',
-            'billing_region'      => '',
-        ];
+        // Ό,τι δεν στάλθηκε πρέπει να είναι ΑΚΡΙΒΩΣ όπως ήταν πριν το edit —
+        // προβολή της γραμμής πριν το edit πάνω στην ίδια λίστα στηλών, με
+        // μόνο το notes αλλαγμένο στη νέα τιμή.
+        $expectedAfterEdit          = $this->columns($rowBefore, array_flip(self::CONTRACT_TRACKED_COLUMNS));
+        $expectedAfterEdit['notes'] = 'Ενημερωμένη σημείωση';
 
         self::assertSame(
             $expectedAfterEdit,
-            $this->columns($row, $expectedAfterEdit),
-            'Η επεξεργασία ΔΕΝ αντικατέστησε ολόκληρη τη γραμμή όπως προέβλεπε η ανάγνωση του κώδικα — '
-            . 'δηλαδή κάτι διαφορετικό από τη γραμμή-προς-γραμμή ανάλυση της contractFrom()/update() '
-            . 'προστατεύει τα μη σταλμένα πεδία. Αν αυτό το assertion είναι κόκκινο, ΜΗΝ το διορθώσεις '
-            . 'εδώ πριν καταλάβεις ποιο από τα δύο ισχύει.'
+            $this->columns($row, array_flip(self::CONTRACT_TRACKED_COLUMNS)),
+            'Το edit άλλαξε κάτι πέρα από το notes που στάλθηκε — η γραμμή έπρεπε να μείνει '
+            . 'ίδια σε όλα τα υπόλοιπα κλειδιά. Αν αυτό κοκκίνισε, η διόρθωση της 2026-08-16 (5) '
+            . 'ξαναχάλασε (contractFrom()/addressFrom() ξαναγράφουν κλειδιά που δεν στάλθηκαν).'
         );
 
-        self::assertNotSame(
+        self::assertSame(
             $customerId,
             (int) ($row['customer_id'] ?? 0),
-            'Ο πελάτης παρέμεινε συνδεδεμένος χωρίς να σταλεί customer_id — δες το docblock, ενδεχόμενο (α).'
+            'Ο πελάτης αποσυνδέθηκε χωρίς να σταλεί customer_id — έπρεπε να παραμείνει όπως ήταν '
+            . '(resolveCustomer() πρέπει να διαβάζει το $existing όταν το αίτημα δεν στέλνει customer_id).'
         );
     }
 
@@ -519,6 +498,72 @@ final class ContractSaveMappingTest extends IntegrationTestCase
             json_decode((string) $row['extra_json'], true),
             'Η κανονική extras bag δίπλα του επηρεάστηκε από τον έλεγχο της διεύθυνσης.'
         );
+    }
+
+    /**
+     * 7. Edit που δεν αγγίζει ένα address block το αφήνει ακριβώς όπως ήταν·
+     *    edit που αγγίζει ΕΝΑ κλειδί του block το επανυπολογίζει ολόκληρο.
+     *
+     * addressFrom() παραλείπει τώρα ένα block εντελώς σε edit που δεν έστειλε
+     * κανένα από τα έξι κλειδιά του (CHANGELOG 2026-08-16 (5), η διόρθωση του
+     * cross-contamination bug). Αυτό το test καρφώνει και τα δύο μισά μαζί:
+     * η παράλειψη διατηρεί, και το άγγιγμα έστω ενός κλειδιού αντικαθιστά
+     * ολόκληρο το block ατομικά — η ίδια συμπεριφορά που είχε πάντα όταν το
+     * block στελνόταν (test 3), τώρα επιβεβαιωμένη και στο edit path.
+     */
+    public function testEditingWithoutTouchingAnAddressBlockLeavesItUntouched(): void
+    {
+        $response = $this->save([
+            'afm'        => self::VALID_AFM,
+            'first_name' => 'Κατερίνα',
+            'last_name'  => 'Παπαδάκη',
+
+            'supply_addr_same'   => 0,
+            'supply_street'      => 'Αρχική Οδός',
+            'supply_street_no'   => '3',
+            'supply_city'        => 'Χανιά',
+            'supply_postal_code' => '73100',
+            'supply_region'      => 'Χανίων',
+
+            'billing_addr_same'   => 0,
+            'billing_street'      => 'Αρχική Χρέωση',
+            'billing_street_no'   => '4',
+            'billing_city'        => 'Ρέθυμνο',
+            'billing_postal_code' => '74100',
+            'billing_region'      => 'Ρεθύμνης',
+        ]);
+
+        $data       = $response->get_data();
+        $contractId = (int) $data['contract_id'];
+        self::assertSame(200, $response->get_status(), (string) ($data['error'] ?? ''));
+
+        // Το edit στέλνει ΜΟΝΟ ένα κλειδί billing — τίποτα από το supply.
+        $edited = $this->save([
+            'contract_id'    => $contractId,
+            'billing_street' => 'Νέα Οδός Χρέωσης',
+        ]);
+
+        self::assertSame(200, $edited->get_status(), (string) ($edited->get_data()['error'] ?? ''));
+
+        $row = $this->storedRow('contracts', $contractId);
+
+        // Το supply block δεν αγγίχτηκε καθόλου — ίδιες τιμές με πριν το edit.
+        self::assertSame('0', $row['supply_addr_same'], 'Το supply block άλλαξε παρότι δεν στάλθηκε.');
+        self::assertSame('Αρχική Οδός', $row['supply_street']);
+        self::assertSame('3', $row['supply_street_no']);
+        self::assertSame('Χανιά', $row['supply_city']);
+        self::assertSame('73100', $row['supply_postal_code']);
+        self::assertSame('Χανίων', $row['supply_region']);
+
+        // Το billing block αγγίχτηκε — επανυπολογίστηκε ΟΛΟΚΛΗΡΟ, όχι μόνο το
+        // ένα κλειδί που στάλθηκε: τα άλλα τέσσερα δεν κράτησαν την παλιά
+        // τιμή τους, η ίδια «ατομική» συμπεριφορά του block όπως πάντα.
+        self::assertSame('0', $row['billing_addr_same']);
+        self::assertSame('Νέα Οδός Χρέωσης', $row['billing_street']);
+        self::assertSame('', $row['billing_street_no'], 'Το block δεν επανυπολογίστηκε ολόκληρο.');
+        self::assertSame('', $row['billing_city']);
+        self::assertSame('', $row['billing_postal_code']);
+        self::assertSame('', $row['billing_region']);
     }
 
     // --- Fixtures και βοηθοί -------------------------------------------------
