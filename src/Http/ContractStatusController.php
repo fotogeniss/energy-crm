@@ -20,6 +20,7 @@ use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\FileRepository;
 use WP_REST_Request;
@@ -32,6 +33,7 @@ final class ContractStatusController implements Controller
         private readonly ContractRepository $contracts,
         private readonly FileRepository $files,
         private readonly ContractLifecycle $lifecycle,
+        private readonly DraftExitGate $draftExit,
     ) {
     }
 
@@ -96,6 +98,21 @@ final class ContractStatusController implements Controller
                     $source->allowedNext()
                 ),
             ], 409);
+        }
+
+        // The second door out of draft, and it has to ask what the save route
+        // asks. A draft may not be sent for signature — or anywhere else except
+        // the bin — without an ΑΦΜ, or the provider's form prints with the box
+        // empty and goes to the customer that way.
+        $missingAfm = $source === null ? null : $this->draftExit->refusalOnMove(
+            $source,
+            $target,
+            (int) ($current['customer_id'] ?? 0),
+            $scope
+        );
+
+        if ($missingAfm !== null) {
+            return new WP_REST_Response(['ok' => false, 'error' => $missingAfm, 'field' => 'afm'], 422);
         }
 
         // Documents gate: some statuses may not be entered with paperwork missing.

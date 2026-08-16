@@ -52,12 +52,13 @@ final class ControllerFactory
         $lifecycle = Services::lifecycle();
         $queries   = Services::contractQueries();
         $details   = Services::contractDetails();
+        $draftExit = Services::draftExitGate();
 
         return [
             // Contracts — read, write, status, bulk, documents.
             new ContractsReadController($scope, $queries, $details, Services::events(), Services::files()),
-            new ContractSaveController($scope, Services::contracts(), Services::customers(), $lifecycle),
-            new ContractStatusController($scope, Services::contracts(), Services::files(), $lifecycle),
+            new ContractSaveController($scope, Services::contracts(), Services::customers(), $lifecycle, $draftExit),
+            new ContractStatusController($scope, Services::contracts(), Services::files(), $lifecycle, $draftExit),
             new ContractsBulkController($scope, Services::contracts(), Services::files(), $lifecycle),
             new ContractDocumentsController($scope, $details, Services::files(), Services::contractDocuments()),
             new DocumentsController($scope, Services::contracts(), Services::files()),

@@ -380,7 +380,7 @@ class ECRM_Shortcodes {
 
 				<div class="ecrm-grid">
 					<label class="ecrm-field" data-for="afm">
-						<span class="ecrm-field__label">ΑΦΜ</span>
+						<span class="ecrm-field__label">ΑΦΜ <abbr title="Υποχρεωτικό για να προχωρήσει η αίτηση πέρα από το πρόχειρο">*</abbr></span>
 						<span class="ecrm-input-wrap"><input type="text" name="afm" class="ecrm-input" autocomplete="off"><button type="button" class="ecrm-input-btn" data-afm-search aria-label="Αναζήτηση ΑΦΜ">🔍</button></span>
 					</label>
 					<?php $ecrm_field( 'doy', 'Δ.Ο.Υ' ); ?>

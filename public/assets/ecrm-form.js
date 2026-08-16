@@ -948,8 +948,19 @@ import { api, esc, toast } from '@energy-crm/util';
 				consentEl.focus();
 				return;
 			}
-			// Hard-block finalize on an invalid ΑΦΜ.
+			// Hard-block finalize on a missing or invalid ΑΦΜ. Missing is the
+			// newer of the two: duplicate detection and search by full ΑΦΜ both
+			// run on afm_hash and nothing else, so a customer saved without one
+			// can never be flagged as a duplicate. The server refuses this too
+			// — DraftExitGate, from both endpoints — and this is here so the
+			// agent is told before the round trip, next to the field.
 			var afmv = readField('afm');
+			if (status === 'new' && !afmv) {
+				toast('Χρειάζεται ΑΦΜ πελάτη για την οριστικοποίηση.', false);
+				fieldNote(afmEl, 'Συμπλήρωσε το ΑΦΜ του πελάτη.', 'err');
+				if (afmEl) afmEl.focus();
+				return;
+			}
 			if (status === 'new' && afmv && !validAfm(afmv)) {
 				toast('Μη έγκυρο ΑΦΜ — διόρθωσέ το πριν την οριστικοποίηση.', false);
 				fieldNote(afmEl, 'Μη έγκυρο ΑΦΜ (έλεγχος ψηφίου).', 'err');
