@@ -21,8 +21,20 @@
  * μοιάζουν ίδια, και το λάθος ζευγάρωμα φαίνεται μόνο αφού η επαναφορά έχει
  * γίνει και καμία καρτέλα δεν δείχνει ΑΦΜ.
  *
- *     php tools/backup.php <φάκελος-dump> <φάκελος-μυστικών>
+ *     php tools/backup.php <φάκελος-dump> <φάκελος-μυστικών> [--with-uploads]
  *     php tools/backup.php --verify <manifest.json>
+ *
+ * ## Γιατί το `uploads` είναι προαιρετικό και όχι προεπιλογή
+ *
+ * Εκεί ζουν οι σαρωμένες ταυτότητες, οι λογαριασμοί, οι υπογραφές και τα
+ * παραγμένα PDF — δηλαδή τα πιο ευαίσθητα αρχεία του συστήματος, και τα μόνα
+ * που η βάση δεν περιέχει: κρατά μόνο γραμμές που δείχνουν σε αυτά. Αντίγραφο
+ * χωρίς αυτά επαναφέρει κάθε σύμβαση με σπασμένους συνδέσμους.
+ *
+ * Μένει προαιρετικό επειδή είναι το μόνο μέρος που μπορεί να είναι γιγαμπάιτ,
+ * και εργαλείο που αντιγράφει σιωπηλά γιγαμπάιτ γεμίζει κάποτε έναν δίσκο. Ο
+ * συμβιβασμός: μετριέται και τυπώνεται ΠΡΙΝ αντιγραφεί, και πάνω από το όριο
+ * σταματά με οδηγία αντί να προσπαθήσει.
  *
  * Το `--verify` απαντά αν το τρέχον κλειδί είναι αυτό που έγραψε εκείνο το
  * αντίγραφο. Τρέξε το ΠΡΙΝ βασιστείς σε ένα αντίγραφο, όχι μετά.
@@ -79,6 +91,15 @@ if (($argv[1] ?? '') === '--verify') {
 
     echo "\nΑντίγραφο: " . ($manifest['created_at'] ?? 'άγνωστης ημερομηνίας') . "\n";
 
+    // Πριν από το κλειδί, γιατί ισχύει ακόμα κι όταν το κλειδί ταιριάζει: ένα
+    // αντίγραφο χωρίς έγγραφα επαναφέρει κάθε σύμβαση με σπασμένους συνδέσμους,
+    // και αυτό δεν φαίνεται από πουθενά αλλού μέχρι να ψάξει κάποιος ταυτότητα.
+    $uploads = $manifest['uploads'] ?? ['included' => false, 'files' => 0];
+
+    echo empty($uploads['included'])
+        ? "[ΠΡΟΣΟΧΗ] Χωρίς έγγραφα: ταυτότητες, υπογραφές και PDF δεν είναι μέσα.\n"
+        : '[ΟΚ] Περιέχει ' . (int) $uploads['files'] . " αρχεία εγγράφων.\n";
+
     if (hash_equals((string) $manifest['key_fingerprint'], $now)) {
         echo "[ΟΚ] Το τρέχον κλειδί είναι αυτό που έγραψε αυτό το αντίγραφο.\n\n";
         exit(0);
@@ -93,12 +114,19 @@ if (($argv[1] ?? '') === '--verify') {
 
 // --- Λειτουργία δημιουργίας --------------------------------------------------
 
-$dumpDir    = $argv[1] ?? '';
-$secretsDir = $argv[2] ?? '';
+$withUploads = in_array('--with-uploads', $argv, true);
+
+$positional = array_values(array_filter(
+    array_slice($argv, 1),
+    static fn (string $arg): bool => ! str_starts_with($arg, '--')
+));
+
+$dumpDir    = $positional[0] ?? '';
+$secretsDir = $positional[1] ?? '';
 
 if ($dumpDir === '' || $secretsDir === '') {
     fwrite(STDERR, "\nΧρήση:\n");
-    fwrite(STDERR, "  php tools/backup.php <φάκελος-dump> <φάκελος-μυστικών>\n");
+    fwrite(STDERR, "  php tools/backup.php <φάκελος-dump> <φάκελος-μυστικών> [--with-uploads]\n");
     fwrite(STDERR, "  php tools/backup.php --verify <manifest.json>\n\n");
     fwrite(STDERR, "Οι δύο φάκελοι πρέπει να είναι ΔΙΑΦΟΡΕΤΙΚΟΙ και ο ένας εκτός του άλλου.\n\n");
     exit(1);
@@ -249,6 +277,86 @@ if (! $exported || ! is_file($dumpFile) || filesize($dumpFile) === 0) {
     );
 }
 
+// --- 2b. Τα έγγραφα, αν ζητήθηκαν -------------------------------------------
+
+/** Το μέγεθος πάνω από το οποίο σταματά αντί να προσπαθήσει. */
+const ECRM_UPLOADS_CAP_BYTES = 500 * 1024 * 1024;
+
+$uploadsReport = ['included' => false, 'files' => 0, 'bytes' => 0];
+$uploadsSource = (string) (wp_upload_dir()['basedir'] ?? '');
+
+if ($withUploads) {
+    if (! is_dir($uploadsSource)) {
+        $fail("Δεν βρέθηκε ο φάκελος uploads: {$uploadsSource}");
+    }
+
+    // Μέτρηση πρώτα, αντιγραφή μετά. Το νούμερο τυπώνεται ώστε να μη γίνει ποτέ
+    // αντιγραφή που ο χειριστής δεν περίμενε.
+    $files = 0;
+    $bytes = 0;
+
+    /** @var SplFileInfo $item */
+    foreach (new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($uploadsSource, FilesystemIterator::SKIP_DOTS)
+    ) as $item) {
+        if ($item->isFile()) {
+            $files++;
+            $bytes += (int) $item->getSize();
+        }
+    }
+
+    printf("  ...   uploads     %d αρχεία, %s MB\n", $files, number_format($bytes / 1048576, 1));
+
+    if ($bytes > ECRM_UPLOADS_CAP_BYTES) {
+        $fail(
+            'Ο φάκελος uploads είναι ' . number_format($bytes / 1048576, 1) . " MB — πάνω από το όριο.\n"
+            . "     Δεν αντιγράφεται από εδώ: αντίγραψέ τον με εργαλείο που ξέρει να\n"
+            . "     συνεχίζει, και κράτα το dump που μόλις βγήκε ως έχει."
+        );
+    }
+
+    $target = $dump . DIRECTORY_SEPARATOR . "crm-{$stamp}-uploads";
+    $prefix = rtrim((string) realpath($uploadsSource), '/\\');
+    $copied = 0;
+
+    /** @var SplFileInfo $item */
+    foreach (new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($uploadsSource, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST
+    ) as $item) {
+        $relative = substr((string) $item->getRealPath(), strlen($prefix));
+        $destination = $target . $relative;
+
+        if ($item->isDir()) {
+            if (! is_dir($destination) && ! mkdir($destination, 0700, true) && ! is_dir($destination)) {
+                $fail("Δεν δημιουργήθηκε ο φάκελος: {$destination}");
+            }
+
+            continue;
+        }
+
+        $parent = dirname($destination);
+
+        if (! is_dir($parent) && ! mkdir($parent, 0700, true) && ! is_dir($parent)) {
+            $fail("Δεν δημιουργήθηκε ο φάκελος: {$parent}");
+        }
+
+        if (! copy((string) $item->getRealPath(), $destination)) {
+            $fail("Δεν αντιγράφηκε το αρχείο: {$item->getRealPath()}");
+        }
+
+        $copied++;
+    }
+
+    if ($copied !== $files) {
+        $fail("Αντιγράφηκαν {$copied} από {$files} αρχεία. Το αντίγραφο είναι ελλιπές.");
+    }
+
+    $uploadsReport = ['included' => true, 'files' => $copied, 'bytes' => $bytes];
+
+    echo "  [ΟΚ]  Έγγραφα     → {$target}\n";
+}
+
 // --- 3. Το manifest ----------------------------------------------------------
 
 global $wpdb;
@@ -270,6 +378,7 @@ $payload = [
     'dump_bytes'         => (int) filesize($dumpFile),
     'dump_sha256'        => hash_file('sha256', $dumpFile),
     'salts_file'         => basename($saltsFile),
+    'uploads'            => $uploadsReport,
     'rows'               => [
         'customers' => $count(Tables::CUSTOMERS),
         'contracts' => $count(Tables::CONTRACTS),
@@ -288,10 +397,21 @@ echo "\n";
 // ετικέτα είναι ~2 bytes ανά χαρακτήρα, οπότε το %-14s τελειώνει πριν από την
 // ετικέτα και δεν στοιχίζεται τίποτα. Το ίδιο λάθος έγινε στο
 // preflight-encryption.php την ίδια μέρα και διορθώθηκε εκεί πρώτα.
-printf("  Πελάτες      %s\n", $payload['rows']['customers']);
-printf("  Συμβάσεις    %s\n", $payload['rows']['contracts']);
-printf("  Αρχεία       %s\n", $payload['rows']['files']);
-printf("  Μέγεθος      %s\n", number_format($payload['dump_bytes'] / 1024, 1) . ' KB');
+printf("  Πελάτες                %s\n", $payload['rows']['customers']);
+printf("  Συμβάσεις              %s\n", $payload['rows']['contracts']);
+printf("  Εγγραφές αρχείων (ΒΔ)  %s\n", $payload['rows']['files']);
+printf("  Μέγεθος βάσης          %s\n", number_format($payload['dump_bytes'] / 1024, 1) . ' KB');
+
+// Τα δύο πλήθη αρχείων μετρούν διαφορετικά πράγματα και συχνά διαφωνούν: η ΒΔ
+// ξέρει όσα έγγραφα κατέγραψε το CRM, ο δίσκος κρατά ΚΑΙ τα μεγέθη εικόνων του
+// WordPress ΚΑΙ ό,τι έμεινε πίσω από διαγραφές. Η διαφορά είναι πληροφορία, όχι
+// σφάλμα — γι' αυτό τυπώνονται δίπλα δίπλα με ετικέτες που το λένε.
+printf(
+    "  Αρχεία στον δίσκο      %s\n",
+    $uploadsReport['included']
+        ? $uploadsReport['files'] . ' (' . number_format($uploadsReport['bytes'] / 1048576, 1) . ' MB)'
+        : 'ΔΕΝ ΣΥΜΠΕΡΙΛΗΦΘΗΚΑΝ (--with-uploads)'
+);
 
 echo "\n" . str_repeat('─', 64) . "\n";
 
@@ -301,8 +421,8 @@ if (! $payload['encryption_enabled']) {
     exit(0);
 }
 
-echo "Έτοιμο. Τα δύο αρχεία είναι ένα πράγμα: χωρίς τα salts το dump δεν\n";
-echo "ανοίγει ποτέ. Επαλήθευση ζευγαριού πριν βασιστείς σε αυτό:\n\n";
+echo "Έτοιμο. Το dump και τα salts είναι ΕΝΑ πράγμα: χωρίς τα δεύτερα το\n";
+echo "πρώτο δεν ανοίγει ποτέ. Επαλήθευση πριν βασιστείς σε αυτό:\n\n";
 echo "  php tools/backup.php --verify " . $manifest . "\n\n";
 
 exit(0);
