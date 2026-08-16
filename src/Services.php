@@ -31,6 +31,7 @@ use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\DocumentQueue;
+use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Infrastructure\ProviderFormRenderer;
 use EnergyCRM\Infrastructure\SecretStore;
@@ -107,6 +108,8 @@ final class Services
 
     private static ?ExtractionGate $extractionGate = null;
 
+    private static ?DraftExitGate $draftExitGate = null;
+
     private static ?ContractLifecycle $lifecycle = null;
 
     private static ?AutoProcess $autoProcess = null;
@@ -147,6 +150,11 @@ final class Services
     public static function extractionGate(): ExtractionGate
     {
         return self::$extractionGate ??= new ExtractionGate();
+    }
+
+    public static function draftExitGate(): DraftExitGate
+    {
+        return self::$draftExitGate ??= new DraftExitGate(self::customers());
     }
 
     public static function documents(): DocumentQueue

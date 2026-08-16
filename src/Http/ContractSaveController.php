@@ -27,6 +27,7 @@ use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\DocumentQueue;
+use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use WP_REST_Request;
@@ -39,6 +40,7 @@ final class ContractSaveController implements Controller
         private readonly ContractRepository $contracts,
         private readonly CustomerRepository $customers,
         private readonly ContractLifecycle $lifecycle,
+        private readonly DraftExitGate $draftExit,
     ) {
     }
 
@@ -102,20 +104,21 @@ final class ContractSaveController implements Controller
             ], 422);
         }
 
-        // Before anything is written, including the customer row: a refused
-        // transition must leave the whole request without effect. Putting this
-        // after the customer update would answer 409 having already changed the
-        // customer's name.
-        $refusal = $this->refuseIllegalStatus($params, $existing);
-
-        if ($refusal !== null) {
-            return $refusal;
-        }
-
         $customerId = $this->resolveCustomer($request, $scope, $existing);
 
         if ($customerId === false) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.'], 404);
+        }
+
+        // Before anything is written, including the customer row: a refused
+        // save must leave the whole request without effect. Putting this after
+        // the customer update would answer 409 having already changed the
+        // customer's name. resolveCustomer() above only reads, so it is safe on
+        // this side of the line — and the gate needs the id it resolves.
+        $refusal = $this->refuseStatusChange($params, $existing, $customerId, $scope, $customer);
+
+        if ($refusal !== null) {
+            return $refusal;
         }
 
         $previousCustomer = $customerId > 0 && $customer !== []
@@ -193,37 +196,61 @@ final class ContractSaveController implements Controller
      * touched: contractFrom() omits the column entirely, which is what makes an
      * ordinary field edit on a signed contract still work.
      *
+     * Two refusals, in this order. The graph decides whether the move exists at
+     * all, and answers 409. Only then does DraftExitGate ask whether this
+     * particular contract is ready to make it, and answers 422 — a legal move
+     * the contract is not ready for is a different thing from an illegal one,
+     * and the agent fixes them differently. The gate is a shared object rather
+     * than an `if` here because ContractStatusController can make the same
+     * moves; a rule enforced on one of two doors is the shape of the bug
+     * CHANGELOG (10) had just closed.
+     *
      * @param array<string, mixed>      $params
      * @param array<string, mixed>|null $existing
+     * @param array<string, string>     $customer
      */
-    private function refuseIllegalStatus(array $params, ?array $existing): ?WP_REST_Response
-    {
+    private function refuseStatusChange(
+        array $params,
+        ?array $existing,
+        int $customerId,
+        UserScope $scope,
+        array $customer,
+    ): ?WP_REST_Response {
         if (! isset($params['status'])) {
             return null;
         }
 
         $target = ContractSaveMapping::statusFrom($params);
+        $afm    = (string) ($customer['afm'] ?? '');
 
         // Creation has no previous status, so the graph has nothing to say
         // about it — but "every contract starts as a draft" was a property of
         // the screen rather than of this endpoint, and a contract could be born
         // payable. These two are the only stages a first save can mean.
         if ($existing === null) {
-            if ($target === ContractStatus::Draft || $target === ContractStatus::Submitted) {
-                return null;
+            if ($target !== ContractStatus::Draft && $target !== ContractStatus::Submitted) {
+                return new WP_REST_Response([
+                    'ok'    => false,
+                    'error' => 'Νέα σύμβαση μπορεί να ξεκινήσει μόνο ως πρόχειρη ή ως νέα αίτηση.',
+                    'field' => 'status',
+                ], 422);
             }
 
-            return new WP_REST_Response([
-                'ok'    => false,
-                'error' => 'Νέα σύμβαση μπορεί να ξεκινήσει μόνο ως πρόχειρη ή ως νέα αίτηση.',
-                'field' => 'status',
-            ], 422);
+            return $this->refuseMissingAfm(
+                $this->draftExit->refusalOnCreate($target, $customerId, $scope, $afm)
+            );
         }
 
         $source = ContractStatus::tryFromSlug((string) $existing['status']);
 
-        if ($source === null || $source->canMoveTo($target)) {
+        if ($source === null) {
             return null;
+        }
+
+        if ($source->canMoveTo($target)) {
+            return $this->refuseMissingAfm(
+                $this->draftExit->refusalOnMove($source, $target, $customerId, $scope, $afm)
+            );
         }
 
         return new WP_REST_Response([
@@ -238,6 +265,23 @@ final class ContractSaveController implements Controller
                 $source->allowedNext()
             ),
         ], 409);
+    }
+
+    /**
+     * Wrap the gate's answer, or pass null straight through.
+     *
+     * 422 rather than 409: the transition itself is legal, and the agent fixes
+     * this by typing an ΑΦΜ rather than by choosing a different stage. `field`
+     * is what the form uses to put the message on the right input, the same way
+     * the ΑΦΜ and email validators above already do.
+     */
+    private function refuseMissingAfm(?string $refusal): ?WP_REST_Response
+    {
+        if ($refusal === null) {
+            return null;
+        }
+
+        return new WP_REST_Response(['ok' => false, 'error' => $refusal, 'field' => 'afm'], 422);
     }
 
     /**
