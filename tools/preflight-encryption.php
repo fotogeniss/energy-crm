@@ -34,6 +34,15 @@
  * Exits 0 when the backfill may run, 1 when it may not. Safe to read-only: it
  * writes nothing and changes nothing.
  *
+ * ## What it covers, stated because it once covered half
+ *
+ * PiiBackfill::sweep() walks two tables — customers, and the personal values
+ * inside contracts.extra_json. Until 2026-08-16 this script reported only the
+ * first, so a run could print every customer column at 100% and end with
+ * "Καθαρό", while the contracts walk had not started. The blockers were always
+ * complete; the progress report was not, and a report that cannot fail over
+ * half its subject is the pattern HANDOVER §1 exists to catch.
+ *
  * @package EnergyCRM
  */
 
@@ -53,7 +62,9 @@ if (! is_readable($load)) {
 require_once $load;
 
 use EnergyCRM\Infrastructure\FieldCipher;
+use EnergyCRM\Infrastructure\PiiBackfill;
 use EnergyCRM\Persistence\CustomerFields;
+use EnergyCRM\Persistence\PiiBackfillRepository;
 use EnergyCRM\Persistence\Tables;
 
 // --- Reporting -------------------------------------------------------------
@@ -184,6 +195,42 @@ foreach ($columns as $column) {
 
     printf("  %-22s %6d με τιμή, %5d κρυπτογραφημένες\n", $column, $filled, $done);
 }
+
+// --- 4b. The other table the backfill sweeps --------------------------------
+
+// Neither figure is a blocker. Work left to do is the reason to run a backfill,
+// not an obstacle to running it — the only things that can say "do not run" are
+// the salts, sodium and the blind index.
+$pending = (new PiiBackfill(PiiBackfillRepository::default()))->pending();
+
+echo "\n  Τι απομένει στη σάρωση\n";
+echo '  ' . str_repeat('─', 46) . "\n";
+// Spacing is written out rather than done with printf's %-38s: that pads by
+// BYTES, and a Greek label is roughly two bytes per character, so the padding
+// is spent before the label ends and nothing lines up. The table above escapes
+// it only because its labels are column names, and those are ASCII.
+printf("  πελάτες με καθαρό κείμενο             %6d\n", $pending['customers']);
+printf("  συμβάσεις που δεν προσπέλασε η σάρωση %6d\n", $pending['contracts']);
+
+echo "\n";
+
+if ($pending['customers'] === 0 && $pending['contracts'] === 0) {
+    $report('ok', 'Η σάρωση έχει τερματίσει και στους δύο πίνακες.');
+} else {
+    $report(
+        'ok',
+        'Η σάρωση δεν έχει τερματίσει — δεν είναι εμπόδιο, είναι η δουλειά.',
+        'Τρέχει αυτόματα ανά ώρα σε παρτίδες, ή με το κουμπί «Μετατροπή τώρα»'
+        . "\nστην οθόνη GDPR."
+    );
+}
+
+// Same caveat the GDPR screen prints, for the same reason: the contracts figure
+// is rows the walk has not reached, not rows still holding plaintext. Nothing
+// can know the latter without opening every bag.
+echo "             Ο αριθμός συμβάσεων είναι όσες δεν έχει προσπελάσει η σάρωση,\n";
+echo "             όχι όσες κρατούν καθαρό κείμενο. Οι περισσότερες δεν θέλουν\n";
+echo "             καμία αλλαγή.\n";
 
 // --- 5. The blind index has to keep up --------------------------------------
 
