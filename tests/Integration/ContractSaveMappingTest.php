@@ -274,7 +274,11 @@ final class ContractSaveMappingTest extends IntegrationTestCase
             'activation_type'  => 'new_connection',
             'supply_number'    => 'SUPPLY-AAA',
             'meter_number'     => 'METER-BBB',
-            'status'           => 'active',
+            // 'new', not 'active': a first save may only mean draft or new
+            // since CHANGELOG 2026-08-16 (10). Fixture data, not an
+            // expectation — the assertions below compare this row against
+            // itself, before and after an edit.
+            'status'           => 'new',
             'notes'            => 'Αρχική σημείωση',
             'start_date'       => '2026-01-01',
             'term_months'      => 12,

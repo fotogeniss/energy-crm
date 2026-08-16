@@ -764,8 +764,21 @@ class ECRM_Shortcodes {
 				<label class="ecrm-consent"><input type="checkbox" data-consent name="consent" value="1" checked> Ο πελάτης ενημερώθηκε και συναινεί στην επεξεργασία των προσωπικών του δεδομένων για τη σύναψη/διαχείριση της σύμβασης (GDPR), συμπεριλαμβανομένης της αυτόματης ανάγνωσης των εγγράφων που υποβάλλει (ταυτότητα, λογαριασμός) από εξωτερική υπηρεσία τεχνητής νοημοσύνης.</label>
 				<div class="ecrm-foot__mode">Λειτουργία: <strong>Νέα αίτηση</strong></div>
 				<div class="ecrm-foot__actions">
+					<?php
+					/*
+					 * Three buttons, of which the agent ever sees two — which
+					 * pair depends on the stage, and ecrm-form.js setStage()
+					 * decides. Nothing transitions TO draft in ContractStatus,
+					 * and only draft transitions to new, so the first two are
+					 * legal in exactly one situation: an application that is
+					 * unsaved or still a draft. Past that, editing a field is
+					 * still allowed — it is not a transition at all — and that
+					 * is what the third one does, by sending no status.
+					 */
+					?>
 					<button type="button" class="ecrm-btn ecrm-btn--ghost" data-save-draft>Προσωρινή Αποθήκευση</button>
 					<button type="button" class="ecrm-btn ecrm-btn--primary" data-finalize>Οριστικοποίηση</button>
+					<button type="button" class="ecrm-btn ecrm-btn--primary" data-save-changes hidden>Αποθήκευση Αλλαγών</button>
 				</div>
 			</footer>
 		</div>
