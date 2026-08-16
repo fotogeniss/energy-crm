@@ -8,6 +8,11 @@
  * step 2 lived. The ownership rules are therefore not repeated here — every
  * read and write goes through a repository that will not run without a scope.
  *
+ * What is left here is the orchestration: resolve the target, refuse what the
+ * actor may not touch, write, audit, enqueue. Turning the request into columns
+ * moved to ContractSaveMapping — 220 lines that change when a provider adds a
+ * field, next to code that changes when an ownership rule does.
+ *
  * @package EnergyCRM
  */
 
@@ -19,12 +24,7 @@ use ECRM_Audit;
 use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
-use EnergyCRM\Domain\Contract\ContractAddresses;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
-use EnergyCRM\Domain\Contract\ExtraFields;
-use EnergyCRM\Domain\Contract\ContractStatus;
-use EnergyCRM\Domain\Contract\ContractTerm;
-use EnergyCRM\Domain\Customer\PostalAddress;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
@@ -33,13 +33,6 @@ use WP_REST_Response;
 
 final class ContractSaveController implements Controller
 {
-    /** Customer columns accepted from the request. */
-    private const CUSTOMER_FIELDS = [
-        'customer_type', 'afm', 'doy', 'first_name', 'last_name', 'father_name',
-        'company_name', 'adt', 'birth_date', 'region', 'city', 'street',
-        'street_no', 'postal_code', 'phone', 'mobile', 'email',
-    ];
-
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
@@ -82,7 +75,7 @@ final class ContractSaveController implements Controller
             }
         }
 
-        $customer = $this->customerFrom($params);
+        $customer = ContractSaveMapping::customerFrom($params);
 
         if (isset($customer['afm']) && ! ECRM_Validate::afm($customer['afm'])) {
             return new WP_REST_Response([
@@ -130,7 +123,7 @@ final class ContractSaveController implements Controller
         // already, and a field the agent's screen did not resend must leave
         // that column alone rather than blank it — see contractFrom().
         $isUpdate = $existing !== null;
-        $contract = $this->contractFrom($params, $customerId, $isUpdate);
+        $contract = ContractSaveMapping::contractFrom($params, $customerId, $isUpdate);
 
         if ($isUpdate) {
             $this->contracts->update($contractId, $scope, $contract);
@@ -162,24 +155,6 @@ final class ContractSaveController implements Controller
             'customer_id' => $customerId,
             'status'      => $responseStatus,
         ], 200);
-    }
-
-    /**
-     * @param array<string, mixed> $params
-     *
-     * @return array<string, string>
-     */
-    private function customerFrom(array $params): array
-    {
-        $customer = [];
-
-        foreach (self::CUSTOMER_FIELDS as $field) {
-            if (isset($params[$field]) && $params[$field] !== '') {
-                $customer[$field] = sanitize_text_field((string) $params[$field]);
-            }
-        }
-
-        return $customer;
     }
 
     /**
@@ -218,201 +193,6 @@ final class ContractSaveController implements Controller
         }
 
         return $customerId;
-    }
-
-    /**
-     * The contract row to write: every column, defaulted, on a fresh save; on
-     * an edit, only the columns the request actually sent.
-     *
-     * ContractRepository::update() already writes exactly the columns present
-     * in the array it is given and leaves the rest of the row untouched — the
-     * same mechanism customerFrom()/CustomerRepository already relied on. The
-     * bug this method used to have was including every column regardless,
-     * defaulted to null or a hardcoded value when the request omitted it, which
-     * turned "the agent didn't resend price_type" into "price_type is now
-     * NULL". Omitting the key on an edit is what makes an omitted field a
-     * no-op instead of an erasure.
-     *
-     * @param array<string, mixed> $params
-     *
-     * @return array<string, mixed>
-     */
-    private function contractFrom(array $params, int $customerId, bool $isUpdate): array
-    {
-        $contract = [];
-
-        // customer_id is never conditionally included: resolveCustomer() has
-        // already decided the right value for both create and edit, including
-        // "keep what's there" when the request didn't resend it.
-        $contract['customer_id'] = $customerId ?: null;
-
-        if (! $isUpdate || isset($params['provider_id'])) {
-            $contract['provider_id'] = isset($params['provider_id']) ? (int) $params['provider_id'] : null;
-        }
-
-        if (! $isUpdate || isset($params['program_id'])) {
-            $contract['program_id'] = isset($params['program_id']) ? (int) $params['program_id'] : null;
-        }
-
-        if (! $isUpdate || isset($params['energy_type'])) {
-            $contract['energy_type'] = sanitize_text_field((string) ($params['energy_type'] ?? 'power'));
-        }
-
-        if (! $isUpdate || isset($params['category'])) {
-            $contract['category'] = sanitize_text_field((string) ($params['category'] ?? 'home'));
-        }
-
-        if (! $isUpdate || isset($params['price_type'])) {
-            $contract['price_type'] = isset($params['price_type'])
-                ? sanitize_text_field((string) $params['price_type']) : null;
-        }
-
-        if (! $isUpdate || isset($params['customer_type'])) {
-            $contract['customer_type'] = sanitize_text_field((string) ($params['customer_type'] ?? 'individual'));
-        }
-
-        if (! $isUpdate || isset($params['activation_type'])) {
-            $contract['activation_type'] = isset($params['activation_type'])
-                ? sanitize_text_field((string) $params['activation_type']) : null;
-        }
-
-        if (! $isUpdate || isset($params['supply_number'])) {
-            $contract['supply_number'] = isset($params['supply_number'])
-                ? sanitize_text_field((string) $params['supply_number']) : null;
-        }
-
-        if (! $isUpdate || isset($params['meter_number'])) {
-            $contract['meter_number'] = isset($params['meter_number'])
-                ? sanitize_text_field((string) $params['meter_number']) : null;
-        }
-
-        if (! $isUpdate || isset($params['invoice_code'])) {
-            $contract['invoice_code'] = isset($params['invoice_code'])
-                ? sanitize_text_field((string) $params['invoice_code']) : null;
-        }
-
-        if (! $isUpdate || isset($params['status'])) {
-            $status              = ContractStatus::tryFromSlug((string) ($params['status'] ?? ''))
-                ?? ContractStatus::Draft;
-            $contract['status'] = $status->value;
-        }
-
-        if (! $isUpdate || isset($params['notes'])) {
-            $contract['notes'] = isset($params['notes'])
-                ? sanitize_textarea_field((string) $params['notes']) : null;
-        }
-
-        if (! $isUpdate || isset($params['extracted_json'])) {
-            $contract['extracted_json'] = isset($params['extracted_json'])
-                ? wp_kses_post((string) $params['extracted_json']) : null;
-        }
-
-        if (! $isUpdate || isset($params['extra'])) {
-            $contract['extra_json'] = ExtraFields::toJson($params['extra'] ?? null);
-        }
-
-        // The three are computed together — end_date depends on start_date and
-        // term_months — so they are treated as one unit: touch the trio if the
-        // request sent any of the three, otherwise leave all three alone.
-        if (! $isUpdate
-            || isset($params['start_date'])
-            || isset($params['term_months'])
-            || isset($params['end_date'])
-        ) {
-            $start  = trim((string) ($params['start_date'] ?? ''));
-            $months = (int) ($params['term_months'] ?? 0);
-
-            $contract['start_date']  = $start !== '' ? $start : null;
-            $contract['term_months'] = $months > 0 ? $months : null;
-            $contract['end_date']    = ContractTerm::endDate(
-                $start,
-                $months,
-                (string) ($params['end_date'] ?? '')
-            );
-        }
-
-        // Where the meter is, and where the bill goes. Each provider form asks
-        // for both and says "εφόσον είναι διαφορετική"; until now the agent
-        // typed the meter address into the extras bag and nothing printed it.
-        $contract += $this->addressFrom($params, ContractAddresses::SUPPLY_PREFIX, $isUpdate);
-        $contract += $this->addressFrom($params, ContractAddresses::BILLING_PREFIX, $isUpdate);
-
-        // GDPR consent: recorded with when and from where, or not at all. Never
-        // cleared by omission — consent already given is not un-given by a
-        // later save that simply didn't touch the checkbox.
-        if (! empty($params['consent'])) {
-            $contract['consent_at'] = current_time('mysql');
-            $contract['consent_ip'] = substr(
-                sanitize_text_field(wp_unslash((string) ($_SERVER['REMOTE_ADDR'] ?? ''))),
-                0,
-                64
-            );
-        }
-
-        return $contract;
-    }
-
-    /**
-     * One of the contract's two extra addresses, read off the request.
-     *
-     * The "same as home" flag is stored rather than inferred, so a blank
-     * address the agent deliberately marked as identical stays distinguishable
-     * from one they simply never filled in. When it is set, the parts are
-     * cleared too — leaving stale values behind is how a corrected address
-     * reappears on the next printed form.
-     *
-     * The six keys of one address block (the flag plus five parts) are treated
-     * as a single unit, the same way the form renders them: on an edit, if the
-     * request sent none of the six, the block is left untouched; if it sent
-     * any one of them, the whole block is recomputed exactly as it always was.
-     *
-     * @param array<string, mixed> $params
-     *
-     * @return array<string, mixed>
-     */
-    private function addressFrom(array $params, string $prefix, bool $isUpdate): array
-    {
-        if ($isUpdate && ! $this->addressSent($params, $prefix)) {
-            return [];
-        }
-
-        $same = ! empty($params[$prefix . 'addr_same']);
-
-        if ($same) {
-            return [$prefix . 'addr_same' => 1] + (new PostalAddress())->toColumns($prefix);
-        }
-
-        // Only the five address keys are read, and each is scalar by the time
-        // it is cast — the request also carries the extras bag, which is an
-        // array and must never reach sanitize_text_field().
-        $clean = [];
-
-        foreach (['street', 'street_no', 'city', 'postal_code', 'region'] as $part) {
-            $value = $params[$prefix . $part] ?? '';
-
-            $clean[$prefix . $part] = is_scalar($value)
-                ? sanitize_text_field((string) $value)
-                : '';
-        }
-
-        return [$prefix . 'addr_same' => 0]
-            + PostalAddress::fromRow($clean, $prefix)->toColumns($prefix);
-    }
-
-    /**
-     * Whether the request touched any of this address block's six keys.
-     *
-     * @param array<string, mixed> $params
-     */
-    private function addressSent(array $params, string $prefix): bool
-    {
-        foreach (['addr_same', 'street', 'street_no', 'city', 'postal_code', 'region'] as $part) {
-            if (array_key_exists($prefix . $part, $params)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
