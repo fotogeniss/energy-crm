@@ -151,6 +151,21 @@ class ECRM_GDPR {
 			return;
 		}
 
+		$keys = \EnergyCRM\Infrastructure\KeyFingerprint::default();
+
+		if ( ! $keys->matches() ) {
+			// Before the pending counts, because none of them mean anything
+			// while the data cannot be read. This is the one notice on this
+			// screen that describes damage still in progress.
+			echo '<div class="notice notice-error"><p><strong>Το κλειδί κρυπτογράφησης άλλαξε.</strong> ';
+			echo 'Τα ΑΦΜ, ΑΔΤ και οι διευθύνσεις διαβάζονται ως κενά, και κάθε αποθήκευση τα γράφει ';
+			echo 'οριστικά κενά. Επανάφερε το παλιό <code>SECURE_AUTH_SALT</code> ΠΡΙΝ συνεχίσει ';
+			echo 'οποιαδήποτε καταχώρηση — μέχρι τότε τα δεδομένα είναι ακέραια στον δίσκο. ';
+			echo 'Οδηγίες: <code>docs/BACKUP.md</code>.</p></div>';
+
+			return;
+		}
+
 		$pending = $backfill->pending();
 
 		if ( 0 === $pending['customers'] && 0 === $pending['contracts'] ) {

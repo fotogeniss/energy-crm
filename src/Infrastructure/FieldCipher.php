@@ -162,6 +162,31 @@ final class FieldCipher
     }
 
     /**
+     * A stable public name for the key currently in use.
+     *
+     * Not the key, and it cannot become the key: HMAC-SHA256 output does not
+     * give up its own key, and this one carries its own label so it shares
+     * nothing with the blind index beyond the material both are derived from.
+     * Safe to keep in the options table and to print, which is the whole point
+     * — it is written down precisely so a later mismatch is detectable.
+     *
+     * Why it has to exist. decrypt() answers '' when the key no longer opens a
+     * value, and the comment there is right about a single field: an empty box
+     * beats corrupt bytes. It composes badly. After a rotation the ciphertext
+     * is still on disk and fully recoverable, but every screen reads empty —
+     * and the first save writes that emptiness over it. The unrecoverable step
+     * is the save, not the rotation, and nothing before this could tell the
+     * two apart.
+     *
+     * Uses hash_hmac rather than sodium so that a build without libsodium can
+     * still report the state instead of failing to answer at all.
+     */
+    public function fingerprint(): string
+    {
+        return hash_hmac('sha256', 'ecrm-key-fingerprint-v1', $this->keyMaterial);
+    }
+
+    /**
      * Separate from the encryption key.
      *
      * The blind index travels differently — it sits in its own column, it is
