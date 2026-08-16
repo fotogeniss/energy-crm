@@ -452,6 +452,7 @@ import { api, esc, toast } from '@energy-crm/util';
 			if (!c) return;
 			state.contract_id = parseInt(c.id, 10) || 0;
 			state.customer_id = parseInt(c.customer_id, 10) || 0;
+			setStage(c.status);
 			setChip('energy_type', c.energy_type); state.energy_type = c.energy_type || 'power';
 			setChip('category', c.category); state.category = c.category || 'home';
 			setChip('price_type', c.price_type); if (c.price_type) state.price_type = c.price_type;
@@ -523,6 +524,9 @@ import { api, esc, toast } from '@energy-crm/util';
 			var titleEl = q('[data-form-title]'); if (titleEl) titleEl.textContent = 'Δημιουργία Αίτησης';
 			var notes = q('[data-notes]'); if (notes) notes.value = '';
 			var fl = q('[data-filelist]'); if (fl) fl.innerHTML = '';
+			// Last, because it reads state.contract_id, which the first line
+			// of this function has just cleared.
+			setStage('');
 		}
 
 		_editFn = applyEdit; _resetFn = resetForm;
@@ -775,6 +779,27 @@ import { api, esc, toast } from '@energy-crm/util';
 				.catch(function () {});
 		}
 
+		/*
+		 * Which save actions this stage allows, and the status the form is on.
+		 *
+		 * ContractStatus lets nothing move TO draft, and only draft move to
+		 * new. So "Προσωρινή Αποθήκευση" and "Οριστικοποίηση" are legal in
+		 * exactly one case — unsaved, or still a draft — and past that the only
+		 * honest action is saving fields without touching the stage. The server
+		 * refuses the rest with 409 since 2026-08-16; this is so the agent is
+		 * never offered a button that will be refused.
+		 */
+		function setStage(status) {
+			state.status = status || '';
+			var stageable = !state.contract_id || state.status === 'draft';
+			var draftBtn = q('[data-save-draft]');
+			var finalBtn = q('[data-finalize]');
+			var saveBtn = q('[data-save-changes]');
+			if (draftBtn) draftBtn.hidden = !stageable;
+			if (finalBtn) finalBtn.hidden = !stageable;
+			if (saveBtn) saveBtn.hidden = stageable;
+		}
+
 		function collect(status) {
 			var payload = {
 				status: status, provider_id: state.provider_id, program_id: state.program_id,
@@ -961,7 +986,13 @@ import { api, esc, toast } from '@energy-crm/util';
 				.then(function (d) {
 					if (d && d.ok) {
 						state.contract_id = d.contract_id; state.customer_id = d.customer_id;
-						toast(status === 'draft' ? 'Αποθηκεύτηκε προσωρινά.' : 'Η αίτηση οριστικοποιήθηκε.');
+						// An undefined status means "fields only, no transition".
+						toast(!status
+							? 'Οι αλλαγές αποθηκεύτηκαν.'
+							: (status === 'draft' ? 'Αποθηκεύτηκε προσωρινά.' : 'Η αίτηση οριστικοποιήθηκε.'));
+						// Finalising moves the form off draft, so the pair of
+						// buttons on screen has to move with it.
+						setStage(status || state.status);
 						uploadFiles();
 					} else { toast((d && d.error) || 'Η αποθήκευση απέτυχε.', false); }
 				})
@@ -970,6 +1001,10 @@ import { api, esc, toast } from '@energy-crm/util';
 		}
 		q('[data-save-draft]').addEventListener('click', function () { save('draft', this); });
 		q('[data-finalize]').addEventListener('click', function () { save('new', this); });
+		// No status in the payload: collect() puts `status: undefined`, which
+		// JSON.stringify drops, and contractFrom() then omits the column
+		// entirely — the same no-op path an ordinary field edit already takes.
+		q('[data-save-changes]').addEventListener('click', function () { save(undefined, this); });
 
 		// ---- action banners (PDF / email sign / live link) ----------------
 		function ensureSaved(cb) {

@@ -25,6 +25,7 @@ use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
@@ -101,6 +102,16 @@ final class ContractSaveController implements Controller
             ], 422);
         }
 
+        // Before anything is written, including the customer row: a refused
+        // transition must leave the whole request without effect. Putting this
+        // after the customer update would answer 409 having already changed the
+        // customer's name.
+        $refusal = $this->refuseIllegalStatus($params, $existing);
+
+        if ($refusal !== null) {
+            return $refusal;
+        }
+
         $customerId = $this->resolveCustomer($request, $scope, $existing);
 
         if ($customerId === false) {
@@ -160,6 +171,73 @@ final class ContractSaveController implements Controller
             'customer_id' => $customerId,
             'status'      => $responseStatus,
         ], 200);
+    }
+
+    /**
+     * Refuse a status the pipeline does not allow from here, or null to proceed.
+     *
+     * Until 2026-08-16 this route was the only one of the three that writes
+     * `status` without consulting anything: ContractStatusController::change()
+     * and ContractsBulkController::changeStatus() both ask
+     * ContractStatus::canMoveTo() first. That was not a small inconsistency,
+     * because finalisation happens here and nowhere else — ecrm-form.js binds
+     * [data-finalize] to a POST on this route — and because routed, active and
+     * resolved are payable. ContractSaveStatusTest pinned what it allowed:
+     * reviving a cancelled contract, and jumping a draft straight to active.
+     *
+     * The rule itself is not repeated here. It lives in the enum, and this asks
+     * the enum the same question ContractStatusController asks, answering with
+     * the same shape so one screen can handle both.
+     *
+     * A request that does not send `status` is not a transition and is not
+     * touched: contractFrom() omits the column entirely, which is what makes an
+     * ordinary field edit on a signed contract still work.
+     *
+     * @param array<string, mixed>      $params
+     * @param array<string, mixed>|null $existing
+     */
+    private function refuseIllegalStatus(array $params, ?array $existing): ?WP_REST_Response
+    {
+        if (! isset($params['status'])) {
+            return null;
+        }
+
+        $target = ContractSaveMapping::statusFrom($params);
+
+        // Creation has no previous status, so the graph has nothing to say
+        // about it — but "every contract starts as a draft" was a property of
+        // the screen rather than of this endpoint, and a contract could be born
+        // payable. These two are the only stages a first save can mean.
+        if ($existing === null) {
+            if ($target === ContractStatus::Draft || $target === ContractStatus::Submitted) {
+                return null;
+            }
+
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Νέα σύμβαση μπορεί να ξεκινήσει μόνο ως πρόχειρη ή ως νέα αίτηση.',
+                'field' => 'status',
+            ], 422);
+        }
+
+        $source = ContractStatus::tryFromSlug((string) $existing['status']);
+
+        if ($source === null || $source->canMoveTo($target)) {
+            return null;
+        }
+
+        return new WP_REST_Response([
+            'ok'      => false,
+            'error'   => sprintf(
+                'Δεν επιτρέπεται μετάβαση από «%s» σε «%s».',
+                $source->label(),
+                $target->label()
+            ),
+            'allowed' => array_map(
+                static fn (ContractStatus $s): array => ['status' => $s->value, 'label' => $s->label()],
+                $source->allowedNext()
+            ),
+        ], 409);
     }
 
     /**

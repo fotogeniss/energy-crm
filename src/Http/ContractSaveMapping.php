@@ -147,9 +147,7 @@ final class ContractSaveMapping
         }
 
         if (! $isUpdate || isset($params['status'])) {
-            $status              = ContractStatus::tryFromSlug((string) ($params['status'] ?? ''))
-                ?? ContractStatus::Draft;
-            $contract['status'] = $status->value;
+            $contract['status'] = self::statusFrom($params)->value;
         }
 
         if (! $isUpdate || isset($params['notes'])) {
@@ -205,6 +203,24 @@ final class ContractSaveMapping
         }
 
         return $contract;
+    }
+
+    /**
+     * The status a payload means, resolved exactly once.
+     *
+     * ContractSaveController has to know the target before it writes anything,
+     * so that a refused transition leaves the customer row untouched too. It
+     * must arrive at the same answer this class does — including the fallback,
+     * where an unrecognised slug becomes Draft rather than an error. Two places
+     * spelling out `tryFromSlug(...) ?? Draft` agree until one of them is
+     * edited, which is the whole reason this method exists instead.
+     *
+     * @param array<string, mixed> $params
+     */
+    public static function statusFrom(array $params): ContractStatus
+    {
+        return ContractStatus::tryFromSlug((string) ($params['status'] ?? ''))
+            ?? ContractStatus::Draft;
     }
 
     /**

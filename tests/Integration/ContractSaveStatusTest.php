@@ -1,47 +1,30 @@
 <?php
 
 /**
- * Whether POST /contracts is allowed to move a contract anywhere in the pipeline.
+ * POST /contracts may not move a contract where the pipeline forbids.
  *
- * ## Why this file exists
+ * ## What these tests were, and what they are now
  *
- * ContractStatus documents two promises in its own docblock: terminal states
- * are terminal, and nothing returns to a stage before its signature. Two of the
- * three routes that write the status column enforce them —
- * ContractStatusController::change() answers 409, and
- * ContractsBulkController::changeStatus() counts the row as rejected. Both go
- * through ContractLifecycle::moveTo(), which refuses a disallowed move and
- * records a status_change event.
+ * They were written on 2026-08-16 as characterisation, from code reading,
+ * before anything ran — and they went green, which was the bad news:
+ * ContractSaveMapping::contractFrom() mapped the request's status straight into
+ * ContractRepository::update(), where `status` is an ordinary writable column,
+ * while the other two routes that write it both ask ContractStatus::canMoveTo()
+ * first. A cancelled contract came back to draft. A draft jumped to active,
+ * which is payable. CHANGELOG 2026-08-16 (9) has the measurement.
  *
- * The third route is this one. Reading it line by line says it enforces
- * nothing: ContractSaveMapping::contractFrom() maps the request's status
- * through tryFromSlug() and hands it to ContractRepository::update(), where
- * `status` is an ordinary writable column. No canMoveTo(). No documents gate.
- * No moveTo() at all.
+ * They are now regression tests for the fix, and their assertions were
+ * deliberately inverted. That is allowed here and is the point: this commit
+ * changes behaviour on purpose. It is not the class-splitting rule, under which
+ * a changed assertion means the split went wrong.
  *
- * That matters beyond tidiness, because finalisation happens here and nowhere
- * else — ecrm-form.js:972 binds [data-finalize] to save('new'), which is a
- * POST to this route — and because ContractStatus::isPayable() returns true for
- * routed, active and resolved. If the reading is right, an agent can put their
- * own contract into a payable state without passing any gate.
+ * ## What is deliberately still permitted
  *
- * ## These tests are characterisation, and the answer is not known yet
- *
- * They were written from code reading, before anything was run, and they assert
- * the behaviour that reading predicts. Both outcomes are meaningful, so read
- * the result rather than the colour:
- *
- * - **Green** confirms the bypass is real. The suite going green is then
- *   evidence of a defect, not of health — exactly what happened to test 2 of
- *   ContractSaveMappingTest on 2026-08-16, whose title said the opposite of
- *   what its green meant.
- * - **Red** means a guard exists that the reading missed. That is the better
- *   news of the two: nothing is broken, and these tests should be rewritten as
- *   regression tests asserting the refusal, keeping the fixtures.
- *
- * Nothing should be changed in src/ until one of the two is on screen. Each
- * assertion below says, in its failure message, what its own failure would
- * mean.
+ * Two of the five below assert that something keeps working, and they matter as
+ * much as the three refusals. Finalising a draft is the single busiest action
+ * in the product, and editing a field on a contract past draft is not a
+ * transition at all — a guard that stopped either would be a worse bug than the
+ * one it replaced, and would look like success from the refusal tests alone.
  *
  * @package EnergyCRM
  */
@@ -78,19 +61,13 @@ final class ContractSaveStatusTest extends IntegrationTestCase
     }
 
     /**
-     * 1. A cancelled contract, edited back into draft.
+     * 1. A cancelled contract cannot be brought back to life.
      *
-     * The strongest of the three, because cancelled is terminal:
-     * ContractStatus::Cancelled->allowedNext() is the empty array, and
-     * canMoveTo() therefore permits nothing but staying put. There is no
-     * legitimate screen for this move — unlike test 2, which has one.
-     *
-     * The row is forced to cancelled with a direct write rather than through
-     * the status route, so that the test depends on one controller instead of
-     * two: what is under examination is the save route, not how the contract
-     * arrived where it is.
+     * Cancelled->allowedNext() is the empty array, so this is the sharpest of
+     * the three refusals: there is no reading of the graph under which it is
+     * permitted, and no screen that ever wanted it.
      */
-    public function testACancelledContractCanBeMovedBackToDraftThroughSave(): void
+    public function testACancelledContractCannotBeMovedBackToDraft(): void
     {
         $contractId = $this->makeDraft();
 
@@ -101,33 +78,33 @@ final class ContractSaveStatusTest extends IntegrationTestCase
             'status'      => ContractStatus::Draft->value,
         ]);
 
-        self::assertSame(200, $response->get_status(), 'Η αποθήκευση δεν πέρασε καν.');
+        self::assertSame(409, $response->get_status(), 'Η ανάσταση ακυρωμένης σύμβασης έπρεπε να απορριφθεί.');
 
         self::assertSame(
-            ContractStatus::Draft->value,
+            ContractStatus::Cancelled->value,
             $this->statusOf($contractId),
-            'ΑΝ ΑΥΤΟ ΕΙΝΑΙ ΚΟΚΚΙΝΟ: υπάρχει φύλακας που η ανάλυση δεν είδε, και η '
-            . 'ακυρωμένη σύμβαση δεν αναστήθηκε — καλά νέα. Ξαναγράψε το test ως '
-            . 'regression της άρνησης. ΑΝ ΕΙΝΑΙ ΠΡΑΣΙΝΟ: η υπόσχεση «τα τερματικά '
-            . 'είναι τερματικά» του ContractStatus παρακάμπτεται από το POST /contracts.'
+            'Η απόρριψη απάντησε 409 αλλά η γραμμή άλλαξε — άρνηση που γράφει είναι χειρότερη από καθόλου άρνηση.'
+        );
+
+        $data = $response->get_data();
+
+        self::assertFalse($data['ok']);
+        self::assertSame(
+            [],
+            $data['allowed'],
+            'Από τερματική κατάσταση δεν υπάρχει επιτρεπτή μετάβαση, και η απάντηση πρέπει να το λέει.'
         );
     }
 
     /**
-     * 2. A draft, edited straight into active — past six intermediate stages.
+     * 2. A draft cannot jump the queue into a payable status.
      *
      * Draft->allowedNext() is [new, pending_signature, awaiting_signature,
-     * cancelled]. Active is not among them, and it is payable, which is what
-     * makes this the expensive one rather than merely the untidy one.
-     *
-     * The documents gate guards active too, in the two routes that check it.
-     * This test deliberately does NOT assert anything about that gate: whether
-     * ECRM_Docs::missing_labels() would have found anything for this fixture
-     * depends on provider document configuration that the fixture does not set
-     * up, and an assertion that cannot fail proves nothing. The transition
-     * graph is enough to make the point, and it needs no configuration.
+     * cancelled]. Active is not among them, and it is what makes a contract
+     * count for commission — which is why this one is about money rather than
+     * tidiness.
      */
-    public function testADraftCanBeMovedStraightToPayableActiveThroughSave(): void
+    public function testADraftCannotBeMovedStraightToPayableActive(): void
     {
         $contractId = $this->makeDraft();
 
@@ -136,36 +113,39 @@ final class ContractSaveStatusTest extends IntegrationTestCase
             'status'      => ContractStatus::Active->value,
         ]);
 
-        self::assertSame(200, $response->get_status(), 'Η αποθήκευση δεν πέρασε καν.');
-
-        $stored = $this->statusOf($contractId);
+        self::assertSame(409, $response->get_status(), 'Το draft → active έπρεπε να απορριφθεί.');
 
         self::assertSame(
-            ContractStatus::Active->value,
-            $stored,
-            'ΑΝ ΚΟΚΚΙΝΟ: ο γράφος εφαρμόζεται και εδώ, η ανάλυση ήταν λάθος. '
-            . 'ΑΝ ΠΡΑΣΙΝΟ: draft → active χωρίς κανένα από τα έξι ενδιάμεσα στάδια.'
+            ContractStatus::Draft->value,
+            $this->statusOf($contractId),
+            'Η σύμβαση μετακινήθηκε παρά την απόρριψη.'
         );
 
-        self::assertTrue(
-            ContractStatus::from($stored)->isPayable(),
-            'Η κατάσταση που προσγειώθηκε δεν είναι προμηθεύσιμη — τότε αυτό το test '
-            . 'μετράει κάτι λιγότερο σοβαρό από όσο λέει ο τίτλος του.'
+        $allowed = array_column($response->get_data()['allowed'], 'status');
+
+        self::assertNotContains(ContractStatus::Active->value, $allowed);
+        self::assertContains(
+            ContractStatus::Submitted->value,
+            $allowed,
+            'Η λίστα των επιτρεπτών πρέπει να προτείνει τη μετάβαση που ο συνεργάτης όντως ήθελε.'
         );
     }
 
     /**
-     * 3. A contract born active, never having been a draft.
+     * 3. A contract cannot be born payable, and a refused save writes nothing.
      *
-     * The create path has no previous status, so the transition graph has
-     * nothing to say about it — this is not a bypass of canMoveTo(), and it is
-     * not written here as one. What it pins is narrower and still worth
-     * pinning: the status a fresh contract lands in is whatever the request
-     * asked for, so "every contract starts as a draft" is a property of the
-     * screen, not of the endpoint.
+     * Creation has no previous status, so the graph cannot judge it — this is a
+     * separate rule, not a canMoveTo() check. The second half of the test is
+     * the more important one: the guard runs before the customer is written, so
+     * a refusal leaves the database exactly as it was. A 422 that had already
+     * created a customer would be a half-applied request, which is the shape of
+     * bug this file exists to stop.
      */
-    public function testANewContractCanBeCreatedDirectlyInAPayableStatus(): void
+    public function testANewContractCannotBeCreatedInAPayableStatusAndNothingIsWritten(): void
     {
+        $contractsBefore = $this->countRows(Tables::CONTRACTS);
+        $customersBefore = $this->countRows(Tables::CUSTOMERS);
+
         $response = $this->save([
             'first_name' => 'Δοκιμή',
             'last_name'  => 'Καταστάσεων',
@@ -173,27 +153,82 @@ final class ContractSaveStatusTest extends IntegrationTestCase
             'status'     => ContractStatus::Active->value,
         ]);
 
-        $data = $response->get_data();
-
-        self::assertSame(200, $response->get_status(), (string) ($data['error'] ?? ''));
+        self::assertSame(422, $response->get_status(), 'Η δημιουργία σε προμηθεύσιμη κατάσταση έπρεπε να απορριφθεί.');
+        self::assertSame('status', $response->get_data()['field']);
 
         self::assertSame(
-            ContractStatus::Active->value,
-            $this->statusOf((int) $data['contract_id']),
-            'ΑΝ ΚΟΚΚΙΝΟ: η δημιουργία περιορίζει την αρχική κατάσταση, και η ανάλυση '
-            . 'ήταν λάθος. ΑΝ ΠΡΑΣΙΝΟ: μια σύμβαση μπορεί να γεννηθεί προμηθεύσιμη.'
+            $contractsBefore,
+            $this->countRows(Tables::CONTRACTS),
+            'Απορρίφθηκε και όμως γράφτηκε σύμβαση.'
+        );
+
+        self::assertSame(
+            $customersBefore,
+            $this->countRows(Tables::CUSTOMERS),
+            'Απορρίφθηκε και όμως γράφτηκε πελάτης — ο φύλακας τρέχει πολύ αργά μέσα στη save().'
+        );
+    }
+
+    /**
+     * 4. Finalising a draft still works. The busiest action in the product.
+     *
+     * Draft → new is the one transition the finalise button asks for, and a
+     * guard that broke it would be caught by no refusal test — every one of
+     * those would still be green.
+     */
+    public function testFinalisingADraftStillSucceeds(): void
+    {
+        $contractId = $this->makeDraft();
+
+        $response = $this->save([
+            'contract_id' => $contractId,
+            'status'      => ContractStatus::Submitted->value,
+        ]);
+
+        self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
+
+        self::assertSame(
+            ContractStatus::Submitted->value,
+            $this->statusOf($contractId),
+            'Η οριστικοποίηση δεν προχώρησε — ο φύλακας έπιασε μετάβαση που ο γράφος επιτρέπει.'
+        );
+    }
+
+    /**
+     * 5. Editing a field on a contract past draft is not a transition.
+     *
+     * This is the path behind the third button on the form: a payload with no
+     * `status` key at all, which contractFrom() answers by omitting the column.
+     * Without it the fix would leave every finalised contract uneditable, and
+     * the agent with no way to correct a typo.
+     */
+    public function testEditingFieldsWithoutSendingStatusIsAllowedAtAnyStage(): void
+    {
+        $contractId = $this->makeDraft();
+
+        $this->forceStatus($contractId, ContractStatus::Signed->value);
+
+        $response = $this->save([
+            'contract_id' => $contractId,
+            'notes'       => 'Διόρθωση μετά την υπογραφή',
+        ]);
+
+        self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
+
+        $row = $this->storedRow('contracts', $contractId);
+
+        self::assertSame('Διόρθωση μετά την υπογραφή', $row['notes'], 'Η επεξεργασία πεδίου δεν πέρασε.');
+
+        self::assertSame(
+            ContractStatus::Signed->value,
+            $row['status'],
+            'Αίτημα χωρίς status μετακίνησε την κατάσταση — η παράλειψη πρέπει να είναι no-op.'
         );
     }
 
     // --- fixtures and helpers ------------------------------------------------
 
-    /**
-     * A saved draft, through the same route under test.
-     *
-     * Created through the endpoint rather than inserted, so that every column
-     * the mapping fills is filled the way production fills it. The status of
-     * the fixture is then forced directly where a test needs a different one.
-     */
+    /** A saved draft, through the same route under test. */
     private function makeDraft(): int
     {
         $response = $this->save([
@@ -224,6 +259,16 @@ final class ContractSaveStatusTest extends IntegrationTestCase
             'Το fixture δεν γράφτηκε. Ένα test που ξεκινά από λάθος κατάσταση δεν '
             . 'μετράει αυτό που νομίζει — δες HANDOVER, «μια κλήση δεν είναι κάλυψη».'
         );
+    }
+
+    private function countRows(string $unprefixedTable): int
+    {
+        global $wpdb;
+
+        $table = Tables::name($unprefixedTable);
+
+        // phpcs:ignore WordPress.DB.PreparedSQL
+        return (int) $wpdb->get_var("SELECT COUNT(*) FROM `{$table}`");
     }
 
     private function statusOf(int $contractId): string
