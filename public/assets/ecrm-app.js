@@ -224,6 +224,13 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 	function openEdit(c) {
 		go('new-contract');
 		if (window.ECRMForm && window.ECRMForm.edit) {
+			// Clear whatever a previous edit session left behind before
+			// prefilling this contract. Without this, a field this contract
+			// doesn't have (e.g. price_type, father_name, a supply address)
+			// keeps whatever the last-opened contract left in the DOM, and
+			// collect() sends it on save as though it belonged here —
+			// confirmed live on crm-test, CHANGELOG 2026-08-16 (4)/(5).
+			if (window.ECRMForm.reset) { window.ECRMForm.reset(); }
 			// give the view a tick to become visible, then prefill
 			setTimeout(function () { window.ECRMForm.edit(c); }, 30);
 		}
