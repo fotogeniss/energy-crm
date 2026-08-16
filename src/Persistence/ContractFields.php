@@ -27,6 +27,7 @@ namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Domain\Forms\ProviderFormFields;
 use EnergyCRM\Infrastructure\FieldCipher;
+use EnergyCRM\Infrastructure\KeyFingerprint;
 
 final class ContractFields
 {
@@ -51,6 +52,10 @@ final class ContractFields
         if (! CustomerFields::isEnabled() || ! isset($contract[self::EXTRAS_COLUMN])) {
             return $contract;
         }
+
+        // Reached only when the bag is being written, which is the only way
+        // this column can lose anything. See CustomerFields::forStorage().
+        KeyFingerprint::assertUsable();
 
         $contract[self::EXTRAS_COLUMN] = $this->map(
             $contract[self::EXTRAS_COLUMN],
