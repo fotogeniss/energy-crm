@@ -97,6 +97,25 @@ final class KeyFingerprint
     }
 
     /**
+     * Refuse a write that would land under the wrong key.
+     *
+     * Static, and deliberately not injected. The two callers are
+     * CustomerFields::forStorage() and ContractFields::forStorage(), which
+     * already reach isEnabled() the same way — and a check that only fires when
+     * the site has a recorded stamp costs one autoloaded option lookup, not a
+     * query. Tests reach it by writing the option, which is what makes the
+     * static acceptable here rather than merely convenient.
+     *
+     * @throws RotatedKey When the stamp disagrees with the key in use.
+     */
+    public static function assertUsable(): void
+    {
+        if (! self::default()->matches()) {
+            throw RotatedKey::fingerprintMismatch();
+        }
+    }
+
+    /**
      * Record the current key as this site's key, once.
      *
      * Never overwrites. An existing stamp that disagrees is the signal, and a

@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Infrastructure\FieldCipher;
+use EnergyCRM\Infrastructure\KeyFingerprint;
 
 final class CustomerFields
 {
@@ -114,6 +115,15 @@ final class CustomerFields
      */
     public function forStorage(array $customer): array
     {
+        // Only when this row actually carries protected data. A save that
+        // touches nothing encrypted — a phone number, a name — cannot destroy
+        // anything under a rotated key, and refusing it would turn a safeguard
+        // into an outage. The blind index counts as protected: written under
+        // the wrong key it silently stops matching every other row.
+        if (self::touchesProtected($customer)) {
+            KeyFingerprint::assertUsable();
+        }
+
         if (array_key_exists(self::INDEXED, $customer)) {
             $customer[self::INDEX_COLUMN] = $this->cipher->blindIndex((string) $customer[self::INDEXED]);
         }
@@ -129,6 +139,26 @@ final class CustomerFields
         }
 
         return $customer;
+    }
+
+    /**
+     * Whether this row would write a value that only the current key can read.
+     *
+     * @param array<string, mixed> $customer
+     */
+    private static function touchesProtected(array $customer): bool
+    {
+        if (array_key_exists(self::INDEXED, $customer)) {
+            return true;
+        }
+
+        foreach (self::ENCRYPTED as $column) {
+            if (array_key_exists($column, $customer)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -93,6 +93,16 @@ final class PiiBackfill
                 . 'θα έμπαιναν σε καθαρό κείμενο πίσω από τον δείκτη και δεν θα ξαναδιαβάζονταν ποτέ.';
         }
 
+        // The sweep refuses itself rather than trusting anyone to have read the
+        // instruction not to run it. Under a rotated key it is the single most
+        // destructive thing on the site: it walks every row on purpose, and
+        // what it would write is the blanks the wrong key is already reading.
+        if (! KeyFingerprint::default()->matches()) {
+            return 'Το κλειδί κρυπτογράφησης δεν είναι αυτό που έγραψε τα δεδομένα. '
+                . 'Το backfill ΔΕΝ πρέπει να τρέξει — θα έκανε μόνιμη την απώλεια. '
+                . 'Επανάφερε το παλιό SECURE_AUTH_SALT· δες docs/BACKUP.md.';
+        }
+
         return null;
     }
 
