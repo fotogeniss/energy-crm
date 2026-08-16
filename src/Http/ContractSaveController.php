@@ -101,7 +101,7 @@ final class ContractSaveController implements Controller
             ], 422);
         }
 
-        $customerId = $this->resolveCustomer($request, $scope, $existing, $customer);
+        $customerId = $this->resolveCustomer($request, $scope, $existing);
 
         if ($customerId === false) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.'], 404);
@@ -112,9 +112,14 @@ final class ContractSaveController implements Controller
             : null;
 
         if ($customer !== []) {
-            $customerId = $customerId > 0
-                ? ($this->customers->update($customerId, $scope, $customer) ? $customerId : $customerId)
-                : $this->customers->create($customer);
+            if ($customerId > 0) {
+                // The bool is dropped on purpose: what stood here returned
+                // $customerId in both branches of a ternary, which reads as a
+                // handled failure and never was one — CHANGELOG 2026-08-16 (7).
+                $this->customers->update($customerId, $scope, $customer);
+            } else {
+                $customerId = $this->customers->create($customer);
+            }
         }
 
         // Whether this is an edit decides how contractFrom() treats a field the
@@ -162,7 +167,6 @@ final class ContractSaveController implements Controller
      * the actor may not touch.
      *
      * @param array<string, mixed>|null $existing
-     * @param array<string, string>     $customer
      *
      * @return int|false
      */
@@ -170,7 +174,6 @@ final class ContractSaveController implements Controller
         WP_REST_Request $request,
         UserScope $scope,
         ?array $existing,
-        array $customer,
     ): int|false {
         $customerId = (int) $request['customer_id'];
 
