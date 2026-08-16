@@ -116,9 +116,13 @@ assertions), phpcs **211**, phpstan **130**. Επαλήθευση με `composer
 - `composer check:all` τρέχει **μόνο** από το Site Shell, με
   `set ECRM_TEST_DB_NAME=energy_crm_tests` / `_USER=root` / `_PASSWORD=root`,
   μία γραμμή τη φορά. «6 skipped» αντί για 1 σημαίνει λάθος PHP.
-- **Μετά από `git commit`, ψάξε τη γραμμή `To https://github.com`.** Το
-  «Enumerating objects» μέσα στο commit είναι packing, όχι push. Το push
-  ξεχάστηκε **τρεις φορές** στις 16 Αυγούστου.
+- **Τα `.git/refs` που διαβάζεις είναι στιγμιότυπο, όχι γεγονός.** Ο πελάτης
+  τρέχει `commit` και `push` ως δύο ξεχωριστές εντολές και συχνά κολλάει την
+  έξοδο ανάμεσά τους. Στις 16 Αυγούστου διάβασα `origin/main` πίσω από το
+  `HEAD` και ανακοίνωσα «δεν έγινε push» — είχαν περάσει 96 δευτερόλεπτα και το
+  push έγινε κανονικά. **Δέκα commits, δέκα pushes, κανένα ξεχασμένο.**
+  Αν πρέπει να ξέρεις, **ρώτα** αντί να συμπεράνεις από χρονικό σημείο που
+  διάλεξες εσύ.
 - Μήνυμα commit σε `.commit-msg.tmp.txt` (είναι στο `.gitignore`), και
   `git commit -F .commit-msg.tmp.txt`. Υπόγραψε με
   `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
