@@ -21,9 +21,11 @@ use EnergyCRM\Admin\PrivacyTools;
 use EnergyCRM\Http\ControllerFactory;
 use EnergyCRM\Http\Router;
 use EnergyCRM\Infrastructure\DocumentProtection;
+use EnergyCRM\Infrastructure\KeyFingerprint;
 use EnergyCRM\Infrastructure\PiiBackfill;
 use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
+use EnergyCRM\Persistence\CustomerFields;
 use EnergyCRM\Persistence\PersonalDataEraser;
 use EnergyCRM\Persistence\PersonalDataExporter;
 use EnergyCRM\Persistence\PiiBackfillRepository;
@@ -95,6 +97,14 @@ final class Plugin
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
         (new DocumentProtection(Services::unprotectedDocuments()))->register();
+
+        // Record which key this site's data belongs to, once. Only while
+        // encryption is on: stamping a site that has never encrypted anything
+        // would name a key that nothing was written under, and the first real
+        // rotation afterwards would be reported against a fiction.
+        if (CustomerFields::isEnabled()) {
+            KeyFingerprint::default()->remember();
+        }
 
         // Scheduled unconditionally, and inert until ECRM_ENCRYPT_PII is on.
         // Registering only when the flag is set would mean the sweep never

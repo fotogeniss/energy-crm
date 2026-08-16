@@ -62,6 +62,7 @@ if (! is_readable($load)) {
 require_once $load;
 
 use EnergyCRM\Infrastructure\FieldCipher;
+use EnergyCRM\Infrastructure\KeyFingerprint;
 use EnergyCRM\Infrastructure\PiiBackfill;
 use EnergyCRM\Persistence\CustomerFields;
 use EnergyCRM\Persistence\PiiBackfillRepository;
@@ -155,6 +156,31 @@ foreach (['secure_auth_key', 'secure_auth_salt'] as $option) {
             . "\nγραμμή: είναι το κλειδί τους."
         );
     }
+}
+
+// --- 2b. Is this still the key the data was written under? ------------------
+
+$fingerprint = KeyFingerprint::default();
+
+if (! $fingerprint->isRecorded()) {
+    $report(
+        'warn',
+        'Δεν έχει καταγραφεί ακόμα αποτύπωμα κλειδιού.',
+        'Καταγράφεται μόνο του με το ECRM_ENCRYPT_PII ανοιχτό. Μέχρι τότε μια'
+        . "\nπεριστροφή του salt δεν ανιχνεύεται από πουθενά."
+    );
+} elseif ($fingerprint->matches()) {
+    $report('ok', 'Το κλειδί είναι αυτό που έγραψε τα δεδομένα.');
+} else {
+    $report(
+        'stop',
+        'ΤΟ ΚΛΕΙΔΙ ΔΕΝ ΕΙΝΑΙ ΑΥΤΟ ΠΟΥ ΕΓΡΑΨΕ ΤΑ ΔΕΔΟΜΕΝΑ.',
+        'Το SECURE_AUTH_SALT άλλαξε. Τα κρυπτογραφημένα πεδία διαβάζονται ως ΚΕΝΑ'
+        . "\nκαι κάθε αποθήκευση γράφει αυτό το κενό πάνω τους — ΜΟΝΙΜΑ."
+        . "\n\nΤΟ ΣΩΣΤΟ ΒΗΜΑ ΕΙΝΑΙ Η ΕΠΑΝΑΦΟΡΑ ΤΟΥ ΠΑΛΙΟΥ SALT, όχι το backfill:"
+        . "\nμέχρι να γραφτεί κάτι από πάνω, το ciphertext είναι ακέραιο στον δίσκο"
+        . "\nκαι ανακτάται ολόκληρο. Δες docs/BACKUP.md."
+    );
 }
 
 // --- 3. The flag ------------------------------------------------------------
