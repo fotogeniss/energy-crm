@@ -26,15 +26,27 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use ECRM_Files;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Persistence\Tables;
+use FilesystemIterator;
 use PHPUnit\Framework\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use SplFileInfo;
 use WP_User;
 
 abstract class IntegrationTestCase extends TestCase
 {
     /** Distinguishes the users each test makes, without a database round trip. */
     private static int $userCounter = 0;
+
+    /**
+     * The protected storage as it looked when this test started.
+     *
+     * @var array<string, true>
+     */
+    private array $documentsAtStart = [];
 
     /**
      * Every test runs inside a transaction that is never committed.
@@ -59,11 +71,31 @@ abstract class IntegrationTestCase extends TestCase
         // The cache outlives the transaction and would answer with rows that
         // no longer exist.
         wp_cache_flush();
+
+        // The disk has no transaction, and that asymmetry cost something real.
+        // ECRM_Files::dir() resolves through wp_upload_dir(), so a test writing
+        // bytes writes them into the SITE'S OWN document folder — the test
+        // database is separate, the disk is not. The rollback then removes every
+        // row that claimed those files and leaves the files themselves, which is
+        // precisely how the 81 orphans of CHANGELOG (18) came to exist.
+        //
+        // Measured, not feared: after the folder was cleared on 2026-08-17, one
+        // check:all put a fresh orphan back. ContractDeleteBytesTest guarantees
+        // one per run, because the test that matters most there ASSERTS the file
+        // survives a refused delete.
+        //
+        // Here rather than in four tearDown() methods: those cover the four
+        // files that write bytes today, and not the fifth written next month.
+        $this->documentsAtStart = self::documentsOnDisk();
     }
 
     protected function tearDown(): void
     {
         global $wpdb;
+
+        // Before the rollback, because the rollback is what turns these into
+        // orphans: it takes away the rows that claim them.
+        self::removeDocumentsWrittenSince($this->documentsAtStart);
 
         $wpdb->query('ROLLBACK');
         $wpdb->query('SET autocommit = 1');
@@ -75,6 +107,50 @@ abstract class IntegrationTestCase extends TestCase
         wp_cache_flush();
 
         parent::tearDown();
+    }
+
+    /**
+     * Every file currently in protected storage, keyed by resolved path.
+     *
+     * @return array<string, true>
+     */
+    private static function documentsOnDisk(): array
+    {
+        if (! class_exists(ECRM_Files::class)) {
+            return [];
+        }
+
+        $found = [];
+
+        /** @var SplFileInfo $item */
+        foreach (new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(ECRM_Files::dir(), FilesystemIterator::SKIP_DOTS)
+        ) as $item) {
+            if ($item->isFile()) {
+                $found[(string) $item->getRealPath()] = true;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * Remove what this test added, and nothing else.
+     *
+     * Compared against a snapshot rather than a list the test hands over: a
+     * test that forgot to register a file it wrote would keep leaking, and
+     * forgetting is the failure being designed out. The site's own documents
+     * were in the snapshot and are never touched.
+     *
+     * @param array<string, true> $before
+     */
+    private static function removeDocumentsWrittenSince(array $before): void
+    {
+        foreach (array_keys(self::documentsOnDisk()) as $path) {
+            if (! isset($before[$path])) {
+                @unlink($path);
+            }
+        }
     }
 
     /**
