@@ -227,6 +227,36 @@ class ECRM_App {
 				</div>
 			</main>
 
+			<?php
+			/*
+			 * Κάτω μπάρα, μόνο σε κινητό (το CSS την κρύβει από τα 768 και πάνω).
+			 *
+			 * Δεν χρειάζεται ούτε γραμμή JS: τα κουμπιά φοράνε την ίδια κλάση
+			 * .ecrm-nav__item και το ίδιο data-go με το πλαϊνό, οπότε ο
+			 * delegated handler του ecrm-app.js τα πιάνει για την πλοήγηση και
+			 * η go() τους βάζει is-active μαζί με τα αντίστοιχα του πλαϊνού.
+			 *
+			 * Πέντε θέσεις, όχι έντεκα: η μπάρα είναι για τις διαδρομές που
+			 * τρέχει κανείς με το ένα χέρι. Τα υπόλοιπα μένουν στο συρτάρι,
+			 * που δεν καταργείται.
+			 */
+			$botnav = [
+				[ 'view' => 'dashboard',    'label' => 'Αρχική',   'icon' => 'dashboard' ],
+				[ 'view' => 'contracts',    'label' => 'Συμβάσεις', 'icon' => 'contracts' ],
+				[ 'view' => 'new-contract', 'label' => 'Νέα',      'icon' => 'new' ],
+				[ 'view' => 'tasks',        'label' => 'Εργασίες',  'icon' => 'tasks' ],
+				[ 'view' => 'customers',    'label' => 'Πελάτες',   'icon' => 'customers' ],
+			];
+			?>
+			<nav class="ecrm-botnav" aria-label="Κύρια πλοήγηση">
+				<?php foreach ( $botnav as $item ) : ?>
+					<button type="button" class="ecrm-nav__item ecrm-botnav__item<?php echo $item['view'] === 'dashboard' ? ' is-active' : ''; ?>" data-go="<?php echo esc_attr( $item['view'] ); ?>">
+						<span class="ecrm-nav__icon"><?php echo self::icon( $item['icon'] ); // phpcs:ignore ?></span>
+						<span class="ecrm-botnav__txt"><?php echo esc_html( $item['label'] ); ?></span>
+					</button>
+				<?php endforeach; ?>
+			</nav>
+
 			<!-- Λίτσα assistant -->
 			<div class="ecrm-litsa" id="ecrm-litsa" data-open="0">
 				<button type="button" class="ecrm-litsa__fab" data-litsa-toggle aria-label="Άνοιγμα βοηθού Λίτσα">

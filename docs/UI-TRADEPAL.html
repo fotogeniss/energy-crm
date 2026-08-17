@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — λογική tradepal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#141414;              /* το φόντο πάνω στο οποίο επιπλέει η εφαρμογή */
+  --sb:#1c1c1a; --sb-line:#ffffff12; --sb-ink:#9d9c96; --sb-hi:#fff; --sb-dim:#ffffff45;
+  --cv:#ffffff;                /* καθαρό λευκό, όχι γκρι */
+  --n25:#fcfcfb;--n50:#f7f7f5;--n100:#f0f0ed;--n150:#e8e7e3;--n200:#dcdad5;
+  --n300:#c2c0b9;--n400:#9e9c95;--n500:#78766f;--n600:#585651;--n700:#3f3e3a;
+  --n800:#282723;--n900:#191917;--n950:#0f0f0e;
+  --a:#c2f04a; --a-ink:#141410; --a-dk:#8cba1c;
+  --up:#0f5f29; --up-bg:#e1f0e6; --dn:#c42a47; --dn-bg:#fceaee;
+  --st-draft:#8f929a;--st-draft-bg:#f0f1f3; --st-new:#5b9be0;--st-new-bg:#eaf3fc;
+  --st-asig:#2f72c4;--st-asig-bg:#e6effa; --st-sign:#255fa8;--st-sign-bg:#e4ecf7;
+  --st-pend:#b87503;--st-pend-bg:#fdf3e0; --st-act:#0f5f29;--st-act-bg:#e1f0e6;
+  --st-canc:#c42a47;--st-canc-bg:#fceaee;
+  --f:"Lexend",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--n100);color:var(--n700);font-family:var(--f);font-size:15px;font-weight:400}
+.wrap{max-width:1380px;margin:0 auto;padding:44px 20px 96px}
+.hd{margin-bottom:16px}
+.hd .eb{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--n500);margin-bottom:12px}
+.hd h1{font-size:35px;font-weight:700;letter-spacing:-.03em;margin:0 0 12px;color:var(--n950)}
+.hd p{font-size:16.5px;color:var(--n600);margin:0;max-width:76ch;line-height:1.65;font-weight:300}
+h2.s{font-size:23px;font-weight:700;letter-spacing:-.024em;color:var(--n950);margin:0 0 8px}
+p.sub{font-size:15px;color:var(--n600);margin:0 0 20px;max-width:78ch;line-height:1.65;font-weight:300}
+section{margin-top:56px}
+
+/* ══════ ΤΟ ΚΕΛΥΦΟΣ ΕΠΙΠΛΕΕΙ ══════ */
+.stage{background:var(--page);border-radius:22px;padding:16px}
+.shell{display:flex;background:var(--cv);border-radius:16px;overflow:hidden;min-height:640px}
+
+/* πλαϊνό: ετικέτες, δύο ενότητες, διαχωριστικό */
+.sb{width:216px;flex:0 0 216px;background:var(--sb);padding:20px 12px 16px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:9px;padding:0 8px 24px}
+.brand svg{width:22px;height:22px;flex:0 0 22px}
+.brand b{font-size:17px;font-weight:600;color:var(--sb-hi);letter-spacing:-.02em}
+.sl{font-size:10.5px;font-weight:400;letter-spacing:.05em;color:var(--sb-dim);padding:0 10px 8px}
+.ni{display:flex;align-items:center;gap:11px;padding:9.5px 12px;border-radius:9px;
+  font-size:13.5px;font-weight:400;color:var(--sb-ink);cursor:pointer;border:none;background:none;
+  width:100%;text-align:left;font-family:inherit;margin-bottom:2px;transition:background .14s,color .14s}
+.ni:hover{background:#ffffff0d;color:var(--sb-hi)}
+.ni.on{background:var(--a);color:var(--a-ink);font-weight:600}
+.ni svg{width:17px;height:17px;flex:0 0 17px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.ni b{margin-left:auto;font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:999px;
+  background:var(--st-pend);color:#fff;font-variant-numeric:tabular-nums}
+.ni.on b{background:#14141026;color:var(--a-ink)}
+.sep{height:1px;background:var(--sb-line);margin:16px 10px 14px}
+.sb .sp{flex:1}
+
+/* ══════ ΚΥΡΙΟ ══════ */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--cv)}
+.top{display:flex;align-items:center;gap:16px;padding:16px 24px}
+.hi{font-size:16px;font-weight:600;color:var(--n950);letter-spacing:-.01em;white-space:nowrap}
+.srch{flex:1;max-width:330px;display:flex;align-items:center;gap:9px;padding:9px 14px;
+  border-radius:999px;background:var(--n100);color:var(--n400);font-size:13px;cursor:pointer}
+.srch svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex:0 0 15px}
+.top .r{margin-left:auto;display:flex;align-items:center;gap:14px}
+.cta{background:var(--n900);color:var(--a);border:none;border-radius:9px;padding:10px 18px;
+  font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.bell{position:relative;width:26px;height:26px;display:grid;place-items:center;color:var(--n600);cursor:pointer}
+.bell svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.bell span{position:absolute;top:-5px;right:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;
+  background:var(--dn);color:#fff;font-size:9.5px;font-weight:600;display:grid;place-items:center;
+  font-variant-numeric:tabular-nums}
+.who{display:flex;align-items:center;gap:9px}
+.who i{width:36px;height:36px;border-radius:50%;background:var(--n900);color:var(--a);
+  display:grid;place-items:center;font-size:12.5px;font-weight:700;font-style:normal;flex:0 0 36px}
+.who b{display:block;font-size:13px;font-weight:500;color:var(--n900);line-height:1.3}
+.who small{display:block;font-size:11.5px;color:var(--n400);font-weight:300}
+
+.pg{padding:8px 24px 0}
+.pgh{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.pgh h1{font-size:25px;font-weight:600;letter-spacing:-.028em;color:var(--n950);margin:0}
+.ghost{background:var(--n100);border:none;border-radius:9px;padding:9px 16px;font-family:inherit;
+  font-size:13px;font-weight:500;color:var(--n700);cursor:pointer}
+
+/* underline tabs, όχι pills */
+.utabs{display:flex;gap:26px;border-bottom:1px solid var(--n150);margin-bottom:4px}
+.ut{border:none;background:none;padding:0 0 12px;font-family:inherit;font-size:14px;font-weight:400;
+  color:var(--n400);cursor:pointer;position:relative}
+.ut.on{color:var(--n950);font-weight:600}
+.ut.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--n950);border-radius:2px}
+.ut i{font-style:normal;font-size:11.5px;color:var(--n400);margin-left:5px;font-variant-numeric:tabular-nums}
+
+/* ══════ ΠΙΝΑΚΑΣ ΧΩΡΙΣ ΓΡΑΜΜΕΣ ══════ */
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;font-size:12px;font-weight:400;color:var(--n400);padding:14px 10px;
+  border-bottom:1px solid var(--n150);white-space:nowrap}
+tbody td{padding:12px 10px;border:none;vertical-align:middle}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:var(--n25)}
+.ent{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:11px;
+  font-weight:700;flex:0 0 34px}
+.e1{font-size:13.5px;font-weight:600;color:var(--n950);letter-spacing:-.01em;white-space:nowrap}
+.e2{font-size:11.5px;color:var(--n400);font-weight:300;margin-top:1px}
+.num{font-size:13.5px;font-weight:500;color:var(--n900);font-variant-numeric:tabular-nums}
+.dlt{font-size:11.5px;font-weight:500;margin-top:2px;font-variant-numeric:tabular-nums}
+.dlt.u{color:var(--up)} .dlt.d{color:var(--dn)} .dlt.f{color:var(--n400)}
+.mono{font-size:13px;color:var(--n600);font-variant-numeric:tabular-nums;font-weight:300}
+.bg{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;
+  font-size:11.5px;font-weight:500;white-space:nowrap}
+.bg i{width:5.5px;height:5.5px;border-radius:50%;background:currentColor;flex:0 0 5.5px}
+.b-act{background:var(--st-act-bg);color:var(--st-act)}
+.b-asig{background:var(--st-asig-bg);color:var(--st-asig)}
+.b-pend{background:var(--st-pend-bg);color:var(--st-pend)}
+.b-sign{background:var(--st-sign-bg);color:var(--st-sign)}
+.b-draft{background:var(--st-draft-bg);color:var(--st-draft)}
+.b-new{background:var(--st-new-bg);color:var(--st-new)}
+.rowa{display:flex;gap:7px;justify-content:flex-end}
+.ra{border:none;border-radius:8px;padding:7px 14px;font-family:inherit;font-size:12.5px;
+  font-weight:500;cursor:pointer}
+.ra-p{background:var(--n900);color:var(--a)}
+.ra-g{background:var(--n100);color:var(--n700)}
+.dots{width:26px;height:26px;border-radius:7px;border:none;background:none;color:var(--n400);
+  cursor:pointer;display:grid;place-items:center;font-size:15px;line-height:1}
+
+/* sparkline */
+.spark{width:74px;height:26px;display:block}
+
+/* ══════ DASHBOARD ══════ */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:4px 0 22px}
+.tile{background:var(--cv);border:1px solid var(--n150);border-radius:14px;padding:16px 18px}
+.tile k{display:block;font-size:12px;font-weight:300;color:var(--n500)}
+.tk{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:8px}
+.tile v{display:block;font-size:29px;font-weight:600;color:var(--n950);letter-spacing:-.03em;
+  line-height:1;font-variant-numeric:tabular-nums}
+.tile .dlt{margin-top:6px}
+
+/* ══════ ΑΝΑΛΥΣΗ ══════ */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cc{border:1px solid var(--n200);border-radius:12px;overflow:hidden;background:#fff}
+.ct{padding:10px 15px;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  border-bottom:1px solid var(--n150)}
+.ct.y{background:var(--n900);color:var(--a)}
+.ct.n{background:var(--dn-bg);color:var(--dn)}
+.cb{padding:15px;font-size:14px;color:var(--n600);line-height:1.7;font-weight:300}
+.cb ul{margin:0;padding-left:18px}
+.cb li{margin-bottom:9px}
+.cb li:last-child{margin-bottom:0}
+.cb b{font-weight:600;color:var(--n900)}
+.note{margin-top:22px;background:#fff;border:1px solid var(--n200);border-left:3px solid var(--n900);
+  border-radius:12px;padding:16px 19px;font-size:14.5px;color:var(--n600);line-height:1.65;font-weight:300}
+.note b{color:var(--n950);font-weight:600}
+code{background:var(--n100);padding:1.5px 6px;border-radius:5px;font-size:12.5px;
+  font-family:ui-monospace,Menlo,monospace;color:var(--n800)}
+@media(max-width:1000px){.cmp{grid-template-columns:1fr}.tiles{grid-template-columns:1fr 1fr}
+  .sb{display:none}.hi{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hd">
+  <div class="eb">Μελέτη + πρόταση · 17 Αυγούστου 2026</div>
+  <h1>Η λογική του tradepal, στο δικό σου CRM</h1>
+  <p>Ίδια δομή πλαϊνού με ετικέτες και ενότητες, κέλυφος που επιπλέει σε σκούρο φόντο,
+     καθαρό λευκό καμβά, πίνακας χωρίς γραμμές, Lexend, και δέλτα κάτω από κάθε αριθμό.</p>
+</div>
+
+<div class="stage">
+  <div class="shell">
+    <aside class="sb">
+      <div class="brand">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 4 14h6l-1 8 9-12h-6z" fill="#c2f04a"/></svg>
+        <b>energy<span style="font-weight:300;color:#9d9c96">crm</span></b>
+      </div>
+
+      <div class="sl">Κύριο μενού</div>
+      <button class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>Dashboard</button>
+      <button class="ni on"><svg viewBox="0 0 24 24"><path d="M4.5 8.5h15l-1.2 10a2 2 0 0 1-2 1.8H7.7a2 2 0 0 1-2-1.8z"/><path d="M9 8.5V6a3 3 0 0 1 6 0v2.5"/></svg>Συμβάσεις</button>
+      <button class="ni"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Νέα σύμβαση</button>
+      <button class="ni"><svg viewBox="0 0 24 24"><path d="M3 4.5h18l-7 8.2V19l-4 2v-8.3z"/></svg>Leads<b>3</b></button>
+      <button class="ni"><svg viewBox="0 0 24 24"><path d="M12 8.5v5"/><circle cx="12" cy="16.8" r=".6" fill="currentColor" stroke="none"/><path d="M10.3 3.8 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/></svg>Εκκρεμότητες<b>7</b></button>
+      <button class="ni"><svg viewBox="0 0 24 24"><path d="M9 11.5l2 2 4.5-4.5"/><rect x="3" y="4" width="18" height="16.5" rx="2.5"/></svg>Εργασίες<b>4</b></button>
+      <button class="ni"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><path d="M16.5 6.6a3.2 3.2 0 0 1 0 6"/><path d="M19.5 19.5a5.5 5.5 0 0 0-2.6-4.7"/></svg>Πελάτες</button>
+      <button class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.6a4 4 0 1 0 0 6.8"/><path d="M7.5 10.8h6M7.5 13.2h6"/></svg>Προμήθειες</button>
+
+      <div class="sep"></div>
+      <div class="sl">Σύστημα</div>
+      <button class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="2.5"/><circle cx="5.5" cy="17" r="2.5"/><circle cx="18.5" cy="17" r="2.5"/><path d="M12 8v3.5M12 11.5 6.8 14.8M12 11.5l5.2 3.3"/></svg>Το δίκτυό μου</button>
+      <button class="ni"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Βάση γνώσης</button>
+      <button class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M21 12h-2.5M5.5 12H3M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8M18.4 18.4l-1.8-1.8M7.4 7.4 5.6 5.6"/></svg>Ρυθμίσεις</button>
+      <div class="sp"></div>
+    </aside>
+
+    <div class="main">
+      <header class="top">
+        <span class="hi">Καλώς ήρθες, Κωνσταντίνε</span>
+        <div class="srch">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          Αναζήτηση…
+        </div>
+        <div class="r">
+          <button class="cta">＋ Νέα σύμβαση</button>
+          <div class="bell">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            <span>7</span>
+          </div>
+          <div class="who"><i>ΚΝ</i><div><b>Κωνσταντίνος Νίκας</b><small>Πωλητής</small></div></div>
+        </div>
+      </header>
+
+      <div class="pg">
+        <div class="tiles">
+          <div class="tile"><k>Συμβάσεις μήνα</k>
+            <div class="tk"><div><v>34</v><div class="dlt u">▲ +12,4%</div></div>
+              <svg class="spark" viewBox="0 0 74 26"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f5f29" stop-opacity=".22"/><stop offset="1" stop-color="#0f5f29" stop-opacity="0"/></linearGradient></defs><path d="M0 20 12 17 24 19 36 12 48 14 60 7 74 4 74 26 0 26z" fill="url(#g1)"/><path d="M0 20 12 17 24 19 36 12 48 14 60 7 74 4" fill="none" stroke="#0f5f29" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div></div>
+          <div class="tile"><k>Ενεργές</k>
+            <div class="tk"><div><v>78</v><div class="dlt u">▲ +6 τον μήνα</div></div>
+              <svg class="spark" viewBox="0 0 74 26"><path d="M0 18 12 16 24 14 36 15 48 10 60 8 74 5" fill="none" stroke="#0f5f29" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div></div>
+          <div class="tile"><k>Εκκρεμότητες</k>
+            <div class="tk"><div><v>7</v><div class="dlt d">▼ 2 πάνω από 5 ημέρες</div></div>
+              <svg class="spark" viewBox="0 0 74 26"><path d="M0 8 12 10 24 7 36 12 48 11 60 16 74 18" fill="none" stroke="#c42a47" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div></div>
+          <div class="tile"><k>Προμήθεια μήνα</k>
+            <div class="tk"><div><v>1.840€</v><div class="dlt u">▲ +8,1%</div></div>
+              <svg class="spark" viewBox="0 0 74 26"><path d="M0 21 12 18 24 19 36 13 48 11 60 9 74 3" fill="none" stroke="#0f5f29" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div></div>
+        </div>
+
+        <div class="pgh">
+          <h1>Συμβάσεις</h1>
+          <button class="ghost">⤓ Εξαγωγή</button>
+        </div>
+
+        <div class="utabs">
+          <button class="ut on">Όλες <i>142</i></button>
+          <button class="ut">Νέες <i>23</i></button>
+          <button class="ut">Αναμονή υπογραφής <i>11</i></button>
+          <button class="ut">Εκκρεμότητες <i>7</i></button>
+          <button class="ut">Ενεργές <i>78</i></button>
+        </div>
+
+        <table>
+          <thead><tr>
+            <th>Πελάτης</th><th>Πάροχος</th><th>ΗΚΑΣΠ</th><th>Διάρκεια</th>
+            <th>Κατάσταση</th><th style="text-align:right">Ενέργειες</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="ent"><span class="logo" style="background:var(--st-act-bg);color:var(--st-act)">ΓΠ</span>
+                <div><div class="e1">Γιώργος Παπαδόπουλος</div><div class="e2">ΑΦΜ 090003373</div></div></div></td>
+              <td><div class="num">ORIZON</div><div class="e2">Home 12M</div></td>
+              <td class="mono">40012345678</td>
+              <td><div class="num">12 μήνες</div><div class="dlt f">λήγει 08/2027</div></td>
+              <td><span class="bg b-act"><i></i>Ενεργή</span></td>
+              <td><div class="rowa"><button class="ra ra-g">Άνοιγμα</button><button class="dots">⋮</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="ent"><span class="logo" style="background:var(--st-asig-bg);color:var(--st-asig)">ΜΚ</span>
+                <div><div class="e1">Μαρία Κωνσταντίνου</div><div class="e2">ΑΦΜ 123456789</div></div></div></td>
+              <td><div class="num">Protergia</div><div class="e2">Οικιακό Value</div></td>
+              <td class="mono">40098765432</td>
+              <td><div class="num">24 μήνες</div><div class="dlt f">δεν ξεκίνησε</div></td>
+              <td><span class="bg b-asig"><i></i>Αναμονή υπογραφής</span></td>
+              <td><div class="rowa"><button class="ra ra-p">Υπενθύμιση</button><button class="dots">⋮</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="ent"><span class="logo" style="background:var(--st-pend-bg);color:var(--st-pend)">ΔΑ</span>
+                <div><div class="e1">Δημήτρης Αντωνίου</div><div class="e2">ΑΦΜ 987654321</div></div></div></td>
+              <td><div class="num">ORIZON</div><div class="e2">Mobile 5GB</div></td>
+              <td class="mono">6944123456</td>
+              <td><div class="num">—</div><div class="dlt d">8 ημέρες στάσιμη</div></td>
+              <td><span class="bg b-pend"><i></i>Εκκρεμότητα</span></td>
+              <td><div class="rowa"><button class="ra ra-p">Επίλυση</button><button class="dots">⋮</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="ent"><span class="logo" style="background:var(--st-sign-bg);color:var(--st-sign)">ΕΣ</span>
+                <div><div class="e1">Ελένη Σταμάτη</div><div class="e2">ΑΦΜ 456789123</div></div></div></td>
+              <td><div class="num">Protergia</div><div class="e2">Αέριο Home</div></td>
+              <td class="mono">40055512340</td>
+              <td><div class="num">12 μήνες</div><div class="dlt f">δεν ξεκίνησε</div></td>
+              <td><span class="bg b-sign"><i></i>Υπεγράφη</span></td>
+              <td><div class="rowa"><button class="ra ra-g">Άνοιγμα</button><button class="dots">⋮</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="ent"><span class="logo" style="background:var(--st-new-bg);color:var(--st-new)">ΝΒ</span>
+                <div><div class="e1">Νίκος Βασιλείου</div><div class="e2">ΑΦΜ 321654987</div></div></div></td>
+              <td><div class="num">ORIZON</div><div class="e2">Home 24M</div></td>
+              <td class="mono">40077788899</td>
+              <td><div class="num">24 μήνες</div><div class="dlt f">δεν ξεκίνησε</div></td>
+              <td><span class="bg b-new"><i></i>Νέα</span></td>
+              <td><div class="rowa"><button class="ra ra-g">Άνοιγμα</button><button class="dots">⋮</button></div></td>
+            </tr>
+            <tr>
+              <td><div class="ent"><span class="logo" style="background:var(--st-draft-bg);color:var(--st-draft)">ΑΜ</span>
+                <div><div class="e1">Αναστασία Μήτσου</div><div class="e2">χωρίς ΑΦΜ</div></div></div></td>
+              <td><div class="num">—</div><div class="e2">χωρίς πάροχο</div></td>
+              <td class="mono">—</td>
+              <td><div class="num">—</div></td>
+              <td><span class="bg b-draft"><i></i>Πρόχειρο</span></td>
+              <td><div class="rowa"><button class="ra ra-g">Συνέχεια</button><button class="dots">⋮</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="height:20px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <h2 class="s">Τι κράτησα και τι όχι</h2>
+  <p class="sub">Δεν αντιγράφεται ένα trading UI αυτούσιο σε CRM πωλήσεων. Το ένα παρακολουθεί,
+     το άλλο δουλεύει.</p>
+  <div class="cmp">
+    <div class="cc">
+      <div class="ct y">Μεταφέρεται</div>
+      <div class="cb"><ul>
+        <li><b>Κέλυφος που επιπλέει.</b> Η εφαρμογή είναι κάρτα με στρογγυλές γωνίες πάνω σε σκούρο φόντο. Το μισό «premium», και είναι μόνο CSS.</li>
+        <li><b>Καθαρό λευκό καμβά</b> αντί για γκρι. Και τα σαρωμένα έγγραφα διαβάζονται καλύτερα.</li>
+        <li><b>Πίνακας χωρίς γραμμές.</b> Μόνο αέρας ανάμεσα στις σειρές, μία γραμμή κάτω από την κεφαλίδα.</li>
+        <li><b>Δύο ενότητες στο πλαϊνό</b> με ετικέτες και διαχωριστικό — όχι πέντε ομάδες με flyout, όπως είχα προτείνει. Πιο απλό, και σου αρκεί.</li>
+        <li><b>Lexend.</b> Το πιο άμεσα αναγνωρίσιμο στοιχείο και το φθηνότερο.</li>
+        <li><b>Δέλτα κάτω από τον αριθμό</b> με βελάκι, και sparkline — αλλά μόνο στο dashboard.</li>
+        <li><b>Δύο σειρές σε κάθε κελί:</b> όνομα + ΑΦΜ, πάροχος + πρόγραμμα. Διπλάσια πληροφορία, ίδιο ύψος.</li>
+        <li><b>Ενέργεια ανά γραμμή</b> που αλλάζει με την κατάσταση: «Υπενθύμιση» σε αναμονή, «Επίλυση» σε εκκρεμότητα, «Συνέχεια» σε πρόχειρο.</li>
+      </ul></div>
+    </div>
+    <div class="cc">
+      <div class="ct n">Δεν μεταφέρεται</div>
+      <div class="cb"><ul>
+        <li><b>Πράσινο accent.</b> Στο trading το πράσινο σημαίνει πάντα «πάνω». Εσύ έχεις «Ενεργή» πράσινη και «Ακυρώθηκε» κόκκινη — έντονο πράσινο brand θα συγκρουόταν. Το λάιμ είναι αρκετά κιτρινωπό ώστε να μην μπερδεύεται.</li>
+        <li><b>Buy / Sell κουμπιά.</b> Δεν υπάρχει δυαδική ενέργεια ανά γραμμή. Στη θέση τους μπαίνει μία ενέργεια που εξαρτάται από την κατάσταση.</li>
+        <li><b>Sparkline ανά γραμμή.</b> Μια σύμβαση δεν έχει χρονοσειρά — έχει στάδια. Το sparkline ανήκει στα πλακίδια, όχι στη λίστα.</li>
+        <li><b>«Insights» με χρωματιστό κείμενο</b> (Risky / Safe). Εσύ έχεις ήδη δώδεκα καταστάσεις· δεύτερο χρωματικό λεξιλόγιο θα ακύρωνε το πρώτο.</li>
+        <li><b>Σκούρος καμβάς.</b> Ο συνεργάτης πληκτρολογεί ΑΦΜ και διαβάζει σαρωμένες ταυτότητες. Το σκούρο μένει στο chrome.</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Μία παρατήρηση για τη γραμματοσειρά.</b> Η Lexend φορτώνεται από Google Fonts — ένα εξωτερικό
+    αίτημα ανά φόρτωση. Για CRM που ανοίγει όλη μέρα δεν είναι θέμα ταχύτητας, είναι θέμα <b>GDPR</b>:
+    το Google Fonts από CDN στέλνει IP επισκεπτών στην Google, και γερμανικά δικαστήρια το έχουν
+    κρίνει παράβαση. Η λύση είναι μία γραμμή δουλειάς: <b>κατεβάζουμε τα αρχεία και τα σερβίρουμε
+    τοπικά</b> από το plugin. Το γράφω εδώ γιατί το σύστημα κρατά ΑΦΜ και ταυτότητες, και δεν
+    προσθέτουμε τρίτο μέρος από απροσεξία.
+  </div>
+</section>
+
+</div>
+</body>
+</html>

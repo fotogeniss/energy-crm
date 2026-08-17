@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — τρεις ταυτότητες</title>
+<style>
+/* ═══════ ΚΟΙΝΑ: δομή, μεγέθη, ρυθμός. Δεν αλλάζουν ανά εκδοχή. ═══════ */
+:root{
+  --radius:10px; --radius-sm:8px;
+  --shadow-xs:0 1px 2px rgba(16,24,40,.05);
+  --shadow-md:0 4px 14px rgba(16,24,40,.09);
+  --shadow-lg:0 16px 40px rgba(16,24,40,.14);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#0e1116;color:#e7e9ee;
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+
+.wrap{max-width:1280px;margin:0 auto;padding:44px 22px 90px}
+.lead h1{font-size:32px;font-weight:800;letter-spacing:-.025em;margin:0 0 10px}
+.lead p{color:#98a0ad;font-size:16px;margin:0 0 6px;max-width:74ch;line-height:1.6}
+.lead .why{color:#6f7783;font-size:14px;max-width:74ch;line-height:1.6;margin-top:14px;
+  border-left:2px solid #262b35;padding-left:14px}
+
+/* Διακόπτης εκδοχών */
+.picker{display:flex;gap:8px;margin:30px 0 12px;flex-wrap:wrap}
+.pick{flex:1;min-width:210px;text-align:left;background:#161a21;border:1px solid #262b35;
+  border-radius:12px;padding:14px 16px;cursor:pointer;color:#e7e9ee;font-family:inherit;
+  transition:border-color .15s,background .15s}
+.pick:hover{border-color:#39404d}
+.pick.on{border-color:#5b6472;background:#1c212a}
+.pick .sw{display:flex;gap:5px;margin-bottom:9px}
+.pick .sw i{width:19px;height:19px;border-radius:5px;display:block}
+.pick b{display:block;font-size:14.5px;font-weight:700;margin-bottom:3px}
+.pick span{display:block;font-size:12.5px;color:#8b93a0;line-height:1.5}
+.hint{font-size:13px;color:#6f7783;margin:0 0 26px}
+
+/* Πλαίσιο εφαρμογής */
+.frame{border-radius:14px;overflow:hidden;box-shadow:var(--shadow-lg);border:1px solid #262b35}
+.chrome{display:flex;align-items:center;gap:7px;padding:10px 14px;background:#1c212a}
+.chrome i{width:10px;height:10px;border-radius:50%;background:#39404d}
+.chrome span{margin-left:8px;font-size:11.5px;color:#6f7783}
+
+/* ═══════ Η ΕΦΑΡΜΟΓΗ ═══════ */
+.app{display:flex;min-height:620px;background:var(--bg)}
+
+.sb{width:224px;flex:0 0 224px;background:var(--sb-bg);border-right:1px solid var(--sb-line);
+  padding:16px 12px;display:flex;flex-direction:column;gap:2px}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 22px}
+.brand i{width:32px;height:32px;border-radius:9px;background:var(--mark-bg);color:var(--mark-ink);
+  display:grid;place-items:center;font-weight:800;font-size:15px;flex:0 0 32px;
+  box-shadow:var(--mark-glow);font-family:var(--display)}
+.brand b{font-size:15px;font-weight:var(--brand-w);color:var(--sb-ink-strong);letter-spacing:var(--brand-ls);
+  font-family:var(--display)}
+.brand b em{font-style:normal;font-weight:800}
+.navlbl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--sb-ink-dim);padding:12px 10px 6px}
+.ni{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--radius-sm);
+  font-size:13.5px;font-weight:600;color:var(--sb-ink);cursor:pointer;border:none;background:none;
+  width:100%;text-align:left;font-family:inherit;transition:background .14s,color .14s}
+.ni:hover{background:var(--sb-hover);color:var(--sb-ink-strong)}
+.ni.on{background:var(--sb-on-bg);color:var(--sb-on-ink);font-weight:700;box-shadow:var(--sb-on-shadow)}
+.ni svg{width:17px;height:17px;flex:0 0 17px;stroke-width:1.9;color:var(--sb-icon)}
+.ni.on svg{color:var(--sb-on-icon)}
+.nb{margin-left:auto;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:999px;
+  background:var(--badge-warn-bg);color:var(--badge-warn)}
+.sbfoot{margin-top:auto;border-top:1px solid var(--sb-line);padding-top:10px}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.tb{display:flex;align-items:center;gap:14px;padding:11px 20px;background:var(--tb-bg);
+  border-bottom:1px solid var(--line)}
+.srch{flex:1;max-width:400px;position:relative}
+.srch input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--input-line);
+  border-radius:var(--radius-sm);font-size:13.5px;font-family:inherit;background:var(--input-bg);color:var(--ink)}
+.srch svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--dim)}
+.tbr{margin-left:auto;display:flex;align-items:center;gap:12px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--ok)}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--mark-bg);color:var(--mark-ink);
+  display:grid;place-items:center;font-size:12.5px;font-weight:800}
+
+.cnt{padding:22px;flex:1;background:var(--bg)}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.ph h1{font-size:23px;font-weight:800;letter-spacing:-.022em;color:var(--ink-strong);margin:0 0 3px;
+  font-family:var(--display)}
+.ph p{font-size:13.5px;color:var(--dim);margin:0}
+
+.btn{padding:8px 15px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:650;
+  font-family:inherit;cursor:pointer;border:1px solid transparent;display:inline-flex;
+  align-items:center;gap:7px;white-space:nowrap}
+.btn-p{background:var(--accent);color:var(--on-accent);box-shadow:var(--accent-glow)}
+.btn-g{background:var(--surface);border-color:var(--line-strong);color:var(--ink)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow-xs);padding:17px 19px}
+
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;box-shadow:var(--shadow-xs);position:relative;overflow:hidden}
+.tile::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tile-bar)}
+.tile.w::after{background:var(--st-pend)} .tile.g::after{background:var(--st-act)}
+.tile k{display:block;font-size:10.5px;font-weight:700;letter-spacing:.075em;text-transform:uppercase;color:var(--dim)}
+.tile v{display:block;font-size:29px;font-weight:800;color:var(--ink-strong);letter-spacing:-.028em;
+  margin-top:4px;line-height:1.05;font-family:var(--display)}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab{border:1px solid var(--line-strong);background:var(--surface);color:var(--dim);padding:5.5px 11px;
+  border-radius:999px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:650;
+  display:inline-flex;align-items:center;gap:6px}
+.tab i{width:6px;height:6px;border-radius:50%}
+.tab b{color:var(--ink-strong);font-weight:800}
+.tab.on{background:var(--tab-on-bg);border-color:var(--tab-on-bg);color:var(--tab-on-ink)}
+.tab.on b{color:var(--tab-on-ink)}
+
+.tw{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface);
+  box-shadow:var(--shadow-xs)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--dim);padding:10px 13px;background:var(--th-bg);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 13px;border-bottom:1px solid var(--line-soft);color:var(--ink);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--row-hover)}
+.c2{display:flex;align-items:center;gap:9px;min-width:0}
+.mk{width:27px;height:27px;border-radius:7px;display:grid;place-items:center;font-size:10.5px;
+  font-weight:800;flex:0 0 27px}
+.nm{font-weight:650;color:var(--ink-strong);white-space:nowrap}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--dim)}
+
+.bg{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;
+  font-size:11.5px;font-weight:700;white-space:nowrap}
+.bg i{width:6px;height:6px;border-radius:50%;flex:0 0 6px;background:currentColor}
+.b-act{background:var(--st-act-bg);color:var(--st-act)}
+.b-asig{background:var(--st-asig-bg);color:var(--st-asig)}
+.b-pend{background:var(--st-pend-bg);color:var(--st-pend)}
+.b-sign{background:var(--st-sign-bg);color:var(--st-sign)}
+.b-draft{background:var(--st-draft-bg);color:var(--st-draft)}
+.b-canc{background:var(--st-canc-bg);color:var(--st-canc)}
+
+.note{margin-top:22px;background:#161a21;border:1px solid #262b35;border-left:3px solid #5b6472;
+  border-radius:10px;padding:15px 18px;font-size:14px;color:#98a0ad;line-height:1.6}
+.note b{color:#e7e9ee}
+
+/* ═══════════════ ΕΚΔΟΧΗ A — «Ρεύμα» ═══════════════
+   Η αρχική ταυτότητα, εκσυγχρονισμένη. Το amber ΜΕΝΕΙ μάρκα· η «Εκκρεμότητα»
+   μετακομίζει σε κοραλί, οπότε η σύγκρουση λύνεται από την άλλη πλευρά. */
+[data-v="a"]{
+  --display:"Inter",sans-serif; --brand-w:600; --brand-ls:.01em;
+  --bg:#f6f7f9; --surface:#ffffff; --line:#e4e7ec; --line-soft:#f0f2f5; --line-strong:#d6dae1;
+  --ink:#38414f; --ink-strong:#0d1b2e; --dim:#6b7688;
+  --input-bg:#f6f7f9; --input-line:#dde1e8; --tb-bg:#ffffff; --th-bg:#f6f7f9; --row-hover:#fafbfc;
+  --sb-bg:linear-gradient(178deg,#0a1f3d,#08192f); --sb-line:#ffffff14;
+  --sb-ink:#b9c5d6; --sb-ink-strong:#ffffff; --sb-ink-dim:#ffffff5c; --sb-icon:#8ea0ba;
+  --sb-hover:#ffffff10;
+  --sb-on-bg:linear-gradient(135deg,#f0a500,#ffc233); --sb-on-ink:#0a1f3d; --sb-on-icon:#0a1f3d;
+  --sb-on-shadow:0 3px 12px rgba(240,165,0,.32);
+  --mark-bg:linear-gradient(135deg,#f0a500,#ffc233); --mark-ink:#0a1f3d;
+  --mark-glow:0 2px 10px rgba(240,165,0,.3);
+  --accent:#f0a500; --on-accent:#0a1f3d; --accent-glow:0 2px 8px rgba(240,165,0,.32);
+  --tab-on-bg:#0a1f3d; --tab-on-ink:#ffffff; --tile-bar:#f0a500; --ok:#0f7a3d;
+  --st-draft:#8a93a5;--st-draft-bg:#f1f3f6; --st-asig:#2f72c4;--st-asig-bg:#e6effa;
+  --st-sign:#255fa8;--st-sign-bg:#e4ecf7; --st-act:#0f5f29;--st-act-bg:#e1f0e6;
+  --st-pend:#c2410c;--st-pend-bg:#ffece0; --st-canc:#c42a47;--st-canc-bg:#fceaee;
+  --badge-warn:#c2410c;--badge-warn-bg:#ffece0;
+}
+/* ═══════════════ ΕΚΔΟΧΗ B — «Πετρόλ» ═══════════════
+   Θερμά ουδέτερα αντί για ψυχρό γκρι, και βαθύ πετρόλ ως επιφάνεια μάρκας.
+   Το accent είναι χαλκός: ζεστό, ενεργειακό, και δεν ακουμπά καμία κατάσταση. */
+[data-v="b"]{
+  --display:"Inter",sans-serif; --brand-w:600; --brand-ls:.01em;
+  --bg:#faf8f5; --surface:#ffffff; --line:#e9e4dc; --line-soft:#f4f0ea; --line-strong:#dbd4c9;
+  --ink:#4a453e; --ink-strong:#1c1a17; --dim:#7d766c;
+  --input-bg:#faf8f5; --input-line:#e3ddd4; --tb-bg:#ffffff; --th-bg:#faf8f5; --row-hover:#fdfcfa;
+  --sb-bg:linear-gradient(178deg,#0d3b3e,#0a2e30); --sb-line:#ffffff16;
+  --sb-ink:#a8c2c2; --sb-ink-strong:#ffffff; --sb-ink-dim:#ffffff5c; --sb-icon:#7fa3a3;
+  --sb-hover:#ffffff12; --sb-on-bg:#ffffff; --sb-on-ink:#0d3b3e; --sb-on-icon:#0d3b3e;
+  --sb-on-shadow:0 2px 10px rgba(0,0,0,.16);
+  --mark-bg:linear-gradient(135deg,#c8763c,#e09455); --mark-ink:#ffffff;
+  --mark-glow:0 2px 10px rgba(200,118,60,.34);
+  --accent:#b8642f; --on-accent:#ffffff; --accent-glow:0 2px 8px rgba(184,100,47,.3);
+  --tab-on-bg:#0d3b3e; --tab-on-ink:#ffffff; --tile-bar:#b8642f; --ok:#12715a;
+  --st-draft:#8f8578;--st-draft-bg:#f3efe9; --st-asig:#2f72c4;--st-asig-bg:#e6effa;
+  --st-sign:#255fa8;--st-sign-bg:#e4ecf7; --st-act:#12715a;--st-act-bg:#dff0ea;
+  --st-pend:#a8600a;--st-pend-bg:#fdf1de; --st-canc:#b8323f;--st-canc-bg:#fbeaec;
+  --badge-warn:#a8600a;--badge-warn-bg:#fdf1de;
+}
+/* ═══════════════ ΕΚΔΟΧΗ C — «Ανθρακί» ═══════════════
+   Ζεστό ανθρακί ως chrome, με ηλεκτρικό πράσινο-λάιμ. Το πιο τολμηρό:
+   «ενέργεια» κυριολεκτικά, και δεν μοιάζει με κανένα άλλο CRM. */
+[data-v="c"]{
+  --display:"Inter",sans-serif; --brand-w:700; --brand-ls:-.02em;
+  --bg:#f7f7f6; --surface:#ffffff; --line:#e6e5e2; --line-soft:#f1f1ef; --line-strong:#d5d4d0;
+  --ink:#3f3f3c; --ink-strong:#131312; --dim:#75746f;
+  --input-bg:#f7f7f6; --input-line:#e0dfdb; --tb-bg:#ffffff; --th-bg:#f7f7f6; --row-hover:#fbfbfa;
+  --sb-bg:#1a1a18; --sb-line:#ffffff14;
+  --sb-ink:#a6a59f; --sb-ink-strong:#ffffff; --sb-ink-dim:#ffffff52; --sb-icon:#83827c;
+  --sb-hover:#ffffff0f; --sb-on-bg:#c2f04a; --sb-on-ink:#141410; --sb-on-icon:#141410;
+  --sb-on-shadow:0 3px 14px rgba(194,240,74,.26);
+  --mark-bg:#c2f04a; --mark-ink:#141410; --mark-glow:0 2px 12px rgba(194,240,74,.3);
+  --accent:#141410; --on-accent:#c2f04a; --accent-glow:0 2px 8px rgba(0,0,0,.2);
+  --tab-on-bg:#1a1a18; --tab-on-ink:#c2f04a; --tile-bar:#8fbf1f; --ok:#3d7a12;
+  --st-draft:#8b8a85;--st-draft-bg:#f0f0ee; --st-asig:#2f72c4;--st-asig-bg:#e6effa;
+  --st-sign:#255fa8;--st-sign-bg:#e4ecf7; --st-act:#3d7a12;--st-act-bg:#eaf3dc;
+  --st-pend:#b3670a;--st-pend-bg:#fdf2e1; --st-canc:#c02a3c;--st-canc-bg:#fbe9ec;
+  --badge-warn:#b3670a;--badge-warn-bg:#fdf2e1;
+}
+
+@media(max-width:900px){
+  .app{flex-direction:column;min-height:0}
+  .sb{width:100%;flex:none;flex-direction:row;overflow-x:auto;border-right:none;padding:9px}
+  .brand,.navlbl,.sbfoot,.nb{display:none}
+  .ni{width:auto;white-space:nowrap}
+  .tiles{grid-template-columns:1fr 1fr}
+  .pick{min-width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="lead">
+  <h1>Τρεις ταυτότητες, ίδια οθόνη</h1>
+  <p>Το σύστημα καταστάσεων μένει όπως μετρήθηκε — αυτό δουλεύει. Αλλάζει μόνο το
+     <strong>chrome</strong>: μενού, accent, ουδέτερα, το χρώμα της μάρκας.</p>
+  <p class="why">Η προηγούμενη πρόταση ήταν άοσμη γιατί έβγαλα το amber, που ήταν
+     αυτό που έδινε πρόσωπο. Ο λόγος ήταν σωστός — συγκρουόταν με την «Εκκρεμότητα» —
+     αλλά διάλεξα τη λάθος πλευρά της σύγκρουσης. Και οι τρεις εκδοχές παρακάτω τη
+     λύνουν από την άλλη: <strong>η μάρκα κρατάει το χρώμα της, η «Εκκρεμότητα»
+     μετακομίζει.</strong></p>
+</div>
+
+<div class="picker">
+  <button class="pick on" data-set="a">
+    <span class="sw"><i style="background:#0a1f3d"></i><i style="background:#f0a500"></i><i style="background:#f6f7f9"></i></span>
+    <b>A · Ρεύμα</b>
+    <span>Η δική σου ταυτότητα, εκσυγχρονισμένη. Navy μενού, amber μάρκα.
+      Αναγνωρίσιμο από την πρώτη ματιά.</span>
+  </button>
+  <button class="pick" data-set="b">
+    <span class="sw"><i style="background:#0d3b3e"></i><i style="background:#b8642f"></i><i style="background:#faf8f5"></i></span>
+    <b>B · Πετρόλ</b>
+    <span>Θερμά ουδέτερα αντί για ψυχρό γκρι, βαθύ πετρόλ μενού, χαλκός accent.
+      Σοβαρό και ξεχωριστό.</span>
+  </button>
+  <button class="pick" data-set="c">
+    <span class="sw"><i style="background:#1a1a18"></i><i style="background:#c2f04a"></i><i style="background:#f7f7f6"></i></span>
+    <b>C · Ανθρακί</b>
+    <span>Ανθρακί chrome, ηλεκτρικό λάιμ. Το πιο τολμηρό —
+      «ενέργεια» κυριολεκτικά, δεν μοιάζει με άλλο CRM.</span>
+  </button>
+</div>
+<p class="hint">Πάτα για εναλλαγή. Η δομή, τα μεγέθη και ο ρυθμός είναι πανομοιότυπα — αλλάζει μόνο η ταυτότητα.</p>
+
+<div class="frame">
+  <div class="chrome"><i></i><i></i><i></i><span>crm.fotogeniss.gr</span></div>
+  <div class="app" id="app" data-v="a">
+    <aside class="sb">
+      <div class="brand"><i>E</i><b>Energy <em>CRM</em></b></div>
+      <div class="navlbl">Πλοήγηση</div>
+      <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a9 9 0 0 1 18 0"/><path d="M12 13l4-3"/></svg>Dashboard</button>
+      <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v5"/><path d="M9.5 14.5h5"/></svg>Νέα Σύμβαση</button>
+      <button class="ni on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="8" y="2.5" width="8" height="4" rx="1.2"/><path d="M8.5 11h7"/></svg>Συμβάσεις</button>
+      <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M10.3 3.8 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/></svg>Εκκρεμότητες<span class="nb">7</span></button>
+      <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>Εργασίες<span class="nb">4</span></button>
+      <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M14 9h4"/></svg>Πελάτες</button>
+      <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.6a4 4 0 1 0 0 6.8"/><path d="M7.5 10.8h6"/></svg>Προμήθειες</button>
+      <div class="sbfoot">
+        <button class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="3"/></svg>Ρυθμίσεις</button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="tb">
+        <div class="srch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input placeholder="Αναζήτηση — ΑΦΜ, όνομα, ΗΚΑΣΠ…">
+        </div>
+        <div class="tbr">
+          <span class="live"><i></i> Live</span>
+          <span class="av">ΚΝ</span>
+        </div>
+      </header>
+      <div class="cnt">
+        <div class="ph">
+          <div><h1>Οι συμβάσεις μου</h1><p>142 συμβάσεις · Αύγουστος 2026</p></div>
+          <button class="btn btn-p">＋ Νέα Σύμβαση</button>
+        </div>
+
+        <div class="tiles">
+          <div class="tile"><k>Σύνολο μήνα</k><v>34</v></div>
+          <div class="tile g"><k>Ενεργές</k><v>78</v></div>
+          <div class="tile w"><k>Εκκρεμότητες</k><v>7</v></div>
+          <div class="tile"><k>Προμήθεια</k><v>1.840€</v></div>
+        </div>
+
+        <div class="tabs">
+          <span class="tab on">ΟΛΕΣ <b>142</b></span>
+          <span class="tab"><i style="background:var(--st-draft)"></i>ΠΡΟΧΕΙΡΑ <b>6</b></span>
+          <span class="tab"><i style="background:var(--st-asig)"></i>ΑΝΑΜΟΝΗ <b>11</b></span>
+          <span class="tab"><i style="background:var(--st-sign)"></i>ΥΠΕΓΡΑΦΗ <b>9</b></span>
+          <span class="tab"><i style="background:var(--st-pend)"></i>ΕΚΚΡΕΜΟΤΗΤΑ <b>7</b></span>
+          <span class="tab"><i style="background:var(--st-act)"></i>ΕΝΕΡΓΕΣ <b>78</b></span>
+        </div>
+
+        <div class="tw">
+          <table>
+            <thead><tr><th>Πάροχος</th><th>Πελάτης</th><th>ΗΚΑΣΠ</th><th>Κατάσταση</th><th>Ενημέρωση</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="c2"><span class="mk" style="background:var(--st-asig-bg);color:var(--st-asig)">OR</span><span>ORIZON</span></div></td>
+                <td><span class="nm">Γιώργος Παπαδόπουλος</span></td>
+                <td class="mono">40012345678</td>
+                <td><span class="bg b-act"><i></i>Ενεργή</span></td>
+                <td class="mono">17/08</td>
+              </tr>
+              <tr>
+                <td><div class="c2"><span class="mk" style="background:var(--st-canc-bg);color:var(--st-canc)">PR</span><span>Protergia</span></div></td>
+                <td><span class="nm">Μαρία Κωνσταντίνου</span></td>
+                <td class="mono">40098765432</td>
+                <td><span class="bg b-asig"><i></i>Αναμονή υπογραφής</span></td>
+                <td class="mono">17/08</td>
+              </tr>
+              <tr>
+                <td><div class="c2"><span class="mk" style="background:var(--st-asig-bg);color:var(--st-asig)">OR</span><span>ORIZON</span></div></td>
+                <td><span class="nm">Δημήτρης Αντωνίου</span></td>
+                <td class="mono">6944123456</td>
+                <td><span class="bg b-pend"><i></i>Εκκρεμότητα</span></td>
+                <td class="mono">16/08</td>
+              </tr>
+              <tr>
+                <td><div class="c2"><span class="mk" style="background:var(--st-canc-bg);color:var(--st-canc)">PR</span><span>Protergia</span></div></td>
+                <td><span class="nm">Ελένη Σταμάτη</span></td>
+                <td class="mono">40055512340</td>
+                <td><span class="bg b-sign"><i></i>Υπεγράφη</span></td>
+                <td class="mono">16/08</td>
+              </tr>
+              <tr>
+                <td><div class="c2"><span class="mk" style="background:var(--st-draft-bg);color:var(--st-draft)">—</span><span>—</span></div></td>
+                <td><span class="nm">Αναστασία Μήτσου</span></td>
+                <td class="mono">—</td>
+                <td><span class="bg b-draft"><i></i>Πρόχειρο</span></td>
+                <td class="mono">15/08</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <b>Τι αλλάζει στον κώδικα αν διαλέξεις μία:</b> μόνο το μπλοκ των tokens στο
+  <code>ecrm-form.css</code>, συν το χρώμα της «Εκκρεμότητας» στο σύνολο των καταστάσεων.
+  Όλη η δουλειά των βημάτων 1-5 — τα ενοποιημένα tokens, τα breakpoints, η κάτω μπάρα,
+  η διαδρομή καταστάσεων — <b>μένει ως έχει</b>. Γι' αυτό μπήκαν όλα σε μεταβλητές:
+  ώστε η ταυτότητα να αλλάζει σε ένα σημείο, όχι σε διακόσια.
+</div>
+
+</div>
+<script>
+  var app = document.getElementById('app');
+  document.querySelectorAll('.pick').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.pick').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      app.setAttribute('data-v', b.getAttribute('data-set'));
+    });
+  });
+</script>
+</body>
+</html>

@@ -4,19 +4,83 @@
  * that fills with a soft glow, and freshly-AI-filled inputs pulse amber once. */
 
 .ecrm {
-	--navy: #0a1f3d;
-	--navy-soft: #1e3a5f;
-	--amber: #f59e0b;
-	--amber-bright: #fbbf24;
-	--ink: #0f172a;
-	--muted: #64748b;
-	--line: #e2e8f0;
-	--line-soft: #f1f5f9;
-	--bg: #f8fafc;
-	--surface: #ffffff;
-	--ok: #10b981;
-	--err: #ef4444;
-	--radius: 12px;
+	/* ---- Παλέτα «Ανθρακί» — 2026-08-17 --------------------------------
+	 * Θερμά ουδέτερα + λάιμ, με ανθρακί chrome. Το amber ΕΠΕΣΤΡΕΨΕ ως χρώμα
+	 * κατάστασης («Εκκρεμότητα»): η σύγκρουση μάρκας/κατάστασης λύθηκε από
+	 * την πλευρά της μάρκας, όχι της κατάστασης — δες CHANGELOG (9)/(10).
+	 * Οι τιμές πέρασαν από validator· τα δύο FAIL που έμειναν είναι σκόπιμα
+	 * και τεκμηριωμένα. Σκεπτικό: docs/UI-PREMIUM.html */
+	--n0: #ffffff;
+	--n25: #fdfdfc;
+	--n50: #f8f8f6;
+	--n100: #f1f1ee;
+	--n150: #e9e8e4;
+	--n200: #dedcd7;
+	--n300: #c6c4bd;
+	--n400: #a3a099;
+	--n500: #7c7a73;
+	--n600: #5c5a55;
+	--n700: #42413d;
+	--n800: #2a2926;
+	--n900: #1a1a18;
+	--n950: #111110;
+
+	/* Λάιμ. Το --p400 είναι η υπογραφή· τα σκουρότερα σκαλιά υπάρχουν για
+	 * κείμενο πάνω σε ανοιχτό φόντο, όπου το ίδιο το λάιμ δεν διαβάζεται. */
+	--p50: #f7fce9;
+	--p100: #eefad0;
+	--p200: #e0f6a8;
+	--p300: #d2f27d;
+	--p400: #c2f04a;
+	--p500: #a9d92b;
+	--p600: #8cba1c;
+	--p700: #6b8f14;
+	--p800: #4e690f;
+
+	/* Chrome: το πλαϊνό και ό,τι κάθεται πάνω του. */
+	--chrome: #171715;
+	--chrome-2: #1f1f1c;
+	--chrome-line: #ffffff14;
+	--chrome-ink: #a8a69f;
+	--chrome-ink-hi: #ffffff;
+	--chrome-ink-dim: #ffffff4d;
+
+	/* Καταστάσεις: πέντε οικογένειες. Χειρότερο ζεύγος σε κανονική όραση
+	 * ΔE 15.1 (όριο 15). Δύο ελλείψεις, και οι δύο συνειδητές: το γκρι του
+	 * «Πρόχειρο» είναι κάτω από το όριο χρώματος επειδή ΠΡΕΠΕΙ να υποχωρεί,
+	 * και το κόκκινο με το πράσινο είναι ταυτόσημα σε δυσχρωματοψία — καμία
+	 * επιλογή δεν το λύνει, γι' αυτό «Ακυρώθηκε» και «Εκκρεμότητα» φέρουν
+	 * ΣΧΗΜΑ (× και !) πέρα από απόχρωση. */
+	--st-draft: #8f929a;		--st-draft-bg: #f0f1f3;
+	--st-term: #6e727a;		--st-term-bg: #eceef0;
+	--st-new: #5b9be0;		--st-new-bg: #eaf3fc;
+	--st-psig: #4587d4;		--st-psig-bg: #e8f1fb;
+	--st-asig: #2f72c4;		--st-asig-bg: #e6effa;
+	--st-signed: #255fa8;		--st-signed-bg: #e4ecf7;
+	--st-proc: #1b4c8a;		--st-proc-bg: #e2eaf4;
+	--st-pending: #b87503;		--st-pending-bg: #fdf3e0;
+	--st-resolved: #33a854;		--st-resolved-bg: #e7f5eb;
+	--st-routed: #1b8a3d;		--st-routed-bg: #e4f4e9;
+	--st-active: #0f5f29;		--st-active-bg: #e1f0e6;
+	--st-cancel: #c42a47;		--st-cancel-bg: #fceaee;
+
+	/* Κείμενο ΠΑΝΩ στο accent. Το iris ήταν σκούρο και ήθελε λευκό· το λάιμ
+	 * είναι ανοιχτό και θέλει σκούρο. Ένα σημείο, όχι δώδεκα κανόνες. */
+	--on-accent: #141410;
+
+	--navy: var(--n900);
+	--navy-soft: var(--n700);
+	--amber: var(--p400);
+	--amber-bright: var(--p300);
+	--ink: var(--n800);
+	--muted: var(--n500);
+	--line: var(--n200);
+	--line-soft: var(--n100);
+	--bg: var(--n50);
+	--surface: var(--n0);
+	--ok: var(--st-routed);
+	--err: var(--st-cancel);
+	--radius: 10px;
 
 	font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 	color: var(--ink);
@@ -41,13 +105,13 @@
 
 /* --- card --- */
 .ecrm-card {
-	background: var(--surface);
-	border: 1px solid var(--line);
+	background: var(--n0);
+	border: 1px solid var(--n150);
 	border-radius: var(--radius);
-	padding: 20px 22px;
-	box-shadow: 0 1px 3px rgba(15,23,42,.05);
+	padding: 18px 20px;
+	box-shadow: 0 1px 2px rgba(16,24,40,.04);
 }
-.ecrm-card--ai { border-color: #fde68a; background: linear-gradient(180deg,#fffbeb 0%,#ffffff 70%); }
+.ecrm-card--ai { border-color: var(--p200); background: linear-gradient(180deg,var(--p50) 0%,var(--n0) 70%); }
 
 .ecrm-step {
 	display: flex; align-items: center; gap: 10px;
@@ -58,7 +122,7 @@
 	background: var(--ok); color: #fff;
 	display: grid; place-items: center; font-size: 12px; font-weight: 800;
 }
-.ecrm-step__n--ai { background: var(--amber); color: var(--navy); width: auto; padding: 0 9px; border-radius: 999px; font-size: 11px; letter-spacing: .06em; }
+.ecrm-step__n--ai { background: var(--amber); color: var(--on-accent); width: auto; padding: 0 9px; border-radius: 999px; font-size: 11px; letter-spacing: .06em; }
 
 /* --- providers --- */
 .ecrm-providers {
@@ -70,8 +134,8 @@
 	font-weight: 700; color: var(--navy); transition: border-color .15s, box-shadow .15s, transform .1s;
 }
 .ecrm-provider img { max-width: 100%; max-height: 40px; object-fit: contain; }
-.ecrm-provider:hover { border-color: var(--navy-soft); }
-.ecrm-provider.is-on { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,.18); }
+.ecrm-provider:hover { border-color: var(--n300); }
+.ecrm-provider.is-on { border-color: var(--p500); background: var(--p50); box-shadow: 0 0 0 3px var(--p100); }
 
 /* --- rows / chips --- */
 .ecrm-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; flex-wrap: wrap; }
@@ -85,13 +149,13 @@
 	font-family: inherit; transition: all .14s;
 }
 .ecrm-chip:hover { border-color: var(--navy-soft); }
-.ecrm-chip.is-on { background: var(--ok); border-color: var(--ok); color: #fff; }
+.ecrm-chip.is-on { background: var(--p50); border-color: var(--p500); color: var(--p700); font-weight: 700; }
 
 .ecrm-select {
 	flex: 1; min-width: 200px; height: 42px; padding: 0 12px;
 	border: 1.5px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 14px; color: var(--ink); background: #fff;
 }
-.ecrm-select:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,.18); }
+.ecrm-select:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(90,81,209,.18); }
 
 /* --- AI dropzone (signature element) --- */
 .ecrm-ai-lead { margin: -6px 0 14px; color: var(--muted); font-size: 13.5px; }
@@ -100,8 +164,8 @@
 	padding: 34px 20px; text-align: center; cursor: pointer;
 	transition: background .18s, border-color .18s, box-shadow .18s;
 }
-.ecrm-drop:hover, .ecrm-drop:focus-visible { background: #fef9e7; border-color: var(--amber); outline: none; }
-.ecrm-drop.is-drag { background: #fef3c7; border-color: var(--amber); box-shadow: 0 0 0 4px rgba(245,158,11,.16) inset; }
+.ecrm-drop:hover, .ecrm-drop:focus-visible { background: var(--p50); border-color: var(--p500); outline: none; }
+.ecrm-drop.is-drag { background: var(--p100); border-color: var(--p600); box-shadow: 0 0 0 4px rgba(90,81,209,.16) inset; }
 .ecrm-drop__icon { font-size: 26px; color: var(--amber); margin-bottom: 8px; }
 .ecrm-drop__title { font-weight: 700; color: var(--navy); font-size: 16px; }
 .ecrm-drop__hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
@@ -126,15 +190,15 @@
 	font-family: inherit; font-size: 14px; color: var(--ink); background: #fff; transition: border-color .14s, box-shadow .14s, background .4s;
 }
 .ecrm-textarea { height: auto; padding: 10px 12px; resize: vertical; width: 100%; }
-.ecrm-input:focus, .ecrm-textarea:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,.18); }
+.ecrm-input:focus, .ecrm-textarea:focus { outline: none; border-color: var(--p500); box-shadow: 0 0 0 3px var(--p100); }
 /* Read-only: system-computed value, not a box to type into (e.g. the Orizon
    plan's fixed price) — visibly different so an agent doesn't hunt for why
    typing does nothing. */
-.ecrm-input[readonly] { background: #f8fafc; color: #64748b; cursor: default; }
+.ecrm-input[readonly] { background: var(--n50); color: var(--n500); cursor: default; }
 .ecrm-input[readonly]:focus { box-shadow: none; border-color: var(--line); }
 /* AI-filled pulse */
-.ecrm-field.is-ai .ecrm-input { background: #fff7e6; border-color: var(--amber); animation: ecrm-pulse 1.6s ease; }
-@keyframes ecrm-pulse { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,.4); } 100% { box-shadow: 0 0 0 8px rgba(245,158,11,0); } }
+.ecrm-field.is-ai .ecrm-input { background: var(--p50); border-color: var(--p400); animation: ecrm-pulse 1.6s ease; }
+@keyframes ecrm-pulse { 0% { box-shadow: 0 0 0 0 rgba(90,81,209,.4); } 100% { box-shadow: 0 0 0 8px rgba(90,81,209,0); } }
 
 /* --- buttons --- */
 .ecrm-btn {
@@ -142,15 +206,15 @@
 	padding: 12px 20px; cursor: pointer; transition: transform .1s, box-shadow .15s, filter .15s, background .15s;
 }
 .ecrm-btn:disabled { opacity: .55; cursor: not-allowed; }
-.ecrm-btn--ai { margin-top: 14px; background: linear-gradient(135deg,var(--amber),var(--amber-bright)); color: var(--navy); box-shadow: 0 6px 16px rgba(245,158,11,.3); }
+.ecrm-btn--ai { margin-top: 14px; background: linear-gradient(135deg,var(--amber),var(--amber-bright)); color: var(--on-accent); box-shadow: 0 6px 16px rgba(90,81,209,.28); }
 .ecrm-btn--ai:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.04); }
 .ecrm-btn--ai.is-loading { position: relative; color: transparent; }
 .ecrm-btn--ai.is-loading::after { content: ""; position: absolute; inset: 0; margin: auto; width: 16px; height: 16px; border: 2px solid rgba(10,31,61,.35); border-top-color: var(--navy); border-radius: 50%; animation: ecrm-spin .7s linear infinite; }
 @keyframes ecrm-spin { to { transform: rotate(360deg); } }
-.ecrm-btn--ghost { background: #fff; border: 1.5px solid var(--amber); color: var(--amber-dark,#b45309); }
-.ecrm-btn--ghost:hover:not(:disabled) { background: #fffbeb; }
-.ecrm-btn--primary { background: var(--navy); color: #fff; box-shadow: 0 6px 16px rgba(10,31,61,.25); }
-.ecrm-btn--primary:hover:not(:disabled) { background: var(--navy-soft); transform: translateY(-1px); }
+.ecrm-btn--ghost { background: var(--n0); border: 1px solid var(--n200); color: var(--n700); }
+.ecrm-btn--ghost:hover:not(:disabled) { background: var(--n50); border-color: var(--n300); }
+.ecrm-btn--primary { background: var(--n900); color: var(--p400); box-shadow: 0 1px 2px rgba(17,17,16,.18); }
+.ecrm-btn--primary:hover:not(:disabled) { background: var(--n950); }
 
 /* --- footer --- */
 .ecrm-foot {
@@ -191,11 +255,11 @@
 .ecrm-step__hint { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted); }
 
 /* sectioned form: subheaders + input addon */
-.ecrm-subhead { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #94a3b8; margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid #eef2f7; }
+.ecrm-subhead { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--n400); margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--n150); }
 .ecrm-input-wrap { display: flex; }
 .ecrm-input-wrap .ecrm-input { border-top-right-radius: 0; border-bottom-right-radius: 0; flex: 1; }
-.ecrm-input-btn { border: 1.5px solid #e2e8f0; border-left: none; background: #f8fafc; border-radius: 0 10px 10px 0; padding: 0 14px; cursor: pointer; font-size: 14px; }
-.ecrm-input-btn:hover { background: #eef2f7; }
+.ecrm-input-btn { border: 1.5px solid var(--n200); border-left: none; background: var(--n50); border-radius: 0 10px 10px 0; padding: 0 14px; cursor: pointer; font-size: 14px; }
+.ecrm-input-btn:hover { background: var(--n150); }
 
 /* sync bars (PSS green "ίδια στοιχεία" toggles) */
 .ecrm-syncbar { display: flex; align-items: center; gap: 9px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
@@ -205,7 +269,7 @@
    declaration beats the [hidden] attribute, so it has to be said explicitly —
    same reason as .ecrm-bell__badge[hidden] in ecrm-app.css. */
 .ecrm-grid[hidden] { display: none; }
-.ecrm-subhead .ecrm-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: #cbd5e1; }
+.ecrm-subhead .ecrm-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--n300); }
 
 /* action banners (PDF / e-sign email / live link) */
 .ecrm-actbanners { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 18px; }
@@ -216,35 +280,35 @@
 .ecrm-actbanner__tx { display: flex; flex-direction: column; gap: 3px; }
 .ecrm-actbanner__tx b { font-size: 15px; font-weight: 800; }
 .ecrm-actbanner__tx span { font-size: 12.5px; opacity: .92; }
-.ecrm-actbanner--amber { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #3a2606; }
+.ecrm-actbanner--amber { background: linear-gradient(135deg, var(--p600), var(--p500)); color: var(--on-accent); }
 .ecrm-actbanner--amber .ecrm-actbanner__ic { background: rgba(58,38,6,.14); }
 .ecrm-actbanner--purple { background: linear-gradient(135deg, #6d28d9, #7c3aed); }
 .ecrm-actbanner--teal { background: linear-gradient(135deg, #0891b2, #06b6d4); }
 
 /* --- Field validation feedback --- */
 .ecrm-input.is-invalid { border-color: #ef4444 !important; box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
-.ecrm-input.is-warn { border-color: #f59e0b !important; }
+.ecrm-input.is-warn { border-color: var(--st-pending) !important; }
 .ecrm-fieldnote { display:block; font-size:12px; margin-top:4px; }
 .ecrm-fieldnote.is-err { color:#dc2626; }
 .ecrm-fieldnote.is-warn { color:#b45309; }
 
 /* GDPR consent */
-.ecrm-consent { display:flex; align-items:flex-start; gap:8px; font-size:12px; color:#475569; margin-bottom:10px; max-width:680px; line-height:1.4; }
+.ecrm-consent { display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--n600); margin-bottom:10px; max-width:680px; line-height:1.4; }
 .ecrm-consent input { margin-top:2px; }
 
 /* --- KB required-documents panel --- */
 .ecrm-step__n--kb { background:#dcfce7; color:#15803d; }
 .ecrm-kbdocs__body { display:flex; flex-direction:column; gap:8px; }
-.ecrm-kbdoc { border:1px solid #eef2f7; border-radius:10px; padding:0; overflow:hidden; background:#fafcff; }
+.ecrm-kbdoc { border:1px solid var(--n150); border-radius:10px; padding:0; overflow:hidden; background:#fafcff; }
 .ecrm-kbdoc > summary { cursor:pointer; padding:11px 14px; font-weight:600; font-size:14px; color:#0f172a; list-style:none; }
 .ecrm-kbdoc > summary::-webkit-details-marker { display:none; }
-.ecrm-kbdoc > summary::before { content:'▸ '; color:#94a3b8; }
+.ecrm-kbdoc > summary::before { content:'▸ '; color:var(--n400); }
 .ecrm-kbdoc[open] > summary::before { content:'▾ '; }
-.ecrm-kbdoc__b { padding:2px 16px 14px; font-size:13.5px; color:#334155; line-height:1.6; border-top:1px solid #f1f5f9; }
+.ecrm-kbdoc__b { padding:2px 16px 14px; font-size:13.5px; color:var(--n700); line-height:1.6; border-top:1px solid var(--n100); }
 .ecrm-kbdoc__b h4 { margin:10px 0 4px; font-size:13px; color:#0f172a; background:#eef2ff; display:inline-block; padding:2px 10px; border-radius:999px; }
 .ecrm-kbdoc__b ol, .ecrm-kbdoc__b ul { padding-left:20px; margin:4px 0; }
 .ecrm-kbdoc__b table { border-collapse:collapse; margin:8px 0; font-size:12.5px; }
-.ecrm-kbdoc__b th, .ecrm-kbdoc__b td { border:1px solid #e2e8f0; padding:4px 8px; }
+.ecrm-kbdoc__b th, .ecrm-kbdoc__b td { border:1px solid var(--n200); padding:4px 8px; }
 
 /* --- Duplicate warning --- */
 .ecrm-dupwarn { background:#fff7ed; border:1px solid #fdba74; border-radius:12px; padding:14px 16px; margin:4px 0 8px; }

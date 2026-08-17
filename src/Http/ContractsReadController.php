@@ -22,6 +22,7 @@ use ECRM_Files;
 use ECRM_Tracking;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\EventRepository;
@@ -122,11 +123,24 @@ final class ContractsReadController implements Controller
         $row['doc_checklist'] = ECRM_Docs::checklist($id, (string) ($row['activation_type'] ?? ''));
         $row['doc_kinds']     = ECRM_Docs::kinds();
 
+        // What the status panel is allowed to offer, per the same graph the
+        // server enforces (ContractStatus::allowedNext()) — the screen used to
+        // render all twelve statuses as clickable regardless of the contract's
+        // current one, so an agent saw legal and illegal moves side by side
+        // and only found out which was which from a 409 toast. An unreadable
+        // status falls back to every slug rather than none, so a row this
+        // never happens to hits the old (permissive) behaviour, not a
+        // frozen one.
+        $currentStatus = ContractStatus::tryFromSlug((string) ($row['status'] ?? ''));
+
         return new WP_REST_Response([
             'ok'               => true,
             'contract'         => $row,
             'statuses'         => ECRM_DB::statuses(),
             'activation_types' => ECRM_DB::activation_types(),
+            'allowed_next'     => $currentStatus === null
+                ? array_keys(ECRM_DB::statuses())
+                : array_map(static fn (ContractStatus $s): string => $s->value, $currentStatus->allowedNext()),
         ], 200);
     }
 

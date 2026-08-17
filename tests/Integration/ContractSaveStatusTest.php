@@ -226,6 +226,81 @@ final class ContractSaveStatusTest extends IntegrationTestCase
         );
     }
 
+    /**
+     * 6. Finalising leaves a status_change event behind — the card's history.
+     *
+     * Until 2026-08-17 this route wrote `status` as an ordinary column through
+     * ContractRepository::update() and never through
+     * ContractLifecycle::moveTo(). moveTo() is the only place that records the
+     * event, announces in-app and by SMS, and fires
+     * ecrm_contract_status_changed — so the busiest transition in the product
+     * left no trace on the contract's timeline at all. ECRM_Audit::excluded()
+     * drops `status` from its own field diff, on the documented assumption
+     * that "status changes keep their own dedicated events": true for
+     * ContractStatusController and the bulk action, false here.
+     *
+     * Test 4 above already asserts the column moves, and it stayed green
+     * through the whole bug. That is why this is a separate test: the visible
+     * outcome was correct and the record of it was missing, which no assertion
+     * about the column can tell apart.
+     */
+    public function testFinalisingADraftRecordsAStatusChangeEvent(): void
+    {
+        $contractId = $this->makeDraft();
+
+        self::assertSame(
+            [],
+            $this->eventsOf($contractId, 'status_change'),
+            'Το fixture ξεκίνησε με ιστορικό μετάβασης, οπότε το test δεν θα μετρούσε την οριστικοποίηση.'
+        );
+
+        $response = $this->save([
+            'contract_id' => $contractId,
+            'status'      => ContractStatus::Submitted->value,
+        ]);
+
+        self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
+
+        $events = $this->eventsOf($contractId, 'status_change');
+
+        self::assertCount(
+            1,
+            $events,
+            'Η οριστικοποίηση δεν άφησε εγγραφή status_change — η κάρτα δείχνει κενό '
+            . 'ιστορικό για τη συχνότερη μετάβαση του προϊόντος.'
+        );
+
+        self::assertSame(ContractStatus::Draft->value, $events[0]['from_status']);
+        self::assertSame(ContractStatus::Submitted->value, $events[0]['to_status']);
+    }
+
+    /**
+     * 7. A field-only edit records nothing, because nothing moved.
+     *
+     * The counterweight to 6. Routing the save through moveTo() must not turn
+     * every ordinary edit into a transition: a payload with no `status` key
+     * writes no event, and the timeline stays readable instead of filling with
+     * entries for saves that changed a phone number. Without this, an
+     * implementation that called moveTo() unconditionally would pass 6.
+     */
+    public function testAFieldOnlyEditRecordsNoStatusChangeEvent(): void
+    {
+        $contractId = $this->makeDraft();
+
+        $response = $this->save([
+            'contract_id' => $contractId,
+            'notes'       => 'Μόνο σχόλιο, καμία μετάβαση',
+        ]);
+
+        self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
+
+        self::assertSame(
+            [],
+            $this->eventsOf($contractId, 'status_change'),
+            'Επεξεργασία πεδίου κατέγραψε μετάβαση που δεν έγινε.'
+        );
+    }
+
     // --- fixtures and helpers ------------------------------------------------
 
     /** A saved draft, through the same route under test. */
@@ -274,6 +349,34 @@ final class ContractSaveStatusTest extends IntegrationTestCase
     private function statusOf(int $contractId): string
     {
         return (string) $this->storedRow('contracts', $contractId)['status'];
+    }
+
+    /**
+     * The contract's events of one type, oldest first.
+     *
+     * Read straight from the table rather than through EventRepository: what
+     * is under test is what was written, and a repository in between would be
+     * a second thing that could be wrong.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function eventsOf(int $contractId, string $type): array
+    {
+        global $wpdb;
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT type, from_status, to_status, message, user_id
+                 FROM %i WHERE contract_id = %d AND type = %s ORDER BY id ASC',
+                Tables::name(Tables::EVENTS),
+                $contractId,
+                $type
+            ),
+            ARRAY_A
+        );
+
+        return $rows;
     }
 
     /**
