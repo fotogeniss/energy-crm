@@ -42,7 +42,9 @@
 	padding: 11px 12px; border-radius: 9px; transition: background .14s, color .14s; width: 100%;
 }
 .ecrm-nav__item:hover { background: #ffffff0f; color: var(--chrome-ink-hi); }
-.ecrm-nav__item.is-active { background: var(--p400); color: var(--on-accent); font-weight: 700; box-shadow: 0 2px 10px rgba(194,240,74,.22); }
+/* Το φωτοστέφανο ήταν rgba(194,240,74) — το ΛΑΪΜ γραμμένο με το χέρι, που δεν
+   περνούσε ποτέ από μεταβλητή. Θα έμενε λάιμ κάτω από πράσινο κουμπί. */
+.ecrm-nav__item.is-active { background: var(--p400); color: var(--on-accent); font-weight: 700; box-shadow: 0 2px 10px rgba(22,194,23,.28); }
 .ecrm-nav__item.is-active .ecrm-nav__icon { color: var(--on-accent); }
 .ecrm-nav__icon { width: 20px; text-align: center; font-size: 15px; }
 .ecrm-sidebar__foot { border-top: 1px solid var(--chrome-line); padding-top: 12px; margin-top: 12px; }
@@ -95,7 +97,9 @@
 .ecrm-chart { display: flex; align-items: flex-end; gap: 10px; height: 180px; padding-top: 10px; }
 .ecrm-bar { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; gap: 6px; }
 .ecrm-bar__fill { width: 70%; min-height: 3px; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, var(--amber-bright), var(--amber)); transition: height .5s ease; }
-.ecrm-bar:nth-child(even) .ecrm-bar__fill { background: linear-gradient(180deg, #8b5cf6, #7c3aed); }
+/* Οι μονές/ζυγές στήλες ήταν λάιμ και ΜΟΒ — το μοβ δεν υπάρχει πουθενά αλλού.
+   Δύο σκαλιά της ίδιας ράμπας κάνουν την ίδια δουλειά χωρίς δεύτερο λεξιλόγιο. */
+.ecrm-bar:nth-child(even) .ecrm-bar__fill { background: linear-gradient(180deg, var(--p300), var(--p500)); }
 .ecrm-bar__lbl { font-size: 11px; color: var(--muted); }
 
 .ecrm-plist { list-style: none; margin: 0; padding: 0; }
@@ -211,7 +215,7 @@
 .ecrm-timeline { list-style: none; margin: 0; padding: 0; }
 .ecrm-timeline li { display: flex; gap: 12px; padding: 0 0 16px; position: relative; }
 .ecrm-timeline li:not(:last-child)::after { content: ""; position: absolute; left: 5px; top: 14px; bottom: 0; width: 2px; background: var(--line); }
-.ecrm-timeline__dot { width: 12px; height: 12px; flex: 0 0 12px; border-radius: 50%; background: var(--amber); margin-top: 2px; z-index: 1; box-shadow: 0 0 0 3px #fff7e6; }
+.ecrm-timeline__dot { width: 12px; height: 12px; flex: 0 0 12px; border-radius: 50%; background: var(--p400); margin-top: 2px; z-index: 1; box-shadow: 0 0 0 3px var(--p50); }
 .ecrm-timeline__txt { font-size: 14px; color: var(--ink); font-weight: 500; }
 .ecrm-timeline__time { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
@@ -245,7 +249,7 @@
 .ecrm-litsa__fab {
 	width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer;
 	background: linear-gradient(135deg, var(--amber), var(--amber-bright));
-	box-shadow: 0 12px 28px -8px rgba(90,81,209,.7); display: grid; place-items: center;
+	box-shadow: 0 12px 28px -8px rgba(22,194,23,.45); display: grid; place-items: center;
 	transition: transform .15s; 
 }
 .ecrm-litsa__fab:hover { transform: translateY(-2px) scale(1.03); }
@@ -281,7 +285,8 @@
 
 .ecrm-litsa__foot { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); background: var(--surface); }
 .ecrm-litsa__input { flex: 1; height: 40px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 14px; }
-.ecrm-litsa__input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(90,81,209,.18); }
+/* Τρίτο υπόλειμμα iris. */
+.ecrm-litsa__input:focus { outline: none; border-color: var(--p400); box-shadow: none; }
 .ecrm-litsa__send { width: 40px; height: 40px; border: none; border-radius: 10px; background: var(--navy); color: #fff; cursor: pointer; font-size: 15px; }
 .ecrm-litsa__send:hover { background: var(--navy-soft); }
 
@@ -362,7 +367,7 @@
 }
 .ecrm-payhero::before {
 	content: ""; position: absolute; inset: 0; pointer-events: none;
-	background: radial-gradient(ellipse at 12% 18%, rgba(90,81,209,.16), transparent 50%);
+	background: radial-gradient(ellipse at 12% 18%, rgba(22,194,23,.14), transparent 50%);
 }
 .ecrm-payhero__main { position: relative; }
 .ecrm-payhero__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--amber-bright); }
@@ -424,7 +429,11 @@
 /* ============================================================
    Team / Network — tabs, empty states, page icon
    ============================================================ */
-.ecrm-btn--amber { background: linear-gradient(135deg, var(--amber), var(--amber-bright)); color: var(--on-accent); border: none; font-weight: 700; }
+/* Ήταν το «accent gradient» κουμπί. Με τρεις τύπους στο φύλλο του πελάτη δεν
+   χωράει τέταρτος: γίνεται ίδιο με το primary. Δύο σημεία το χρησιμοποιούν και
+   αξίζει να ενοποιηθούν σε --primary σε επόμενο πέρασμα. */
+.ecrm-btn--amber { background: var(--p400); color: #fff; border: none; }
+.ecrm-btn--amber:hover:not(:disabled) { background: var(--p500); }
 .ecrm-btn--amber:hover { filter: brightness(1.04); }
 
 .ecrm-titlewrap { display: flex; align-items: center; gap: 14px; }
@@ -438,7 +447,9 @@
 }
 .ecrm-tab2 span { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; margin-left: 6px; border-radius: 999px; background: var(--line); color: var(--navy); font-size: 11px; }
 .ecrm-tab2.is-on { color: var(--navy); border-bottom-color: var(--amber); }
-.ecrm-tab2.is-on span { background: var(--amber-bright); color: var(--on-accent); }
+/* Η ΜΟΝΗ εξαίρεση στο --on-accent: εδώ το φόντο είναι ΑΝΟΙΧΤΟ πράσινο
+   (--amber-bright = --p300) και το λευκό δεν διαβάζεται πάνω του. */
+.ecrm-tab2.is-on span { background: var(--amber-bright); color: var(--on-accent-light); }
 
 .ecrm-listhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .ecrm-listhead__count { font-size: 14px; font-weight: 700; color: var(--ink); }
@@ -569,7 +580,7 @@
 .ecrm-barrow { display:grid; grid-template-columns:130px 1fr 44px; align-items:center; gap:10px; }
 .ecrm-barrow__lbl { font-size:13px; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ecrm-barrow__track { background:var(--n150); border-radius:999px; height:10px; overflow:hidden; }
-.ecrm-barrow__fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--amber,#f59e0b),var(--amber-bright,#fbbf24)); min-width:3px; }
+.ecrm-barrow__fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--p400),var(--p300)); min-width:3px; }
 .ecrm-barrow__fill.is-prov { background:linear-gradient(90deg,#0ea5e9,#38bdf8); }
 .ecrm-barrow__fill.is-energy { background:linear-gradient(90deg,#10b981,#34d399); }
 .ecrm-barrow__fill.is-region { background:linear-gradient(90deg,#8b5cf6,#a78bfa); }
@@ -577,7 +588,7 @@
 
 .ecrm-trend { display:flex; align-items:flex-end; gap:6px; height:140px; padding-top:8px; }
 .ecrm-trend__col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; }
-.ecrm-trend__bar { width:100%; max-width:34px; border-radius:6px 6px 0 0; background:linear-gradient(180deg,var(--amber,#f59e0b),var(--amber-bright,#fbbf24)); transition:height .3s ease; }
+.ecrm-trend__bar { width:100%; max-width:34px; border-radius:6px 6px 0 0; background:linear-gradient(180deg,var(--p300),var(--p400)); transition:height .3s ease; }
 .ecrm-trend__lbl { font-size:11px; color:var(--n500); }
 
 /* --- Required-docs checklist + inline upload --- */
@@ -663,7 +674,7 @@
 .ecrm-kbfilter { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
 .ecrm-kbfilter > span { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--n400); margin-right:4px; }
 .ecrm-chip2 { border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:var(--n300); border-radius:999px; padding:4px 12px; font-size:13px; font-weight:600; cursor:pointer; }
-.ecrm-chip2.is-on { background:var(--amber,#f59e0b); color:var(--on-accent); border-color:var(--amber,#f59e0b); }
+.ecrm-chip2.is-on { background:var(--p400); color:var(--on-accent); border-color:var(--p400); }
 .ecrm-kbgroup { margin-bottom:18px; }
 .ecrm-kbgroup__head { font-size:15px; font-weight:800; color:#0f172a; padding:6px 2px; display:flex; align-items:center; gap:10px; }
 .ecrm-kbgroup__count { font-size:12px; font-weight:600; color:var(--n400); background:var(--n100); padding:2px 8px; border-radius:999px; }
@@ -687,7 +698,7 @@
 /* --- KB AI ask (Λίτσα) --- */
 .ecrm-kbsearchbox__title { color:#fff; font-size:18px; font-weight:800; margin-bottom:12px; }
 .ecrm-kbsearchbox__q { gap:10px; }
-.ecrm-kbask { flex:0 0 auto; border:0; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; background:var(--amber,#f59e0b); color:var(--on-accent); white-space:nowrap; }
+.ecrm-kbask { flex:0 0 auto; border:0; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; background:var(--p400); color:var(--on-accent); white-space:nowrap; }
 .ecrm-kbask:hover { filter:brightness(1.05); }
 .ecrm-kbanswer { margin-top:12px; background:#fff; border-radius:12px; padding:14px 16px; }
 .ecrm-kbanswer__loading { color:var(--n500); font-size:14px; }

@@ -729,15 +729,15 @@ class ECRM_Shortcodes {
 
 			<!-- Ενέργειες σύμβασης -->
 			<div class="ecrm-actbanners">
-				<button type="button" class="ecrm-actbanner ecrm-actbanner--amber" data-act="pdf">
+				<button type="button" class="ecrm-actbanner ecrm-actbanner--primary" data-act="pdf">
 					<span class="ecrm-actbanner__ic">🖨</span>
 					<span class="ecrm-actbanner__tx"><b>Εκτύπωση Σύμβασης</b><span>Δημιουργείται αυτόματα το PDF του συμβολαίου με τα στοιχεία της φόρμας</span></span>
 				</button>
-				<button type="button" class="ecrm-actbanner ecrm-actbanner--purple" data-act="email">
+				<button type="button" class="ecrm-actbanner ecrm-actbanner--dark" data-act="email">
 					<span class="ecrm-actbanner__ic">✉</span>
 					<span class="ecrm-actbanner__tx"><b>Αποστολή στον πελάτη για ηλεκτρονική υπογραφή</b><span>Στέλνεται email στον πελάτη με σύνδεσμο υπογραφής</span></span>
 				</button>
-				<button type="button" class="ecrm-actbanner ecrm-actbanner--teal" data-act="livelink">
+				<button type="button" class="ecrm-actbanner ecrm-actbanner--outline" data-act="livelink">
 					<span class="ecrm-actbanner__ic">🔗</span>
 					<span class="ecrm-actbanner__tx"><b>Δημιουργία συνδέσμου για live υπογραφή</b><span>Σύνδεσμος για υπογραφή επί τόπου ή αποστολή με μήνυμα</span></span>
 				</button>
