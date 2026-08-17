@@ -96,9 +96,33 @@ function renderDetail(view, d) {
 	var name = c.company_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || '—';
 	var energy = energyLabel(c.energy_type);
 
-	var statusOpts = Object.keys(statuses).map(function (s) {
-		return '<button type="button" class="ecrm-statuschip ecrm-badge--' + s + (c.status === s ? ' is-on' : '') + '" data-status="' + s + '">' + esc(statuses[s]) + '</button>';
+	// Only the current status plus what ContractStatus::allowedNext() actually
+	// permits from here — not all twelve, always. The server was already the
+	// real gate (409 on anything else); this just stops the screen offering
+	// moves it is guaranteed to refuse. d.allowed_next missing (older cached
+	// response) falls back to every status, same as before this change.
+	var allowedSet = {};
+	allowedSet[c.status] = true;
+	(d.allowed_next || Object.keys(statuses)).forEach(function (s) { allowedSet[s] = true; });
+	// Η τρέχουσα κατάσταση φεύγει από τη λίστα και γίνεται αφετηρία: το πάνελ
+	// δείχνει «πού είμαι → πού μπορώ να πάω» αντί για πλέγμα ισότιμων κουμπιών.
+	// Το allowed_next το δίνει ο server από το ContractStatus::allowedNext(),
+	// οπότε ο γράφος δεν αντιγράφεται εδώ — ερωτάται.
+	var statusOpts = Object.keys(statuses).filter(function (s) {
+		return allowedSet[s] && s !== c.status;
+	}).map(function (s) {
+		return '<button type="button" class="ecrm-statuschip ecrm-badge--' + s + '" data-status="' + s + '">' + esc(statuses[s]) + '</button>';
 	}).join('');
+
+	// Τερματική κατάσταση: το allowedNext() είναι ο κενός πίνακας για τα
+	// «Ακυρώθηκε» και «Τερματίστηκε». Χωρίς αυτό το σκέλος το πάνελ έδειχνε
+	// έναν τίτλο πάνω από το τίποτα.
+	var statusFlow = '<div class="ecrm-statusflow">' +
+		'<span class="ecrm-statusflow__now ecrm-badge ecrm-badge--' + esc(c.status) + '">' + esc(statuses[c.status] || c.status) + '</span>' +
+		(statusOpts
+			? '<span class="ecrm-statusflow__arrow" aria-hidden="true">&rarr;</span><div class="ecrm-statuschips">' + statusOpts + '</div>'
+			: '<span class="ecrm-statusflow__end">Τερματική κατάσταση — καμία επιτρεπτή μετάβαση.</span>') +
+		'</div>';
 
 	var timeline = (c.events && c.events.length)
 		? '<ul class="ecrm-timeline">' + c.events.map(function (e) {
@@ -139,7 +163,7 @@ function renderDetail(view, d) {
 		'</div>' +
 
 		'<div class="ecrm-cols">' +
-		'<div class="ecrm-card"><div class="ecrm-step">Αλλαγή κατάστασης</div><div class="ecrm-statuschips">' + statusOpts + '</div></div>' +
+		'<div class="ecrm-card"><div class="ecrm-step">Αλλαγή κατάστασης</div>' + statusFlow + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Ιστορικό</div>' + timeline + '</div>' +
 		'</div>' +
 		filesCard(c);

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — premium · τρία μοτίβα</title>
+<style>
+/* ══════════ ΑΝΘΡΑΚΙ PREMIUM ══════════ */
+:root{
+  /* Θερμά ουδέτερα — όχι ψυχρό slate. Εδώ κρύβεται το «ακριβό». */
+  --c0:#ffffff; --c25:#fdfdfc; --c50:#f8f8f6; --c100:#f1f1ee; --c150:#e9e8e4;
+  --c200:#dedcd7; --c300:#c6c4bd; --c400:#a3a099; --c500:#7c7a73;
+  --c600:#5c5a55; --c700:#42413d; --c800:#2a2926; --c900:#1a1a18; --c950:#111110;
+
+  /* Chrome */
+  --chrome:#171715; --chrome-2:#1f1f1c; --chrome-line:#ffffff14;
+  --chrome-ink:#a8a69f; --chrome-ink-hi:#ffffff; --chrome-ink-dim:#ffffff4d;
+
+  /* Accent — εναλλάσσεται */
+  --a:#c2f04a; --a-ink:#141410; --a-soft:#c2f04a26; --a-line:#c2f04a55;
+
+  /* Καταστάσεις — από τη μετρημένη παλέτα, με «Εκκρεμότητα» σε κεχριμπάρι */
+  --st-draft:#8b8a85;  --st-draft-bg:#f1f1ee;
+  --st-new:#5b9be0;    --st-new-bg:#eaf3fc;
+  --st-asig:#2f72c4;   --st-asig-bg:#e6effa;
+  --st-sign:#255fa8;   --st-sign-bg:#e4ecf7;
+  --st-pend:#b3670a;   --st-pend-bg:#fdf2e1;
+  --st-act:#2f7d32;    --st-act-bg:#e8f3e6;
+  --st-canc:#c02a3c;   --st-canc-bg:#fbe9ec;
+
+  --r:10px; --r-sm:7px; --r-lg:14px;
+  --sh-1:0 1px 2px rgba(17,17,16,.05);
+  --sh-2:0 2px 6px rgba(17,17,16,.06),0 1px 2px rgba(17,17,16,.04);
+  --sh-3:0 10px 30px -8px rgba(17,17,16,.18),0 2px 6px rgba(17,17,16,.06);
+  --sh-4:0 28px 70px -14px rgba(17,17,16,.42);
+  --f:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+[data-a="brass"]{ --a:#c9a227; --a-ink:#191505; --a-soft:#c9a22726; --a-line:#c9a22755; }
+
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--c100);color:var(--c700);font-family:var(--f);
+  font-size:15px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1340px;margin:0 auto;padding:48px 22px 100px}
+
+/* ── κείμενο εγγράφου ── */
+.hd{margin-bottom:34px}
+.hd .eyebrow{font-size:11px;font-weight:750;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--c500);margin-bottom:13px}
+.hd h1{font-size:36px;font-weight:800;letter-spacing:-.03em;margin:0 0 12px;color:var(--c950)}
+.hd p{font-size:16.5px;color:var(--c600);margin:0;max-width:74ch;line-height:1.65}
+h2.sec{font-size:24px;font-weight:800;letter-spacing:-.024em;color:var(--c950);margin:0 0 8px}
+p.sub{font-size:15px;color:var(--c600);margin:0 0 22px;max-width:76ch;line-height:1.65}
+section{margin-top:60px}
+.tagrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.tag{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;
+  background:var(--c0);border:1px solid var(--c200);color:var(--c600)}
+.tag.hi{background:var(--c950);border-color:var(--c950);color:var(--a)}
+
+/* ── διακόπτης accent ── */
+.acc{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--c0);
+  border:1px solid var(--c200);border-radius:var(--r);margin-bottom:12px;flex-wrap:wrap}
+.acc b{font-size:13px;font-weight:700;color:var(--c800)}
+.acc button{border:1px solid var(--c200);background:var(--c0);border-radius:999px;padding:6px 13px;
+  font-family:inherit;font-size:12.5px;font-weight:650;color:var(--c600);cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px}
+.acc button i{width:12px;height:12px;border-radius:50%;display:block}
+.acc button.on{background:var(--c950);border-color:var(--c950);color:var(--c0)}
+.acc span{font-size:12.5px;color:var(--c500);margin-left:auto}
+
+/* ══════════ ΠΛΑΙΣΙΟ ══════════ */
+.frame{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-3);border:1px solid var(--c200);background:var(--c0)}
+.tt{display:flex;align-items:center;gap:7px;padding:10px 14px;background:var(--c100);border-bottom:1px solid var(--c150)}
+.tt i{width:10px;height:10px;border-radius:50%;background:var(--c300)}
+.tt span{margin-left:8px;font-size:11.5px;color:var(--c500);font-weight:600}
+
+.app{display:flex;min-height:660px;background:var(--c50);position:relative}
+
+/* ── ράγα ── */
+.rail{width:60px;flex:0 0 60px;background:var(--chrome);display:flex;flex-direction:column;
+  align-items:center;padding:14px 0 12px;gap:3px}
+.rail .mk{width:32px;height:32px;border-radius:9px;background:var(--a);color:var(--a-ink);
+  display:grid;place-items:center;font-weight:800;font-size:15px;margin-bottom:14px}
+.ri{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;color:var(--chrome-ink);
+  cursor:pointer;border:none;background:none;position:relative;transition:background .15s,color .15s}
+.ri:hover{background:#ffffff0f;color:var(--chrome-ink-hi)}
+.ri.on{background:#ffffff14;color:var(--a)}
+.ri.on::before{content:"";position:absolute;left:-9px;top:9px;bottom:9px;width:2.5px;
+  border-radius:0 3px 3px 0;background:var(--a)}
+.ri svg{width:18px;height:18px;stroke-width:1.85}
+.ri .dot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;
+  background:var(--st-pend);border:1.5px solid var(--chrome)}
+.rail .sp{flex:1}
+
+/* ── topbar ── */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--c0);
+  border-bottom:1px solid var(--c150)}
+.kbar{flex:1;max-width:390px;display:flex;align-items:center;gap:9px;padding:7px 11px;
+  border:1px solid var(--c200);border-radius:var(--r-sm);background:var(--c50);cursor:pointer;
+  color:var(--c500);font-size:13px;transition:border-color .15s,background .15s}
+.kbar:hover{border-color:var(--c300);background:var(--c0)}
+.kbar svg{width:15px;height:15px;flex:0 0 15px}
+.kbd{margin-left:auto;display:flex;gap:3px}
+.kbd b{font-size:10.5px;font-weight:700;padding:2px 5px;border-radius:4px;background:var(--c150);
+  color:var(--c600);font-family:var(--f);border:1px solid var(--c200);border-bottom-width:2px}
+.tr{margin-left:auto;display:flex;align-items:center;gap:11px}
+.stack{display:flex}
+.stack i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:9.5px;
+  font-weight:800;border:2px solid var(--c0);margin-left:-7px}
+.stack i:first-child{margin-left:0}
+.iconb{width:32px;height:32px;border-radius:var(--r-sm);border:1px solid var(--c200);background:var(--c0);
+  display:grid;place-items:center;color:var(--c500);cursor:pointer;position:relative}
+.iconb svg{width:16px;height:16px}
+.iconb .n{position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;padding:0 4px;border-radius:999px;
+  background:var(--st-canc);color:#fff;font-size:9.5px;font-weight:800;display:grid;place-items:center;
+  border:2px solid var(--c0)}
+.me{width:32px;height:32px;border-radius:50%;background:var(--c950);color:var(--a);
+  display:grid;place-items:center;font-size:11.5px;font-weight:800}
+
+/* ── περιοχή εργασίας ── */
+.work{flex:1;display:flex;min-height:0;background:var(--c50)}
+.listcol{flex:1;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--c150)}
+.lhead{padding:15px 18px 12px;background:var(--c0);border-bottom:1px solid var(--c150)}
+.lh1{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:13px}
+.lh1 h1{font-size:19px;font-weight:800;letter-spacing:-.02em;color:var(--c950);margin:0}
+.lh1 h1 em{font-style:normal;font-weight:600;color:var(--c400);font-size:14px;margin-left:7px;
+  font-variant-numeric:tabular-nums}
+.seg{display:flex;background:var(--c100);border-radius:8px;padding:2.5px;gap:2px}
+.seg button{border:none;background:none;padding:5px 12px;border-radius:6px;font-family:inherit;
+  font-size:12.5px;font-weight:650;color:var(--c500);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.seg button svg{width:14px;height:14px}
+.seg button.on{background:var(--c0);color:var(--c900);box-shadow:var(--sh-1)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--c200);background:var(--c0);color:var(--c600);padding:4.5px 10px;
+  border-radius:999px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:650;
+  display:inline-flex;align-items:center;gap:6px}
+.chip i{width:6px;height:6px;border-radius:50%}
+.chip b{color:var(--c900);font-weight:800;font-variant-numeric:tabular-nums}
+.chip.on{background:var(--c950);border-color:var(--c950);color:var(--c0)}
+.chip.on b{color:var(--a)}
+
+.rows{flex:1;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--c100);
+  cursor:pointer;background:var(--c0);position:relative;transition:background .12s}
+.row:hover{background:var(--c25)}
+.row.on{background:var(--a-soft)}
+.row.on::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2.5px;background:var(--a)}
+.mk2{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:10.5px;
+  font-weight:800;flex:0 0 30px}
+.rmain{flex:1;min-width:0}
+.rname{font-size:13.5px;font-weight:700;color:var(--c900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rmeta{font-size:11.5px;color:var(--c400);margin-top:1.5px;font-variant-numeric:tabular-nums}
+.rside{display:flex;align-items:center;gap:11px;flex:0 0 auto}
+.rtime{font-size:11.5px;color:var(--c400);font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
+
+.bg{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;
+  font-size:11px;font-weight:700;white-space:nowrap}
+.bg i{width:5.5px;height:5.5px;border-radius:50%;background:currentColor;flex:0 0 5.5px}
+.b-act{background:var(--st-act-bg);color:var(--st-act)}
+.b-asig{background:var(--st-asig-bg);color:var(--st-asig)}
+.b-pend{background:var(--st-pend-bg);color:var(--st-pend)}
+.b-sign{background:var(--st-sign-bg);color:var(--st-sign)}
+.b-draft{background:var(--st-draft-bg);color:var(--st-draft)}
+.b-new{background:var(--st-new-bg);color:var(--st-new)}
+.b-canc{background:var(--st-canc-bg);color:var(--st-canc)}
+
+/* ── πάνελ καρτέλας ── */
+.rec{width:440px;flex:0 0 440px;background:var(--c0);display:flex;flex-direction:column;overflow:hidden}
+.rhead{padding:16px 20px 14px;border-bottom:1px solid var(--c150);background:var(--c0)}
+.rh1{display:flex;align-items:flex-start;gap:12px;margin-bottom:13px}
+.rcode{font-size:11px;font-weight:750;letter-spacing:.1em;color:var(--c400);
+  font-family:ui-monospace,Menlo,monospace}
+.rh1 h2{font-size:19px;font-weight:800;letter-spacing:-.022em;color:var(--c950);margin:3px 0 0;line-height:1.25}
+.rx{margin-left:auto;width:28px;height:28px;border-radius:7px;border:1px solid var(--c200);background:var(--c0);
+  color:var(--c500);cursor:pointer;display:grid;place-items:center;flex:0 0 28px;font-size:15px}
+.racts{display:flex;gap:6px;flex-wrap:wrap}
+.btn{padding:6.5px 12px;border-radius:var(--r-sm);font-size:12.5px;font-weight:650;font-family:inherit;
+  cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn svg{width:14px;height:14px}
+.btn-a{background:var(--c950);color:var(--a)}
+.btn-g{background:var(--c0);border-color:var(--c200);color:var(--c700)}
+.btn-g:hover{background:var(--c50);border-color:var(--c300)}
+
+.rbody{flex:1;overflow:hidden;padding:16px 20px 20px}
+.blk{margin-bottom:20px}
+.blk h3{font-size:10.5px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:var(--c400);
+  margin:0 0 11px;display:flex;align-items:center;gap:8px}
+.blk h3::after{content:"";flex:1;height:1px;background:var(--c150)}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:11px 16px}
+.kv dt{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--c400);margin-bottom:2px}
+.kv dd{margin:0;font-size:13.5px;color:var(--c800);font-weight:600;font-variant-numeric:tabular-nums}
+
+.flow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.flow .now{font-size:12px;padding:4.5px 10px}
+.flow .ar{color:var(--c300);font-size:15px}
+.stepb{padding:5px 10px;border-radius:7px;border:1px solid var(--c200);background:var(--c0);
+  font-size:12px;font-weight:650;color:var(--c600);cursor:pointer;font-family:inherit;
+  display:inline-flex;align-items:center;gap:6px}
+.stepb:hover{border-color:var(--c400);background:var(--c50)}
+.stepb i{width:5.5px;height:5.5px;border-radius:50%}
+
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:flex;gap:11px;padding:7px 0;position:relative}
+.tl li:not(:last-child)::before{content:"";position:absolute;left:4.5px;top:21px;bottom:-3px;width:1.5px;background:var(--c150)}
+.tl b{width:10px;height:10px;border-radius:50%;flex:0 0 10px;margin-top:4px;background:var(--c300);
+  border:2px solid var(--c0);box-shadow:0 0 0 1.5px var(--c200)}
+.tl b.hi{background:var(--st-act);box-shadow:0 0 0 1.5px var(--st-act)}
+.tl b.a{background:var(--a);box-shadow:0 0 0 1.5px var(--a-line)}
+.tl p{margin:0;font-size:12.5px;color:var(--c700);font-weight:600}
+.tl small{display:block;font-size:11px;color:var(--c400);margin-top:1px;font-variant-numeric:tabular-nums}
+
+.doc{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--c150);
+  border-radius:var(--r-sm);margin-bottom:6px}
+.doc i{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;font-size:8.5px;
+  font-weight:800;flex:0 0 28px;background:var(--st-canc-bg);color:var(--st-canc);font-style:normal}
+.doc i.img{background:var(--st-new-bg);color:var(--st-new)}
+.doc b{font-size:12.5px;font-weight:650;color:var(--c800);display:block}
+.doc small{font-size:10.5px;color:var(--c400)}
+
+/* ── command palette ── */
+.pal-scrim{position:absolute;inset:0;background:rgba(17,17,16,.55);backdrop-filter:blur(3px);
+  display:flex;align-items:flex-start;justify-content:center;padding-top:78px;z-index:20}
+.pal{width:560px;max-width:92%;background:var(--c0);border-radius:var(--r-lg);box-shadow:var(--sh-4);
+  overflow:hidden;border:1px solid var(--c200)}
+.pal-in{display:flex;align-items:center;gap:11px;padding:15px 18px;border-bottom:1px solid var(--c150)}
+.pal-in svg{width:18px;height:18px;color:var(--c400);flex:0 0 18px}
+.pal-in input{flex:1;border:none;outline:none;font-family:inherit;font-size:15.5px;color:var(--c900);background:none}
+.pal-sec{font-size:10px;font-weight:750;letter-spacing:.11em;text-transform:uppercase;color:var(--c400);
+  padding:12px 18px 6px}
+.pal-i{display:flex;align-items:center;gap:11px;padding:9px 18px;cursor:pointer}
+.pal-i:hover,.pal-i.on{background:var(--c50)}
+.pal-i.on{box-shadow:inset 2.5px 0 0 var(--a)}
+.pal-ico{width:28px;height:28px;border-radius:7px;background:var(--c100);color:var(--c600);
+  display:grid;place-items:center;flex:0 0 28px}
+.pal-ico svg{width:15px;height:15px}
+.pal-t{flex:1;min-width:0}
+.pal-t b{display:block;font-size:13.5px;font-weight:650;color:var(--c900)}
+.pal-t small{display:block;font-size:11.5px;color:var(--c400);margin-top:1px}
+.pal-k{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--c100);
+  color:var(--c500);border:1px solid var(--c200)}
+.pal-foot{display:flex;align-items:center;gap:14px;padding:10px 18px;border-top:1px solid var(--c150);
+  background:var(--c50);font-size:11.5px;color:var(--c500)}
+.pal-foot span{display:inline-flex;align-items:center;gap:5px}
+
+/* ── board ── */
+.board{display:flex;gap:12px;padding:16px;overflow-x:auto;background:var(--c50);flex:1;align-items:flex-start}
+.col{width:252px;flex:0 0 252px;background:var(--c100);border-radius:var(--r);padding:10px;border:1px solid var(--c150)}
+.colh{display:flex;align-items:center;gap:8px;padding:2px 4px 10px}
+.colh i{width:7px;height:7px;border-radius:50%}
+.colh b{font-size:12px;font-weight:750;color:var(--c800);letter-spacing:.01em}
+.colh span{margin-left:auto;font-size:11px;font-weight:750;color:var(--c500);background:var(--c0);
+  padding:1.5px 7px;border-radius:999px;font-variant-numeric:tabular-nums;border:1px solid var(--c200)}
+.bc{background:var(--c0);border:1px solid var(--c150);border-radius:var(--r-sm);padding:10px 11px;
+  margin-bottom:7px;box-shadow:var(--sh-1);cursor:pointer}
+.bc:hover{box-shadow:var(--sh-2);border-color:var(--c300)}
+.bc-t{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.bc-t b{font-size:12.5px;font-weight:700;color:var(--c900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-m{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bc-m small{font-size:10.5px;color:var(--c400);font-variant-numeric:tabular-nums}
+.mk3{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:9px;font-weight:800;flex:0 0 22px}
+
+.note{margin-top:26px;background:var(--c0);border:1px solid var(--c200);border-left:3px solid var(--c900);
+  border-radius:var(--r);padding:16px 19px;font-size:14.5px;color:var(--c600);line-height:1.65}
+.note b{color:var(--c950)}
+.note.warn{border-left-color:var(--st-pend)}
+table.t{width:100%;border-collapse:collapse;font-size:14px;margin-top:16px;background:var(--c0);
+  border:1px solid var(--c200);border-radius:var(--r);overflow:hidden}
+table.t th{text-align:left;font-size:10.5px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--c500);padding:10px 14px;background:var(--c50);border-bottom:1px solid var(--c150)}
+table.t td{padding:12px 14px;border-bottom:1px solid var(--c100);color:var(--c600);vertical-align:top}
+table.t tr:last-child td{border-bottom:none}
+table.t td:first-child{font-weight:700;color:var(--c900);white-space:nowrap}
+code{background:var(--c100);padding:1.5px 6px;border-radius:5px;font-size:12.5px;
+  font-family:ui-monospace,Menlo,monospace;color:var(--c800)}
+
+@media(max-width:1100px){
+  .rec{display:none}
+  .listcol{border-right:none}
+}
+@media(max-width:760px){
+  .wrap{padding:32px 14px 70px}
+  .hd h1{font-size:27px}
+  .app{min-height:0}
+  .kbar{max-width:none}
+  .tr .stack{display:none}
+}
+</style>
+</head>
+<body data-a="lime">
+<div class="wrap">
+
+<div class="hd">
+  <div class="eyebrow">Πρόταση · 17 Αυγούστου 2026</div>
+  <h1>Ανθρακί premium, και τρία μοτίβα σύγχρονου CRM</h1>
+  <p>Premium δεν σημαίνει περισσότερα στολίδια — σημαίνει λιγότερα και πιο μετρημένα.
+     Θερμά ουδέτερα αντί για ψυχρό γκρι, μία λεπτή γραμμή αντί για σκιά, και ένα accent
+     που εμφανίζεται σπάνια ώστε να μετράει όταν εμφανίζεται.</p>
+</div>
+
+<div class="acc">
+  <b>Accent:</b>
+  <button class="on" data-acc="lime"><i style="background:#c2f04a"></i>Λάιμ</button>
+  <button data-acc="brass"><i style="background:#c9a227"></i>Μπρούντζος</button>
+  <span>Το λάιμ διαβάζεται σπορ και τεχνολογικό· ο μπρούντζος ακριβό, και κρατά νήμα με το amber που είχες.</span>
+</div>
+
+<!-- ═════════ 1. SPLIT VIEW ═════════ -->
+<section>
+  <h2 class="sec">1 · Split view — η καρτέλα ανοίγει δίπλα, όχι αλλού</h2>
+  <p class="sub">Το μεγαλύτερο άλμα, και το πιο αισθητό στην καθημερινή χρήση. Κλικ σε γραμμή:
+     η λίστα μένει, η καρτέλα γεμίζει το δεξί πάνελ. Κλικ σε επόμενη: αλλάζει μόνο το πάνελ.
+     Καμία φόρτωση οθόνης, καμία απώλεια θέσης στη λίστα.</p>
+  <div class="tagrow">
+    <span class="tag hi">Το μεγαλύτερο κέρδος</span>
+    <span class="tag">Ξαναχρησιμοποιεί το υπάρχον <code>openDetail()</code></span>
+    <span class="tag">Το <code>#contract-detail</code> μένει για κινητό</span>
+  </div>
+
+  <div class="frame">
+    <div class="tt"><i></i><i></i><i></i><span>crm.fotogeniss.gr — Συμβάσεις</span></div>
+    <div class="app">
+      <nav class="rail">
+        <div class="mk">E</div>
+        <button class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a9 9 0 0 1 18 0"/><path d="M12 13l4-3"/></svg></button>
+        <button class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v5"/><path d="M9.5 14.5h5"/></svg></button>
+        <button class="ri on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="8" y="2.5" width="8" height="4" rx="1.2"/><path d="M8.5 11h7"/></svg></button>
+        <button class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M10.3 3.8 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/></svg><span class="dot"></span></button>
+        <button class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg></button>
+        <button class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M14 9h4"/></svg></button>
+        <div class="sp"></div>
+        <button class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="3"/></svg></button>
+      </nav>
+      <div class="main">
+        <header class="top">
+          <div class="kbar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            Αναζήτηση ή εντολή…
+            <span class="kbd"><b>⌘</b><b>K</b></span>
+          </div>
+          <div class="tr">
+            <div class="stack">
+              <i style="background:var(--st-asig-bg);color:var(--st-asig)">ΜΚ</i>
+              <i style="background:var(--st-act-bg);color:var(--st-act)">ΓΠ</i>
+              <i style="background:var(--st-pend-bg);color:var(--st-pend)">ΔΑ</i>
+            </div>
+            <button class="iconb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg><span class="n">3</span></button>
+            <span class="me">ΚΝ</span>
+          </div>
+        </header>
+
+        <div class="work">
+          <div class="listcol">
+            <div class="lhead">
+              <div class="lh1">
+                <h1>Συμβάσεις <em>142</em></h1>
+                <div class="seg">
+                  <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Λίστα</button>
+                  <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="8" rx="1"/></svg>Board</button>
+                </div>
+              </div>
+              <div class="chips">
+                <span class="chip on">Όλες <b>142</b></span>
+                <span class="chip"><i style="background:var(--st-new)"></i>Νέες <b>23</b></span>
+                <span class="chip"><i style="background:var(--st-asig)"></i>Αναμονή <b>11</b></span>
+                <span class="chip"><i style="background:var(--st-pend)"></i>Εκκρεμ. <b>7</b></span>
+                <span class="chip"><i style="background:var(--st-act)"></i>Ενεργές <b>78</b></span>
+              </div>
+            </div>
+            <div class="rows">
+              <div class="row on">
+                <span class="mk2" style="background:var(--st-act-bg);color:var(--st-act)">OR</span>
+                <div class="rmain"><div class="rname">Γιώργος Παπαδόπουλος</div><div class="rmeta">ORIZON · Home 12M · 40012345678</div></div>
+                <div class="rside"><span class="bg b-act"><i></i>Ενεργή</span><span class="rtime">2ω</span></div>
+              </div>
+              <div class="row">
+                <span class="mk2" style="background:var(--st-canc-bg);color:var(--st-canc)">PR</span>
+                <div class="rmain"><div class="rname">Μαρία Κωνσταντίνου</div><div class="rmeta">Protergia · Οικιακό Value · 40098765432</div></div>
+                <div class="rside"><span class="bg b-asig"><i></i>Αναμονή</span><span class="rtime">5ω</span></div>
+              </div>
+              <div class="row">
+                <span class="mk2" style="background:var(--st-act-bg);color:var(--st-act)">OR</span>
+                <div class="rmain"><div class="rname">Δημήτρης Αντωνίου</div><div class="rmeta">ORIZON · Mobile 5GB · 6944123456</div></div>
+                <div class="rside"><span class="bg b-pend"><i></i>Εκκρεμότητα</span><span class="rtime">χθες</span></div>
+              </div>
+              <div class="row">
+                <span class="mk2" style="background:var(--st-canc-bg);color:var(--st-canc)">PR</span>
+                <div class="rmain"><div class="rname">Ελένη Σταμάτη</div><div class="rmeta">Protergia · Αέριο Home · 40055512340</div></div>
+                <div class="rside"><span class="bg b-sign"><i></i>Υπεγράφη</span><span class="rtime">χθες</span></div>
+              </div>
+              <div class="row">
+                <span class="mk2" style="background:var(--st-new-bg);color:var(--st-new)">OR</span>
+                <div class="rmain"><div class="rname">Νίκος Βασιλείου</div><div class="rmeta">ORIZON · Home 24M · 40077788899</div></div>
+                <div class="rside"><span class="bg b-new"><i></i>Νέα</span><span class="rtime">2μ</span></div>
+              </div>
+              <div class="row">
+                <span class="mk2" style="background:var(--st-draft-bg);color:var(--st-draft)">—</span>
+                <div class="rmain"><div class="rname">Αναστασία Μήτσου</div><div class="rmeta">χωρίς πάροχο</div></div>
+                <div class="rside"><span class="bg b-draft"><i></i>Πρόχειρο</span><span class="rtime">2μ</span></div>
+              </div>
+              <div class="row">
+                <span class="mk2" style="background:var(--st-act-bg);color:var(--st-act)">OR</span>
+                <div class="rmain"><div class="rname">Παναγιώτης Ρήγας</div><div class="rmeta">ORIZON · Home 12M · 40033322211</div></div>
+                <div class="rside"><span class="bg b-act"><i></i>Ενεργή</span><span class="rtime">3μ</span></div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="rec">
+            <div class="rhead">
+              <div class="rh1">
+                <div>
+                  <div class="rcode">ORIZON-0041</div>
+                  <h2>Γιώργος Παπαδόπουλος</h2>
+                </div>
+                <button class="rx">✕</button>
+              </div>
+              <div class="racts">
+                <button class="btn btn-a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Αποστολή για υπογραφή</button>
+                <button class="btn btn-g">Επεξεργασία</button>
+                <button class="btn btn-g">🖨</button>
+              </div>
+            </div>
+            <div class="rbody">
+              <div class="blk">
+                <h3>Κατάσταση</h3>
+                <div class="flow">
+                  <span class="bg b-sign now"><i></i>Υπεγράφη</span>
+                  <span class="ar">→</span>
+                  <button class="stepb"><i style="background:var(--st-asig)"></i>Επεξεργασία</button>
+                  <button class="stepb"><i style="background:var(--st-pend)"></i>Εκκρεμότητα</button>
+                  <button class="stepb"><i style="background:var(--st-act)"></i>Δρομολόγηση</button>
+                </div>
+              </div>
+
+              <div class="blk">
+                <h3>Πελάτης</h3>
+                <div class="kv">
+                  <div><dt>ΑΦΜ</dt><dd>090003373</dd></div>
+                  <div><dt>ΑΔΤ</dt><dd>ΑΒ123456</dd></div>
+                  <div><dt>Κινητό</dt><dd>6944 123 456</dd></div>
+                  <div><dt>Email</dt><dd style="font-weight:500">giorgos@…</dd></div>
+                  <div><dt>ΗΚΑΣΠ</dt><dd>40012345678</dd></div>
+                  <div><dt>Τιμολόγιο</dt><dd>Γ1Ν</dd></div>
+                </div>
+              </div>
+
+              <div class="blk">
+                <h3>Έγγραφα · 3</h3>
+                <div class="doc"><i>PDF</i><div><b>Υπογεγραμμένη σύμβαση</b><small>2.4 MB · 16/08</small></div></div>
+                <div class="doc"><i class="img">IMG</i><div><b>Ταυτότητα (εμπρός)</b><small>840 KB · 15/08</small></div></div>
+                <div class="doc"><i class="img">IMG</i><div><b>Λογαριασμός ρεύματος</b><small>1.1 MB · 15/08</small></div></div>
+              </div>
+
+              <div class="blk">
+                <h3>Ιστορικό</h3>
+                <ul class="tl">
+                  <li><b class="a"></b><div><p>Αναμονή υπογραφής → Υπεγράφη</p><small>16/08, 18:42</small></div></li>
+                  <li><b></b><div><p>Νέα → Αναμονή υπογραφής</p><small>16/08, 11:20</small></div></li>
+                  <li><b></b><div><p>Πρόχειρο → Νέα</p><small>15/08, 16:05</small></div></li>
+                  <li><b></b><div><p>Τροποποίηση — ΑΦΜ, Κινητό</p><small>15/08, 15:58</small></div></li>
+                </ul>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Γιατί είναι το χαμηλότερο ρίσκο από τα τρία:</b> το <code>openDetail(id)</code> ήδη
+    φέρνει τα δεδομένα και χτίζει το HTML. Αλλάζει <b>πού</b> μπαίνει το αποτέλεσμα, όχι τι
+    κάνει. Το <code>#contract-detail</code> μένει ως έχει και χρησιμοποιείται στο κινητό,
+    όπου δεν χωράνε δύο στήλες — οπότε δεν σβήνεται τίποτα.
+  </div>
+</section>
+
+<!-- ═════════ 2. COMMAND PALETTE ═════════ -->
+<section>
+  <h2 class="sec">2 · Command palette — ⌘K</h2>
+  <p class="sub">Έχεις ήδη καθολική αναζήτηση που χτυπά το <code>/search</code>. Η παλέτα είναι
+     η ίδια αναζήτηση με δύο προσθήκες: δέχεται <strong>εντολές</strong>, όχι μόνο ονόματα, και
+     ανοίγει από πληκτρολόγιο χωρίς να αφήσει κανείς το χέρι του.</p>
+  <div class="tagrow">
+    <span class="tag hi">Φθηνό, μεγάλη αίσθηση</span>
+    <span class="tag">Πάνω στο υπάρχον <code>/search</code></span>
+    <span class="tag">Δεν αντικαθιστά τίποτα</span>
+  </div>
+
+  <div class="frame">
+    <div class="tt"><i></i><i></i><i></i><span>crm.fotogeniss.gr — ⌘K</span></div>
+    <div class="app" style="min-height:460px">
+      <nav class="rail">
+        <div class="mk">E</div>
+        <button class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a9 9 0 0 1 18 0"/><path d="M12 13l4-3"/></svg></button>
+        <button class="ri on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="8" y="2.5" width="8" height="4" rx="1.2"/></svg></button>
+        <button class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M10.3 3.8 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/></svg><span class="dot"></span></button>
+        <div class="sp"></div>
+      </nav>
+      <div class="main">
+        <header class="top">
+          <div class="kbar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            Αναζήτηση ή εντολή…<span class="kbd"><b>⌘</b><b>K</b></span>
+          </div>
+          <div class="tr"><span class="me">ΚΝ</span></div>
+        </header>
+        <div class="work" style="opacity:.45"><div class="listcol"><div class="lhead"><div class="lh1"><h1>Συμβάσεις <em>142</em></h1></div></div></div></div>
+      </div>
+
+      <div class="pal-scrim">
+        <div class="pal">
+          <div class="pal-in">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input value="παπα" readonly>
+          </div>
+          <div class="pal-sec">Συμβάσεις</div>
+          <div class="pal-i on">
+            <span class="pal-ico" style="background:var(--st-act-bg);color:var(--st-act)">ΓΠ</span>
+            <span class="pal-t"><b>Γιώργος Παπαδόπουλος</b><small>ORIZON-0041 · ΑΦΜ 090003373 · Ενεργή</small></span>
+            <span class="pal-k">↵</span>
+          </div>
+          <div class="pal-i">
+            <span class="pal-ico" style="background:var(--st-new-bg);color:var(--st-new)">ΕΠ</span>
+            <span class="pal-t"><b>Ελένη Παπαδοπούλου</b><small>PROT-0088 · ΑΦΜ 123456789 · Νέα</small></span>
+          </div>
+          <div class="pal-sec">Ενέργειες</div>
+          <div class="pal-i">
+            <span class="pal-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+            <span class="pal-t"><b>Νέα σύμβαση</b><small>άνοιγμα φόρμας</small></span>
+            <span class="pal-k">N</span>
+          </div>
+          <div class="pal-i">
+            <span class="pal-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M10.3 3.8 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/></svg></span>
+            <span class="pal-t"><b>Εκκρεμότητες</b><small>7 ανοιχτές · 2 πάνω από 5 ημέρες</small></span>
+            <span class="pal-k">E</span>
+          </div>
+          <div class="pal-i">
+            <span class="pal-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>
+            <span class="pal-t"><b>Εξαγωγή σε Excel</b><small>τρέχον φίλτρο · 142 γραμμές</small></span>
+          </div>
+          <div class="pal-foot">
+            <span><b class="pal-k">↑↓</b> πλοήγηση</span>
+            <span><b class="pal-k">↵</b> άνοιγμα</span>
+            <span><b class="pal-k">esc</b> κλείσιμο</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ 3. BOARD ═════════ -->
+<section>
+  <h2 class="sec">3 · Board — ο αγωγός σε στήλες</h2>
+  <p class="sub">Έχεις δώδεκα καταστάσεις και έναν πραγματικό αγωγό πωλήσεων. Ο πίνακας
+     απαντά «τι υπάρχει»· το board απαντά <strong>«πού κολλάει»</strong> — που είναι άλλη
+     ερώτηση, και αυτή που κάνει κανείς Δευτέρα πρωί.</p>
+  <div class="tagrow">
+    <span class="tag hi">Νέα οπτική, όχι νέα δεδομένα</span>
+    <span class="tag">Ίδιο <code>/contracts</code></span>
+    <span class="tag">Χωρίς drag στο πρώτο βήμα</span>
+  </div>
+
+  <div class="frame">
+    <div class="tt"><i></i><i></i><i></i><span>crm.fotogeniss.gr — Board</span></div>
+    <div class="app" style="min-height:480px">
+      <nav class="rail">
+        <div class="mk">E</div>
+        <button class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13a9 9 0 0 1 18 0"/><path d="M12 13l4-3"/></svg></button>
+        <button class="ri on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="8" y="2.5" width="8" height="4" rx="1.2"/></svg></button>
+        <div class="sp"></div>
+      </nav>
+      <div class="main">
+        <header class="top">
+          <div class="kbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Αναζήτηση ή εντολή…<span class="kbd"><b>⌘</b><b>K</b></span></div>
+          <div class="tr"><span class="me">ΚΝ</span></div>
+        </header>
+        <div class="lhead" style="border-bottom:1px solid var(--c150)">
+          <div class="lh1">
+            <h1>Συμβάσεις <em>142</em></h1>
+            <div class="seg">
+              <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Λίστα</button>
+              <button class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="8" rx="1"/></svg>Board</button>
+            </div>
+          </div>
+        </div>
+        <div class="board">
+          <div class="col">
+            <div class="colh"><i style="background:var(--st-new)"></i><b>Νέες</b><span>23</span></div>
+            <div class="bc"><div class="bc-t"><span class="mk3" style="background:var(--st-new-bg);color:var(--st-new)">OR</span><b>Νίκος Βασιλείου</b></div><div class="bc-m"><small>Home 24M</small><small>2 μέρες</small></div></div>
+            <div class="bc"><div class="bc-t"><span class="mk3" style="background:var(--st-canc-bg);color:var(--st-canc)">PR</span><b>Σοφία Λέκκα</b></div><div class="bc-m"><small>Οικιακό Value</small><small>3 μέρες</small></div></div>
+            <div class="bc"><div class="bc-t"><span class="mk3" style="background:var(--st-new-bg);color:var(--st-new)">OR</span><b>Θανάσης Ίτσιος</b></div><div class="bc-m"><small>Mobile 10GB</small><small>4 μέρες</small></div></div>
+          </div>
+          <div class="col">
+            <div class="colh"><i style="background:var(--st-asig)"></i><b>Αναμονή υπογραφής</b><span>11</span></div>
+            <div class="bc"><div class="bc-t"><span class="mk3" style="background:var(--st-canc-bg);color:var(--st-canc)">PR</span><b>Μαρία Κωνσταντίνου</b></div><div class="bc-m"><small>Οικιακό Value</small><small>5 ώρες</small></div></div>
+            <div class="bc"><div class="bc-t"><span class="mk3" style="background:var(--st-new-bg);color:var(--st-new)">OR</span><b>Κώστας Δήμου</b></div><div class="bc-m"><small>Home 12M</small><small>χθες</small></div></div>
+          </div>
+          <div class="col">
+            <div class="colh"><i style="background:var(--st-pend)"></i><b>Εκκρεμότητα</b><span>7</span></div>
+            <div class="bc" style="border-color:var(--st-pend);box-shadow:0 0 0 2px var(--st-pend-bg)"><div class="bc-t"><span class="mk3" style="background:var(--st-pend-bg);color:var(--st-pend)">OR</span><b>Δημήτρης Αντωνίου</b></div><div class="bc-m"><small>Mobile 5GB</small><small style="color:var(--st-pend);font-weight:750">8 μέρες</small></div></div>
+            <div class="bc"><div class="bc-t"><span class="mk3" style="background:var(--st-canc-bg);color:var(--st-canc)">PR</span><b>Αγγελική Ρίζου</b></div><div class="bc-m"><small>Αέριο Home</small><small>2 μέρες</small></div></div>
+          </div>
+          <div class="col">
+            <div class="colh"><i style="background:var(--st-sign)"></i><b>Υπεγράφη</b><span>9</span></div>
+            <div class="bc"><div class="bc-t"><span class="mk3" style="background:var(--st-act-bg);color:var(--st-act)">OR</span><b>Γιώργος Παπαδόπουλος</b></div><div class="bc-m"><small>Home 12M</small><small>χθες</small></div></div>
+            <div class="bc"><div class="bc-t"><span class="mk3" style="background:var(--st-canc-bg);color:var(--st-canc)">PR</span><b>Ελένη Σταμάτη</b></div><div class="bc-m"><small>Αέριο Home</small><small>χθες</small></div></div>
+          </div>
+          <div class="col">
+            <div class="colh"><i style="background:var(--st-act)"></i><b>Ενεργές</b><span>78</span></div>
+            <div class="bc"><div class="bc-t"><span class="mk3" style="background:var(--st-act-bg);color:var(--st-act)">OR</span><b>Παναγιώτης Ρήγας</b></div><div class="bc-m"><small>Home 12M</small><small>3 μέρες</small></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note warn">
+    <b>Το drag δεν μπαίνει στο πρώτο βήμα, και ο λόγος δεν είναι δισταγμός.</b> Σύρσιμο κάρτας
+    σημαίνει <b>μετάβαση κατάστασης</b> — δηλαδή περνά από τον ίδιο γράφο, τον
+    <code>DraftExitGate</code> και τις ειδοποιήσεις. Ένα 409 ή ένα 422 στη μέση ενός drag πρέπει
+    να επαναφέρει την κάρτα και να εξηγήσει γιατί, αλλιώς ο συνεργάτης βλέπει την κάρτα να
+    «γυρίζει πίσω» χωρίς λόγο. Αυτό είναι δικό του βήμα, με δικά του tests.
+  </div>
+</section>
+
+<!-- ═════════ ΚΟΣΤΟΣ ═════════ -->
+<section>
+  <h2 class="sec">Τι κοστίζει το καθένα</h2>
+  <table class="t">
+    <thead><tr><th>Μοτίβο</th><th>Τι αγγίζει</th><th>Ρίσκο</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Split view</td>
+        <td>CSS για τη διάταξη· στο <code>ecrm-view-detail.js</code> αλλάζει ο στόχος του render.
+            Το <code>openDetail()</code> μένει ίδιο. Στο κινητό πέφτει πίσω στην υπάρχουσα οθόνη.</td>
+        <td><b>Χαμηλό</b> — καμία αλλαγή σε δεδομένα ή endpoints</td>
+      </tr>
+      <tr>
+        <td>Command palette</td>
+        <td>Νέο module ~150 γραμμές. Καλεί το <code>/search</code> που ήδη υπάρχει, και για τις
+            εντολές το <code>go()</code> που ήδη υπάρχει. Το topbar input γίνεται σκανδάλη.</td>
+        <td><b>Χαμηλό</b> — προσθετικό, δεν αντικαθιστά τίποτα</td>
+      </tr>
+      <tr>
+        <td>Board (χωρίς drag)</td>
+        <td>Νέα όψη πάνω στο ίδιο <code>/contracts</code>. Ομαδοποίηση ανά status στον client.</td>
+        <td><b>Μεσαίο</b> — νέος κώδικας, μηδέν JS tests</td>
+      </tr>
+      <tr>
+        <td>Board με drag</td>
+        <td>Επιπλέον: χειρισμός 409/422, επαναφορά κάρτας, μήνυμα στον χρήστη.</td>
+        <td><b>Υψηλό</b> — γράφει καταστάσεις· δικό του βήμα</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <b>Η φόρμα νέας σύμβασης δεν αγγίζεται</b>, όπως συμφωνήθηκε — μόνο το νέο στυλ.
+    Είναι 1094 γραμμές χωρίς κανένα test, και είναι το σημείο όπου έχουν ήδη εμφανιστεί
+    τρία bugs που κάθονταν ανάμεσα σε client και server.
+  </div>
+</section>
+
+</div>
+<script>
+  document.querySelectorAll('[data-acc]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('[data-acc]').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      document.body.setAttribute('data-a', b.getAttribute('data-acc'));
+    });
+  });
+</script>
+</body>
+</html>

@@ -128,13 +128,13 @@ function renderContracts(view, d) {
 			'<td class="ecrm-checkcol"><input type="checkbox" class="ecrm-rowcheck" data-cid="' + r.id + '"></td>' +
 			'<td class="ecrm-expandcol"><button type="button" class="ecrm-expand" data-expand="' + r.id + '" aria-label="Λεπτομέρειες">+</button></td>' +
 			'<td><span class="ecrm-cell-prov">' + prov + '<span>' + esc(r.provider_name || '—') + '</span></span></td>' +
-			'<td>' + esc(r.program_name || '—') + '</td>' +
+			'<td class="ecrm-col-sec">' + esc(r.program_name || '—') + '</td>' +
 			'<td><span class="ecrm-cell-cust">' + cust + '<span>' + esc(name) + '</span></span></td>' +
-			(showOwner ? '<td><span class="ecrm-cell-owner">' + esc(r.partner_name || '—') + '</span></td>' : '') +
-			'<td class="ecrm-mono">' + esc(r.supply_number || '') + '</td>' +
-			'<td>' + inv + '</td>' +
+			(showOwner ? '<td class="ecrm-col-sec"><span class="ecrm-cell-owner">' + esc(r.partner_name || '—') + '</span></td>' : '') +
+			'<td class="ecrm-mono ecrm-col-sec">' + esc(r.supply_number || '') + '</td>' +
+			'<td class="ecrm-col-sec">' + inv + '</td>' +
 			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(stLabel) + '</span></td>' +
-			'<td class="ecrm-cell-date"><div>' + fmtDate(r.updated_at) + '</div><div class="ecrm-muted">' + timeAgo(r.updated_at) + '</div></td>' +
+			'<td class="ecrm-cell-date ecrm-col-sec"><div>' + fmtDate(r.updated_at) + '</div><div class="ecrm-muted">' + timeAgo(r.updated_at) + '</div></td>' +
 			'</tr>' +
 			'<tr class="ecrm-exprow" data-exprow="' + r.id + '" hidden><td class="ecrm-expaccent" data-status="' + esc(r.status) + '"></td><td colspan="' + (showOwner ? 9 : 8) + '"><div class="ecrm-exppanel" data-exppanel="' + r.id + '"><div class="ecrm-loading">Φόρτωση…</div></div></td></tr>';
 	}).join('');
@@ -149,9 +149,9 @@ function renderContracts(view, d) {
 			(can('ecrm_delete_contract') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--danger" data-bulk-delete>🗑 Διαγραφή</button>' : '') +
 			'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-clear>Καθαρισμός</button></div>' +
 			'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-table--rich"><thead><tr>' +
-			'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πάροχος</th><th>Πρόγραμμα</th><th>Πελάτης</th>' +
-			(showOwner ? '<th>Συνεργάτης</th>' : '') +
-			'<th>ΗΚΑΣΠ / Παροχή</th><th>Τιμολόγιο</th><th>Κατάσταση</th><th>Ενημέρωση</th>' +
+			'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πάροχος</th><th class="ecrm-col-sec">Πρόγραμμα</th><th>Πελάτης</th>' +
+			(showOwner ? '<th class="ecrm-col-sec">Συνεργάτης</th>' : '') +
+			'<th class="ecrm-col-sec">ΗΚΑΣΠ / Παροχή</th><th class="ecrm-col-sec">Τιμολόγιο</th><th>Κατάσταση</th><th class="ecrm-col-sec">Ενημέρωση</th>' +
 			'</tr></thead><tbody>' + body + '</tbody></table></div>' +
 			'<div class="ecrm-pager"><span>Σύνολο <b>' + total + '</b> συμβάσεις</span>' +
 			'<div class="ecrm-pager__nav"><button type="button" class="ecrm-pager__b" data-page="prev"' + (contractsState.page <= 1 ? ' disabled' : '') + '>‹ Προηγούμενη</button>' +

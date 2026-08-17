@@ -144,6 +144,24 @@ final class ContractSaveController implements Controller
         $isUpdate = $existing !== null;
         $contract = ContractSaveMapping::contractFrom($params, $customerId, $isUpdate);
 
+        // On an edit, a status in the payload is a real transition — the form
+        // only ever sends one starting from draft (ecrm-form.js: stay on
+        // 'draft', or finalise to 'new'; refuseStatusChange() above has
+        // already refused anything the pipeline forbids). It must go through
+        // ContractLifecycle::moveTo(), the only place that writes the
+        // status_change event, fires the in-app/SMS notifications and the
+        // ecrm_contract_status_changed hook. Writing it as a plain column
+        // below skipped all four, silently: ECRM_Audit::excluded() drops
+        // 'status' from its own diff on the assumption that "status changes
+        // keep their own dedicated events" — true for ContractStatusController
+        // and the bulk action, not for this route until now.
+        $statusChange = null;
+
+        if ($isUpdate && array_key_exists('status', $contract)) {
+            $statusChange = $contract['status'];
+            unset($contract['status']);
+        }
+
         if ($isUpdate) {
             $this->contracts->update($contractId, $scope, $contract);
         } else {
@@ -156,6 +174,13 @@ final class ContractSaveController implements Controller
             $this->contracts->assignCode($contractId, $scope);
         }
 
+        if ($statusChange !== null) {
+            $this->lifecycle->moveTo($contractId, $statusChange, [
+                'user_id' => $scope->actorId(),
+                'from'    => (string) $existing['status'],
+            ]);
+        }
+
         $this->recordHistory($contractId, $scope, $existing, $previousCustomer, $contract, $customer);
 
         // Scheduled, not rendered here. Building it inline held a PHP worker
@@ -163,10 +188,10 @@ final class ContractSaveController implements Controller
         // DocumentQueue. Nothing on this screen waits for the file.
         DocumentQueue::enqueue($contractId);
 
-        // $contract['status'] is only absent when this was an edit that did
-        // not resend status — the column, and therefore $existing, are both
+        // Absent only when this was an edit that neither resent status nor
+        // moved it (the field-only "Αποθήκευση Αλλαγών" path) — $existing is
         // guaranteed to exist in that case.
-        $responseStatus = $contract['status'] ?? ($existing !== null ? $existing['status'] : null);
+        $responseStatus = $statusChange ?? ($contract['status'] ?? ($existing !== null ? $existing['status'] : null));
 
         return new WP_REST_Response([
             'ok'          => true,
