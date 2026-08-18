@@ -43,7 +43,7 @@ function commissionsHTML(d) {
 
 		// dark hero
 		'<div class="ecrm-payhero">' +
-		'<div class="ecrm-payhero__main"><div class="ecrm-payhero__eyebrow">💰 ΣΥΝΟΛΙΚΑ ΕΣΟΔΑ · ' + range + '</div>' +
+		'<div class="ecrm-payhero__main"><div class="ecrm-payhero__eyebrow"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h15a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V6a2 2 0 012-2h11M17 13h.01"/></svg> ΣΥΝΟΛΙΚΑ ΕΣΟΔΑ · ' + range + '</div>' +
 		'<div class="ecrm-payhero__big">' + Number(d.total).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ' €</div>' +
 		'<div class="ecrm-payhero__sub">Από ' + months.length + ' εκκαθαρίσεις</div></div>' +
 		'<div class="ecrm-payhero__side"><div class="ecrm-payhero__k">ΚΟΡΥΦΑΙΟΣ ΜΗΝΑΣ</div><div class="ecrm-payhero__v">' + esc(d.best_label || '—') + '</div>' +
@@ -52,8 +52,8 @@ function commissionsHTML(d) {
 		// three stat cards
 		'<div class="ecrm-stats">' +
 		'<div class="ecrm-stat is-routed"><div class="ecrm-stat__k">✓ Καταχωρημένες</div><div class="ecrm-stat__v">' + (d.count || 0) + '</div></div>' +
-		'<div class="ecrm-stat is-today"><div class="ecrm-stat__k">💶 Πληρωμένα</div><div class="ecrm-stat__v">' + Number(d.paid_total || 0).toFixed(0) + ' €</div></div>' +
-		'<div class="ecrm-stat is-pending"><div class="ecrm-stat__k">🧾 Προς πληρωμή</div><div class="ecrm-stat__v">' + Number(d.unpaid_total || 0).toFixed(0) + ' €</div></div></div>' +
+		'<div class="ecrm-stat is-today"><div class="ecrm-stat__k"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 9A4 4 0 009 12a4 4 0 006.5 3M7.5 11h5M7.5 13.5h5"/></svg> Πληρωμένα</div><div class="ecrm-stat__v">' + Number(d.paid_total || 0).toFixed(0) + ' €</div></div>' +
+		'<div class="ecrm-stat is-pending"><div class="ecrm-stat__k"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21z"/><path d="M9 8h6M9 12h6"/></svg> Προς πληρωμή</div><div class="ecrm-stat__v">' + Number(d.unpaid_total || 0).toFixed(0) + ' €</div></div></div>' +
 
 		// history
 		'<div class="ecrm-card"><div class="ecrm-step">Ιστορικό εκκαθαρίσεων <span class="ecrm-step__hint">μέσος όρος ' + avg.toFixed(0) + ' € / σύμβαση</span></div>' + hist + '</div>';

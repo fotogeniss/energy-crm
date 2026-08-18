@@ -186,6 +186,9 @@
 .ecrm-chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .ecrm-chips--wrap { max-width: 100%; }
 .ecrm-chip {
+	/* inline-flex ώστε το εικονίδιο του ::before να στοιχίζεται με το κείμενο
+	   αντί να κάθεται σαν γράμμα πάνω στη γραμμή βάσης. */
+	display: inline-flex; align-items: center; gap: 7px;
 	border: 1.5px solid var(--line); background: #fff; color: var(--ink);
 	padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 600;
 	font-family: inherit; transition: all .14s;
@@ -201,14 +204,19 @@
 
 /* --- AI dropzone (signature element) --- */
 .ecrm-ai-lead { margin: -6px 0 14px; color: var(--muted); font-size: 13.5px; }
+/* Όγδοο ξεφευγμένο χρώμα, και το πιο εμφανές: #fcd34d και #fffdf5 είναι το
+   ΚΙΤΡΙΝΟ του παλιού amber, γραμμένο με το χέρι. Επέζησε και του (4) και του
+   (12) γιατί δεν ήταν ούτε κείμενο ούτε φόντο κουμπιού — ήταν διακεκομμένο
+   περίγραμμα. Φάνηκε μόνο όταν αποδόθηκε η οθόνη. */
 .ecrm-drop {
-	border: 2px dashed #fcd34d; border-radius: 14px; background: #fffdf5;
+	border: 2px dashed var(--p300); border-radius: 14px; background: var(--p50);
 	padding: 34px 20px; text-align: center; cursor: pointer;
 	transition: background .18s, border-color .18s, box-shadow .18s;
 }
 .ecrm-drop:hover, .ecrm-drop:focus-visible { background: var(--p50); border-color: var(--p500); outline: none; }
 .ecrm-drop.is-drag { background: var(--p100); border-color: var(--p600); box-shadow: 0 0 0 4px rgba(22,194,23,.16) inset; }
-.ecrm-drop__icon { font-size: 26px; color: var(--amber); margin-bottom: 8px; }
+.ecrm-drop__icon { color: var(--p400); margin-bottom: 8px; line-height: 0; }
+.ecrm-i--drop { width: 30px; height: 30px; flex: 0 0 30px; vertical-align: 0; stroke-width: 1.6; }
 .ecrm-drop__title { font-weight: 700; color: var(--navy); font-size: 16px; }
 .ecrm-drop__hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .ecrm-link { background: none; border: none; color: var(--amber-bright); font-weight: 700; cursor: pointer; text-decoration: underline; font-family: inherit; font-size: inherit; padding: 0; }
@@ -248,6 +256,166 @@
 .ecrm-field.is-ai .ecrm-input { background: var(--p50); border-color: var(--p400); animation: ecrm-pulse 1.6s ease; }
 /* Ίδιο υπόλειμμα iris, στον παλμό του πεδίου που γέμισε το AI. */
 @keyframes ecrm-pulse { 0% { box-shadow: 0 0 0 0 rgba(22,194,23,.45); } 100% { box-shadow: 0 0 0 8px rgba(22,194,23,0); } }
+
+/* Κατάταξη συνεργατών: τα 🥇🥈🥉 ήταν τρία emoji που το κάθε λειτουργικό τα
+ * ζωγραφίζει αλλιώς, και μετά το τέταρτο έγραφε «4». Τώρα είναι ΕΝΑ πράγμα με
+ * τέσσερις καταστάσεις — αριθμός σε κύκλο — και οι τρεις πρώτοι απλώς παίρνουν
+ * χρώμα μεταλλίου. Ίδιο μέγεθος, ίδια στοίχιση, καμία έκπληξη στη γραμμή. */
+.ecrm-medal {
+	display: inline-grid; place-items: center; width: 22px; height: 22px;
+	border-radius: 50%; font-size: 11px; font-weight: 800; color: #fff;
+	font-variant-numeric: tabular-nums;
+}
+.ecrm-medal--1 { background: #c9971f; }
+.ecrm-medal--2 { background: #9aa0a6; }
+.ecrm-medal--3 { background: #a4703a; }
+
+/* --- Εικονίδια στα chips — 2026-08-17 --------------------------------------
+ * Τα emoji ήταν ψημένα μέσα στις ετικέτες του PHP και περνούσαν από esc_html()
+ * μαζί με τη λέξη — δηλαδή δεν υπήρχε τρόπος να γίνουν κάτι άλλο.
+ *
+ * Μπαίνουν από εδώ, πάνω στο data-val, με mask αντί για background-image. Ο
+ * λόγος είναι ένας και είναι ο σωστός: το background-image ΔΕΝ κληρονομεί
+ * currentColor, οπότε το εικονίδιο θα έμενε μαύρο πάνω στο πράσινο ενεργό
+ * chip. Το mask βάφει με background-color, άρα ακολουθεί το κείμενο παντού. */
+.ecrm-chip::before {
+	content: ""; width: 15px; height: 15px; flex: 0 0 15px;
+	background-color: currentColor;
+	-webkit-mask: var(--chip-i) center / contain no-repeat;
+	mask: var(--chip-i) center / contain no-repeat;
+}
+/* Chip χωρίς εικονίδιο (Γ1, Γ21, ενεργοποίηση) δεν παίρνει κενό τετράγωνο. */
+.ecrm-chip:not([data-val]):before,
+.ecrm-chips:not([data-field="energy_type"]):not([data-field="category"]):not([data-field="customer_type"]):not([data-field="price_type"]) .ecrm-chip::before {
+	display: none;
+}
+.ecrm-chips[data-field="energy_type"] .ecrm-chip[data-val="power"] { --chip-i: url("data:image/svg+xml,%3Csvg%20xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M13%202L4%2014h7l-1%208%209-12h-7z'%2F%3E%3C%2Fsvg%3E"); }
+.ecrm-chips[data-field="energy_type"] .ecrm-chip[data-val="gas"] { --chip-i: url("data:image/svg+xml,%3Csvg%20xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M12%203s5%204.5%205%209a5%205%200%2001-10%200c0-2%201-3.5%202-5%20.5%202%201.5%202.5%202%202%20.5-1.5-.5-4%201-6z'%2F%3E%3C%2Fsvg%3E"); }
+.ecrm-chips[data-field="energy_type"] .ecrm-chip[data-val="mobile"] { --chip-i: url("data:image/svg+xml,%3Csvg%20xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20x='7'%20y='2'%20width='10'%20height='20'%20rx='2'%2F%3E%3Cpath%20d='M11%2018h2'%2F%3E%3C%2Fsvg%3E"); }
+.ecrm-chips[data-field="category"] .ecrm-chip[data-val="home"] { --chip-i: url("data:image/svg+xml,%3Csvg%20xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M3%2011l9-7%209%207M5%2010v10h14V10'%2F%3E%3Cpath%20d='M10%2020v-5h4v5'%2F%3E%3C%2Fsvg%3E"); }
+.ecrm-chips[data-field="category"] .ecrm-chip[data-val="business"] { --chip-i: url("data:image/svg+xml,%3Csvg%20xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M4%2021V6l7-3v18M11%2021h9V10l-9-3'%2F%3E%3Cpath%20d='M7%209v0M7%2013v0M15%2013v0M15%2017v0'%2F%3E%3C%2Fsvg%3E"); }
+.ecrm-chips[data-field="category"] .ecrm-chip[data-val="communal"] { --chip-i: url("data:image/svg+xml,%3Csvg%20xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M3%209l9-5%209%205M4%209v11M20%209v11M8%2012v6M12%2012v6M16%2012v6M2%2021h20'%2F%3E%3C%2Fsvg%3E"); }
+.ecrm-chips[data-field="customer_type"] .ecrm-chip[data-val="individual"] { --chip-i: url("data:image/svg+xml,%3Csvg%20xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='12'%20cy='8'%20r='4'%2F%3E%3Cpath%20d='M4%2021c0-4%203.5-6%208-6s8%202%208%206'%2F%3E%3C%2Fsvg%3E"); }
+.ecrm-chips[data-field="customer_type"] .ecrm-chip[data-val="sole_prop"] { --chip-i: url("data:image/svg+xml,%3Csvg%20xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M6%203h9l3%203v15H6z'%2F%3E%3Cpath%20d='M15%203v4h3M9%2012h6M9%2016h4'%2F%3E%3C%2Fsvg%3E"); }
+.ecrm-chips[data-field="customer_type"] .ecrm-chip[data-val="company"] { --chip-i: url("data:image/svg+xml,%3Csvg%20xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23000'%20stroke-width='1.9'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M4%2021V6l7-3v18M11%2021h9V10l-9-3'%2F%3E%3Cpath%20d='M7%209v0M7%2013v0M15%2013v0M15%2017v0'%2F%3E%3C%2Fsvg%3E"); }
+
+/* Το «Χρώμα» είναι κυριολεκτικά χρώμα τιμολογίου: τελεία, όχι εικονίδιο. Εδώ
+   ΔΕΝ μπαίνει mask — η τελεία πρέπει να κρατήσει τη δική της απόχρωση. */
+.ecrm-chips[data-field="price_type"] .ecrm-chip::before {
+	-webkit-mask: none; mask: none;
+	width: 10px; height: 10px; flex: 0 0 10px; border-radius: 50%;
+}
+.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="fixed"]::before { background-color: #5b9be0; }
+.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="special"]::before { background-color: #0f5f29; }
+.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="variable"]::before { background-color: #e0a800; }
+.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="dynamic"]::before { background-color: #d97706; }
+
+/* --- Εικονίδια — 2026-08-17 ----------------------------------------------
+ * Αντικατέστησαν 15 emoji. Τα emoji τα ζωγραφίζει το λειτουργικό σύστημα: άλλα
+ * σε Windows, άλλα σε Mac, άλλα σε κινητό, με δικά τους χρώματα και δικό τους
+ * βάρος — και κανένα δεν ταιριάζει με τα γραμμικά εικονίδια του πλαϊνού μενού.
+ *
+ * Το currentColor είναι το νόημα: το εικονίδιο παίρνει το χρώμα του κειμένου
+ * δίπλα του, άρα δουλεύει αυτόματα σε λευκό κουμπί, σε μαύρη μπάρα, σε κόκκινο
+ * «Διαγραφή» και σε πράσινο banner, χωρίς έναν κανόνα ανά περίπτωση.
+ *
+ * Δύο σύμβολα ΔΕΝ αντικαταστάθηκαν: το ✓ και το €. Έχουν νόημα ως κείμενο,
+ * διαβάζονται από screen reader και μεταφράζονται — δεν είναι εικονίδια. */
+.ecrm-i {
+	width: 15px; height: 15px; flex: 0 0 15px;
+	stroke: currentColor; fill: none;
+	stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+	vertical-align: -2px;
+}
+.ecrm-i--step { width: 16px; height: 16px; flex: 0 0 16px; vertical-align: 0; stroke-width: 1.8; }
+.ecrm-i--banner { width: 21px; height: 21px; flex: 0 0 21px; vertical-align: 0; stroke-width: 1.7; }
+
+/* --- Χειριστήρια: select και κουτάκια — 2026-08-17 ------------------------
+ * Το βελάκι μπαίνει ως background-image data-URI και ΟΧΙ ως στοιχείο δίπλα στο
+ * select: είκοσι επτά select σε επτά αρχεία θα ήθελαν είκοσι επτά αλλαγές
+ * markup, και καθεμιά είναι μια ευκαιρία να ξεχαστεί μία.
+ *
+ * ΟΡΙΟ, γραμμένο για να μη ζητηθεί ξανά: η ΑΝΟΙΧΤΗ λίστα του select τη
+ * ζωγραφίζει το λειτουργικό σύστημα και δεν στυλάρεται με CSS σε κανέναν
+ * browser. Στυλάρεται μόνο το κουτί. Για να αλλάξει και η λίστα πρέπει να
+ * ξαναγραφτεί όλο το χειριστήριο σε JS, με πληκτρολόγιο και screen reader από
+ * την αρχή — και η native λίστα είναι ό,τι καλύτερο σε αφή, §1.9. */
+.ecrm select.ecrm-input,
+.ecrm .ecrm-select,
+.ecrm .ecrm-kind {
+	appearance: none; -webkit-appearance: none;
+	padding-right: 36px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c5a55' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	background-size: 16px 16px;
+	cursor: pointer;
+}
+/* Στη μαύρη μπάρα μαζικών ενεργειών το λευκό κουτί ούρλιαζε. */
+.ecrm-bulkbar select.ecrm-input {
+	background-color: #262521;
+	border-color: #3d3b36;
+	color: #fff;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+.ecrm-bulkbar select.ecrm-input:focus { border-color: var(--p400); }
+
+/* Κουτάκια επιλογής — ΚΥΚΛΙΚΑ, επιλογή του πελάτη 2026-08-17.
+ *
+ * Προτάθηκε στρογγυλεμένο τετράγωνο με τον εξής λόγο: ο κύκλος σημαίνει σχεδόν
+ * παντού «ένα από τα Ν», ενώ εδώ επιλέγονται πολλές γραμμές μαζί για μαζική
+ * αλλαγή κατάστασης. Ο πελάτης είδε τις δύο εκδοχές δίπλα-δίπλα και διάλεξε
+ * κύκλο. Γράφεται εδώ ώστε να μην «διορθωθεί» από κάποιον που θα νομίσει
+ * αργότερα ότι είναι αβλεψία — δεν είναι, και το UI το κρίνει ο χρήστης (§1.8).
+ *
+ * Ο κίνδυνος της σύγχυσης με radio μειώνεται από δύο πράγματα που ΔΕΝ είναι
+ * τυχαία: το γέμισμα είναι πλήρες με τσεκ (τα radio παίρνουν τελεία), και δεν
+ * υπάρχει ούτε ένα radio σε όλη την εφαρμογή — καμία σύγκριση δεν προσφέρεται.
+ *
+ * Το :indeterminate ΔΕΝ είναι διακόσμηση — είναι η κεφαλίδα όταν έχουν επιλεγεί
+ * μερικές γραμμές, όχι όλες. Χωρίς αυτό δείχνει κενή, που λέει ψέματα. */
+.ecrm input[type="checkbox"] {
+	appearance: none; -webkit-appearance: none;
+	margin: 0; width: 19px; height: 19px; flex: 0 0 19px;
+	border: 1.5px solid var(--n200); border-radius: 50%; background: var(--n0);
+	cursor: pointer; position: relative; vertical-align: middle;
+	transition: background .14s, border-color .14s;
+}
+.ecrm input[type="checkbox"]:hover { border-color: var(--n300); }
+.ecrm input[type="checkbox"]:checked { background: var(--p400); border-color: var(--p400); }
+.ecrm input[type="checkbox"]:checked::after {
+	content: ""; position: absolute; left: 6px; top: 3px; width: 4px; height: 8.5px;
+	border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.ecrm input[type="checkbox"]:indeterminate { background: var(--p400); border-color: var(--p400); }
+.ecrm input[type="checkbox"]:indeterminate::after {
+	content: ""; position: absolute; left: 4px; top: 7.5px; width: 9px; height: 2px;
+	background: #fff; border: none; transform: none; border-radius: 1px;
+}
+.ecrm input[type="checkbox"]:focus-visible { outline: 2px solid var(--p400); outline-offset: 2px; }
+.ecrm input[type="checkbox"]:disabled { background: var(--n100); border-color: var(--n200); cursor: not-allowed; }
+
+/* --- Το φίλτρο του εντύπου — 2026-08-17 -----------------------------------
+ * Ό,τι δεν τυπώνεται στο έντυπο του παρόχου κρύβεται, ΔΕΝ σβήνεται: το
+ * collect() διαβάζει κάθε .ecrm-input με τιμή ανεξάρτητα από ορατότητα, οπότε
+ * καμία αποθήκευση δεν χάνει δεδομένα. Το «Περισσότερα» τα φέρνει πίσω. */
+.ecrm-field.is-offform { display: none; }
+.ecrm-card.is-showall .ecrm-field.is-offform { display: flex; }
+.ecrm-card.is-showall .ecrm-field.is-offform .ecrm-field__label { color: var(--n500); }
+.ecrm-card.is-showall .ecrm-field.is-offform .ecrm-field__label::after {
+	content: " · δεν τυπώνεται"; font-weight: 400; font-size: 11px; color: var(--n400);
+}
+/* Κάρτα χωρίς τίποτα ορατό: ο τίτλος πάνω από το κενό είναι το ίδιο λάθος με
+   την τερματική κατάσταση της (7) — φεύγει ολόκληρη. */
+.ecrm-card.is-emptyfortemplate { display: none; }
+
+.ecrm-more {
+	margin-top: 12px; border: none; background: none; padding: 4px 0;
+	font-family: inherit; font-size: 13px; font-weight: 600; color: var(--p600);
+	cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+.ecrm-more:hover { color: var(--p700); }
+.ecrm-more[hidden] { display: none; }
 
 /* --- buttons --- */
 .ecrm-btn {

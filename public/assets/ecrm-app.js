@@ -184,7 +184,7 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 
 		html += '<div class="ecrm-bellpanel__head"><b>Εκκρεμότητες</b><span>' + (stale ? stale + ' πάνω από ' + d.threshold + ' ημέρες' : 'όλα εντάξει') + '</span></div>';
 		if (!rows.length) {
-			html += '<div class="ecrm-bellpanel__empty">Καμία ανοιχτή σύμβαση 🎉</div>';
+			html += '<div class="ecrm-bellpanel__empty">Καμία ανοιχτή σύμβαση</div>';
 		} else {
 			html += '<div class="ecrm-bellpanel__list">' + rows.slice(0, 12).map(function (r) {
 				return '<button type="button" class="ecrm-bellitem' + (r.stale ? ' is-stale' : '') + '" data-bell-open="' + r.id + '">' +

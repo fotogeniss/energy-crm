@@ -1,0 +1,298 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard — πρόταση</title><style>
+@font-face{font-family:"Manrope";font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-latin-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122;}
+@font-face{font-family:"Manrope";font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-greek-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF;}
+:root{
+ --p50:#eafaea;--p100:#d2f5d3;--p200:#a5eba7;--p300:#6bdd6d;--p400:#16c217;
+ --p500:#12a413;--p600:#0e8610;--p700:#0b690c;
+ --n0:#fff;--n25:#fcfcfb;--n50:#f8f8f6;--n100:#f1f1ee;--n150:#e9e8e4;--n200:#dedcd7;
+ --n300:#c6c4bd;--n400:#a3a099;--n500:#7c7a73;--n600:#5c5a55;--n700:#42413d;--n800:#2a2926;--n900:#1a1a18;
+ --pend:#b87503;--pend-bg:#fdf3e0;--route:#255fa8;--route-bg:#e4ecf7;--ok:#0f5f29;--ok-bg:#e1f0e6;
+ --f:"Manrope",-apple-system,"Segoe UI",Roboto,sans-serif;
+ --grid:#e9e8e4;}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--n50);color:var(--n800);font-family:var(--f);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:36px 22px 110px}
+.doc{background:#fff;border:1px solid var(--n150);border-radius:14px;padding:22px 26px;margin-bottom:30px}
+.doc h1{font-size:26px;font-weight:700;letter-spacing:-.03em;margin:0 0 10px}
+.doc p{color:var(--n600);margin:0 0 8px;line-height:1.65;max-width:80ch}
+.doc code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:var(--n100);padding:2px 6px;border-radius:5px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--n400)}
+.note{border-left:3px solid var(--p400);background:var(--p50);padding:13px 17px;border-radius:0 10px 10px 0;
+ margin-top:16px;line-height:1.65;font-size:14px}
+.warn{border-left:3px solid var(--pend);background:var(--pend-bg);padding:13px 17px;border-radius:0 10px 10px 0;
+ margin-top:16px;line-height:1.65;font-size:14px}
+
+/* ══ το ίδιο το dashboard ══ */
+.dash{display:flex;flex-direction:column;gap:16px}
+.card{background:#fff;border:1px solid var(--n150);border-radius:14px;padding:20px 22px}
+.card__h{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.card__t{font-size:14.5px;font-weight:700;color:var(--n900)}
+.card__s{font-size:12.5px;color:var(--n500);margin-left:auto}
+
+.head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:2px}
+.head h2{font-size:23px;font-weight:700;letter-spacing:-.025em;margin:2px 0 0;color:var(--n900)}
+
+/* hero + meter */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px;align-items:center}
+@media(max-width:760px){.hero{grid-template-columns:1fr;gap:20px}}
+.hero__n{font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--n900)}
+.hero__lbl{font-size:13px;color:var(--n500);margin-top:6px}
+.delta{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;
+ padding:3px 9px;border-radius:999px;margin-left:12px;vertical-align:6px}
+.delta--up{background:var(--ok-bg);color:var(--ok)} .delta--down{background:#fceaee;color:#c42a47}
+.delta svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.tier__row{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+.tier__now{font-size:15px;font-weight:700;color:var(--n900)}
+.tier__next{font-size:12.5px;color:var(--n500);margin-left:auto}
+.meter{height:9px;border-radius:999px;background:var(--p100);overflow:hidden}
+.meter__f{height:100%;background:var(--p500);border-radius:999px}
+.tier__scale{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--n400);
+ font-variant-numeric:tabular-nums}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:700px){.kpis{grid-template-columns:1fr}}
+.kpi{background:#fff;border:1px solid var(--n150);border-radius:14px;padding:16px 18px 18px}
+.kpi__k{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--n600);margin-bottom:9px}
+.kpi__dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px}
+.kpi__v{font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1;color:var(--n900)}
+.kpi__f{font-size:12px;color:var(--n500);margin-top:8px}
+.kpi__f a{color:var(--p600);font-weight:600;text-decoration:none;border-bottom:1px solid var(--p200)}
+
+/* charts */
+.cols{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+@media(max-width:860px){.cols{grid-template-columns:1fr}}
+.chart{position:relative}
+svg.plot{display:block;width:100%;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:var(--n900);color:#fff;border-radius:8px;
+ padding:7px 11px;font-size:12.5px;font-weight:600;white-space:nowrap;opacity:0;transition:opacity .1s;
+ transform:translate(-50%,-130%);z-index:5}
+.tip b{color:var(--p300)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;display:none}
+.tbl.on{display:table}
+.tbl th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--n500);
+ padding:7px 8px;border-bottom:1px solid var(--n150)}
+.tbl td{padding:7px 8px;border-top:1px solid var(--n100);font-variant-numeric:tabular-nums}
+.tbl td.n{text-align:right;font-weight:700}
+.tv{border:none;background:none;font-family:inherit;font-size:12px;font-weight:600;color:var(--n500);
+ cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.tv:hover{color:var(--n800)}
+.plot.off{display:none}
+
+/* provider bars */
+.pbars{display:flex;flex-direction:column;gap:11px}
+.pbar{display:grid;grid-template-columns:104px 1fr 34px;align-items:center;gap:11px}
+.pbar__n{font-size:13px;color:var(--n700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbar__t{display:block;height:14px;background:var(--n100);border-radius:4px;overflow:hidden}
+.pbar__f{display:block;height:100%;background:var(--p500);border-radius:0 4px 4px 0}
+.pbar__v{font-size:13px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;color:var(--n900)}
+
+/* feed */
+.feed{list-style:none;margin:0;padding:0}
+.feed li{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--n100);font-size:13.5px}
+.feed li:first-child{border-top:none}
+.feed__c{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:var(--n600);
+ background:var(--n100);padding:2px 7px;border-radius:5px;flex:0 0 auto}
+.feed__m{color:var(--n700);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed__t{color:var(--n400);font-size:12px;flex:0 0 auto}
+
+/* todo */
+.todo{list-style:none;margin:0;padding:0}
+.todo li{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--n100)}
+.todo li:first-child{border-top:none}
+.todo__b{width:3px;align-self:stretch;border-radius:2px;flex:0 0 3px}
+.todo__m{flex:1;min-width:0;font-size:13.5px;color:var(--n800)}
+.todo__m small{display:block;color:var(--n500);font-size:12px;margin-top:2px}
+.todo__a{border:1px solid var(--n200);background:#fff;border-radius:7px;padding:6px 12px;
+ font-family:inherit;font-size:12.5px;font-weight:600;color:var(--n700);cursor:pointer;white-space:nowrap}
+.todo__a:hover{border-color:var(--n400)}
+.ghost{opacity:.55}
+</style></head><body><div class="wrap">
+
+<div class="doc">
+<div class="eyebrow">energy-crm · dashboard · πρόταση κατά §1.8</div>
+<h1>Το dashboard, με νόημα αντί για μετρητές</h1>
+<p>Το σημερινό δείχνει <b>αριθμούς χωρίς σύγκριση</b>: «12 αιτήσεις» — καλό ή κακό; Και δεν λέει
+πουθενά <b>τι χρειάζεται εσένα σήμερα</b>. Τα δεδομένα υπάρχουν σχεδόν όλα· απλώς δεν ρωτιούνται.</p>
+<p>Οι μορφές δεν διαλέχτηκαν στο μάτι. Τα χρώματα μετρήθηκαν: η ράμπα του πρασίνου είναι
+<b>μονότονη σε 9 σκαλιά</b> άρα έγκυρη για μέγεθος· και το accent <code>#16c217</code> δίνει
+<b>2,33:1</b> πάνω σε λευκό — <b>κάτω</b> από το 3:1 που θέλουν τα γραφικά. Γι' αυτό οι ράβδοι
+είναι <code>#12a413</code> (3,31:1) και η γραμμή <code>#0e8610</code> (4,61:1). Το accent μένει
+για μικρά σημάδια, όχι για επιφάνειες.</p>
+</div>
+
+<div class="dash">
+
+ <div class="head">
+  <div><div class="eyebrow">Δευτέρα, 18 Αυγούστου</div>
+   <h2>Καλημέρα, Κωνσταντίνε</h2></div>
+ </div>
+
+ <!-- HERO + METER -->
+ <div class="card">
+  <div class="hero">
+   <div>
+    <div class="eyebrow">Αιτήσεις αυτόν τον μήνα</div>
+    <div class="hero__n">14<span class="delta delta--up"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>+3</span></div>
+    <div class="hero__lbl">έναντι 11 τον Ιούλιο</div>
+   </div>
+   <div>
+    <div class="tier__row"><span class="tier__now">Bronze</span>
+     <span class="tier__next">26 ακόμα για Silver</span></div>
+    <div class="meter"><div class="meter__f" style="width:35%"></div></div>
+    <div class="tier__scale"><span>Bronze 15</span><span>Silver 40</span></div>
+   </div>
+  </div>
+ </div>
+
+ <!-- KPIs -->
+ <div class="kpis">
+  <div class="kpi"><div class="kpi__k"><span class="kpi__dot" style="background:var(--ok)"></span>Σήμερα</div>
+   <div class="kpi__v">2</div><div class="kpi__f">τελευταία πριν 40 λεπτά</div></div>
+  <div class="kpi"><div class="kpi__k"><span class="kpi__dot" style="background:var(--pend)"></span>Εκκρεμότητες</div>
+   <div class="kpi__v">7</div><div class="kpi__f"><a href="#">3 πάνω από 5 ημέρες →</a></div></div>
+  <div class="kpi"><div class="kpi__k"><span class="kpi__dot" style="background:var(--route)"></span>Δρομολογήθηκαν</div>
+   <div class="kpi__v">5</div><div class="kpi__f">περιμένουν τον πάροχο</div></div>
+ </div>
+
+ <!-- ΤΙ ΘΕΛΕΙ ΕΜΕΝΑ -->
+ <div class="card">
+  <div class="card__h"><span class="card__t">Τι χρειάζεται εσένα</span>
+   <span class="card__s">3 από 7 εκκρεμότητες</span></div>
+  <ul class="todo">
+   <li><span class="todo__b" style="background:#c42a47"></span>
+    <span class="todo__m">Αικατερίνη Οικονόμου · NRG
+     <small>Εκκρεμότητα εδώ και 9 ημέρες — λείπει ΑΔΤ</small></span>
+    <button class="todo__a">Επίλυση</button></li>
+   <li><span class="todo__b" style="background:var(--pend)"></span>
+    <span class="todo__m">Παρασκευή Ζαχαρίου-Μπέη · Enerwave
+     <small>Προς υπογραφή 4 ημέρες — δεν άνοιξε το email</small></span>
+    <button class="todo__a">Υπενθύμιση</button></li>
+   <li><span class="todo__b" style="background:var(--n300)"></span>
+    <span class="todo__m">Αναστασία Μήτσου · Orizon
+     <small>Πρόχειρο από 15/08 — λείπει ΑΦΜ, δεν οριστικοποιείται</small></span>
+    <button class="todo__a">Συνέχεια</button></li>
+  </ul>
+ </div>
+
+ <!-- ΓΡΑΦΗΜΑΤΑ -->
+ <div class="cols">
+  <div class="card">
+   <div class="card__h"><span class="card__t">Αιτήσεις ανά μήνα</span>
+    <button class="tv" data-tv="m">Πίνακας</button></div>
+   <div class="chart" id="mchart">
+    <svg class="plot" id="msvg" viewBox="0 0 560 190" preserveAspectRatio="none" role="img"
+         aria-label="Αιτήσεις ανά μήνα, Ιανουάριος έως Αύγουστος"></svg>
+    <div class="tip" id="mtip"></div>
+   </div>
+   <table class="tbl" id="mtbl"><thead><tr><th>Μήνας</th><th style="text-align:right">Αιτήσεις</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+   <div class="card__h"><span class="card__t">Ανά πάροχο</span>
+    <span class="card__s">αυτόν τον μήνα</span></div>
+   <div class="pbars" id="pb"></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <div class="card__h"><span class="card__t">Ζωντανή ροή</span></div>
+  <ul class="feed">
+   <li><span class="feed__c">APP-0041</span><span class="feed__m">Υπεγράφη ηλεκτρονικά από τον πελάτη</span><span class="feed__t">πριν 12′</span></li>
+   <li><span class="feed__c">APP-0040</span><span class="feed__m">Κατάσταση: Δρομολογήθηκε → Ενεργή</span><span class="feed__t">πριν 2 ώρες</span></li>
+   <li><span class="feed__c">APP-0038</span><span class="feed__m">Νέα σύμβαση, Protergia MyHome Special</span><span class="feed__t">χθες</span></li>
+  </ul>
+ </div>
+</div>
+
+<div class="doc" style="margin-top:30px">
+<h1 style="font-size:20px">Τι άλλαξε, και γιατί</h1>
+<p><b>Ένα ηρωικό νούμερο, όχι τέσσερα ισότιμα.</b> Ο μήνας είναι η ιστορία· τα υπόλοιπα είναι
+πλαίσιο. Και έχει επιτέλους <b>σύγκριση</b>: «+3 έναντι 11 τον Ιούλιο». <b>Υπολογίζεται δωρεάν</b>
+από το <code>monthly</code> που ήδη επιστρέφει το API — δεν χρειάζεται τίποτα από το backend.</p>
+<p><b>Ο μετρητής επιπέδου έγινε μετρητής.</b> Η άδεια πίστα είναι <b>ανοιχτότερο σκαλί της ίδιας
+ράμπας</b> αντί για γκρι, οπότε η κατάσταση διαβάζεται σε όλο το μήκος. Και δείχνει τα δύο άκρα
+(15 → 40) ώστε το 35% να σημαίνει κάτι.</p>
+<p><b>Οι μπάρες έγιναν γραμμή.</b> Δώδεκα κοντόχοντρες στήλες είναι δώδεκα ανεξάρτητα νούμερα·
+η τάση είναι μία γραμμή. Ένα χρώμα, κανένα legend (μία σειρά — ο τίτλος τη δηλώνει),
+ετικέτα <b>μόνο στο τελευταίο σημείο</b>, πλέγμα μονόγραμμο και συμπαγές.</p>
+<p><b>Οι πάροχοι είναι μέγεθος, όχι ταυτότητα</b> — άρα <b>ένα</b> χρώμα για όλες τις ράβδους.
+Διαφορετικό χρώμα ανά πάροχο θα ξόδευε το μοναδικό ελεύθερο κανάλι για πληροφορία που το μήκος
+ήδη δείχνει.</p>
+<div class="warn"><b>Ένα πράγμα χρειάζεται backend, και το λέω ρητά.</b> Το «Τι χρειάζεται εσένα»
+είναι το μόνο κομμάτι που δεν βγαίνει από τα σημερινά δεδομένα: το <code>/dashboard</code>
+επιστρέφει <b>μόνο τον αριθμό</b> των εκκρεμοτήτων, όχι ποιες. Θέλει μια λίστα με τις 3-5 πιο
+επείγουσες. <b>Είναι και το πιο χρήσιμο κομμάτι της σελίδας</b> — χωρίς αυτό, το dashboard
+εξακολουθεί να μετράει αντί να δείχνει δουλειά.</div>
+<div class="note"><b>Κάθε γράφημα έχει και πίνακα.</b> Πάτα «Πίνακας» — τα νούμερα δεν πρέπει να
+είναι προσβάσιμα μόνο με το ποντίκι πάνω από ένα σχήμα.</div>
+</div>
+
+</div>
+<script>
+var MONTHS=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ'];
+var DATA=[4,7,5,9,12,8,11,14];
+var PROV=[['Protergia',9],['NRG',6],['Elpedison',4],['Orizon',3],['Enerwave',2]];
+
+/* ── γραμμή ── */
+(function(){
+ var W=560,H=190,PL=34,PR=16,PT=14,PB=26;
+ var max=Math.max.apply(null,DATA), min=0;
+ var iw=W-PL-PR, ih=H-PT-PB;
+ var x=function(i){return PL+(DATA.length<2?iw/2:i*iw/(DATA.length-1));};
+ var y=function(v){return PT+ih-((v-min)/(max-min||1))*ih;};
+ var s=[],ticks=[0,Math.round(max/2),max];
+ ticks.forEach(function(t){
+  s.push('<line x1="'+PL+'" x2="'+(W-PR)+'" y1="'+y(t)+'" y2="'+y(t)+'" stroke="var(--grid)" stroke-width="1"/>');
+  s.push('<text x="'+(PL-9)+'" y="'+(y(t)+4)+'" text-anchor="end" font-size="10.5" fill="var(--n400)" font-family="var(--f)">'+t+'</text>');
+ });
+ var d=DATA.map(function(v,i){return (i?'L':'M')+x(i)+' '+y(v);}).join(' ');
+ s.push('<path d="'+d+' L'+x(DATA.length-1)+' '+(PT+ih)+' L'+x(0)+' '+(PT+ih)+' Z" fill="var(--p400)" opacity=".10"/>');
+ s.push('<path d="'+d+'" fill="none" stroke="var(--p600)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>');
+ DATA.forEach(function(v,i){
+  s.push('<text x="'+x(i)+'" y="'+(H-7)+'" text-anchor="middle" font-size="10.5" fill="var(--n400)" font-family="var(--f)">'+MONTHS[i]+'</text>');
+ });
+ var li=DATA.length-1;
+ s.push('<circle cx="'+x(li)+'" cy="'+y(DATA[li])+'" r="4.5" fill="var(--p600)" stroke="#fff" stroke-width="2"/>');
+ s.push('<text x="'+(x(li)-8)+'" y="'+(y(DATA[li])-11)+'" text-anchor="end" font-size="12.5" font-weight="700" fill="var(--n900)" font-family="var(--f)">'+DATA[li]+'</text>');
+ DATA.forEach(function(v,i){
+  s.push('<rect class="hit" data-i="'+i+'" x="'+(x(i)-iw/(DATA.length-1)/2)+'" y="'+PT+'" width="'+(iw/(DATA.length-1))+'" height="'+ih+'" fill="transparent"/>');
+ });
+ var svg=document.getElementById('msvg'); svg.innerHTML=s.join('');
+ var tip=document.getElementById('mtip'), box=document.getElementById('mchart');
+ svg.querySelectorAll('.hit').forEach(function(r){
+  r.addEventListener('mouseenter',function(){
+   var i=+this.dataset.i, rect=box.getBoundingClientRect(), sr=svg.getBoundingClientRect();
+   tip.innerHTML=MONTHS[i]+' · <b>'+DATA[i]+'</b>';
+   tip.style.left=(sr.left-rect.left+x(i)/W*sr.width)+'px';
+   tip.style.top=(sr.top-rect.top+y(DATA[i])/H*sr.height)+'px';
+   tip.style.opacity=1;});
+  r.addEventListener('mouseleave',function(){tip.style.opacity=0;});
+ });
+ var tb=document.querySelector('#mtbl tbody');
+ tb.innerHTML=DATA.map(function(v,i){return '<tr><td>'+MONTHS[i]+'</td><td class="n">'+v+'</td></tr>';}).join('');
+})();
+
+/* ── πάροχοι ── */
+(function(){
+ var max=Math.max.apply(null,PROV.map(function(p){return p[1];}));
+ document.getElementById('pb').innerHTML=PROV.map(function(p){
+  return '<div class="pbar"><span class="pbar__n">'+p[0]+'</span>'+
+   '<span class="pbar__t"><span class="pbar__f" style="width:'+Math.round(p[1]/max*100)+'%"></span></span>'+
+   '<span class="pbar__v">'+p[1]+'</span></div>';}).join('');
+})();
+
+document.querySelectorAll('.tv').forEach(function(b){
+ b.addEventListener('click',function(){
+  var t=document.getElementById('mtbl'), p=document.getElementById('msvg');
+  var on=t.classList.toggle('on'); p.classList.toggle('off',on);
+  document.getElementById('mtip').style.opacity=0;
+  b.textContent=on?'Γράφημα':'Πίνακας';});
+});
+</script></body></html>

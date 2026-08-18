@@ -156,6 +156,16 @@ import { api, esc, toast } from '@energy-crm/util';
 			input.value = val;
 			var field = input.closest('.ecrm-field');
 			if (field) { field.classList.add('is-ai'); setTimeout(function () { field.classList.remove('is-ai'); }, 1800); }
+
+			// Το φίλτρο του εντύπου έτρεξε όταν διαλέχτηκε ο πάροχος, δηλαδή
+			// ΠΡΙΝ γεμίσει το AI. Ένα πεδίο που μόλις απέκτησε τιμή δεν
+			// επιτρέπεται να μείνει κρυμμένο: θα αποθηκευόταν κάτι που ο
+			// συνεργάτης δεν βλέπει πουθενά, και δεν θα μπορούσε να το
+			// διορθώσει χωρίς να ψάξει πίσω από το «Περισσότερα».
+			if (field && field.classList.contains('is-offform')) {
+				field.classList.remove('is-offform');
+				paintMoreToggles();
+			}
 		}
 
 		// chips
@@ -197,7 +207,7 @@ import { api, esc, toast } from '@energy-crm/util';
 			if (!card) return;
 
 			var name = providerName();
-			if (!name) { card.hidden = true; return; }
+			if (!name) { card.hidden = true; applyTemplateFilter([]); return; }
 
 			var qs = '?provider=' + encodeURIComponent(name) +
 				'&energy=' + encodeURIComponent(state.energy_type || 'power') +
@@ -205,7 +215,11 @@ import { api, esc, toast } from '@energy-crm/util';
 				'&program=' + encodeURIComponent(programCode()) +
 				'&activation_type=' + encodeURIComponent(state.activation_type || '');
 
-			if (provFieldsCache[qs]) { paintProviderFields(card, provFieldsCache[qs]); return; }
+			if (provFieldsCache[qs]) {
+				paintProviderFields(card, provFieldsCache[qs]);
+				applyTemplateFilter(provFieldsCache[qs].main_inputs);
+				return;
+			}
 
 			fetch(api('/forms/fields') + qs, { headers: { 'X-WP-Nonce': ECRM.nonce } })
 				.then(function (r) { return r.json(); })
@@ -213,6 +227,7 @@ import { api, esc, toast } from '@energy-crm/util';
 					if (!d || !d.ok) return;
 					provFieldsCache[qs] = d;
 					paintProviderFields(card, d);
+					applyTemplateFilter(d.main_inputs);
 				})
 				.catch(function () { card.hidden = true; });
 		}
@@ -231,6 +246,102 @@ import { api, esc, toast } from '@energy-crm/util';
 				else b.parent.appendChild(b.el);
 			});
 			borrowed = [];
+		}
+
+		// ── Το φίλτρο του εντύπου ────────────────────────────────────────
+		// Η φόρμα ρωτάει 85 πεδία. Το χειρότερο έντυπο τυπώνει 23, το μικρότερο
+		// 5. Ό,τι δεν τυπώνεται πάει πίσω από «Περισσότερα» ανά κάρτα — ΠΟΤΕ
+		// δεν φεύγει από το DOM: το collect() διαβάζει κάθε .ecrm-input με τιμή,
+		// κρυμμένο ή όχι, οπότε τίποτα δεν χάνεται στην αποθήκευση.
+		//
+		// Τέσσερις κανόνες, και οι τρεις τελευταίοι είναι εκεί για να μη
+		// κρυφτεί ποτέ κάτι που έχει σημασία:
+		//
+		//   1. Κενή λίστα σημαίνει «δεν ξέρω ποιο έντυπο» → δείξε τα πάντα.
+		//   2. Πεδίο ΜΕ ΤΙΜΗ δεν κρύβεται ποτέ. Αν το γέμισε το AI ή ο χρήστης,
+		//      το κρύψιμο θα έκρυβε δεδομένα που θα αποθηκευτούν.
+		//   3. Δανεισμένο πεδίο (είναι στην ★ ενότητα) δεν κρύβεται ποτέ.
+		//   4. Το φίλτρο δεν ΔΕΙΧΝΕΙ τίποτα — μόνο κρύβει. Ό,τι έχει ήδη κρύψει
+		//      το data-when μένει κρυφό.
+		var offFormActive = false;
+
+		function fieldName(el) { return el.getAttribute('data-for') || ''; }
+
+		function applyTemplateFilter(mainInputs) {
+			var wanted = {};
+			var have = mainInputs && mainInputs.length;
+			(mainInputs || []).forEach(function (n) { wanted[n] = true; });
+
+			offFormActive = !!have;
+
+			qa('.ecrm-field[data-for]').forEach(function (f) {
+				var input = f.querySelector('.ecrm-input');
+				var filled = !!(input && String(input.value || '').trim());
+				var borrowedNow = !!f.closest('[data-provider-fields]');
+				var off = have && !wanted[fieldName(f)] && !filled && !borrowedNow;
+				f.classList.toggle('is-offform', off);
+			});
+
+			paintMoreToggles();
+		}
+
+		// Ορατότητα ΜΕΣΑ στην κάρτα, όχι στη σελίδα.
+		//
+		// Η πρώτη γραφή χρησιμοποιούσε offsetParent !== null, που είναι λάθος με
+		// τον χειρότερο τρόπο: όταν το φίλτρο τρέξει ενώ ο χρήστης βρίσκεται σε
+		// άλλη οθόνη, η .ecrm-view της φόρμας είναι display:none και ΚΑΘΕ πεδίο
+		// μετριέται αόρατο — οπότε κάθε κάρτα έπαιρνε is-emptyfortemplate και η
+		// φόρμα εξαφανιζόταν ολόκληρη μόλις ο χρήστης γύριζε σε αυτήν. Το
+		// refreshProviderFields() τρέχει σε κάθε κλικ chip και στη φόρτωση.
+		//
+		// Η ερώτηση που πρέπει να απαντηθεί είναι στενότερη: «το έκρυψε το
+		// data-when;» — δηλαδή υπάρχει inline display:none ΑΝΑΜΕΣΑ στο πεδίο
+		// και στην κάρτα του. Ό,τι είναι πιο πάνω αφορά την πλοήγηση, όχι εμάς.
+		function hiddenByWhen(field, card) {
+			for (var el = field; el && el !== card; el = el.parentElement) {
+				if (el.style && el.style.display === 'none') return true;
+			}
+			return false;
+		}
+
+		// Ένα «Περισσότερα (N)» ανά κάρτα, και η κάρτα φεύγει ολόκληρη όταν δεν
+		// της μένει τίποτα ορατό. Χωρίς αυτό ο συνεργάτης βλέπει τίτλους
+		// ενοτήτων πάνω από το κενό — δες CHANGELOG 2026-08-17 (7), το ίδιο
+		// λάθος με την τερματική κατάσταση.
+		function paintMoreToggles() {
+			root.querySelectorAll('.ecrm-card').forEach(function (card) {
+				var fields = card.querySelectorAll('.ecrm-field[data-for]');
+				if (!fields.length) return;
+
+				var hidden = card.querySelectorAll('.ecrm-field.is-offform').length;
+				var visible = 0;
+				fields.forEach(function (f) {
+					if (!f.classList.contains('is-offform') && !hiddenByWhen(f, card)) visible++;
+				});
+
+				var btn = card.querySelector('[data-more]');
+				if (!btn) {
+					btn = document.createElement('button');
+					btn.type = 'button';
+					btn.className = 'ecrm-more';
+					btn.setAttribute('data-more', '1');
+					btn.addEventListener('click', function () {
+						card.classList.toggle('is-showall');
+						btn.textContent = card.classList.contains('is-showall')
+							? 'Λιγότερα' : 'Περισσότερα (' + hidden + ')';
+					});
+					card.appendChild(btn);
+				}
+
+				btn.hidden = hidden === 0;
+				if (!card.classList.contains('is-showall')) {
+					btn.textContent = 'Περισσότερα (' + hidden + ')';
+				}
+
+				// Καμία ορατή γραμμή και τίποτα κρυμμένο να αποκαλυφθεί → η
+				// κάρτα δεν έχει λόγο ύπαρξης σε αυτό το έντυπο.
+				card.classList.toggle('is-emptyfortemplate', offFormActive && visible === 0 && hidden === 0);
+			});
 		}
 
 		function paintProviderFields(card, d) {

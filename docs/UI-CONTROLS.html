@@ -1,0 +1,173 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dropdown, κουτάκια, εικονίδια</title><style>
+@font-face{font-family:"Manrope";font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-latin-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122;}
+@font-face{font-family:"Manrope";font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-greek-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF;}
+:root{--g:#16c217;--g-h:#12a413;--g-soft:#e8f9e8;--k:#1a1a1a;--w:#fff;--ln:#dedcd7;--ln-h:#c6c4bd;
+ --t:#2a2926;--t2:#5c5a55;--t3:#a3a099;--fill:#f1f1ee;--err:#c42a47;
+ --f:"Manrope",-apple-system,"Segoe UI",Roboto,sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fafafa;color:var(--t);font-family:var(--f);font-size:15px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding:44px 24px 120px}
+h1{font-size:31px;font-weight:700;letter-spacing:-.03em;margin:0 0 12px}
+h2{font-size:21px;font-weight:700;letter-spacing:-.025em;margin:0 0 6px}
+.lead{color:var(--t2);margin:0 0 8px;max-width:76ch;line-height:1.65}
+.sub{color:var(--t2);margin:0 0 22px;max-width:82ch;line-height:1.65;font-size:14.5px}
+section{margin-top:60px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#f0f0f0;padding:2px 6px;border-radius:5px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:800px){.cmp{grid-template-columns:1fr}}
+.box{background:var(--w);border:1px solid #eee;border-radius:12px;padding:18px 20px 22px}
+.box h3{margin:0 0 4px;font-size:14px;font-weight:700}
+.box p{margin:0 0 16px;font-size:12.5px;color:var(--t2);line-height:1.55}
+.bad h3{color:var(--err)} .good h3{color:var(--g)}
+.note{border-left:3px solid var(--g);background:var(--g-soft);padding:14px 18px;border-radius:0 10px 10px 0;
+ margin-top:20px;line-height:1.65;font-size:14.5px}
+.warn{border-left:3px solid #b87503;background:#fdf3e0;padding:14px 18px;border-radius:0 10px 10px 0;
+ margin-top:20px;line-height:1.65;font-size:14.5px}
+
+/* ── ΤΩΡΑ ── */
+.raw{height:42px;padding:0 12px;border:1.5px solid var(--ln);border-radius:10px;font-family:inherit;font-size:14px}
+.rawcb{width:16px;height:16px}
+
+/* ── ΠΡΟΤΑΣΗ: select ── */
+.sel{position:relative;display:inline-block;width:100%;max-width:320px}
+.sel select{appearance:none;-webkit-appearance:none;width:100%;height:42px;padding:0 38px 0 14px;
+ border:1px solid var(--ln);border-radius:8px;background:var(--w);font-family:inherit;font-size:14px;
+ color:var(--t);cursor:pointer;outline:none;transition:border-color .15s}
+.sel select:hover{border-color:var(--ln-h)}
+.sel select:focus{border-color:var(--g)}
+.sel svg{position:absolute;right:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;
+ pointer-events:none;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sel.dark select{background:var(--k);color:#fff;border-color:#333}
+.sel.dark svg{stroke:#fff}
+
+/* ── ΠΡΟΤΑΣΗ: κουτάκια ── */
+.cb{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;margin-right:22px}
+.cb input{appearance:none;-webkit-appearance:none;margin:0;width:20px;height:20px;flex:0 0 20px;
+ border:1.5px solid var(--ln);background:var(--w);cursor:pointer;position:relative;
+ transition:background .14s,border-color .14s}
+.cb.sq input{border-radius:6px}
+.cb.ci input{border-radius:50%}
+.cb input:hover{border-color:var(--ln-h)}
+.cb input:checked{background:var(--g);border-color:var(--g)}
+.cb input:checked::after{content:"";position:absolute;left:6px;top:2.5px;width:5px;height:10px;
+ border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.cb input:indeterminate{background:var(--g);border-color:var(--g)}
+.cb input:indeterminate::after{content:"";position:absolute;left:4px;top:8px;width:10px;height:2px;
+ background:#fff;border:none;transform:none}
+.cb input:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+
+/* ── εικονίδια ── */
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #eee;border-radius:12px;overflow:hidden}
+th{text-align:left;background:#fafafa;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+ color:var(--t2);padding:11px 15px;border-bottom:1px solid #eee;font-weight:700}
+td{padding:12px 15px;border-top:1px solid #f2f2f2;font-size:14px;vertical-align:middle}
+td.e{font-size:19px;width:70px;text-align:center}
+td.i{width:70px;text-align:center}
+td.i svg{width:19px;height:19px;stroke:var(--t);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.b{border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:600;padding:9px 16px;
+ cursor:pointer;display:inline-flex;align-items:center;gap:8px;line-height:1;margin:0 8px 8px 0}
+.b-o{background:#fff;color:var(--t);border:1px solid var(--ln)}
+.b-o:hover{border-color:var(--ln-h)}
+.b-d{background:#fff;color:var(--err);border:1px solid #f5c2cc}
+.b svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.bar{background:var(--k);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bar span{color:#fff;font-size:13.5px;font-weight:600}
+.bar .b-o{background:#fff}
+</style></head><body><div class="wrap">
+
+<div class="eyebrow">energy-crm · χειριστήρια · πρόταση κατά §1.8</div>
+<h1>Το dropdown, τα κουτάκια και τα εικονίδια</h1>
+<p class="lead">Απολογισμός πριν αγγίξω κώδικα: <b>27 native selects</b>, <b>7 κουτάκια επιλογής</b>
+και <b>15 emoji</b> σε επτά αρχεία. Τα φτιάχνω όλα μαζί ή θα τα διορθώνουμε ένα-ένα για μια βδομάδα.</p>
+
+<section>
+<h2>1. Το dropdown</h2>
+<div class="cmp">
+ <div class="box bad"><h3>Τώρα</h3><p>Σκέτο <code>&lt;select&gt;</code> με το βελάκι των Windows.
+  Άλλο ύψος, άλλη ακτίνα, άλλο περίγραμμα από κάθε άλλο πεδίο δίπλα του.</p>
+  <select class="raw"><option>— Αλλαγή κατάστασης —</option><option>Πρόχειρο</option><option>Ενεργή</option></select>
+ </div>
+ <div class="box good"><h3>Πρόταση</h3><p>Ίδιο ύψος, ίδια ακτίνα 8px, ίδιο περίγραμμα και ίδιο
+  πράσινο focus με τα υπόλοιπα πεδία. Δικό μας βελάκι.</p>
+  <div class="sel"><select><option>— Αλλαγή κατάστασης —</option><option>Πρόχειρο</option><option>Ενεργή</option></select>
+   <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+ </div>
+</div>
+<p class="sub" style="margin-top:18px">Και η εκδοχή για τη <b>μαύρη μπάρα μαζικών ενεργειών</b>, όπου το
+λευκό κουτί ούρλιαζε μέσα στο μαύρο:</p>
+<div class="bar">
+ <span>3 επιλεγμένες</span>
+ <div class="sel dark" style="max-width:230px"><select><option>— Αλλαγή κατάστασης —</option><option>Ενεργή</option></select>
+  <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+ <button class="b" style="background:#16c217;color:#fff">Εφαρμογή</button>
+ <button class="b b-o"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Export επιλογής</button>
+ <button class="b b-d"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg>Διαγραφή</button>
+</div>
+<div class="warn"><b>Ένα όριο που πρέπει να το ξέρεις.</b> Η <b>ανοιχτή λίστα</b> — αυτή που φαίνεται
+στη φωτογραφία σου με το μπλε highlight — <b>τη ζωγραφίζει το λειτουργικό σύστημα, όχι η σελίδα.</b>
+Δεν στυλάρεται με CSS σε κανέναν browser. Στυλάρεται μόνο το κουτί.
+Για να αλλάξει και η λίστα πρέπει να ξαναφτιαχτεί όλο το χειριστήριο σε JavaScript — με πληκτρολόγιο,
+screen reader και συμπεριφορά αφής από την αρχή. <b>Δεν το προτείνω για 27 selects</b>, και ειδικά όχι
+όταν η native λίστα είναι ό,τι καλύτερο σε κινητό και tablet (§1.9).</div>
+</section>
+
+<section>
+<h2>2. Τα κουτάκια επιλογής</h2>
+<p class="sub">Δύο εκδοχές. <b>Διάλεξε μία</b> — θέλω τη γνώμη σου γιατί έχει και πρακτική συνέπεια.</p>
+<div class="cmp">
+ <div class="box"><h3>Στρογγυλεμένο τετράγωνο · 6px</h3>
+  <p>Το πρότυπο για «διάλεξε πολλά». Ο χρήστης το ξεχωρίζει με τη μία από επιλογή «ένα από τα Ν».</p>
+  <label class="cb sq"><input type="checkbox" checked> Επιλεγμένη</label>
+  <label class="cb sq"><input type="checkbox"> Κενή</label>
+  <label class="cb sq"><input type="checkbox" id="ind1"> Μερική</label>
+ </div>
+ <div class="box"><h3>Κύκλος</h3>
+  <p>Πιο «premium», όπως το ζήτησες. <b>Το τίμημα:</b> ο κύκλος σημαίνει παντού «ένα από τα Ν», και
+  εδώ επιλέγεις πολλές γραμμές μαζί.</p>
+  <label class="cb ci"><input type="checkbox" checked> Επιλεγμένη</label>
+  <label class="cb ci"><input type="checkbox"> Κενή</label>
+  <label class="cb ci"><input type="checkbox" id="ind2"> Μερική</label>
+ </div>
+</div>
+<div class="note"><b>Η «Μερική» δεν είναι διακόσμηση.</b> Είναι το κουτάκι της κεφαλίδας όταν έχεις
+επιλέξει <b>μερικές</b> γραμμές, όχι όλες — σήμερα δείχνει απλά κενό, που λέει ψέματα. Παίρνει παύλα
+αντί για τσεκ, και στις δύο εκδοχές.</div>
+</section>
+
+<section>
+<h2>3. Τα εικονίδια</h2>
+<p class="sub">Τα emoji τα ζωγραφίζει το λειτουργικό: άλλα σε Windows, άλλα σε Mac, άλλα σε κινητό —
+και κανένα δεν ταιριάζει με τα γραμμικά εικονίδια του μενού σου. Αριστερά τι υπάρχει, δεξιά τι μπαίνει:
+<b>ίδιο πάχος γραμμής, ίδιες στρογγυλές απολήξεις, χρώμα του κειμένου.</b></p>
+<table>
+<tr><th>Πού</th><th>Τώρα</th><th>Πρόταση</th><th></th></tr>
+<tr><td>Export Excel</td><td class="e">⤓</td><td class="i"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg></td><td>λήψη</td></tr>
+<tr><td>Διαγραφή</td><td class="e">🗑</td><td class="i"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg></td><td>κάδος</td></tr>
+<tr><td>Αποθήκευση φίλτρου</td><td class="e">★</td><td class="i"><svg viewBox="0 0 24 24"><path d="M12 3l2.9 6 6.6.9-4.8 4.6 1.2 6.5-5.9-3.1-5.9 3.1 1.2-6.5L2.5 9.9 9.1 9z"/></svg></td><td>αστέρι</td></tr>
+<tr><td>Φίλτρα</td><td class="e">⚙</td><td class="i"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></td><td>ρυθμιστικά, όχι γρανάζι — γρανάζι σημαίνει «ρυθμίσεις»</td></tr>
+<tr><td>Αναζήτηση ΑΦΜ</td><td class="e">🔍</td><td class="i"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></td><td>φακός</td></tr>
+<tr><td>Εξαγωγή με AI</td><td class="e">✨</td><td class="i"><svg viewBox="0 0 24 24"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg></td><td>λάμψη</td></tr>
+<tr><td>Δικαιολογητικά</td><td class="e">📋</td><td class="i"><svg viewBox="0 0 24 24"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2M9 12h6M9 16h4"/></svg></td><td>λίστα</td></tr>
+<tr><td>Εκτύπωση Σύμβασης</td><td class="e">🖨</td><td class="i"><svg viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg></td><td>εκτυπωτής</td></tr>
+<tr><td>Αποστολή για υπογραφή</td><td class="e">✉</td><td class="i"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zM3 7l9 6 9-6"/></svg></td><td>φάκελος</td></tr>
+<tr><td>Σύνδεσμος live υπογραφής</td><td class="e">🔗</td><td class="i"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg></td><td>κρίκος</td></tr>
+<tr><td>Ενότητα παρόχου</td><td class="e">★</td><td class="i"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></td><td>το ★ σημαίνει ήδη «αγαπημένο» παραδίπλα</td></tr>
+</table>
+<div class="note"><b>Δύο πράγματα που δεν αλλάζω.</b> Το <code>✓</code> στα Ναι/Όχι και το <code>€</code>
+είναι <b>σύμβολα, όχι εικονίδια</b> — έχουν νόημα ως κείμενο και μεταφράζονται σωστά.
+Και τα εικονίδια του πλαϊνού μενού μένουν όπως είναι: είναι ήδη γραμμικά SVG με το ίδιο πάχος, και
+πάνω τους δένουν όλα τα υπόλοιπα.</div>
+</section>
+
+</div>
+<script>
+document.getElementById('ind1').indeterminate = true;
+document.getElementById('ind2').indeterminate = true;
+</script></body></html>

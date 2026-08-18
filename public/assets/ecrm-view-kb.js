@@ -54,8 +54,8 @@ function renderKB(view, d) {
 		'<p class="ecrm-sub">Δικαιολογητικά, εγγυήσεις & χρεώσεις ανά πάροχο</p></header>' +
 		'<div class="ecrm-kbsearchbox">' +
 			'<div class="ecrm-kbsearchbox__title">Τι χρειάζεσαι για να κλείσεις τη σύμβαση;</div>' +
-			'<div class="ecrm-kbsearchbox__q">🔎 <input type="text" data-kbq placeholder="Αναζήτηση ή ρώτησε τη Λίτσα…" value="' + esc(kbState.q) + '">' +
-				'<button type="button" class="ecrm-kbask" data-kbask>✨ Ρώτησε τη Λίτσα</button></div>' +
+			'<div class="ecrm-kbsearchbox__q"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg> <input type="text" data-kbq placeholder="Αναζήτηση ή ρώτησε τη Λίτσα…" value="' + esc(kbState.q) + '">' +
+				'<button type="button" class="ecrm-kbask" data-kbask><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg> Ρώτησε τη Λίτσα</button></div>' +
 			'<div class="ecrm-kbanswer" data-kbanswer hidden></div>' +
 			'<div class="ecrm-kbfilters">' +
 				'<div class="ecrm-kbfilter"><span>Ενέργεια</span>' + energyChips + '</div>' +
@@ -80,7 +80,7 @@ function renderKB(view, d) {
 			.then(function (d) {
 				if (!d || !d.ok) { box.innerHTML = '<div class="ecrm-kbanswer__err">' + esc((d && d.error) || 'Αποτυχία.') + '</div>'; return; }
 				var html = esc(d.reply).replace(/\n/g, '<br>');
-				box.innerHTML = '<div class="ecrm-kbanswer__head">✨ Λίτσα</div><div class="ecrm-kbanswer__body">' + html + '</div>' +
+				box.innerHTML = '<div class="ecrm-kbanswer__head"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg> Λίτσα</div><div class="ecrm-kbanswer__body">' + html + '</div>' +
 					'<button type="button" class="ecrm-kbanswer__close" data-kbclose>Κλείσιμο</button>';
 				box.querySelector('[data-kbclose]').addEventListener('click', function () { box.hidden = true; box.innerHTML = ''; });
 			})

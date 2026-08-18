@@ -47,7 +47,7 @@ function analyticsHTML(d) {
 		'<div class="ecrm-stat is-routed"><div class="ecrm-stat__k">Σύνολο αιτήσεων</div><div class="ecrm-stat__v">' + (d.total || 0) + '</div></div>' +
 		'<div class="ecrm-stat is-today"><div class="ecrm-stat__k">✓ Conversion</div><div class="ecrm-stat__v">' + Number(d.conv_rate || 0).toFixed(1) + '%</div></div>' +
 		'<div class="ecrm-stat is-pending"><div class="ecrm-stat__k">✕ Ακυρώσεις</div><div class="ecrm-stat__v">' + Number(d.canc_rate || 0).toFixed(1) + '%</div></div>' +
-		'<div class="ecrm-stat is-today"><div class="ecrm-stat__k">⌛ Μέσος χρόνος ενεργ.</div><div class="ecrm-stat__v">' + (d.avg_days == null ? '—' : (Number(d.avg_days).toFixed(1) + ' ημ.')) + '</div></div>' +
+		'<div class="ecrm-stat is-today"><div class="ecrm-stat__k"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> Μέσος χρόνος ενεργ.</div><div class="ecrm-stat__v">' + (d.avg_days == null ? '—' : (Number(d.avg_days).toFixed(1) + ' ημ.')) + '</div></div>' +
 		'</div>';
 
 	// funnel (only stages with any count, in pipeline order)
@@ -76,7 +76,7 @@ function analyticsHTML(d) {
 	var lbHTML = lb.length
 		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>#</th><th>Συνεργάτης</th><th>Συμβάσεις</th><th style="text-align:right">Προμήθεια €</th></tr></thead><tbody>' +
 			lb.map(function (r, i) {
-				var medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : (i + 1)));
+				var medal = i < 3 ? '<span class="ecrm-medal ecrm-medal--' + (i + 1) + '">' + (i + 1) + '</span>' : (i + 1);
 				return '<tr><td>' + medal + '</td><td><strong>' + esc(r.name) + '</strong></td><td>' + r.count + '</td>' +
 					'<td style="text-align:right" class="ecrm-mono">' + Number(r.amount).toFixed(0) + ' €</td></tr>';
 			}).join('') + '</tbody></table></div>'
@@ -95,5 +95,5 @@ function analyticsHTML(d) {
 		'<div class="ecrm-card"><div class="ecrm-step">Ανά νομό</div>' + barList(d.by_region || [], 'is-region') + '</div>' +
 		'</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Τάση μήνα (' + new Date().getFullYear() + ')</div>' + trend + '</div>' +
-		'<div class="ecrm-card"><div class="ecrm-step">🏆 Κατάταξη συνεργατών</div>' + lbHTML + '</div>';
+		'<div class="ecrm-card"><div class="ecrm-step"><svg class="ecrm-i ecrm-i--step" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 01-8 0zM8 6H5v2a3 3 0 003 3M16 6h3v2a3 3 0 01-3 3M10 13h4v3h-4zM8 20h8M12 16v4"/></svg> Κατάταξη συνεργατών</div>' + lbHTML + '</div>';
 }

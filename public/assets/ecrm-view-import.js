@@ -16,7 +16,7 @@ export function initImport() {
 		'<div class="ecrm-card ecrm-card--ai">' +
 		'<div class="ecrm-drop" data-idrop tabindex="0" role="button">' +
 		'<input type="file" data-ifile accept=".xlsx,.csv" hidden>' +
-		'<div class="ecrm-drop__icon">⇪</div><div class="ecrm-drop__title">Σύρε το Excel/CSV εδώ</div>' +
+		'<div class="ecrm-drop__icon"><svg class="ecrm-i ecrm-i--drop" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V7m0 0l-4 4m4-4l4 4M4 21h16"/></svg></div><div class="ecrm-drop__title">Σύρε το Excel/CSV εδώ</div>' +
 		'<div class="ecrm-drop__hint">ή <button type="button" class="ecrm-link" data-ipick>πάτα για επιλογή</button> · .xlsx ή .csv</div>' +
 		'</div><div class="ecrm-ai-status" data-istatus aria-live="polite"></div></div>' +
 		'<div data-imap></div>';

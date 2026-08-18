@@ -41,12 +41,12 @@ function dashboardHTML(d) {
 
 	return '' +
 		'<header class="ecrm-head"><div class="ecrm-eyebrow">' + new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div>' +
-		'<h2 class="ecrm-title">Καλό βράδυ, ' + esc(d.user || '') + ' 👋</h2><p class="ecrm-sub">τα στατιστικά σου</p></header>' +
+		'<h2 class="ecrm-title">Καλό βράδυ, ' + esc(d.user || '') + ' <svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 100-18 9 9 0 000 18z"/><path d="M8.5 14a4 4 0 007 0M9 9.5v.01M15 9.5v.01"/></svg></h2><p class="ecrm-sub">τα στατιστικά σου</p></header>' +
 
 		'<div class="ecrm-card ecrm-level">' +
 		'<div class="ecrm-level__top"><div><div class="ecrm-eyebrow">Επίπεδο μήνα · δικά σου</div>' +
 		'<div class="ecrm-level__name">' + esc(lvl.current || 'Χωρίς level') + '</div>' +
-		'<div class="ecrm-level__hint">' + (lvl.remaining || 0) + ' αιτήσεις ακόμα για 🥉 ' + esc(lvl.next || '') + '</div></div>' +
+		'<div class="ecrm-level__hint">' + (lvl.remaining || 0) + ' αιτήσεις ακόμα για ' + esc(lvl.next || '') + '</div></div>' +
 		'<div class="ecrm-level__big">' + (c.month || 0) + '<span>αιτήσεις τον μήνα</span></div></div>' +
 		'<div class="ecrm-progress"><div class="ecrm-progress__fill" style="width:' + pct + '%"></div></div></div>' +
 
