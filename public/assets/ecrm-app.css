@@ -230,6 +230,12 @@
 .ecrm-import-report { margin-top: 14px; }
 .ecrm-import-stats { display: flex; flex-wrap: wrap; gap: 18px; font-size: 14px; color: var(--ink); }
 .ecrm-import-stats b { color: var(--navy); font-size: 16px; }
+/* Οι απορρίψεις της ροής μεταβάσεων. Χωρίς δικό τους χρώμα θα διαβάζονταν ως
+   άλλος ένας ουδέτερος μετρητής δίπλα στο «Ενημερώθηκαν», ενώ λένε το αντίθετο.
+   --st-pending-ink και ΟΧΙ --st-pending: το δεύτερο δίνει 3,76:1 σε λευκό, που
+   είναι αρκετό για κουκκίδα και ανεπαρκές για κείμενο 14px. Μετρήθηκε. */
+.ecrm-import-stats .is-warn { color: var(--st-pending-ink); }
+.ecrm-import-stats .is-warn b { color: var(--st-pending-ink); }
 
 /* ============================================================
    Λίτσα assistant

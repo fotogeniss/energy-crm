@@ -123,13 +123,25 @@ function applyImport(view, dry, btn) {
 		.then(function (d) {
 			if (!d || !d.ok) { toast((d && d.error) || 'Αποτυχία.', false); return; }
 			var rep = view.querySelector('[data-report]');
+			var refused = Number(d.rejected_total) || 0;
+
+			/* Οι απορρίψεις εμφανίζονται. Το Excel του παρόχου μπορεί να ζητά
+			 * μετάβαση που η ροή δεν επιτρέπει — «ακυρωμένη» πίσω σε «ενεργή»,
+			 * λόγου χάρη — και ένας αριθμός που δεν φαίνεται είναι σιωπηλή
+			 * απώλεια: ο συνεργάτης νομίζει ότι πέρασε ολόκληρο το αρχείο. */
 			rep.innerHTML = '<div class="ecrm-import-stats">' +
-				'<span>Βρέθηκαν: <b>' + d.matched + '</b></span>' +
-				'<span>' + (dry ? 'Θα ενημερωθούν' : 'Ενημερώθηκαν') + ': <b>' + d.updated + '</b></span>' +
-				'<span>Ίδια: <b>' + d.unchanged + '</b></span>' +
-				'<span>Χωρίς αντιστοίχιση: <b>' + d.unmatched_total + '</b></span></div>' +
-				(d.unmatched_total ? '<div class="ecrm-muted" style="margin-top:8px">Δεν βρέθηκαν: ' + d.unmatched.map(esc).join(', ') + (d.unmatched_total > d.unmatched.length ? '…' : '') + '</div>' : '');
-			toast(dry ? 'Προεπισκόπηση έτοιμη.' : ('Ενημερώθηκαν ' + d.updated + ' συμβάσεις.'));
+				'<span>Βρέθηκαν: <b>' + esc(d.matched) + '</b></span>' +
+				'<span>' + (dry ? 'Θα ενημερωθούν' : 'Ενημερώθηκαν') + ': <b>' + esc(d.updated) + '</b></span>' +
+				'<span>Ίδια: <b>' + esc(d.unchanged) + '</b></span>' +
+				(refused ? '<span class="is-warn">Δεν επιτρέπονται: <b>' + refused + '</b></span>' : '') +
+				'<span>Χωρίς αντιστοίχιση: <b>' + esc(d.unmatched_total) + '</b></span></div>' +
+				(d.unmatched_total ? '<div class="ecrm-muted" style="margin-top:8px">Δεν βρέθηκαν: ' + d.unmatched.map(esc).join(', ') + (d.unmatched_total > d.unmatched.length ? '…' : '') + '</div>' : '') +
+				(refused ? '<div class="ecrm-muted" style="margin-top:8px">Η ροή δεν επιτρέπει τη μετάβαση για: ' + d.rejected.map(esc).join(', ') + (refused > d.rejected.length ? '…' : '') + '</div>' : '');
+
+			toast(
+				dry ? 'Προεπισκόπηση έτοιμη.' : ('Ενημερώθηκαν ' + d.updated + ' συμβάσεις.'),
+				refused === 0
+			);
 		})
 		.catch(function () { toast('Σφάλμα δικτύου.', false); })
 		.finally(function () { btn.disabled = false; btn.textContent = t; });

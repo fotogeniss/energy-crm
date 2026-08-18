@@ -205,7 +205,7 @@ class ECRM_Import {
 		$ph     = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 		$valid  = ECRM_DB::statuses();
 
-		$matched = 0; $updated = 0; $unchanged = 0; $unmatched = [];
+		$matched = 0; $updated = 0; $unchanged = 0; $unmatched = []; $rejected = [];
 
 		foreach ( $pairs as $pair ) {
 			$supply = trim( (string) ( $pair['supply'] ?? '' ) );
@@ -215,7 +215,7 @@ class ECRM_Import {
 			}
 
 			$row = $wpdb->get_row( $wpdb->prepare(
-				"SELECT id, status FROM {$ct} WHERE supply_number = %s AND partner_user_id IN ($ph) LIMIT 1",
+				"SELECT id, status, partner_user_id FROM {$ct} WHERE supply_number = %s AND partner_user_id IN ($ph) LIMIT 1",
 				array_merge( [ $supply ], $ids )
 			), ARRAY_A );
 
@@ -229,16 +229,45 @@ class ECRM_Import {
 				continue;
 			}
 
+			// Ο γράφος ελέγχεται ΠΡΙΝ από τη διάκριση dry/live, αλλιώς η
+			// προεπισκόπηση λέει ψέματα: μετρούσε ως «θα ενημερωθούν» και όσες
+			// η ροή θα αρνιόταν, και ο χρήστης έβλεπε άλλο νούμερο στο dry run
+			// από ό,τι στο πραγματικό — χωρίς καμία εξήγηση για τη διαφορά.
+			$from   = \EnergyCRM\Domain\Contract\ContractStatus::tryFromSlug( (string) $row['status'] );
+			$target = \EnergyCRM\Domain\Contract\ContractStatus::tryFromSlug( $status );
+
+			if ( null === $target || ( null !== $from && ! $from->canMoveTo( $target ) ) ) {
+				$rejected[] = $supply;
+				continue;
+			}
+
 			if ( ! $dry ) {
-				$wpdb->update( $ct, [ 'status' => $status ], [ 'id' => (int) $row['id'] ] );
-				$wpdb->insert( ECRM_DB::table( 'events' ), [
-					'contract_id' => (int) $row['id'],
-					'user_id'     => $uid,
-					'type'        => 'status_change',
-					'from_status' => $row['status'],
-					'to_status'   => $status,
-					'message'     => 'Ενημέρωση από Excel παρόχου',
+				// ΜΕΣΩ ContractLifecycle. Το σκέτο UPDATE + insert που ήταν εδώ
+				// ήταν το μοναδικό σημείο σε όλο τον κώδικα που έγραφε status
+				// έξω από τη ροή, και έχανε και τα τέσσερα που κάνει η moveTo():
+				// τον γράφο μεταβάσεων, την ειδοποίηση στον συνεργάτη, το SMS
+				// στον πελάτη, και το ecrm_contract_status_changed που ξεκινά
+				// τον AutoProcess.
+				//
+				// Το τρίτο ήταν το χειρότερο: η κύρια ροή ενημέρωσης καταστάσεων
+				// στην πράξη είναι το Excel του παρόχου, δηλαδή ήταν ακριβώς η
+				// ροή που δεν ειδοποιούσε κανέναν, ενώ η ΙΔΙΑ μετάβαση από το UI
+				// έστελνε κανονικά.
+				//
+				// user_id = ο κάτοχος και όχι ο εισαγωγέας, όπως ακριβώς κάνει
+				// και η ContractsBulkController: η moveTo() το προωθεί στη
+				// notify_status_change(), που το χρησιμοποιεί ως ΠΑΡΑΛΗΠΤΗ. Η
+				// ταυτότητα του εισαγωγέα μένει στο μήνυμα του γεγονότος.
+				$moved = \EnergyCRM\Services::lifecycle()->moveTo( (int) $row['id'], $status, [
+					'user_id' => (int) $row['partner_user_id'],
+					'from'    => (string) $row['status'],
+					'message' => 'Ενημέρωση από Excel παρόχου',
 				] );
+
+				if ( ! $moved ) {
+					$rejected[] = $supply;
+					continue;
+				}
 			}
 			$updated++;
 		}
@@ -251,6 +280,8 @@ class ECRM_Import {
 			'unchanged'      => $unchanged,
 			'unmatched'      => array_slice( $unmatched, 0, 100 ),
 			'unmatched_total'=> count( $unmatched ),
+			'rejected'       => array_slice( $rejected, 0, 100 ),
+			'rejected_total' => count( $rejected ),
 		];
 	}
 }
