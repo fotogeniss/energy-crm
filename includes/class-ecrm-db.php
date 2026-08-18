@@ -392,25 +392,45 @@ class ECRM_DB {
 	}
 
 	/**
-	 * All user IDs visible to a given user: themselves + their whole
-	 * downline (team members and sub-partners, recursively).
+	 * All user IDs visible to a given user.
 	 *
-	 * Delegates to EnergyCRM\Persistence\NetworkRepository, which resolves the
-	 * subtree with a single prefix query on the materialized path. This used to
-	 * be a breadth-first walk issuing one get_users() call per node.
+	 * ## Δεν αποφασίζει εδώ, και αυτό ΗΤΑΝ το bug
+	 *
+	 * Ρωτούσε μόνη της το δίκτυο: διαχειριστής -> όλοι, οποιοσδήποτε άλλος ->
+	 * ολόκληρο το υποδέντρο του. Ο σύγχρονος WordPressScopeResolver όμως ρωτά
+	 * και μια τρίτη ερώτηση — αν ο χρήστης έχει `ecrm_manage_team` — και χωρίς
+	 * αυτήν επιστρέφει ΜΟΝΟ τον εαυτό του.
+	 *
+	 * Δύο απαντήσεις στο «τι βλέπει ποιος», και η μία τις αγνοούσε τα
+	 * δικαιώματα. Οι δύο καλούντες αυτής εδώ δεν είναι αθώοι: ECRM_Files::serve
+	 * (ποιος κατεβάζει σαρωμένη ταυτότητα) και ECRM_Import::apply (ποιων
+	 * συμβάσεων αλλάζει την κατάσταση το Excel του παρόχου).
+	 *
+	 * Με το σημερινό Roles::matrix() οι δύο απαντήσεις συμπίπτουν, επειδή ο
+	 * μόνος ρόλος με IMPORT_DATA έχει και MANAGE_TEAM. Το Roles.php όμως
+	 * υπόσχεται «άλλαξε το matrix() και τίποτα άλλο δεν χρειάζεται να κουνηθεί»
+	 * — και αυτή η υπόσχεση ήταν ψευδής όσο ζούσε εδώ δεύτερη πολιτική.
+	 *
+	 * Η πολιτική είναι πλέον μία, στο src/Access. Εδώ μένει μόνο η επέκταση
+	 * του «χωρίς περιορισμό» σε πραγματική λίστα.
 	 *
 	 * @return int[]
 	 */
 	public static function visible_user_ids( int $user_id ): array {
-		$network = \EnergyCRM\Services::network();
-
-		// Administrators run the company; the partner tree describes who earns
-		// commission, not who is allowed to look. See docs/ARCHITECTURE.md.
-		if ( user_can( $user_id, 'manage_options' ) ) {
-			return $network->allUserIds();
+		if ( $user_id <= 0 ) {
+			return [];
 		}
 
-		return $network->subtreeIds( $user_id );
+		$scope = \EnergyCRM\Services::scopeResolver()->forUser( $user_id );
+
+		// Ο διαχειριστής είναι «χωρίς περιορισμό», και το userIds() του δίνει
+		// ΜΟΝΟ τον εαυτό του — δες UserScope::forAdministrator. Η επέκταση σε
+		// πραγματική λίστα γίνεται εδώ, όπως ακριβώς και στο
+		// TeamActivityRepository. Το ScopeClause δεν τη χρειάζεται, γιατί για
+		// διαχειριστή δεν εκπέμπει καθόλου συνθήκη.
+		return $scope->isAdministrator()
+			? \EnergyCRM\Services::network()->allUserIds()
+			: $scope->userIds();
 	}
 
 
