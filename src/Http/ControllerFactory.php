@@ -65,13 +65,9 @@ final class ControllerFactory
             new DuplicateCheckController($scope, $queries),
             new RenewalsController($scope, Services::contracts(), $queries, Services::events()),
 
-            // Signing — the two public routes and the link that creates them.
-            new SigningController(
-                Services::signatures(),
-                Services::files(),
-                $lifecycle,
-                Services::contractNotices()
-            ),
+            // Signing. Ο σύνδεσμος ΕΙΝΑΙ το tracking URL — δεν υπάρχει δεύτερο
+            // token να λήξει ή να διαρρεύσει, και ο SigningController που
+            // εξυπηρετούσε το παλιό διαγράφηκε μαζί με τη σελίδα του.
             new SignLinkController($scope, $details, Services::documents(), $lifecycle),
 
             // People.
