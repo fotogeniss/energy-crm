@@ -74,14 +74,7 @@
 .ecrm-view { display: none; flex-direction: column; gap: 18px; }
 .ecrm-view.is-active { display: flex; }
 
-/* --- dashboard: level --- */
-.ecrm-level__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.ecrm-level__name { font-size: 22px; font-weight: 800; color: var(--navy); margin: 2px 0; }
-.ecrm-level__hint { font-size: 13px; color: var(--muted); }
-.ecrm-level__big { font-size: 40px; font-weight: 800; color: var(--navy); line-height: 1; text-align: right; }
-.ecrm-level__big span { display: block; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .04em; margin-top: 4px; }
-.ecrm-progress { height: 8px; border-radius: 999px; background: var(--line); margin-top: 16px; overflow: hidden; }
-.ecrm-progress__fill { height: 100%; background: linear-gradient(90deg, var(--amber), var(--amber-bright)); border-radius: 999px; transition: width .6s ease; }
+/* --- dashboard --- */
 
 /* --- dashboard: stat cards --- */
 .ecrm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -102,10 +95,6 @@
 .ecrm-bar:nth-child(even) .ecrm-bar__fill { background: linear-gradient(180deg, var(--p300), var(--p500)); }
 .ecrm-bar__lbl { font-size: 11px; color: var(--muted); }
 
-.ecrm-plist { list-style: none; margin: 0; padding: 0; }
-.ecrm-plist li { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: 14px; }
-.ecrm-plist li:last-child { border-bottom: none; }
-.ecrm-plist strong { color: var(--navy); }
 
 .ecrm-feed { list-style: none; margin: 0; padding: 0; }
 .ecrm-feed li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
@@ -813,8 +802,6 @@
 }
 
 @media (max-width: 600px) {
-	.ecrm-level__top { flex-direction: column; gap: 10px; }
-	.ecrm-level__big { text-align: left; font-size: 34px; }
 	.ecrm-detailhead { flex-wrap: wrap; }
 	.ecrm-head--row { flex-direction: column; align-items: stretch; gap: 10px; }
 	.ecrm-head--row .ecrm-btn { width: 100%; }
@@ -961,4 +948,125 @@
 .ecrm-mono, .ecrm-code, .ecrm-table td, .ecrm-stat__v, .ecrm-tab b,
 .ecrm-nav__badge, .ecrm-cell-date, .ecrm-dl dd, .ecrm-level__big {
 	font-variant-numeric: tabular-nums;
+}
+
+/* ═══ DASHBOARD — 2026-08-18 ══════════════════════════════════════════════
+ * Οι μορφές και τα χρώματα δεν διαλέχτηκαν στο μάτι· μετρήθηκαν.
+ * Η ράμπα --p50…--p800 είναι μονότονη σε φωτεινότητα και στα 9 σκαλιά, άρα
+ * έγκυρη για μέγεθος. Το accent --p400 δίνει 2,33:1 σε λευκό — ΚΑΤΩ από το
+ * 3:1 που θέλουν τα γραφικά αντικείμενα — οπότε ΔΕΝ γεμίζει τίποτα εδώ:
+ * οι ράβδοι είναι --p500 (3,31:1) και η γραμμή --p600 (4,61:1). */
+
+/* ── το ηρωικό νούμερο ── */
+.ecrm-hero { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 28px; align-items: center; }
+/* Αναλογικά ψηφία, ΟΧΙ tabular: σε μέγεθος οθόνης το tabular κάνει το «121»
+   να φαίνεται αραιό. Το tabular ανήκει σε στήλες αριθμών. */
+.ecrm-hero__n { font-size: 52px; font-weight: 700; letter-spacing: -.04em; line-height: 1; color: var(--n900); }
+.ecrm-hero__lbl { font-size: 13px; color: var(--n500); margin-top: 6px; }
+.ecrm-delta { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700;
+	padding: 3px 9px; border-radius: 999px; margin-left: 12px; vertical-align: 6px; }
+.ecrm-delta svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ecrm-delta.is-up { background: var(--st-active-bg); color: var(--st-active); }
+.ecrm-delta.is-down { background: var(--st-cancel-bg); color: var(--st-cancel); }
+
+/* ── ο μετρητής επιπέδου ── */
+.ecrm-tier { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+.ecrm-tier__now { font-size: 15px; font-weight: 700; color: var(--n900); }
+.ecrm-tier__next { font-size: 12.5px; color: var(--n500); margin-left: auto; }
+/* Η άδεια πίστα είναι ΑΝΟΙΧΤΟΤΕΡΟ ΣΚΑΛΙ ΤΗΣ ΙΔΙΑΣ ΡΑΜΠΑΣ, όχι γκρι, ώστε η
+   κατάσταση να διαβάζεται σε όλο το μήκος και όχι μόνο στο γεμάτο κομμάτι. */
+.ecrm-meter { height: 9px; border-radius: 999px; background: var(--p100); overflow: hidden; }
+.ecrm-meter__f { display: block; height: 100%; background: var(--p500); border-radius: 999px; transition: width .5s ease; }
+.ecrm-tier__scale { display: flex; justify-content: space-between; margin-top: 7px; font-size: 11px;
+	color: var(--n400); font-variant-numeric: tabular-nums; }
+
+/* ── οι τρεις μετρητές ── */
+.ecrm-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.ecrm-kpi { background: var(--n0); border: 1px solid var(--n150); border-radius: var(--radius); padding: 16px 18px 18px; }
+.ecrm-kpi__k { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--n600); margin-bottom: 9px; }
+.ecrm-kpi__dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 7px; }
+.ecrm-kpi__dot.is-ok { background: var(--st-active); }
+.ecrm-kpi__dot.is-pend { background: var(--st-pending); }
+.ecrm-kpi__dot.is-route { background: var(--st-routed); }
+.ecrm-kpi__v { font-size: 30px; font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--n900); }
+.ecrm-kpi__f { font-size: 12px; color: var(--n500); margin-top: 8px; }
+
+/* ── τι χρειάζεται εσένα ── */
+.ecrm-attnhead { display: flex; align-items: baseline; gap: 12px; }
+.ecrm-attnhead .ecrm-step { margin: 0; }
+.ecrm-attnhead__n { font-size: 12.5px; color: var(--n500); margin-left: auto; }
+.ecrm-attn { list-style: none; margin: 6px 0 0; padding: 0; }
+.ecrm-attn li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--n100); }
+.ecrm-attn li:first-child { border-top: none; }
+.ecrm-attn__b { width: 3px; align-self: stretch; border-radius: 2px; flex: 0 0 3px; }
+.ecrm-attn__b.is-late { background: var(--st-cancel); }
+.ecrm-attn__b.is-pend { background: var(--st-pending); }
+.ecrm-attn__b.is-mute { background: var(--n300); }
+.ecrm-attn__m { flex: 1; min-width: 0; font-size: 13.5px; color: var(--ink); }
+.ecrm-attn__m b { font-weight: 600; }
+.ecrm-attn__m small { display: block; color: var(--n500); font-size: 12px; margin-top: 2px; }
+.ecrm-attn__a { border: 1px solid var(--n200); background: var(--n0); border-radius: 8px; padding: 7px 13px;
+	font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--n700); cursor: pointer; white-space: nowrap; }
+.ecrm-attn__a:hover { border-color: var(--n400); color: var(--n900); }
+
+/* ── το γράφημα τάσης ── */
+/* Το SVG τεντώνεται οριζόντια (preserveAspectRatio="none") για να γεμίσει την
+ * κάρτα σε κάθε πλάτος — και γι' αυτό ΔΕΝ περιέχει ούτε ένα κείμενο: το
+ * τέντωμα θα παραμόρφωνε τα γράμματα. Οι ετικέτες αξόνων είναι HTML από πάνω
+ * και από κάτω, σε πραγματικό μέγεθος. Πρώτη γραφή τα είχε μέσα και βγήκαν
+ * 8px παραμορφωμένα σε κάρτα 430px. */
+/* padding-top: χώρος για την ετικέτα του τελευταίου σημείου όταν αυτό είναι το
+   ψηλότερο — αλλιώς η ετικέτα βγαίνει έξω από την κάρτα και προσγειώνεται πάνω
+   στο κουμπί «Πίνακας». */
+.ecrm-chart { position: relative; padding-left: 30px; padding-top: 20px; }
+.ecrm-plot { display: block; width: 100%; height: 168px; overflow: visible; }
+.ecrm-yaxis { position: absolute; left: 0; top: 20px; height: 168px; width: 28px; }
+.ecrm-yaxis span { position: absolute; right: 0; transform: translateY(-50%);
+	font-size: 10.5px; color: var(--n400); font-variant-numeric: tabular-nums; }
+.ecrm-xaxis { display: flex; justify-content: space-between; margin-top: 7px; }
+.ecrm-xaxis span { font-size: 10.5px; color: var(--n400); flex: 1 1 0; text-align: center; }
+.ecrm-xaxis span:first-child { text-align: left; }
+.ecrm-xaxis span:last-child { text-align: right; }
+/* Συμπαγείς τρίχινες γραμμές, ΠΟΤΕ διακεκομμένες: το διάστικτο διαβάζεται ως
+   «όριο» ή «πρόβλεψη» ενώ είναι απλό πλέγμα. */
+.ecrm-gridline { stroke: var(--n150); stroke-width: 1; }
+.ecrm-area { fill: var(--p400); opacity: .10; }
+.ecrm-line { fill: none; stroke: var(--p600); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ecrm-dot { fill: var(--p600); stroke: var(--n0); stroke-width: 2; }
+.ecrm-hit { fill: transparent; }
+.ecrm-endval { position: absolute; transform: translate(-100%, -130%); font-size: 12.5px;
+	font-weight: 700; color: var(--n900); font-variant-numeric: tabular-nums; pointer-events: none; }
+.ecrm-charttip { position: absolute; pointer-events: none; background: var(--n900); color: var(--n0);
+	border-radius: 8px; padding: 7px 11px; font-size: 12.5px; font-weight: 600; white-space: nowrap;
+	opacity: 0; transition: opacity .1s; transform: translate(-50%, -130%); z-index: 5; }
+.ecrm-charttip.is-on { opacity: 1; }
+.ecrm-charttip b { color: var(--p300); }
+.ecrm-tableview { border: none; background: none; font-family: inherit; font-size: 12px; font-weight: 600;
+	color: var(--n500); cursor: pointer; padding: 0; margin-left: auto;
+	text-decoration: underline; text-underline-offset: 3px; }
+.ecrm-tableview:hover { color: var(--n800); }
+.ecrm-charttbl { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+.ecrm-charttbl th { text-align: left; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+	color: var(--n500); padding: 7px 8px; border-bottom: 1px solid var(--n150); }
+.ecrm-charttbl td { padding: 7px 8px; border-top: 1px solid var(--n100); }
+.ecrm-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+/* ── ανά πάροχο ── */
+/* ΕΝΑ χρώμα για όλες: οι πάροχοι είναι μέγεθος, όχι ταυτότητα. Χρώμα ανά
+   πάροχο θα ξόδευε το μοναδικό ελεύθερο κανάλι για πληροφορία που το μήκος
+   της ράβδου ήδη δείχνει. */
+.ecrm-pbars { display: flex; flex-direction: column; gap: 11px; margin-top: 4px; }
+.ecrm-pbar { display: grid; grid-template-columns: 104px 1fr 34px; align-items: center; gap: 11px; }
+.ecrm-pbar__n { font-size: 13px; color: var(--n700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* display:block και στα δύο: είναι span, και σε inline στοιχείο το width και
+   το height αγνοούνται — η ράβδος έβγαινε κενή. */
+.ecrm-pbar__t { display: block; height: 14px; background: var(--n100); border-radius: 4px; overflow: hidden; }
+.ecrm-pbar__f { display: block; height: 100%; background: var(--p500); border-radius: 0 4px 4px 0; }
+.ecrm-pbar__v { font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; color: var(--n900); }
+
+@media (max-width: 700px) {
+	.ecrm-hero { grid-template-columns: 1fr; gap: 20px; }
+	.ecrm-kpis { grid-template-columns: 1fr; }
+	.ecrm-attn li { flex-wrap: wrap; }
+	.ecrm-attn__a { margin-left: 15px; }
 }

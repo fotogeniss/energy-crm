@@ -52,6 +52,10 @@ final class DashboardController implements Controller
             'monthly'     => array_values($this->dashboard->monthlyTotals($actor, (int) gmdate('Y'))),
             'feed'        => $this->dashboard->recentActivity($actor),
             'level'       => PerformanceTier::forVolume($cards['month']),
+
+            // Ο αριθμός «7 εκκρεμότητες» δεν οδηγεί πουθενά· η λίστα ναι.
+            // Πέντε, οι πιο στάσιμες πρώτα — δες DashboardRepository::needsAttention().
+            'attention'   => $this->dashboard->needsAttention($actor),
         ], 200);
     }
 }

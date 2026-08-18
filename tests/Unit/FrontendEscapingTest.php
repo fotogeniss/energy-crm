@@ -62,17 +62,16 @@ final class FrontendEscapingTest extends TestCase
      *
      * Keep the reason beside each one — a bare list decays into a place to
      * append and move on.
+     *
+     * It is empty on purpose, and that is the state to keep it in. The two
+     * entries that used to live here were hardcoded labels from an array
+     * literal — provably safe, and still not worth a line: wrapping them in
+     * esc() costs nothing (esc() of a string without `& < > "` returns it
+     * unchanged) and survives the day somebody makes those labels come from
+     * the server. An exception belongs here only when esc() would actually
+     * break the output.
      */
-    private const APPROVED = [
-        // Both are keys of an array literal written three lines above the
-        // render, holding hardcoded Greek labels and CSS class names. No
-        // server data can reach them. They moved out of the shell with
-        // dashboardHTML() — which is the guard working: the file name is part
-        // of the key, so an approved site cannot drift to another file
-        // unnoticed.
-        'ecrm-view-dashboard.js x.cls',
-        'ecrm-view-dashboard.js x.k',
-    ];
+    private const APPROVED = [];
 
     /**
      * Property names that are structurally numeric or opaque ids in this
