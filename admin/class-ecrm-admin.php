@@ -11,6 +11,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class ECRM_Admin {
 
+	/**
+	 * Το χρώμα τονισμού όταν ο διαχειριστής δεν έχει ορίσει δικό του.
+	 *
+	 * Ήταν γραμμένο `#f59e0b` σε ΤΕΣΣΕΡΑ σημεία — στις δύο σελίδες πελάτη, στο
+	 * placeholder αυτής της οθόνης και στην περιγραφή της. Το amber έπαψε να
+	 * είναι το χρώμα της μάρκας στις 2026-08-17 και κανένα από τα τέσσερα δεν
+	 * το έμαθε.
+	 *
+	 * Είναι το ΣΚΟΥΡΟ πράσινο, όχι το `#16c217` της εφαρμογής, και ο λόγος
+	 * μετρήθηκε: λευκό πάνω στο #16c217 δίνει 2,40:1 — κάτω από το 4,5 που
+	 * θέλει κανονικό κείμενο. Το κουμπί «Υπογράφω» το πατά πελάτης, συχνά σε
+	 * κινητό και στον ήλιο. Το #0e8610 δίνει 4,61:1.
+	 */
+	const DEFAULT_ACCENT = '#0e8610';
+
 	public static function init(): void {
 		// Priority 9: the parent menu must exist in $menu before any submenu is
 		// attached to it. WordPress only creates the implicit "back to parent"
@@ -221,7 +236,7 @@ class ECRM_Admin {
 					</tr>
 					<tr>
 						<th scope="row"><label for="ecrm_accent">Χρώμα τόνου</label></th>
-						<td><input type="text" id="ecrm_accent" name="<?php echo esc_attr( ECRM_PREFIX . 'accent_color' ); ?>" value="<?php echo esc_attr( self::get( 'accent_color' ) ); ?>" class="regular-text" placeholder="#f59e0b"><p class="description">Hex χρώμα για τονισμό στην εφαρμογή. Κενό = προεπιλογή (amber).</p></td>
+						<td><input type="text" id="ecrm_accent" name="<?php echo esc_attr( ECRM_PREFIX . 'accent_color' ); ?>" value="<?php echo esc_attr( self::get( 'accent_color' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( self::DEFAULT_ACCENT ); ?>"><p class="description">Hex χρώμα για τονισμό στις σελίδες που βλέπει ο πελάτης. Κενό = προεπιλογή (πράσινο μάρκας).</p></td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="ecrm_pfooter">Υποσέλιδο PDF</label></th>

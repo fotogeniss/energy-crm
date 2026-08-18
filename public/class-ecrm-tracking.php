@@ -406,7 +406,9 @@ class ECRM_Tracking {
 			return;
 		}
 		$rest    = esc_url_raw( rest_url( \EnergyCRM\Http\Router::NAMESPACE . '/track/' . $token ) );
-		$accent  = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'accent_color', '#f59e0b' ) : '#f59e0b';
+		$accent  = class_exists( 'ECRM_Admin' )
+			? (string) ECRM_Admin::get( 'accent_color', ECRM_Admin::DEFAULT_ACCENT )
+			: '#0e8610';
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '';
 
 		// Verify the HMAC token here (server-side) so we can distinguish a genuinely
@@ -425,60 +427,88 @@ class ECRM_Tracking {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Παρακολούθηση Αίτησης</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+<?php // Η γραμματοσειρά σερβίρεται ΑΠΟ ΤΟ PLUGIN. Εδώ έμπαινε Inter από το CDN
+// της Google — σε σελίδα που βλέπει ο ΠΕΛΑΤΗΣ, μέσα σε ροή προσωπικών
+// δεδομένων. Δες EnergyCRM\Infrastructure\LocalFonts και CHANGELOG (15).
+echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- σταθερό CSS με URL που φτιάχνει η ίδια η κλάση.
+?>
 <style>
-	:root { --accent: <?php echo esc_html( $accent ?: '#f59e0b' ); ?>; --navy:#0a1f3d; }
+	/* ---- Ταυτότητα 2026-08-18 -----------------------------------------
+	 * Ήταν navy #0a1f3d με amber gradient: η παλέτα ΠΡΙΝ από το restyle των
+	 * πέντε βημάτων, που δεν άγγιξε ποτέ τις σελίδες του πελάτη. Ο πελάτης που
+	 * υπέγραφε έβλεπε άλλο προϊόν από τον συνεργάτη που του πούλησε.
+	 *
+	 * Το --accent έρχεται από τις ρυθμίσεις, με προεπιλογή ECRM_Admin::DEFAULT_ACCENT. */
+	:root {
+		--accent: <?php echo esc_html( $accent ?: '#0e8610' ); ?>;
+		--page:#141412; --chrome:#1a1a18; --surface:#fff;
+		--ink:#2a2926; --ink2:#5c5a55; --ink3:#a3a099;
+		--line:#e9e8e4; --line2:#dedcd7; --fill:#f8f8f6;
+		--ok:#0f5f29; --ok-bg:#e1f0e6; --err:#c42a47; --err-bg:#fceaee;
+	}
 	* { box-sizing: border-box; }
-	body { margin:0; font-family:"Inter",system-ui,sans-serif; background:
-		radial-gradient(ellipse at 20% 10%, rgba(245,158,11,.12), transparent 50%),
-		linear-gradient(160deg,#061429,var(--navy) 50%,#14304f); min-height:100vh;
-		display:flex; align-items:center; justify-content:center; padding:20px; color:#0f172a; }
-	.card { background:#fff; border-radius:18px; box-shadow:0 30px 70px -20px rgba(0,0,0,.5); width:100%; max-width:520px; overflow:hidden; }
-	.head { background:var(--navy); color:#fff; padding:22px 24px; }
-	.head h1 { margin:0; font-size:19px; }
-	.head p { margin:6px 0 0; color:#cbd5e1; font-size:13px; }
-	.body { padding:24px; }
-	.row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:14px; }
-	.row span { color:#64748b; } .row b { color:#0f172a; }
+	body { margin:0; font-family:<?php echo \EnergyCRM\Infrastructure\LocalFonts::STACK; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- σταθερά κλάσης, όχι είσοδος. Το esc_html() θα μετέτρεπε τα εισαγωγικά του «"Manrope"» σε &quot; και θα ΕΣΠΑΓΕ το CSS. ?>;
+		background:var(--page); min-height:100vh; min-height:100dvh;
+		display:flex; align-items:center; justify-content:center; padding:20px; color:var(--ink); }
+	.card { background:var(--surface); border-radius:16px; box-shadow:0 24px 60px -24px rgba(0,0,0,.55);
+		width:100%; max-width:520px; overflow:hidden; }
+	.head { background:var(--chrome); color:#fff; padding:20px 24px; }
+	.head h1 { margin:0; font-size:18px; font-weight:700; letter-spacing:-.02em; }
+	.head p { margin:5px 0 0; color:#a3a099; font-size:13px; }
+	.body { padding:22px 24px; }
+	.row { display:flex; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px solid var(--line); font-size:14px; }
+	.row:last-of-type { border-bottom:0; }
+	.row span { color:var(--ink2); } .row b { color:var(--ink); font-weight:600; text-align:right; }
+	.foot { text-align:center; font-size:12px; color:var(--ink3); padding:14px; border-top:1px solid var(--line); }
 	.steps { list-style:none; margin:22px 0 6px; padding:0; }
 	.steps li { display:flex; align-items:flex-start; gap:12px; padding-bottom:18px; position:relative; }
-	.steps li:not(:last-child)::before { content:""; position:absolute; left:13px; top:28px; bottom:-2px; width:2px; background:#e2e8f0; }
+	.steps li:not(:last-child)::before { content:""; position:absolute; left:13px; top:28px; bottom:-2px; width:2px; background:var(--line); }
 	.steps li.done:not(:last-child)::before { background:var(--accent); }
-	.dot { flex:0 0 28px; width:28px; height:28px; border-radius:50%; background:#e2e8f0; color:#94a3b8; display:grid; place-items:center; font-weight:800; font-size:14px; z-index:1; }
-	.steps li.done .dot { background:var(--accent); color:var(--navy); }
-	.steps li.current .dot { background:var(--navy); color:#fff; box-shadow:0 0 0 4px rgba(10,31,61,.15); }
-	.steps .lbl { padding-top:4px; font-weight:600; color:#94a3b8; }
-	.steps li.done .lbl, .steps li.current .lbl { color:#0f172a; }
-	.badge { display:inline-block; margin-top:4px; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:700; background:#eef2ff; color:#3730a3; }
-	.badge.cancel { background:#fee2e2; color:#b91c1c; }
+	.dot { flex:0 0 28px; width:28px; height:28px; border-radius:50%; background:var(--line); color:var(--ink3);
+		display:grid; place-items:center; font-weight:700; font-size:14px; z-index:1; }
+	.steps li.done .dot { background:var(--accent); color:#fff; }
+	.steps li.current .dot { background:var(--chrome); color:#fff; box-shadow:0 0 0 4px rgba(26,26,24,.12); }
+	.steps .lbl { padding-top:4px; font-weight:600; color:var(--ink3); }
+	.steps li.done .lbl, .steps li.current .lbl { color:var(--ink); }
+	/* ΟΥΔΕΤΕΡΟ, όχι πράσινο: το badge δείχνει όποια κατάσταση κι αν είναι, και
+	   «Εκκρεμότητα» σε πράσινο φόντο λέει «όλα καλά». Την πρόοδο τη δείχνει η
+	   λίστα βημάτων από κάτω· εδώ χρειάζεται μόνο ονομασία. Η ακύρωση κρατά το
+	   δικό της κόκκινο, γιατί εκεί το χρώμα ΕΙΝΑΙ η πληροφορία. */
+	.badge { display:inline-block; margin-top:4px; padding:6px 12px; border-radius:999px; font-size:13px;
+		font-weight:700; background:var(--fill); color:var(--ink); border:1px solid var(--line2); }
+	.badge.cancel { background:var(--err-bg); color:var(--err); }
 	.cancel-box { text-align:center; padding:30px 10px; }
-	.cancel-box .x { width:60px; height:60px; border-radius:50%; background:#fee2e2; color:#b91c1c; display:grid; place-items:center; font-size:30px; margin:0 auto 14px; }
-	.foot { text-align:center; font-size:12px; color:#94a3b8; padding:14px; }
-	.sign { margin-top:22px; border-top:1px solid #f1f5f9; padding-top:18px; }
-	.sign h2 { font-size:15px; margin:0 0 4px; color:#0f172a; }
-	.sign p.lead { margin:0 0 12px; font-size:13px; color:#64748b; }
-	.pad { border:2px dashed #cbd5e1; border-radius:12px; background:#fbfdff; touch-action:none; width:100%; height:180px; display:block; }
-	.pad.is-empty { } 
+	.cancel-box .x { width:58px; height:58px; border-radius:50%; background:var(--err-bg); color:var(--err);
+		display:grid; place-items:center; font-size:28px; margin:0 auto 14px; }
+	.sign { margin-top:22px; border-top:1px solid var(--line); padding-top:18px; }
+	.sign h2 { font-size:15px; margin:0 0 4px; color:var(--ink); font-weight:700; }
+	.sign p.lead { margin:0 0 12px; font-size:13px; color:var(--ink2); }
+	.pad { border:2px dashed var(--line2); border-radius:12px; background:var(--fill); touch-action:none;
+		width:100%; height:180px; display:block; }
 	.padbar { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
-	.padbar small { color:#94a3b8; font-size:12px; }
-	.btn { border:0; border-radius:10px; padding:11px 18px; font-size:14px; font-weight:700; cursor:pointer; }
-	.btn--clear { background:#f1f5f9; color:#475569; padding:7px 12px; font-size:12px; }
-	.btn--sign { background:var(--accent); color:var(--navy); width:100%; margin-top:14px; }
+	.padbar small { color:var(--ink3); font-size:12px; }
+	.btn { border:0; border-radius:8px; padding:11px 18px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; }
+	.btn--clear { background:var(--fill); color:var(--ink2); padding:7px 12px; font-size:12px; border:1px solid var(--line2); }
+	.btn--clear:hover { border-color:var(--ink3); }
+	.btn--sign { background:var(--accent); color:#fff; width:100%; margin-top:14px; height:48px; font-size:15.5px; font-weight:700; transition:filter .15s; }
+	.btn--sign:hover:not(:disabled) { filter:brightness(1.08); }
 	.btn--sign:disabled { opacity:.5; cursor:not-allowed; }
-	.consent { display:flex; gap:10px; align-items:flex-start; margin-top:14px; font-size:12.5px; color:#475569; line-height:1.5; }
-	.consent input { margin-top:2px; flex:0 0 auto; width:16px; height:16px; }
+	.consent { display:flex; gap:10px; align-items:flex-start; margin-top:14px; font-size:12.5px; color:var(--ink2); line-height:1.5; }
+	.consent input { margin-top:1px; flex:0 0 18px; width:18px; height:18px; accent-color:var(--accent); }
 	.signed-ok { text-align:center; padding:18px 10px; }
-	.signed-ok .v { width:54px; height:54px; border-radius:50%; background:#dcfce7; color:#15803d; display:grid; place-items:center; font-size:28px; margin:0 auto 12px; }
-	.signed-ok p { color:#15803d; font-weight:700; margin:0; }
-	.docs { margin-top:22px; border-top:1px solid #f1f5f9; padding-top:18px; }
-	.docs h2 { font-size:15px; margin:0 0 4px; color:#0f172a; }
-	.docs p.lead { margin:0 0 12px; font-size:13px; color:#64748b; }
-	.doc-item { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid #f5f7fa; }
+	.signed-ok .v { width:52px; height:52px; border-radius:50%; background:var(--ok-bg); color:var(--ok);
+		display:grid; place-items:center; font-size:26px; margin:0 auto 12px; }
+	.signed-ok p { color:var(--ok); font-weight:700; margin:0; }
+	.docs { margin-top:22px; border-top:1px solid var(--line); padding-top:18px; }
+	.docs h2 { font-size:15px; margin:0 0 4px; color:var(--ink); font-weight:700; }
+	.docs p.lead { margin:0 0 12px; font-size:13px; color:var(--ink2); }
+	.doc-item { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); }
 	.doc-item:last-child { border-bottom:0; }
-	.doc-lbl { font-size:14px; font-weight:600; color:#334155; }
-	.doc-ok { display:inline-flex; align-items:center; gap:6px; color:#15803d; font-weight:700; font-size:13px; }
-	.up-btn { border:1px solid var(--navy); background:#fff; color:var(--navy); border-radius:9px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer; }
-	.up-btn:hover { background:#f8fafc; }
+	.doc-lbl { font-size:14px; font-weight:600; color:var(--ink); }
+	.doc-ok { display:inline-flex; align-items:center; gap:6px; color:var(--ok); font-weight:700; font-size:13px; }
+	.up-btn { border:1px solid var(--line2); background:var(--surface); color:var(--ink); border-radius:8px;
+		padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+	.up-btn:hover { border-color:var(--ink3); }
 	.up-btn.is-busy { opacity:.6; pointer-events:none; }
 	.doc-msg { font-size:12px; margin-top:8px; min-height:16px; }
 </style>

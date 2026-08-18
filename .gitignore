@@ -42,4 +42,4 @@ Thumbs.db
 
 # Προσωρινό μήνυμα commit. Τα ελληνικά πολυγραμμικά μηνύματα δεν περνούν με
 # -m μέσα από το cmd.exe, οπότε γράφονται εδώ και δίνονται με `git commit -F`.
-.commit-msg.tmp.txt
+.commit-msg*.tmp.txt
