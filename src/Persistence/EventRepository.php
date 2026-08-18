@@ -80,6 +80,40 @@ final class EventRepository
         ]);
     }
 
+    /**
+     * Whether the contract ever reached a status, according to its own history.
+     *
+     * The one question the transition graph cannot answer. `pending` accepts
+     * contracts from `new`, where cancelling is ordinary, and from `active`,
+     * where it is not — and the status column holds only where the contract is
+     * now, never where it has been. See Domain\Contract\CancellationGate.
+     *
+     * Reads `to_status` and not `from_status`: a status the contract left is
+     * one it reached, but the first entry of all has no `from` at all, so
+     * asking the other side would miss a contract that has moved exactly once.
+     */
+    public function hasReached(int $contractId, string $status): bool
+    {
+        global $wpdb;
+
+        if ($contractId <= 0 || $status === '') {
+            return false;
+        }
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT EXISTS (
+                     SELECT 1 FROM %i
+                     WHERE contract_id = %d AND type = %s AND to_status = %s
+                 )',
+                $this->table,
+                $contractId,
+                'status_change',
+                $status
+            )
+        ) === 1;
+    }
+
     private function orNull(mixed $value): ?string
     {
         $text = trim((string) ($value ?? ''));

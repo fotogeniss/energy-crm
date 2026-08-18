@@ -27,6 +27,7 @@ namespace EnergyCRM;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\WordPressScopeResolver;
 use EnergyCRM\Domain\Contract\AutoProcess;
+use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Infrastructure\ContractNotices;
@@ -107,6 +108,8 @@ final class Services
 
     private static ?DraftExitGate $draftExitGate = null;
 
+    private static ?CancellationGate $cancellationGate = null;
+
     private static ?ContractLifecycle $lifecycle = null;
 
     private static ?AutoProcess $autoProcess = null;
@@ -152,6 +155,11 @@ final class Services
     public static function draftExitGate(): DraftExitGate
     {
         return self::$draftExitGate ??= new DraftExitGate(self::customers());
+    }
+
+    public static function cancellationGate(): CancellationGate
+    {
+        return self::$cancellationGate ??= new CancellationGate(self::events());
     }
 
     public static function documents(): DocumentQueue
@@ -262,7 +270,11 @@ final class Services
 
     public static function lifecycle(): ContractLifecycle
     {
-        return self::$lifecycle ??= new ContractLifecycle(self::contractTransitions(), self::events());
+        return self::$lifecycle ??= new ContractLifecycle(
+            self::contractTransitions(),
+            self::events(),
+            self::cancellationGate(),
+        );
     }
 
     public static function autoProcess(): AutoProcess
@@ -313,5 +325,10 @@ final class Services
         self::$extractionGate    = null;
         self::$lifecycle         = null;
         self::$autoProcess       = null;
+        // Οι δύο πύλες κρατούν repositories που μηδενίζονται από πάνω· χωρίς
+        // αυτές τις δύο γραμμές ένα reset() άφηνε πίσω αντικείμενα που
+        // δείχνουν σε παλιά.
+        self::$draftExitGate     = null;
+        self::$cancellationGate  = null;
     }
 }

@@ -49,6 +49,7 @@ final class ContractLifecycle
     public function __construct(
         private readonly ContractTransitions $transitions,
         private readonly EventRepository $events,
+        private readonly CancellationGate $cancellation,
     ) {
     }
 
@@ -93,6 +94,15 @@ final class ContractLifecycle
         // Refuse what the pipeline does not allow: reviving a cancelled
         // contract, or rewinding a signed one past its own signature.
         if ($current !== null && ! $current->canMoveTo($target)) {
+            return false;
+        }
+
+        // Ο γράφος ξέρει πού είναι η σύμβαση, όχι πού υπήρξε. Η ακύρωση μιας
+        // σύμβασης που υπήρξε ενεργή κόβεται εδώ, στο σημείο απ' όπου περνούν
+        // και οι τέσσερις διαδρομές — αλλιώς η μαζική ενέργεια και η εισαγωγή
+        // Excel θα την επέτρεπαν ενώ οι δύο οθόνες όχι, που είναι ακριβώς ο
+        // τρόπος με τον οποίο ένας κανόνας παύει να είναι κανόνας.
+        if ($current !== null && $this->cancellation->refusalOnMove($current, $target, $contractId) !== null) {
             return false;
         }
 
