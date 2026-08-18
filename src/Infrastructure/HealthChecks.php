@@ -154,8 +154,10 @@ final class HealthChecks
         $reachable = $this->probeIsReachable($dir);
 
         $out[] = self::row('Έγγραφα', 'Απευθείας πρόσβαση από το web', $reachable === null ? null : ! $reachable, match ($reachable) {
-            true  => 'ΑΝΟΙΧΤΟΣ. Το .htaccess ισχύει μόνο σε Apache. Σε nginx χρειάζεται κανόνας '
-                . 'στη ρύθμιση του server: location ~* /uploads/ecrm-secure/ { deny all; }',
+            true  => 'ΑΝΟΙΧΤΟΣ. Το .htaccess ισχύει μόνο σε Apache. Σε nginx βάλε στη ρύθμιση '
+                . 'του server: location ^~ /wp-content/uploads/ecrm-secure/ { deny all; return 404; } '
+                . '— το ^~ είναι απαραίτητο, αλλιώς ο κανόνας για τις εικόνες πιάνει πρώτος '
+                . 'ένα doc_XXXX.jpg και το σερβίρει.',
             false => 'Κλειστός. Ο server αρνείται το αρχείο δοκιμής.',
             null  => 'Δεν απαντήθηκε — το site δεν φτάνει τον εαυτό του. Έλεγξέ το με το χέρι.',
         });
