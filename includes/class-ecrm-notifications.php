@@ -32,6 +32,13 @@ class ECRM_Notifications {
 
 	public static function init(): void {
 		add_action( self::CRON_HOOK, [ __CLASS__, 'run_digest' ] );
+
+		// Αυτοπρογραμματισμός, όπως κάνουν Retention, DocumentProtection και
+		// PiiBackfill. Η schedule() καλούνταν ΜΟΝΟ από την ενεργοποίηση, οπότε
+		// ένα site που ενεργοποιήθηκε πριν υπάρξει αυτή η δουλειά — ή που έχασε
+		// το πρόγραμμα για οποιονδήποτε λόγο — δεν το ξαναποκτούσε ποτέ.
+		// Το βρήκε η οθόνη Υγεία την πρώτη μέρα που υπήρξε.
+		self::schedule();
 	}
 
 	/** Schedule/unschedule the daily digest (called on activation/deactivation). */
