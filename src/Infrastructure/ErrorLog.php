@@ -16,6 +16,22 @@
  * Το μήνυμα περνά από scrub(): μια εξαίρεση μπορεί να κουβαλά τιμή στο κείμενό
  * της, και δεν ελέγχουμε τι γράφει κάθε βιβλιοθήκη.
  *
+ * ## Δύο κατηγορίες, και η γραμμή ανάμεσά τους είναι ο κωδικός HTTP
+ *
+ * 4xx — ο χρήστης μπορεί να το διορθώσει: λείπει ΑΦΜ, μη έγκυρο ΑΦΜ, λείπει
+ * δικαιολογητικό, η μετάβαση δεν επιτρέπεται. Το CRM ήδη απαντά με ελληνικό
+ * μήνυμα και συχνά με `field`, ώστε να μπει δίπλα στο input. Αυτά ΔΕΝ
+ * καταγράφονται και δεν παίρνουν κωδικό: δεν είναι βλάβες, είναι η εφαρμογή που
+ * κάνει τη δουλειά της.
+ *
+ * 5xx — εμείς σπάσαμε. Ο χρήστης δεν έχει τι να κάνει, και το «Η αποθήκευση
+ * απέτυχε» δεν λέει τίποτα σε κανέναν. Εδώ το σφάλμα καταγράφεται με **κωδικό
+ * αναφοράς**, και ο χρήστης βλέπει μόνο τον κωδικό. Το πρωτότυπο μήνυμα μένει
+ * στο log.
+ *
+ * Ο κωδικός δεν είναι διακοσμητικός: είναι ο μόνος τρόπος να συνδεθεί ένα «δεν
+ * δούλεψε κάτι» στο τηλέφωνο με τη συγκεκριμένη γραμμή που έσπασε.
+ *
  * @package EnergyCRM
  */
 
@@ -32,6 +48,10 @@ final class ErrorLog
 
     /** Κόβει μήνυμα που ξέφυγε· κανένα δικό μας δεν πλησιάζει. */
     private const MAX_MESSAGE = 500;
+
+    /** Ό,τι βλέπει ο χρήστης όταν φταίμε εμείς. Το %s είναι ο κωδικός. */
+    private const USER_MESSAGE = 'Παρουσιάστηκε τεχνικό πρόβλημα. Δεν φταις εσύ — '
+        . 'δοκίμασε ξανά σε λίγο. Αν επιμείνει, δώσε τον κωδικό %s.';
 
     /** Μόνο αυτά είναι μοιραία· τα warnings θα γέμιζαν την οθόνη. */
     private const FATAL = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
@@ -84,16 +104,25 @@ final class ErrorLog
                 ? (string) $data['error']
                 : 'HTTP ' . $response->get_status();
 
-            $this->record('rest', $message, (string) $request->get_route(), 0);
+            $code = $this->record('rest', $message, (string) $request->get_route(), 0);
+
+            // Το πρωτότυπο μήνυμα μένει στο log και ΔΕΝ φτάνει στον χρήστη: είναι
+            // εσωτερικό και δεν του λέει τι να κάνει. Παίρνει τον κωδικό, που
+            // είναι το μόνο που χρειάζεται για να το αναφέρει.
+            if (is_array($data)) {
+                $data['error'] = sprintf(self::USER_MESSAGE, $code);
+                $data['code']  = $code;
+                $response->set_data($data);
+            }
         }
 
         return $response;
     }
 
-    /** Χειροκίνητη καταχώριση από catch block. */
-    public function recordThrowable(\Throwable $e): void
+    /** Χειροκίνητη καταχώριση από catch block. Επιστρέφει τον κωδικό αναφοράς. */
+    public function recordThrowable(\Throwable $e): string
     {
-        $this->record('exception', get_class($e) . ': ' . $e->getMessage(), $e->getFile(), $e->getLine());
+        return $this->record('exception', get_class($e) . ': ' . $e->getMessage(), $e->getFile(), $e->getLine());
     }
 
     /**
@@ -111,7 +140,8 @@ final class ErrorLog
         delete_option(self::OPTION);
     }
 
-    private function record(string $kind, string $message, string $file, int $line): void
+    /** @return string Ο κωδικός αναφοράς, π.χ. ECRM-7F32. */
+    private function record(string $kind, string $message, string $file, int $line): string
     {
         $entry = [
             'at'      => gmdate('Y-m-d H:i:s'),
@@ -127,15 +157,51 @@ final class ErrorLog
 
         // Ίδιο σφάλμα στη σειρά μετριέται, δεν επαναλαμβάνεται: ένα cron που
         // σπάει κάθε λεπτό θα έσβηνε όλο το υπόλοιπο ιστορικό μέσα σε μια ώρα.
+        // Ο κωδικός ΜΕΝΕΙ ο ίδιος — ο χρήστης που το ανέφερε πρέπει να βρίσκει
+        // την ίδια εγγραφή, με το πλήθος να δείχνει πόσες φορές συνέβη.
         if ($log !== [] && ($log[0]['message'] ?? '') === $entry['message'] && ($log[0]['where'] ?? '') === $entry['where']) {
             $log[0]['count'] = (int) ($log[0]['count'] ?? 1) + 1;
             $log[0]['at']    = $entry['at'];
-        } else {
-            $entry['count'] = 1;
-            array_unshift($log, $entry);
+
+            update_option(self::OPTION, array_slice($log, 0, self::KEEP), false);
+
+            return (string) ($log[0]['code'] ?? '');
         }
 
+        $entry['count'] = 1;
+        $entry['code']  = self::newCode(array_column($log, 'code'));
+        array_unshift($log, $entry);
+
         update_option(self::OPTION, array_slice($log, 0, self::KEEP), false);
+
+        return $entry['code'];
+    }
+
+    /**
+     * Κωδικός αναφοράς: κοντός για να ειπωθεί στο τηλέφωνο, μοναδικός μέσα στα
+     * όσα κρατάμε.
+     *
+     * Τέσσερα δεκαεξαδικά είναι 65.536 τιμές για 50 εγγραφές — η σύγκρουση είναι
+     * απίθανη αλλά ο έλεγχος κοστίζει τίποτα, και μια σύγκρουση θα έστελνε τον
+     * χρήστη σε λάθος συμβάν.
+     *
+     * @param list<mixed> $taken
+     */
+    public static function newCode(array $taken): string
+    {
+        $used = array_map('strval', $taken);
+
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $code = 'ECRM-' . strtoupper(bin2hex(random_bytes(2)));
+
+            if (! in_array($code, $used, true)) {
+                return $code;
+            }
+        }
+
+        // Είκοσι συγκρούσεις στη σειρά δεν συμβαίνουν· αν συμβούν, ένα
+        // μακρύτερο είναι καλύτερο από έναν διπλό.
+        return 'ECRM-' . strtoupper(bin2hex(random_bytes(3)));
     }
 
     /**
