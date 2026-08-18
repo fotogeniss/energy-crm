@@ -270,7 +270,7 @@ class ECRM_App {
 					<div class="ecrm-litsa__body" data-litsa-body></div>
 					<div class="ecrm-litsa__foot">
 						<input type="text" class="ecrm-litsa__input" data-litsa-input placeholder="Ρώτησέ με κάτι…" autocomplete="off">
-						<button type="button" class="ecrm-litsa__send" data-litsa-send aria-label="Αποστολή">➤</button>
+						<button type="button" class="ecrm-litsa__send" data-litsa-send aria-label="Αποστολή"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6z"/></svg></button>
 					</div>
 				</div>
 			</div>

@@ -55,7 +55,7 @@ function expandPanel(c, view) {
 
 	var banner =
 		'<div class="ecrm-expbanner ecrm-expbanner--' + esc(c.status) + '">' +
-		'<span class="ecrm-expbanner__ico">' + (c.status === 'draft' ? '🗎' : (c.status === 'cancelled' || c.status === 'terminated' ? '✕' : '!')) + '</span>' +
+		'<span class="ecrm-expbanner__ico">' + (c.status === 'draft' ? '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>' : (c.status === 'cancelled' || c.status === 'terminated' ? '✕' : '!')) + '</span>' +
 		'<div><div class="ecrm-expbanner__eyebrow">' + esc(up(stLabel)) + '</div>' +
 		'<div class="ecrm-expbanner__title">' + esc(stLabel) + ' για ' + esc(name) + '</div>' +
 		'<div class="ecrm-expbanner__sub">Δημιουργήθηκε: <b>' + fmtDate(c.created_at) + '</b> · Αριθμός συμβολαίου: <b>' + esc(c.code || '—') + '</b></div></div></div>';
@@ -145,8 +145,8 @@ function renderContracts(view, d) {
 			Object.keys(statuses).map(function (s) { return '<option value="' + esc(s) + '">' + esc(statuses[s]) + '</option>'; }).join('') +
 			'</select><button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--primary" data-bulk-apply-status>Εφαρμογή</button>' +
 			(scope() === 'team' ? '<select class="ecrm-input ecrm-input--sm" data-bulk-assign><option value="">— Ανάθεση σε… —</option></select><button type="button" class="ecrm-btn ecrm-btn--sm" data-bulk-apply-assign>Ανάθεση</button>' : '') +
-			(can('ecrm_export_data') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-export>⤓ Export επιλογής</button>' : '') +
-			(can('ecrm_delete_contract') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--danger" data-bulk-delete>🗑 Διαγραφή</button>' : '') +
+			(can('ecrm_export_data') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-export><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Export επιλογής</button>' : '') +
+			(can('ecrm_delete_contract') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--danger" data-bulk-delete><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' : '') +
 			'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-clear>Καθαρισμός</button></div>' +
 			'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-table--rich"><thead><tr>' +
 			'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πάροχος</th><th class="ecrm-col-sec">Πρόγραμμα</th><th>Πελάτης</th>' +
@@ -163,11 +163,11 @@ function renderContracts(view, d) {
 		'<header class="ecrm-head ecrm-head--row"><div><h2 class="ecrm-title">Οι συμβάσεις μου</h2><p class="ecrm-sub">' + total + ' συμβάσεις · κάνε click σε γραμμή για λεπτομέρειες</p></div>' +
 		'<div class="ecrm-head__actions">' +
 		'<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (scope()==="own"?" is-on":"") + '" data-scope="own">Δικά μου</button><button type="button" class="ecrm-scope__b' + (scope()==="team"?" is-on":"") + '" data-scope="team">Ομάδας</button></div>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-export>⤓ Export Excel</button></div></header>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-export><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Export Excel</button></div></header>' +
 		'<div class="ecrm-card">' +
 		'<div class="ecrm-search-row"><div class="ecrm-search"><input type="search" class="ecrm-input" placeholder="Αναζήτηση πελάτη, ΑΦΜ, ΗΚΑΣΠ, αριθμού συμβολαίου…" value="' + esc(contractsState.q) + '" data-search></div>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-save-filter>★ Αποθήκευση φίλτρου</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-toggle-filters>⚙ Φίλτρα</button></div>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-save-filter><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.9 6 6.6.9-4.8 4.6 1.2 6.5-5.9-3.1-5.9 3.1 1.2-6.5L2.5 9.9 9.1 9z"/></svg> Αποθήκευση φίλτρου</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-toggle-filters><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg> Φίλτρα</button></div>' +
 		'<div class="ecrm-savedfilters" data-savedfilters></div>' +
 		'<div class="ecrm-tabs" data-tabs>' + tabs + '</div>' +
 		table + '</div>';
@@ -258,17 +258,40 @@ function renderContracts(view, d) {
 		var ids = selectedIds();
 		bar.hidden = ids.length === 0;
 		var n = bar.querySelector('[data-bulk-n]'); if (n) n.textContent = ids.length;
+		syncCheckAll();
 	}
+
+	// Η κεφαλίδα έχει ΤΡΕΙΣ καταστάσεις, όχι δύο: καμία, μερικές, όλες. Μέχρι
+	// τώρα έδειχνε κενή και για «καμία» και για «μερικές» — δηλαδή έλεγε ψέματα
+	// σε κάθε μερική επιλογή. Το indeterminate είναι ιδιότητα του DOM, δεν
+	// γράφεται σε HTML και δεν στυλάρεται χωρίς να τεθεί από εδώ.
+	function syncCheckAll() {
+		var box = view.querySelector('[data-checkall]');
+		if (!box) return;
+
+		var all = view.querySelectorAll('.ecrm-rowcheck').length;
+		var on = view.querySelectorAll('.ecrm-rowcheck:checked').length;
+
+		box.checked = all > 0 && on === all;
+		box.indeterminate = on > 0 && on < all;
+	}
+
 	view.querySelectorAll('.ecrm-rowcheck').forEach(function (cb) {
 		cb.addEventListener('click', function (e) { e.stopPropagation(); refreshBar(); });
 	});
 	var checkAll = view.querySelector('[data-checkall]');
 	if (checkAll) checkAll.addEventListener('click', function (e) {
 		e.stopPropagation();
-		var on = this.checked;
+		// Από «μερικές», το κλικ επιλέγει ΟΛΕΣ. Ο browser δίνει checked=false σε
+		// indeterminate κουτί, που θα σήμαινε «καθάρισε» — το ανάποδο από αυτό
+		// που περιμένει ο χρήστης όταν βλέπει παύλα και πατάει.
+		var on = this.indeterminate ? true : this.checked;
+		this.indeterminate = false;
+		this.checked = on;
 		view.querySelectorAll('.ecrm-rowcheck').forEach(function (c) { c.checked = on; });
 		refreshBar();
 	});
+	syncCheckAll();
 	if (bar) {
 		// populate assignee list (team scope)
 		var assignSel = bar.querySelector('[data-bulk-assign]');

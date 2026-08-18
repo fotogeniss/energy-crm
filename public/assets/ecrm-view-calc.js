@@ -36,7 +36,7 @@ function renderCalc(view) {
 				'</div>' +
 			'</div>' +
 			'<div class="ecrm-calc__result" data-calc-result></div>' +
-			'<div class="ecrm-calc__actions"><button type="button" class="ecrm-btn ecrm-btn--primary" data-calc-pdf>📄 PDF Προσφοράς</button></div>' +
+			'<div class="ecrm-calc__actions"><button type="button" class="ecrm-btn ecrm-btn--primary" data-calc-pdf><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> PDF Προσφοράς</button></div>' +
 			'<p class="ecrm-hint">Η εκτίμηση αφορά χρέωση ενέργειας + πάγιο. Ρυθμιζόμενες χρεώσεις, φόροι και δημοτικά τέλη είναι κοινά μεταξύ παρόχων και δεν υπολογίζονται.</p>' +
 		'</div></div>';
 

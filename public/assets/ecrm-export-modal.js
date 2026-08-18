@@ -20,26 +20,26 @@ export function openExportModal(filters) {
 	ov.innerHTML =
 		'<div class="ecrm-modal" role="dialog" aria-modal="true">' +
 			'<button type="button" class="ecrm-modal__x" data-x aria-label="Κλείσιμο">×</button>' +
-			'<div class="ecrm-modal__eyebrow">⤓ Εξαγωγή σε Excel</div>' +
+			'<div class="ecrm-modal__eyebrow"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Εξαγωγή σε Excel</div>' +
 			'<h3 class="ecrm-modal__title">Συμβάσεις — φιλτράρισμα &amp; λήψη</h3>' +
 			'<p class="ecrm-modal__lead">Διάλεξε <strong>κατάσταση</strong> και προαιρετικά <strong>εύρος ημερομηνιών</strong>. Το αρχείο κατεβαίνει σε <code>.xlsx</code> με τις στήλες της σελίδας συμβάσεων.</p>' +
 			'<div class="ecrm-modal__card">' +
-				'<div class="ecrm-field"><span class="ecrm-field__label">🏳 Κατάσταση</span><select class="ecrm-input" data-x-status>' + statusOpts + '</select></div>' +
+				'<div class="ecrm-field"><span class="ecrm-field__label"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 3 2 3H5"/></svg> Κατάσταση</span><select class="ecrm-input" data-x-status>' + statusOpts + '</select></div>' +
 			'</div>' +
 			'<div class="ecrm-modal__card">' +
-				'<div class="ecrm-field__label">📅 Εύρος ημερομηνιών <span class="ecrm-muted">(προαιρετικό)</span></div>' +
+				'<div class="ecrm-field__label"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg> Εύρος ημερομηνιών <span class="ecrm-muted">(προαιρετικό)</span></div>' +
 				'<div class="ecrm-modal__row">' +
 					'<label class="ecrm-field"><span class="ecrm-field__label">Από</span><input type="date" class="ecrm-input" data-x-from></label>' +
 					'<label class="ecrm-field"><span class="ecrm-field__label">Έως</span><input type="date" class="ecrm-input" data-x-to></label>' +
 				'</div>' +
 			'</div>' +
-			'<label class="ecrm-modal__scope-sel"><span class="ecrm-field__label">👥 Συνεργάτες</span>' +
+			'<label class="ecrm-modal__scope-sel"><span class="ecrm-field__label"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5 6.5-5s6.5 1.7 6.5 5"/><path d="M17 8.2A3 3 0 0017 14M18 20c0-2.3-.8-3.8-2-4.6"/></svg> Συνεργάτες</span>' +
 				'<select class="ecrm-input" data-x-partner><option value="me">Μόνο εγώ</option></select></label>' +
 			'<div class="ecrm-modal__bar">' +
-				'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-x-clear>↻ Καθαρισμός</button>' +
+				'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-x-clear><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 11-2.6-5.9M20 4v5h-5"/></svg> Καθαρισμός</button>' +
 				'<span style="flex:1"></span>' +
 				'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-x>Ακύρωση</button>' +
-				'<button type="button" class="ecrm-btn ecrm-btn--primary" data-x-go>⤓ Λήψη Excel</button>' +
+				'<button type="button" class="ecrm-btn ecrm-btn--primary" data-x-go><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Λήψη Excel</button>' +
 			'</div>' +
 		'</div>';
 	root().appendChild(ov);

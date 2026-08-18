@@ -57,7 +57,7 @@ function filesCard(c) {
 		var ck = c.doc_checklist;
 		var rows = ck.items.map(function (it) {
 			return '<li class="ecrm-check ' + (it.ok ? 'is-ok' : 'is-missing') + '">' +
-				'<span class="ecrm-check__mark">' + (it.ok ? '✓' : '○') + '</span>' +
+				'<span class="ecrm-check__mark">' + (it.ok ? '✓' : '&#9675;') + '</span>' +
 				'<span>' + esc(it.label) + '</span></li>';
 		}).join('');
 		var banner = ck.complete
@@ -134,15 +134,15 @@ function renderDetail(view, d) {
 		: '<div class="ecrm-empty">Καμία καταγραφή.</div>';
 
 	view.innerHTML = '' +
-		'<div class="ecrm-detailhead"><button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-go="contracts">← Πίσω</button>' +
+		'<div class="ecrm-detailhead"><button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-go="contracts"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Πίσω</button>' +
 		'<div><div class="ecrm-eyebrow">' + esc(c.code || '') + '</div><h2 class="ecrm-title">' + esc(name) + '</h2></div>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-detail-edit>' + svgIcon('edit') + ' Επεξεργασία</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-printform="' + c.id + '">🖨 Εκτύπωση εντύπου</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-provform="' + c.id + '">📄 Λήψη εντύπου παρόχου</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-sign="' + c.id + '">✍ Αποστολή για υπογραφή</button>' +
-		(c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-track="' + esc(c.track_url) + '">🔗 Link παρακολούθησης</button>' : '') +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-task-new="' + c.id + '">＋ Εργασία</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm ecrm-btn--danger" data-detail-del="' + c.id + '">🗑 Διαγραφή</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-printform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg> Εκτύπωση εντύπου</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Αποστολή για υπογραφή</button>' +
+		(c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-track="' + esc(c.track_url) + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg> Link παρακολούθησης</button>' : '') +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-task-new="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Εργασία</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm ecrm-btn--danger" data-detail-del="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' +
 		'<span class="ecrm-badge ecrm-badge--' + esc(c.status) + '">' + esc(statuses[c.status] || c.status) + '</span>' +
 		(c.consent_at ? '<span class="ecrm-chip-consent" title="Συναίνεση: ' + esc(fmtDate(c.consent_at)) + '">✓ GDPR</span>' : '') +
 		'</div>' +
@@ -211,7 +211,7 @@ function renderDetail(view, d) {
 			.finally(function () { b.disabled = false; b.textContent = t; });
 	});
 	var provBtn = view.querySelector('[data-provform]');
-	if (provBtn) provBtn.addEventListener('click', function () { downloadBinary('/contracts/' + c.id + '/provider-form', this, 'Λήψη…', '📄 Λήψη εντύπου παρόχου'); });
+	if (provBtn) provBtn.addEventListener('click', function () { downloadBinary('/contracts/' + c.id + '/provider-form', this, 'Λήψη…', '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου'); });
 
 	var signBtn = view.querySelector('[data-sign]');
 	if (signBtn) signBtn.addEventListener('click', function () {

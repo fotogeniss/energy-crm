@@ -115,6 +115,112 @@ final class ProviderFormFields
     ];
 
     /**
+     * Fill keys backed by a column, mapped to the inputs of the MAIN form.
+     *
+     * FROM_COLUMNS answers «is this already on the main form?» so the ★ section
+     * does not repeat it. That was the only question anyone asked, so the
+     * answer stayed a flat list. But the list is only half the knowledge: it
+     * knows the key is on the main form and not WHERE. That is why the main
+     * form still shows all 63 of its inputs for a template that prints seven.
+     *
+     * This map is the other half, and it is what lets the form ask only what
+     * will be printed. It duplicates on purpose what class-ecrm-formfill.php
+     * does in the opposite direction — that file goes contract → paper, this
+     * one goes paper → screen — and the two are kept honest by
+     * ProviderFormFieldsColumnsTest, which fails if a FROM_COLUMNS key has no
+     * entry here.
+     *
+     * Keys that no input can supply are mapped to an empty list rather than
+     * left out: «the paper prints it, nobody types it» is a real answer, and
+     * omitting them would make a missing entry indistinguishable from a
+     * forgotten one.
+     *
+     * @var array<string, list<string>>
+     */
+    private const COLUMN_INPUTS = [
+        // Πελάτης
+        'onomateponymo_pelati'    => ['first_name', 'last_name'],
+        'eponymo_pelati'          => ['last_name'],
+        'onoma_pelati'            => ['first_name'],
+        'patronymo_pelati'        => ['father_name'],
+        'eponymia_etaireias'      => ['company_name'],
+        'afm_pelati'              => ['afm'],
+        'afm_etaireias'           => ['afm'],
+        'doy_pelati'              => ['doy'],
+        'adt_pelati'              => ['adt'],
+        'imerominia_gennisis'     => ['birth_date'],
+        'tilefono_pelati'         => ['phone'],
+        'kinito_pelati'           => ['mobile'],
+        'email_pelati'            => ['email'],
+        'epaggelma_pelati'        => ['activity'],
+
+        // Διεύθυνση κατοικίας
+        'odos_arithmos_katoikias' => ['street', 'street_no'],
+        'dieuthynsi_katoikias'    => ['street', 'street_no', 'city', 'postal_code'],
+        'arithmos_odou_katoikias' => ['street_no'],
+        'poli_katoikias'          => ['city'],
+        'tk_katoikias'            => ['postal_code'],
+        'nomos_katoikias'         => ['region'],
+
+        // Διεύθυνση παροχής — εκεί που είναι ο μετρητής
+        'dieuthynsi_paroxis'      => ['supply_street', 'supply_street_no', 'supply_city', 'supply_postal_code'],
+        'odos_arithmos_paroxis'   => ['supply_street', 'supply_street_no'],
+        'odos_paroxis'            => ['supply_street'],
+        'arithmos_odou_paroxis'   => ['supply_street_no'],
+        'poli_paroxis'            => ['supply_city'],
+        'tk_paroxis'              => ['supply_postal_code'],
+        'nomos_paroxis'           => ['supply_region'],
+
+        // Διεύθυνση αποστολής λογαριασμού
+        'dieuthynsi_apostolis'     => ['billing_street', 'billing_street_no', 'billing_city', 'billing_postal_code'],
+        'odos_arithmos_apostolis'  => ['billing_street', 'billing_street_no'],
+        'odos_apostolis'           => ['billing_street'],
+        'arithmos_odou_apostolis'  => ['billing_street_no'],
+        'poli_apostolis'           => ['billing_city'],
+        'tk_apostolis'             => ['billing_postal_code'],
+        'nomos_apostolis'          => ['billing_region'],
+
+        // Παροχή και μετρητής
+        'arithmos_paroxis'        => ['supply_number'],
+        'hkasp'                   => ['supply_number'],
+        'arithmos_metriti'        => ['meter_number'],
+
+        // Το τυπώνει η μηχανή, δεν το πληκτρολογεί κανείς: προκύπτει από τα
+        // chips του βήματος 1, από τη βάση, ή από τον ίδιο τον λογαριασμό.
+        'kodikos_timologiou'             => [],
+        'onoma_programmatos'             => [],
+        'diarkeia_symvasis'              => [],
+        'arithmos_aitisis'               => [],
+        'imerominia_aitisis'             => [],
+        'imerominia_liksis'              => ['end_date'],
+        'topos_aitisis'                  => [],
+        'topos_imerominia_aitisis'       => [],
+        'eponymia_etaireias_mas'         => [],
+        'onomateponymo_politi'           => [],
+        'kodikos_synergati'              => [],
+        'typos_pelati_idiotis'           => [],
+        'typos_pelati_atomiki'           => [],
+        'typos_pelati_etaireia'          => [],
+        'katigoria_paroxis_oikiaki'      => [],
+        'katigoria_paroxis_epaggelmatiki' => [],
+        'energopoiisi_allagi_paroxou'    => [],
+        'energopoiisi_diadoxi'           => [],
+        'energopoiisi_epanasyndesi'      => [],
+        'energopoiisi_ananeosi'          => [],
+        'energopoiisi_nea_syndesi'       => [],
+        'energopoiisi_allagi_programmatos' => [],
+        'energopoiisi_apaiteitai'        => [],
+        'diarkeia_aoristou'              => [],
+        'diarkeia_6_mines'               => [],
+        'diarkeia_12_mines'              => [],
+        'diarkeia_18_mines'              => [],
+        'diarkeia_24_mines'              => [],
+        'diarkeia_36_mines'              => [],
+        'ypovoli_ilektronika'            => [],
+        'ypovoli_taxydromika'            => [],
+    ];
+
+    /**
      * What each input is called in the CRM's own words.
      *
      * @var array<string, string>
@@ -264,6 +370,65 @@ final class ProviderFormFields
         }
 
         return $out;
+    }
+
+    /**
+     * The MAIN-form inputs a template actually prints, as a flat set.
+     *
+     * The mirror image of forTemplate(): that one answers «what extra does this
+     * provider want?», this one answers «of everything the form already asks,
+     * what will end up on the paper?». Both read the same JSON; they differ
+     * only in which side of FROM_COLUMNS they keep.
+     *
+     * An unknown or unreadable template returns an EMPTY list, and the caller
+     * must read that as «I don't know» and show everything — never as «nothing
+     * is needed». Hiding the whole form because a JSON is missing would turn a
+     * packaging mistake into an agent who cannot type an application.
+     *
+     * @return list<string> Input names, deduplicated, in template order.
+     */
+    public static function mainFormInputsForTemplate(string $key, string $formsDir): array
+    {
+        $path = rtrim($formsDir, '/\\') . '/' . $key . '.json';
+
+        if ($key === '' || ! is_readable($path)) {
+            return [];
+        }
+
+        $map = json_decode((string) file_get_contents($path), true);
+
+        if (! is_array($map)) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach (array_keys(is_array($map['fields'] ?? null) ? $map['fields'] : []) as $fillKey) {
+            foreach (self::COLUMN_INPUTS[$fillKey] ?? [] as $input) {
+                $out[$input] = true;
+            }
+        }
+
+        return array_keys($out);
+    }
+
+    /**
+     * Every fill key this class claims to know, for the test that keeps
+     * COLUMN_INPUTS and FROM_COLUMNS from drifting apart.
+     *
+     * @return list<string>
+     */
+    public static function columnFillKeys(): array
+    {
+        return self::FROM_COLUMNS;
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    public static function columnInputMap(): array
+    {
+        return self::COLUMN_INPUTS;
     }
 
     /**

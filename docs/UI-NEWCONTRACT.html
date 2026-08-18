@@ -1,0 +1,271 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Νέα Σύμβαση — τρεις προτάσεις</title><style>
+@font-face{font-family:"Manrope";font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-latin-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122;}
+@font-face{font-family:"Manrope";font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-greek-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF;}
+:root{--g:#16c217;--g-h:#12a413;--g-soft:#e8f9e8;--k:#1a1a1a;--w:#fff;--ln:#e2e2e2;
+ --t:#1a1a1a;--t2:#6b6b6b;--t3:#a0a0a0;--fill:#f2f2f2;--err:#e5484d;--amb:#b87503;--amb-bg:#fdf3e0;
+ --f:"Manrope",-apple-system,"Segoe UI",Roboto,sans-serif}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fafafa;color:var(--t);font-family:var(--f);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:44px 24px 120px}
+h1{font-size:32px;font-weight:700;letter-spacing:-.03em;margin:0 0 12px}
+h2{font-size:22px;font-weight:700;letter-spacing:-.025em;margin:0 0 6px}
+.lead{color:var(--t2);margin:0 0 10px;max-width:76ch;line-height:1.65}
+.sub{color:var(--t2);margin:0 0 22px;max-width:80ch;line-height:1.65;font-size:14.5px}
+section{margin-top:64px;padding-top:8px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+code{font-family:ui-monospace,Consolas,monospace;font-size:13px;background:#f0f0f0;padding:2px 6px;border-radius:5px}
+.big{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:26px 0}
+@media(max-width:820px){.big{grid-template-columns:1fr 1fr}}
+.stat{background:var(--w);border:1px solid #eee;border-radius:12px;padding:16px 18px}
+.stat .k{font-size:12px;color:var(--t2);margin-bottom:8px;line-height:1.35;min-height:32px}
+.stat .v{font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.stat .v.bad{color:var(--err)} .stat .v.good{color:var(--g)}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #eee;border-radius:12px;overflow:hidden}
+th{text-align:left;background:#fafafa;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+ color:var(--t2);padding:11px 15px;border-bottom:1px solid #eee;font-weight:700}
+td{padding:11px 15px;border-top:1px solid #f2f2f2;font-size:14px}
+td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.demo{background:var(--w);border:1px solid #e6e6e6;border-radius:14px;overflow:hidden;margin-top:18px}
+.demo__bar{background:#fafafa;border-bottom:1px solid #eee;padding:10px 16px;font-size:12px;color:var(--t2);
+ display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.demo__body{padding:22px}
+.b{border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;padding:11px 22px;
+ cursor:pointer;display:inline-flex;align-items:center;gap:8px;line-height:1}
+.b-p{background:var(--g);color:#fff} .b-p:hover{background:var(--g-h)}
+.b-k{background:var(--k);color:#fff}
+.b-o{background:#fff;color:var(--t);border:1px solid var(--ln)}
+.sw{display:flex;gap:8px;flex-wrap:wrap}
+.sw button{border:1px solid var(--ln);background:#fff;border-radius:999px;padding:7px 15px;font-family:inherit;
+ font-size:13px;font-weight:600;color:var(--t2);cursor:pointer}
+.sw button.on{background:var(--k);color:#fff;border-color:var(--k)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr 1fr}}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld span{font-size:12.5px;font-weight:600;color:#3f3e3a}
+.fld i{height:40px;border:1px solid var(--ln);border-radius:8px;background:#fff;display:block}
+.fld.ai i{border-color:var(--g);background:var(--g-soft)}
+.fld.ai span::after{content:" ✓ AI";color:var(--g);font-weight:700;font-size:11px}
+.fld.req span::after{content:" *";color:var(--err)}
+.zone{border:1px solid #eee;border-radius:12px;margin-bottom:14px;overflow:hidden}
+.zone__h{padding:12px 16px;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:10px}
+.zone__h b{margin-left:auto;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+.z1 .zone__h{background:var(--amb-bg);color:var(--amb)} .z1 .zone__h b{background:var(--amb);color:#fff}
+.z2 .zone__h{background:#fdeaec;color:var(--err)} .z2 .zone__h b{background:var(--err);color:#fff}
+.z3 .zone__h{background:#f4f4f4;color:var(--t2)} .z3 .zone__h b{background:#c9c9c9;color:#fff}
+.zone__b{padding:16px}
+.z3 .zone__h::after{content:"▸";margin-left:8px;color:var(--t3)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:430px}
+@media(max-width:820px){.split{grid-template-columns:1fr}}
+.split__doc{background:#efefef;border-right:1px solid #e6e6e6;padding:16px;display:flex;flex-direction:column;gap:10px}
+.paper{background:#fff;border:1px solid #ddd;border-radius:4px;padding:16px;font-size:11px;color:#555;
+ line-height:1.9;flex:1;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.paper h4{margin:0 0 10px;font-size:12px;color:#222;letter-spacing:.04em}
+.paper .hl{background:#fff3b0;padding:1px 3px;border-radius:2px;color:#111;font-weight:600}
+.paper .hl.on{background:var(--g);color:#fff}
+.split__form{padding:18px;display:flex;flex-direction:column;gap:12px}
+.docnav{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--t2)}
+.docnav button{border:1px solid var(--ln);background:#fff;border-radius:6px;width:26px;height:26px;cursor:pointer}
+.note{border-left:3px solid var(--g);background:var(--g-soft);padding:14px 18px;border-radius:0 10px 10px 0;
+ margin-top:22px;line-height:1.65;font-size:14.5px}
+.warn{border-left:3px solid var(--err);background:#fdeaec;padding:14px 18px;border-radius:0 10px 10px 0;
+ margin-top:18px;line-height:1.65;font-size:14.5px}
+.verdict{background:var(--k);color:#fff;border-radius:14px;padding:26px 28px;margin-top:26px}
+.verdict h3{margin:0 0 10px;font-size:19px}
+.verdict p{margin:0 0 12px;color:#d4d4d4;line-height:1.7}
+.verdict b{color:var(--g)}
+.old{border:1px dashed #d0d0d0;border-radius:12px;padding:16px;background:#fbfbfb}
+.oldrow{display:flex;flex-wrap:wrap;gap:5px}
+.oldrow i{display:block;width:78px;height:26px;border:1px solid #e0e0e0;border-radius:5px;background:#fff}
+</style></head><body><div class="wrap">
+
+<div class="eyebrow">energy-crm · Νέα Σύμβαση · πρόταση κατά §1.8</div>
+<h1>Τρεις τρόποι να ξαναγίνει η πιο σημαντική σελίδα</h1>
+<p class="lead">Πριν σχεδιάσω τίποτα, μέτρησα. Τα νούμερα από κάτω βγήκαν από τον δικό σου κώδικα —
+από το <code>class-ecrm-shortcodes.php</code>, τα <code>assets/forms/*.json</code> και τον χάρτη
+του <code>class-ecrm-formfill.php</code>. Δεν είναι εκτιμήσεις.</p>
+
+<div class="big">
+ <div class="stat"><div class="k">Πεδία στη φόρμα</div><div class="v bad">85</div></div>
+ <div class="stat"><div class="k">Σημασμένα ως υποχρεωτικά</div><div class="v bad">1</div></div>
+ <div class="stat"><div class="k">Ορατά σε οικιακή σύμβαση ρεύματος</div><div class="v bad">~63</div></div>
+ <div class="stat"><div class="k">Που χρειάζεται πραγματικά το χαρτί</div><div class="v good">7–22</div></div>
+</div>
+
+<p class="sub"><b>Το τελευταίο νούμερο είναι το θέμα.</b> Πήρα τα κλειδιά κάθε εντύπου από τα
+<code>assets/forms/*.json</code> και τα πέρασα ανάποδα μέσα από τον χάρτη
+<code>onomateponymo_pelati =&gt; $name</code> του <code>class-ecrm-formfill.php</code>, για να δω
+ποια πεδία της CRM χρειάζεται στ' αλήθεια το κάθε έντυπο:</p>
+
+<table>
+<tr><th>Έντυπο</th><th>Κουτιά στο χαρτί</th><th>Πεδία CRM</th><th>Ο χρήστης βλέπει σήμερα</th></tr>
+<tr><td>Orizon Family (κινητή)</td><td class="n">13</td><td class="n">7</td><td class="n">~40</td></tr>
+<tr><td>Orizon Φορητότητα</td><td class="n">13</td><td class="n">11</td><td class="n">~40</td></tr>
+<tr><td>Elpedison οικιακό ρεύμα</td><td class="n">23</td><td class="n">18</td><td class="n">~63</td></tr>
+<tr><td>Protergia οικιακό ρεύμα</td><td class="n">40</td><td class="n">22</td><td class="n">~63</td></tr>
+</table>
+
+<div class="warn"><b>Το χειρότερο έντυπο θέλει 22 πεδία. Η οθόνη ζητάει 63.</b>
+Και από τα 85 συνολικά, <b>ένα μόνο</b> λέει στον συνεργάτη ότι είναι υποχρεωτικό — το ΑΦΜ.
+Τα υπόλοιπα 84 δεν δίνουν καμία ένδειξη αν χρειάζονται, αν μπλοκάρουν, ή αν δεν τυπώνονται πουθενά.
+<b>Το πρόβλημα δεν είναι ότι η σελίδα είναι άσχημη. Είναι ότι δεν ξεχωρίζει το σημαντικό.</b></div>
+
+<!-- ══════════════ Α ══════════════ -->
+<section>
+<div class="eyebrow">Πρόταση Α</div>
+<h2>Η φόρμα ρωτάει μόνο ό,τι θα τυπωθεί</h2>
+<p class="sub">Στο βήμα 1 διαλέγεις πάροχο και πρόγραμμα. Από εκείνη τη στιγμή το σύστημα
+<b>ήδη ξέρει</b> ποια πεδία χρειάζεται — η πληροφορία υπάρχει στα JSON, απλώς κανείς δεν τη ρωτάει
+προς τα πίσω. Πάτα έναν πάροχο και δες τη φόρμα να μαζεύεται.</p>
+
+<div class="demo">
+ <div class="demo__bar"><span>Διάλεξε έντυπο:</span>
+  <div class="sw" id="swA">
+   <button class="on" data-p="of">Orizon Family</button>
+   <button data-p="el">Elpedison οικιακό</button>
+   <button data-p="pr">Protergia οικιακό</button>
+   <button data-p="all">— χωρίς φιλτράρισμα (σήμερα)</button>
+  </div></div>
+ <div class="demo__body">
+  <div id="cntA" style="font-size:13.5px;color:var(--t2);margin-bottom:16px"></div>
+  <div class="grid" id="fldA"></div>
+  <div id="allA" style="display:none">
+   <div class="old"><div style="font-size:12.5px;color:var(--t2);margin-bottom:10px">
+    63 πεδία, σε 8 ενότητες, χωρίς ένδειξη τι μετράει</div><div class="oldrow" id="oldRow"></div></div>
+  </div>
+ </div>
+</div>
+<div class="note"><b>Τι κερδίζεις.</b> Για Orizon Family ο συνεργάτης βλέπει <b>7 πεδία αντί για ~40</b>.
+Για το χειρότερο έντυπο, 22 αντί για 63. Και δεν χάνεται τίποτα: ό,τι δεν τυπώνεται μένει διαθέσιμο
+πίσω από ένα «Περισσότερα», για τις σπάνιες φορές που το θέλεις.</div>
+</section>
+
+<!-- ══════════════ Β ══════════════ -->
+<section>
+<div class="eyebrow">Πρόταση Β</div>
+<h2>Τρεις ζώνες αντί για οκτώ ενότητες</h2>
+<p class="sub">Ανεβάζεις ταυτότητα και λογαριασμό, το AI γεμίζει ό,τι διαβάζει. Μετά η οθόνη δεν
+δείχνει «Στοιχεία Πελάτη / Μετρητή / Τιμολόγησης» — δείχνει <b>τι χρειάζεται από σένα</b>.</p>
+
+<div class="demo">
+ <div class="demo__bar">Μετά την εξαγωγή · 2 αρχεία · Protergia οικιακό ρεύμα</div>
+ <div class="demo__body">
+  <div class="zone z1"><div class="zone__h">Δεν το διάβασα καθαρά — έλεγξέ το <b>3</b></div>
+   <div class="zone__b"><div class="grid">
+    <label class="fld"><span>Α.Δ.Τ</span><i></i></label>
+    <label class="fld"><span>Αριθμός Παροχής / ΗΚΑΣΠ</span><i></i></label>
+    <label class="fld"><span>Προηγούμενος Πάροχος</span><i></i></label>
+   </div></div></div>
+
+  <div class="zone z2"><div class="zone__h">Μπλοκάρει την οριστικοποίηση <b>2</b></div>
+   <div class="zone__b"><div class="grid">
+    <label class="fld req"><span>ΑΦΜ</span><i></i></label>
+    <label class="fld req"><span>Τρόπος Πληρωμής</span><i></i></label>
+   </div></div></div>
+
+  <div class="zone z3"><div class="zone__h">Γεμάτα από το AI — άνοιξε αν θες να τα δεις <b>17</b></div></div>
+
+  <div style="display:flex;gap:12px;margin-top:18px;flex-wrap:wrap">
+   <button class="b b-p">Οριστικοποίηση</button>
+   <button class="b b-o">Προσωρινή Αποθήκευση</button></div>
+ </div>
+</div>
+<div class="note"><b>Τι κερδίζεις.</b> Ο συνεργάτης βλέπει <b>5 πεδία</b> αντί για 63, και ξέρει
+γιατί κάθε ένα είναι εκεί. Το «μπλοκάρει την οριστικοποίηση» είναι πληροφορία που το σύστημα
+<b>έχει ήδη</b> — απλώς σήμερα τη μαθαίνει ο χρήστης μόνο όταν πατήσει και αποτύχει.</div>
+</section>
+
+<!-- ══════════════ Γ ══════════════ -->
+<section>
+<div class="eyebrow">Πρόταση Γ</div>
+<h2>Το έγγραφο δίπλα στα πεδία</h2>
+<p class="sub">Ο σαρωμένος λογαριασμός αριστερά, τα πεδία δεξιά. Κάνε κλικ σε πεδίο και το σημείο
+του εγγράφου φωτίζεται. Καμία εναλλαγή παραθύρου, κανένα «πού το είχα δει αυτό».</p>
+
+<div class="demo">
+ <div class="demo__bar">Λογαριασμός ΔΕΗ · σελίδα 1 από 2
+  <span class="docnav" style="margin-left:auto"><button>−</button><button>+</button></span></div>
+ <div class="split">
+  <div class="split__doc"><div class="paper">
+   <h4>ΛΟΓΑΡΙΑΣΜΟΣ ΡΕΥΜΑΤΟΣ</h4>
+   Επωνυμία: <span class="hl" data-hl="name">ΠΑΠΑΔΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ</span><br>
+   ΑΦΜ: <span class="hl" data-hl="afm">123456789</span><br>
+   Διεύθυνση: <span class="hl" data-hl="addr">ΕΡΜΟΥ 45, 10563 ΑΘΗΝΑ</span><br>
+   Αριθμός Παροχής: <span class="hl" data-hl="supply">4 100123456</span><br>
+   Αριθμός Μετρητή: <span class="hl" data-hl="meter">E-8842190</span><br>
+   Τιμολόγιο: <span class="hl" data-hl="inv">Γ1</span><br>
+   Συμφ. Ισχύς: 8 kVA · Ένδειξη: 41820
+  </div></div>
+  <div class="split__form">
+   <label class="fld" data-f="name"><span>Ονοματεπώνυμο</span><i></i></label>
+   <label class="fld" data-f="afm"><span>ΑΦΜ</span><i></i></label>
+   <label class="fld" data-f="addr"><span>Διεύθυνση</span><i></i></label>
+   <label class="fld" data-f="supply"><span>Αριθμός Παροχής / ΗΚΑΣΠ</span><i></i></label>
+   <label class="fld" data-f="meter"><span>Αριθμός Μετρητή</span><i></i></label>
+   <label class="fld" data-f="inv"><span>Κωδικός Τιμολογίου</span><i></i></label>
+  </div>
+ </div>
+</div>
+<div class="note"><b>Τι κερδίζεις.</b> Είναι ο τρόπος που δουλεύουν τα σοβαρά εργαλεία καταχώρησης.
+<b>Δεν μειώνει τα πεδία</b> — κάνει το γέμισμα κάθε πεδίου φθηνότερο. Δένει φυσικά με το Α ή το Β,
+δεν τα αντικαθιστά.</div>
+</section>
+
+<section>
+<h2>Η γνώμη μου</h2>
+<div class="verdict">
+ <h3>Α + Β μαζί. Το Γ μετά, αν αξίζει ακόμα.</h3>
+ <p><b>Το Α είναι το μεγάλο κέρδος και το φθηνότερο</b>, γιατί η πληροφορία υπάρχει ήδη στο repo:
+ τα JSON λένε τι τυπώνεται και ο χάρτης του formfill λέει ποιο πεδίο το τροφοδοτεί. Δεν σχεδιάζω
+ κάτι καινούριο — σταματάω τη φόρμα να ζητά πράγματα που δεν πάνε πουθενά.</p>
+ <p><b>Το Β είναι αυτό που κάνει τη σελίδα να διαβάζεται.</b> Χωρίς αυτό, ακόμα και 22 πεδία είναι
+ 22 ίδια κουτιά χωρίς ιεραρχία. Με αυτό, ο συνεργάτης ξέρει τι τον μπλοκάρει πριν πατήσει.</p>
+ <p><b>Το Γ το θα το άφηνα τελευταίο</b> — είναι το ακριβότερο σε δουλειά, και αν το AI διαβάζει
+ σωστά τα έγγραφα, το όφελός του μικραίνει. Αν μετά το Α+Β βλέπεις ότι πληκτρολογείς ακόμα πολύ
+ κοιτάζοντας χαρτί, τότε αξίζει.</p>
+ <p style="margin:0;color:#9a9a9a;font-size:13.5px">Και τα τρία είναι <b>μόνο frontend</b>: κανένα
+ δεν αλλάζει βάση, REST ή τη ροή πρόχειρο → οριστικοποίηση.</p>
+</div>
+</section>
+
+</div>
+<script>
+var FIELDS={
+ of:['Ονοματεπώνυμο','ΑΦΜ','Α.Δ.Τ','Πόλη','Αριθμός Κινητού','Ημ. Λήξης','Κωδ. Συνεργάτη'],
+ el:['Όνομα','Επίθετο','Πατρώνυμο','ΑΦΜ','Δ.Ο.Υ','Α.Δ.Τ','Ημ. Γέννησης','Οδός & Αριθμός','Πόλη','Τ.Κ',
+     'Τηλέφωνο','Κινητό','Email','Τηλ. Επικοινωνίας','Αριθμός Παροχής / ΗΚΑΣΠ','Διεύθυνση Παροχής',
+     'Προηγούμενος Πάροχος','Κωδ. Συνεργάτη'],
+ pr:['Ονοματεπώνυμο','ΑΦΜ','Δ.Ο.Υ','Α.Δ.Τ','Οδός & Αριθμός','Πόλη','Τ.Κ','Τηλέφωνο','Κινητό','Email',
+     'Αντικείμενο Δραστηριότητας','Αριθμός Παροχής / ΗΚΑΣΠ','Διεύθυνση Παροχής','Αριθμός Μετρητή',
+     'Ένδειξη Ημέρας','Προηγούμενος Πάροχος','Τρόπος Πληρωμής','Διεύθυνση Αποστολής',
+     'Υπεύθ. — Κινητό','Υπεύθ. — Τηλέφωνο','Υπεύθ. — Email','Κωδ. Συνεργάτη']
+};
+var LBL={of:'Orizon Family · 13 κουτιά στο χαρτί',el:'Elpedison οικιακό · 23 κουτιά στο χαρτί',
+         pr:'Protergia οικιακό · 40 κουτιά στο χαρτί'};
+var AI={of:3,el:9,pr:11};
+function render(p){
+ var g=document.getElementById('fldA'),c=document.getElementById('cntA'),a=document.getElementById('allA');
+ if(p==='all'){g.style.display='none';a.style.display='block';
+  c.innerHTML='<b style="color:#e5484d">63 πεδία</b> — όλα ίδια, κανένα δεν λέει αν χρειάζεται';return;}
+ g.style.display='';a.style.display='none';
+ var f=FIELDS[p];
+ c.innerHTML=LBL[p]+' → <b style="color:#16c217">'+f.length+' πεδία στην οθόνη</b> (τα '+AI[p]+' τα γεμίζει το AI)';
+ g.innerHTML=f.map(function(n,i){return '<label class="fld'+(i<AI[p]?' ai':'')+(n==='ΑΦΜ'?' req':'')+
+   '"><span>'+n+'</span><i></i></label>';}).join('');
+}
+document.getElementById('swA').addEventListener('click',function(e){
+ var b=e.target.closest('button'); if(!b)return;
+ [].forEach.call(this.children,function(x){x.classList.remove('on')});
+ b.classList.add('on'); render(b.dataset.p);});
+var o=document.getElementById('oldRow'),h='';for(var i=0;i<63;i++)h+='<i></i>';o.innerHTML=h;
+render('of');
+document.querySelectorAll('.split__form .fld').forEach(function(f){
+ f.addEventListener('click',function(){
+  document.querySelectorAll('.paper .hl').forEach(function(x){x.classList.remove('on')});
+  var t=document.querySelector('.paper [data-hl="'+f.dataset.f+'"]'); if(t)t.classList.add('on');});});
+</script></body></html>

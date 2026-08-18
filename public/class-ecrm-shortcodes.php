@@ -217,9 +217,17 @@ class ECRM_Shortcodes {
 	 * Reused inside the app shell's "Νέα Σύμβαση" view.
 	 */
 	public static function form_inner_html(): string {
-		$cats = [ 'home' => '🏠 Οικιακό', 'business' => '🏢 Επαγγελματικό', 'communal' => '🏛 Κοινόχρηστο' ];
-		$pts  = [ 'fixed' => '🔵 Σταθερό', 'special' => '🟢 Ειδικό', 'variable' => '🟡 Κυμαινόμενο', 'dynamic' => '🟠 Δυναμικό' ];
-		$ctyp = [ 'individual' => '👤 Ιδιώτης', 'sole_prop' => '🧾 Ατομική Επιχείρηση', 'company' => '🏢 Εταιρεία' ];
+		// Οι ετικέτες είναι ΣΚΕΤΟ ΚΕΙΜΕΝΟ. Τα emoji που ήταν ψημένα εδώ μέσα
+		// («🏠 Οικιακό») περνούσαν από esc_html() μαζί με τη λέξη, οπότε το
+		// εικονίδιο δεν μπορούσε ποτέ να γίνει τίποτα άλλο από emoji — και το
+		// ζωγράφιζε το λειτουργικό, με δικό του χρώμα και δικό του βάρος.
+		//
+		// Τώρα το εικονίδιο μπαίνει από το CSS πάνω στο data-val του chip, με
+		// mask + currentColor: κληρονομεί το χρώμα του κειμένου, άρα γίνεται
+		// πράσινο μόνο του όταν το chip είναι ενεργό. Δες ecrm-form.css.
+		$cats = [ 'home' => 'Οικιακό', 'business' => 'Επαγγελματικό', 'communal' => 'Κοινόχρηστο' ];
+		$pts  = [ 'fixed' => 'Σταθερό', 'special' => 'Ειδικό', 'variable' => 'Κυμαινόμενο', 'dynamic' => 'Δυναμικό' ];
+		$ctyp = [ 'individual' => 'Ιδιώτης', 'sole_prop' => 'Ατομική Επιχείρηση', 'company' => 'Εταιρεία' ];
 		$acts = ECRM_DB::activation_types();
 
 		ob_start();
@@ -242,9 +250,9 @@ class ECRM_Shortcodes {
 				<div class="ecrm-row">
 					<span class="ecrm-row__label">Είδος</span>
 					<div class="ecrm-chips" data-field="energy_type">
-						<button type="button" class="ecrm-chip is-on" data-val="power">⚡ Ηλεκτρισμός</button>
-						<button type="button" class="ecrm-chip" data-val="gas">🔥 Φυσικό Αέριο</button>
-						<button type="button" class="ecrm-chip" data-val="mobile">📱 Κινητή Τηλεφωνία</button>
+						<button type="button" class="ecrm-chip is-on" data-val="power">Ηλεκτρισμός</button>
+						<button type="button" class="ecrm-chip" data-val="gas">Φυσικό Αέριο</button>
+						<button type="button" class="ecrm-chip" data-val="mobile">Κινητή Τηλεφωνία</button>
 					</div>
 				</div>
 
@@ -323,7 +331,7 @@ class ECRM_Shortcodes {
 
 			<!-- Auto: required documents from Knowledge Base -->
 			<section class="ecrm-card ecrm-kbdocs" data-kbdocs hidden>
-				<div class="ecrm-step"><span class="ecrm-step__n ecrm-step__n--kb">📋</span> Απαιτούμενα δικαιολογητικά</div>
+				<div class="ecrm-step"><span class="ecrm-step__n ecrm-step__n--kb"><svg class="ecrm-i ecrm-i--step" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2M9 12h6M9 16h4"/></svg></span> Απαιτούμενα δικαιολογητικά</div>
 				<div class="ecrm-kbdocs__body" data-kbdocs-body></div>
 			</section>
 
@@ -342,7 +350,7 @@ class ECRM_Shortcodes {
 				</div>
 
 				<ul class="ecrm-filelist" data-filelist></ul>
-				<button type="button" class="ecrm-btn ecrm-btn--ai" data-extract disabled>✨ Εξαγωγή με AI</button>
+				<button type="button" class="ecrm-btn ecrm-btn--ai" data-extract disabled><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg> Εξαγωγή με AI</button>
 				<div class="ecrm-ai-status" data-ai-status aria-live="polite"></div>
 			</section>
 
@@ -381,7 +389,7 @@ class ECRM_Shortcodes {
 				<div class="ecrm-grid">
 					<label class="ecrm-field" data-for="afm">
 						<span class="ecrm-field__label">ΑΦΜ <abbr title="Υποχρεωτικό για να προχωρήσει η αίτηση πέρα από το πρόχειρο">*</abbr></span>
-						<span class="ecrm-input-wrap"><input type="text" name="afm" class="ecrm-input" autocomplete="off"><button type="button" class="ecrm-input-btn" data-afm-search aria-label="Αναζήτηση ΑΦΜ">🔍</button></span>
+						<span class="ecrm-input-wrap"><input type="text" name="afm" class="ecrm-input" autocomplete="off"><button type="button" class="ecrm-input-btn" data-afm-search aria-label="Αναζήτηση ΑΦΜ"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button></span>
 					</label>
 					<?php $ecrm_field( 'doy', 'Δ.Ο.Υ' ); ?>
 					<?php $ecrm_field( 'postal_code', 'Τ.Κ' ); ?>
@@ -429,7 +437,7 @@ class ECRM_Shortcodes {
 				και στο χαρτί.
 			-->
 			<section class="ecrm-card ecrm-provform" data-provider-fields hidden>
-				<div class="ecrm-step"><span class="ecrm-step__n">★</span> <span data-provform-title>Απαιτούμενα από τον πάροχο</span></div>
+				<div class="ecrm-step"><span class="ecrm-step__n"><svg class="ecrm-i ecrm-i--step" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span> <span data-provform-title>Απαιτούμενα από τον πάροχο</span></div>
 				<div class="ecrm-grid" data-provform-grid></div>
 			</section>
 
@@ -730,15 +738,15 @@ class ECRM_Shortcodes {
 			<!-- Ενέργειες σύμβασης -->
 			<div class="ecrm-actbanners">
 				<button type="button" class="ecrm-actbanner ecrm-actbanner--primary" data-act="pdf">
-					<span class="ecrm-actbanner__ic">🖨</span>
+					<span class="ecrm-actbanner__ic"><svg class="ecrm-i ecrm-i--banner" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg></span>
 					<span class="ecrm-actbanner__tx"><b>Εκτύπωση Σύμβασης</b><span>Δημιουργείται αυτόματα το PDF του συμβολαίου με τα στοιχεία της φόρμας</span></span>
 				</button>
 				<button type="button" class="ecrm-actbanner ecrm-actbanner--dark" data-act="email">
-					<span class="ecrm-actbanner__ic">✉</span>
+					<span class="ecrm-actbanner__ic"><svg class="ecrm-i ecrm-i--banner" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM3 7l9 6 9-6"/></svg></span>
 					<span class="ecrm-actbanner__tx"><b>Αποστολή στον πελάτη για ηλεκτρονική υπογραφή</b><span>Στέλνεται email στον πελάτη με σύνδεσμο υπογραφής</span></span>
 				</button>
 				<button type="button" class="ecrm-actbanner ecrm-actbanner--outline" data-act="livelink">
-					<span class="ecrm-actbanner__ic">🔗</span>
+					<span class="ecrm-actbanner__ic"><svg class="ecrm-i ecrm-i--banner" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg></span>
 					<span class="ecrm-actbanner__tx"><b>Δημιουργία συνδέσμου για live υπογραφή</b><span>Σύνδεσμος για υπογραφή επί τόπου ή αποστολή με μήνυμα</span></span>
 				</button>
 			</div>

@@ -59,12 +59,12 @@ function renderLeads(view, d) {
 		if (l.callback_at) {
 			var due = new Date(l.callback_at.replace(' ', 'T') + 'Z').getTime();
 			var overdue = due <= now && l.stage !== 'won' && l.stage !== 'lost';
-			cb = '<span class="ecrm-leadcb' + (overdue ? ' is-over' : '') + '">📞 ' + esc(fmtDate(l.callback_at)) + '</span>';
+			cb = '<span class="ecrm-leadcb' + (overdue ? ' is-over' : '') + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/></svg> ' + esc(fmtDate(l.callback_at)) + '</span>';
 		}
 		var tel = l.phone ? '<a class="ecrm-leadtel" href="tel:' + esc(l.phone) + '">' + esc(l.phone) + '</a>' : '';
 		var conv = (l.stage === 'won' && l.contract_id) ?
 			'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-lopen="' + l.contract_id + '">Άνοιγμα σύμβασης</button>' :
-			'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-lconv="' + l.id + '">➜ Μετατροπή σε σύμβαση</button>';
+			'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-lconv="' + l.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Μετατροπή σε σύμβαση</button>';
 		return '<div class="ecrm-leadcard ecrm-stage-' + esc(l.stage) + '">' +
 			'<div class="ecrm-leadcard__top"><div><strong>' + esc(l.name) + '</strong> ' + (l.energy_type ? '<span class="ecrm-muted">· ' + esc(energyMap[l.energy_type] || l.energy_type) + '</span>' : '') +
 				'<div class="ecrm-leadmeta">' + tel + (l.source_label ? ' <span class="ecrm-muted">· ' + esc(l.source_label) + '</span>' : '') + '</div></div>' +
@@ -73,7 +73,7 @@ function renderLeads(view, d) {
 			'<div class="ecrm-leadcard__bar">' + cb +
 				'<span class="ecrm-leadcard__actions">' + conv +
 					'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-ledit="' + l.id + '">Επεξεργασία</button>' +
-					'<button type="button" class="ecrm-iconbtn" data-ldel="' + l.id + '" title="Διαγραφή">🗑</button>' +
+					'<button type="button" class="ecrm-iconbtn" data-ldel="' + l.id + '" title="Διαγραφή"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg></button>' +
 				'</span></div>' +
 		'</div>';
 	}).join('');
@@ -82,7 +82,7 @@ function renderLeads(view, d) {
 	view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Πριν τη σύμβαση</div><h2 class="ecrm-title">Leads</h2>' +
 		'<p class="ecrm-sub">Υποψήφιοι πελάτες & επανακλήσεις</p></div>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-lnew>＋ Νέο Lead</button></header>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-lnew><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέο Lead</button></header>' +
 		'<div class="ecrm-leadfilters"><div class="ecrm-search"><input type="search" class="ecrm-input" placeholder="Αναζήτηση ονόματος, τηλεφώνου, ενδιαφέροντος…" value="' + esc(leadsState.q) + '" data-lq></div></div>' +
 		'<div class="ecrm-kbfilter ecrm-leadstages">' + sChips + '</div>' +
 		form +

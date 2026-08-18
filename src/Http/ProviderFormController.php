@@ -68,8 +68,17 @@ final class ProviderFormController implements Controller
             (string) $request['activation_type']
         );
 
+        // Άγνωστος συνδυασμός: ΚΑΝΕΝΑ φιλτράρισμα. Το κενό main_inputs σημαίνει
+        // «δεν ξέρω τι τυπώνεται», και η οθόνη πρέπει να δείξει τα πάντα — ποτέ
+        // «δεν χρειάζεται τίποτα». Ένας πάροχος χωρίς έντυπο δίνει τη σημερινή
+        // φόρμα ολόκληρη, όχι μια φόρμα που δεν συμπληρώνεται.
         if ($template === '') {
-            return new WP_REST_Response(['ok' => true, 'template' => '', 'fields' => []], 200);
+            return new WP_REST_Response([
+                'ok'          => true,
+                'template'    => '',
+                'fields'      => [],
+                'main_inputs' => [],
+            ], 200);
         }
 
         $dir = (Plugin::instance()?->dir() ?? '') . 'assets/forms';
@@ -77,7 +86,15 @@ final class ProviderFormController implements Controller
         return new WP_REST_Response([
             'ok'       => true,
             'template' => $template,
+
+            // Τα ΕΞΤΡΑ του παρόχου, που δεν υπάρχουν στην κύρια φόρμα.
             'fields'   => ProviderFormFields::forTemplate($template, $dir),
+
+            // Και ο καθρέφτης τους: ποια από τα πεδία της ΚΥΡΙΑΣ φόρμας
+            // καταλήγουν στο χαρτί. Ταξιδεύει στο ίδιο αίτημα επίτηδες — η JS
+            // το ζητάει ήδη σε κάθε αλλαγή παρόχου, προγράμματος ή τύπου
+            // πελάτη, που είναι ακριβώς οι στιγμές που αλλάζει η απάντηση.
+            'main_inputs' => ProviderFormFields::mainFormInputsForTemplate($template, $dir),
         ], 200);
     }
 }
