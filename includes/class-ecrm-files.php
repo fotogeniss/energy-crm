@@ -86,28 +86,53 @@ class ECRM_Files {
 	// --- Upload (protected) -------------------------------------------------
 
 	/**
-	 * Store an uploaded file in the protected dir.
+	 * Αποθηκεύει ένα ανεβασμένο αρχείο στον προστατευμένο φάκελο.
 	 *
-	 * @param array $file A single $_FILES entry (tmp_name, name, type).
+	 * Ο τύπος βγαίνει από τα bytes του αρχείου, όχι από όσα δηλώνει ο browser:
+	 * το `$file['type']` το γράφει ο πελάτης και αλλάζει με ένα curl. Μέχρι τις
+	 * 2026-08-18 το εμπιστευόμασταν, και μαζί του και την κατάληξη από το όνομα.
+	 *
+	 * @param array       $file          Μία εγγραφή του $_FILES (tmp_name, name, type).
+	 * @param array       $allowed_mimes Τι δεχόμαστε.
+	 * @param string|null $reason        Γεμίζει με τον λόγο απόρριψης, για να τον πει η οθόνη.
+	 *
 	 * @return array{path:string, filename:string, mime:string}|null
 	 */
-	public static function store( array $file, array $allowed_mimes ): ?array {
+	public static function store( array $file, array $allowed_mimes, ?string &$reason = null ): ?array {
+		$reason = '';
+
 		if ( ( $file['error'] ?? 1 ) !== UPLOAD_ERR_OK || empty( $file['tmp_name'] ) ) {
+			// UPLOAD_ERR_INI_SIZE/FORM_SIZE σημαίνουν «πολύ μεγάλο» και το ξέρει ο χρήστης.
+			$err    = (int) ( $file['error'] ?? UPLOAD_ERR_NO_FILE );
+			$reason = in_array( $err, [ UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE ], true ) ? 'too_large' : 'upload_failed';
 			return null;
 		}
 		if ( ! is_uploaded_file( $file['tmp_name'] ) ) {
+			$reason = 'upload_failed';
 			return null;
 		}
-		$ft   = wp_check_filetype( $file['name'] ?? '' );
-		$mime = in_array( ( $file['type'] ?? '' ), $allowed_mimes, true ) ? $file['type'] : ( $ft['type'] ?? '' );
-		if ( ! in_array( $mime, $allowed_mimes, true ) ) {
+
+		$size    = (int) @filesize( $file['tmp_name'] ); // phpcs:ignore
+		$problem = \EnergyCRM\Infrastructure\UploadCheck::sizeProblem( $size );
+		if ( '' !== $problem ) {
+			$reason = $problem;
 			return null;
 		}
-		$ext  = $ft['ext'] ?: 'bin';
+
+		$head = (string) @file_get_contents( $file['tmp_name'], false, null, 0, \EnergyCRM\Infrastructure\UploadCheck::HEAD_BYTES ); // phpcs:ignore
+		$mime = \EnergyCRM\Infrastructure\UploadCheck::sniff( $head );
+		if ( '' === $mime || ! in_array( $mime, $allowed_mimes, true ) ) {
+			$reason = 'bad_type';
+			return null;
+		}
+
+		// Η κατάληξη από τον τύπο που επιβεβαιώθηκε — ποτέ από το όνομα.
+		$ext  = \EnergyCRM\Infrastructure\UploadCheck::extensionFor( $mime );
 		$dir  = self::dir();
-		$name = 'doc_' . wp_generate_password( 24, false ) . '.' . $ext; // unguessable name
+		$name = 'doc_' . wp_generate_password( 24, false ) . '.' . $ext; // όνομα που δεν μαντεύεται
 		$dest = trailingslashit( $dir ) . $name;
 		if ( ! @move_uploaded_file( $file['tmp_name'], $dest ) ) { // phpcs:ignore
+			$reason = 'store_failed';
 			return null;
 		}
 		@chmod( $dest, 0640 ); // phpcs:ignore
