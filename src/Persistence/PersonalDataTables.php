@@ -35,7 +35,19 @@ final class PersonalDataTables
      * name because their columns are not interchangeable.
      *
      * `tasks` reaches a customer both through a contract and directly through
-     * `customer_id`; only the contract edge belongs in this map.
+     * `customer_id`; only the contract edge belongs in this map, because the
+     * values here are keyed by table and a table cannot appear twice.
+     *
+     * **Η δεύτερη ακμή ΔΕΝ χάνεται** — και οι δύο καταναλωτές τη χειρίζονται
+     * ρητά: `PersonalDataExporter::export()` συγχωνεύει τις εργασίες που
+     * βρίσκονται με `customer_id`, και `PersonalDataEraser::eraseTasks()`
+     * σβήνει με τα δύο κλειδιά. Το ότι δεν φαίνεται εδώ είναι ακριβώς που
+     * παραπλάνησε τον έλεγχο της 18/08/2026: διαβάστηκε ως «η ακμή
+     * απορρίφθηκε» ενώ λέει «η ακμή δεν χωράει σε αυτόν τον χάρτη».
+     *
+     * Ο `PersonalDataCoverageTest` σαρώνει πλέον το πραγματικό σχήμα και
+     * απαιτεί κάθε ακμή να είναι είτε εδώ είτε δηλωμένη ως χειρωνακτική. Η
+     * υπόσχεση από πάνω —«τίποτα δεν θα το επισημάνει»— έπαψε να ισχύει.
      *
      * @return array<string, string> Tables::* constant => key column
      */
