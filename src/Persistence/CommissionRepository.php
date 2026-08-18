@@ -70,6 +70,38 @@ final class CommissionRepository
     }
 
     /**
+     * Πόσες συμβάσεις έχουν κερδίσει προμήθεια συνολικά.
+     *
+     * Η payable() σταματά στο LIMIT. Χωρίς αυτό το νούμερο, το σύνολο ευρώ που
+     * βλέπει ο συνεργάτης είναι σιωπηλά λάθος όταν τις ξεπεράσει — και λεφτά
+     * που βγαίνουν λάθος χωρίς να το πει κανείς είναι το χειρότερο είδος.
+     *
+     * @param list<string> $payableStatuses
+     */
+    public function countPayable(UserScope $scope, array $payableStatuses): int
+    {
+        global $wpdb;
+
+        if ($payableStatuses === []) {
+            return 0;
+        }
+
+        [$clause, $scopeParams] = $this->scopeClause($scope);
+        $statusPlaceholders     = implode(',', array_fill(0, count($payableStatuses), '%s'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $total = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM %i WHERE status IN ({$statusPlaceholders}){$clause}",
+                [Tables::name(Tables::CONTRACTS), ...$payableStatuses, ...$scopeParams]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return (int) $total;
+    }
+
+    /**
      * Contracts still in flight, for the "expected" figure. Only the fields the
      * commission rules read — this is an estimate, not a statement.
      *
@@ -105,19 +137,14 @@ final class CommissionRepository
     }
 
     /**
+     * Το όνομα μένει επειδή το καλεί ήδη το υπόλοιπο αρχείο· το σώμα έφυγε στο
+     * ScopeClause, όπου ζει η μία και μόνη έκδοση. Ήταν λέξη προς λέξη το ίδιο —
+     * σωστό σήμερα, και δεύτερο μέρος να γίνει λάθος αύριο.
+     *
      * @return array{0: string, 1: list<int>}
      */
     private function scopeClause(UserScope $scope, string $alias = ''): array
     {
-        if ($scope->isAdministrator()) {
-            return ['', []];
-        }
-
-        $column = ($alias === '' ? '' : $alias . '.') . 'partner_user_id';
-
-        return [
-            ' AND ' . $column . ' IN (' . $scope->placeholders() . ')',
-            $scope->userIds(),
-        ];
+        return ScopeClause::forScope($scope, $alias);
     }
 }

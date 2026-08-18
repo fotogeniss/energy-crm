@@ -298,6 +298,58 @@ final class FileRepository
     }
 
     /**
+     * Τι κρατάει ο δίσκος για αυτές τις συμβάσεις, χωρίς να σβήσει τίποτα.
+     *
+     * Διαβάζεται ΠΡΙΝ διαγραφεί η σύμβαση. Το foreign key `files.contract_id`
+     * είναι ON DELETE CASCADE, οπότε τη στιγμή που φεύγει η σύμβαση φεύγουν και
+     * οι γραμμές — και μαζί τους η μόνη ένδειξη ποια αρχεία υπήρχαν. Χωρίς αυτό
+     * το στιγμιότυπο, τα σαρωμένα δελτία ταυτότητας μένουν στον δίσκο χωρίς
+     * τίποτα να τα δείχνει.
+     *
+     * @param list<int> $contractIds
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function recordsForContracts(array $contractIds): array
+    {
+        global $wpdb;
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', $contractIds))));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT id, path, attachment_id FROM {$this->table} WHERE contract_id IN ({$placeholders})",
+                $ids
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
+     * Σβήνει τα bytes ενός στιγμιότυπου από recordsForContracts().
+     *
+     * Ασφαλές να τρέξει δύο φορές: το wp_delete_file() σε αρχείο που δεν
+     * υπάρχει δεν κάνει τίποτα.
+     *
+     * @param list<array<string, mixed>> $records
+     */
+    public function forgetBytes(array $records): void
+    {
+        $this->deleteBytes($records);
+    }
+
+    /**
      * @param list<array<string, mixed>> $rows
      */
     private function deleteBytes(array $rows): void

@@ -20,6 +20,11 @@ final class MigrationRunner
 {
     public const OPTION = 'ecrm_applied_migrations';
 
+    private const LOCK = 'ecrm_migrations_running';
+
+    /** Αρκετά για το πιο αργό migration, αρκετά λίγο ώστε να ξεκολλήσει μόνο του. */
+    private const LOCK_SECONDS = 120;
+
     /** @var list<Migration> */
     private array $migrations;
 
@@ -49,6 +54,37 @@ final class MigrationRunner
      * @return list<string> Ids applied during this run.
      */
     public function run(): array
+    {
+        if ($this->pending() === []) {
+            return [];
+        }
+
+        // Το run() καλείται σε ΚΑΘΕ αίτηση. Μετά από deploy που φέρνει νέο
+        // migration, οι πρώτες ταυτόχρονες αιτήσεις το βλέπουν όλες εκκρεμές και
+        // το τρέχουν όλες. Τα seed migrations θα διπλασίαζαν γραμμές, και το
+        // markApplied() είναι read-modify-write σε option: δύο ταυτόχρονοι
+        // τερματισμοί χάνουν το ένα id και το migration ξανατρέχει.
+        //
+        // Το transient δεν είναι αδιάβλητο κλείδωμα — δεν υπάρχει atomic
+        // set-if-absent με object cache. Κλείνει όμως το ρεαλιστικό παράθυρο,
+        // που είναι μερικά δευτερόλεπτα μία φορά ανά deploy.
+        if (get_transient(self::LOCK) !== false) {
+            return [];
+        }
+
+        set_transient(self::LOCK, 1, self::LOCK_SECONDS);
+
+        try {
+            return $this->applyPending();
+        } finally {
+            delete_transient(self::LOCK);
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function applyPending(): array
     {
         $done = [];
 

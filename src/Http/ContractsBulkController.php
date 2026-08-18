@@ -191,14 +191,34 @@ final class ContractsBulkController implements Controller
     {
         $ids = array_map(static fn (array $r): int => (int) $r['id'], $rows);
 
-        // Bytes before rows: the cascade removes the file records without
-        // touching the documents on disk. See FileRepository.
-        $this->files->purgeForContracts($ids);
+        /*
+         * Η σειρά είχε τα αρχεία πρώτα, και ο λόγος ήταν σωστός: το CASCADE
+         * σβήνει τις γραμμές του `files` χωρίς να αγγίξει τον δίσκο, οπότε αν
+         * έφευγε πρώτη η σύμβαση, τα bytes έμεναν χωρίς τίποτα να τα δείχνει.
+         *
+         * Το κόστος όμως ήταν ότι μια αποτυχημένη διαγραφή σύμβασης άφηνε τα
+         * σαρωμένα δελτία ταυτότητας ΗΔΗ σβησμένα, οριστικά, για σύμβαση που
+         * επέζησε. Το πρωτότυπο δεν υπήρξε ποτέ αλλού.
+         *
+         * Τρία βήματα αντί για δύο: στιγμιότυπο, διαγραφή, και τα bytes μετά.
+         */
+        $doomed  = $this->files->recordsForContracts($ids);
+        $removed = $this->contracts->deleteMany($ids, $scope);
 
-        return new WP_REST_Response(
-            ['ok' => true, 'updated' => $this->contracts->deleteMany($ids, $scope)],
-            200
-        );
+        if ($removed === 0) {
+            return new WP_REST_Response(
+                ['ok' => false, 'error' => 'Καμία σύμβαση δεν διαγράφηκε· τα έγγραφα δεν πειράχτηκαν.'],
+                500
+            );
+        }
+
+        // Οι γραμμές έφυγαν με το CASCADE — αν το foreign key υπάρχει. Αν δεν
+        // εφαρμόστηκε ποτέ (το AddForeignKeys καταγράφει και προσπερνά), αυτό
+        // τις καθαρίζει. Και στις δύο περιπτώσεις τα bytes φεύγουν παρακάτω.
+        $this->files->purgeForContracts($ids);
+        $this->files->forgetBytes($doomed);
+
+        return new WP_REST_Response(['ok' => true, 'updated' => $removed], 200);
     }
 
     /**
