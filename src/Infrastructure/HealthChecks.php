@@ -35,12 +35,67 @@ final class HealthChecks
     public function all(): array
     {
         return array_merge(
+            $this->secrets(),
             $this->encryption(),
             $this->documents(),
             $this->schema(),
             $this->scheduled(),
             $this->platform()
         );
+    }
+
+    /**
+     * Πού ζουν τα διαπιστευτήρια, και πόσο εκτεθειμένο είναι το αρχείο που τα κρατά.
+     *
+     * @return list<array{group: string, label: string, ok: bool|null, detail: string}>
+     */
+    private function secrets(): array
+    {
+        $pinned = \EnergyCRM\Services::secrets()->isPinned('claude_api_key');
+        $set    = \EnergyCRM\Services::secrets()->get('claude_api_key') !== '';
+
+        $out = [
+            self::row('Μυστικά', 'Κλειδί Claude', $set ? $pinned : null, match (true) {
+                ! $set  => 'Δεν έχει οριστεί. Η ανάγνωση λογαριασμών και η βάση γνώσης δεν δουλεύουν.',
+                $pinned => 'Καρφωμένο εκτός βάσης (σταθερά ή μεταβλητή περιβάλλοντος). Σωστό.',
+                default => 'Αποθηκευμένο κρυπτογραφημένο στη ΒΑΣΗ. Δουλεύει, αλλά ένα dump μαζί '
+                    . 'με τα salts του wp-config το ανοίγει. Προτίμησε σταθερά στο wp-config.php.',
+            }),
+        ];
+
+        // Το wp-config μπορεί να ζει ένα επίπεδο πάνω από τον web root· το
+        // WordPress το ψάχνει και εκεί. Τότε δεν το σερβίρει ποτέ ο server.
+        $inRoot = file_exists(ABSPATH . 'wp-config.php');
+        $above  = file_exists(dirname(rtrim(ABSPATH, '/\\')) . '/wp-config.php');
+
+        $out[] = self::row('Μυστικά', 'Θέση wp-config.php', $above ? true : null, $above
+            ? 'Πάνω από τον web root. Ο server δεν μπορεί να το σερβίρει.'
+            : ($inRoot
+                ? 'Μέσα στον web root. Δουλεύει και είναι το συνηθισμένο, αλλά αν κάποια '
+                  . 'στιγμή σπάσει η PHP, το αρχείο σερβίρεται ως κείμενο με όλα μέσα. '
+                  . 'Μετακίνησέ το ένα επίπεδο πάνω αν το επιτρέπει ο host.'
+                : 'Δεν βρέθηκε στα συνήθη σημεία.'));
+
+        $config = $inRoot ? ABSPATH . 'wp-config.php' : dirname(rtrim(ABSPATH, '/\\')) . '/wp-config.php';
+
+        if (file_exists($config)) {
+            // Σε Windows το fileperms() επιστρέφει σταθερά 0666: δεν υπάρχουν
+            // δικαιώματα POSIX να διαβαστούν. Φύλακας που φωνάζει σε κάθε
+            // μηχάνημα ανάπτυξης παύει να διαβάζεται.
+            if (PHP_OS_FAMILY === 'Windows') {
+                $out[] = self::row('Μυστικά', 'Δικαιώματα wp-config.php', null,
+                    'Δεν ελέγχεται σε Windows. Στον server της παραγωγής θέλει 0640 ή 0600.');
+            } else {
+                $perms = fileperms($config);
+                $loose = $perms !== false && ($perms & 0o044) !== 0;
+
+                $out[] = self::row('Μυστικά', 'Δικαιώματα wp-config.php', ! $loose, $loose
+                    ? sprintf('%04o — το διαβάζουν και άλλοι χρήστες του server. Βάλε 0640 ή 0600.', $perms & 0o777)
+                    : sprintf('%04o', $perms === false ? 0 : $perms & 0o777));
+            }
+        }
+
+        return $out;
     }
 
     /**
