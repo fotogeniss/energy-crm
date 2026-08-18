@@ -42,6 +42,7 @@ use EnergyCRM\Domain\Contract\ContractAddresses;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\ContractTerm;
 use EnergyCRM\Domain\Contract\ExtraFields;
+use ECRM_Validate;
 use EnergyCRM\Domain\Customer\PostalAddress;
 use EnergyCRM\Infrastructure\RequestIp;
 
@@ -71,6 +72,14 @@ final class ContractSaveMapping
             if (isset($params[$field]) && $params[$field] !== '') {
                 $customer[$field] = sanitize_text_field((string) $params[$field]);
             }
+        }
+
+        // Το ΑΦΜ αποθηκεύεται σκέτα ψηφία. Η αναζήτηση και ο έλεγχος διπλοτύπων
+        // κόβουν ό,τι δεν είναι ψηφίο πριν ψάξουν, οπότε ένα «123 456 789»
+        // γραμμένο με κενά έπαιρνε afm_hash που δεν ταιριάζει ποτέ σε τίποτα.
+        // Δεν χάνεται τιμή: αν μείνει κενό, ο έλεγχος ψηφίου παρακάτω το κόβει.
+        if (isset($customer['afm'])) {
+            $customer['afm'] = ECRM_Validate::digits($customer['afm']);
         }
 
         return $customer;

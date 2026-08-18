@@ -48,7 +48,7 @@ final class VatLookupController implements Controller
             return ECRM_RateLimit::too_many();
         }
 
-        $afm = (string) preg_replace('/\D+/', '', (string) $request['afm']);
+        $afm = ECRM_Validate::digits((string) $request['afm']);
 
         // Check digit first: a typo costs nothing to catch here and a round
         // trip to Brussels to catch there.

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Persistence\CustomerRepository;
 use WP_REST_Request;
@@ -102,7 +103,9 @@ final class CustomersController implements Controller
 
     public function check(WP_REST_Request $request): WP_REST_Response
     {
-        $afm    = trim((string) $request['afm']);
+        // Ίδια κανονικοποίηση με το /contracts/duplicate. Με σκέτο trim() το
+        // ΑΦΜ με κενά έψαχνε άλλο hash από αυτό που είχε αποθηκευτεί.
+        $afm    = ECRM_Validate::digits((string) $request['afm']);
         $supply = trim((string) $request['supply']);
 
         if ($afm === '' && $supply === '') {
