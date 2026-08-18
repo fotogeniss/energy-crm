@@ -58,7 +58,6 @@ final class Loader
             'admin/class-ecrm-kb-admin.php',
             'public/class-ecrm-shortcodes.php',
             'public/class-ecrm-app.php',
-            'public/class-ecrm-sign-page.php',
             'public/class-ecrm-tracking.php',
         ];
     }
@@ -86,7 +85,6 @@ final class Loader
             'ECRM_Assistant',
             'ECRM_Shortcodes',
             'ECRM_App',
-            'ECRM_Sign_Page',
             'ECRM_Tracking',
         ];
     }

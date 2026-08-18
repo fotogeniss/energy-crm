@@ -50,8 +50,17 @@ final class RestRouteGuardTest extends IntegrationTestCase
         self::ROOT =>
             'The namespace index, registered by WordPress itself. Route discovery, no data of ours.',
 
-        self::ROOT . '/sign/(?P<token>[A-Za-z0-9]+)' =>
-            'The customer signs without an account. The token is the whole credential.',
+        /*
+         * Το /sign/{token} έφυγε στις 18/08/2026. Ήταν δημόσιο, δεν είχε rate
+         * limit, το token δεν έληγε ποτέ, και περνούσε 'from' => null στη
+         * moveTo() — που σημαίνει ότι ΔΕΝ εφαρμοζόταν ο γράφος μεταβάσεων.
+         *
+         * Και δεν το έφτιαξα, το έσβησα: κανένα σημείο του κώδικα δεν έγραφε
+         * ποτέ στον πίνακα signatures, και το ερώτημα στην παραγωγή επιβεβαίωσε
+         * μηδέν γραμμές. Ήταν δημόσια επιφάνεια επίθεσης χωρίς έναν χρήστη.
+         *
+         * Η υπογραφή γίνεται από το /track/{token}/sign, που είναι παρακάτω.
+         */
 
         self::ROOT . '/file/(?P<id>\d+)' =>
             'ECRM_Files::serve checks a signed short-lived token and the scope it was issued to.',

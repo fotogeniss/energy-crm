@@ -143,11 +143,16 @@ final class FileRepositoryTest extends IntegrationTestCase
      * was exactly "a caller removing half" — the failure mode the class header
      * says this class exists to prevent.
      *
-     * SigningController::storeSignatureImage() calls replaceKind() on every
-     * re-sign, so a customer signing twice would have left the first drawing
-     * on disk, referenced by nothing — invisible to purgeOrphans() too, since
-     * there was never a dangling row, just a file nothing pointed at after the
-     * delete. This is the regression test for that fix.
+     * ECRM_Tracking::rest_sign() calls replaceKind() on every signature, so a
+     * customer signing twice would have left the first drawing on disk,
+     * referenced by nothing — invisible to purgeOrphans() too, since there was
+     * never a dangling row, just a file nothing pointed at after the delete.
+     * This is the regression test for that fix.
+     *
+     * (Ο καλών ήταν ο SigningController μέχρι τις 18/08. Όταν εκείνος
+     * διαγράφηκε ως ορφανός, η rest_sign() σταμάτησε να κάνει σκέτο insert και
+     * πήρε τη θέση του — αλλιώς η replaceKind() θα έμενε χωρίς καλούντα και
+     * αυτό το test θα φύλαγε νεκρό κώδικα.)
      */
     public function testReplaceKindDeletesTheBytesOfTheRowItReplaces(): void
     {

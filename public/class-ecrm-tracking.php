@@ -217,10 +217,15 @@ class ECRM_Tracking {
 			$stored = ECRM_Files::put_bytes( $png, 'png', 'image/png', 'signature.png' );
 			if ( $stored ) {
 				$sig_path = $stored['path'];
-				$wpdb->insert( ECRM_DB::table( 'files' ), [
-					'contract_id' => $id, 'attachment_id' => null, 'doc_kind' => 'signature',
-					'filename' => 'signature.png', 'mime' => 'image/png', 'path' => $stored['path'], 'protected' => 1,
-				] );
+				// Μέσω FileRepository και όχι με σκέτο insert. Μια σύμβαση έχει ΜΙΑ
+				// υπογραφή, και η replaceKind() σβήνει πρώτα τα bytes της παλιάς·
+				// ένα insert εδώ θα άφηνε το προηγούμενο σχέδιο στον δίσκο χωρίς
+				// τίποτα να το δείχνει — ακριβώς η διαρροή για την οποία γράφτηκε
+				// ο FileRepository, και που ως τώρα την απέτρεπε μόνο ο έλεγχος
+				// signed_at δύο οθόνες πιο πάνω.
+				\EnergyCRM\Services::files()->replaceKind(
+					$id, 'signature', 'signature.png', 'image/png', $stored['path']
+				);
 			}
 		}
 
@@ -238,11 +243,13 @@ class ECRM_Tracking {
 				if ( $pdf && class_exists( 'ECRM_Files' ) ) {
 					$sp = ECRM_Files::put_bytes( $pdf, 'pdf', 'application/pdf', 'symvasi-ypografi.pdf' );
 					if ( $sp ) {
-						$wpdb->insert( ECRM_DB::table( 'files' ), [
-							'contract_id' => $id, 'attachment_id' => null, 'doc_kind' => 'signed_pdf',
-							'filename' => ( $row['code'] ?: ( 'symvasi-' . $id ) ) . '-ypografi.pdf',
-							'mime' => 'application/pdf', 'path' => $sp['path'], 'protected' => 1,
-						] );
+						\EnergyCRM\Services::files()->replaceKind(
+							$id,
+							'signed_pdf',
+							( $row['code'] ?: ( 'symvasi-' . $id ) ) . '-ypografi.pdf',
+							'application/pdf',
+							$sp['path']
+						);
 					}
 				}
 			} catch ( \Throwable $e ) { /* PDF optional — signing still succeeds */ }
