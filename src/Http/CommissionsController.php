@@ -61,7 +61,7 @@ final class CommissionsController implements Controller
         $unpaid  = 0.0;
 
         foreach ($this->commissions->payable($scope, ECRM_DB::payable_statuses()) as $row) {
-            $amount   = (float) ECRM_Commissions::amount_for($row);
+            $amount   = $this->amountOf($row);
             $isPaid   = ($row['payout_status'] ?? '') === 'paid';
             $customer = $row['company_name']
                 ?: trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
@@ -85,6 +85,8 @@ final class CommissionsController implements Controller
 
         $expected = 0.0;
 
+        // Ζωντανός υπολογισμός, σωστά: τίποτα από αυτά δεν έχει μπει σε
+        // παρτίδα, άρα δεν υπάρχει στιγμιότυπο να σεβαστούμε.
         foreach ($this->commissions->inProgress($scope, self::IN_PROGRESS) as $row) {
             $expected += (float) ECRM_Commissions::amount_for($row);
         }
@@ -110,5 +112,30 @@ final class CommissionsController implements Controller
             'best_label'   => $monthly['best_label'],
             'pending_est'  => round($expected, 2),
         ], 200);
+    }
+
+    /**
+     * Το ποσό μιας σύμβασης: το στιγμιότυπο αν έχει μπει σε παρτίδα, αλλιώς
+     * ζωντανός υπολογισμός.
+     *
+     * Ο ιδιοκτήτης αποφάσισε (18/08/2026) ότι η εκκαθάριση είναι στιγμιότυπο —
+     * ό,τι πληρώθηκε δεν αλλάζει αναδρομικά επειδή άλλαξε αργότερα κανόνας
+     * προμήθειας. Η οθόνη όμως υπολόγιζε πάντα ζωντανά, οπότε η απόφαση ζούσε
+     * στη βάση και ο συνεργάτης έβλεπε άλλο νούμερο από αυτό που εισέπραξε.
+     * Απόφαση που την τηρεί η μία από τις δύο πλευρές δεν είναι απόφαση.
+     *
+     * NULL σημαίνει «χωρίς στιγμιότυπο»: είτε δεν έχει μπει σε παρτίδα, είτε
+     * μπήκε πριν αρχίσει να κρατιέται (μετάβαση 0016). Και στις δύο περιπτώσεις
+     * ο ζωντανός υπολογισμός είναι η σωστή, και η σημερινή, απάντηση.
+     *
+     * @param array<string, mixed> $row
+     */
+    private function amountOf(array $row): float
+    {
+        $snapshot = $row['payout_amount'] ?? null;
+
+        return $snapshot === null
+            ? (float) ECRM_Commissions::amount_for($row)
+            : (float) $snapshot;
     }
 }

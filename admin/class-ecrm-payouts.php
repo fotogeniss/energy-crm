@@ -55,6 +55,19 @@ class ECRM_Payouts {
 		return class_exists( 'ECRM_Commissions' ) ? ECRM_Commissions::amount_for( $r ) : 0.0;
 	}
 
+	/**
+	 * Το ποσό με το οποίο μπήκε η σύμβαση στην παρτίδα της.
+	 *
+	 * NULL σημαίνει «χωρίς στιγμιότυπο» — γραμμή σφραγισμένη πριν αρχίσει να
+	 * κρατιέται (μετάβαση 0016). Τότε μένει ο ζωντανός υπολογισμός, που είναι
+	 * ό,τι έδειχνε ούτως ή άλλως.
+	 *
+	 * @param array<string, mixed> $r
+	 */
+	private static function settled_amount( array $r ): float {
+		return isset( $r['payout_amount'] ) ? (float) $r['payout_amount'] : self::amount( $r );
+	}
+
 	// ---------------------------------------------------------------------
 	public static function render(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { return; }
@@ -225,8 +238,22 @@ class ECRM_Payouts {
 			$payout_id
 		), ARRAY_A );
 
+		// Το ποσό γράφεται και πάνω στην κάθε σύμβαση, όχι μόνο ως σύνολο στην
+		// παρτίδα. Η οθόνη του συνεργάτη δείχνει γραμμή ανά σύμβαση: χωρίς
+		// στιγμιότυπο ανά γραμμή θα ξαναϋπολόγιζε με τους σημερινούς κανόνες
+		// ό,τι πληρώθηκε με τους παλιούς, και θα διαφωνούσε μόνιμα με το ποσό
+		// που όντως πληρώθηκε — χωρίς να το πει σε κανέναν.
+		//
+		// Το σύνολο είναι το άθροισμα των στρογγυλεμένων γραμμών, όχι η
+		// στρογγυλεμένη ολότητα: οι γραμμές που βλέπει ο συνεργάτης πρέπει να
+		// βγάζουν το νούμερο που πληρώνεται, αλλιώς το ένα από τα δύο λέει
+		// ψέματα για ένα-δυο λεπτά και κανείς δεν ξέρει ποιο.
 		$total = 0.0;
-		foreach ( (array) $mine as $r ) { $total += self::amount( $r ); }
+		foreach ( (array) $mine as $r ) {
+			$amount = round( self::amount( $r ), 2 );
+			$total += $amount;
+			$wpdb->update( $ct, [ 'payout_amount' => $amount ], [ 'id' => (int) $r['id'] ] );
+		}
 
 		$wpdb->update( $pt, [
 			'period' => self::period_for( (array) $mine ),
@@ -305,7 +332,13 @@ class ECRM_Payouts {
 		if ( $status === 'paid' ) { self::back( 'locked' ); }
 
 		$ct = ECRM_DB::table( 'contracts' );
-		$wpdb->query( $wpdb->prepare( "UPDATE {$ct} SET payout_id = NULL WHERE payout_id = %d", $id ) );
+		// Μαζί με το payout_id φεύγει και το στιγμιότυπο: σύμβαση εκτός
+		// παρτίδας δεν έχει «ποσό με το οποίο μπήκε», και ένα ξεχασμένο ποσό θα
+		// εμφανιζόταν παγωμένο στην οθόνη ενώ η σύμβαση ξαναϋπολογίζεται.
+		$wpdb->query( $wpdb->prepare(
+			"UPDATE {$ct} SET payout_id = NULL, payout_amount = NULL WHERE payout_id = %d",
+			$id
+		) );
 		// Η ίδια συνθήκη στη διαγραφή: αν κάποιος την πλήρωσε ενδιάμεσα, μένει.
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$pt} WHERE id = %d AND status = 'pending'", $id ) );
 
@@ -326,6 +359,7 @@ class ECRM_Payouts {
 		$pr = ECRM_DB::table( 'providers' );
 		$rows = $wpdb->get_results( $wpdb->prepare(
 			"SELECT c.code, c.provider_id, c.program_id, c.energy_type, c.category, c.status,
+			        c.payout_amount,
 			        p.name AS provider_name, cu.first_name, cu.last_name, cu.company_name
 			 FROM {$ct} c
 			 LEFT JOIN {$cu} cu ON cu.id = c.customer_id
@@ -333,6 +367,10 @@ class ECRM_Payouts {
 			 WHERE c.payout_id = %d ORDER BY c.code", $id
 		), ARRAY_A );
 
+		// Το στιγμιότυπο, όχι ο σημερινός υπολογισμός. Αυτό εδώ είναι το χαρτί
+		// που κρατάει ο συνεργάτης: αν οι γραμμές του ξαναϋπολογίζονταν με
+		// κανόνες που άλλαξαν μετά, δεν θα έβγαζαν το σύνολο που τυπώνεται
+		// στην ίδια σελίδα.
 		$lines = [];
 		foreach ( $rows as $r ) {
 			$name = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
@@ -340,7 +378,7 @@ class ECRM_Payouts {
 				'code'     => $r['code'] ?: '—',
 				'customer' => $name ?: '—',
 				'provider' => $r['provider_name'] ?: '—',
-				'amount'   => self::amount( $r ),
+				'amount'   => self::settled_amount( $r ),
 			];
 		}
 		$u = get_userdata( (int) $b['partner_user_id'] );
