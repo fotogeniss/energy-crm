@@ -45,6 +45,18 @@ final class WordPressScopeResolver implements ScopeResolver
         return $this->memo[$userId] ??= $this->resolve($userId);
     }
 
+    /**
+     * @return list<int>
+     */
+    public function visibleUserIds(UserScope $scope): array
+    {
+        // Ο διαχειριστής δεν έχει «ομάδα»: έχει την εταιρεία. Η ιεραρχία
+        // περιγράφει ποιος κερδίζει προμήθεια, όχι ποιος επιτρέπεται να δει.
+        return $scope->isAdministrator()
+            ? $this->network->allUserIds()
+            : $scope->userIds();
+    }
+
     private function resolve(int $userId): UserScope
     {
         if (user_can($userId, 'manage_options')) {

@@ -54,6 +54,40 @@ final class UserScopeTest extends TestCase
         self::assertTrue($scope->includes(4242));
     }
 
+    /**
+     * Η παγίδα, δηλωμένη ως γεγονός αντί να ανακαλύπτεται.
+     *
+     * Ένα scope διαχειριστή λέει «περιλαμβάνει τους πάντες» ΚΑΙ «η λίστα μου
+     * είναι ένα άτομο». Και τα δύο σωστά: το `userIds()` απαντά «ποιος είναι ο
+     * δράστης», όχι «τι βλέπει».
+     *
+     * Διαβασμένο ως το δεύτερο, δίνει άδεια εξαγωγή και κενές ειδοποιήσεις —
+     * αποτυχία που δεν φωνάζει, γιατί λιγότερα δεδομένα δεν μοιάζουν με σφάλμα.
+     * Τρεις controllers το είχαν διαβάσει έτσι, και το πάτησα κι εγώ γράφοντας
+     * τη διόρθωση του ευρήματος 5.
+     *
+     * Όποιος χρειάζεται «τι βλέπει» ρωτά τον `ScopeResolver::visibleUserIds()`.
+     */
+    public function testAnAdministratorScopeStillListsOnlyTheActor(): void
+    {
+        $scope = UserScope::forAdministrator(1);
+
+        self::assertSame(
+            [1],
+            $scope->userIds(),
+            'Αν αυτό γίνει ποτέ «όλοι», ο ScopeResolver::visibleUserIds() και οι '
+            . 'έλεγχοι isAdministrator() στα αποθετήρια περισσεύουν — και το '
+            . 'AdministratorScopeIsNotATeamTest φυλάει κάτι που δεν ισχύει πια.'
+        );
+
+        self::assertTrue(
+            $scope->includes(4242),
+            'Ταυτόχρονα περιλαμβάνει τους πάντες. Η αντίφαση ΕΙΝΑΙ το σχέδιο: '
+            . 'το ScopeClause δεν εκπέμπει συνθήκη για διαχειριστή, οπότε δεν '
+            . 'χρειάζεται ποτέ τη λίστα.'
+        );
+    }
+
     public function testPlaceholdersMatchTheNumberOfIds(): void
     {
         $scope = UserScope::forTeam(7, [12, 15]);

@@ -236,8 +236,13 @@ final class ContractsBulkController implements Controller
             );
         }
 
-        $ids  = array_map(static fn (array $r): int => (int) $r['id'], $rows);
-        $data = ECRM_Export::contracts_dataset('', '', $ids, $scope->userIds());
+        $ids = array_map(static fn (array $r): int => (int) $r['id'], $rows);
+
+        // Τα $ids έχουν ήδη περάσει από reachableAmong(), οπότε το δεύτερο
+        // φίλτρο είναι ζώνη και τιράντες. Με $scope->userIds() όμως έσφιγγε
+        // λάθος: για διαχειριστή σημαίνει «μόνο εγώ», και η μαζική εξαγωγή
+        // επέστρεφε άδειο αρχείο για συμβάσεις που μόλις είχε επιλέξει.
+        $data = ECRM_Export::contracts_dataset('', '', $ids, $this->scopes->visibleUserIds($scope));
 
         return new WP_REST_Response([
             'ok'       => true,

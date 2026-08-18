@@ -421,16 +421,12 @@ class ECRM_DB {
 			return [];
 		}
 
-		$scope = \EnergyCRM\Services::scopeResolver()->forUser( $user_id );
+		$resolver = \EnergyCRM\Services::scopeResolver();
 
-		// Ο διαχειριστής είναι «χωρίς περιορισμό», και το userIds() του δίνει
-		// ΜΟΝΟ τον εαυτό του — δες UserScope::forAdministrator. Η επέκταση σε
-		// πραγματική λίστα γίνεται εδώ, όπως ακριβώς και στο
-		// TeamActivityRepository. Το ScopeClause δεν τη χρειάζεται, γιατί για
-		// διαχειριστή δεν εκπέμπει καθόλου συνθήκη.
-		return $scope->isAdministrator()
-			? \EnergyCRM\Services::network()->allUserIds()
-			: $scope->userIds();
+		// Η επέκταση του «χωρίς περιορισμό» σε πραγματική λίστα ζούσε εδώ για
+		// μισή μέρα. Έχει πλέον σπίτι στον resolver, μαζί με την εξήγηση γιατί
+		// το UserScope::userIds() δεν αρκεί.
+		return $resolver->visibleUserIds( $resolver->forUser( $user_id ) );
 	}
 
 
