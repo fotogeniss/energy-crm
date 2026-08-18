@@ -73,8 +73,24 @@ class ECRM_Payouts {
 		echo '<div class="wrap"><h1>Εκκαθαρίσεις Προμηθειών</h1>';
 		if ( isset( $_GET['ecrm_msg'] ) ) {
 			$m = sanitize_text_field( wp_unslash( $_GET['ecrm_msg'] ) );
-			$txt = [ 'created' => 'Δημιουργήθηκε εκκαθάριση.', 'paid' => 'Σημειώθηκε ως πληρωμένη.', 'deleted' => 'Διαγράφηκε.' ][ $m ] ?? 'Έγινε.';
-			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $txt ) . '</p></div>';
+			// Τα τρία τελευταία ΔΕΝ είναι επιτυχίες. Ένα «Έγινε.» σε πράσινο
+			// φόντο για κάτι που δεν έγινε είναι χειρότερο από καμία ένδειξη:
+			// ο διαχειριστής φεύγει πιστεύοντας ότι πλήρωσε.
+			$ok  = [
+				'created' => 'Δημιουργήθηκε εκκαθάριση.',
+				'paid'    => 'Σημειώθηκε ως πληρωμένη.',
+				'deleted' => 'Διαγράφηκε.',
+			];
+			$err = [
+				'empty'  => 'Καμία σύμβαση δεν εντάχθηκε: τις πρόλαβε άλλη εκκαθάριση ή δεν υπάρχουν ανεξόφλητες.',
+				'locked' => 'Πληρωμένη εκκαθάριση δεν διαγράφεται. Η διαγραφή θα την επέστρεφε στις ανεξόφλητες και θα την ξαναπλήρωνε η επόμενη.',
+				'noop'   => 'Δεν άλλαξε τίποτα: η εκκαθάριση δεν υπάρχει ή δεν ήταν σε εκκρεμότητα.',
+			];
+			if ( isset( $err[ $m ] ) ) {
+				echo '<div class="notice notice-error is-dismissible"><p>' . esc_html( $err[ $m ] ) . '</p></div>';
+			} else {
+				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $ok[ $m ] ?? 'Έγινε.' ) . '</p></div>';
+			}
 		}
 
 		// --- Owed table ---
@@ -129,16 +145,39 @@ class ECRM_Payouts {
 				echo '<input type="hidden" name="action" value="ecrm_pay_payout"><input type="hidden" name="id" value="' . (int) $b['id'] . '">';
 				echo '<button class="button button-small button-primary">Πληρώθηκε</button></form> ';
 			}
-			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline" onsubmit="return confirm(\'Διαγραφή εκκαθάρισης; Οι συμβάσεις θα επιστρέψουν στις ανεξόφλητες.\')">';
-			wp_nonce_field( 'ecrm_delete_payout' );
-			echo '<input type="hidden" name="action" value="ecrm_delete_payout"><input type="hidden" name="id" value="' . (int) $b['id'] . '">';
-			echo '<button class="button button-small button-link-delete">Διαγραφή</button></form>';
+			// Καμία διαγραφή σε πληρωμένη: η remove() το αρνείται ούτως ή άλλως,
+			// αλλά ένα κουμπί που δεν επιτρέπεται να πατηθεί δεν πρέπει να
+			// υπάρχει — ο έλεγχος στον server είναι το δίχτυ, όχι το μήνυμα.
+			if ( ! $paid ) {
+				echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline" onsubmit="return confirm(\'Διαγραφή εκκαθάρισης; Οι συμβάσεις θα επιστρέψουν στις ανεξόφλητες.\')">';
+				wp_nonce_field( 'ecrm_delete_payout' );
+				echo '<input type="hidden" name="action" value="ecrm_delete_payout"><input type="hidden" name="id" value="' . (int) $b['id'] . '">';
+				echo '<button class="button button-small button-link-delete">Διαγραφή</button></form>';
+			}
 			echo '</td></tr>';
 		}
 		echo '</tbody></table></div>';
 	}
 
 	// ---------------------------------------------------------------------
+	/**
+	 * Δημιουργία εκκαθάρισης.
+	 *
+	 * Η αξίωση των συμβάσεων γίνεται ΜΕΣΑ στο UPDATE, όχι με έλεγχο πριν από
+	 * αυτό. Το «διάβασε τις ανεξόφλητες, μετά σφράγισέ τες» άφηνε παράθυρο: δύο
+	 * κλικ στο ίδιο κουμπί — ή δύο διαχειριστές — διάβαζαν τις ΙΔΙΕΣ συμβάσεις,
+	 * περνούσαν και τα δύο INSERT, και προέκυπταν δύο παρτίδες με το ίδιο ποσό.
+	 * Το δεύτερο UPDATE έγραφε το payout_id του από πάνω, αλλά η πρώτη παρτίδα
+	 * παρέμενε στην οθόνη πληρώσιμη: ο συνεργάτης πληρωνόταν δύο φορές.
+	 *
+	 * Είναι το μοτίβο που ήδη προστατεύει την υπογραφή — δες
+	 * SignatureRepository::sign(). Εφαρμοζόταν εκεί που το ρίσκο είναι μία
+	 * υπογραφή και όχι εδώ, που το ρίσκο είναι χρήματα.
+	 *
+	 * Η σειρά είναι: παρτίδα πρώτα (χρειαζόμαστε το id για να σφραγίσουμε),
+	 * μετά η αξίωση, μετά τα σύνολα από ό,τι ΟΝΤΩΣ σφραγίστηκε. Μια παρτίδα που
+	 * δεν κέρδισε καμία σύμβαση διαγράφεται αντί να μείνει μηδενική.
+	 */
 	public static function create(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_create_payout' );
@@ -147,51 +186,128 @@ class ECRM_Payouts {
 		if ( ! $partner ) { self::back(); }
 
 		$rows = self::unsettled_rows( $partner );
-		if ( ! $rows ) { self::back( 'created' ); }
+		if ( ! $rows ) { self::back( 'empty' ); }
 
-		$ids = []; $total = 0.0;
-		foreach ( $rows as $r ) { $ids[] = (int) $r['id']; $total += self::amount( $r ); }
+		$ids = array_map( static fn( array $r ): int => (int) $r['id'], $rows );
+		$pt  = ECRM_DB::table( 'payouts' );
+		$ct  = ECRM_DB::table( 'contracts' );
 
-		$pt = ECRM_DB::table( 'payouts' );
 		$wpdb->insert( $pt, [
 			'partner_user_id' => $partner,
-			'period'          => gmdate( 'Y-m' ),
-			'cnt'             => count( $ids ),
-			'amount'          => round( $total, 2 ),
+			'period'          => '',
+			'cnt'             => 0,
+			'amount'          => 0,
 			'status'          => 'pending',
 			'created_by'      => get_current_user_id(),
 		] );
 		$payout_id = (int) $wpdb->insert_id;
+		if ( ! $payout_id ) { self::back(); }
 
-		if ( $payout_id && $ids ) {
-			$ct  = ECRM_DB::table( 'contracts' );
-			$in  = implode( ',', array_map( 'intval', $ids ) );
-			$wpdb->query( $wpdb->prepare( "UPDATE {$ct} SET payout_id = %d WHERE id IN ($in)", $payout_id ) );
+		$in = implode( ',', array_map( 'intval', $ids ) );
+		$claimed = $wpdb->query( $wpdb->prepare(
+			"UPDATE {$ct} SET payout_id = %d
+			 WHERE id IN ($in) AND ( payout_id IS NULL OR payout_id = 0 )",
+			$payout_id
+		) );
+
+		// Κάποιος πρόλαβε. Η άδεια παρτίδα φεύγει: μια εκκαθάριση με μηδέν
+		// συμβάσεις είναι γραμμή που κάποιος θα πατήσει «Πληρώθηκε».
+		if ( ! $claimed ) {
+			$wpdb->delete( $pt, [ 'id' => $payout_id ] );
+			self::back( 'empty' );
 		}
+
+		// Τα σύνολα από τις σφραγισμένες γραμμές, όχι από όσες διαβάστηκαν.
+		$mine = $wpdb->get_results( $wpdb->prepare(
+			"SELECT id, partner_user_id, provider_id, program_id, energy_type, category, status, updated_at
+			 FROM {$ct} WHERE payout_id = %d",
+			$payout_id
+		), ARRAY_A );
+
+		$total = 0.0;
+		foreach ( (array) $mine as $r ) { $total += self::amount( $r ); }
+
+		$wpdb->update( $pt, [
+			'period' => self::period_for( (array) $mine ),
+			'cnt'    => count( (array) $mine ),
+			'amount' => round( $total, 2 ),
+		], [ 'id' => $payout_id ] );
+
 		self::back( 'created' );
 	}
 
+	/**
+	 * Η περίοδος είναι ο μήνας που ΚΕΡΔΗΘΗΚΑΝ οι συμβάσεις, όχι ο μήνας που
+	 * πατήθηκε το κουμπί. Εκκαθάριση Αυγούστου που φτιάχνεται 1η Σεπτεμβρίου
+	 * γραφόταν 2026-09 και δεν συμφωνούσε με κανένα άλλο χαρτί.
+	 *
+	 * Ο πιο πρόσφατος μήνας της παρτίδας, γιατί μια παρτίδα μπορεί να πιάνει
+	 * παραπάνω από έναν και το «μέχρι πότε φτάνει» είναι η χρήσιμη απάντηση.
+	 *
+	 * @param list<array<string, mixed>> $rows
+	 */
+	private static function period_for( array $rows ): string {
+		$latest = '';
+		foreach ( $rows as $r ) {
+			$month = substr( (string) ( $r['updated_at'] ?? '' ), 0, 7 );
+			if ( $month !== '' && $month > $latest ) { $latest = $month; }
+		}
+		return $latest !== '' ? $latest : gmdate( 'Y-m' );
+	}
+
+	/**
+	 * Σήμανση ως πληρωμένη.
+	 *
+	 * Η συνθήκη είναι μέσα στο UPDATE για τον ίδιο λόγο που είναι και στη
+	 * create(): διπλό κλικ δεν πρέπει να ξαναγράψει το paid_at, και μια
+	 * ανύπαρκτη παρτίδα δεν πρέπει να απαντά «Σημειώθηκε ως πληρωμένη».
+	 */
 	public static function pay(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_pay_payout' );
 		global $wpdb;
 		$id = (int) ( $_POST['id'] ?? 0 );
-		if ( $id ) {
-			$wpdb->update( ECRM_DB::table( 'payouts' ), [ 'status' => 'paid', 'paid_at' => current_time( 'mysql', true ) ], [ 'id' => $id ] );
-		}
-		self::back( 'paid' );
+		if ( ! $id ) { self::back(); }
+
+		$pt = ECRM_DB::table( 'payouts' );
+		$affected = $wpdb->query( $wpdb->prepare(
+			"UPDATE {$pt} SET status = 'paid', paid_at = %s WHERE id = %d AND status = 'pending'",
+			current_time( 'mysql', true ),
+			$id
+		) );
+
+		self::back( $affected ? 'paid' : 'noop' );
 	}
 
+	/**
+	 * Ακύρωση παρτίδας — ΜΟΝΟ όσο εκκρεμεί.
+	 *
+	 * Δεν έλεγχε την κατάσταση. Μια πληρωμένη εκκαθάριση διαγραφόταν όπως κάθε
+	 * άλλη: οι συμβάσεις γύριζαν στις ανεξόφλητες, η επόμενη παρτίδα τις
+	 * ξαναπλήρωνε, και η απόδειξη ότι είχαν πληρωθεί έφευγε μαζί — ο πίνακας
+	 * payouts δεν έχει soft-delete και το events δεν καταγράφει εκκαθαρίσεις.
+	 *
+	 * Αν χρειαστεί ποτέ να αναιρεθεί πληρωμένη εκκαθάριση, αυτό είναι
+	 * αντιλογιστική εγγραφή και θέλει δικό της ίχνος, όχι DELETE.
+	 */
 	public static function remove(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_delete_payout' );
 		global $wpdb;
 		$id = (int) ( $_POST['id'] ?? 0 );
-		if ( $id ) {
-			$ct = ECRM_DB::table( 'contracts' );
-			$wpdb->query( $wpdb->prepare( "UPDATE {$ct} SET payout_id = NULL WHERE payout_id = %d", $id ) );
-			$wpdb->delete( ECRM_DB::table( 'payouts' ), [ 'id' => $id ] );
-		}
+		if ( ! $id ) { self::back(); }
+
+		$pt     = ECRM_DB::table( 'payouts' );
+		$status = $wpdb->get_var( $wpdb->prepare( "SELECT status FROM {$pt} WHERE id = %d", $id ) );
+
+		if ( $status === null ) { self::back( 'noop' ); }
+		if ( $status === 'paid' ) { self::back( 'locked' ); }
+
+		$ct = ECRM_DB::table( 'contracts' );
+		$wpdb->query( $wpdb->prepare( "UPDATE {$ct} SET payout_id = NULL WHERE payout_id = %d", $id ) );
+		// Η ίδια συνθήκη στη διαγραφή: αν κάποιος την πλήρωσε ενδιάμεσα, μένει.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$pt} WHERE id = %d AND status = 'pending'", $id ) );
+
 		self::back( 'deleted' );
 	}
 
