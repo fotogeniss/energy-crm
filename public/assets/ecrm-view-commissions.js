@@ -45,7 +45,17 @@ function commissionsHTML(d) {
 		'<div class="ecrm-payhero">' +
 		'<div class="ecrm-payhero__main"><div class="ecrm-payhero__eyebrow"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h15a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V6a2 2 0 012-2h11M17 13h.01"/></svg> ΣΥΝΟΛΙΚΑ ΕΣΟΔΑ · ' + range + '</div>' +
 		'<div class="ecrm-payhero__big">' + Number(d.total).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ' €</div>' +
-		'<div class="ecrm-payhero__sub">Από ' + months.length + ' εκκαθαρίσεις</div></div>' +
+		'<div class="ecrm-payhero__sub">Από ' + months.length + ' εκκαθαρίσεις</div>' +
+
+		/* Το σύνολο βγαίνει από όσες γραμμές επέστρεψε ο server, και ο server
+		   σταματά σε ένα όριο. Πάνω από αυτό το ποσό ΕΙΝΑΙ μικρότερο από το
+		   πραγματικό — και ένα λάθος ποσό χωρίς ένδειξη είναι χειρότερο από
+		   κανένα ποσό. */
+		(d.truncated
+			? '<div class="ecrm-payhero__warn">Μερικό: υπολογίστηκαν ' + esc(d.count) +
+			  ' από ' + esc(d.available) + ' συμβάσεις</div>'
+			: '') +
+		'</div>' +
 		'<div class="ecrm-payhero__side"><div class="ecrm-payhero__k">ΚΟΡΥΦΑΙΟΣ ΜΗΝΑΣ</div><div class="ecrm-payhero__v">' + esc(d.best_label || '—') + '</div>' +
 		'<div class="ecrm-payhero__k" style="margin-top:12px">ΣΕ ΑΝΑΜΟΝΗ</div><div class="ecrm-payhero__v">~' + Number(d.pending_est).toFixed(0) + ' €</div></div></div>' +
 

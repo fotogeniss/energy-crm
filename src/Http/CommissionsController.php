@@ -91,9 +91,16 @@ final class CommissionsController implements Controller
 
         $monthly = MonthlyTotals::from($entries);
 
+        // Το LIMIT της payable() δεν φαινόταν πουθενά: πάνω από αυτό, το σύνολο
+        // ευρώ έβγαινε μικρότερο χωρίς καμία ένδειξη. Τώρα η οθόνη ξέρει ότι
+        // κοιτάζει μέρος.
+        $available = $this->commissions->countPayable($scope, ECRM_DB::payable_statuses());
+
         return new WP_REST_Response([
             'ok'           => true,
             'rows'         => $rows,
+            'available'    => $available,
+            'truncated'    => $available > count($rows),
             'total'        => round($total, 2),
             'paid_total'   => round($paid, 2),
             'unpaid_total' => round($unpaid, 2),

@@ -22,6 +22,9 @@ use WP_REST_Response;
 
 final class ImportController implements Controller
 {
+    /** Πόσες γραμμές δέχεται μία εισαγωγή. Μεγαλύτερο αρχείο χωρίζεται. */
+    private const MAX_ROWS = 2000;
+
     public function routes(): void
     {
         $guard = Guards::needs(Capability::IMPORT_DATA);
@@ -41,6 +44,11 @@ final class ImportController implements Controller
                     'type'     => 'array',
                     'required' => true,
                     'minItems' => 1,
+                    // Κάθε γραμμή είναι ένα ερώτημα συν μια μετάβαση. Χωρίς όριο,
+                    // ένα αρχείο 20.000 γραμμών χτυπά το timeout της PHP με τις
+                    // μισές αλλαγές γραμμένες και χωρίς απάντηση — ο χρήστης δεν
+                    // μαθαίνει πού σταμάτησε και ξαναπατάει.
+                    'maxItems' => self::MAX_ROWS,
                 ],
                 'dry' => ['type' => 'boolean', 'default' => false],
             ],

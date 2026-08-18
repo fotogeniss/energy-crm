@@ -368,6 +368,10 @@
 .ecrm-payhero__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--amber-bright); }
 .ecrm-payhero__big { font-size: 46px; font-weight: 800; letter-spacing: -.02em; margin: 8px 0 4px; line-height: 1; }
 .ecrm-payhero__sub { font-size: 13px; color: var(--n300); }
+/* Προειδοποίηση ότι το ποσό είναι μερικό. Δεν είναι διακοσμητικό: χωρίς αυτό
+   το «ΣΥΝΟΛΙΚΑ ΕΣΟΔΑ» λέει ψέματα σιωπηλά όταν ξεπεραστεί το όριο.
+   Σε ΣΚΟΥΡΟ φόντο, οπότε --st-pending-on-dark: το --st-pending δίνει 3,87:1 εδώ. */
+.ecrm-payhero__warn { margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--st-pending-on-dark); }
 .ecrm-payhero__side { position: relative; text-align: right; border-left: 1px solid #ffffff1a; padding-left: 22px; }
 .ecrm-payhero__k { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--n400); }
 .ecrm-payhero__v { font-size: 20px; font-weight: 800; }
