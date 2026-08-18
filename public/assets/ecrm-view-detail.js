@@ -8,7 +8,7 @@
  * shared module. Both have exactly one caller, here, and a helper with one
  * user is not shared — it is misplaced. */
 
-import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, rejectedNote, toast, viewEl } from '@energy-crm/util';
 import { energyLabel, fmtDate, svgIcon, timeAgo } from '@energy-crm/format';
 import { go, openEdit } from '@energy-crm/navigate';
 
@@ -267,8 +267,20 @@ function renderDetail(view, d) {
 		fetch(api('/contracts/' + c.id + '/files'), { method: 'POST', headers: H(), body: fd })
 			.then(function (r) { return r.json(); })
 			.then(function (d) {
-				if (d && d.ok) { toast('Προστέθηκαν ' + d.saved + ' έγγραφα.'); openDetail(c.id); }
-				else { msg.textContent = (d && d.error) || 'Αποτυχία.'; msg.className = 'ecrm-docup__msg is-err'; b.disabled = false; }
+				if (!d || !d.ok) {
+					msg.textContent = (d && d.error) || 'Αποτυχία.'; msg.className = 'ecrm-docup__msg is-err'; b.disabled = false;
+					return;
+				}
+				// Όταν δεν μπήκε τίποτα δεν ξαναφορτώνουμε την καρτέλα: το ξαναχτίσιμο
+				// θα έσβηνε το μήνυμα, που είναι το μόνο χρήσιμο εδώ.
+				var note = rejectedNote(d.rejected);
+				if (!d.saved) {
+					msg.textContent = note || 'Δεν ανέβηκε κανένα αρχείο.';
+					msg.className = 'ecrm-docup__msg is-err'; b.disabled = false;
+					return;
+				}
+				toast('Προστέθηκαν ' + d.saved + ' έγγραφα.' + (note ? ' ' + note : ''), !note);
+				openDetail(c.id);
 			})
 			.catch(function () { msg.textContent = 'Σφάλμα δικτύου.'; msg.className = 'ecrm-docup__msg is-err'; b.disabled = false; });
 	});

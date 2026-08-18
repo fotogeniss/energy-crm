@@ -1,4 +1,4 @@
-import { api, esc, toast } from '@energy-crm/util';
+import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 
 /* Energy CRM — New Contract form behaviour.
  * Exposes window.ECRMForm.init(rootEl) so it can run standalone OR inside the
@@ -886,8 +886,17 @@ import { api, esc, toast } from '@energy-crm/util';
 			state.files.forEach(function (item) { fd.append('files[]', item.file); fd.append('kinds[]', item.kind); });
 			fetch(api('/contracts/' + state.contract_id + '/files'), { method: 'POST', headers: headers(false), body: fd })
 				.then(function (r) { return r.json(); })
-				.then(function (d) { if (d && d.ok && d.saved) { state.filesUploaded = true; toast('Αποθηκεύτηκαν ' + d.saved + ' έγγραφα στη σύμβαση.'); } })
-				.catch(function () {});
+				.then(function (d) {
+					if (!d || !d.ok) { return; }
+					var note = rejectedNote(d.rejected);
+					if (d.saved) {
+						state.filesUploaded = true;
+						toast('Αποθηκεύτηκαν ' + d.saved + ' έγγραφα στη σύμβαση.' + (note ? ' ' + note : ''), !note);
+					} else if (note) {
+						toast(note, false);
+					}
+				})
+				.catch(function () { toast('Τα έγγραφα δεν ανέβηκαν — σφάλμα δικτύου.', false); });
 		}
 
 		/*

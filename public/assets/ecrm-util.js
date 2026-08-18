@@ -107,6 +107,20 @@ export function root() {
  * Creates its own node on first use, so no view has to remember to render a
  * container it does not otherwise care about.
  */
+/*
+ * Τα αρχεία που δεν πέρασαν, σε μία πρόταση.
+ *
+ * Ο server στέλνει λόγο ανά αρχείο. Χωρίς αυτό ο συνεργάτης έβλεπε
+ * «Προστέθηκαν 0 έγγραφα» και δεν μάθαινε ποτέ γιατί.
+ */
+export function rejectedNote(list) {
+	if (!list || !list.length) { return ''; }
+	return list.map(function (r) {
+		var name = (r && r.filename) || 'Το αρχείο';
+		return name + ': ' + ((r && r.reason) || 'δεν έγινε δεκτό.');
+	}).join(' — ');
+}
+
 export function toast(msg, ok) {
 	var t = document.getElementById('ecrm-toast');
 
