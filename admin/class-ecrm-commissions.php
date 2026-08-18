@@ -28,23 +28,48 @@ class ECRM_Commissions {
 	/**
 	 * Best-matching commission amount for a contract row.
 	 *
+	 * Η απόφαση ζει πλέον στο EnergyCRM\Domain\Commission\RuleMatch: είναι
+	 * λογική που κρίνει χρήματα, και εκεί δηλώνεται σε tests αντί να την
+	 * εμπιστεύεται κανείς. Εδώ μένει μόνο το ερώτημα.
+	 *
 	 * @param array $c Row with provider_id, program_id, energy_type, category, status.
 	 */
 	public static function amount_for( array $c ): float {
-		global $wpdb;
-		$rt    = ECRM_DB::table( 'commission_rules' );
-		$rules = $wpdb->get_results( "SELECT * FROM {$rt} WHERE active = 1", ARRAY_A );
-		$best  = null; $best_score = -1;
+		return \EnergyCRM\Domain\Commission\RuleMatch::amountFor( self::active_rules(), $c );
+	}
 
-		foreach ( $rules as $r ) {
-			$score = 0;
-			if ( $r['provider_id'] ) { if ( (int) $r['provider_id'] !== (int) ( $c['provider_id'] ?? 0 ) ) { continue; } $score += 8; }
-			if ( $r['program_id'] )  { if ( (int) $r['program_id']  !== (int) ( $c['program_id'] ?? 0 ) )  { continue; } $score += 4; }
-			if ( $r['energy_type'] ) { if ( $r['energy_type'] !== ( $c['energy_type'] ?? '' ) ) { continue; } $score += 2; }
-			if ( $r['category'] )    { if ( $r['category'] !== ( $c['category'] ?? '' ) ) { continue; } $score += 1; }
-			if ( $score > $best_score ) { $best_score = $score; $best = $r; }
+	/**
+	 * Οι ενεργοί κανόνες, διαβασμένοι μία φορά ανά αίτημα.
+	 *
+	 * Η amount_for() καλείται μέσα σε βρόχους — CommissionsController δύο φορές
+	 * (πληρωτέες + αναμενόμενες, έως 2.000 γραμμές η καθεμιά), AnalyticsController
+	 * για τον πίνακα κατάταξης, ECRM_Payouts για κάθε ασυμψήφιστη — και μέχρι
+	 * τώρα έκανε το ΙΔΙΟ ερώτημα σε κάθε κλήση. Ένα άνοιγμα της οθόνης Προμήθειες
+	 * μπορούσε να στείλει 4.000 πανομοιότυπα SELECT. Είναι το ίδιο N+1 που το
+	 * βήμα 3 έβγαλε από το visible_user_ids().
+	 *
+	 * Το ORDER BY δεν είναι καλλωπισμός. Χωρίς αυτό, δύο κανόνες με την ίδια
+	 * ειδικότητα έδιναν αποτέλεσμα που εξαρτιόταν από τη σειρά που τύχαινε να
+	 * επιστρέψει η MySQL. Ο RuleMatch κρατά τον πρώτο σε ισοβαθμία, άρα εδώ
+	 * ορίζεται τι σημαίνει «πρώτος»: ο νεότερος κανόνας.
+	 *
+	 * Η στατική είναι ασφαλής επειδή οι δύο διαδρομές που γράφουν κανόνες —
+	 * save_rule() και delete_rule() — τελειώνουν σε redirect, οπότε δεν υπάρχει
+	 * αίτημα που να διαβάζει κανόνες αφού τους άλλαξε.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function active_rules(): array {
+		static $rules = null;
+
+		if ( $rules === null ) {
+			global $wpdb;
+			$rt    = ECRM_DB::table( 'commission_rules' );
+			$rows  = $wpdb->get_results( "SELECT * FROM {$rt} WHERE active = 1 ORDER BY id DESC", ARRAY_A );
+			$rules = is_array( $rows ) ? array_values( $rows ) : [];
 		}
-		return $best ? (float) $best['amount'] : 0.0;
+
+		return $rules;
 	}
 
 	// ---------------------------------------------------------------------
