@@ -209,7 +209,7 @@ class ECRM_Tracking {
 		}
 
 		$now = current_time( 'mysql' );
-		$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		$ip  = \EnergyCRM\Infrastructure\RequestIp::current();
 
 		// Persist the signature image (protected).
 		$sig_path = '';
