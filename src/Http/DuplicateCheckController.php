@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_DB;
+use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractQueries;
@@ -49,7 +50,7 @@ final class DuplicateCheckController implements Controller
 
     public function check(WP_REST_Request $request): WP_REST_Response
     {
-        $afm    = (string) preg_replace('/\D+/', '', (string) $request['afm']);
+        $afm    = ECRM_Validate::digits((string) $request['afm']);
         $supply = trim((string) $request['supply']);
 
         if (strlen($afm) < 9 && $supply === '') {
