@@ -43,6 +43,7 @@ final class CommissionRepository
             $wpdb->prepare(
                 "SELECT c.id, c.code, c.status, c.provider_id, c.program_id,
                         c.energy_type, c.category, c.updated_at, c.payout_id,
+                        c.payout_amount,
                         po.status AS payout_status,
                         p.name AS provider_name,
                         cu.first_name, cu.last_name, cu.company_name
