@@ -25,6 +25,7 @@ use ECRM_Validate;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\DocumentQueue;
@@ -42,6 +43,7 @@ final class ContractSaveController implements Controller
         private readonly CustomerRepository $customers,
         private readonly ContractLifecycle $lifecycle,
         private readonly DraftExitGate $draftExit,
+        private readonly CancellationGate $cancellation,
     ) {
     }
 
@@ -137,7 +139,7 @@ final class ContractSaveController implements Controller
         // the customer update would answer 409 having already changed the
         // customer's name. resolveCustomer() above only reads, so it is safe on
         // this side of the line — and the gate needs the id it resolves.
-        $refusal = $this->refuseStatusChange($params, $existing, $customerId, $scope, $customer);
+        $refusal = $this->refuseStatusChange($params, $existing, $contractId, $customerId, $scope, $customer);
 
         if ($refusal !== null) {
             return $refusal;
@@ -262,6 +264,7 @@ final class ContractSaveController implements Controller
     private function refuseStatusChange(
         array $params,
         ?array $existing,
+        int $contractId,
         int $customerId,
         UserScope $scope,
         array $customer,
@@ -311,6 +314,16 @@ final class ContractSaveController implements Controller
             if ($refusal !== null) {
                 return $refusal;
             }
+        }
+
+        // Η ίδια ερώτηση που κάνει ο ContractStatusController, με την ίδια
+        // απάντηση: σύμβαση που υπήρξε ενεργή δεν ακυρώνεται. Πριν τον γράφο,
+        // επειδή ο γράφος θα έλεγε «επιτρέπεται» για το Εκκρεμότητα →
+        // Ακυρώθηκε και θα προχωρούσαμε.
+        $wasActive = $this->cancellation->refusalOnMove($source, $target, $contractId);
+
+        if ($wasActive !== null) {
+            return new WP_REST_Response(['ok' => false, 'error' => $wasActive], 409);
         }
 
         if ($source->canMoveTo($target)) {

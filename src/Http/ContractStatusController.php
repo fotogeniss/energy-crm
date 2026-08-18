@@ -18,6 +18,7 @@ namespace EnergyCRM\Http;
 use ECRM_Docs;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\DraftExitGate;
@@ -34,6 +35,7 @@ final class ContractStatusController implements Controller
         private readonly FileRepository $files,
         private readonly ContractLifecycle $lifecycle,
         private readonly DraftExitGate $draftExit,
+        private readonly CancellationGate $cancellation,
     ) {
     }
 
@@ -98,6 +100,19 @@ final class ContractStatusController implements Controller
                     $source->allowedNext()
                 ),
             ], 409);
+        }
+
+        // Η ακύρωση σύμβασης που υπήρξε ενεργή. Ο γράφος από πάνω δεν το
+        // πιάνει: απαγορεύει μόνο το απευθείας Ενεργή → Ακυρώθηκε, ενώ η
+        // διαδρομή Ενεργή → Εκκρεμότητα → Ακυρώθηκε περνούσε. 409 και όχι 422,
+        // επειδή δεν λείπει κάτι που μπορεί να συμπληρωθεί: η μετάβαση δεν
+        // υπάρχει για αυτή τη σύμβαση.
+        $wasActive = $source === null
+            ? null
+            : $this->cancellation->refusalOnMove($source, $target, $id);
+
+        if ($wasActive !== null) {
+            return new WP_REST_Response(['ok' => false, 'error' => $wasActive], 409);
         }
 
         // The second door out of draft, and it has to ask what the save route

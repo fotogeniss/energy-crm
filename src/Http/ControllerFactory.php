@@ -53,12 +53,27 @@ final class ControllerFactory
         $queries   = Services::contractQueries();
         $details   = Services::contractDetails();
         $draftExit = Services::draftExitGate();
+        $cancel    = Services::cancellationGate();
 
         return [
             // Contracts — read, write, status, bulk, documents.
             new ContractsReadController($scope, $queries, $details, Services::events(), Services::files()),
-            new ContractSaveController($scope, Services::contracts(), Services::customers(), $lifecycle, $draftExit),
-            new ContractStatusController($scope, Services::contracts(), Services::files(), $lifecycle, $draftExit),
+            new ContractSaveController(
+                $scope,
+                Services::contracts(),
+                Services::customers(),
+                $lifecycle,
+                $draftExit,
+                $cancel
+            ),
+            new ContractStatusController(
+                $scope,
+                Services::contracts(),
+                Services::files(),
+                $lifecycle,
+                $draftExit,
+                $cancel
+            ),
             new ContractsBulkController($scope, Services::contracts(), Services::files(), $lifecycle),
             new ContractDocumentsController($scope, $details, Services::files(), Services::contractDocuments()),
             new DocumentsController($scope, Services::contracts(), Services::files()),
