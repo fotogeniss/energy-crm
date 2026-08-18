@@ -52,9 +52,17 @@ class ECRM_Export {
 			if ( $from !== '' ) { $where[] = 'c.created_at >= %s'; $params[] = $from . ' 00:00:00'; }
 			if ( $to !== '' )   { $where[] = 'c.created_at <= %s'; $params[] = $to . ' 23:59:59'; }
 			if ( $q !== '' ) {
-				$like    = '%' . $wpdb->esc_like( $q ) . '%';
-				$where[] = '( cu.first_name LIKE %s OR cu.last_name LIKE %s OR cu.company_name LIKE %s OR cu.afm LIKE %s OR c.supply_number LIKE %s OR c.code LIKE %s )';
+				$like = '%' . $wpdb->esc_like( $q ) . '%';
+				// Το ΑΦΜ ψάχνεται και ως στήλη και ως hash, όπως στη λίστα
+				// (ContractQueries::search). Η κρυπτογράφηση είναι τυχαιοποιημένη:
+				// η στήλη δεν ισούται ποτέ με τον εαυτό της, οπότε μόνο ολόκληρο
+				// ΑΦΜ βρίσκεται, μέσω του blind index. Χωρίς αυτό η εξαγωγή
+				// γύριζε άδεια ενώ η ίδια αναζήτηση στην οθόνη έβρισκε τη σύμβαση.
+				$where[] = '( cu.first_name LIKE %s OR cu.last_name LIKE %s OR cu.company_name LIKE %s'
+					. ' OR cu.afm LIKE %s OR c.supply_number LIKE %s OR c.code LIKE %s'
+					. ' OR cu.' . \EnergyCRM\Persistence\CustomerFields::INDEX_COLUMN . ' = %s )';
 				array_push( $params, $like, $like, $like, $like, $like, $like );
+				$params[] = \EnergyCRM\Persistence\CustomerFields::default()->index( $q );
 			}
 		}
 

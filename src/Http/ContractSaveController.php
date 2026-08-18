@@ -22,6 +22,7 @@ namespace EnergyCRM\Http;
 
 use ECRM_Audit;
 use ECRM_Validate;
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
@@ -49,6 +50,15 @@ final class ContractSaveController implements Controller
         register_rest_route(Router::NAMESPACE, '/contracts', [
             'methods'             => 'POST',
             'callback'            => [$this, 'save'],
+            // Ο φύλακας εδώ είναι το δάπεδο, όχι όλη η απόφαση. Η ίδια
+            // διαδρομή δημιουργεί σύμβαση, την επεξεργάζεται και τη
+            // μετακινεί, και αυτά είναι τρία διαφορετικά δικαιώματα. Ένα
+            // μόνο cap πάνω στη διαδρομή θα ζητούσε άδεια αλλαγής
+            // κατάστασης από κάποιον που απλώς διορθώνει ένα τηλέφωνο —
+            // ή, όπως ήταν ως τώρα, δεν θα ζητούσε τίποτα από κάποιον που
+            // οριστικοποιεί. Το κάθε δικαίωμα ελέγχεται εκεί που φαίνεται
+            // τι ζητά η αίτηση, όπως κάνει ήδη ο ContractsBulkController
+            // για τις τέσσερις μαζικές ενέργειές του.
             'permission_callback' => Guards::crmUser(),
             // Field-level shapes are declared where they are read; what matters
             // at the route is that the two ids are integers, because they are
@@ -69,6 +79,18 @@ final class ContractSaveController implements Controller
         // cannot see is indistinguishable from one that does not exist.
         $contractId = (int) $request['contract_id'];
         $existing   = null;
+
+        // Δημιουργία και επεξεργασία είναι δύο δικαιώματα, όχι ένα. Ποιο από
+        // τα δύο ζητά η αίτηση το λέει το contract_id, πριν διαβαστεί
+        // οτιδήποτε: id που δεν βρίσκεται είναι 404 παρακάτω, δεν γίνεται
+        // δημιουργία.
+        $refusal = $this->refuseWithout(
+            $contractId > 0 ? Capability::EDIT_CONTRACT : Capability::CREATE_CONTRACT
+        );
+
+        if ($refusal !== null) {
+            return $refusal;
+        }
 
         if ($contractId > 0) {
             $existing = $this->contracts->find($contractId, $scope);
@@ -272,6 +294,22 @@ final class ContractSaveController implements Controller
             return null;
         }
 
+        // Η μετακίνηση θέλει το δικό της δικαίωμα — το ίδιο που ζητά ο
+        // ContractStatusController για την ακριβώς ίδια πράξη. Ο έλεγχος
+        // μπαίνει πριν από τον γράφο: σε ποιον δεν επιτρέπεται να μετακινήσει
+        // καθόλου, δεν απαντάμε ποιες μεταβάσεις θα ήταν νόμιμες.
+        //
+        // Μόνο όταν η κατάσταση όντως αλλάζει. Η φόρμα ξαναστέλνει «draft» σε
+        // κάθε προσωρινή αποθήκευση προχείρου (ecrm-form.js: save('draft')),
+        // και αυτό είναι αποθήκευση πεδίων, όχι μετάβαση.
+        if ($target !== $source) {
+            $refusal = $this->refuseWithout(Capability::CHANGE_STATUS);
+
+            if ($refusal !== null) {
+                return $refusal;
+            }
+        }
+
         if ($source->canMoveTo($target)) {
             return $this->refuseMissingAfm(
                 $this->draftExit->refusalOnMove($source, $target, $customerId, $scope, $afm)
@@ -290,6 +328,25 @@ final class ContractSaveController implements Controller
                 $source->allowedNext()
             ),
         ], 409);
+    }
+
+    /**
+     * 403 όταν λείπει το δικαίωμα, αλλιώς null.
+     *
+     * Ίδιο μήνυμα με τον ContractsBulkController: για τον χρήστη είναι το ίδιο
+     * γεγονός, και δύο διατυπώσεις του ίδιου «δεν επιτρέπεται» διαβάζονται σαν
+     * δύο διαφορετικά προβλήματα.
+     */
+    private function refuseWithout(string $capability): ?WP_REST_Response
+    {
+        if (current_user_can($capability)) {
+            return null;
+        }
+
+        return new WP_REST_Response(
+            ['ok' => false, 'error' => 'Δεν έχεις δικαίωμα για αυτή την ενέργεια.'],
+            403
+        );
     }
 
     /**
