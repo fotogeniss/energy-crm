@@ -243,14 +243,17 @@ final class ContractSaveController implements Controller
      * touched: contractFrom() omits the column entirely, which is what makes an
      * ordinary field edit on a signed contract still work.
      *
-     * Two refusals, in this order. The graph decides whether the move exists at
-     * all, and answers 409. Only then does DraftExitGate ask whether this
-     * particular contract is ready to make it, and answers 422 — a legal move
-     * the contract is not ready for is a different thing from an illegal one,
-     * and the agent fixes them differently. The gate is a shared object rather
-     * than an `if` here because ContractStatusController can make the same
-     * moves; a rule enforced on one of two doors is the shape of the bug
-     * CHANGELOG (10) had just closed.
+     * Three refusals, in this order. First the capability, and 403: whether the
+     * caller may move a contract at all is not a question about this contract,
+     * so it is answered before anything is said about which moves exist. Then
+     * the graph decides whether the move exists, and answers 409. Only then
+     * does DraftExitGate ask whether this particular contract is ready to make
+     * it, and answers 422 — a legal move the contract is not ready for is a
+     * different thing from an illegal one, and the agent fixes them
+     * differently. The gate is a shared object rather than an `if` here because
+     * ContractStatusController can make the same moves; a rule enforced on one
+     * of two doors is the shape of the bug CHANGELOG (10) had just closed —
+     * and the capability was exactly that bug, on exactly those two doors.
      *
      * @param array<string, mixed>      $params
      * @param array<string, mixed>|null $existing
