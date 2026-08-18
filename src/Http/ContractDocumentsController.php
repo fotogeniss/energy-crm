@@ -166,7 +166,9 @@ final class ContractDocumentsController implements Controller
         if ($partner > 0 && $scope->includes($partner)) {
             $userIds = [$partner];
         } elseif ($request['scope'] === 'team') {
-            $userIds = $scope->userIds();
+            // Όχι $scope->userIds(): για διαχειριστή σημαίνει «μόνο εγώ», και η
+            // εξαγωγή «όλη η ομάδα» έβγαινε άδεια χωρίς κανένα μήνυμα.
+            $userIds = $this->scopes->visibleUserIds($scope);
         } else {
             $userIds = [$scope->actorId()];
         }

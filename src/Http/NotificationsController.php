@@ -67,7 +67,12 @@ final class NotificationsController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Απαιτείται σύνδεση.'], 401);
         }
 
-        $ids = $request['scope'] === 'team' ? $scope->userIds() : [$scope->actorId()];
+        // visibleUserIds() και όχι $scope->userIds(): για διαχειριστή το δεύτερο
+        // δίνει μόνο τον εαυτό του, οπότε το «ομάδα» επέστρεφε τις ειδοποιήσεις
+        // των δικών του συμβάσεων — συνήθως καμία.
+        $ids = $request['scope'] === 'team'
+            ? $this->scopes->visibleUserIds($scope)
+            : [$scope->actorId()];
 
         $data = ECRM_Notifications::followups_for($ids);
         $data['ok']        = true;
