@@ -103,19 +103,24 @@ final class HealthPage
 
         echo '</tbody></table>';
 
-        echo '<h2 style="margin-top:28px;">Τελευταία σφάλματα</h2>';
-        echo '<p>Δεν καταγράφεται περιεχόμενο αιτήματος. Ό,τι μοιάζει με ΑΦΜ, ΑΔΤ, '
+        echo '<h2 style="margin-top:28px;">Τελευταία τεχνικά σφάλματα</h2>';
+        echo '<p>Μόνο όσα <strong>φταίμε εμείς</strong>. Ό,τι μπορεί να διορθώσει ο χρήστης '
+            . '— λείπει ΑΦΜ, λείπει δικαιολογητικό, μη επιτρεπτή μετάβαση — του λέγεται '
+            . 'κατευθείαν στην οθόνη του και δεν καταγράφεται εδώ: δεν είναι βλάβη.</p>';
+        echo '<p>Όταν κάποιος αναφέρει <code>ECRM-XXXX</code>, βρες τον εδώ. '
+            . 'Δεν καταγράφεται περιεχόμενο αιτήματος, και ό,τι μοιάζει με ΑΦΜ, ΑΔΤ, '
             . 'τηλέφωνο, email ή IBAN αντικαθίσταται πριν αποθηκευτεί.</p>';
 
         if ($errors === []) {
             echo '<p><em>Κανένα καταγεγραμμένο σφάλμα.</em></p>';
         } else {
             echo '<table class="widefat striped"><thead><tr>'
-                . '<th>Πότε (UTC)</th><th>Τι</th><th>Πού</th><th>Διαδρομή</th><th>Φορές</th>'
+                . '<th>Κωδικός</th><th>Πότε (UTC)</th><th>Τι</th><th>Πού</th><th>Διαδρομή</th><th>Φορές</th>'
                 . '</tr></thead><tbody>';
 
             foreach ($errors as $e) {
                 echo '<tr>';
+                echo '<td><strong><code>' . esc_html((string) ($e['code'] ?? '—')) . '</code></strong></td>';
                 echo '<td style="white-space:nowrap">' . esc_html((string) ($e['at'] ?? '')) . '</td>';
                 echo '<td>' . esc_html((string) ($e['message'] ?? '')) . '</td>';
                 echo '<td><code>' . esc_html((string) ($e['where'] ?? '')) . '</code></td>';
@@ -161,7 +166,8 @@ final class HealthPage
 
         foreach (array_slice($errors, 0, 15) as $e) {
             $lines[] = sprintf(
-                '  %s  %s  [%s]  %s  x%d',
+                '  %s  %s  %s  [%s]  %s  x%d',
+                (string) ($e['code'] ?? '—'),
                 (string) ($e['at'] ?? ''),
                 (string) ($e['message'] ?? ''),
                 (string) ($e['where'] ?? ''),
