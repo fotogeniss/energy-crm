@@ -17,10 +17,13 @@ namespace EnergyCRM;
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Admin\FormCalibrator;
+use EnergyCRM\Admin\HealthPage;
 use EnergyCRM\Admin\PrivacyTools;
 use EnergyCRM\Http\ControllerFactory;
 use EnergyCRM\Http\Router;
 use EnergyCRM\Infrastructure\DocumentProtection;
+use EnergyCRM\Infrastructure\ErrorLog;
+use EnergyCRM\Infrastructure\HealthChecks;
 use EnergyCRM\Infrastructure\KeyFingerprint;
 use EnergyCRM\Infrastructure\PiiBackfill;
 use EnergyCRM\Infrastructure\Retention;
@@ -94,6 +97,9 @@ final class Plugin
         Installer::maybeUpgrade();
         Roles::maybeSync();
 
+        // Πρώτο απ' όλα: αν σκάσει κάτι παρακάτω, θέλουμε να έχει καταγραφεί.
+        (new ErrorLog())->register();
+
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
         (new DocumentProtection(Services::unprotectedDocuments()))->register();
@@ -127,6 +133,8 @@ final class Plugin
 
             // Tools → Export/Erase Personal Data. Admin-only, and admin-ajax
             // counts as admin, which is where WordPress actually runs them.
+            (new HealthPage(new HealthChecks(), new ErrorLog()))->register();
+
             (new PrivacyTools(
                 new PersonalDataExporter(),
                 new PersonalDataEraser(Services::files())
