@@ -43,6 +43,7 @@ use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\ContractTerm;
 use EnergyCRM\Domain\Contract\ExtraFields;
 use EnergyCRM\Domain\Customer\PostalAddress;
+use EnergyCRM\Infrastructure\RequestIp;
 
 final class ContractSaveMapping
 {
@@ -195,11 +196,10 @@ final class ContractSaveMapping
         // later save that simply didn't touch the checkbox.
         if (! empty($params['consent'])) {
             $contract['consent_at'] = current_time('mysql');
-            $contract['consent_ip'] = substr(
-                sanitize_text_field(wp_unslash((string) ($_SERVER['REMOTE_ADDR'] ?? ''))),
-                0,
-                64
-            );
+            // Όχι REMOTE_ADDR: πίσω από Cloudflare αυτό είναι το Cloudflare, και
+            // η απόδειξη συναίνεσης θα έδειχνε το ίδιο edge node για κάθε πελάτη.
+            // Δες Infrastructure\RequestIp.
+            $contract['consent_ip'] = RequestIp::current();
         }
 
         return $contract;

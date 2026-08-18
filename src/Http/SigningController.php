@@ -25,6 +25,7 @@ use ECRM_Files;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\DocumentQueue;
+use EnergyCRM\Infrastructure\RequestIp;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\SignatureRepository;
 use WP_REST_Request;
@@ -111,7 +112,7 @@ final class SigningController implements Controller
 
         $image = substr($image, 0, self::MAX_IMAGE_BYTES);
         $name  = (string) $request['name'];
-        $ip    = sanitize_text_field(wp_unslash((string) ($_SERVER['REMOTE_ADDR'] ?? '')));
+        $ip    = RequestIp::current();
 
         // Returns false when another request signed it first.
         if (! $this->signatures->sign($token, $name, $image, $ip)) {
@@ -125,7 +126,7 @@ final class SigningController implements Controller
             'message' => 'Υπεγράφη από πελάτη' . ($name !== '' ? ' (' . $name . ')' : ''),
             'extra'   => [
                 'signed_at' => current_time('mysql'),
-                'signed_ip' => substr($ip, 0, 64),
+                'signed_ip' => $ip,
             ],
             // The notices->signed() call below is the one that reaches the agent.
             'inapp'   => false,
