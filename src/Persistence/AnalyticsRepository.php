@@ -155,7 +155,8 @@ final class AnalyticsRepository
         $statuses          = implode(',', array_fill(0, count($payableStatuses), '%s'));
 
         return $this->rows(
-            "SELECT partner_user_id, provider_id, program_id, energy_type, category, status
+            "SELECT partner_user_id, provider_id, program_id, energy_type, category, status,
+                    payout_amount
              FROM %i WHERE status IN ({$statuses}){$clause} LIMIT " . max(1, $limit),
             [Tables::name(Tables::CONTRACTS), ...$payableStatuses, ...$params]
         );

@@ -18,6 +18,7 @@ use ECRM_Commissions;
 use ECRM_DB;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Commission\CommissionAmount;
 use EnergyCRM\Domain\Commission\MonthlyTotals;
 use EnergyCRM\Persistence\CommissionRepository;
 use WP_REST_Request;
@@ -61,7 +62,7 @@ final class CommissionsController implements Controller
         $unpaid  = 0.0;
 
         foreach ($this->commissions->payable($scope, ECRM_DB::payable_statuses()) as $row) {
-            $amount   = $this->amountOf($row);
+            $amount   = CommissionAmount::of($row, [ECRM_Commissions::class, 'amount_for']);
             $isPaid   = ($row['payout_status'] ?? '') === 'paid';
             $customer = $row['company_name']
                 ?: trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
@@ -114,28 +115,4 @@ final class CommissionsController implements Controller
         ], 200);
     }
 
-    /**
-     * Το ποσό μιας σύμβασης: το στιγμιότυπο αν έχει μπει σε παρτίδα, αλλιώς
-     * ζωντανός υπολογισμός.
-     *
-     * Ο ιδιοκτήτης αποφάσισε (18/08/2026) ότι η εκκαθάριση είναι στιγμιότυπο —
-     * ό,τι πληρώθηκε δεν αλλάζει αναδρομικά επειδή άλλαξε αργότερα κανόνας
-     * προμήθειας. Η οθόνη όμως υπολόγιζε πάντα ζωντανά, οπότε η απόφαση ζούσε
-     * στη βάση και ο συνεργάτης έβλεπε άλλο νούμερο από αυτό που εισέπραξε.
-     * Απόφαση που την τηρεί η μία από τις δύο πλευρές δεν είναι απόφαση.
-     *
-     * NULL σημαίνει «χωρίς στιγμιότυπο»: είτε δεν έχει μπει σε παρτίδα, είτε
-     * μπήκε πριν αρχίσει να κρατιέται (μετάβαση 0016). Και στις δύο περιπτώσεις
-     * ο ζωντανός υπολογισμός είναι η σωστή, και η σημερινή, απάντηση.
-     *
-     * @param array<string, mixed> $row
-     */
-    private function amountOf(array $row): float
-    {
-        $snapshot = $row['payout_amount'] ?? null;
-
-        return $snapshot === null
-            ? (float) ECRM_Commissions::amount_for($row)
-            : (float) $snapshot;
-    }
 }
