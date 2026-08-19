@@ -171,6 +171,41 @@
 	   αυτό ακριβώς ήταν το λάθος που διορθώνεται εδώ. */
 	--on-dark: #ffffff;
 
+	/* ---- Σημασιολογικό στρώμα — 19/08/2026 ------------------------------
+	 * Κάθε όνομα λέει ΔΟΥΛΕΙΑ, όχι σκαλί. Οι τιμές είναι ακριβώς αυτές που
+	 * ίσχυαν πριν, οπότε το commit δεν μπορεί να αλλάξει pixel — αυτό ήταν και
+	 * το κριτήριο επιτυχίας.
+	 *
+	 * Ο λόγος που χρειάστηκε: κάθε ωμό σκαλί έκανε δύο ή τρεις δουλειές μαζί.
+	 * Το --n900 ήταν ταυτόχρονα «το πιο σκούρο γράμμα» ΚΑΙ «σκούρο πάνελ μέσα
+	 * σε ανοιχτή σελίδα» (payhero, .ecrm-btn--dark, tooltip, μπάρα μαζικών).
+	 * Στο σκούρο θέμα τα δύο πάνε ΑΝΤΙΘΕΤΑ, και καμία αντιστροφή ράμπας δεν
+	 * το λύνει αυτό όσο είναι η ίδια τιμή. Τώρα είναι δύο ονόματα.
+	 *
+	 * Ό,τι έχει «-inverse» είναι σκούρο ΜΕΣΑ στο ανοιχτό θέμα, και στο σκούρο
+	 * δεν αντιστρέφεται — ανοίγει λίγο ή κρατά περίγραμμα. */
+	--surface-2: var(--n25);			/* ήσυχη επιφάνεια: hover γραμμής, κάρτα ΓΒ */
+	--surface-sunk: var(--n100);		/* βυθισμένο γέμισμα: chip μετρητή, κανάλι */
+	--surface-track: var(--n150);		/* κανάλι μπάρας προόδου */
+	--surface-inverse: var(--n900);		/* σκούρο πάνελ σε ανοιχτή σελίδα */
+	--surface-inverse-soft: var(--n800);	/* το ανοιχτό άκρο του ίδιου πάνελ */
+	--surface-inverse-deep: var(--n950);	/* το σκούρο άκρο του */
+	--line-card: var(--n150);		/* το περίγραμμα της κάρτας */
+	--line-mid: var(--n300);		/* πιο δυνατή γραμμή: χωρίσματα, chip */
+	--line-strong: var(--n400);		/* η πιο δυνατή: hover, ταινία lead */
+	--line-inverse: var(--n700);		/* γραμμή ΠΑΝΩ σε σκούρο πάνελ */
+	--fill-mute: var(--n300);		/* ανενεργή κουκκίδα / ταινία */
+	--fill-mute-strong: var(--n400);	/* ουδέτερη κουκκίδα με βάρος */
+	--faint: var(--n400);			/* αχνό κείμενο: σημειώσεις, άξονες */
+	--faint-2: var(--n300);			/* ακόμα πιο αχνό: chevron, × */
+	--muted-strong: var(--n600);		/* δεύτερο κείμενο με βάρος */
+	--accent-hover: var(--p500);		/* το accent σε hover */
+	--accent-deep: var(--p600);		/* γραμμή γραφήματος, κουκκίδα */
+	--accent-ink: var(--p700);		/* πράσινο ΚΕΙΜΕΝΟ σε ανοιχτό */
+	--accent-wash: var(--p50);		/* πλύση accent */
+	--accent-wash-2: var(--p100);		/* δεύτερη πλύση */
+	--accent-soft: var(--p200);		/* απαλό accent: ανενεργό, περίγραμμα */
+
 	--navy: var(--n900);
 	--navy-soft: var(--n700);
 	--amber: var(--p400);
@@ -252,13 +287,13 @@
 
 /* --- card --- */
 .ecrm-card {
-	background: var(--n0);
-	border: 1px solid var(--n150);
+	background: var(--surface);
+	border: 1px solid var(--line-card);
 	border-radius: var(--radius);
 	padding: 18px 20px;
 	box-shadow: 0 1px 2px rgba(16,24,40,.04);
 }
-.ecrm-card--ai { border-color: var(--p200); background: linear-gradient(180deg,var(--p50) 0%,var(--n0) 70%); }
+.ecrm-card--ai { border-color: var(--accent-soft); background: linear-gradient(180deg,var(--accent-wash) 0%,var(--surface) 70%); }
 
 .ecrm-step {
 	display: flex; align-items: center; gap: 10px;
@@ -281,8 +316,8 @@
 	font-weight: 700; color: var(--navy); transition: border-color .15s, box-shadow .15s, transform .1s;
 }
 .ecrm-provider img { max-width: 100%; max-height: 40px; object-fit: contain; }
-.ecrm-provider:hover { border-color: var(--n300); }
-.ecrm-provider.is-on { border-color: var(--p500); background: var(--p50); box-shadow: 0 0 0 3px var(--p100); }
+.ecrm-provider:hover { border-color: var(--line-mid); }
+.ecrm-provider.is-on { border-color: var(--accent-hover); background: var(--accent-wash); box-shadow: 0 0 0 3px var(--accent-wash-2); }
 
 /* --- rows / chips --- */
 .ecrm-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; flex-wrap: wrap; }
@@ -299,13 +334,13 @@
 	font-family: inherit; transition: all .14s;
 }
 .ecrm-chip:hover { border-color: var(--navy-soft); }
-.ecrm-chip.is-on { background: var(--p50); border-color: var(--p500); color: var(--p700); font-weight: 700; }
+.ecrm-chip.is-on { background: var(--accent-wash); border-color: var(--accent-hover); color: var(--accent-ink); font-weight: 700; }
 
 .ecrm-select {
 	flex: 1; min-width: 200px; height: 42px; padding: 0 12px;
 	border: 1.5px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--surface);
 }
-.ecrm-select:focus { outline: none; border-color: var(--p400); box-shadow: none; }
+.ecrm-select:focus { outline: none; border-color: var(--amber); box-shadow: none; }
 
 /* --- AI dropzone (signature element) --- */
 .ecrm-ai-lead { margin: -6px 0 14px; color: var(--muted); font-size: 13.5px; }
@@ -314,13 +349,13 @@
    (12) γιατί δεν ήταν ούτε κείμενο ούτε φόντο κουμπιού — ήταν διακεκομμένο
    περίγραμμα. Φάνηκε μόνο όταν αποδόθηκε η οθόνη. */
 .ecrm-drop {
-	border: 2px dashed var(--p300); border-radius: 14px; background: var(--p50);
+	border: 2px dashed var(--amber-bright); border-radius: 14px; background: var(--accent-wash);
 	padding: 34px 20px; text-align: center; cursor: pointer;
 	transition: background .18s, border-color .18s, box-shadow .18s;
 }
-.ecrm-drop:hover, .ecrm-drop:focus-visible { background: var(--p50); border-color: var(--p500); outline: none; }
-.ecrm-drop.is-drag { background: var(--p100); border-color: var(--p600); box-shadow: 0 0 0 4px rgba(22,194,23,.16) inset; }
-.ecrm-drop__icon { color: var(--p400); margin-bottom: 8px; line-height: 0; }
+.ecrm-drop:hover, .ecrm-drop:focus-visible { background: var(--accent-wash); border-color: var(--accent-hover); outline: none; }
+.ecrm-drop.is-drag { background: var(--accent-wash-2); border-color: var(--accent-deep); box-shadow: 0 0 0 4px rgba(22,194,23,.16) inset; }
+.ecrm-drop__icon { color: var(--amber); margin-bottom: 8px; line-height: 0; }
 .ecrm-i--drop { width: 30px; height: 30px; flex: 0 0 30px; vertical-align: 0; stroke-width: 1.6; }
 .ecrm-drop__title { font-weight: 700; color: var(--navy); font-size: 16px; }
 .ecrm-drop__hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
@@ -346,8 +381,8 @@
 }
 .ecrm-textarea { height: auto; padding: 10px 12px; resize: vertical; width: 100%; }
 /* Focus: μόνο πράσινο περίγραμμα, ΧΩΡΙΣ φωτοστέφανο — έτσι είναι στο φύλλο. */
-.ecrm-input:hover:not(:focus):not([readonly]), .ecrm-textarea:hover:not(:focus) { border-color: var(--n300); }
-.ecrm-input:focus, .ecrm-textarea:focus { outline: none; border-color: var(--p400); box-shadow: none; }
+.ecrm-input:hover:not(:focus):not([readonly]), .ecrm-textarea:hover:not(:focus) { border-color: var(--line-mid); }
+.ecrm-input:focus, .ecrm-textarea:focus { outline: none; border-color: var(--amber); box-shadow: none; }
 /* Σφάλμα: κόκκινο περίγραμμα και μήνυμα από κάτω. */
 .ecrm-input.is-err, .ecrm-textarea.is-err { border-color: var(--err); }
 .ecrm-input.is-err:focus, .ecrm-textarea.is-err:focus { border-color: var(--err); }
@@ -355,10 +390,10 @@
 /* Read-only: system-computed value, not a box to type into (e.g. the Orizon
    plan's fixed price) — visibly different so an agent doesn't hunt for why
    typing does nothing. */
-.ecrm-input[readonly] { background: var(--n50); color: var(--n500); cursor: default; }
+.ecrm-input[readonly] { background: var(--bg); color: var(--muted); cursor: default; }
 .ecrm-input[readonly]:focus { box-shadow: none; border-color: var(--line); }
 /* AI-filled pulse */
-.ecrm-field.is-ai .ecrm-input { background: var(--p50); border-color: var(--p400); animation: ecrm-pulse 1.6s ease; }
+.ecrm-field.is-ai .ecrm-input { background: var(--accent-wash); border-color: var(--amber); animation: ecrm-pulse 1.6s ease; }
 /* Ίδιο υπόλειμμα iris, στον παλμό του πεδίου που γέμισε το AI. */
 @keyframes ecrm-pulse { 0% { box-shadow: 0 0 0 0 rgba(22,194,23,.45); } 100% { box-shadow: 0 0 0 8px rgba(22,194,23,0); } }
 
@@ -459,11 +494,11 @@
 /* Στη μαύρη μπάρα μαζικών ενεργειών το λευκό κουτί ούρλιαζε. */
 .ecrm-bulkbar select.ecrm-input {
 	background-color: var(--chrome-2);
-	border-color: var(--n700);
+	border-color: var(--line-inverse);
 	color: var(--chrome-ink-hi);
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
-.ecrm-bulkbar select.ecrm-input:focus { border-color: var(--p400); }
+.ecrm-bulkbar select.ecrm-input:focus { border-color: var(--amber); }
 
 /* Κουτάκια επιλογής — ΚΥΚΛΙΚΑ, επιλογή του πελάτη 2026-08-17.
  *
@@ -482,23 +517,23 @@
 .ecrm input[type="checkbox"] {
 	appearance: none; -webkit-appearance: none;
 	margin: 0; width: 19px; height: 19px; flex: 0 0 19px;
-	border: 1.5px solid var(--n200); border-radius: 50%; background: var(--n0);
+	border: 1.5px solid var(--line); border-radius: 50%; background: var(--surface);
 	cursor: pointer; position: relative; vertical-align: middle;
 	transition: background .14s, border-color .14s;
 }
-.ecrm input[type="checkbox"]:hover { border-color: var(--n300); }
-.ecrm input[type="checkbox"]:checked { background: var(--p400); border-color: var(--p400); }
+.ecrm input[type="checkbox"]:hover { border-color: var(--line-mid); }
+.ecrm input[type="checkbox"]:checked { background: var(--amber); border-color: var(--amber); }
 .ecrm input[type="checkbox"]:checked::after {
 	content: ""; position: absolute; left: 6px; top: 3px; width: 4px; height: 8.5px;
 	border: solid var(--on-accent); border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
-.ecrm input[type="checkbox"]:indeterminate { background: var(--p400); border-color: var(--p400); }
+.ecrm input[type="checkbox"]:indeterminate { background: var(--amber); border-color: var(--amber); }
 .ecrm input[type="checkbox"]:indeterminate::after {
 	content: ""; position: absolute; left: 4px; top: 7.5px; width: 9px; height: 2px;
 	background: var(--on-accent); border: none; transform: none; border-radius: 1px;
 }
-.ecrm input[type="checkbox"]:focus-visible { outline: 2px solid var(--p400); outline-offset: 2px; }
-.ecrm input[type="checkbox"]:disabled { background: var(--n100); border-color: var(--n200); cursor: not-allowed; }
+.ecrm input[type="checkbox"]:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.ecrm input[type="checkbox"]:disabled { background: var(--surface-sunk); border-color: var(--line); cursor: not-allowed; }
 
 /* --- Το φίλτρο του εντύπου — 2026-08-17 -----------------------------------
  * Ό,τι δεν τυπώνεται στο έντυπο του παρόχου κρύβεται, ΔΕΝ σβήνεται: το
@@ -506,9 +541,9 @@
  * καμία αποθήκευση δεν χάνει δεδομένα. Το «Περισσότερα» τα φέρνει πίσω. */
 .ecrm-field.is-offform { display: none; }
 .ecrm-card.is-showall .ecrm-field.is-offform { display: flex; }
-.ecrm-card.is-showall .ecrm-field.is-offform .ecrm-field__label { color: var(--n500); }
+.ecrm-card.is-showall .ecrm-field.is-offform .ecrm-field__label { color: var(--muted); }
 .ecrm-card.is-showall .ecrm-field.is-offform .ecrm-field__label::after {
-	content: " · δεν τυπώνεται"; font-weight: 400; font-size: 11px; color: var(--n400);
+	content: " · δεν τυπώνεται"; font-weight: 400; font-size: 11px; color: var(--faint);
 }
 /* Κάρτα χωρίς τίποτα ορατό: ο τίτλος πάνω από το κενό είναι το ίδιο λάθος με
    την τερματική κατάσταση της (7) — φεύγει ολόκληρη. */
@@ -516,10 +551,10 @@
 
 .ecrm-more {
 	margin-top: 12px; border: none; background: none; padding: 4px 0;
-	font-family: inherit; font-size: 13px; font-weight: 600; color: var(--p600);
+	font-family: inherit; font-size: 13px; font-weight: 600; color: var(--accent-deep);
 	cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
 }
-.ecrm-more:hover { color: var(--p700); }
+.ecrm-more:hover { color: var(--accent-ink); }
 .ecrm-more[hidden] { display: none; }
 
 /* --- buttons --- */
@@ -532,26 +567,26 @@
 .ecrm-btn:disabled { opacity: .55; cursor: not-allowed; }
 /* Το box-shadow ήταν rgba(90,81,209) — το IRIS, η παλέτα που απορρίφθηκε
    στις 2026-08-17 (9). Είχε μείνει μέσα από τότε. */
-.ecrm-btn--ai { margin-top: 14px; background: var(--p400); color: var(--on-accent); box-shadow: none; }
+.ecrm-btn--ai { margin-top: 14px; background: var(--amber); color: var(--on-accent); box-shadow: none; }
 .ecrm-btn--ai:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.04); }
 .ecrm-btn--ai.is-loading { position: relative; color: transparent; }
 .ecrm-btn--ai.is-loading::after { content: ""; position: absolute; inset: 0; margin: auto; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.45); border-top-color: var(--on-accent); border-radius: 50%; animation: ecrm-spin .7s linear infinite; }
 @keyframes ecrm-spin { to { transform: rotate(360deg); } }
 /* Outline: λευκό με περίγραμμα. Στο hover σκουραίνει ΜΟΝΟ το περίγραμμα —
    το γέμισμα μένει λευκό, όπως στο φύλλο του πελάτη. */
-.ecrm-btn--ghost { background: var(--n0); border: 1px solid var(--n200); color: var(--n800); }
-.ecrm-btn--ghost:hover:not(:disabled) { border-color: var(--n300); }
-.ecrm-btn--ghost:disabled { color: var(--n300); border-color: var(--n100); opacity: 1; }
+.ecrm-btn--ghost { background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.ecrm-btn--ghost:hover:not(:disabled) { border-color: var(--line-mid); }
+.ecrm-btn--ghost:disabled { color: var(--faint-2); border-color: var(--line-soft); opacity: 1; }
 /* Primary: γεμάτο πράσινο με λευκά. Ήταν ανθρακί με λάιμ γράμματα — άλλαξε
    με το design system που έστειλε ο πελάτης, 2026-08-17. */
-.ecrm-btn--primary { background: var(--p400); color: var(--on-accent); }
-.ecrm-btn--primary:hover:not(:disabled) { background: var(--p500); }
-.ecrm-btn--primary:disabled { background: var(--p200); color: var(--on-accent); opacity: 1; }
+.ecrm-btn--primary { background: var(--amber); color: var(--on-accent); }
+.ecrm-btn--primary:hover:not(:disabled) { background: var(--accent-hover); }
+.ecrm-btn--primary:disabled { background: var(--accent-soft); color: var(--on-accent); opacity: 1; }
 
 /* Secondary: η μαύρη ενέργεια — το «Νέα Σύμβαση» της πάνω μπάρας. */
-.ecrm-btn--dark { background: var(--n900); color: var(--chrome-ink-hi); }
-.ecrm-btn--dark:hover:not(:disabled) { background: var(--n800); }
-.ecrm-btn--dark:disabled { background: var(--n400); color: var(--chrome-ink-hi); opacity: 1; }
+.ecrm-btn--dark { background: var(--surface-inverse); color: var(--chrome-ink-hi); }
+.ecrm-btn--dark:hover:not(:disabled) { background: var(--surface-inverse-soft); }
+.ecrm-btn--dark:disabled { background: var(--fill-mute-strong); color: var(--chrome-ink-hi); opacity: 1; }
 
 /* --- footer --- */
 .ecrm-foot {
@@ -592,11 +627,11 @@
 .ecrm-step__hint { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted); }
 
 /* sectioned form: subheaders + input addon */
-.ecrm-subhead { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--n400); margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--n150); }
+.ecrm-subhead { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--line-card); }
 .ecrm-input-wrap { display: flex; }
 .ecrm-input-wrap .ecrm-input { border-top-right-radius: 0; border-bottom-right-radius: 0; flex: 1; }
-.ecrm-input-btn { border: 1.5px solid var(--n200); border-left: none; background: var(--n50); border-radius: 0 10px 10px 0; padding: 0 14px; cursor: pointer; font-size: 14px; }
-.ecrm-input-btn:hover { background: var(--n150); }
+.ecrm-input-btn { border: 1.5px solid var(--line); border-left: none; background: var(--bg); border-radius: 0 10px 10px 0; padding: 0 14px; cursor: pointer; font-size: 14px; }
+.ecrm-input-btn:hover { background: var(--surface-track); }
 
 /* sync bars (PSS green "ίδια στοιχεία" toggles) */
 .ecrm-syncbar { display: flex; align-items: center; gap: 9px; background: var(--st-routed-bg); border: 1px solid var(--st-routed); color: var(--st-routed); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
@@ -606,7 +641,7 @@
    declaration beats the [hidden] attribute, so it has to be said explicitly —
    same reason as .ecrm-bell__badge[hidden] in ecrm-app.css. */
 .ecrm-grid[hidden] { display: none; }
-.ecrm-subhead .ecrm-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--n300); }
+.ecrm-subhead .ecrm-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--faint-2); }
 
 /* action banners (PDF / e-sign email / live link) */
 .ecrm-actbanners { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 18px; }
@@ -625,12 +660,12 @@
  *
  * Η ιεραρχία είναι και το νόημα: η εκτύπωση είναι η κύρια ενέργεια, η αποστολή
  * η δεύτερη, ο σύνδεσμος η σπάνια. */
-.ecrm-actbanner--primary { background: var(--p400); color: var(--on-accent); }
+.ecrm-actbanner--primary { background: var(--amber); color: var(--on-accent); }
 .ecrm-actbanner--primary .ecrm-actbanner__ic { background: rgba(255,255,255,.22); }
-.ecrm-actbanner--dark { background: var(--n900); color: var(--chrome-ink-hi); }
+.ecrm-actbanner--dark { background: var(--surface-inverse); color: var(--chrome-ink-hi); }
 .ecrm-actbanner--dark .ecrm-actbanner__ic { background: rgba(255,255,255,.14); }
-.ecrm-actbanner--outline { background: var(--n0); color: var(--ink); border: 1px solid var(--n200); }
-.ecrm-actbanner--outline .ecrm-actbanner__ic { background: var(--n100); }
+.ecrm-actbanner--outline { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.ecrm-actbanner--outline .ecrm-actbanner__ic { background: var(--surface-sunk); }
 
 /* --- Field validation feedback --- */
 .ecrm-input.is-invalid { border-color: var(--st-cancel) !important; box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
@@ -640,22 +675,22 @@
 .ecrm-fieldnote.is-warn { color: var(--st-pending); }
 
 /* GDPR consent */
-.ecrm-consent { display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--n600); margin-bottom:10px; max-width:680px; line-height:1.4; }
+.ecrm-consent { display:flex; align-items:flex-start; gap:8px; font-size:12px; color:var(--muted-strong); margin-bottom:10px; max-width:680px; line-height:1.4; }
 .ecrm-consent input { margin-top:2px; }
 
 /* --- KB required-documents panel --- */
 .ecrm-step__n--kb { background:var(--st-routed-bg); color:var(--st-routed); }
 .ecrm-kbdocs__body { display:flex; flex-direction:column; gap:8px; }
-.ecrm-kbdoc { border:1px solid var(--n150); border-radius:10px; padding:0; overflow:hidden; background:var(--n25); }
+.ecrm-kbdoc { border:1px solid var(--line-card); border-radius:10px; padding:0; overflow:hidden; background:var(--surface-2); }
 .ecrm-kbdoc > summary { cursor:pointer; padding:11px 14px; font-weight:600; font-size:14px; color:var(--ink); list-style:none; }
 .ecrm-kbdoc > summary::-webkit-details-marker { display:none; }
-.ecrm-kbdoc > summary::before { content:'▸ '; color:var(--n400); }
+.ecrm-kbdoc > summary::before { content:'▸ '; color:var(--faint); }
 .ecrm-kbdoc[open] > summary::before { content:'▾ '; }
-.ecrm-kbdoc__b { padding:2px 16px 14px; font-size:13.5px; color:var(--n700); line-height:1.6; border-top:1px solid var(--n100); }
-.ecrm-kbdoc__b h4 { margin:10px 0 4px; font-size:13px; color:var(--ink); background:var(--n100); display:inline-block; padding:2px 10px; border-radius:999px; }
+.ecrm-kbdoc__b { padding:2px 16px 14px; font-size:13.5px; color:var(--navy-soft); line-height:1.6; border-top:1px solid var(--line-soft); }
+.ecrm-kbdoc__b h4 { margin:10px 0 4px; font-size:13px; color:var(--ink); background:var(--surface-sunk); display:inline-block; padding:2px 10px; border-radius:999px; }
 .ecrm-kbdoc__b ol, .ecrm-kbdoc__b ul { padding-left:20px; margin:4px 0; }
 .ecrm-kbdoc__b table { border-collapse:collapse; margin:8px 0; font-size:12.5px; }
-.ecrm-kbdoc__b th, .ecrm-kbdoc__b td { border:1px solid var(--n200); padding:4px 8px; }
+.ecrm-kbdoc__b th, .ecrm-kbdoc__b td { border:1px solid var(--line); padding:4px 8px; }
 
 /* --- Duplicate warning --- */
 .ecrm-dupwarn { background:var(--st-pending-bg); border:1px solid var(--st-pending); border-radius:12px; padding:14px 16px; margin:4px 0 8px; }
