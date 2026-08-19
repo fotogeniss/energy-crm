@@ -164,8 +164,12 @@
 	 * ΜΙΑ εξαίρεση, και είναι γραμμένη δίπλα της: το .ecrm-tab2.is-on span
 	 * κάθεται σε --amber-bright (ανοιχτό πράσινο), όπου το λευκό δεν
 	 * διαβάζεται· εκεί μένει σκούρο ρητά. */
-	--on-accent: #ffffff;
-	--on-accent-light: #0b3d0c;   /* για τα λίγα σημεία πάνω σε ΑΝΟΙΧΤΟ πράσινο */
+	--on-accent: #0b3d0c;
+	/* Λευκό πάνω σε ΣΚΟΥΡΟ ή κορεσμένο φόντο: ανθρακί εικονίδιο σελίδας,
+	   κόκκινο badge, μοβ Viber, πράσινο --ok, avatar με υπολογισμένη απόχρωση.
+	   Ξεχωριστό από το --on-accent γιατί κάνει την ΑΝΤΙΘΕΤΗ δουλειά — και
+	   αυτό ακριβώς ήταν το λάθος που διορθώνεται εδώ. */
+	--on-dark: #ffffff;
 
 	--navy: var(--n900);
 	--navy-soft: var(--n700);
@@ -262,7 +266,7 @@
 }
 .ecrm-step__n {
 	width: 24px; height: 24px; flex: 0 0 24px; border-radius: 50%;
-	background: var(--ok); color: var(--on-accent);
+	background: var(--ok); color: var(--on-dark);
 	display: grid; place-items: center; font-size: 12px; font-weight: 800;
 }
 .ecrm-step__n--ai { background: var(--amber); color: var(--on-accent); width: auto; padding: 0 9px; border-radius: 999px; font-size: 11px; letter-spacing: .06em; }
@@ -364,7 +368,7 @@
  * χρώμα μεταλλίου. Ίδιο μέγεθος, ίδια στοίχιση, καμία έκπληξη στη γραμμή. */
 .ecrm-medal {
 	display: inline-grid; place-items: center; width: 22px; height: 22px;
-	border-radius: 50%; font-size: 11px; font-weight: 800; color: var(--on-accent);
+	border-radius: 50%; font-size: 11px; font-weight: 800; color: var(--on-dark);
 	font-variant-numeric: tabular-nums;
 }
 .ecrm-medal--1 { background: var(--medal-gold); }
