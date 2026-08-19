@@ -105,25 +105,40 @@ class ECRM_Notifications {
 		return [ 'rows' => $out, 'count' => count( $out ), 'stale' => $stale ];
 	}
 
-	/** Email the owner when a contract enters "pending" (εκκρεμότητα). */
-	public static function notify_status_change( int $contract_id, string $to, int $owner_id ): void {
+	/**
+	 * Email στον κάτοχο όταν η σύμβαση μπαίνει σε «Εκκρεμότητα».
+	 *
+	 * Ο κάτοχος βγαίνει από τη ΣΥΜΒΑΣΗ, όχι από παράμετρο. Ως τις 19/08/2026
+	 * τον δεχόταν απ' έξω, και ο `ContractLifecycle` της περνούσε το
+	 * `$options['user_id']` — τιμή που τρεις από τις πέντε πόρτες γεμίζουν με
+	 * τον **δράστη**. Δηλαδή όταν το back office έβαζε μια αίτηση σε
+	 * εκκρεμότητα, που είναι ο συνήθης τρόπος, το «⚠ Εκκρεμότητα» έφτανε στο
+	 * back office και ο συνεργάτης που έπρεπε να ενεργήσει δεν έπαιρνε τίποτα.
+	 *
+	 * Η ίδια τιμή δεν μπορεί να απαντά και «ποιος το έκανε» και «σε ποιον το
+	 * λέμε». Τώρα το γεγονός κρατά τον δράστη και η ειδοποίηση βρίσκει μόνη της
+	 * τον παραλήπτη, από το `partner_user_id` της ίδιας σύμβασης — μέσα στο
+	 * ερώτημα που έτσι κι αλλιώς γινόταν, χωρίς δεύτερο.
+	 */
+	public static function notify_status_change( int $contract_id, string $to ): void {
 		if ( $to !== 'pending' ) {
 			return;
 		}
 		if ( class_exists( 'ECRM_Admin' ) && ! ECRM_Admin::get( 'notify_email', '1' ) ) {
 			return;
 		}
-		$user = get_userdata( $owner_id );
-		if ( ! $user || ! is_email( $user->user_email ) ) {
-			return;
-		}
 		global $wpdb;
 		$ct  = ECRM_DB::table( 'contracts' );
 		$cu  = ECRM_DB::table( 'customers' );
 		$row = $wpdb->get_row( $wpdb->prepare(
-			"SELECT c.code, cu.first_name, cu.last_name, cu.company_name
+			"SELECT c.code, c.partner_user_id, cu.first_name, cu.last_name, cu.company_name
 			 FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id=c.customer_id WHERE c.id=%d", $contract_id
 		), ARRAY_A );
+
+		$user = $row ? get_userdata( (int) $row['partner_user_id'] ) : null;
+		if ( ! $user || ! is_email( $user->user_email ) ) {
+			return;
+		}
 		$name    = $row ? ( $row['company_name'] ?: trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) ) ) : '';
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' );
 		$subject = '⚠ Εκκρεμότητα: ' . ( $row['code'] ?? '' ) . ' - ' . $name;

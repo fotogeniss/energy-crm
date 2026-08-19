@@ -39,6 +39,7 @@ final class HealthChecks
             $this->encryption(),
             $this->documents(),
             $this->schema(),
+            $this->commissions(),
             $this->scheduled(),
             $this->platform()
         );
@@ -220,6 +221,43 @@ final class HealthChecks
                     static fn (Migration $m): string => $m->id(),
                     $pending
                 )) . '. Αν μένουν εκκρεμή, κάποιο αποτυγχάνει — δες το log.'),
+        ];
+    }
+
+    /**
+     * Υπάρχει έστω ένας κανόνας που να δίνει ποσό;
+     *
+     * Ο πιο αθόρυβος τρόπος να αποτύχει αυτό το σύστημα. Η
+     * `ECRM_Commissions::amount_for()` περνά κάθε σύμβαση από τον `RuleMatch`
+     * πάνω σε όσους κανόνες είναι `active = 1`. Με άδειο πίνακα κανένας δεν
+     * ταιριάζει και η απάντηση είναι **0** — για κάθε σύμβαση, κάθε συνεργάτη,
+     * κάθε εκκαθάριση.
+     *
+     * Και δεν φαίνεται πουθενά ως βλάβη. Η οθόνη Προμήθειες δείχνει 0,00 € σε
+     * κάθε γραμμή, η κατάταξη της ομάδας είναι όλο μηδενικά, η εκκαθάριση
+     * δημιουργείται κανονικά με `amount = 0` και η βεβαίωση τυπώνεται. Όλα
+     * δουλεύουν· απλώς δεν πληρώνεται κανείς.
+     *
+     * Ο έλεγχος γράφτηκε επειδή στις 18/08/2026 ο πίνακας ήταν **όντως άδειος**
+     * και οι δεκαεπτά υπόλοιποι έλεγχοι αυτής της οθόνης ήταν πράσινοι.
+     *
+     * @return list<array{group: string, label: string, ok: bool|null, detail: string}>
+     */
+    private function commissions(): array
+    {
+        global $wpdb;
+
+        $table = Tables::name(Tables::COMMISSION_RULES);
+
+        // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $active = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE active = 1', $table));
+
+        return [
+            self::row('Προμήθειες', 'Ενεργοί κανόνες', $active > 0, $active > 0
+                ? $active . ' ενεργοί. Οι υπολογισμοί έχουν πάνω σε τι να πέσουν.'
+                : 'ΚΑΝΕΝΑΣ. Κάθε προμήθεια υπολογίζεται 0 € — σε κάθε οθόνη, σε κάθε '
+                  . 'εκκαθάριση, σε κάθε βεβαίωση. Τίποτα δεν σπάει και κανείς δεν '
+                  . 'πληρώνεται. Πρόσθεσε κανόνες στη σελίδα «Προμήθειες».'),
         ];
     }
 

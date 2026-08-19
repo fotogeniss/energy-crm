@@ -32,6 +32,8 @@ declare(strict_types=1);
 namespace EnergyCRM\Infrastructure;
 
 use EnergyCRM\Access\NetworkPath;
+use EnergyCRM\Domain\Contract\ContractLifecycle;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\NotificationRepository;
@@ -41,11 +43,86 @@ final class ContractNotices
     /** A customer whose name we could not work out is still a customer. */
     private const FALLBACK_NAME = 'Ο πελάτης';
 
+    /**
+     * Οι καταστάσεις για τις οποίες χτυπά καμπανάκι, και γιατί μόνο αυτές.
+     *
+     * Δεν ειδοποιεί κάθε μετάβαση: μια αίτηση περνά από πρόχειρο, νέα,
+     * υπογραφή, επεξεργασία και δρομολόγηση χωρίς να χρειάζεται τίποτα από
+     * κανέναν, και ένα καμπανάκι σε κάθε βήμα είναι θόρυβος που μαθαίνει τον
+     * χρήστη να μην κοιτάζει.
+     *
+     * Αυτές οι δύο είναι διαφορετικές: η **εκκρεμότητα** ζητά ενέργεια από τον
+     * συνεργάτη — είναι η μόνη κατάσταση που σημαίνει «κάτι λείπει, κάποιος
+     * πρέπει να το φτιάξει» — και η **ακύρωση** τερματίζει τη δουλειά του. Και
+     * στις δύο, το να το μάθει αργά είναι το ίδιο κακό με το να μην το μάθει.
+     *
+     * @var array<string, string>
+     */
+    private const ANNOUNCED = [
+        'pending'   => 'Εκκρεμότητα',
+        'cancelled' => 'Ακυρώθηκε',
+    ];
+
     public function __construct(
         private readonly ContractDetails $details,
         private readonly NotificationRepository $notifications,
         private readonly NetworkRepository $network,
     ) {
+    }
+
+    /**
+     * Ακούει τον κύκλο ζωής, αντί να τον καλεί εκείνος.
+     *
+     * Ο `ContractLifecycle` ζει στο `Domain` και δεν ξέρει ότι υπάρχει
+     * ειδοποίηση — όπως δεν ξέρει ούτε ότι υπάρχει χρονοπρογραμματιστής. Ο
+     * `AutoProcess` συνδέεται στο ίδιο σημείο για τον ίδιο λόγο.
+     */
+    public function register(): void
+    {
+        add_action(ContractLifecycle::STATUS_CHANGED, [$this, 'statusChanged'], 10, 2);
+    }
+
+    /**
+     * Η σύμβαση μπήκε σε κατάσταση που ο συνεργάτης πρέπει να μάθει.
+     *
+     * Ως τις 19/08/2026 δεν υπήρχε τίποτα εδώ, και η συνέπεια μετρήθηκε: το
+     * καμπανάκι κάλυπτε μόνο «ο πελάτης ανέβασε έγγραφο» και «ο πελάτης
+     * υπέγραψε», το email της εκκρεμότητας πήγαινε σε λάθος άνθρωπο (δες
+     * `ECRM_Notifications::notify_status_change()`), και η ημερήσια περίληψη
+     * στέλνει μόνο για ό,τι έχει μείνει ακίνητο **πέντε μέρες** — ενώ η ίδια η
+     * αλλαγή κατάστασης μόλις ανανέωσε το `updated_at`. Δηλαδή ο συνεργάτης
+     * μάθαινε ότι η αίτησή του ζητά ενέργεια στην καλύτερη περίπτωση πέντε
+     * μέρες αργότερα.
+     *
+     * Ο δράστης δεν εξαιρείται από τους παραλήπτες, και δεν είναι παράλειψη: το
+     * `ecrm_contract_status_changed` δίνει σύμβαση, νέα και παλιά κατάσταση —
+     * **όχι** ποιος ενήργησε. Θα ήταν σωστό να μην ειδοποιείται κάποιος για
+     * κάτι που μόλις έκανε ο ίδιος, αλλά για να γίνει αυτό πρέπει ο δράστης να
+     * περάσει μέσα από το ίδιο το γεγονός, που είναι αλλαγή στον κύκλο ζωής και
+     * όχι εδώ. Ως τότε, ένα περιττό καμπανάκι είναι φθηνότερο από ένα που
+     * λείπει — ο συνεργάτης που ακυρώνει μόνος του τη δική του αίτηση το βλέπει
+     * δύο φορές, ο προϊστάμενός του μία, και κανείς δεν το χάνει.
+     */
+    public function statusChanged(int $contractId, string $to): void
+    {
+        $label = self::ANNOUNCED[$to] ?? null;
+
+        if ($label === null) {
+            return;
+        }
+
+        $row = $this->details->noticeSubject($contractId);
+
+        if ($row === null) {
+            return;
+        }
+
+        $status = ContractStatus::tryFromSlug($to);
+        $title  = ($status?->label() ?? $label) . ' — ' . (string) ($row['code'] ?? '');
+        $body   = $this->customerName($row) . ': η αίτηση '
+            . ($to === 'cancelled' ? 'ακυρώθηκε.' : 'χρειάζεται ενέργεια.');
+
+        $this->tell($row, 'status', $title, $body, $contractId);
     }
 
     /** The customer attached a supporting document through their link. */

@@ -140,7 +140,7 @@ final class ContractLifecycle
     private function announce(int $contractId, string $to, string $from, array $options): void
     {
         if (($options['inapp'] ?? true) && class_exists(ECRM_Notifications::class)) {
-            ECRM_Notifications::notify_status_change($contractId, $to, (int) ($options['user_id'] ?? 0));
+            ECRM_Notifications::notify_status_change($contractId, $to);
         }
 
         if (($options['sms'] ?? true) && class_exists(ECRM_Messaging::class)) {

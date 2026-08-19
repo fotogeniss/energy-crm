@@ -70,6 +70,32 @@ final class TeamRepository
         $this->setDisabled($userId, true);
     }
 
+    /**
+     * Δίνει τα παιδιά ενός μέλους στον δικό του προϊστάμενο.
+     *
+     * Χωρίς αυτό, η αφαίρεση ενός μεσαίου ανθρώπου έβγαζε από το δέντρο και
+     * όλους από κάτω του: τα παιδιά κρατούσαν `ecrm_parent` προς αυτόν, εκείνος
+     * γινόταν ρίζα, και ολόκληρο το υποδέντρο έπαυε να φαίνεται στην εταιρεία.
+     * Αφαιρείς έναν και χάνεις πέντε.
+     *
+     * Τα materialized paths δεν ενημερώνονται εδώ: το `NetworkSync` ακούει το
+     * `updated_user_meta` και τα ξαναχτίζει μόνο του. Ένα χτίσιμο εδώ θα ήταν
+     * δεύτερο σημείο που πρέπει να θυμάται ο επόμενος.
+     *
+     * @return int Πόσα μέλη μετακινήθηκαν.
+     */
+    public function reparentChildren(int $fromUserId, int $toUserId): int
+    {
+        $moved = 0;
+
+        foreach ($this->directReportsOf($fromUserId) as $child) {
+            update_user_meta((int) $child->ID, self::PARENT_META, $toUserId);
+            $moved++;
+        }
+
+        return $moved;
+    }
+
     public function attach(int $userId, int $managerId): void
     {
         update_user_meta($userId, self::PARENT_META, $managerId);

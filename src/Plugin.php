@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM;
 
+use EnergyCRM\Access\DisabledAccounts;
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Admin\FormCalibrator;
@@ -100,6 +101,10 @@ final class Plugin
         // Πρώτο απ' όλα: αν σκάσει κάτι παρακάτω, θέλουμε να έχει καταγραφεί.
         (new ErrorLog())->register();
 
+        // Πριν από οτιδήποτε αγγίζει δικαιώματα: όσο ο λογαριασμός είναι
+        // απενεργοποιημένος, κανένα ecrm_* δικαίωμα δεν ισχύει πουθενά.
+        (new DisabledAccounts(Services::team()))->register();
+
         (new NetworkSync(Services::network()))->register();
         (new Retention(Services::contracts()))->register();
         (new DocumentProtection(Services::unprotectedDocuments()))->register();
@@ -123,6 +128,11 @@ final class Plugin
         // Signed contracts advance themselves after a delay: a one-off event per
         // signature, plus a sweep that heals a missed one.
         Services::autoProcess()->register();
+
+        // Το καμπανάκι για τις καταστάσεις που ζητούν ενέργεια. Συνδέεται στο
+        // ίδιο σημείο με τον AutoProcess, ώστε ο κύκλος ζωής να μη χρειάζεται
+        // να ξέρει ότι υπάρχουν ειδοποιήσεις.
+        Services::contractNotices()->register();
 
         // The PDF builder listens for its own scheduled events; without this
         // the queue fills and nothing ever drains it.

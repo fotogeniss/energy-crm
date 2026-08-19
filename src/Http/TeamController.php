@@ -16,6 +16,7 @@ namespace EnergyCRM\Http;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\TeamRepository;
 use WP_Error;
 use WP_REST_Request;
@@ -27,6 +28,7 @@ final class TeamController implements Controller
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly TeamRepository $team,
+        private readonly ContractRepository $contracts,
     ) {
     }
 
@@ -184,9 +186,26 @@ final class TeamController implements Controller
         }
 
         if ($request['op'] === 'remove') {
+            // Πρώτα φεύγει η δουλειά του, μετά ο ίδιος. Ανάποδη σειρά και το
+            // `detach()` θα τον είχε ήδη βγάλει από το scope, οπότε η μεταφορά
+            // δεν θα έβρισκε τίποτα να μετακινήσει.
+            //
+            // Και τα δύο πάνε στον από πάνω του, που είναι αυτός που κάνει την
+            // ενέργεια: οι συμβάσεις γιατί είναι πελάτες της εταιρείας και όχι
+            // δικοί του, τα παιδιά του γιατί αλλιώς βγαίνει ολόκληρο το
+            // υποδέντρο από το δέντρο μαζί του.
+            $scope     = $this->scopes->forCurrentUser();
+            $contracts = $this->contracts->handOver($member, $actor, $scope);
+            $members   = $this->team->reparentChildren($member, $actor);
+
             $this->team->detach($member);
 
-            return new WP_REST_Response(['ok' => true, 'removed' => true], 200);
+            return new WP_REST_Response([
+                'ok'        => true,
+                'removed'   => true,
+                'contracts' => $contracts,
+                'members'   => $members,
+            ], 200);
         }
 
         $wasDisabled = $this->team->isDisabled($member);
