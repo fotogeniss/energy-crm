@@ -17,6 +17,7 @@ namespace EnergyCRM\Http;
 use ECRM_Commissions;
 use ECRM_DB;
 use EnergyCRM\Access\Capability;
+use EnergyCRM\Domain\Commission\CommissionAmount;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Analytics\Funnel;
@@ -136,7 +137,17 @@ final class AnalyticsController implements Controller
 
             $totals[$partner] ??= ['count' => 0, 'amount' => 0.0];
             $totals[$partner]['count']++;
-            $totals[$partner]['amount'] += (float) ECRM_Commissions::amount_for($row);
+
+            // Το ίδιο ερώτημα που κάνουν η οθόνη Προμήθειες και η βεβαίωση:
+            // ό,τι έχει σφραγιστεί σε παρτίδα μετράει με το ποσό που
+            // πληρώθηκε. Η κατάταξη υπολόγιζε ζωντανά, οπότε μια αλλαγή
+            // κανόνα μετά από εκκαθάριση την έκανε να διαφωνεί μόνιμα με τις
+            // άλλες δύο — και η κατάταξη είναι το σημείο όπου οι άνθρωποι
+            // συγκρίνονται μεταξύ τους.
+            $totals[$partner]['amount'] += CommissionAmount::of(
+                $row,
+                [ECRM_Commissions::class, 'amount_for']
+            );
         }
 
         uasort($totals, static fn (array $a, array $b): int => $b['amount'] <=> $a['amount']);

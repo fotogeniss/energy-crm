@@ -58,14 +58,17 @@ class ECRM_Payouts {
 	/**
 	 * Το ποσό με το οποίο μπήκε η σύμβαση στην παρτίδα της.
 	 *
-	 * NULL σημαίνει «χωρίς στιγμιότυπο» — γραμμή σφραγισμένη πριν αρχίσει να
-	 * κρατιέται (μετάβαση 0016). Τότε μένει ο ζωντανός υπολογισμός, που είναι
-	 * ό,τι έδειχνε ούτως ή άλλως.
+	 * Ο κανόνας ζει στην `Domain\Commission\CommissionAmount`, που τον ρωτούν
+	 * και οι τέσσερις που μετρούν λεφτά. Εδώ μένει μόνο το ποιος κάνει τον
+	 * ζωντανό υπολογισμό όταν δεν υπάρχει στιγμιότυπο.
 	 *
 	 * @param array<string, mixed> $r
 	 */
 	private static function settled_amount( array $r ): float {
-		return isset( $r['payout_amount'] ) ? (float) $r['payout_amount'] : self::amount( $r );
+		return \EnergyCRM\Domain\Commission\CommissionAmount::of(
+			$r,
+			static fn( array $row ): float => self::amount( $row )
+		);
 	}
 
 	// ---------------------------------------------------------------------
