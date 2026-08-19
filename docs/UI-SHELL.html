@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — το κέλυφος: ανοιχτό και σκούρο</title>
+<style>
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-greek-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-latin-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122}
+
+/* ---------- το ίδιο ΑΚΡΙΒΩΣ markup, δύο σύνολα τιμών ---------- */
+.t{
+ --chrome:#171715; --chrome-2:#1f1f1c; --chrome-line:#ffffff14;
+ --chrome-ink:#a8a69f; --chrome-ink-hi:#ffffff; --chrome-ink-dim:#ffffff4d;
+ --accent:#16c217; --accent-hover:#12a413; --on-accent:#0b3d0c; --radius:10px;
+}
+.t-light{
+ --bg:#f8f8f6; --surface:#ffffff; --surface-2:#fdfdfc; --surface-sunk:#f1f1ee; --surface-track:#e9e8e4;
+ --line-soft:#f1f1ee; --line-card:#e9e8e4; --line:#dedcd7; --line-mid:#c6c4bd; --line-strong:#a3a099;
+ --ink:#2a2926; --navy:#1a1a18; --navy-soft:#42413d;
+ --muted:#6e6c66; --muted-strong:#5c5a55; --faint:#83817a;
+ --accent-ink:#0b690c; --accent-wash:#eafaea; --accent-soft:#a5eba7;
+ --st-draft:#6a6d75;--st-draft-bg:#f0f1f3; --st-new:#0072b7;--st-new-bg:#ecf2fc;
+ --st-psig:#0062a8;--st-psig-bg:#ebf0fb; --st-signed:#00468a;--st-signed-bg:#e8ebf7;
+ --st-pending:#ab5506;--st-pending-bg:#fcf2ec; --st-routed:#006926;--st-routed-bg:#e6f4e7;
+ --st-active:#00531e;--st-active-bg:#e3f0e4; --st-cancel:#c32b47;--st-cancel-bg:#fdeaea;
+}
+.t-dark{
+ --bg:#111110; --surface:#1a1a18; --surface-2:#1f1f1c; --surface-sunk:#232320; --surface-track:#2a2926;
+ --line-soft:#232320; --line-card:#2a2926; --line:#33322e; --line-mid:#3d3c37; --line-strong:#4d4b45;
+ --ink:#f1f1ee; --navy:#f8f8f6; --navy-soft:#dedcd7;
+ --muted:#a3a099; --muted-strong:#c6c4bd; --faint:#8a887f;
+ --accent-ink:#6bdd6d; --accent-wash:#12240f; --accent-soft:#1e4a21;
+ --st-draft:#9fa0a3;--st-draft-bg:#343536; --st-new:#79afec;--st-new-bg:#2e353f;
+ --st-psig:#8db8f7;--st-psig-bg:#2f3540; --st-signed:#b9cbff;--st-signed-bg:#31343f;
+ --st-pending:#ffb682;--st-pending-bg:#3f322a; --st-routed:#8cc792;--st-routed-bg:#2c382d;
+ --st-active:#a3d9a9;--st-active-bg:#2c382d; --st-cancel:#fb8a91;--st-cancel-bg:#423030;
+}
+.t-cool{ --bg:#0f1218; --surface:#171b24; --surface-2:#1e2430; --surface-sunk:#222836;
+ --line-card:#2a3140; --line:#333c4d; --line-mid:#3e4859; --chrome:#12161f; --chrome-2:#181d28; }
+
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;
+ font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:29px;font-weight:800;letter-spacing:-.025em;margin:0 0 6px;color:#1a1a18}
+h2{font-size:20px;font-weight:800;letter-spacing:-.015em;margin:0 0 6px;color:#1a1a18}
+h3{font-size:12px;font-weight:800;margin:20px 0 8px;color:#6e6c66;letter-spacing:.07em;text-transform:uppercase}
+p{margin:0 0 12px;font-size:14.5px}
+.lead{color:#5c5a55;font-size:15.5px;margin-bottom:24px}
+section{background:#fff;border:1px solid #dedcd7;border-radius:12px;padding:22px 24px;margin-bottom:18px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+ color:#83817a;margin-bottom:8px}
+.cap{font-size:12.5px;color:#5c5a55;margin:6px 0 16px}
+.callout{border-left:3px solid #16c217;padding:2px 0 2px 14px;margin:14px 0}
+.callout.bad{border-left-color:#c32b47}
+.callout p{margin:0;font-size:13.5px}
+table.data{border-collapse:collapse;width:100%;font-size:12.5px;margin:8px 0}
+table.data th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+ color:#83817a;padding:0 10px 7px 0;border-bottom:1px solid #e9e8e4;white-space:nowrap}
+table.data td{padding:5px 10px 5px 0;border-bottom:1px solid #f1f1ee}
+table.data td.n{text-align:right;font-variant-numeric:tabular-nums}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:#42413d}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:6px;
+ border:1px solid rgba(0,0,0,.15)}
+.yes{color:#0b690c;font-weight:700}.no{color:#c32b47;font-weight:800}
+.zero{background:#eafaea;border:1px solid #a5eba7;border-radius:9px;padding:12px 15px;margin:12px 0;font-size:13.5px}
+footer{font-size:12.5px;color:#5c5a55;text-align:center;margin-top:26px}
+.lbl{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#83817a;margin:18px 0 7px}
+
+/* ================= ΤΟ ΚΕΛΥΦΟΣ — δομή του ζωντανού app ================= */
+.app{display:flex;border-radius:14px;overflow:hidden;border:1px solid var(--line-card);
+ background:var(--bg);min-height:520px;font-size:14px;color:var(--ink)}
+.sb{width:206px;flex:0 0 206px;background:var(--chrome);color:var(--chrome-ink);
+ border-right:1px solid var(--chrome-line);padding:16px 10px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:9px;padding:2px 6px 18px}
+.brand i{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#6bdd6d);
+ color:var(--on-accent);display:grid;place-items:center;font-style:normal;font-weight:800;font-size:16px}
+.brand span{font-size:14px;font-weight:700;color:var(--chrome-ink-hi)}
+.navlbl{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--chrome-ink-dim);padding:13px 9px 5px}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:8px;color:var(--chrome-ink);
+ font-size:12.5px;font-weight:600;margin-bottom:1px}
+.nav i{width:17px;text-align:center;font-style:normal;font-size:13px;opacity:.9}
+.nav.on{background:var(--accent);color:var(--on-accent);font-weight:700}
+.nav .bg{margin-left:auto;background:#c32b47;color:#fff;border-radius:999px;font-size:9.5px;font-weight:800;
+ padding:0 5px;min-width:16px;text-align:center}
+.mn{flex:1;display:flex;flex-direction:column;min-width:0}
+.tb{display:flex;align-items:center;gap:14px;padding:11px 18px;background:var(--surface);
+ border-bottom:1px solid var(--line-card)}
+.tb .hi{font-size:13.5px;color:var(--muted)}
+.tb .hi b{color:var(--ink)}
+.sp{margin-left:auto}
+.btn{border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:700;font-family:inherit;
+ border:1px solid transparent;cursor:default;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--accent);color:var(--on-accent)}
+.btn-g{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.ct{padding:16px 18px;flex:1}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px}
+.stat u{display:block;text-decoration:none;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+ text-transform:uppercase;color:var(--muted)}
+.stat b{display:block;font-size:27px;font-weight:800;color:var(--navy);letter-spacing:-.02em;line-height:1.2}
+.stat em{font-style:normal;font-size:11px;color:var(--accent-ink);font-weight:600}
+.stat.p{border-left:3px solid var(--st-pending)}
+.stat.a{border-left:3px solid var(--st-active)}
+.filt{display:flex;gap:7px;flex-wrap:wrap;align-items:center;background:var(--surface);
+ border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;margin-bottom:12px}
+.chip{border:1px solid var(--line-mid);background:var(--surface);color:var(--muted);border-radius:999px;
+ padding:4px 11px;font-size:11.5px;font-weight:600}
+.chip.on{background:var(--accent-wash);border-color:var(--accent-soft);color:var(--accent-ink);font-weight:700}
+.tw{border:1px solid var(--line-card);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+table.d{width:100%;border-collapse:collapse;font-size:13px}
+table.d th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+ color:var(--muted);padding:9px 12px;background:var(--bg);border-bottom:1px solid var(--line-card)}
+table.d td{padding:11px 12px;border-bottom:1px solid var(--line-soft);color:var(--navy-soft)}
+table.d tr:last-child td{border-bottom:none}
+.who b{display:block;font-size:13px;color:var(--ink);font-weight:700}
+.who s{display:block;text-decoration:none;font-size:11.5px;color:var(--muted)}
+.bdg{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:11.5px;
+ font-weight:700;white-space:nowrap}
+.bdg::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 6px}
+.bdg.pill{border-radius:999px}
+.b-psig{background:var(--st-psig-bg);color:var(--st-psig)}
+.b-signed{background:var(--st-signed-bg);color:var(--st-signed)}
+.b-draft{background:var(--st-draft-bg);color:var(--st-draft)}
+.b-cancel{background:var(--st-cancel-bg);color:var(--st-cancel)}
+.b-active{background:var(--st-active-bg);color:var(--st-active)}
+.b-pending{background:var(--st-pending-bg);color:var(--st-pending)}
+.b-routed{background:var(--st-routed-bg);color:var(--st-routed)}
+.b-new{background:var(--st-new-bg);color:var(--st-new)}
+.mini{font-size:11.5px;color:var(--faint)}
+.lnk{color:var(--accent-ink);font-weight:700;font-size:12px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+@media (max-width:980px){.split{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+</style></head><body><main>
+
+<div class="tag">Energy CRM · πρόταση εμφάνισης · §1.8 · 19/08/2026</div>
+<h1>Το κέλυφος — ανοιχτό και σκούρο</h1>
+<p class="lead">Τρεις αποφάσεις πάρθηκαν και αυτή η πρόταση τις εφαρμόζει: accent <b>πράσινο
+<code>#16c217</code></b> (όχι λάιμ), <b>διακόπτης</b> ανοιχτό + σκούρο (όχι σκούρο μόνο),
+<b>κέλυφος πρώτα</b> ώστε να αλλάξουν και οι είκοσι οθόνες μαζί.</p>
+
+<section>
+<h2>Πρώτα το σημαντικό: τι αλλάζει και τι όχι</h2>
+<p>Το κέλυφος του CRM είναι <b>ήδη</b> η δομή του kit — πλαϊνό ανθρακί με ομάδες, sticky
+topbar, κάρτες, badge με κουκκίδα, κάτω tab bar στο κινητό. Το μετρήσιμο: το kit έχει
+<b>13</b> οθόνες, το app <b>~20</b>, και οι δύο μοιράζονται τα ίδια δομικά.</p>
+<p><b>Αυτό που κάνει το app να μη μοιάζει με το kit είναι ο καμβάς.</b> Γι' αυτό ο
+διακόπτης δεν είναι «μια επιπλέον λειτουργία» — <b>είναι</b> η αλλαγή κελύφους, και
+επειδή περνά από τα είκοσι ένα ονόματα ρόλου, αλλάζει <b>κάθε</b> οθόνη ταυτόχρονα,
+συμπεριλαμβανομένων των έντεκα που το kit δεν σχεδίασε ποτέ.</p>
+<div class="zero"><b>Το ίδιο ακριβώς markup παρακάτω.</b> Δεν υπάρχει δεύτερο HTML για το
+σκούρο· αλλάζει μόνο το σύνολο τιμών. Ό,τι δεις να δουλεύει εδώ, δουλεύει έτσι και στο
+plugin — γι' αυτό έγιναν οι τρεις μέρες tokens.</div>
+</section>
+
+<section>
+<h2>Το κέλυφος, ανοιχτό</h2>
+<div class="t t-light">
+ <div class="app">
+  <aside class="sb">
+   <div class="brand"><i>Ε</i><span>Energy <b>CRM</b></span></div>
+   <div class="navlbl">Κύρια</div>
+   <div class="nav"><i>▤</i>Dashboard</div>
+   <div class="nav"><i>＋</i>Νέα Σύμβαση</div>
+   <div class="nav on"><i>▦</i>Συμβάσεις</div>
+   <div class="nav"><i>◷</i>Εκκρεμότητες<span class="bg">7</span></div>
+   <div class="nav"><i>☑</i>Εργασίες<span class="bg">3</span></div>
+   <div class="navlbl">Πελατολόγιο</div>
+   <div class="nav"><i>☺</i>Πελάτες</div>
+   <div class="nav"><i>⏱</i>Λήξεις</div>
+   <div class="nav"><i>≡</i>Προσφορά</div>
+   <div class="navlbl">Δίκτυο</div>
+   <div class="nav"><i>⑃</i>Το δίκτυό μου</div>
+   <div class="nav"><i>♟</i>Η ομάδα μου</div>
+   <div class="nav"><i>€</i>Προμήθειες</div>
+   <div class="navlbl">Βοήθεια</div>
+   <div class="nav"><i>❑</i>Βάση Γνώσης</div>
+  </aside>
+  <div class="mn">
+   <div class="tb">
+    <span class="hi">Καλημέρα, <b>Κώστα</b></span>
+    <span class="sp"></span>
+    <span class="mini">⌕ Αναζήτηση ΑΦΜ, ονόματος…</span>
+    <span class="btn btn-g">Εξαγωγή</span>
+    <span class="btn btn-p">＋ Νέα σύμβαση</span>
+   </div>
+   <div class="ct">
+    <div class="stats">
+     <div class="stat"><u>Ανοιχτές</u><b>128</b><em>↑ 12 αυτή την εβδομάδα</em></div>
+     <div class="stat p"><u>Αναμονή υπογραφής</u><b>34</b><em style="color:var(--st-pending)">8 λήγουν σήμερα</em></div>
+     <div class="stat a"><u>Κλεισμένες (μήνας)</u><b>91</b><em>→ 1.820 €</em></div>
+     <div class="stat"><u>Εργασίες μου</u><b>7</b><em style="color:var(--muted)">3 εκπρόθεσμες</em></div>
+    </div>
+    <div class="filt">
+     <span class="chip on">Όλες</span><span class="chip">Πρόχειρο</span>
+     <span class="chip">Αναμονή</span><span class="chip">Υπογεγραμμένες</span>
+     <span class="sp"></span>
+     <span class="chip on">Δικά μου</span><span class="chip">Ομάδας</span>
+    </div>
+    <div class="tw">
+     <table class="d">
+      <thead><tr><th>Πελάτης</th><th>Πάροχος</th><th>Κατάσταση</th><th>Ημ/νία</th><th></th></tr></thead>
+      <tbody>
+       <tr><td class="who"><b>Μαρία Παπαδοπούλου</b><s>ΑΦΜ 123456789 · #CR-10482</s></td>
+        <td class="who"><b>Protergia</b><s>Value 24μηνο</s></td>
+        <td><span class="bdg b-psig">Αναμονή υπογραφής</span></td><td class="mini">18 Αυγ</td>
+        <td><span class="lnk">Υπενθύμιση</span></td></tr>
+       <tr><td class="who"><b>Γιάννης Νικολάου</b><s>ΑΦΜ 987654321 · #CR-10471</s></td>
+        <td class="who"><b>Protergia</b><s>Επαγγελματικό</s></td>
+        <td><span class="bdg b-signed">Υπογεγραμμένη</span></td><td class="mini">17 Αυγ</td>
+        <td><span class="lnk">Άνοιγμα</span></td></tr>
+       <tr><td class="who"><b>Ελένη Κωνσταντίνου</b><s>ΑΦΜ 112233445 · #CR-10455</s></td>
+        <td class="who"><b>Orizon</b><s>10GB + 5GB</s></td>
+        <td><span class="bdg b-draft">Πρόχειρο</span></td><td class="mini">16 Αυγ</td>
+        <td><span class="lnk">Συνέχεια</span></td></tr>
+       <tr><td class="who"><b>Σοφία Βασιλείου</b><s>ΑΦΜ 998877665 · #CR-10412</s></td>
+        <td class="who"><b>NRG</b><s>Home Comfort</s></td>
+        <td><span class="bdg b-cancel">Ακυρώθηκε</span></td><td class="mini">14 Αυγ</td>
+        <td><span class="lnk">Επίλυση</span></td></tr>
+       <tr><td class="who"><b>Ανδρέας Δημητρίου</b><s>ΑΦΜ 445566778 · #CR-10390</s></td>
+        <td class="who"><b>ΔΕΗ</b><s>myHome Online</s></td>
+        <td><span class="bdg b-active">Ενεργή</span></td><td class="mini">12 Αυγ</td>
+        <td><span class="lnk">Άνοιγμα</span></td></tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+<p class="cap">Σήμερα, με τα tokens όπως έμειναν μετά την (54). Οι είκοσι μία τιμές που
+ζωγραφίζουν αυτή την οθόνη έχουν όλες όνομα ρόλου.</p>
+</section>
+
+<section>
+<h2>Το ίδιο κέλυφος, σκούρο</h2>
+<div class="t t-dark">
+ <div class="app">
+  <aside class="sb">
+   <div class="brand"><i>Ε</i><span>Energy <b>CRM</b></span></div>
+   <div class="navlbl">Κύρια</div>
+   <div class="nav"><i>▤</i>Dashboard</div>
+   <div class="nav"><i>＋</i>Νέα Σύμβαση</div>
+   <div class="nav on"><i>▦</i>Συμβάσεις</div>
+   <div class="nav"><i>◷</i>Εκκρεμότητες<span class="bg">7</span></div>
+   <div class="nav"><i>☑</i>Εργασίες<span class="bg">3</span></div>
+   <div class="navlbl">Πελατολόγιο</div>
+   <div class="nav"><i>☺</i>Πελάτες</div>
+   <div class="nav"><i>⏱</i>Λήξεις</div>
+   <div class="nav"><i>≡</i>Προσφορά</div>
+   <div class="navlbl">Δίκτυο</div>
+   <div class="nav"><i>⑃</i>Το δίκτυό μου</div>
+   <div class="nav"><i>♟</i>Η ομάδα μου</div>
+   <div class="nav"><i>€</i>Προμήθειες</div>
+   <div class="navlbl">Βοήθεια</div>
+   <div class="nav"><i>❑</i>Βάση Γνώσης</div>
+  </aside>
+  <div class="mn">
+   <div class="tb">
+    <span class="hi">Καλημέρα, <b>Κώστα</b></span>
+    <span class="sp"></span>
+    <span class="mini">⌕ Αναζήτηση ΑΦΜ, ονόματος…</span>
+    <span class="btn btn-g">Εξαγωγή</span>
+    <span class="btn btn-p">＋ Νέα σύμβαση</span>
+   </div>
+   <div class="ct">
+    <div class="stats">
+     <div class="stat"><u>Ανοιχτές</u><b>128</b><em>↑ 12 αυτή την εβδομάδα</em></div>
+     <div class="stat p"><u>Αναμονή υπογραφής</u><b>34</b><em style="color:var(--st-pending)">8 λήγουν σήμερα</em></div>
+     <div class="stat a"><u>Κλεισμένες (μήνας)</u><b>91</b><em>→ 1.820 €</em></div>
+     <div class="stat"><u>Εργασίες μου</u><b>7</b><em style="color:var(--muted)">3 εκπρόθεσμες</em></div>
+    </div>
+    <div class="filt">
+     <span class="chip on">Όλες</span><span class="chip">Πρόχειρο</span>
+     <span class="chip">Αναμονή</span><span class="chip">Υπογεγραμμένες</span>
+     <span class="sp"></span>
+     <span class="chip on">Δικά μου</span><span class="chip">Ομάδας</span>
+    </div>
+    <div class="tw">
+     <table class="d">
+      <thead><tr><th>Πελάτης</th><th>Πάροχος</th><th>Κατάσταση</th><th>Ημ/νία</th><th></th></tr></thead>
+      <tbody>
+       <tr><td class="who"><b>Μαρία Παπαδοπούλου</b><s>ΑΦΜ 123456789 · #CR-10482</s></td>
+        <td class="who"><b>Protergia</b><s>Value 24μηνο</s></td>
+        <td><span class="bdg b-psig">Αναμονή υπογραφής</span></td><td class="mini">18 Αυγ</td>
+        <td><span class="lnk">Υπενθύμιση</span></td></tr>
+       <tr><td class="who"><b>Γιάννης Νικολάου</b><s>ΑΦΜ 987654321 · #CR-10471</s></td>
+        <td class="who"><b>Protergia</b><s>Επαγγελματικό</s></td>
+        <td><span class="bdg b-signed">Υπογεγραμμένη</span></td><td class="mini">17 Αυγ</td>
+        <td><span class="lnk">Άνοιγμα</span></td></tr>
+       <tr><td class="who"><b>Ελένη Κωνσταντίνου</b><s>ΑΦΜ 112233445 · #CR-10455</s></td>
+        <td class="who"><b>Orizon</b><s>10GB + 5GB</s></td>
+        <td><span class="bdg b-draft">Πρόχειρο</span></td><td class="mini">16 Αυγ</td>
+        <td><span class="lnk">Συνέχεια</span></td></tr>
+       <tr><td class="who"><b>Σοφία Βασιλείου</b><s>ΑΦΜ 998877665 · #CR-10412</s></td>
+        <td class="who"><b>NRG</b><s>Home Comfort</s></td>
+        <td><span class="bdg b-cancel">Ακυρώθηκε</span></td><td class="mini">14 Αυγ</td>
+        <td><span class="lnk">Επίλυση</span></td></tr>
+       <tr><td class="who"><b>Ανδρέας Δημητρίου</b><s>ΑΦΜ 445566778 · #CR-10390</s></td>
+        <td class="who"><b>ΔΕΗ</b><s>myHome Online</s></td>
+        <td><span class="bdg b-active">Ενεργή</span></td><td class="mini">12 Αυγ</td>
+        <td><span class="lnk">Άνοιγμα</span></td></tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+<p class="cap">Ίδιο markup, 24 διαφορετικές τιμές. Πρόσεξε τι <b>δεν</b> αντιστράφηκε: το
+πλαϊνό μένει <code>#171715</code> και στα δύο — στο ανοιχτό είναι το σκούρο chrome, στο
+σκούρο γίνεται η <i>ανασηκωμένη</i> επιφάνεια, γιατί ο καμβάς από κάτω του είναι
+<code>#111110</code>, ακόμα πιο σκούρος. Το accent <code>#16c217</code> δεν άλλαξε ούτε
+κατά ένα ψηφίο.</p>
+</section>
+
+<section>
+<h2>Η κλίμακα ρίσκου — τι ακριβώς ακουμπάει το καθένα</h2>
+<p>Το σύστημα δουλεύει. Ό,τι κάνουμε για την εμφάνιση <b>δεν επιτρέπεται να το ακουμπήσει</b>.
+Γι' αυτό η δουλειά χωρίζεται σε τέσσερα επίπεδα, και το commit που προτείνεται εδώ είναι
+ολόκληρο στο <b>επίπεδο 0</b>.</p>
+<table class="data"><thead><tr><th>επίπεδο</th><th>τι αγγίζει</th><th>τι μπορεί να σπάσει</th><th>τι μπαίνει εδώ</th></tr></thead>
+<tbody>
+<tr><td><b class="yes">0 · τιμές</b></td><td>μόνο τιμές μέσα σε <code>.ecrm</code> και ένα μπλοκ <code>[data-theme]</code></td><td><b>τίποτα λειτουργικό.</b> Καμία δήλωση δεν αλλάζει, κανένας επιλογέας, κανένα markup, κανένα JS, κανένα PHP εκτός από μία κλάση</td><td><b>ο διακόπτης — αυτό το commit</b></td></tr>
+<tr><td>1 · CSS δομή</td><td>ακτίνες, σχήμα badge, στυλ ενεργού μενού</td><td>μόνο εικόνα· καμία ροή</td><td>τα τέσσερα δομικά του kit, παρακάτω</td></tr>
+<tr><td>2 · markup / JS</td><td>views, σειρά πεδίων, νέα μπλοκ οθόνης</td><td><b>ροές.</b> Θέλει χαρακτηρισμό πρώτα — δεν υπάρχει JS test infrastructure</td><td>AI rail, «χρειάζεται ενέργεια», κουμπί ανά κατάσταση</td></tr>
+<tr><td>3 · backend</td><td>νέες διαδρομές, tokens, rate limit</td><td><b>ασφάλεια και δεδομένα.</b> Θέλει integration tests πριν και μετά</td><td>δημόσια υπογραφή, σελίδα success</td></tr>
+</tbody></table>
+<div class="callout"><p><b>Το επίπεδο 0 δεν είναι υπόσχεση, είναι ιδιότητα.</b> Αν το commit
+αλλάζει μόνο τιμές custom properties και μία κλάση στο <code>&lt;div class="ecrm"&gt;</code>,
+τότε καμία συνάρτηση, κανένα endpoint και καμία assertion δεν βλέπει διαφορά — και αν κάτι
+δεν σου αρέσει, η επιστροφή είναι <b>να σβήσεις το μπλοκ</b>. Το tag
+<code>pre-ui-2026-08-19</code> υπάρχει και στα δύο repos ούτως ή άλλως.</p></div>
+</section>
+
+<section>
+<h2>Οι 24 τιμές του σκούρου</h2>
+<p class="cap">Σχεδιάστηκαν κατά <b>ρόλο</b>, όχι με αντιστροφή ράμπας — η αντιστροφή
+δοκιμάστηκε και καταρρέει, γιατί στο ανοιχτό ο καμβάς είναι πιο σκούρος από την κάρτα ενώ
+στο σκούρο πρέπει να είναι το ίδιο, και οι γραμμές πάνε ανάποδα.</p>
+<table class="data">
+<thead><tr><th>ρόλος</th><th>ανοιχτό</th><th>σκούρο</th><th>τι κάνει</th><th class="n">έλεγχος</th></tr></thead>
+<tbody>
+<tr><td><code>--bg</code></td><td><span class="sw" style="background:#f8f8f6"></span>#f8f8f6</td><td><span class="sw" style="background:#111110"></span>#111110</td><td>ο καμβάς</td><td class="n">—</td></tr>
+<tr><td><code>--surface</code></td><td><span class="sw" style="background:#ffffff"></span>#ffffff</td><td><span class="sw" style="background:#1a1a18"></span>#1a1a18</td><td>η κάρτα — <b>επιπλέει</b> πάνω από τον καμβά και στα δύο</td><td class="n">—</td></tr>
+<tr><td><code>--surface-2</code></td><td>#fdfdfc</td><td>#1f1f1c</td><td>hover γραμμής</td><td class="n">—</td></tr>
+<tr><td><code>--surface-sunk</code></td><td>#f1f1ee</td><td>#232320</td><td>βυθισμένο γέμισμα</td><td class="n">—</td></tr>
+<tr><td><code>--surface-track</code></td><td>#e9e8e4</td><td>#2a2926</td><td>κανάλι μπάρας</td><td class="n">—</td></tr>
+<tr><td><code>--line-soft</code></td><td>#f1f1ee</td><td>#232320</td><td rowspan="5">οι γραμμές· στο σκούρο <b>πιο ανοιχτές</b> από την κάρτα, όχι πιο σκούρες</td><td class="n">1.11</td></tr>
+<tr><td><code>--line-card</code></td><td>#e9e8e4</td><td>#2a2926</td><td class="n">1.20</td></tr>
+<tr><td><code>--line</code></td><td>#dedcd7</td><td>#33322e</td><td class="n">1.36</td></tr>
+<tr><td><code>--line-mid</code></td><td>#c6c4bd</td><td>#3d3c37</td><td class="n">1.58</td></tr>
+<tr><td><code>--line-strong</code></td><td>#a3a099</td><td>#4d4b45</td><td class="n">2.00</td></tr>
+<tr><td><code>--ink</code></td><td>#2a2926</td><td>#f1f1ee</td><td>κύριο κείμενο</td><td class="n"><b class="yes">15.40</b></td></tr>
+<tr><td><code>--navy</code></td><td>#1a1a18</td><td>#f8f8f6</td><td>επικεφαλίδες, μεγάλοι αριθμοί</td><td class="n"><b class="yes">16.39</b></td></tr>
+<tr><td><code>--navy-soft</code></td><td>#42413d</td><td>#dedcd7</td><td>κείμενο πίνακα</td><td class="n"><b class="yes">12.72</b></td></tr>
+<tr><td><code>--muted</code></td><td>#6e6c66</td><td>#a3a099</td><td>δεύτερο κείμενο <i>(69 σημεία)</i></td><td class="n"><b class="yes">6.68</b></td></tr>
+<tr><td><code>--muted-strong</code></td><td>#5c5a55</td><td>#c6c4bd</td><td>δεύτερο με βάρος</td><td class="n"><b class="yes">9.99</b></td></tr>
+<tr><td><code>--faint</code></td><td>#83817a</td><td>#8a887f</td><td>μελάνι εικονιδίου <i>(όριο 3:1)</i></td><td class="n"><b class="yes">4.90</b></td></tr>
+<tr><td><code>--accent-ink</code></td><td>#0b690c</td><td>#6bdd6d</td><td>πράσινο <b>κείμενο</b> — το μόνο πράσινο που αντιστρέφεται</td><td class="n"><b class="yes">10.12</b></td></tr>
+<tr><td><code>--accent-wash</code></td><td>#eafaea</td><td>#12240f</td><td rowspan="2">οι πλύσεις του accent</td><td class="n">—</td></tr>
+<tr><td><code>--accent-soft</code></td><td>#a5eba7</td><td>#1e4a21</td><td class="n">—</td></tr>
+<tr><td><code>--chrome</code> +3</td><td colspan="2" style="text-align:center">#171715 — <b>ίδιο και στα δύο</b></td><td>το πλαϊνό ήταν ήδη ανθρακί· δεν αλλάζει</td><td class="n"><b class="yes">7.15</b></td></tr>
+<tr><td><code>--accent</code>, <code>--on-accent</code></td><td colspan="2" style="text-align:center">#16c217 / #0b3d0c — <b>ίδια και στα δύο</b></td><td>η μάρκα δεν μετακινείται</td><td class="n"><b class="yes">5.19</b></td></tr>
+</tbody></table>
+<p class="cap">Η στήλη «έλεγχος» είναι ο λόγος αντίθεσης στο <b>σκούρο</b>, πάνω στην κάρτα
+<code>#1a1a18</code>· για τις γραμμές είναι ο λόγος τους προς την κάρτα, όπου το ζητούμενο
+δεν είναι όριο αλλά <i>να φαίνονται και να έχουν σειρά</i>. WCAG 2.x / sRGB.</p>
+<div class="zero"><b>Κανένα κείμενο κάτω από το όριο, σε καμία από τις τέσσερις επιφάνειες
+του σκούρου</b> (καμβάς, κάρτα, επιφάνεια-2, βυθισμένο). Το χειρότερο είναι το
+<code>--muted</code> στο βυθισμένο: <b>6,04</b>.</div>
+</section>
+
+<section>
+<h2>Τα δώδεκα badge στο σκούρο</h2>
+<p>Οι τιμές τους σχεδιάστηκαν στις 19/08 μαζί με το ανοιχτό και κάθονται ήδη αδρανείς στο
+CSS. Τις ξαναμέτρησα <b>πάνω στις νέες επιφάνειες</b>, γιατί ένα χρώμα δεν έχει αντίθεση
+από μόνο του — την έχει πάνω σε κάτι.</p>
+<div class="t t-dark" style="background:#1a1a18;border:1px solid #2a2926;border-radius:12px;padding:16px">
+ <span class="bdg b-draft">Πρόχειρο</span> <span class="bdg b-new">Νέο</span>
+ <span class="bdg b-psig">Αναμονή υπογραφής</span> <span class="bdg b-signed">Υπογεγραμμένη</span>
+ <span class="bdg b-pending">Εκκρεμεί</span> <span class="bdg b-routed">Δρομολογήθηκε</span>
+ <span class="bdg b-active">Ενεργή</span> <span class="bdg b-cancel">Ακυρώθηκε</span>
+</div>
+<table class="data" style="margin-top:12px"><thead><tr><th>κατάσταση</th><th class="n">γράμμα σε πινελιά</th><th class="n">πινελιά vs κάρτα</th><th class="n">κουκκίδα vs κάρτα</th></tr></thead>
+<tbody>
+<tr><td>Πρόχειρο</td><td class="n"><b class="yes">4.70</b></td><td class="n">1.42</td><td class="n">6.67</td></tr>
+<tr><td>Νέο</td><td class="n"><b class="yes">5.39</b></td><td class="n">1.41</td><td class="n">7.60</td></tr>
+<tr><td>Αναμονή υπογραφής</td><td class="n"><b class="yes">6.06</b></td><td class="n">1.41</td><td class="n">8.58</td></tr>
+<tr><td>Υπογεγραμμένη</td><td class="n"><b class="yes">7.71</b></td><td class="n">1.41</td><td class="n">10.83</td></tr>
+<tr><td>Εκκρεμεί</td><td class="n"><b class="yes">7.21</b></td><td class="n">1.41</td><td class="n">10.18</td></tr>
+<tr><td>Δρομολογήθηκε</td><td class="n"><b class="yes">6.25</b></td><td class="n">1.42</td><td class="n">8.88</td></tr>
+<tr><td>Ενεργή</td><td class="n"><b class="yes">7.63</b></td><td class="n">1.42</td><td class="n">10.84</td></tr>
+<tr><td>Ακυρώθηκε</td><td class="n"><b class="yes">5.39</b></td><td class="n">1.41</td><td class="n">7.59</td></tr>
+</tbody></table>
+<p class="cap">Και οι δώδεκα (εδώ οι οκτώ αντιπροσωπευτικές) περνούν το 4,5. Κάθε πινελιά
+κάθεται στο <b>1,41–1,42</b> πάνω από την κάρτα — σταθερή, σκόπιμη ανύψωση, όχι τυχαία.
+Αυτό είναι και η επιβεβαίωση ότι η κάρτα του σκούρου <i>έπρεπε</i> να είναι γύρω στο
+<code>#1a1a18</code>: εκεί σχεδιάστηκαν.</p>
+</section>
+
+<section>
+<h2>Θερμό ή ψυχρό σκούρο;</h2>
+<p>Το kit χρησιμοποιεί ψυχρά μπλε-γκρι (<code>#0f1218</code>, <code>#171b24</code>). Η
+ουδέτερη ράμπα του CRM είναι <b>θερμή</b> (<code>#111110</code>, <code>#1a1a18</code>) και
+υπάρχει ήδη — είναι τα <code>--n950</code>/<code>--n900</code> που ήδη ζωγραφίζουν το
+payhero και την κεφαλή της Λίτσας.</p>
+<div class="split">
+ <div><div class="lbl">θερμό — μηδέν νέα πρωτογενή</div>
+  <div class="t t-dark"><div class="app" style="min-height:0">
+   <aside class="sb" style="padding:12px 8px"><div class="brand"><i>Ε</i><span>Energy <b>CRM</b></span></div>
+    <div class="nav on"><i>▦</i>Συμβάσεις</div><div class="nav"><i>☑</i>Εργασίες</div></aside>
+   <div class="mn"><div class="tb"><span class="hi">Καλημέρα, <b>Κώστα</b></span></div>
+    <div class="ct"><div class="stat" style="margin-bottom:8px"><u>Ανοιχτές</u><b>128</b><em>↑ 12</em></div>
+    <span class="bdg b-psig">Αναμονή υπογραφής</span></div></div>
+  </div></div>
+ </div>
+ <div><div class="lbl">ψυχρό — όπως το kit, +8 νέα πρωτογενή</div>
+  <div class="t t-dark t-cool"><div class="app" style="min-height:0">
+   <aside class="sb" style="padding:12px 8px"><div class="brand"><i>Ε</i><span>Energy <b>CRM</b></span></div>
+    <div class="nav on"><i>▦</i>Συμβάσεις</div><div class="nav"><i>☑</i>Εργασίες</div></aside>
+   <div class="mn"><div class="tb"><span class="hi">Καλημέρα, <b>Κώστα</b></span></div>
+    <div class="ct"><div class="stat" style="margin-bottom:8px"><u>Ανοιχτές</u><b>128</b><em>↑ 12</em></div>
+    <span class="bdg b-psig">Αναμονή υπογραφής</span></div></div>
+  </div></div>
+ </div>
+</div>
+<p class="cap">Μετρημένη διαφορά: <b>ΔE00 4,5</b> στον καμβά, <b>7,6</b> στην κάρτα,
+<b>9,9</b> στην επιφάνεια-2. Ορατή αν τα βάλεις δίπλα, σχεδόν αόρατη χωριστά — σε αυτή τη
+σκοτεινότητα η απόχρωση μόλις που διαβάζεται.</p>
+<div class="callout"><p><b>Προτείνω το θερμό,</b> και ο λόγος δεν είναι γούστο: το ψυχρό
+σημαίνει <b>δεύτερη οικογένεια ουδετέρων</b> στο σύστημα — οκτώ νέα πρωτογενή που δεν
+συνδέονται με κανένα από τα δεκατέσσερα υπάρχοντα, και ένα ανοιχτό θέμα που πλέον διαφωνεί
+με το σκούρο του. Το θερμό δεν προσθέτει <i>ούτε μία</i> νέα πρωτογενή τιμή. Αν πάντως το
+ψυχρό σου αρέσει περισσότερο στο μάτι, το λες και το γράφω — αλλά τότε αξίζει να πάει
+ψυχρό <b>και</b> το ανοιχτό, σε δικό του βήμα.</p></div>
+</section>
+
+<section>
+<h2>Τρία δομικά που παίρνουμε από το kit <small></small></h2>
+<p class="cap">Επίπεδο 1: μόνο CSS, καμία ροή. Το καθένα χωριστά — μπορείς να πεις ναι στο
+ένα και όχι στο άλλο.</p>
+
+<h3>α · Το ενεργό μενού</h3>
+<div class="split">
+ <div><div class="lbl">σήμερα — συμπαγές accent</div>
+  <div class="t t-dark" style="background:#171715;border-radius:12px;padding:12px 10px">
+   <div class="nav"><i>▤</i>Dashboard</div>
+   <div class="nav on"><i>▦</i>Συμβάσεις</div>
+   <div class="nav"><i>☑</i>Εργασίες</div></div></div>
+ <div><div class="lbl">kit — πλύση accent + πράσινο γράμμα</div>
+  <div class="t t-dark" style="background:#171715;border-radius:12px;padding:12px 10px">
+   <div class="nav"><i>▤</i>Dashboard</div>
+   <div class="nav" style="background:rgba(22,194,23,.15);color:#6bdd6d;font-weight:700"><i>▦</i>Συμβάσεις</div>
+   <div class="nav"><i>☑</i>Εργασίες</div></div></div>
+</div>
+<p class="cap">Το συμπαγές είναι πιο δυνατό σήμα «είσαι εδώ»· η πλύση είναι πιο ήσυχη και
+είναι αυτό που δείχνει το kit. Και τα δύο περνούν: το σκούρο γράμμα σε συμπαγές accent
+δίνει <b>5,19</b>, το <code>#6bdd6d</code> σε πλύση πάνω σε <code>#171715</code> δίνει
+<b>8,20</b>. <b>Είναι καθαρά γούστο — διάλεξε με το μάτι.</b></p>
+
+<h3>β · Το σχήμα του badge</h3>
+<p style="margin-bottom:14px">
+ <span class="t t-light"><span class="bdg b-psig">Αναμονή υπογραφής</span>
+ <span class="bdg b-active">Ενεργή</span></span>
+ &nbsp;&nbsp;γωνία 6px, σήμερα &nbsp;&nbsp;|&nbsp;&nbsp;
+ <span class="t t-light"><span class="bdg pill b-psig">Αναμονή υπογραφής</span>
+ <span class="bdg pill b-active">Ενεργή</span></span>
+ &nbsp;&nbsp;pill, όπως το kit</p>
+<p class="cap">Μία γραμμή CSS. Το pill διαβάζεται πιο «κατάσταση», η γωνία πιο «ετικέτα».
+Καμία διαφορά στην αντίθεση.</p>
+
+<h3>γ · Ακτίνα κάρτας 10px → 12px</h3>
+<p class="cap">Το kit χρησιμοποιεί 12px παντού. Είναι <b>μία τιμή</b>, το
+<code>--radius</code>, και την ακούν όλες οι κάρτες και οι πίνακες ταυτόχρονα.</p>
+
+<div class="callout bad"><p><b>Και ένα που ΔΕΝ είναι επίπεδο 1, παρότι φαίνεται:</b> η
+γραμμή «↑ 12 αυτή την εβδομάδα» κάτω από κάθε KPI, που είναι στα mock παραπάνω για να
+φανεί. Θέλει <b>αριθμό που το backend δεν στέλνει σήμερα</b> — σύγκριση με προηγούμενη
+περίοδο. Είναι επίπεδο 2/3 και πάει στη σειρά παρακάτω, όχι εδώ.</p></div>
+</section>
+
+<section>
+<h2>Τι αλλάζει σε κώδικα — και γιατί σε δύο commit</h2>
+<p>Χωρίζεται ώστε το πρώτο να μην μπορεί να σπάσει τίποτα και το δεύτερο να είναι
+απομονωμένο αν χρειαστεί επιστροφή.</p>
+
+<h3>Commit A — ο διακόπτης, χωρίς αποθηκευμένη προτίμηση</h3>
+<table class="data"><thead><tr><th>αρχείο</th><th>αλλαγή</th><th>ρίσκο</th></tr></thead>
+<tbody>
+<tr><td><code>public/assets/ecrm-form.css</code></td><td>το μπλοκ του σκούρου αποκτά τις <b>24 σημασιολογικές</b> τιμές δίπλα στις 24 καταστάσεων που ήδη έχει</td><td>καμία δήλωση, μόνο τιμές</td></tr>
+<tr><td><code>public/assets/ecrm-form.css</code></td><td>ο επιλογέας <code>[data-theme="dark"] .ecrm</code> → <code>.ecrm[data-theme="dark"]</code></td><td>ένας επιλογέας· σήμερα δεν ταιριάζει σε τίποτα, άρα η αλλαγή δεν μπορεί να χαλάσει υπάρχουσα εικόνα</td></tr>
+<tr><td><code>public/class-ecrm-app.php:109</code></td><td><b>ένα attribute</b> στο ίδιο <code>&lt;div class="ecrm ecrm-app"&gt;</code> που ήδη υπάρχει</td><td>μηδέν τρεμόπαιγμα — γράφεται από PHP, όχι JS· καμία εξάρτηση από το θέμα</td></tr>
+</tbody></table>
+<p class="cap">Προεπιλογή: <code>prefers-color-scheme</code> του λειτουργικού. Δηλαδή όποιος
+έχει σκούρο Windows το βλέπει σκούρο, οι υπόλοιποι δεν βλέπουν καμία απολύτως διαφορά.</p>
+<div class="zero"><b>Οι τέσσερις αριθμοί: αμετάβλητοι.</b> phpcs 248 · phpstan 141 ·
+unit 858 (1 skipped) · integration 291 (1943 assertions). Κανένα νέο αρχείο PHP, καμία νέα
+μέθοδος, κανένα νέο CSS αρχείο. Ο <code>ColourIsDecidedInOnePlaceTest</code> μένει πράσινος
+— όλες οι νέες τιμές γράφονται σε γραμμές ορισμού custom property.</div>
+
+<h3>Commit B — η προτίμηση ανά χρήστη</h3>
+<p>Αντιγράφει <b>ακριβώς</b> το μοτίβο του <code>SavedFiltersController</code>: μία σταθερά
+<code>META_KEY</code>, ένα <code>register_rest_route</code>, <code>get_user_meta</code> /
+<code>update_user_meta</code>. Συν ένα κουμπί στο υποσέλιδο του πλαϊνού.</p>
+<div class="callout"><p><b>Εδώ οι αριθμοί ΘΑ κινηθούν, και ξέρω πόσο:</b> ένα νέο αρχείο σε
+<code>src/Http/</code> κάνει <b>phpcs 248 → 249</b> και <b>phpstan 141 → 142</b>· και επειδή
+τρεις φύλακες απαριθμούν αρχεία, <b>unit 858 → 861</b> ακόμα και χωρίς νέο test. Με τα
+tests της προτίμησης, παραπάνω. <i>Θα γράψω την ακριβή πρόβλεψη πριν τρέξεις — όπως πάντα.</i></p></div>
+
+<h3>Το θέμα: <b>καμία</b> αλλαγή</h3>
+<p>Το είχα πει ότι χρειάζεται μία γραμμή στο repo του θέματος. <b>Το έλεγξα και δεν
+χρειάζεται.</b> Το <code>.ecrm-app</code> έχει ήδη <code>background: var(--bg)</code> και
+<code>min-height: 100vh</code> — καλύπτει ολόκληρη την οθόνη μόνο του. Το
+<code>body.ect-app-body</code> του θέματος φαίνεται μόνο στο overscroll του κινητού.
+<b>Ο διακόπτης ζει εξ ολοκλήρου μέσα στο repo του plugin</b> — ένα repo, ένα commit, μία
+επιστροφή αν χρειαστεί.</p>
+</section>
+
+<section>
+<h2>Η σειρά από δω και πέρα</h2>
+<p>Λογική ροή, από το πιο ασφαλές στο πιο επικίνδυνο — και κάθε βήμα αφήνει το σύστημα να
+δουλεύει.</p>
+<table class="data"><thead><tr><th class="n">#</th><th>βήμα</th><th>επίπεδο</th><th>τι πιάνει</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td><b>Ο διακόπτης</b> (commit A)</td><td><b class="yes">0</b></td><td><b>και τις είκοσι οθόνες</b> ταυτόχρονα — αυτό είναι που κάνει το CRM να μοιάζει με το kit</td></tr>
+<tr><td class="n">2</td><td>Προτίμηση ανά χρήστη (commit B)</td><td>0→1</td><td>ένα κουμπί στο πλαϊνό</td></tr>
+<tr><td class="n">3</td><td>Τα τρία δομικά (μενού, badge, ακτίνα)</td><td>1</td><td>όλες οι οθόνες, μόνο εικόνα</td></tr>
+<tr><td class="n">4</td><td>«Χρειάζεται ενέργεια» στο dashboard + κουμπί ανά κατάσταση στη λίστα</td><td>2</td><td>δύο views· <b>θέλει characterisation πρώτα</b></td></tr>
+<tr><td class="n">5</td><td>AI rail στη λεπτομέρεια και στον wizard</td><td>2</td><td>δύο views· η Λίτσα υπάρχει ήδη, αλλάζει θέση</td></tr>
+<tr><td class="n">6</td><td>Δείκτες μεταβολής στα KPI (↑12 εβδομάδα)</td><td>2–3</td><td>θέλει νέο αριθμό από το backend</td></tr>
+<tr><td class="n">7</td><td>Δημόσια υπογραφή + σελίδα success</td><td><b class="no">3</b></td><td>νέα διαδρομή, token, rate limit· <b>integration tests πριν και μετά</b></td></tr>
+</tbody></table>
+<div class="callout"><p><b>Τα βήματα 1–3 δεν αγγίζουν ούτε μία γραμμή λειτουργίας</b> — ούτε
+view, ούτε endpoint, ούτε ερώτημα βάσης. Είναι όλη η οπτική αλλαγή που θα δεις, και το
+κόστος επιστροφής τους είναι να σβήσεις ένα μπλοκ CSS. Τα 4–7 είναι εκεί που πραγματικά
+χρειάζεται προσοχή, και το καθένα θα έρθει με δική του πρόταση, δικά του tests και δικό
+του commit.</p></div>
+</section>
+
+<section>
+<h2>Τι χρειάζεται απόφαση τώρα</h2>
+<table class="data"><thead><tr><th class="n">#</th><th>ερώτημα</th><th>προτεινόμενο</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td>Το σκούρο όπως το βλέπεις παραπάνω;</td><td><b>ναι</b> — μηδέν κείμενο κάτω από το όριο, τα 12 badge περνούν, το accent άθικτο</td></tr>
+<tr><td class="n">2</td><td>Θερμό ή ψυχρό σκούρο;</td><td><b>θερμό</b> — μηδέν νέα πρωτογενή, ΔE00 4,5–9,9 από το ψυχρό του kit</td></tr>
+<tr><td class="n">3</td><td>Ενεργό μενού: συμπαγές ή πλύση;</td><td>καθαρά γούστο· <b>πλύση</b> αν θες να μοιάζει με το kit</td></tr>
+<tr><td class="n">4</td><td>Badge pill και ακτίνα 12px;</td><td><b>ναι σε αμφότερα</b> — δύο γραμμές, μηδέν ρίσκο</td></tr>
+</tbody></table>
+</section>
+
+<footer>Energy CRM · <code>docs/UI-SHELL.html</code> · πρόταση κατά §1.8 · 19/08/2026<br>
+Το ίδιο markup ζωγραφίζεται δύο φορές με δύο σύνολα τιμών — δεν υπάρχει δεύτερο HTML.
+Κάθε λόγος αντίθεσης WCAG 2.x / sRGB, κάθε ΔE είναι ΔE00.</footer>
+
+</main></body></html>
