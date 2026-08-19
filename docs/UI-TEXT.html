@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — το αχνό κείμενο: --muted, --faint, --faint-2</title>
+<style>@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-greek-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-latin-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122}
+:root{--n0:#fff;--n25:#fdfdfc;--n50:#f8f8f6;--n100:#f1f1ee;--n150:#e9e8e4;--n200:#dedcd7;
+ --n300:#c6c4bd;--n400:#a3a099;--n500:#7c7a73;--n600:#5c5a55;--n700:#42413d;--n800:#2a2926;
+ --n900:#1a1a18;--n950:#111110;--p400:#16c217;--p700:#0b690c;--bad:#c32b47;
+ --f:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--n100);color:var(--n800);font-family:var(--f);line-height:1.62;
+ -webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:0 auto;padding:34px 20px 90px}
+h1{font-size:30px;font-weight:800;letter-spacing:-.025em;margin:0 0 6px;color:var(--n900)}
+h2{font-size:20px;font-weight:800;letter-spacing:-.015em;margin:0 0 4px;color:var(--n900)}
+h2 small{font-size:12px;font-weight:700;color:var(--n400);letter-spacing:.04em;margin-left:8px}
+h3{font-size:12.5px;font-weight:800;margin:20px 0 7px;color:var(--n500);letter-spacing:.06em;
+ text-transform:uppercase}
+p{margin:0 0 12px;font-size:14.5px}
+.lead{color:var(--n500);font-size:15.5px;margin-bottom:26px}
+section{background:var(--n0);border:1px solid var(--n150);border-radius:12px;padding:22px 24px;
+ margin-bottom:18px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.12em;
+ text-transform:uppercase;color:var(--n400);margin-bottom:8px}
+table{border-collapse:collapse;width:100%;margin:10px 0 4px;font-size:12.5px}
+th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+ color:var(--n400);padding:0 10px 7px 0;border-bottom:1px solid var(--n150);white-space:nowrap}
+td{padding:6px 10px 6px 0;border-bottom:1px solid var(--n100);vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;padding-right:14px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--n700)}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;
+ margin-right:6px;border:1px solid rgba(0,0,0,.12)}
+.yes{color:var(--p700);font-weight:700}.no{color:var(--bad);font-weight:800}
+.warn{color:#ab5506;font-weight:800}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--n150);
+ border-radius:10px;overflow:hidden;margin:10px 0}
+.cmp>div{padding:16px 18px;background:var(--n50)}
+.cmp>div+div{border-left:1px solid var(--n150);background:var(--n0)}
+.cmp h4,.cmp3 h4{margin:0 0 12px;font-size:10px;font-weight:800;letter-spacing:.1em;
+ text-transform:uppercase;color:var(--n400)}
+.cmp3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--n150);
+ border-radius:10px;overflow:hidden;margin:12px 0}
+.cmp3>div{padding:18px}
+.cmp3>div+div{border-left:1px solid var(--n150)}
+.pick{background:#eafaea}
+.cap{font-size:12px;color:var(--n500);margin:2px 0 14px}
+.callout{border-left:3px solid var(--p400);padding:2px 0 2px 14px;margin:14px 0}
+.callout.bad{border-left-color:var(--bad)}
+.callout.warn2{border-left-color:#ab5506}
+.callout p{margin:0;font-size:13.5px}
+.big{font-size:32px;font-weight:800;letter-spacing:-.03em;color:var(--n900);line-height:1.15;
+ margin:6px 0 10px}
+.big span{font-size:13.5px;font-weight:600;color:var(--n500);letter-spacing:0;display:block;
+ margin-top:4px;line-height:1.5}
+.zero{background:#eafaea;border:1px solid #a5eba7;border-radius:9px;padding:12px 15px;margin:12px 0;
+ font-size:13.5px}
+footer{font-size:12.5px;color:var(--n500);text-align:center;margin-top:26px}
+.dark{background:linear-gradient(135deg,#111110 0%,#1a1a18 55%,#2a2926 100%);border-radius:12px;
+ padding:16px 18px}
+.card{background:#fff;border:1px solid #e9e8e4;border-radius:12px;padding:12px 14px}
+.sunk{background:#f1f1ee;border-radius:999px;padding:3px 11px;display:inline-block}
+.ico{font-size:15px;line-height:1;font-weight:700}
+@media (max-width:820px){.cmp,.cmp3{grid-template-columns:1fr}
+ .cmp>div+div,.cmp3>div+div{border-left:none;border-top:1px solid var(--n150)}}
+</style></head><body><main>
+
+<div class="tag">Energy CRM · πρόταση εμφάνισης · §1.8 · 19/08/2026</div>
+<h1>Το αχνό κείμενο</h1>
+<p class="lead">Τρία tokens γράφουν το «δεύτερο» και το «τρίτο» κείμενο ολόκληρου του CRM:
+<code>--muted</code> σε <b>57</b> σημεία, <code>--faint</code> σε <b>15</b>, <code>--faint-2</code>
+σε <b>10</b>. Κανένα από τα τρία δεν περνά σήμερα το 4,5:1 όπου είναι κείμενο. Το πρώτο
+διορθώνεται με <b>μία τιμή</b>· τα άλλα δύο όχι, γιατί κάνουν τρεις διαφορετικές δουλειές
+με το ίδιο όνομα.</p>
+
+<section>
+<h2>Η μέθοδος <small>πριν από κάθε αριθμό αυτής της σελίδας</small></h2>
+<p><b>Τα πλήθη</b> βγήκαν με πέρασμα των δύο CSS ως δέντρο κανόνων: αφαίρεση σχολίων,
+σπάσιμο σε <code>επιλογέας { δηλώσεις }</code>, και καταμέτρηση κάθε δήλωσης που περιέχει
+<code>var(--muted)</code>, <code>var(--faint)</code> ή <code>var(--faint-2)</code>.
+Δίνει 47+10 = <b>57</b>, 12+3 = <b>15</b>, 8+2 = <b>10</b>.</p>
+<p><b>Το φόντο κάθε σημείου</b> δεν υποτέθηκε: για καθεμιά από τις 25 χρήσεις των
+<code>--faint*</code> βρέθηκε ο κανόνας του δοχείου που ορίζει <code>background</code>, και
+γράφτηκε δίπλα της. Εκεί όπου το δοχείο δεν ορίζει φόντο (γραφήματα, φίλτρα, subhead) η
+τιμή είναι της κάρτας, <code>--surface</code>.</p>
+<p><b>Οι λόγοι αντίθεσης</b> είναι WCAG 2.x πάνω σε sRGB — γραμμικοποίηση καναλιών,
+σχετική φωτεινότητα <code>0,2126R + 0,7152G + 0,0722B</code>,
+<code>(L₁+0,05)/(L₂+0,05)</code>. <b>Το ΔE είναι ΔE00</b> (CIEDE2000, D65), όχι CIE76 —
+γράφεται εδώ γιατί στην (46) ένας ΔE χωρίς μέθοδο δεν αναπαραγόταν.</p>
+<div class="callout"><p><b>Και μία μέτρηση που με διόρθωσε ενώ την έκανα.</b> Είχα γράψει
+ότι το <code>--muted</code> κάθεται και πάνω στις πινελιές κατάστασης, όπου θα έπεφτε στο
+4,21. Ο κώδικας λέει όχι: το <code>.ecrm-agepill.is-expired</code> αλλάζει <i>και</i> το
+χρώμα του σε <code>--st-cancel</code>, οπότε το <code>--muted</code> δεν φτάνει ποτέ εκεί.
+Έμεινε <b>ένα</b> τέτοιο σημείο, παρακάτω. Το εύρημα ήταν σχεδόν λάθος, και έγινε σωστό
+μόνο επειδή ελέγχθηκε ο κανόνας αντί να πιστευτεί το μοτίβο.</p></div>
+</section>
+
+<section>
+<h2>Μέρος Α — <code>--muted</code> <small>μία τιμή · 57 σημεία · κανένας κανόνας CSS δεν αλλάζει</small></h2>
+<p class="big">4,30 &nbsp;/&nbsp; 4,04<span><code>--muted</code> (<code>--n500</code>,
+<code>#7c7a73</code>) πάνω στην κάρτα και πάνω στον καμβά. Το όριο για κείμενο είναι 4,5:1.</span></p>
+
+<p>Το <code>--n500</code> έχει <b>έναν και μόνο καταναλωτή</b>: τη γραμμή
+<code>--muted: var(--n500)</code>. Μετρήθηκε — καμία άλλη χρήση <code>var(--n500)</code> δεν
+υπάρχει στα δύο αρχεία. Άρα η αλλαγή της τιμής του κινεί ακριβώς αυτά τα 57 σημεία και
+τίποτα άλλο.</p>
+
+<h3>Οι δύο υποψήφιες, σε κάθε φόντο πάνω στο οποίο πέφτει το <code>--muted</code></h3>
+<table><thead><tr><th>φόντο</th><th>πού</th>
+<th class="n">σήμερα<br>#7c7a73</th><th class="n">Α<br>#73716b</th><th class="n">Β<br>#6e6c66</th></tr></thead>
+<tbody>
+<tr><td><span class="sw" style="background:#ffffff"></span><code>#ffffff</code> <code>--surface</code></td><td>κάρτα, modal, πίνακας, πλαίσιο ειδοποιήσεων</td><td class="n"><b class="no">4.30</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><span class="sw" style="background:#fdfdfc"></span><code>#fdfdfc</code> <code>--surface-2</code></td><td>hover γραμμής, κάρτα γνωσιακής βάσης</td><td class="n"><b class="no">4.22</b></td><td class="n"><b class="yes">4.79</b></td><td class="n"><b class="yes">5.16</b></td></tr>
+<tr><td><span class="sw" style="background:#f8f8f6"></span><code>#f8f8f6</code> <code>--bg</code></td><td>καμβάς, κεφαλίδα πίνακα (<code>.ecrm-table th</code>), agepill</td><td class="n"><b class="no">4.04</b></td><td class="n"><b class="yes">4.59</b></td><td class="n"><b class="yes">4.94</b></td></tr>
+<tr><td><span class="sw" style="background:#fcf2ec"></span><code>#fcf2ec</code> <code>--st-pending-bg</code></td><td><b>ένα σημείο:</b> <code>.ecrm-bellitem__meta</code> σε ειδοποίηση που λιμνάζει</td><td class="n"><b class="no">3.90</b></td><td class="n"><b class="warn">4.43</b></td><td class="n"><b class="yes">4.76</b></td></tr>
+</tbody></table>
+<p class="cap">ΔE00 από τη σημερινή τιμή: <b>Α = 3,59</b> · <b>Β = 5,54</b>.
+L*: σήμερα 51,2 → Α 47,6 → Β 45,6.</p>
+
+<div class="callout warn2"><p><b>Το ένα σημείο που δεν κλείνει με την Α.</b> Όταν μια
+ειδοποίηση λιμνάζει, το <code>.ecrm-bellitem</code> βάφεται <code>--st-pending-bg</code>.
+Το <code>__age</code> μέσα του παίρνει ήδη δικό του χρώμα (<code>--st-pending</code>), το
+<code>__meta</code> όμως μένει <code>--muted</code> — και εκεί η Α δίνει <b>4,43</b>, δηλαδή
+0,07 κάτω. Τρεις δρόμοι, όλοι μικροί:
+<b>(i)</b> η τιμή Β, που το πάει σε 4,76 και κλείνει τα πάντα·
+<b>(ii)</b> μία γραμμή που δίνει στο <code>__meta</code> της λιμνασμένης ειδοποίησης το
+<code>--muted-strong</code> — <b>6,25</b> — ακριβώς όπως ήδη γίνεται δίπλα του με το
+<code>__age</code>· <b>(iii)</b> τίποτα, με τον λόγο γραμμένο.</p></div>
+
+<h3>Πριν / μετά, σε πραγματικά στοιχεία</h3>
+<div class="cmp3">
+ <div><h4>σήμερα · #7c7a73</h4>
+  <div class="card" style="margin-bottom:10px"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#7c7a73">Σύνολο συμβάσεων</div><div style="font-size:26px;font-weight:800;color:#2a2926;letter-spacing:-.02em">1.284</div></div>
+  <div style="background:#f8f8f6;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#7c7a73;margin-bottom:10px">Πελάτης &nbsp;·&nbsp; Πάροχος &nbsp;·&nbsp; Κατάσταση</div>
+  <div class="card"><div style="font-size:13.5px;font-weight:700;color:#2a2926">Κλήση στον κ. Παπαδόπουλο</div><div style="font-size:12px;color:#7c7a73">Ανανέωση συμβολαίου ρεύματος</div></div>
+ </div>
+ <div class="pick"><h4>Α · #73716b · ΔE 3,6</h4>
+  <div class="card" style="margin-bottom:10px"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#73716b">Σύνολο συμβάσεων</div><div style="font-size:26px;font-weight:800;color:#2a2926;letter-spacing:-.02em">1.284</div></div>
+  <div style="background:#f8f8f6;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#73716b;margin-bottom:10px">Πελάτης &nbsp;·&nbsp; Πάροχος &nbsp;·&nbsp; Κατάσταση</div>
+  <div class="card"><div style="font-size:13.5px;font-weight:700;color:#2a2926">Κλήση στον κ. Παπαδόπουλο</div><div style="font-size:12px;color:#73716b">Ανανέωση συμβολαίου ρεύματος</div></div>
+ </div>
+ <div><h4>Β · #6e6c66 · ΔE 5,5</h4>
+  <div class="card" style="margin-bottom:10px"><div style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#6e6c66">Σύνολο συμβάσεων</div><div style="font-size:26px;font-weight:800;color:#2a2926;letter-spacing:-.02em">1.284</div></div>
+  <div style="background:#f8f8f6;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6e6c66;margin-bottom:10px">Πελάτης &nbsp;·&nbsp; Πάροχος &nbsp;·&nbsp; Κατάσταση</div>
+  <div class="card"><div style="font-size:13.5px;font-weight:700;color:#2a2926">Κλήση στον κ. Παπαδόπουλο</div><div style="font-size:12px;color:#6e6c66">Ανανέωση συμβολαίου ρεύματος</div></div>
+ </div>
+</div>
+<p class="cap">Πάνω: <code>.ecrm-stat__k</code> σε κάρτα. Μέση: <code>.ecrm-table th</code>,
+που κάθεται σε <code>--bg</code> και είναι το χειρότερο από τα τρία σήμερα.
+Κάτω: <code>.ecrm-task__sub</code>.</p>
+<div class="zero"><b>Καμία από τις δύο δεν αγγίζει κανόνα CSS.</b> Αλλάζει η γραμμή
+<code>--n500</code> μέσα στο μπλοκ <code>.ecrm</code>, και τίποτα άλλο — όπως στην (47),
+όπου άλλαξαν 24 τιμές και κανένας κανόνας.</div>
+</section>
+
+<section>
+<h2>Μέρος Β — τα 25 σημεία <small>--faint 15 · --faint-2 10 · κρίνονται ένα-ένα</small></h2>
+<p>Δεν είναι μία απόφαση, είναι <b>τέσσερις</b>. Τα δύο tokens κάνουν σήμερα τρεις
+διαφορετικές δουλειές με το ίδιο όνομα — αχνό κείμενο σε ανοιχτό, αχνό κείμενο σε
+<i>σκούρο</i> πάνελ, και εικονίδιο. Οι τρεις τραβούν προς αντίθετες κατευθύνσεις: ό,τι
+σκουραίνει για να διαβαστεί στο λευκό, χειροτερεύει πάνω στο σκούρο. <b>Ίδιο σχήμα με το
+<code>--n900</code> της (52).</b></p>
+
+<h3>1 · Έξι σημεία σε σκούρο πάνελ — διαβάζονται ήδη μια χαρά</h3>
+<table><thead><tr><th>σημείο</th><th>token</th><th>δουλειά</th><th>φόντο</th><th class="n">σήμερα</th></tr></thead>
+<tbody>
+<tr><td><code>.ecrm-litsa__sub</code></td><td><code>--faint-2</code></td><td>κείμενο</td><td>κεφαλή Λίτσας, <code>#111110→#1a1a18</code></td><td class="n"><b class="yes">9.99</b></td></tr>
+<tr><td><code>.ecrm-litsa__x</code></td><td><code>--faint-2</code></td><td>εικονίδιο ×</td><td>ίδια κεφαλή</td><td class="n"><b class="yes">9.99</b></td></tr>
+<tr><td><code>.ecrm-payhero__sub</code></td><td><code>--faint-2</code></td><td>κείμενο</td><td>payhero, <code>#111110→#2a2926</code></td><td class="n"><b class="yes">8.33</b></td></tr>
+<tr><td><code>.ecrm-payhero__k</code></td><td><code>--faint</code></td><td>κείμενο</td><td>ίδιο ντεγκραντέ</td><td class="n"><b class="yes">5.57</b></td></tr>
+<tr><td><code>.ecrm-chip2</code></td><td><code>--faint-2</code></td><td>κείμενο</td><td><code>rgba(255,255,255,.06)</code> σε σκούρο → <code>#282826</code></td><td class="n"><b class="yes">8.46</b></td></tr>
+<tr><td><code>.ecrm-tlstat.is-online&nbsp;.ecrm-tlstat__l</code></td><td><code>--faint-2</code></td><td>κείμενο</td><td><code>--surface-inverse</code> <code>#1a1a18</code></td><td class="n"><b class="yes">9.99</b></td></tr>
+</tbody></table>
+<p class="cap">Οι στήλες «σήμερα» δείχνουν το χειρότερο άκρο κάθε ντεγκραντέ, όχι το μέσο.
+Το <code>.ecrm-chip2</code> είναι ένα από τα 11 <code>rgba()</code> σε
+<code>background</code>/<code>border</code> που ο φύλακας δεν βλέπει — υπολογίστηκε με
+σύνθεση άλφα πάνω στο <code>#1a1a18</code>.</p>
+
+<div class="cmp">
+ <div><h4>μένουν όπως είναι</h4>
+  <div class="dark"><div style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6bdd6d">Εκκαθάριση Αυγούστου</div><div style="font-size:27px;font-weight:800;color:#fff;letter-spacing:-.02em;margin:2px 0">3.418,50 €</div><div style="font-size:12.5px;color:#c6c4bd">42 συμβάσεις · 8 συνεργάτες</div><div style="height:10px"></div><div style="font-size:11px;color:#a3a099">ΠΛΗΡΩΤΕΟ ΕΩΣ</div><div style="font-size:13px;color:#fff;font-weight:700">10/09/2026</div></div>
+ </div>
+ <div><h4>ενοποιημένα σε <code>--chrome-ink</code></h4>
+  <div class="dark"><div style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6bdd6d">Εκκαθάριση Αυγούστου</div><div style="font-size:27px;font-weight:800;color:#fff;letter-spacing:-.02em;margin:2px 0">3.418,50 €</div><div style="font-size:12.5px;color:#a8a69f">42 συμβάσεις · 8 συνεργάτες</div><div style="height:10px"></div><div style="font-size:11px;color:#a8a69f">ΠΛΗΡΩΤΕΟ ΕΩΣ</div><div style="font-size:13px;color:#fff;font-weight:700">10/09/2026</div></div>
+ </div>
+</div>
+<p class="cap">Το <code>--chrome-ink</code> (<code>#a8a69f</code>) υπάρχει ήδη και σημαίνει
+ακριβώς αυτό: αχνό μελάνι πάνω στο σκούρο chrome. Δίνει 7,15 στο <code>#1a1a18</code> και
+5,97 στο <code>#2a2926</code>. ΔE00 από το <code>--faint</code> <b>1,8</b> (πρακτικά
+αόρατο)· από το <code>--faint-2</code> <b>8,2</b> — ορατό, σε πέντε σημεία.</p>
+<div class="callout"><p><b>Γιατί αξίζει παρότι δεν διορθώνει τίποτα σήμερα:</b> όσο τα
+<code>--faint*</code> κρατούν και τη δουλειά «αχνό πάνω σε σκούρο», ο διακόπτης του σκούρου
+θέματος θα πρέπει να τους δώσει τιμή που εξυπηρετεί δύο αντίθετα πράγματα — δηλαδή ακριβώς
+το αδιέξοδο που έλυσε η (52) σπάζοντας το <code>--n900</code> σε <code>--navy</code> και
+<code>--surface-inverse</code>. <b>Αν δεν γίνει τώρα, θα γίνει τότε, με 21 ονόματα
+παραπάνω στο τραπέζι.</b></p></div>
+
+<h3>2 · Πέντε εικονίδια σε ανοιχτό φόντο — όριο 3:1, όχι 4,5:1</h3>
+<table><thead><tr><th>σημείο</th><th>token</th><th>τι είναι</th><th>φόντο</th><th class="n">σήμερα</th><th class="n">με #83817a</th></tr></thead>
+<tbody>
+<tr><td><code>.ecrm-statusflow__arrow</code></td><td><code>--faint-2</code></td><td>βέλος ανάμεσα σε στάδια</td><td><code>#ffffff</code></td><td class="n"><b class="no">1.75</b></td><td class="n"><b class="yes">3.90</b></td></tr>
+<tr><td><code>.ecrm-task__rm</code></td><td><code>--faint-2</code></td><td>× αφαίρεσης εργασίας</td><td><code>#ffffff</code></td><td class="n"><b class="no">1.75</b></td><td class="n"><b class="yes">3.90</b></td></tr>
+<tr><td><code>.ecrm-kbentry__chev</code></td><td><code>--faint-2</code></td><td>chevron ανοίγματος</td><td><code>#ffffff</code></td><td class="n"><b class="no">1.75</b></td><td class="n"><b class="yes">3.90</b></td></tr>
+<tr><td><code>.ecrm-savedchip__x</code></td><td><code>--faint</code></td><td>× διαγραφής φίλτρου</td><td><code>#f1f1ee</code></td><td class="n"><b class="no">2.31</b></td><td class="n"><b class="yes">3.45</b></td></tr>
+<tr><td><code>.ecrm-kbdoc > summary::before</code></td><td><code>--faint</code></td><td>δείκτης ▸</td><td><code>#fdfdfc</code></td><td class="n"><b class="no">2.56</b></td><td class="n"><b class="yes">3.83</b></td></tr>
+</tbody></table>
+<p class="cap">Τα πέντε είναι <b>χειριστήρια</b>, όχι διακόσμηση: το × σβήνει, το chevron
+ανοίγει. Το όριο τους είναι 3:1 (WCAG 1.4.11), και <b>και τα πέντε πέφτουν κάτω από αυτό
+σήμερα</b> — το χειρότερο στο 1,75. Η προτεινόμενη τιμή <code>#83817a</code> (L* 54,0)
+είναι το πιο αχνό που περνά το 3:1 και στα τέσσερα ανοιχτά φόντα του CRM.</p>
+<div class="cmp">
+ <div><h4>σήμερα · 1,75</h4>
+  <div class="card" style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;border:2px solid #c6c4bd;flex:0 0 22px"></span><span style="flex:1"><b style="font-size:13.5px;color:#2a2926">Αποστολή συμβολαίου</b><br><span style="font-size:12px;color:#7c7a73">ΔΕΗ · Παπαδοπούλου Μαρία</span></span><span class="ico" style="color:#c6c4bd">✕</span></div>
+  <div style="height:10px"></div>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:13.5px;color:#2a2926">Πώς ακυρώνεται μια σύμβαση;</b><span class="ico" style="color:#c6c4bd">⌄</span></div>
+  <div style="height:10px"></div>
+  <div><span class="sunk" style="font-size:12px;color:#42413d;font-weight:700">Εκκρεμείς &gt; 7 ημ. <span style="color:#a3a099">✕</span></span></div>
+ </div>
+ <div><h4>με <code>#83817a</code> · 3,90</h4>
+  <div class="card" style="display:flex;align-items:center;gap:10px"><span style="width:22px;height:22px;border-radius:50%;border:2px solid #c6c4bd;flex:0 0 22px"></span><span style="flex:1"><b style="font-size:13.5px;color:#2a2926">Αποστολή συμβολαίου</b><br><span style="font-size:12px;color:#73716b">ΔΕΗ · Παπαδοπούλου Μαρία</span></span><span class="ico" style="color:#83817a">✕</span></div>
+  <div style="height:10px"></div>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:13.5px;color:#2a2926">Πώς ακυρώνεται μια σύμβαση;</b><span class="ico" style="color:#83817a">⌄</span></div>
+  <div style="height:10px"></div>
+  <div><span class="sunk" style="font-size:12px;color:#42413d;font-weight:700">Εκκρεμείς &gt; 7 ημ. <span style="color:#83817a">✕</span></span></div>
+ </div>
+</div>
+
+<h3>3 · Δεκατρία που είναι πραγματικό κείμενο — πάνε στο <code>--muted</code></h3>
+<p>Κανένα από τα δεκατρία δεν χρειάζεται νέα τιμή. Χρειάζεται το <b>σωστό όνομα</b>: είναι
+δεύτερο κείμενο, και το token του δεύτερου κειμένου είναι το <code>--muted</code>.</p>
+<table><thead><tr><th>σημείο</th><th>token σήμερα</th><th>φόντο</th><th class="n">σήμερα</th><th class="n">Α #73716b</th><th class="n">Β #6e6c66</th></tr></thead>
+<tbody>
+<tr><td><code>.ecrm-subhead .ecrm-hint</code></td><td><code>--faint-2</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">1.75</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-kbgroup__count</code></td><td><code>--faint</code></td><td><code>#f1f1ee</code> <code>--surface-sunk</code></td><td class="n"><b class="no">2.31</b></td><td class="n"><b class="warn">4.31</b></td><td class="n"><b class="yes">4.64</b></td></tr>
+<tr><td><code>.ecrm-savedfilters__lbl</code></td><td><code>--faint</code></td><td><code>#f8f8f6</code></td><td class="n"><b class="no">2.45</b></td><td class="n"><b class="yes">4.59</b></td><td class="n"><b class="yes">4.94</b></td></tr>
+<tr><td><code>.ecrm-statusflow__end</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-task__note</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-muted</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-kbfilter &gt; span</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-gsearch__empty</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-tier__scale</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-yaxis span</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-xaxis span</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-field__label::after</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+<tr><td><code>.ecrm-subhead</code></td><td><code>--faint</code></td><td><code>#ffffff</code></td><td class="n"><b class="no">2.61</b></td><td class="n"><b class="yes">4.88</b></td><td class="n"><b class="yes">5.25</b></td></tr>
+</tbody></table>
+
+<div class="callout warn2"><p><b>Και εδώ φαίνεται το δεύτερο σημείο που η Α δεν κλείνει.</b>
+Το <code>.ecrm-kbgroup__count</code> είναι αριθμός μέσα σε pill με φόντο
+<code>--surface-sunk</code>: με την Α φτάνει <b>4,31</b>, με τη Β <b>4,64</b>. Μαζί με το
+<code>.ecrm-bellitem__meta</code> του Μέρους Α, <b>η Α αφήνει δύο σημεία κάτω από το όριο
+και η Β κανένα</b>. Αυτό είναι το πραγματικό ερώτημα ανάμεσα στις δύο, όχι το ΔE.</p></div>
+
+<h3>Η ιεραρχία που χάνεται, και τι την κρατά</h3>
+<div class="cmp">
+ <div><h4>σήμερα · δύο επίπεδα με χρώμα</h4>
+  <div class="card"><div style="border-top:1px solid #e9e8e4;padding-top:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#a3a099">Στοιχεία παροχής</span> <span style="font-size:11px;font-weight:600;color:#c6c4bd">— συμπληρώνονται αυτόματα από τον λογαριασμό</span></div><div style="height:10px"></div><label style="font-size:12px;font-weight:700;color:#1a1a18">Αριθμός παροχής</label><div style="border:1.5px solid #dedcd7;border-radius:10px;padding:8px 11px;font-size:13px;color:#2a2926;margin-top:4px">4 12345678 01</div></div>
+ </div>
+ <div><h4>μετά · δύο επίπεδα με βάρος και πεζά/κεφαλαία</h4>
+  <div class="card"><div style="border-top:1px solid #e9e8e4;padding-top:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#73716b">Στοιχεία παροχής</span> <span style="font-size:11px;font-weight:600;color:#73716b">— συμπληρώνονται αυτόματα από τον λογαριασμό</span></div><div style="height:10px"></div><label style="font-size:12px;font-weight:700;color:#1a1a18">Αριθμός παροχής</label><div style="border:1.5px solid #dedcd7;border-radius:10px;padding:8px 11px;font-size:13px;color:#2a2926;margin-top:4px">4 12345678 01</div></div>
+ </div>
+</div>
+<p class="cap">Το <code>.ecrm-subhead</code> και το <code>.ecrm-hint</code> του διαφέρουν ήδη
+σε <b>βάρος</b> (800 / 600), <b>κεφαλαία</b> και <b>letter-spacing</b>. Το χρώμα ήταν το
+τέταρτο κανάλι διαφοράς — και το μόνο που έκανε τη μία από τις δύο αδιάβαστη στο
+<b>1,75</b>. Αυτό είναι το τίμημα της αλλαγής και είναι εδώ για να το δει το μάτι.</p>
+
+<h3>4 · Ένα που εξαιρείται</h3>
+<table><thead><tr><th>σημείο</th><th>token</th><th>γιατί εξαιρείται</th><th class="n">σήμερα</th></tr></thead>
+<tbody><tr><td><code>.ecrm-btn--ghost:disabled</code></td><td><code>--faint-2</code></td><td>απενεργοποιημένο χειριστήριο — το WCAG 1.4.3 εξαιρεί ρητά τα ανενεργά στοιχεία, και το «σβηστό» <i>είναι</i> η πληροφορία</td><td class="n">1.75</td></tr></tbody></table>
+<div class="zero"><b>Το αποτέλεσμα σε ονόματα:</b> μετά από αυτό το <code>--faint</code>
+έχει <b>πέντε</b> καταναλωτές, όλους εικονίδια, και το <code>--faint-2</code> έχει
+<b>έναν</b> — το απενεργοποιημένο κουμπί. Δύο ονόματα που σήμαιναν «λίγο πιο αχνό» και
+«ακόμα πιο αχνό» αρχίζουν να λένε δουλειά: <i>εικονίδιο</i> και <i>ανενεργό</i>. Αν
+μετονομαστούν, είναι δική τους απόφαση και δεν χρειάζεται εδώ.</div>
+</section>
+
+<section>
+<h2>Τι αλλάζει σε κώδικα</h2>
+<h3>Τιμές — μέσα στο μπλοκ <code>.ecrm</code> του <code>ecrm-form.css</code></h3>
+<table><thead><tr><th>γραμμή</th><th>από</th><th>σε</th><th>γιατί</th></tr></thead>
+<tbody>
+<tr><td><code>--n500</code></td><td><code>#7c7a73</code></td><td><code>#73716b</code> (Α) ή <code>#6e6c66</code> (Β)</td><td>το δεύτερο κείμενο περνά το 4,5:1· ένας μόνο καταναλωτής, το <code>--muted</code></td></tr>
+<tr><td><code>--n450</code> <b>νέο</b></td><td>—</td><td><code>#83817a</code></td><td>νέο σκαλί για τα εικονίδια· L* 54,0, ανάμεσα στο <code>--n400</code> (65,9) και το <code>--n500</code> (51,2)</td></tr>
+<tr><td><code>--faint</code></td><td><code>var(--n400)</code></td><td><code>var(--n450)</code></td><td>το <code>--faint</code> παύει να είναι κείμενο και γίνεται <b>μελάνι εικονιδίου</b></td></tr>
+</tbody></table>
+<p class="cap">Τα <code>--n400</code> και <code>--n300</code> <b>δεν</b> αγγίζονται: τρέφουν
+και τα <code>--line-strong</code> / <code>--line-mid</code> / <code>--fill-mute*</code> —
+συνολικά 18 σημεία περιγραμμάτων και κουκκίδων που δεν έχουν κανένα πρόβλημα. Γι' αυτό
+μπαίνει νέο σκαλί αντί να μετακινηθεί υπάρχον. <i>(Με τη Β η ράμπα βγαίνει και πιο ίσια:
+τα κενά γίνονται 12,0 → 8,3 μονάδες L*, αντί 12,0 → 2,8.)</i></p>
+
+<h3>Δηλώσεις — καμία νέα, καμία διαγραφή</h3>
+<table><thead><tr><th class="n">πλήθος</th><th>αλλαγή</th><th>πού</th></tr></thead>
+<tbody>
+<tr><td class="n"><b>13</b></td><td><code>var(--faint)</code> / <code>var(--faint-2)</code> → <code>var(--muted)</code></td><td>τα δεκατρία της ομάδας 3</td></tr>
+<tr><td class="n"><b>3</b></td><td><code>var(--faint-2)</code> → <code>var(--faint)</code></td><td><code>statusflow__arrow</code>, <code>task__rm</code>, <code>kbentry__chev</code></td></tr>
+<tr><td class="n"><b>6</b></td><td><code>var(--faint)</code> / <code>var(--faint-2)</code> → <code>var(--chrome-ink)</code></td><td>τα έξι του σκούρου πάνελ — <b>προαιρετικό</b></td></tr>
+<tr><td class="n"><b>0–1</b></td><td>νέος κανόνας: <code>.ecrm-bellitem.is-stale .ecrm-bellitem__meta</code></td><td>μόνο αν επιλεγεί η Α χωρίς τη Β</td></tr>
+</tbody></table>
+
+<h3>Οι τέσσερις αριθμοί — πρόβλεψη πριν τρέξει το <code>check:all</code></h3>
+<p>Καμία μετακίνηση: <b>phpcs 248</b>, <b>phpstan 141</b>, <b>unit 858 (1 skipped)</b>,
+<b>integration 291 (1943 assertions)</b>. Ο λόγος γραμμένος, όχι υποσχεμένος: δεν
+προστίθεται αρχείο PHP σε <code>src</code>/<code>tests</code>/<code>includes</code>/
+<code>admin</code>/<code>public</code> (άρα ούτε +3 από τους τρεις απαριθμητές αρχείων),
+δεν προστίθεται test method, δεν αλλάζει assertion, και τα δύο CSS παραμένουν δύο (άρα ο
+<code>styleSheets</code> μένει 2). Ο <code>ColourIsDecidedInOnePlaceTest</code> μένει
+πράσινος γιατί το <code>#83817a</code> γράφεται σε <b>γραμμή ορισμού custom property</b>,
+που είναι ακριβώς το επιτρεπτό — και η <code>LEFTOVERS</code> μένει κενή.</p>
+<div class="callout bad"><p><b>Αν κάποιος από τους τέσσερις κινηθεί, το commit δεν
+προχωράει μέχρι να εξηγηθεί γιατί.</b> Στις 19/08 ο pre-commit άφησε δύο commit να
+περάσουν χωρίς έλεγχο και σιωπούσε· διορθώθηκε στην (48), αλλά η πρόβλεψη είναι το δεύτερο
+δίχτυ και δεν αντικαθίσταται από αυτήν.</p></div>
+</section>
+
+<section>
+<h2>Τι ΔΕΝ προτείνεται εδώ</h2>
+<p><b>Ο διακόπτης του σκούρου.</b> Είναι το επόμενο βήμα και έχει δική του πρόταση. Αυτή
+εδώ τον <i>ξεκλειδώνει</i> κατά ένα κομμάτι — αν εγκριθεί η ομάδα 1, τα
+<code>--faint*</code> παύουν να κουβαλούν τη δουλειά «αχνό πάνω σε σκούρο», που είναι
+ακριβώς η διπλή δουλειά που έκανε την αντιστροφή της ράμπας αδύνατη.</p>
+<p><b>Τα μετάλλια και τα avatar.</b> Μένουν ανοιχτά, όπως γράφτηκαν στο <code>§6β</code>:
+2,65 / 2,64 / 4,24 τα πρώτα, ολόκληρος ο χρωματικός κύκλος τα δεύτερα. Καμία τιμή
+ουδέτερου δεν τα αγγίζει.</p>
+<p><b>Το τυφλό σημείο του φύλακα.</b> 36 <code>rgba()</code>/<code>hsl()</code> μέσα σε
+κανόνες — 25 σε <code>box-shadow</code>, 9 σε <code>background</code>, 2 σε
+<code>border</code>. Ένα από αυτά υπολογίστηκε εδώ (το <code>.ecrm-chip2</code>), αλλά η
+επέκταση του κανόνα ανοίγει νέα λίστα χρέους και δεν μοιράζεται commit με αυτό.</p>
+<p><b>Το <code>docs/UI-KIT.html</code>.</b> Είναι μια παλέτα πίσω — δεν περιέχει καμία από
+τις δώδεκα τιμές καταστάσεων της (46)/(47). Δεν ενημερώνεται εδώ.</p>
+</section>
+
+<section>
+<h2>Τι χρειάζεται απόφαση</h2>
+<table><thead><tr><th>#</th><th>ερώτημα</th><th>προτεινόμενο</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td><code>--muted</code>: <b>Α</b> <code>#73716b</code> (ΔE 3,6, αφήνει 2 σημεία στο 4,43 και 4,31) ή <b>Β</b> <code>#6e6c66</code> (ΔE 5,5, δεν αφήνει κανένα);</td><td><b>Β</b> — η διαφορά στο μάτι είναι 2 μονάδες ΔE, η διαφορά στη μέτρηση είναι «περνά» / «δεν περνά»</td></tr>
+<tr><td class="n">2</td><td>Τα 5 εικονίδια: νέο <code>--n450</code> <code>#83817a</code>;</td><td><b>ναι</b> — και τα πέντε είναι χειριστήρια κάτω από το 3:1 σήμερα</td></tr>
+<tr><td class="n">3</td><td>Τα 13 κείμενα στο <code>--muted</code>, με την ιεραρχία να κρατιέται από βάρος και κεφαλαία;</td><td><b>ναι</b></td></tr>
+<tr><td class="n">4</td><td>Τα 6 του σκούρου πάνελ στο <code>--chrome-ink</code> (ΔE 8,2 σε πέντε από αυτά);</td><td><b>ναι, αλλά χωριστά</b> — δεν διορθώνει τίποτα σήμερα, καθαρίζει τον δρόμο του διακόπτη· μπορεί να πάει μαζί του</td></tr>
+</tbody></table>
+</section>
+
+<footer>Energy CRM · <code>docs/UI-TEXT.html</code> · πρόταση κατά §1.8 · 19/08/2026<br>
+Κάθε λόγος αντίθεσης WCAG 2.x/sRGB, κάθε ΔE είναι ΔE00. Τα πλήθη από πέρασμα των δύο CSS
+ως δέντρο κανόνων, όχι από grep γραμμών.</footer>
+
+</main></body></html>
