@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — οι δώδεκα καταστάσεις, ξανασχεδιασμένες</title>
+<style>
+@font-face { font-family:"Manrope"; font-style:normal; font-weight:200 800; font-display:swap;
+  src:url("../public/assets/fonts/manrope-greek-wght-normal.woff2") format("woff2-variations");
+  unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF; }
+@font-face { font-family:"Manrope"; font-style:normal; font-weight:200 800; font-display:swap;
+  src:url("../public/assets/fonts/manrope-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122; }
+:root{
+  --n0:#ffffff; --n50:#f8f8f6; --n100:#f1f1ee; --n150:#e9e8e4; --n200:#dedcd7;
+  --n400:#a3a099; --n500:#7c7a73; --n700:#42413d; --n800:#2a2926; --n900:#1a1a18;
+  --p400:#16c217; --p700:#0b690c; --bad:#c32b47;
+  --f:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--n100);color:var(--n800);font-family:var(--f);line-height:1.62;
+  -webkit-font-smoothing:antialiased}
+main{max-width:900px;margin:0 auto;padding:34px 20px 90px}
+h1{font-size:30px;font-weight:800;letter-spacing:-.025em;margin:0 0 6px;color:var(--n900)}
+h2{font-size:20px;font-weight:800;letter-spacing:-.015em;margin:0 0 10px;color:var(--n900)}
+h3{font-size:13px;font-weight:800;margin:20px 0 7px;color:var(--n700);letter-spacing:.01em}
+p{margin:0 0 12px;font-size:14.5px}
+.lead{color:var(--n500);font-size:15.5px;margin-bottom:26px}
+section{background:var(--n0);border:1px solid var(--n150);border-radius:12px;padding:22px 24px;
+  margin-bottom:18px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+section.dark{background:#171715;border-color:#2e2e2a;color:#e8e6e1}
+section.dark h2,section.dark h3{color:#ffffff}
+section.dark p{color:#b9b6ae}
+section.dark .strip{background:#22221f;border-color:#33332e}
+section.dark table{color:#e8e6e1}
+section.dark th{color:#8b877e;border-bottom-color:#33332e}
+section.dark td{border-bottom-color:#2a2a26}
+section.dark code{color:#b9b6ae}
+section.dark .demo{background:#22221f;border-color:#33332e}
+section.dark .demo td{border-bottom-color:#33332e}
+section.dark .demo .mono{color:#8b877e}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--n400);margin-bottom:8px}
+table{border-collapse:collapse;width:100%;margin:12px 0 6px;font-size:13px}
+th{text-align:left;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--n400);padding:0 10px 7px 0;border-bottom:1px solid var(--n150);white-space:nowrap}
+td{padding:7px 10px 7px 0;border-bottom:1px solid var(--n100);vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;padding-right:14px}
+td.dim{color:var(--n400)} td.was{color:var(--n400)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--n700)}
+.yes{color:var(--p700);font-weight:700} .no{color:var(--bad);font-weight:800}
+.bdg{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;
+  font-size:11.5px;font-weight:700;white-space:nowrap}
+.bdg i{width:6px;height:6px;flex:0 0 6px;border-radius:50%}
+.bdg b{font-size:11px;font-weight:900;line-height:1}
+.strip{display:flex;flex-wrap:wrap;gap:7px;padding:14px;background:var(--n50);
+  border:1px solid var(--n150);border-radius:9px;margin:10px 0 4px}
+.cap{font-size:12px;color:var(--n500);margin:0 0 16px}
+.callout{border-left:3px solid var(--p400);padding:2px 0 2px 14px;margin:14px 0}
+.callout.bad{border-left-color:var(--bad)}
+.callout p{margin:0}
+.big{font-size:33px;font-weight:800;letter-spacing:-.03em;color:var(--n900);line-height:1.15;margin:6px 0 10px}
+.big span{font-size:14px;font-weight:600;color:var(--n500);letter-spacing:0;display:block;margin-top:2px}
+.demo{width:100%;border:1px solid var(--n150);border-radius:9px;overflow:hidden;background:var(--n0);margin:10px 0 4px}
+.demo table{margin:0}
+.demo td{padding:9px 14px;font-size:13.5px}
+.demo tr:last-child td{border-bottom:none}
+.demo .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--n500);width:120px}
+pre{background:var(--n50);border:1px solid var(--n150);border-radius:9px;padding:14px 16px;
+  overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.75;
+  color:var(--n700);margin:10px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0 2px}
+.grid>div{background:var(--n50);border:1px solid var(--n150);border-radius:9px;padding:13px 15px}
+.grid h4{margin:0 0 4px;font-size:13px;font-weight:800}
+.grid p{margin:0;font-size:12.5px;color:var(--n500);line-height:1.5}
+footer{font-size:12.5px;color:var(--n500);text-align:center;margin-top:26px}
+@media (max-width:720px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+
+<div class="tag">Energy CRM · πρόταση εμφάνισης · 19/08/2026</div>
+<h1>Οι δώδεκα καταστάσεις, ξανασχεδιασμένες</h1>
+<p class="lead">Δεν μπαλώνουμε τα υπάρχοντα χρώματα — τα ξαναφτιάχνουμε, ώστε <b>η ίδια τιμή να
+κάνει και την κουκκίδα και το γράμμα</b> χωρίς να κόβεται πουθενά. Καμία αλλαγή σε κανόνα CSS:
+αλλάζουν μόνο 24 τιμές μέσα στο μπλοκ των tokens. Και επειδή έτσι κι αλλιώς τις πιάνουμε,
+σχεδιάζονται μαζί και οι 24 του σκούρου.</p>
+
+<section>
+<h2>Γιατί δεν φταίνε οι αποχρώσεις — φταίει η φωτεινότητα</h2>
+<p>Το badge γράφει με το χρώμα της κατάστασης πάνω στην ανοιχτή πινελιά της:
+<code>color: var(--st-X)</code> σε <code>background: var(--st-X-bg)</code>. Στα 11,5px bold το
+όριο του WCAG είναι <b>4,5:1</b> — «large text» θα ήταν από 18,66px bold και πάνω.</p>
+<p class="big">8 στις 12 κόβονταν<span>Και δεν ήταν θέμα γούστου: με πινελιά στο L* 95,
+κανένα χρώμα πάνω από <b>L* ≈ 46</b> δεν φτάνει το 4,5:1 — και τα οκτώ που κόβονταν είναι
+<i>ακριβώς</i> τα οκτώ που ήταν πιο ανοιχτά από αυτό.</span></p>
+<div class="strip"><span class="bdg" style="background:#f0f1f3;color:#8f929a"><i style="background:#8f929a"></i>Πρόχειρο</span><span class="bdg" style="background:#eaf3fc;color:#5b9be0"><i style="background:#5b9be0"></i>Νέα</span><span class="bdg" style="background:#e8f1fb;color:#4587d4"><i style="background:#4587d4"></i>Προς υπογραφή</span><span class="bdg" style="background:#e6effa;color:#2f72c4"><i style="background:#2f72c4"></i>Αναμονή υπογραφής</span><span class="bdg" style="background:#e4ecf7;color:#255fa8"><i style="background:#255fa8"></i>Υπογεγραμμένη</span><span class="bdg" style="background:#e2eaf4;color:#1b4c8a"><i style="background:#1b4c8a"></i>Σε επεξεργασία</span><span class="bdg" style="background:#fdf3e0;color:#b87503"><b>!</b>Εκκρεμότητα</span><span class="bdg" style="background:#e7f5eb;color:#33a854"><i style="background:#33a854"></i>Επιλύθηκε</span><span class="bdg" style="background:#e4f4e9;color:#1b8a3d"><i style="background:#1b8a3d"></i>Δρομολογήθηκε</span><span class="bdg" style="background:#e1f0e6;color:#0f5f29"><i style="background:#0f5f29"></i>Ενεργή</span><span class="bdg" style="background:#fceaee;color:#c42a47"><b>×</b>Ακυρώθηκε</span><span class="bdg" style="background:#eceef0;color:#6e727a"><i style="background:#6e727a"></i>Τερματίστηκε</span></div>
+<p class="cap">Όπως είναι σήμερα.</p>
+<div class="callout bad"><p><b>Η αιτία σε μία γραμμή:</b> οι δώδεκα τιμές σχεδιάστηκαν για να
+ξεχωρίζουν <i>μεταξύ τους</i> — αυτό μετρά το ΔE της παλέτας — και για να διαβάζονται ως
+κουκκίδες, όπου το όριο είναι 3:1. Κανείς δεν τις ρώτησε αν αντέχουν ως <i>γράμματα</i>. Το
+amber ρωτήθηκε, και γι' αυτό μόνο αυτό απέκτησε <code>-ink</code>.</p></div>
+</section>
+
+<section>
+<h2>Η πρόταση, ανοιχτός καμβάς</h2>
+<p>Ίδιες αποχρώσεις, ίδιες οικογένειες, ίδια σειρά. Κάθε ράμπα κατεβαίνει ώστε <b>και το πιο
+ανοιχτό σκαλί</b> να περνά το όριο, και οι πινελιές μένουν εκεί που ήταν. Το αποτέλεσμα είναι
+βαθύτερο και πιο ήσυχο — πιο κοντά στο ανθρακί της ταυτότητας παρά στα παστέλ.</p>
+<div class="strip"><span class="bdg" style="background:#f0f1f3;color:#6a6d75"><i style="background:#6a6d75"></i>Πρόχειρο</span><span class="bdg" style="background:#ecf2fc;color:#0072b7"><i style="background:#0072b7"></i>Νέα</span><span class="bdg" style="background:#ebf0fb;color:#0062a8"><i style="background:#0062a8"></i>Προς υπογραφή</span><span class="bdg" style="background:#eaeefa;color:#005499"><i style="background:#005499"></i>Αναμονή υπογραφής</span><span class="bdg" style="background:#e8ebf7;color:#00468a"><i style="background:#00468a"></i>Υπογεγραμμένη</span><span class="bdg" style="background:#e8e9f1;color:#043875"><i style="background:#043875"></i>Σε επεξεργασία</span><span class="bdg" style="background:#fcf2ec;color:#ab5506"><b>!</b>Εκκρεμότητα</span><span class="bdg" style="background:#e9f5ea;color:#0b7e36"><i style="background:#0b7e36"></i>Επιλύθηκε</span><span class="bdg" style="background:#e6f4e7;color:#006926"><i style="background:#006926"></i>Δρομολογήθηκε</span><span class="bdg" style="background:#e3f0e4;color:#00531e"><i style="background:#00531e"></i>Ενεργή</span><span class="bdg" style="background:#fdeaea;color:#c32b47"><b>×</b>Ακυρώθηκε</span><span class="bdg" style="background:#edeef0;color:#59595b"><i style="background:#59595b"></i>Τερματίστηκε</span></div>
+<div class="demo"><table><tr><td class="mono">ORIZON-0036</td><td>ΚΩΝΣΤΑΝΤΙΝΟΣ ΝΙΚΑΣ</td><td><span class="bdg" style="background:#e3f0e4;color:#00531e"><i style="background:#00531e"></i>Ενεργή</span></td></tr><tr><td class="mono">PROT-0114</td><td>ΜΑΡΙΑ ΠΑΠΠΑ</td><td><span class="bdg" style="background:#fcf2ec;color:#ab5506"><b>!</b>Εκκρεμότητα</span></td></tr><tr><td class="mono">NRG-0088</td><td>ΓΕΩΡΓΙΟΣ ΛΕΜΟΝΗΣ</td><td><span class="bdg" style="background:#eaeefa;color:#005499"><i style="background:#005499"></i>Αναμονή υπογραφής</span></td></tr><tr><td class="mono">ELPE-0021</td><td>ΕΛΕΝΗ ΒΑΣΙΛΕΙΟΥ</td><td><span class="bdg" style="background:#fdeaea;color:#c32b47"><b>×</b>Ακυρώθηκε</span></td></tr><tr><td class="mono">PROT-0119</td><td>ΔΗΜΗΤΡΗΣ ΚΩΣΤΑ</td><td><span class="bdg" style="background:#e6f4e7;color:#006926"><i style="background:#006926"></i>Δρομολογήθηκε</span></td></tr></table></div>
+<p class="cap">Σε λίστα συμβάσεων, εκεί που πραγματικά διαβάζονται.</p>
+<table>
+<thead><tr><th>badge</th><th>χρώμα</th><th>πινελιά</th><th class="n">λόγος</th>
+<th class="n">σε λευκό</th><th class="n">ΔE από σήμερα</th><th class="n">ήταν</th></tr></thead>
+<tbody><tr><td><span class="bdg" style="background:#f0f1f3;color:#6a6d75"><i style="background:#6a6d75"></i>Πρόχειρο</span></td><td><code>#6a6d75</code></td><td><code>#f0f1f3</code></td><td class="n"><span class="yes">4.58</span></td><td class="n">5.18</td><td class="n dim">14.1</td><td class="n was">2.75</td></tr><tr><td><span class="bdg" style="background:#ecf2fc;color:#0072b7"><i style="background:#0072b7"></i>Νέα</span></td><td><code>#0072b7</code></td><td><code>#ecf2fc</code></td><td class="n"><span class="yes">4.56</span></td><td class="n">5.13</td><td class="n dim">15.6</td><td class="n was">2.60</td></tr><tr><td><span class="bdg" style="background:#ebf0fb;color:#0062a8"><i style="background:#0062a8"></i>Προς υπογραφή</span></td><td><code>#0062a8</code></td><td><code>#ebf0fb</code></td><td class="n"><span class="yes">5.55</span></td><td class="n">6.34</td><td class="n dim">14.7</td><td class="n was">3.25</td></tr><tr><td><span class="bdg" style="background:#eaeefa;color:#005499"><i style="background:#005499"></i>Αναμονή υπογραφής</span></td><td><code>#005499</code></td><td><code>#eaeefa</code></td><td class="n"><span class="yes">6.64</span></td><td class="n">7.70</td><td class="n dim">11.3</td><td class="n was">4.18</td></tr><tr><td><span class="bdg" style="background:#e8ebf7;color:#00468a"><i style="background:#00468a"></i>Υπογεγραμμένη</span></td><td><code>#00468a</code></td><td><code>#e8ebf7</code></td><td class="n"><span class="yes">7.87</span></td><td class="n">9.36</td><td class="n dim">8.7</td><td class="n was">5.38</td></tr><tr><td><span class="bdg" style="background:#e8e9f1;color:#043875"><i style="background:#043875"></i>Σε επεξεργασία</span></td><td><code>#043875</code></td><td><code>#e8e9f1</code></td><td class="n"><span class="yes">9.50</span></td><td class="n">11.49</td><td class="n dim">6.6</td><td class="n was">7.07</td></tr><tr><td><span class="bdg" style="background:#fcf2ec;color:#ab5506"><b>!</b>Εκκρεμότητα</span></td><td><code>#ab5506</code></td><td><code>#fcf2ec</code></td><td class="n"><span class="yes">4.72</span></td><td class="n">5.21</td><td class="n dim">12.8</td><td class="n was">3.42</td></tr><tr><td><span class="bdg" style="background:#e9f5ea;color:#0b7e36"><i style="background:#0b7e36"></i>Επιλύθηκε</span></td><td><code>#0b7e36</code></td><td><code>#e9f5ea</code></td><td class="n"><span class="yes">4.62</span></td><td class="n">5.18</td><td class="n dim">14.7</td><td class="n was">2.72</td></tr><tr><td><span class="bdg" style="background:#e6f4e7;color:#006926"><i style="background:#006926"></i>Δρομολογήθηκε</span></td><td><code>#006926</code></td><td><code>#e6f4e7</code></td><td class="n"><span class="yes">6.05</span></td><td class="n">6.89</td><td class="n dim">11.5</td><td class="n was">3.88</td></tr><tr><td><span class="bdg" style="background:#e3f0e4;color:#00531e"><i style="background:#00531e"></i>Ενεργή</span></td><td><code>#00531e</code></td><td><code>#e3f0e4</code></td><td class="n"><span class="yes">7.91</span></td><td class="n">9.31</td><td class="n dim">3.8</td><td class="n was">6.62</td></tr><tr><td><span class="bdg" style="background:#fdeaea;color:#c32b47"><b>×</b>Ακυρώθηκε</span></td><td><code>#c32b47</code></td><td><code>#fdeaea</code></td><td class="n"><span class="yes">4.83</span></td><td class="n">5.59</td><td class="n dim">0.2</td><td class="n was">4.81</td></tr><tr><td><span class="bdg" style="background:#edeef0;color:#59595b"><i style="background:#59595b"></i>Τερματίστηκε</span></td><td><code>#59595b</code></td><td><code>#edeef0</code></td><td class="n"><span class="yes">6.02</span></td><td class="n">6.99</td><td class="n dim">9.8</td><td class="n was">4.15</td></tr></tbody></table>
+<p class="cap">«Λόγος» = κείμενο πάνω στην πινελιά του. «Σε λευκό» = η ίδια τιμή ως κουκκίδα ή
+ταινία πάνω σε κάρτα. Ελάχιστο: <b>4.56</b>.</p>
+</section>
+
+<section class="dark">
+<h2>Η ίδια δωδεκάδα, σκούρος καμβάς</h2>
+<p>Οι ίδιες αποχρώσεις αναποδογυρισμένες: το χρώμα ανεβαίνει σε φωτεινότητα, η πινελιά πέφτει.
+Η σειρά της ράμπας διατηρείται — όσο προχωρά η κατάσταση, τόσο πιο έντονη γίνεται.</p>
+<div class="strip"><span class="bdg" style="background:#343536;color:#9fa0a3"><i style="background:#9fa0a3"></i>Πρόχειρο</span><span class="bdg" style="background:#2e353f;color:#79afec"><i style="background:#79afec"></i>Νέα</span><span class="bdg" style="background:#2f3540;color:#8db8f7"><i style="background:#8db8f7"></i>Προς υπογραφή</span><span class="bdg" style="background:#303541;color:#a2c1ff"><i style="background:#a2c1ff"></i>Αναμονή υπογραφής</span><span class="bdg" style="background:#31343f;color:#b9cbff"><i style="background:#b9cbff"></i>Υπογεγραμμένη</span><span class="bdg" style="background:#323440;color:#cdd5ff"><i style="background:#cdd5ff"></i>Σε επεξεργασία</span><span class="bdg" style="background:#3f322a;color:#ffb682"><b>!</b>Εκκρεμότητα</span><span class="bdg" style="background:#2c382d;color:#75b47e"><i style="background:#75b47e"></i>Επιλύθηκε</span><span class="bdg" style="background:#2c382d;color:#8cc792"><i style="background:#8cc792"></i>Δρομολογήθηκε</span><span class="bdg" style="background:#2c382d;color:#a3d9a9"><i style="background:#a3d9a9"></i>Ενεργή</span><span class="bdg" style="background:#423030;color:#fb8a91"><b>×</b>Ακυρώθηκε</span><span class="bdg" style="background:#343536;color:#a3a6ad"><i style="background:#a3a6ad"></i>Τερματίστηκε</span></div>
+<div class="demo"><table><tr><td class="mono">ORIZON-0036</td><td>ΚΩΝΣΤΑΝΤΙΝΟΣ ΝΙΚΑΣ</td><td><span class="bdg" style="background:#2c382d;color:#a3d9a9"><i style="background:#a3d9a9"></i>Ενεργή</span></td></tr><tr><td class="mono">PROT-0114</td><td>ΜΑΡΙΑ ΠΑΠΠΑ</td><td><span class="bdg" style="background:#3f322a;color:#ffb682"><b>!</b>Εκκρεμότητα</span></td></tr><tr><td class="mono">NRG-0088</td><td>ΓΕΩΡΓΙΟΣ ΛΕΜΟΝΗΣ</td><td><span class="bdg" style="background:#303541;color:#a2c1ff"><i style="background:#a2c1ff"></i>Αναμονή υπογραφής</span></td></tr><tr><td class="mono">ELPE-0021</td><td>ΕΛΕΝΗ ΒΑΣΙΛΕΙΟΥ</td><td><span class="bdg" style="background:#423030;color:#fb8a91"><b>×</b>Ακυρώθηκε</span></td></tr><tr><td class="mono">PROT-0119</td><td>ΔΗΜΗΤΡΗΣ ΚΩΣΤΑ</td><td><span class="bdg" style="background:#2c382d;color:#8cc792"><i style="background:#8cc792"></i>Δρομολογήθηκε</span></td></tr></table></div>
+<table>
+<thead><tr><th>badge</th><th>χρώμα</th><th>πινελιά</th><th class="n">λόγος</th>
+<th class="n">πινελιά/κάρτα</th></tr></thead>
+<tbody><tr><td><span class="bdg" style="background:#343536;color:#9fa0a3"><i style="background:#9fa0a3"></i>Πρόχειρο</span></td><td><code>#9fa0a3</code></td><td><code>#343536</code></td><td class="n"><span class="yes">4.70</span></td><td class="n">6.10</td></tr><tr><td><span class="bdg" style="background:#2e353f;color:#79afec"><i style="background:#79afec"></i>Νέα</span></td><td><code>#79afec</code></td><td><code>#2e353f</code></td><td class="n"><span class="yes">5.39</span></td><td class="n">6.95</td></tr><tr><td><span class="bdg" style="background:#2f3540;color:#8db8f7"><i style="background:#8db8f7"></i>Προς υπογραφή</span></td><td><code>#8db8f7</code></td><td><code>#2f3540</code></td><td class="n"><span class="yes">6.06</span></td><td class="n">7.85</td></tr><tr><td><span class="bdg" style="background:#303541;color:#a2c1ff"><i style="background:#a2c1ff"></i>Αναμονή υπογραφής</span></td><td><code>#a2c1ff</code></td><td><code>#303541</code></td><td class="n"><span class="yes">6.78</span></td><td class="n">8.82</td></tr><tr><td><span class="bdg" style="background:#31343f;color:#b9cbff"><i style="background:#b9cbff"></i>Υπογεγραμμένη</span></td><td><code>#b9cbff</code></td><td><code>#31343f</code></td><td class="n"><span class="yes">7.71</span></td><td class="n">9.91</td></tr><tr><td><span class="bdg" style="background:#323440;color:#cdd5ff"><i style="background:#cdd5ff"></i>Σε επεξεργασία</span></td><td><code>#cdd5ff</code></td><td><code>#323440</code></td><td class="n"><span class="yes">8.56</span></td><td class="n">11.06</td></tr><tr><td><span class="bdg" style="background:#3f322a;color:#ffb682"><b>!</b>Εκκρεμότητα</span></td><td><code>#ffb682</code></td><td><code>#3f322a</code></td><td class="n"><span class="yes">7.21</span></td><td class="n">9.32</td></tr><tr><td><span class="bdg" style="background:#2c382d;color:#75b47e"><i style="background:#75b47e"></i>Επιλύθηκε</span></td><td><code>#75b47e</code></td><td><code>#2c382d</code></td><td class="n"><span class="yes">5.02</span></td><td class="n">6.52</td></tr><tr><td><span class="bdg" style="background:#2c382d;color:#8cc792"><i style="background:#8cc792"></i>Δρομολογήθηκε</span></td><td><code>#8cc792</code></td><td><code>#2c382d</code></td><td class="n"><span class="yes">6.25</span></td><td class="n">8.13</td></tr><tr><td><span class="bdg" style="background:#2c382d;color:#a3d9a9"><i style="background:#a3d9a9"></i>Ενεργή</span></td><td><code>#a3d9a9</code></td><td><code>#2c382d</code></td><td class="n"><span class="yes">7.63</span></td><td class="n">9.92</td></tr><tr><td><span class="bdg" style="background:#423030;color:#fb8a91"><b>×</b>Ακυρώθηκε</span></td><td><code>#fb8a91</code></td><td><code>#423030</code></td><td class="n"><span class="yes">5.39</span></td><td class="n">6.95</td></tr><tr><td><span class="bdg" style="background:#343536;color:#a3a6ad"><i style="background:#a3a6ad"></i>Τερματίστηκε</span></td><td><code>#a3a6ad</code></td><td><code>#343536</code></td><td class="n"><span class="yes">5.04</span></td><td class="n">6.54</td></tr></tbody></table>
+<p class="cap">Κάρτα <code>#22221f</code>, καμβάς <code>#171715</code>. Ελάχιστος λόγος: <b>4.70</b>.</p>
+</section>
+
+<section>
+<h2>Οι έλεγχοι που πέρασε, με νούμερα</h2>
+<table>
+<thead><tr><th>έλεγχος</th><th class="n">σήμερα</th><th class="n">ανοιχτό</th><th class="n">σκούρο</th><th>όριο</th></tr></thead>
+<tbody>
+<tr><td>Κείμενο badge στην πινελιά του, χειρότερο</td><td class="n was">3,42 και άλλα 7</td>
+<td class="n"><span class="yes">4.56</span></td><td class="n"><span class="yes">4.70</span></td><td>4,5:1</td></tr>
+<tr><td>Διάκριση <b>μεταξύ</b> οικογενειών, χειρότερο ζεύγος</td><td class="n was">18.9</td>
+<td class="n"><span class="yes">19.7</span></td><td class="n"><span class="yes">17.2</span></td><td>ΔE 15</td></tr>
+<tr><td>Μπλε ράμπα, διαδοχικά σκαλιά</td><td class="n was">6.5 · 7.8 · 7.3 · 7.0</td>
+<td class="n">5.9 · 5.0 · 4.9 · 5.0</td><td class="n">3.7 · 3.9 · 4.9 · 4.8</td><td>στένεψε</td></tr>
+<tr><td>Δυσχρωματοψία: «Δρομολογήθηκε» vs «Ακυρώθηκε»</td><td class="n was">0.8</td>
+<td class="n">10.3</td><td class="n">—</td><td>+ ΣΧΗΜΑ</td></tr>
+</tbody></table>
+<div class="callout"><p><b>Το χειρότερο ζεύγος μεταξύ οικογενειών βελτιώθηκε</b> (18.9 → 19.7).
+<b>Η μπλε ράμπα όμως στένεψε, και δεν το κρύβω:</b> τα σκαλιά της πέφτουν από ~7 σε ~5, στο σκούρο
+σε 3,7 στο στενότερο. Αναπόφευκτο — ολόκληρη η ράμπα πρέπει τώρα να χωρέσει κάτω από το L* 46
+αντί να απλώνεται ως το 62,5. Πέντε μονάδες ΔE είναι ακόμα ορατό σκαλί· για σύγκριση, η λύση
+«μελάνι ανά οικογένεια» που απορρίφθηκε το πήγαινε στο 0,5.</p>
+<p style="margin-top:10px">Το κόκκινο με το πράσινο εξακολουθούν να μοιάζουν σε δυσχρωματοψία —
+καμία παλέτα δεν το λύνει, γι' αυτό «Ακυρώθηκε» και «Εκκρεμότητα» κρατούν το <b>×</b> και το
+<b>!</b> τους. Τώρα πάντως διαφέρουν και σε φωτεινότητα: ΔE 0.8 → 10.3 σε προσομοίωση
+deuteranopia.</p></div>
+</section>
+
+<section>
+<h2>Τι αλλάζει στον κώδικα</h2>
+<p><b>Μηδέν κανόνες.</b> Το <code>.ecrm-badge--X</code>, οι κουκκίδες, οι ταινίες, τα banner —
+όλα μένουν όπως είναι. Αλλάζουν μόνο οι τιμές μέσα στο μπλοκ <code>.ecrm</code> του
+<code>ecrm-form.css</code>:</p>
+<pre>--st-draft: #6a6d75;         --st-draft-bg: #f0f1f3;
+--st-new: #0072b7;           --st-new-bg: #ecf2fc;
+--st-psig: #0062a8;          --st-psig-bg: #ebf0fb;
+--st-asig: #005499;          --st-asig-bg: #eaeefa;
+--st-signed: #00468a;        --st-signed-bg: #e8ebf7;
+--st-proc: #043875;          --st-proc-bg: #e8e9f1;
+--st-pending: #ab5506;       --st-pending-bg: #fcf2ec;
+--st-resolved: #0b7e36;      --st-resolved-bg: #e9f5ea;
+--st-routed: #006926;        --st-routed-bg: #e6f4e7;
+--st-active: #00531e;        --st-active-bg: #e3f0e4;
+--st-cancel: #c32b47;        --st-cancel-bg: #fdeaea;
+--st-term: #59595b;          --st-term-bg: #edeef0;</pre>
+<p>Και οι αντίστοιχες για τον σκούρο καμβά, που θα ζήσουν σε
+<code>[data-theme="dark"] .ecrm</code> όταν μπει ο διακόπτης:</p>
+<pre>--st-draft: #9fa0a3;         --st-draft-bg: #343536;
+--st-new: #79afec;           --st-new-bg: #2e353f;
+--st-psig: #8db8f7;          --st-psig-bg: #2f3540;
+--st-asig: #a2c1ff;          --st-asig-bg: #303541;
+--st-signed: #b9cbff;        --st-signed-bg: #31343f;
+--st-proc: #cdd5ff;          --st-proc-bg: #323440;
+--st-pending: #ffb682;       --st-pending-bg: #3f322a;
+--st-resolved: #75b47e;      --st-resolved-bg: #2c382d;
+--st-routed: #8cc792;        --st-routed-bg: #2c382d;
+--st-active: #a3d9a9;        --st-active-bg: #2c382d;
+--st-cancel: #fb8a91;        --st-cancel-bg: #423030;
+--st-term: #a3a6ad;          --st-term-bg: #343536;</pre>
+<div class="grid">
+<div><h4>Τι ξεκλειδώνει</h4><p>Τα 57 υπολείμματα χρώματος αποκτούν προορισμό που περνά. Το
+<code>#15803d</code> που σήμερα δίνει 4,79 δεν θα πέσει σε 3,88 — θα πάει σε τιμή που δίνει
+6,05.</p></div>
+<div><h4>Τι κοστίζει</h4><p>Κάθε badge αλλάζει ορατά — πιο βαθύ, λιγότερο παστέλ. Είναι το μόνο
+που πρέπει να κριθεί με το μάτι· τα υπόλοιπα τα έκρινε ο υπολογισμός.</p></div>
+</div>
+</section>
+
+<section>
+<h2>Και δύο tokens σβήνουν</h2>
+<p>Το <code>--st-pending-ink</code> γεννήθηκε ακριβώς επειδή το <code>--st-pending</code> δεν
+άντεχε ως γράμμα. Στη νέα παλέτα το <code>--st-pending</code> <b>είναι</b> #ab5506, δηλαδή σχεδόν
+η ίδια τιμή με το σημερινό ink (#b45309): δίνει 5,19 σε λευκό και 4,72 στην πινελιά του.
+Οι <b>έντεκα</b> χρήσεις του ink δείχνουν πλέον στο ίδιο το <code>--st-pending</code>, και το
+token φεύγει.</p>
+<p>Το ίδιο και το <code>--st-pending-on-dark</code>: στον σκούρο καμβά το
+<code>--st-pending</code> γίνεται μόνο του ανοιχτό (#ffb682). Δεν χρειάζεται τρίτο amber.</p>
+<div class="callout"><p>Δηλαδή δεν προσθέτουμε τιμές για να λύσουμε το πρόβλημα —
+<b>αφαιρούμε</b>. Τα ονόματα <code>--st-*</code> πέφτουν από 26 σε 24, και η ερώτηση «ποιο από
+τα τρία amber θέλω εδώ;» παύει να υπάρχει.</p></div>
+</section>
+
+<section>
+<h2>Τι απορρίφθηκε, και γιατί</h2>
+<h3>Μελάνι ανά οικογένεια (<code>--st-X-ink</code>, όπως το amber)</h3>
+<p>Κρατούσε τα σημερινά χρώματα και πρόσθετε επτά σκουρότερες τιμές μόνο για γράμματα. Δουλεύει,
+αλλά όλες οι νέες τιμές πέφτουν στην <i>ίδια</i> φωτεινότητα — εκεί που ακουμπά το 4,5:1 — και η
+μπλε ράμπα καταρρέει: «Προς υπογραφή» και «Αναμονή υπογραφής» απέχουν σήμερα ΔE 6,5, μετά 0,5.
+Δύο διαφορετικές καταστάσεις, το ίδιο μπλε.</p>
+<h3>Ουδέτερο γράμμα, χρωματιστή κουκκίδα</h3>
+<p>Το κείμενο σε <code>--ink</code> και το χρώμα μόνο στην κουκκίδα. Λύνει την αντίθεση με ένα
+token, αλλά ζητά αλλαγή CSS (η κουκκίδα είναι <code>currentColor</code>) και αφαιρεί το χρώμα
+από εκεί που το βλέπει πρώτα το μάτι. Μένει στο συρτάρι: αν τα βαθιά badge δεν σου αρέσουν,
+είναι η επόμενη πόρτα.</p>
+</section>
+
+<section>
+<h2>Μια υποσημείωση που δεν κρύβεται</h2>
+<p>Το σχόλιο της σημερινής παλέτας λέει «χειρότερο ζεύγος σε κανονική όραση ΔE 15,1 (όριο 15)».
+<b>Δεν το αναπαρήγαγα.</b> Με ΔE00 το χειρότερο ζεύγος διαφορετικών οικογενειών βγαίνει 18.9
+και το χειρότερο ζεύγος οποιωνδήποτε δύο από τα δώδεκα 6,5 — μέσα στην μπλε ράμπα, προφανώς
+σκόπιμο. Με CIE76 βγαίνουν 36,6 και 8,7. Καμία ανάγνωση δεν δίνει 15,1.</p>
+<p>Δεν λέω ότι ο αριθμός ήταν λάθος· λέω ότι <b>η μέθοδος δεν γράφτηκε δίπλα του</b>, οπότε δεν
+ελέγχεται. Στη νέα παλέτα κάθε νούμερο θα μπει με τον τύπο και το ζεύγος του.</p>
+</section>
+
+<footer>Αντίθεση κατά WCAG 2.x, χρωματική απόσταση κατά CIEDE2000, προσομοίωση δυσχρωματοψίας
+κατά Viénot–Brettel. Οι τιμές παράχθηκαν σε CIE LCh με σταθερή απόχρωση ανά οικογένεια.</footer>
+
+</main>
+</body>
+</html>
