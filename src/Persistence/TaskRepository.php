@@ -163,6 +163,43 @@ final class TaskRepository
         return $affected !== false && $affected > 0;
     }
 
+    /**
+     * Δίνει τις ΑΝΟΙΧΤΕΣ εργασίες ενός ανθρώπου σε άλλον.
+     *
+     * Μόνο τις ανοιχτές, και η διάκριση είναι το νόημα: μια ολοκληρωμένη
+     * εργασία λέει «αυτός ο άνθρωπος έκανε αυτό, τότε» — είναι αρχείο, και
+     * μεταφέροντάς την θα ξαναγράφαμε ιστορία. Μια ανοιχτή λέει «κάποιος πρέπει
+     * να κάνει αυτό», και όταν ο κάποιος φύγει πρέπει να γίνει άλλος.
+     *
+     * Χωρίς scope: τρέχει από τη διαγραφή χρήστη, όπου δεν υπάρχει πάντα
+     * συνδεδεμένος actor — μια διαγραφή μπορεί να έρθει και από WP-CLI. Την
+     * εξουσία την έχει ήδη κρίνει το WordPress, που δεν αφήνει κανέναν χωρίς
+     * `delete_users` να φτάσει ως εδώ. Ίδιο σκεπτικό με την
+     * `ContractRepository::clearExtractionPayloads()`, που είναι επίσης
+     * συντήρηση χωρίς πρόσωπο από πίσω.
+     *
+     * @return int Πόσες εργασίες μετακινήθηκαν.
+     */
+    public function handOverOpen(int $fromUserId, int $toUserId): int
+    {
+        global $wpdb;
+
+        if ($fromUserId <= 0 || $toUserId <= 0 || $fromUserId === $toUserId) {
+            return 0;
+        }
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $moved = $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE %i SET assigned_to = %d WHERE assigned_to = %d AND status = 'open'",
+                [$this->table, $toUserId, $fromUserId]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $moved === false ? 0 : (int) $moved;
+    }
+
     public function delete(int $taskId, UserScope $scope): bool
     {
         global $wpdb;
