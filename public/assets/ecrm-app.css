@@ -99,7 +99,7 @@
 .ecrm-feed { list-style: none; margin: 0; padding: 0; }
 .ecrm-feed li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
 .ecrm-feed li:last-child { border-bottom: none; }
-.ecrm-feed__code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--amber-dark, var(--st-pending-ink)); font-weight: 700; }
+.ecrm-feed__code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--amber-dark, var(--st-pending)); font-weight: 700; }
 .ecrm-feed__msg { flex: 1; color: var(--ink); }
 .ecrm-feed__time { color: var(--muted); font-size: 12px; }
 
@@ -232,10 +232,11 @@
 .ecrm-import-stats b { color: var(--navy); font-size: 16px; }
 /* Οι απορρίψεις της ροής μεταβάσεων. Χωρίς δικό τους χρώμα θα διαβάζονταν ως
    άλλος ένας ουδέτερος μετρητής δίπλα στο «Ενημερώθηκαν», ενώ λένε το αντίθετο.
-   --st-pending-ink και ΟΧΙ --st-pending: το δεύτερο δίνει 3,76:1 σε λευκό, που
-   είναι αρκετό για κουκκίδα και ανεπαρκές για κείμενο 14px. Μετρήθηκε. */
-.ecrm-import-stats .is-warn { color: var(--st-pending-ink); }
-.ecrm-import-stats .is-warn b { color: var(--st-pending-ink); }
+   Έλεγε «--st-pending-ink και ΟΧΙ --st-pending, γιατί το δεύτερο δίνει 3,76:1
+   σε λευκό». Ίσχυε ως τις 19/08: το νέο --st-pending δίνει 5,21:1 σε λευκό,
+   οπότε το ink αποσύρθηκε και η διάκριση δεν χρειάζεται πια. Μετρήθηκε. */
+.ecrm-import-stats .is-warn { color: var(--st-pending); }
+.ecrm-import-stats .is-warn b { color: var(--st-pending); }
 
 /* ============================================================
    Λίτσα assistant
@@ -407,7 +408,7 @@
 }
 .ecrm-cell-mark--cust { border-radius: 50%; background: hsl(var(--h, 210) 50% 50%); }
 
-.ecrm-tariff { display: inline-block; padding: 3px 9px; border-radius: 7px; background: #fef3c7; color: var(--st-pending-ink); font-size: 11.5px; font-weight: 800; }
+.ecrm-tariff { display: inline-block; padding: 3px 9px; border-radius: 7px; background: #fef3c7; color: var(--st-pending); font-size: 11.5px; font-weight: 800; }
 .ecrm-cell-date div:first-child { font-weight: 600; color: var(--ink); }
 
 .ecrm-exprow > td { background: var(--bg); padding: 0 12px 14px; }
@@ -469,7 +470,7 @@
 .ecrm-file:hover { border-color: var(--navy-soft); box-shadow: 0 4px 12px -6px rgba(10,31,61,.2); }
 .ecrm-file__thumb { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 8px; overflow: hidden; background: var(--bg); display: grid; place-items: center; }
 .ecrm-file__thumb img { width: 100%; height: 100%; object-fit: cover; }
-.ecrm-file__ext { font-size: 11px; font-weight: 800; color: var(--amber-dark, var(--st-pending-ink)); }
+.ecrm-file__ext { font-size: 11px; font-weight: 800; color: var(--amber-dark, var(--st-pending)); }
 .ecrm-file__meta { min-width: 0; }
 .ecrm-file__name { display: block; font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ecrm-file__kind { display: block; font-size: 11px; color: var(--muted); }
@@ -626,7 +627,7 @@
 .ecrm-task__title { font-weight:600; font-size:14px; color:#0f172a; }
 .ecrm-task__sub { font-size:12px; color:var(--n500); margin-top:2px; }
 .ecrm-task__note { font-size:12px; color:var(--n400); margin-top:3px; }
-.ecrm-tasklink { color:var(--amber,var(--st-pending-ink)); font-weight:600; text-decoration:none; }
+.ecrm-tasklink { color:var(--amber,var(--st-pending)); font-weight:600; text-decoration:none; }
 .ecrm-task__due { flex:0 0 auto; text-align:right; }
 .ecrm-taskdue { font-size:12px; color:var(--n600); white-space:nowrap; }
 .ecrm-taskdue.is-overdue { color:#dc2626; font-weight:700; }
@@ -683,7 +684,7 @@
 .ecrm-kbentry__title { flex:1; font-size:14px; font-weight:600; color:#0f172a; }
 .ecrm-kbentry__badges { display:flex; gap:6px; flex-wrap:wrap; }
 .ecrm-kbbadge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap; }
-.ecrm-kbbadge.is-energy-power { background:#fef3c7; color:var(--st-pending-ink); }
+.ecrm-kbbadge.is-energy-power { background:#fef3c7; color:var(--st-pending); }
 .ecrm-kbbadge.is-energy-gas { background:#dbeafe; color:#1d4ed8; }
 .ecrm-kbbadge.is-section { background:var(--st-active-bg); color:var(--st-active); }
 .ecrm-kbbadge.is-type { background:#ede9fe; color:#6d28d9; }
@@ -702,7 +703,7 @@
 .ecrm-kbanswer { margin-top:12px; background:var(--surface); border-radius:12px; padding:14px 16px; }
 .ecrm-kbanswer__loading { color:var(--n500); font-size:14px; }
 .ecrm-kbanswer__err { color:#b91c1c; font-size:14px; }
-.ecrm-kbanswer__head { font-size:12px; font-weight:800; color:var(--amber,var(--st-pending-ink)); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+.ecrm-kbanswer__head { font-size:12px; font-weight:800; color:var(--amber,var(--st-pending)); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
 .ecrm-kbanswer__body { font-size:14px; color:#0f172a; line-height:1.6; }
 .ecrm-kbanswer__close { margin-top:10px; border:1px solid var(--n200); background:var(--n50); color:var(--n600); border-radius:8px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; }
 @media (max-width:560px){ .ecrm-kbsearchbox__q { flex-wrap:wrap; } .ecrm-kbask { width:100%; } }
@@ -740,7 +741,7 @@
 .ecrm-tldot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--n300); margin-right:8px; vertical-align:middle; }
 .ecrm-tldot.is-on { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.2); animation:ecrmpulse 1.6s infinite; }
 @keyframes ecrmpulse { 0%{box-shadow:0 0 0 0 rgba(34,197,94,.5);} 70%{box-shadow:0 0 0 6px rgba(34,197,94,0);} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0);} }
-.ecrm-pillwarn { display:inline-block; min-width:22px; padding:2px 8px; border-radius:999px; background:#fef3c7; color:var(--st-pending-ink); font-weight:700; font-size:12px; }
+.ecrm-pillwarn { display:inline-block; min-width:22px; padding:2px 8px; border-radius:999px; background:#fef3c7; color:var(--st-pending); font-weight:700; font-size:12px; }
 @media (max-width:900px){ .ecrm-tlstats { grid-template-columns:repeat(3,1fr); } }
 @media (max-width:520px){ .ecrm-tlstats { grid-template-columns:repeat(2,1fr); } }
 
@@ -825,7 +826,7 @@
 .ecrm-modal__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--amber); text-transform: uppercase; }
 .ecrm-modal__title { font-size: 22px; font-weight: 800; color: var(--navy); margin: 6px 0 6px; }
 .ecrm-modal__lead { font-size: 13.5px; color: var(--muted); margin: 0 0 16px; line-height: 1.5; }
-.ecrm-modal__lead code { background: #fef3c7; color: var(--st-pending-ink); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+.ecrm-modal__lead code { background: #fef3c7; color: var(--st-pending); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
 .ecrm-modal__card { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
 .ecrm-modal__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
 .ecrm-modal__scope { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink); margin: 4px 2px 16px; cursor: pointer; }
