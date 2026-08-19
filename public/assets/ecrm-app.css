@@ -194,8 +194,8 @@
 /* Η διαδρομή: πού είναι η σύμβαση, και πού επιτρέπεται να πάει. */
 .ecrm-statusflow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .ecrm-statusflow__now { font-size: 12.5px; padding: 5px 11px; }
-.ecrm-statusflow__arrow { color: var(--faint-2); font-size: 16px; line-height: 1; flex: 0 0 auto; }
-.ecrm-statusflow__end { font-size: 12.5px; color: var(--faint); font-style: italic; }
+.ecrm-statusflow__arrow { color: var(--faint); font-size: 16px; line-height: 1; flex: 0 0 auto; }
+.ecrm-statusflow__end { font-size: 12.5px; color: var(--muted); font-style: italic; }
 @media (max-width: 600px) {
 	.ecrm-statusflow { align-items: flex-start; flex-direction: column; gap: 8px; }
 	.ecrm-statusflow__arrow { transform: rotate(90deg); margin-left: 6px; }
@@ -374,7 +374,7 @@
    Σε ΣΚΟΥΡΟ φόντο, οπότε --st-pending-on-dark: το --st-pending δίνει 3,87:1 εδώ. */
 .ecrm-payhero__warn { margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--st-pending-on-dark); }
 .ecrm-payhero__side { position: relative; text-align: right; border-left: 1px solid var(--chrome-wash-2); padding-left: 22px; }
-.ecrm-payhero__k { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--faint); }
+.ecrm-payhero__k { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--chrome-ink); }
 .ecrm-payhero__v { font-size: 20px; font-weight: 800; }
 
 @media (max-width: 600px) {
@@ -630,14 +630,13 @@
 .ecrm-task__body { flex:1; min-width:0; }
 .ecrm-task__title { font-weight:600; font-size:14px; color:var(--ink); }
 .ecrm-task__sub { font-size:12px; color:var(--muted); margin-top:2px; }
-.ecrm-task__note { font-size:12px; color:var(--faint); margin-top:3px; }
+.ecrm-task__note { font-size:12px; color:var(--muted); margin-top:3px; }
 .ecrm-tasklink { color:var(--amber,var(--st-pending)); font-weight:600; text-decoration:none; }
 .ecrm-task__due { flex:0 0 auto; text-align:right; }
 .ecrm-taskdue { font-size:12px; color:var(--muted-strong); white-space:nowrap; }
 .ecrm-taskdue.is-overdue { color:var(--st-cancel); font-weight:700; }
-.ecrm-task__rm { flex:0 0 auto; border:0; background:transparent; color:var(--faint-2); cursor:pointer; font-size:15px; padding:2px 4px; }
+.ecrm-task__rm { flex:0 0 auto; border:0; background:transparent; color:var(--faint); cursor:pointer; font-size:15px; padding:2px 4px; }
 .ecrm-task__rm:hover { color:var(--st-cancel); }
-.ecrm-muted { color:var(--faint); }
 
 /* --- Quote / savings calculator --- */
 .ecrm-calc__grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -676,12 +675,12 @@
 .ecrm-kbsearchbox__q input { border:0; outline:0; flex:1; font-size:15px; background:transparent; }
 .ecrm-kbfilters { display:flex; flex-wrap:wrap; gap:16px; margin-top:14px; }
 .ecrm-kbfilter { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
-.ecrm-kbfilter > span { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); margin-right:4px; }
+.ecrm-kbfilter > span { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-right:4px; }
 .ecrm-chip2 { border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:var(--faint-2); border-radius:999px; padding:4px 12px; font-size:13px; font-weight:600; cursor:pointer; }
 .ecrm-chip2.is-on { background:var(--amber); color:var(--on-accent); border-color:var(--amber); }
 .ecrm-kbgroup { margin-bottom:18px; }
 .ecrm-kbgroup__head { font-size:15px; font-weight:800; color:var(--ink); padding:6px 2px; display:flex; align-items:center; gap:10px; }
-.ecrm-kbgroup__count { font-size:12px; font-weight:600; color:var(--faint); background:var(--surface-sunk); padding:2px 8px; border-radius:999px; }
+.ecrm-kbgroup__count { font-size:12px; font-weight:600; color:var(--muted); background:var(--surface-sunk); padding:2px 8px; border-radius:999px; }
 .ecrm-kbentry { background:var(--surface); border:1px solid var(--line-card); border-radius:12px; margin-bottom:8px; overflow:hidden; }
 .ecrm-kbentry.is-open { border-color:var(--line-mid); box-shadow:0 6px 20px -12px rgba(0,0,0,.25); }
 .ecrm-kbentry__head { width:100%; display:flex; align-items:center; gap:10px; padding:14px 16px; background:transparent; border:0; cursor:pointer; text-align:left; }
@@ -692,7 +691,7 @@
 .ecrm-kbbadge.is-energy-gas { background:var(--cat-teal-bg); color:var(--cat-teal); }
 .ecrm-kbbadge.is-section { background:var(--st-active-bg); color:var(--st-active); }
 .ecrm-kbbadge.is-type { background:var(--cat-violet-bg); color:var(--cat-violet); }
-.ecrm-kbentry__chev { color:var(--faint-2); font-size:20px; transition:transform .2s; }
+.ecrm-kbentry__chev { color:var(--faint); font-size:20px; transition:transform .2s; }
 .ecrm-kbentry.is-open .ecrm-kbentry__chev { transform:rotate(90deg); }
 .ecrm-kbentry__body { padding:4px 18px 16px; font-size:14px; color:var(--navy-soft); line-height:1.6; border-top:1px solid var(--line-soft); }
 .ecrm-kbentry__body h1,.ecrm-kbentry__body h2,.ecrm-kbentry__body h3,.ecrm-kbentry__body strong { color:var(--ink); }
@@ -721,12 +720,12 @@
 .ecrm-gsearch__row:hover { background:var(--bg); }
 .ecrm-gsearch__main { font-size:14px; font-weight:600; color:var(--ink); }
 .ecrm-gsearch__meta { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.ecrm-gsearch__empty { padding:14px; color:var(--faint); font-size:13px; }
+.ecrm-gsearch__empty { padding:14px; color:var(--muted); font-size:13px; }
 @media (max-width:760px){ .ecrm-gsearch { display:none; } }
 
 /* --- Saved filters --- */
 .ecrm-savedfilters { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:10px 0 4px; }
-.ecrm-savedfilters__lbl { font-size:12px; color:var(--faint); font-weight:600; }
+.ecrm-savedfilters__lbl { font-size:12px; color:var(--muted); font-weight:600; }
 .ecrm-savedchip { display:inline-flex; align-items:center; background:var(--surface-sunk); border-radius:999px; overflow:hidden; }
 .ecrm-savedchip__go { border:0; background:transparent; color:var(--navy-soft); font-size:13px; font-weight:600; padding:5px 6px 5px 12px; cursor:pointer; }
 .ecrm-savedchip__x { border:0; background:transparent; color:var(--faint); font-size:15px; padding:5px 10px 5px 4px; cursor:pointer; }
@@ -993,7 +992,7 @@
 .ecrm-meter { height: 9px; border-radius: 999px; background: var(--accent-wash-2); overflow: hidden; }
 .ecrm-meter__f { display: block; height: 100%; background: var(--accent-hover); border-radius: 999px; transition: width .5s ease; }
 .ecrm-tier__scale { display: flex; justify-content: space-between; margin-top: 7px; font-size: 11px;
-	color: var(--faint); font-variant-numeric: tabular-nums; }
+	color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* ── οι τρεις μετρητές ── */
 .ecrm-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -1037,9 +1036,9 @@
 .ecrm-plot { display: block; width: 100%; height: 168px; overflow: visible; }
 .ecrm-yaxis { position: absolute; left: 0; top: 20px; height: 168px; width: 28px; }
 .ecrm-yaxis span { position: absolute; right: 0; transform: translateY(-50%);
-	font-size: 10.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+	font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .ecrm-xaxis { display: flex; justify-content: space-between; margin-top: 7px; }
-.ecrm-xaxis span { font-size: 10.5px; color: var(--faint); flex: 1 1 0; text-align: center; }
+.ecrm-xaxis span { font-size: 10.5px; color: var(--muted); flex: 1 1 0; text-align: center; }
 .ecrm-xaxis span:first-child { text-align: left; }
 .ecrm-xaxis span:last-child { text-align: right; }
 /* Συμπαγείς τρίχινες γραμμές, ΠΟΤΕ διακεκομμένες: το διάστικτο διαβάζεται ως

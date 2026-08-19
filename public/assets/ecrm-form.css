@@ -45,7 +45,8 @@
 	--n200: #dedcd7;
 	--n300: #c6c4bd;
 	--n400: #a3a099;
-	--n500: #7c7a73;
+	--n450: #83817a;
+	--n500: #6e6c66;
 	--n600: #5c5a55;
 	--n700: #42413d;
 	--n800: #2a2926;
@@ -196,8 +197,8 @@
 	--line-inverse: var(--n700);		/* γραμμή ΠΑΝΩ σε σκούρο πάνελ */
 	--fill-mute: var(--n300);		/* ανενεργή κουκκίδα / ταινία */
 	--fill-mute-strong: var(--n400);	/* ουδέτερη κουκκίδα με βάρος */
-	--faint: var(--n400);			/* αχνό κείμενο: σημειώσεις, άξονες */
-	--faint-2: var(--n300);			/* ακόμα πιο αχνό: chevron, × */
+	--faint: var(--n450);			/* μελάνι εικονιδίου: ×, chevron, βέλος — όριο 3:1 */
+	--faint-2: var(--n300);			/* αχνό ΠΑΝΩ σε σκούρο πάνελ· και το ανενεργό κουμπί */
 	--muted-strong: var(--n600);		/* δεύτερο κείμενο με βάρος */
 	--accent-hover: var(--p500);		/* το accent σε hover */
 	--accent-deep: var(--p600);		/* γραμμή γραφήματος, κουκκίδα */
@@ -543,7 +544,7 @@
 .ecrm-card.is-showall .ecrm-field.is-offform { display: flex; }
 .ecrm-card.is-showall .ecrm-field.is-offform .ecrm-field__label { color: var(--muted); }
 .ecrm-card.is-showall .ecrm-field.is-offform .ecrm-field__label::after {
-	content: " · δεν τυπώνεται"; font-weight: 400; font-size: 11px; color: var(--faint);
+	content: " · δεν τυπώνεται"; font-weight: 400; font-size: 11px; color: var(--muted);
 }
 /* Κάρτα χωρίς τίποτα ορατό: ο τίτλος πάνω από το κενό είναι το ίδιο λάθος με
    την τερματική κατάσταση της (7) — φεύγει ολόκληρη. */
@@ -627,7 +628,7 @@
 .ecrm-step__hint { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted); }
 
 /* sectioned form: subheaders + input addon */
-.ecrm-subhead { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--line-card); }
+.ecrm-subhead { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--line-card); }
 .ecrm-input-wrap { display: flex; }
 .ecrm-input-wrap .ecrm-input { border-top-right-radius: 0; border-bottom-right-radius: 0; flex: 1; }
 .ecrm-input-btn { border: 1.5px solid var(--line); border-left: none; background: var(--bg); border-radius: 0 10px 10px 0; padding: 0 14px; cursor: pointer; font-size: 14px; }
@@ -641,7 +642,7 @@
    declaration beats the [hidden] attribute, so it has to be said explicitly —
    same reason as .ecrm-bell__badge[hidden] in ecrm-app.css. */
 .ecrm-grid[hidden] { display: none; }
-.ecrm-subhead .ecrm-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--faint-2); }
+.ecrm-subhead .ecrm-hint { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--muted); }
 
 /* action banners (PDF / e-sign email / live link) */
 .ecrm-actbanners { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 18px; }
