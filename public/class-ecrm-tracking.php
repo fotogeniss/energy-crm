@@ -42,23 +42,111 @@ class ECRM_Tracking {
 		] );
 	}
 
-	// --- Stateless token ----------------------------------------------------
+	// --- Token ανά σύμβαση, ανακλητό ----------------------------------------
 
+	/**
+	 * Ο σύνδεσμος μιας σύμβασης. Παράγει κλειδί αν δεν υπάρχει ήδη.
+	 *
+	 * Ως τις 19/08/2026 το token ήταν `{id}-{hmac(id, salt)}`: καθαρό, χωρίς
+	 * βάση, μη απαριθμήσιμο — και **αιώνιο**. Ο ίδιος σύνδεσμος για την ίδια
+	 * σύμβαση, για πάντα, και ο μόνος τρόπος να ακυρωθεί ήταν να αλλάξει το
+	 * `wp_salt('auth')`, που ακυρώνει όλους και πετάει έξω κάθε συνδεδεμένο
+	 * χρήστη του WordPress.
+	 *
+	 * Τώρα στο υλικό του HMAC μπαίνει και ένα κλειδί που ανήκει στη σύμβαση.
+	 * Ανάκληση ενός συνδέσμου = νέο κλειδί σε μία γραμμή· όλοι οι άλλοι ζουν.
+	 *
+	 * Χάθηκε η ιδιότητα «δεν αγγίζει τη βάση» — μία ανάγνωση με πρωτεύον
+	 * κλειδί. Είναι το τίμημα της ανάκλησης, και είναι το ζητούμενο.
+	 */
 	public static function token( int $id ): string {
-		$sig = substr( hash_hmac( 'sha256', 'ecrm_track_' . $id, wp_salt( 'auth' ) ), 0, 20 );
-		return $id . '-' . $sig;
+		$key = self::key_for( $id );
+		return $key === '' ? '' : self::sign( $id, $key );
 	}
 
+	/**
+	 * Το id πίσω από ένα token, ή null.
+	 *
+	 * **Ποτέ δεν παράγει κλειδί.** Η διαδρομή είναι ανώνυμη και δημόσια· αν
+	 * παρήγαγε, μια αίτηση σε τυχαίο id θα προκαλούσε εγγραφή στη βάση, δηλαδή
+	 * θα έδινε σε οποιονδήποτε τρόπο να γεμίσει τον πίνακα. Σύμβαση χωρίς
+	 * κλειδί δεν έχει έγκυρο σύνδεσμο, τελεία.
+	 */
 	public static function verify( string $token ): ?int {
 		if ( ! preg_match( '/^(\d+)-([a-f0-9]{20})$/', $token, $m ) ) {
 			return null;
 		}
-		$id = (int) $m[1];
-		return hash_equals( self::token( $id ), $token ) ? $id : null;
+		$id  = (int) $m[1];
+		$key = self::stored_key( $id );
+
+		return $key !== '' && hash_equals( self::sign( $id, $key ), $token ) ? $id : null;
+	}
+
+	/**
+	 * Ακυρώνει τον σύνδεσμο μιας σύμβασης.
+	 *
+	 * Ο επόμενος που θα ζητήσει σύνδεσμο παίρνει καινούργιο· ο παλιός δεν
+	 * ξαναδουλεύει ποτέ.
+	 */
+	public static function revoke( int $id ): void {
+		global $wpdb;
+		$ct = ECRM_DB::table( 'contracts' );
+		// Ρητό ερώτημα και όχι $wpdb->update(): εκείνη δεν γράφει NULL — τα
+		// null στα δεδομένα τα προσπερνά, οπότε η ανάκληση θα «πετύχαινε»
+		// αφήνοντας το κλειδί στη θέση του. Σιωπηλή αποτυχία σε λειτουργία
+		// ασφαλείας είναι το χειρότερο είδος.
+		$wpdb->query( $wpdb->prepare( "UPDATE {$ct} SET track_key = NULL WHERE id = %d", $id ) );
+	}
+
+	private static function sign( int $id, string $key ): string {
+		$sig = substr( hash_hmac( 'sha256', 'ecrm_track_' . $id . '|' . $key, wp_salt( 'auth' ) ), 0, 20 );
+		return $id . '-' . $sig;
+	}
+
+	/** Το αποθηκευμένο κλειδί, χωρίς να παραχθεί τίποτα. */
+	private static function stored_key( int $id ): string {
+		global $wpdb;
+		if ( $id <= 0 ) {
+			return '';
+		}
+		$ct = ECRM_DB::table( 'contracts' );
+		return (string) $wpdb->get_var( $wpdb->prepare( "SELECT track_key FROM {$ct} WHERE id = %d", $id ) );
+	}
+
+	/**
+	 * Το κλειδί της σύμβασης, φτιαγμένο αν λείπει.
+	 *
+	 * Η διεκδίκηση είναι μέσα στο `UPDATE`, με το `track_key IS NULL` ως
+	 * συνθήκη, και μετά ξαναδιαβάζεται ό,τι όντως γράφτηκε. Ο λόγος δεν είναι
+	 * θεωρητικός: το `ContractsReadController` χτίζει `track_url` σε **κάθε**
+	 * άνοιγμα καρτέλας, οπότε δύο ταυτόχρονα αιτήματα θα έγραφαν δύο κλειδιά
+	 * και ο σύνδεσμος του πρώτου θα έπαυε να ισχύει σιωπηλά — ακριβώς το σχήμα
+	 * που έκλεισε στη δημιουργία εκκαθάρισης.
+	 */
+	private static function key_for( int $id ): string {
+		global $wpdb;
+		if ( $id <= 0 ) {
+			return '';
+		}
+
+		$existing = self::stored_key( $id );
+		if ( $existing !== '' ) {
+			return $existing;
+		}
+
+		$ct = ECRM_DB::table( 'contracts' );
+		$wpdb->query( $wpdb->prepare(
+			"UPDATE {$ct} SET track_key = %s WHERE id = %d AND ( track_key IS NULL OR track_key = '' )",
+			wp_generate_password( 24, false ),
+			$id
+		) );
+
+		return self::stored_key( $id );
 	}
 
 	public static function url( int $id ): string {
-		return add_query_arg( 'ecrm_track', self::token( $id ), home_url( '/' ) );
+		$token = self::token( $id );
+		return $token === '' ? '' : add_query_arg( 'ecrm_track', $token, home_url( '/' ) );
 	}
 
 	// --- Customer-friendly stages -------------------------------------------
