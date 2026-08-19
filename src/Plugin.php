@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM;
 
+use EnergyCRM\Access\DepartingUser;
 use EnergyCRM\Access\DisabledAccounts;
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
@@ -106,6 +107,15 @@ final class Plugin
         (new DisabledAccounts(Services::team()))->register();
 
         (new NetworkSync(Services::network()))->register();
+
+        // Η διαγραφή χρήστη από το wp-admin παρακάμπτει το «Αφαίρεση» του CRM.
+        // Η δουλειά του παραδίδεται πριν πάψει να υπάρχει.
+        (new DepartingUser(
+            Services::team(),
+            Services::contracts(),
+            Services::leads(),
+            Services::tasks()
+        ))->register();
         (new Retention(Services::contracts()))->register();
         (new DocumentProtection(Services::unprotectedDocuments()))->register();
 

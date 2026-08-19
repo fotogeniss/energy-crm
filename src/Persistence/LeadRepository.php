@@ -174,6 +174,43 @@ final class LeadRepository
         return $affected !== false && ($affected > 0 || $this->find($leadId, $scope) !== null);
     }
 
+    /**
+     * Δίνει όλα τα leads ενός συνεργάτη σε άλλον.
+     *
+     * Ζωντανή δουλειά, όχι αρχείο: ένα lead είναι άνθρωπος που περιμένει
+     * τηλέφωνο. Όταν φεύγει ο συνεργάτης, ή το αναλαμβάνει κάποιος ή χάνεται.
+     *
+     * Παράλληλη της `ContractRepository::handOver()`, με τον ίδιο έλεγχο: και
+     * οι δύο πλευρές μέσα στο scope αυτού που το ζητά.
+     *
+     * @return int Πόσα leads μετακινήθηκαν.
+     */
+    public function handOver(int $fromUserId, int $toUserId, UserScope $scope): int
+    {
+        global $wpdb;
+
+        if ($fromUserId <= 0 || $toUserId <= 0 || $fromUserId === $toUserId) {
+            return 0;
+        }
+
+        if (! $scope->includes($fromUserId) || ! $scope->includes($toUserId)) {
+            return 0;
+        }
+
+        [$clause, $params] = $this->scopeClause($scope);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $moved = $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE %i SET partner_user_id = %d WHERE partner_user_id = %d{$clause}",
+                [$this->table, $toUserId, $fromUserId, ...$params]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $moved === false ? 0 : (int) $moved;
+    }
+
     public function delete(int $leadId, UserScope $scope): bool
     {
         global $wpdb;
