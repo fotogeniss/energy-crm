@@ -44,7 +44,7 @@
 .ecrm-nav__item:hover { background: var(--chrome-wash-1); color: var(--chrome-ink-hi); }
 /* Το φωτοστέφανο ήταν rgba(194,240,74) — το ΛΑΪΜ γραμμένο με το χέρι, που δεν
    περνούσε ποτέ από μεταβλητή. Θα έμενε λάιμ κάτω από πράσινο κουμπί. */
-.ecrm-nav__item.is-active { background: var(--p400); color: var(--on-accent); font-weight: 700; box-shadow: 0 2px 10px rgba(22,194,23,.28); }
+.ecrm-nav__item.is-active { background: var(--amber); color: var(--on-accent); font-weight: 700; box-shadow: 0 2px 10px rgba(22,194,23,.28); }
 .ecrm-nav__item.is-active .ecrm-nav__icon { color: var(--on-accent); }
 .ecrm-nav__icon { width: 20px; text-align: center; font-size: 15px; }
 .ecrm-sidebar__foot { border-top: 1px solid var(--chrome-line); padding-top: 12px; margin-top: 12px; }
@@ -54,7 +54,7 @@
 .ecrm-topbar {
 	position: sticky; top: 0; z-index: 20;
 	display: flex; align-items: center; justify-content: space-between; gap: 16px;
-	padding: 12px 24px; background: var(--n0); border-bottom: 1px solid var(--n150);
+	padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--line-card);
 }
 .ecrm-topbar__hello { font-size: 14px; color: var(--muted); }
 .ecrm-topbar__hello strong { color: var(--ink); }
@@ -70,7 +70,7 @@
 @keyframes ecrm-pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); } 70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
 .ecrm-btn--sm { padding: 8px 14px; font-size: 13px; }
 
-.ecrm-content { padding: 22px 24px 34px; flex: 1; background: var(--n50); }
+.ecrm-content { padding: 22px 24px 34px; flex: 1; background: var(--bg); }
 .ecrm-view { display: none; flex-direction: column; gap: 18px; }
 .ecrm-view.is-active { display: flex; }
 
@@ -83,7 +83,7 @@
 .ecrm-stat__v { font-size: 34px; font-weight: 800; color: var(--navy); margin-top: 6px; }
 .ecrm-stat.is-pending { border-left: 3px solid var(--st-pending); }
 .ecrm-stat.is-routed { border-left: 3px solid var(--st-active); }
-.ecrm-stat.is-today { border-left: 3px solid var(--p500); }
+.ecrm-stat.is-today { border-left: 3px solid var(--accent-hover); }
 
 /* --- dashboard: columns / chart / lists --- */
 .ecrm-cols { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
@@ -92,14 +92,14 @@
 .ecrm-bar__fill { width: 70%; min-height: 3px; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, var(--amber-bright), var(--amber)); transition: height .5s ease; }
 /* Οι μονές/ζυγές στήλες ήταν λάιμ και ΜΟΒ — το μοβ δεν υπάρχει πουθενά αλλού.
    Δύο σκαλιά της ίδιας ράμπας κάνουν την ίδια δουλειά χωρίς δεύτερο λεξιλόγιο. */
-.ecrm-bar:nth-child(even) .ecrm-bar__fill { background: linear-gradient(180deg, var(--p300), var(--p500)); }
+.ecrm-bar:nth-child(even) .ecrm-bar__fill { background: linear-gradient(180deg, var(--amber-bright), var(--accent-hover)); }
 .ecrm-bar__lbl { font-size: 11px; color: var(--muted); }
 
 
 .ecrm-feed { list-style: none; margin: 0; padding: 0; }
 .ecrm-feed li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
 .ecrm-feed li:last-child { border-bottom: none; }
-.ecrm-feed__code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--amber-dark, var(--st-pending)); font-weight: 700; }
+.ecrm-feed__code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--st-pending); font-weight: 700; }
 .ecrm-feed__msg { flex: 1; color: var(--ink); }
 .ecrm-feed__time { color: var(--muted); font-size: 12px; }
 
@@ -108,21 +108,21 @@
 .ecrm-search .ecrm-input { width: 100%; }
 .ecrm-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .ecrm-tab {
-	border: 1px solid var(--n200); background: var(--n0); color: var(--n600);
+	border: 1px solid var(--line); background: var(--surface); color: var(--muted-strong);
 	padding: 6px 12px; border-radius: 999px; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 650; letter-spacing: .02em;
 	transition: background .14s, border-color .14s, color .14s;
 }
-.ecrm-tab b { color: var(--n900); margin-left: 4px; font-weight: 800; }
-.ecrm-tab:hover { border-color: var(--n300); background: var(--n50); color: var(--n800); }
-.ecrm-tab.is-on { background: var(--n900); border-color: var(--n900); color: var(--n0); }
-.ecrm-tab.is-on b { color: var(--p400); }
+.ecrm-tab b { color: var(--navy); margin-left: 4px; font-weight: 800; }
+.ecrm-tab:hover { border-color: var(--line-mid); background: var(--bg); color: var(--ink); }
+.ecrm-tab.is-on { background: var(--surface-inverse); border-color: var(--surface-inverse); color: var(--on-dark); }
+.ecrm-tab.is-on b { color: var(--amber); }
 
-.ecrm-tablewrap { overflow-x: auto; border: 1px solid var(--n150); border-radius: var(--radius); background: var(--n0); }
+.ecrm-tablewrap { overflow-x: auto; border: 1px solid var(--line-card); border-radius: var(--radius); background: var(--surface); }
 .ecrm-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-.ecrm-table th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--n500); padding: 10px 12px; background: var(--n50); border-bottom: 1px solid var(--n150); white-space: nowrap; }
-.ecrm-table td { padding: 12px; border-bottom: 1px solid var(--n100); color: var(--n700); }
+.ecrm-table th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; background: var(--bg); border-bottom: 1px solid var(--line-card); white-space: nowrap; }
+.ecrm-table td { padding: 12px; border-bottom: 1px solid var(--line-soft); color: var(--navy-soft); }
 .ecrm-table tr:last-child td { border-bottom: none; }
-.ecrm-table tbody tr:hover td { background: var(--n25); }
+.ecrm-table tbody tr:hover td { background: var(--surface-2); }
 .ecrm-code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 700; color: var(--navy); }
 .ecrm-mono { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; }
 .ecrm-muted { color: var(--muted); font-size: 12px; }
@@ -189,13 +189,13 @@
 	transition: border-color .14s, filter .14s;
 }
 .ecrm-statuschip::before { content: ""; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: currentColor; margin-right: 5px; }
-.ecrm-statuschip:hover { opacity: 1; border-color: var(--p400); }
+.ecrm-statuschip:hover { opacity: 1; border-color: var(--amber); }
 
 /* Η διαδρομή: πού είναι η σύμβαση, και πού επιτρέπεται να πάει. */
 .ecrm-statusflow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .ecrm-statusflow__now { font-size: 12.5px; padding: 5px 11px; }
-.ecrm-statusflow__arrow { color: var(--n300); font-size: 16px; line-height: 1; flex: 0 0 auto; }
-.ecrm-statusflow__end { font-size: 12.5px; color: var(--n400); font-style: italic; }
+.ecrm-statusflow__arrow { color: var(--faint-2); font-size: 16px; line-height: 1; flex: 0 0 auto; }
+.ecrm-statusflow__end { font-size: 12.5px; color: var(--faint); font-style: italic; }
 @media (max-width: 600px) {
 	.ecrm-statusflow { align-items: flex-start; flex-direction: column; gap: 8px; }
 	.ecrm-statusflow__arrow { transform: rotate(90deg); margin-left: 6px; }
@@ -204,7 +204,7 @@
 .ecrm-timeline { list-style: none; margin: 0; padding: 0; }
 .ecrm-timeline li { display: flex; gap: 12px; padding: 0 0 16px; position: relative; }
 .ecrm-timeline li:not(:last-child)::after { content: ""; position: absolute; left: 5px; top: 14px; bottom: 0; width: 2px; background: var(--line); }
-.ecrm-timeline__dot { width: 12px; height: 12px; flex: 0 0 12px; border-radius: 50%; background: var(--p400); margin-top: 2px; z-index: 1; box-shadow: 0 0 0 3px var(--p50); }
+.ecrm-timeline__dot { width: 12px; height: 12px; flex: 0 0 12px; border-radius: 50%; background: var(--amber); margin-top: 2px; z-index: 1; box-shadow: 0 0 0 3px var(--accent-wash); }
 .ecrm-timeline__txt { font-size: 14px; color: var(--ink); font-weight: 500; }
 .ecrm-timeline__time { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
@@ -260,12 +260,12 @@
 .ecrm-litsa[data-open="1"] .ecrm-litsa__panel { display: flex; animation: ecrm-litsa-in .18s ease; }
 @keyframes ecrm-litsa-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-.ecrm-litsa__head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(135deg, var(--n950), var(--navy)); color: var(--chrome-ink-hi); }
+.ecrm-litsa__head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(135deg, var(--surface-inverse-deep), var(--navy)); color: var(--chrome-ink-hi); }
 .ecrm-litsa__id { display: flex; align-items: center; gap: 10px; }
 .ecrm-litsa__avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--amber), var(--amber-bright)); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; }
 .ecrm-litsa__id strong { display: block; font-size: 15px; }
-.ecrm-litsa__sub { font-size: 11px; color: var(--n300); }
-.ecrm-litsa__x { background: none; border: none; color: var(--n300); font-size: 16px; cursor: pointer; }
+.ecrm-litsa__sub { font-size: 11px; color: var(--faint-2); }
+.ecrm-litsa__x { background: none; border: none; color: var(--faint-2); font-size: 16px; cursor: pointer; }
 .ecrm-litsa__x:hover { color: var(--chrome-ink-hi); }
 
 .ecrm-litsa__body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
@@ -282,7 +282,7 @@
 .ecrm-litsa__foot { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); background: var(--surface); }
 .ecrm-litsa__input { flex: 1; height: 40px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 14px; }
 /* Τρίτο υπόλειμμα iris. */
-.ecrm-litsa__input:focus { outline: none; border-color: var(--p400); box-shadow: none; }
+.ecrm-litsa__input:focus { outline: none; border-color: var(--amber); box-shadow: none; }
 .ecrm-litsa__send { width: 40px; height: 40px; border: none; border-radius: 10px; background: var(--navy); color: var(--chrome-ink-hi); cursor: pointer; font-size: 15px; }
 .ecrm-litsa__send:hover { background: var(--navy-soft); }
 
@@ -325,8 +325,8 @@
 .ecrm-org span { font-size: 10px; letter-spacing: .1em; color: var(--muted); font-weight: 700; }
 .ecrm-avatar {
 	width: 36px; height: 36px; flex: 0 0 36px; border-radius: 50%;
-	background: var(--n900);
-	color: var(--p400); display: grid; place-items: center; font-weight: 800; font-size: 13px;
+	background: var(--surface-inverse);
+	color: var(--amber); display: grid; place-items: center; font-weight: 800; font-size: 13px;
 }
 
 .ecrm-nav__icon { position: relative; }
@@ -358,7 +358,7 @@
    ============================================================ */
 .ecrm-payhero {
 	display: flex; justify-content: space-between; gap: 20px;
-	background: linear-gradient(135deg, var(--n950) 0%, var(--navy) 55%, var(--n800) 100%);
+	background: linear-gradient(135deg, var(--surface-inverse-deep) 0%, var(--surface-inverse) 55%, var(--surface-inverse-soft) 100%);
 	border-radius: 16px; padding: 26px 28px; color: var(--chrome-ink-hi); position: relative; overflow: hidden;
 }
 .ecrm-payhero::before {
@@ -368,13 +368,13 @@
 .ecrm-payhero__main { position: relative; }
 .ecrm-payhero__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--amber-bright); }
 .ecrm-payhero__big { font-size: 46px; font-weight: 800; letter-spacing: -.02em; margin: 8px 0 4px; line-height: 1; }
-.ecrm-payhero__sub { font-size: 13px; color: var(--n300); }
+.ecrm-payhero__sub { font-size: 13px; color: var(--faint-2); }
 /* Προειδοποίηση ότι το ποσό είναι μερικό. Δεν είναι διακοσμητικό: χωρίς αυτό
    το «ΣΥΝΟΛΙΚΑ ΕΣΟΔΑ» λέει ψέματα σιωπηλά όταν ξεπεραστεί το όριο.
    Σε ΣΚΟΥΡΟ φόντο, οπότε --st-pending-on-dark: το --st-pending δίνει 3,87:1 εδώ. */
 .ecrm-payhero__warn { margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--st-pending-on-dark); }
 .ecrm-payhero__side { position: relative; text-align: right; border-left: 1px solid var(--chrome-wash-2); padding-left: 22px; }
-.ecrm-payhero__k { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--n400); }
+.ecrm-payhero__k { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--faint); }
 .ecrm-payhero__v { font-size: 20px; font-weight: 800; }
 
 @media (max-width: 600px) {
@@ -432,8 +432,8 @@
 /* Ήταν το «accent gradient» κουμπί. Με τρεις τύπους στο φύλλο του πελάτη δεν
    χωράει τέταρτος: γίνεται ίδιο με το primary. Δύο σημεία το χρησιμοποιούν και
    αξίζει να ενοποιηθούν σε --primary σε επόμενο πέρασμα. */
-.ecrm-btn--amber { background: var(--p400); color: var(--on-accent); border: none; }
-.ecrm-btn--amber:hover:not(:disabled) { background: var(--p500); }
+.ecrm-btn--amber { background: var(--amber); color: var(--on-accent); border: none; }
+.ecrm-btn--amber:hover:not(:disabled) { background: var(--accent-hover); }
 .ecrm-btn--amber:hover { filter: brightness(1.04); }
 
 .ecrm-titlewrap { display: flex; align-items: center; gap: 14px; }
@@ -474,7 +474,7 @@
 .ecrm-file:hover { border-color: var(--navy-soft); box-shadow: 0 4px 12px -6px rgba(10,31,61,.2); }
 .ecrm-file__thumb { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 8px; overflow: hidden; background: var(--bg); display: grid; place-items: center; }
 .ecrm-file__thumb img { width: 100%; height: 100%; object-fit: cover; }
-.ecrm-file__ext { font-size: 11px; font-weight: 800; color: var(--amber-dark, var(--st-pending)); }
+.ecrm-file__ext { font-size: 11px; font-weight: 800; color: var(--st-pending); }
 .ecrm-file__meta { min-width: 0; }
 .ecrm-file__name { display: block; font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ecrm-file__kind { display: block; font-size: 11px; color: var(--muted); }
@@ -583,8 +583,8 @@
 .ecrm-barlist { display:flex; flex-direction:column; gap:10px; margin-top:6px; }
 .ecrm-barrow { display:grid; grid-template-columns:130px 1fr 44px; align-items:center; gap:10px; }
 .ecrm-barrow__lbl { font-size:13px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.ecrm-barrow__track { background:var(--n150); border-radius:999px; height:10px; overflow:hidden; }
-.ecrm-barrow__fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--p400),var(--p300)); min-width:3px; }
+.ecrm-barrow__track { background:var(--surface-track); border-radius:999px; height:10px; overflow:hidden; }
+.ecrm-barrow__fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--amber),var(--amber-bright)); min-width:3px; }
 .ecrm-barrow__fill.is-prov { background:var(--cat-teal); }
 .ecrm-barrow__fill.is-energy { background:var(--st-routed); }
 .ecrm-barrow__fill.is-region { background:var(--cat-violet); }
@@ -592,8 +592,8 @@
 
 .ecrm-trend { display:flex; align-items:flex-end; gap:6px; height:140px; padding-top:8px; }
 .ecrm-trend__col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; }
-.ecrm-trend__bar { width:100%; max-width:34px; border-radius:6px 6px 0 0; background:linear-gradient(180deg,var(--p300),var(--p400)); transition:height .3s ease; }
-.ecrm-trend__lbl { font-size:11px; color:var(--n500); }
+.ecrm-trend__bar { width:100%; max-width:34px; border-radius:6px 6px 0 0; background:linear-gradient(180deg,var(--amber-bright),var(--amber)); transition:height .3s ease; }
+.ecrm-trend__lbl { font-size:11px; color:var(--muted); }
 
 /* --- Required-docs checklist + inline upload --- */
 .ecrm-checklist { list-style:none; margin:6px 0 10px; padding:0; display:flex; flex-direction:column; gap:6px; }
@@ -601,13 +601,13 @@
 .ecrm-check__mark { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; font-weight:800; font-size:13px; flex:0 0 22px; }
 .ecrm-check.is-ok .ecrm-check__mark { background:var(--st-active-bg); color:var(--st-active); }
 .ecrm-check.is-missing .ecrm-check__mark { background:var(--st-cancel-bg); color:var(--st-cancel); }
-.ecrm-check.is-missing { color:var(--n500); }
+.ecrm-check.is-missing { color:var(--muted); }
 .ecrm-check__note { font-size:13px; font-weight:600; padding:8px 12px; border-radius:10px; margin-bottom:12px; }
 .ecrm-check__note.is-ok { background:var(--st-routed-bg); color:var(--st-routed); }
 .ecrm-check__note.is-missing { background:var(--st-pending-bg); color:var(--st-pending); }
-.ecrm-docup { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--n200); }
+.ecrm-docup { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); }
 .ecrm-docup__kind { max-width:220px; }
-.ecrm-docup__msg { font-size:13px; color:var(--n500); }
+.ecrm-docup__msg { font-size:13px; color:var(--muted); }
 .ecrm-docup__msg.is-err { color:var(--st-cancel); }
 
 /* --- Tasks / callbacks --- */
@@ -619,38 +619,38 @@
    κρατούσε #e2e8f0 και #475569 σκληροκωδικοποιημένα. Δύο κανόνες για το ίδιο
    στοιχείο δεν διαφωνούν θορυβωδώς — κερδίζει σιωπηλά ο τελευταίος. */
 .ecrm-tasklist { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
-.ecrm-task { display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid var(--n150); border-radius:12px; background:var(--surface); }
+.ecrm-task { display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid var(--line-card); border-radius:12px; background:var(--surface); }
 .ecrm-task.is-overdue { border-color:var(--st-cancel); background:var(--st-cancel-bg); }
 .ecrm-task.is-done { opacity:.55; }
 .ecrm-task.is-done .ecrm-task__title { text-decoration:line-through; }
-.ecrm-task__check { flex:0 0 24px; width:24px; height:24px; border-radius:50%; border:2px solid var(--n300); background:var(--surface); color:var(--st-routed); font-weight:800; cursor:pointer; display:grid; place-items:center; margin-top:1px; }
+.ecrm-task__check { flex:0 0 24px; width:24px; height:24px; border-radius:50%; border:2px solid var(--line-mid); background:var(--surface); color:var(--st-routed); font-weight:800; cursor:pointer; display:grid; place-items:center; margin-top:1px; }
 .ecrm-task.is-done .ecrm-task__check { background:var(--st-routed-bg); border-color:var(--st-routed); }
-.ecrm-prio { flex:0 0 8px; width:8px; height:8px; border-radius:50%; margin-top:8px; background:var(--n400); }
-.ecrm-prio--high { background:var(--st-cancel); } .ecrm-prio--normal { background:var(--st-pending); } .ecrm-prio--low { background:var(--n400); }
+.ecrm-prio { flex:0 0 8px; width:8px; height:8px; border-radius:50%; margin-top:8px; background:var(--fill-mute-strong); }
+.ecrm-prio--high { background:var(--st-cancel); } .ecrm-prio--normal { background:var(--st-pending); } .ecrm-prio--low { background:var(--fill-mute-strong); }
 .ecrm-task__body { flex:1; min-width:0; }
 .ecrm-task__title { font-weight:600; font-size:14px; color:var(--ink); }
-.ecrm-task__sub { font-size:12px; color:var(--n500); margin-top:2px; }
-.ecrm-task__note { font-size:12px; color:var(--n400); margin-top:3px; }
+.ecrm-task__sub { font-size:12px; color:var(--muted); margin-top:2px; }
+.ecrm-task__note { font-size:12px; color:var(--faint); margin-top:3px; }
 .ecrm-tasklink { color:var(--amber,var(--st-pending)); font-weight:600; text-decoration:none; }
 .ecrm-task__due { flex:0 0 auto; text-align:right; }
-.ecrm-taskdue { font-size:12px; color:var(--n600); white-space:nowrap; }
+.ecrm-taskdue { font-size:12px; color:var(--muted-strong); white-space:nowrap; }
 .ecrm-taskdue.is-overdue { color:var(--st-cancel); font-weight:700; }
-.ecrm-task__rm { flex:0 0 auto; border:0; background:transparent; color:var(--n300); cursor:pointer; font-size:15px; padding:2px 4px; }
+.ecrm-task__rm { flex:0 0 auto; border:0; background:transparent; color:var(--faint-2); cursor:pointer; font-size:15px; padding:2px 4px; }
 .ecrm-task__rm:hover { color:var(--st-cancel); }
-.ecrm-muted { color:var(--n400); }
+.ecrm-muted { color:var(--faint); }
 
 /* --- Quote / savings calculator --- */
 .ecrm-calc__grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .ecrm-calc__cols { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
-.ecrm-calc__box { border:1px solid var(--n150); border-radius:12px; padding:14px; }
+.ecrm-calc__box { border:1px solid var(--line-card); border-radius:12px; padding:14px; }
 .ecrm-calc__box--offer { border-color:var(--st-pending); background:var(--st-pending-bg); }
 .ecrm-calc__h { font-weight:700; font-size:13px; color:var(--ink); margin-bottom:10px; }
 .ecrm-calc .ecrm-field { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
-.ecrm-calc .ecrm-field > span { font-size:12px; color:var(--n500); }
+.ecrm-calc .ecrm-field > span { font-size:12px; color:var(--muted); }
 .ecrm-calc__result { margin-top:16px; }
 .ecrm-calc__cmp { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.ecrm-calc__cmp div { background:var(--n50); border-radius:10px; padding:12px; }
-.ecrm-calc__cmp span { display:block; font-size:12px; color:var(--n500); }
+.ecrm-calc__cmp div { background:var(--bg); border-radius:10px; padding:12px; }
+.ecrm-calc__cmp span { display:block; font-size:12px; color:var(--muted); }
 .ecrm-calc__cmp strong { font-size:18px; color:var(--ink); }
 .ecrm-calc__save { margin-top:12px; border-radius:12px; padding:16px; display:flex; align-items:center; justify-content:space-between; }
 .ecrm-calc__save.is-pos { background:var(--st-routed-bg); color:var(--st-routed); }
@@ -665,25 +665,25 @@
 
 /* --- Bulk actions --- */
 .ecrm-checkcol { width:34px; text-align:center; }
-.ecrm-bulkbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 12px; margin-bottom:10px; background:var(--n900); border-radius:12px; color:var(--chrome-ink-hi); }
+.ecrm-bulkbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 12px; margin-bottom:10px; background:var(--surface-inverse); border-radius:12px; color:var(--chrome-ink-hi); }
 .ecrm-bulkbar__n { font-size:13px; margin-right:4px; } .ecrm-bulkbar__n b { font-size:15px; }
 .ecrm-input--sm { padding:6px 8px; font-size:13px; height:auto; max-width:200px; }
 .ecrm-bulkbar .ecrm-input--sm { color:var(--ink); }
 
 /* --- Knowledge base --- */
-.ecrm-kbsearchbox { background:linear-gradient(160deg,var(--n900),var(--n800)); border-radius:16px; padding:18px; margin-bottom:16px; }
+.ecrm-kbsearchbox { background:linear-gradient(160deg,var(--surface-inverse),var(--surface-inverse-soft)); border-radius:16px; padding:18px; margin-bottom:16px; }
 .ecrm-kbsearchbox__q { display:flex; align-items:center; gap:8px; background:var(--surface); border-radius:10px; padding:10px 14px; font-size:15px; }
 .ecrm-kbsearchbox__q input { border:0; outline:0; flex:1; font-size:15px; background:transparent; }
 .ecrm-kbfilters { display:flex; flex-wrap:wrap; gap:16px; margin-top:14px; }
 .ecrm-kbfilter { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
-.ecrm-kbfilter > span { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--n400); margin-right:4px; }
-.ecrm-chip2 { border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:var(--n300); border-radius:999px; padding:4px 12px; font-size:13px; font-weight:600; cursor:pointer; }
-.ecrm-chip2.is-on { background:var(--p400); color:var(--on-accent); border-color:var(--p400); }
+.ecrm-kbfilter > span { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); margin-right:4px; }
+.ecrm-chip2 { border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:var(--faint-2); border-radius:999px; padding:4px 12px; font-size:13px; font-weight:600; cursor:pointer; }
+.ecrm-chip2.is-on { background:var(--amber); color:var(--on-accent); border-color:var(--amber); }
 .ecrm-kbgroup { margin-bottom:18px; }
 .ecrm-kbgroup__head { font-size:15px; font-weight:800; color:var(--ink); padding:6px 2px; display:flex; align-items:center; gap:10px; }
-.ecrm-kbgroup__count { font-size:12px; font-weight:600; color:var(--n400); background:var(--n100); padding:2px 8px; border-radius:999px; }
-.ecrm-kbentry { background:var(--surface); border:1px solid var(--n150); border-radius:12px; margin-bottom:8px; overflow:hidden; }
-.ecrm-kbentry.is-open { border-color:var(--n300); box-shadow:0 6px 20px -12px rgba(0,0,0,.25); }
+.ecrm-kbgroup__count { font-size:12px; font-weight:600; color:var(--faint); background:var(--surface-sunk); padding:2px 8px; border-radius:999px; }
+.ecrm-kbentry { background:var(--surface); border:1px solid var(--line-card); border-radius:12px; margin-bottom:8px; overflow:hidden; }
+.ecrm-kbentry.is-open { border-color:var(--line-mid); box-shadow:0 6px 20px -12px rgba(0,0,0,.25); }
 .ecrm-kbentry__head { width:100%; display:flex; align-items:center; gap:10px; padding:14px 16px; background:transparent; border:0; cursor:pointer; text-align:left; }
 .ecrm-kbentry__title { flex:1; font-size:14px; font-weight:600; color:var(--ink); }
 .ecrm-kbentry__badges { display:flex; gap:6px; flex-wrap:wrap; }
@@ -692,9 +692,9 @@
 .ecrm-kbbadge.is-energy-gas { background:var(--cat-teal-bg); color:var(--cat-teal); }
 .ecrm-kbbadge.is-section { background:var(--st-active-bg); color:var(--st-active); }
 .ecrm-kbbadge.is-type { background:var(--cat-violet-bg); color:var(--cat-violet); }
-.ecrm-kbentry__chev { color:var(--n300); font-size:20px; transition:transform .2s; }
+.ecrm-kbentry__chev { color:var(--faint-2); font-size:20px; transition:transform .2s; }
 .ecrm-kbentry.is-open .ecrm-kbentry__chev { transform:rotate(90deg); }
-.ecrm-kbentry__body { padding:4px 18px 16px; font-size:14px; color:var(--n700); line-height:1.6; border-top:1px solid var(--n100); }
+.ecrm-kbentry__body { padding:4px 18px 16px; font-size:14px; color:var(--navy-soft); line-height:1.6; border-top:1px solid var(--line-soft); }
 .ecrm-kbentry__body h1,.ecrm-kbentry__body h2,.ecrm-kbentry__body h3,.ecrm-kbentry__body strong { color:var(--ink); }
 .ecrm-kbentry__body ul,.ecrm-kbentry__body ol { padding-left:20px; margin:6px 0; }
 .ecrm-kbentry__body p { margin:8px 0; }
@@ -702,47 +702,47 @@
 /* --- KB AI ask (Λίτσα) --- */
 .ecrm-kbsearchbox__title { color:var(--chrome-ink-hi); font-size:18px; font-weight:800; margin-bottom:12px; }
 .ecrm-kbsearchbox__q { gap:10px; }
-.ecrm-kbask { flex:0 0 auto; border:0; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; background:var(--p400); color:var(--on-accent); white-space:nowrap; }
+.ecrm-kbask { flex:0 0 auto; border:0; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; background:var(--amber); color:var(--on-accent); white-space:nowrap; }
 .ecrm-kbask:hover { filter:brightness(1.05); }
 .ecrm-kbanswer { margin-top:12px; background:var(--surface); border-radius:12px; padding:14px 16px; }
-.ecrm-kbanswer__loading { color:var(--n500); font-size:14px; }
+.ecrm-kbanswer__loading { color:var(--muted); font-size:14px; }
 .ecrm-kbanswer__err { color:var(--st-cancel); font-size:14px; }
 .ecrm-kbanswer__head { font-size:12px; font-weight:800; color:var(--amber,var(--st-pending)); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
 .ecrm-kbanswer__body { font-size:14px; color:var(--ink); line-height:1.6; }
-.ecrm-kbanswer__close { margin-top:10px; border:1px solid var(--n200); background:var(--n50); color:var(--n600); border-radius:8px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; }
+.ecrm-kbanswer__close { margin-top:10px; border:1px solid var(--line); background:var(--bg); color:var(--muted-strong); border-radius:8px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; }
 @media (max-width:560px){ .ecrm-kbsearchbox__q { flex-wrap:wrap; } .ecrm-kbask { width:100%; } }
 
 /* --- Global search (topbar) --- */
 .ecrm-gsearch { position:relative; flex:1; max-width:520px; margin:0 18px; }
-.ecrm-gsearch > input { width:100%; border:1px solid var(--n200); border-radius:10px; padding:9px 14px; font-size:14px; background:var(--n50); outline:none; }
-.ecrm-gsearch > input:focus { background:var(--surface); border-color:var(--n300); }
-.ecrm-gsearch__results { position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--surface); border:1px solid var(--n200); border-radius:12px; box-shadow:0 16px 40px -16px rgba(0,0,0,.3); z-index:60; max-height:420px; overflow:auto; }
-.ecrm-gsearch__row { display:flex; flex-direction:column; gap:3px; width:100%; text-align:left; border:0; background:transparent; border-bottom:1px solid var(--n100); padding:10px 14px; cursor:pointer; }
-.ecrm-gsearch__row:hover { background:var(--n50); }
+.ecrm-gsearch > input { width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 14px; font-size:14px; background:var(--bg); outline:none; }
+.ecrm-gsearch > input:focus { background:var(--surface); border-color:var(--line-mid); }
+.ecrm-gsearch__results { position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:0 16px 40px -16px rgba(0,0,0,.3); z-index:60; max-height:420px; overflow:auto; }
+.ecrm-gsearch__row { display:flex; flex-direction:column; gap:3px; width:100%; text-align:left; border:0; background:transparent; border-bottom:1px solid var(--line-soft); padding:10px 14px; cursor:pointer; }
+.ecrm-gsearch__row:hover { background:var(--bg); }
 .ecrm-gsearch__main { font-size:14px; font-weight:600; color:var(--ink); }
-.ecrm-gsearch__meta { font-size:12px; color:var(--n500); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.ecrm-gsearch__empty { padding:14px; color:var(--n400); font-size:13px; }
+.ecrm-gsearch__meta { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.ecrm-gsearch__empty { padding:14px; color:var(--faint); font-size:13px; }
 @media (max-width:760px){ .ecrm-gsearch { display:none; } }
 
 /* --- Saved filters --- */
 .ecrm-savedfilters { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:10px 0 4px; }
-.ecrm-savedfilters__lbl { font-size:12px; color:var(--n400); font-weight:600; }
-.ecrm-savedchip { display:inline-flex; align-items:center; background:var(--n100); border-radius:999px; overflow:hidden; }
-.ecrm-savedchip__go { border:0; background:transparent; color:var(--n700); font-size:13px; font-weight:600; padding:5px 6px 5px 12px; cursor:pointer; }
-.ecrm-savedchip__x { border:0; background:transparent; color:var(--n400); font-size:15px; padding:5px 10px 5px 4px; cursor:pointer; }
+.ecrm-savedfilters__lbl { font-size:12px; color:var(--faint); font-weight:600; }
+.ecrm-savedchip { display:inline-flex; align-items:center; background:var(--surface-sunk); border-radius:999px; overflow:hidden; }
+.ecrm-savedchip__go { border:0; background:transparent; color:var(--navy-soft); font-size:13px; font-weight:600; padding:5px 6px 5px 12px; cursor:pointer; }
+.ecrm-savedchip__x { border:0; background:transparent; color:var(--faint); font-size:15px; padding:5px 10px 5px 4px; cursor:pointer; }
 .ecrm-savedchip__x:hover { color:var(--st-cancel); }
 
 /* --- Live team dashboard --- */
 .ecrm-tlstats { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:16px; }
-.ecrm-tlstat { background:var(--surface); border:1px solid var(--n150); border-radius:12px; padding:14px; text-align:center; }
-.ecrm-tlstat.is-online { background:var(--n900); border-color:var(--n900); }
+.ecrm-tlstat { background:var(--surface); border:1px solid var(--line-card); border-radius:12px; padding:14px; text-align:center; }
+.ecrm-tlstat.is-online { background:var(--surface-inverse); border-color:var(--surface-inverse); }
 .ecrm-tlstat.is-online .ecrm-tlstat__n { color:var(--st-routed); }
-.ecrm-tlstat.is-online .ecrm-tlstat__l { color:var(--n300); }
+.ecrm-tlstat.is-online .ecrm-tlstat__l { color:var(--faint-2); }
 .ecrm-tlstat__n { font-size:26px; font-weight:800; color:var(--ink); line-height:1; }
-.ecrm-tlstat__l { font-size:12px; color:var(--n500); margin-top:6px; }
+.ecrm-tlstat__l { font-size:12px; color:var(--muted); margin-top:6px; }
 .ecrm-tlnum { text-align:center; font-weight:600; }
 .ecrm-tlrole { font-size:11px; }
-.ecrm-tldot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--n300); margin-right:8px; vertical-align:middle; }
+.ecrm-tldot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--fill-mute); margin-right:8px; vertical-align:middle; }
 .ecrm-tldot.is-on { background:var(--st-routed); box-shadow:0 0 0 3px rgba(34,197,94,.2); animation:ecrmpulse 1.6s infinite; }
 @keyframes ecrmpulse { 0%{box-shadow:0 0 0 0 rgba(34,197,94,.5);} 70%{box-shadow:0 0 0 6px rgba(34,197,94,0);} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0);} }
 .ecrm-pillwarn { display:inline-block; min-width:22px; padding:2px 8px; border-radius:999px; background:var(--st-pending-bg); color:var(--st-pending); font-weight:700; font-size:12px; }
@@ -757,8 +757,8 @@
 .ecrm-leadform .ecrm-field--wide { grid-column:1 / -1; }
 .ecrm-leadform__bar { display:flex; gap:10px; margin-top:14px; }
 .ecrm-leadlist { display:flex; flex-direction:column; gap:10px; }
-.ecrm-leadcard { background:var(--surface); border:1px solid var(--n150); border-left:4px solid var(--n300); border-radius:12px; padding:14px 16px; }
-.ecrm-leadcard.ecrm-stage-new { border-left-color:var(--n400); }
+.ecrm-leadcard { background:var(--surface); border:1px solid var(--line-card); border-left:4px solid var(--line-mid); border-radius:12px; padding:14px 16px; }
+.ecrm-leadcard.ecrm-stage-new { border-left-color:var(--line-strong); }
 .ecrm-leadcard.ecrm-stage-contacted { border-left-color:var(--st-new); }
 .ecrm-leadcard.ecrm-stage-callback { border-left-color:var(--st-pending); }
 .ecrm-leadcard.ecrm-stage-qualified { border-left-color:var(--st-psig); }
@@ -768,13 +768,13 @@
 .ecrm-leadcard__top strong { font-size:15px; color:var(--ink); }
 .ecrm-leadmeta { font-size:13px; margin-top:2px; }
 .ecrm-leadtel { color:var(--st-asig); text-decoration:none; font-weight:600; }
-.ecrm-leadstage { flex:0 0 auto; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:var(--n100); color:var(--n600); }
-.ecrm-leadint { font-size:13.5px; color:var(--n600); margin:8px 0 0; }
+.ecrm-leadstage { flex:0 0 auto; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:var(--surface-sunk); color:var(--muted-strong); }
+.ecrm-leadint { font-size:13.5px; color:var(--muted-strong); margin:8px 0 0; }
 .ecrm-leadcard__bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
 .ecrm-leadcard__actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
-.ecrm-leadcb { font-size:12.5px; color:var(--n500); font-weight:600; }
+.ecrm-leadcb { font-size:12.5px; color:var(--muted); font-weight:600; }
 .ecrm-leadcb.is-over { color:var(--st-cancel); }
-.ecrm-iconbtn { border:0; background:var(--n50); border-radius:8px; padding:5px 9px; cursor:pointer; font-size:13px; }
+.ecrm-iconbtn { border:0; background:var(--bg); border-radius:8px; padding:5px 9px; cursor:pointer; font-size:13px; }
 .ecrm-iconbtn:hover { background:var(--st-cancel-bg); }
 @media (max-width:760px){ .ecrm-leadform__grid { grid-template-columns:1fr 1fr; } }
 @media (max-width:520px){ .ecrm-leadform__grid { grid-template-columns:1fr; } }
@@ -839,10 +839,10 @@
 
 /* --- status tab colour dots --- */
 .ecrm-tab { display: inline-flex; align-items: center; gap: 7px; }
-.ecrm-tabdot { width: 7px; height: 7px; border-radius: 50%; background: var(--n400); flex: 0 0 auto; }
+.ecrm-tabdot { width: 7px; height: 7px; border-radius: 50%; background: var(--fill-mute-strong); flex: 0 0 auto; }
 /* Το awaiting_signature και το signed ΔΕΝ είχαν ορισμό μέχρι σήμερα:
    δύο από τις δώδεκα καρτέλες φίλτρου έβγαζαν άχρωμη τελεία. */
-.ecrm-tabdot--all { background: var(--n500); }
+.ecrm-tabdot--all { background: var(--fill-mute-strong); }
 .ecrm-tabdot--draft { background: var(--st-draft); }
 .ecrm-tabdot--new { background: var(--st-new); }
 .ecrm-tabdot--pending_signature { background: var(--st-psig); }
@@ -940,17 +940,17 @@
 @media (max-width: 767px) {
 	.ecrm-botnav {
 		display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
-		background: var(--n0); border-top: 1px solid var(--n150);
+		background: var(--surface); border-top: 1px solid var(--line-card);
 		padding: 4px 2px calc(4px + env(safe-area-inset-bottom));
 		box-shadow: 0 -2px 12px rgba(16,24,40,.06);
 	}
 	.ecrm-botnav__item {
 		flex: 1; flex-direction: column; align-items: center; justify-content: center;
 		gap: 2px; padding: 7px 2px; min-height: 52px; border-radius: 10px; width: auto;
-		font-size: 10px; font-weight: 650; color: var(--n500);
+		font-size: 10px; font-weight: 650; color: var(--muted);
 	}
 	.ecrm-botnav__item:hover { background: none; }
-	.ecrm-botnav__item.is-active { background: none; color: var(--p700); font-weight: 750; }
+	.ecrm-botnav__item.is-active { background: none; color: var(--accent-ink); font-weight: 750; }
 	.ecrm-botnav__item .ecrm-nav__icon { width: 22px; height: 22px; flex: 0 0 22px; }
 	.ecrm-botnav__item .ecrm-nav__icon svg { width: 21px; height: 21px; }
 	.ecrm-botnav__txt { white-space: nowrap; }
@@ -976,8 +976,8 @@
 .ecrm-hero { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 28px; align-items: center; }
 /* Αναλογικά ψηφία, ΟΧΙ tabular: σε μέγεθος οθόνης το tabular κάνει το «121»
    να φαίνεται αραιό. Το tabular ανήκει σε στήλες αριθμών. */
-.ecrm-hero__n { font-size: 52px; font-weight: 700; letter-spacing: -.04em; line-height: 1; color: var(--n900); }
-.ecrm-hero__lbl { font-size: 13px; color: var(--n500); margin-top: 6px; }
+.ecrm-hero__n { font-size: 52px; font-weight: 700; letter-spacing: -.04em; line-height: 1; color: var(--navy); }
+.ecrm-hero__lbl { font-size: 13px; color: var(--muted); margin-top: 6px; }
 .ecrm-delta { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700;
 	padding: 3px 9px; border-radius: 999px; margin-left: 12px; vertical-align: 6px; }
 .ecrm-delta svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -986,43 +986,43 @@
 
 /* ── ο μετρητής επιπέδου ── */
 .ecrm-tier { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
-.ecrm-tier__now { font-size: 15px; font-weight: 700; color: var(--n900); }
-.ecrm-tier__next { font-size: 12.5px; color: var(--n500); margin-left: auto; }
+.ecrm-tier__now { font-size: 15px; font-weight: 700; color: var(--navy); }
+.ecrm-tier__next { font-size: 12.5px; color: var(--muted); margin-left: auto; }
 /* Η άδεια πίστα είναι ΑΝΟΙΧΤΟΤΕΡΟ ΣΚΑΛΙ ΤΗΣ ΙΔΙΑΣ ΡΑΜΠΑΣ, όχι γκρι, ώστε η
    κατάσταση να διαβάζεται σε όλο το μήκος και όχι μόνο στο γεμάτο κομμάτι. */
-.ecrm-meter { height: 9px; border-radius: 999px; background: var(--p100); overflow: hidden; }
-.ecrm-meter__f { display: block; height: 100%; background: var(--p500); border-radius: 999px; transition: width .5s ease; }
+.ecrm-meter { height: 9px; border-radius: 999px; background: var(--accent-wash-2); overflow: hidden; }
+.ecrm-meter__f { display: block; height: 100%; background: var(--accent-hover); border-radius: 999px; transition: width .5s ease; }
 .ecrm-tier__scale { display: flex; justify-content: space-between; margin-top: 7px; font-size: 11px;
-	color: var(--n400); font-variant-numeric: tabular-nums; }
+	color: var(--faint); font-variant-numeric: tabular-nums; }
 
 /* ── οι τρεις μετρητές ── */
 .ecrm-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.ecrm-kpi { background: var(--n0); border: 1px solid var(--n150); border-radius: var(--radius); padding: 16px 18px 18px; }
-.ecrm-kpi__k { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--n600); margin-bottom: 9px; }
+.ecrm-kpi { background: var(--surface); border: 1px solid var(--line-card); border-radius: var(--radius); padding: 16px 18px 18px; }
+.ecrm-kpi__k { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted-strong); margin-bottom: 9px; }
 .ecrm-kpi__dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 7px; }
 .ecrm-kpi__dot.is-ok { background: var(--st-active); }
 .ecrm-kpi__dot.is-pend { background: var(--st-pending); }
 .ecrm-kpi__dot.is-route { background: var(--st-routed); }
-.ecrm-kpi__v { font-size: 30px; font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--n900); }
-.ecrm-kpi__f { font-size: 12px; color: var(--n500); margin-top: 8px; }
+.ecrm-kpi__v { font-size: 30px; font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--navy); }
+.ecrm-kpi__f { font-size: 12px; color: var(--muted); margin-top: 8px; }
 
 /* ── τι χρειάζεται εσένα ── */
 .ecrm-attnhead { display: flex; align-items: baseline; gap: 12px; }
 .ecrm-attnhead .ecrm-step { margin: 0; }
-.ecrm-attnhead__n { font-size: 12.5px; color: var(--n500); margin-left: auto; }
+.ecrm-attnhead__n { font-size: 12.5px; color: var(--muted); margin-left: auto; }
 .ecrm-attn { list-style: none; margin: 6px 0 0; padding: 0; }
-.ecrm-attn li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--n100); }
+.ecrm-attn li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line-soft); }
 .ecrm-attn li:first-child { border-top: none; }
 .ecrm-attn__b { width: 3px; align-self: stretch; border-radius: 2px; flex: 0 0 3px; }
 .ecrm-attn__b.is-late { background: var(--st-cancel); }
 .ecrm-attn__b.is-pend { background: var(--st-pending); }
-.ecrm-attn__b.is-mute { background: var(--n300); }
+.ecrm-attn__b.is-mute { background: var(--fill-mute); }
 .ecrm-attn__m { flex: 1; min-width: 0; font-size: 13.5px; color: var(--ink); }
 .ecrm-attn__m b { font-weight: 600; }
-.ecrm-attn__m small { display: block; color: var(--n500); font-size: 12px; margin-top: 2px; }
-.ecrm-attn__a { border: 1px solid var(--n200); background: var(--n0); border-radius: 8px; padding: 7px 13px;
-	font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--n700); cursor: pointer; white-space: nowrap; }
-.ecrm-attn__a:hover { border-color: var(--n400); color: var(--n900); }
+.ecrm-attn__m small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.ecrm-attn__a { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 13px;
+	font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--navy-soft); cursor: pointer; white-space: nowrap; }
+.ecrm-attn__a:hover { border-color: var(--line-strong); color: var(--navy); }
 
 /* ── το γράφημα τάσης ── */
 /* Το SVG τεντώνεται οριζόντια (preserveAspectRatio="none") για να γεμίσει την
@@ -1037,33 +1037,33 @@
 .ecrm-plot { display: block; width: 100%; height: 168px; overflow: visible; }
 .ecrm-yaxis { position: absolute; left: 0; top: 20px; height: 168px; width: 28px; }
 .ecrm-yaxis span { position: absolute; right: 0; transform: translateY(-50%);
-	font-size: 10.5px; color: var(--n400); font-variant-numeric: tabular-nums; }
+	font-size: 10.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .ecrm-xaxis { display: flex; justify-content: space-between; margin-top: 7px; }
-.ecrm-xaxis span { font-size: 10.5px; color: var(--n400); flex: 1 1 0; text-align: center; }
+.ecrm-xaxis span { font-size: 10.5px; color: var(--faint); flex: 1 1 0; text-align: center; }
 .ecrm-xaxis span:first-child { text-align: left; }
 .ecrm-xaxis span:last-child { text-align: right; }
 /* Συμπαγείς τρίχινες γραμμές, ΠΟΤΕ διακεκομμένες: το διάστικτο διαβάζεται ως
    «όριο» ή «πρόβλεψη» ενώ είναι απλό πλέγμα. */
-.ecrm-gridline { stroke: var(--n150); stroke-width: 1; }
-.ecrm-area { fill: var(--p400); opacity: .10; }
-.ecrm-line { fill: none; stroke: var(--p600); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.ecrm-dot { fill: var(--p600); stroke: var(--n0); stroke-width: 2; }
+.ecrm-gridline { stroke: var(--line-card); stroke-width: 1; }
+.ecrm-area { fill: var(--amber); opacity: .10; }
+.ecrm-line { fill: none; stroke: var(--accent-deep); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ecrm-dot { fill: var(--accent-deep); stroke: var(--surface); stroke-width: 2; }
 .ecrm-hit { fill: transparent; }
 .ecrm-endval { position: absolute; transform: translate(-100%, -130%); font-size: 12.5px;
-	font-weight: 700; color: var(--n900); font-variant-numeric: tabular-nums; pointer-events: none; }
-.ecrm-charttip { position: absolute; pointer-events: none; background: var(--n900); color: var(--n0);
+	font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; pointer-events: none; }
+.ecrm-charttip { position: absolute; pointer-events: none; background: var(--surface-inverse); color: var(--on-dark);
 	border-radius: 8px; padding: 7px 11px; font-size: 12.5px; font-weight: 600; white-space: nowrap;
 	opacity: 0; transition: opacity .1s; transform: translate(-50%, -130%); z-index: 5; }
 .ecrm-charttip.is-on { opacity: 1; }
-.ecrm-charttip b { color: var(--p300); }
+.ecrm-charttip b { color: var(--amber-bright); }
 .ecrm-tableview { border: none; background: none; font-family: inherit; font-size: 12px; font-weight: 600;
-	color: var(--n500); cursor: pointer; padding: 0; margin-left: auto;
+	color: var(--muted); cursor: pointer; padding: 0; margin-left: auto;
 	text-decoration: underline; text-underline-offset: 3px; }
-.ecrm-tableview:hover { color: var(--n800); }
+.ecrm-tableview:hover { color: var(--ink); }
 .ecrm-charttbl { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
 .ecrm-charttbl th { text-align: left; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
-	color: var(--n500); padding: 7px 8px; border-bottom: 1px solid var(--n150); }
-.ecrm-charttbl td { padding: 7px 8px; border-top: 1px solid var(--n100); }
+	color: var(--muted); padding: 7px 8px; border-bottom: 1px solid var(--line-card); }
+.ecrm-charttbl td { padding: 7px 8px; border-top: 1px solid var(--line-soft); }
 .ecrm-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
 
 /* ── ανά πάροχο ── */
@@ -1072,12 +1072,12 @@
    της ράβδου ήδη δείχνει. */
 .ecrm-pbars { display: flex; flex-direction: column; gap: 11px; margin-top: 4px; }
 .ecrm-pbar { display: grid; grid-template-columns: 104px 1fr 34px; align-items: center; gap: 11px; }
-.ecrm-pbar__n { font-size: 13px; color: var(--n700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-pbar__n { font-size: 13px; color: var(--navy-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* display:block και στα δύο: είναι span, και σε inline στοιχείο το width και
    το height αγνοούνται — η ράβδος έβγαινε κενή. */
-.ecrm-pbar__t { display: block; height: 14px; background: var(--n100); border-radius: 4px; overflow: hidden; }
-.ecrm-pbar__f { display: block; height: 100%; background: var(--p500); border-radius: 0 4px 4px 0; }
-.ecrm-pbar__v { font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; color: var(--n900); }
+.ecrm-pbar__t { display: block; height: 14px; background: var(--surface-sunk); border-radius: 4px; overflow: hidden; }
+.ecrm-pbar__f { display: block; height: 100%; background: var(--accent-hover); border-radius: 0 4px 4px 0; }
+.ecrm-pbar__v { font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; color: var(--navy); }
 
 @media (max-width: 700px) {
 	.ecrm-hero { grid-template-columns: 1fr; gap: 20px; }
