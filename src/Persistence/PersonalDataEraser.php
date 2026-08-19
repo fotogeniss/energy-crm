@@ -122,7 +122,10 @@ final class PersonalDataEraser
     {
         $rowsChanged = $this->redactRows(
             Tables::CONTRACTS,
-            'notes = NULL, extracted_json = NULL, consent_ip = NULL',
+            // Το track_key μαζί: ο σύνδεσμος παρακολούθησης είναι δρόμος προς
+            // τα στοιχεία αυτού του ανθρώπου, και μια διαγραφή που τον αφήνει
+            // ζωντανό δεν είναι διαγραφή.
+            'notes = NULL, extracted_json = NULL, consent_ip = NULL, track_key = NULL',
             'id',
             $contractIds
         );
