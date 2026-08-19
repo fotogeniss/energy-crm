@@ -130,6 +130,33 @@
 	--st-active: #00531e;		--st-active-bg: #e3f0e4;
 	--st-cancel: #c32b47;		--st-cancel-bg: #fdeaea;
 
+	/* Κατηγορίες — ΟΧΙ καταστάσεις. Σειρές ραβδογράμματος και badge της
+	 * γνωσιακής βάσης: ένα ραβδόγραμμα δεν έχει κατάσταση, έχει σειρές. Ίδια
+	 * μέθοδος με τα --st-* (CIE LCh, L* 46) ώστε να περνούν και ως κείμενο:
+	 * 4,56 και 4,57 πάνω στην πινελιά τους. Απέχουν ΔE00 21,6 και 20,1 από την
+	 * πλησιέστερη κατάσταση, άρα δεν διαβάζονται ως τέτοιες. Η τρίτη σειρά, η
+	 * «ενέργεια», μένει στο πράσινο του προϊόντος — δεν χρειάζεται τρίτο. */
+	--cat-teal: #007a79;		--cat-teal-bg: #e3f4f3;
+	--cat-violet: #9255a3;		--cat-violet-bg: #f6eef8;
+
+	/* Μάρκα και κατάταξη: σωστά χρώματα που δεν είχαν όνομα. Το μοβ της Viber
+	 * είναι χρώμα μάρκας και ΔΕΝ αλλάζει· το χρυσό/ασημί/χάλκινο σημαίνουν
+	 * θέση και δεν αντιστοιχούν σε καμία κατάσταση. Μπήκαν με την τιμή που
+	 * ήδη είχαν — μηδέν αλλαγή pixel. */
+	--brand-viber: #7360f2;		--brand-viber-hi: #5b46e0;
+	--medal-gold: #c9971f;
+	--medal-silver: #9aa0a6;
+	--medal-bronze: #a4703a;
+
+	/* Ημιδιαφανή λευκά, μόνο πάνω στο ανθρακί. Τέσσερα βάρη δίπλα στο
+	 * --chrome-line που ήδη υπήρχε· δεν ισοπεδώνονται σε αυτό, γιατί το 0f,
+	 * το 1a, το 26 και το 55 είναι τέσσερις διαφορετικές εντάσεις και η
+	 * ισοπέδωση θα άλλαζε pixel χωρίς λόγο. */
+	--chrome-wash-1: #ffffff0f;
+	--chrome-wash-2: #ffffff1a;
+	--chrome-wash-3: #ffffff26;
+	--chrome-ring: #ffffff55;
+
 	/* Κείμενο ΠΑΝΩ στο accent. Τρίτη τιμή σε τρεις παλέτες, και κάθε φορά την
 	 * ορίζει το accent: iris σκούρο → λευκό, λάιμ ανοιχτό → σκούρο, πράσινο
 	 * μεσαίο → λευκό. Ένα σημείο, όχι δεκαοκτώ κανόνες.
@@ -202,6 +229,10 @@
 	--st-routed: #8cc792;		--st-routed-bg: #2c382d;
 	--st-active: #a3d9a9;		--st-active-bg: #2c382d;
 	--st-cancel: #fb8a91;		--st-cancel-bg: #423030;
+	/* Και οι κατηγορίες, με την ίδια λογική. ΔE 18,1 και 20,4 από την
+	   πλησιέστερη σκούρα κατάσταση. */
+	--cat-teal: #5ec0be;		--cat-teal-bg: #333535;
+	--cat-violet: #cca2d6;		--cat-violet-bg: #3a323c;
 }
 
 .ecrm *, .ecrm *::before, .ecrm *::after { box-sizing: border-box; }
@@ -296,8 +327,8 @@
 .ecrm-fileitem { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
 .ecrm-fileitem__name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ecrm-kind { height: 32px; border: 1px solid var(--line); border-radius: 6px; font-family: inherit; font-size: 12px; padding: 0 6px; }
-.ecrm-fileitem__rm { width: 28px; height: 28px; border: none; background: #fef2f2; color: var(--err); border-radius: 6px; cursor: pointer; font-size: 13px; }
-.ecrm-fileitem__rm:hover { background: #fee2e2; }
+.ecrm-fileitem__rm { width: 28px; height: 28px; border: none; background: var(--st-cancel-bg); color: var(--err); border-radius: 6px; cursor: pointer; font-size: 13px; }
+.ecrm-fileitem__rm:hover { background: var(--st-cancel-bg); }
 
 .ecrm-ai-status { margin-top: 10px; font-size: 13px; color: var(--amber-bright); min-height: 18px; }
 
@@ -336,9 +367,9 @@
 	border-radius: 50%; font-size: 11px; font-weight: 800; color: var(--on-accent);
 	font-variant-numeric: tabular-nums;
 }
-.ecrm-medal--1 { background: #c9971f; }
-.ecrm-medal--2 { background: #9aa0a6; }
-.ecrm-medal--3 { background: #a4703a; }
+.ecrm-medal--1 { background: var(--medal-gold); }
+.ecrm-medal--2 { background: var(--medal-silver); }
+.ecrm-medal--3 { background: var(--medal-bronze); }
 
 /* --- Εικονίδια στα chips — 2026-08-17 --------------------------------------
  * Τα emoji ήταν ψημένα μέσα στις ετικέτες του PHP και περνούσαν από esc_html()
@@ -377,8 +408,8 @@
 }
 .ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="fixed"]::before { background-color: var(--st-new); }
 .ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="special"]::before { background-color: var(--st-active); }
-.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="variable"]::before { background-color: #e0a800; }
-.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="dynamic"]::before { background-color: #d97706; }
+.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="variable"]::before { background-color: var(--st-pending); }
+.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="dynamic"]::before { background-color: var(--st-pending); }
 
 /* --- Εικονίδια — 2026-08-17 ----------------------------------------------
  * Αντικατέστησαν 15 emoji. Τα emoji τα ζωγραφίζει το λειτουργικό σύστημα: άλλα
@@ -423,8 +454,8 @@
 }
 /* Στη μαύρη μπάρα μαζικών ενεργειών το λευκό κουτί ούρλιαζε. */
 .ecrm-bulkbar select.ecrm-input {
-	background-color: #262521;
-	border-color: #3d3b36;
+	background-color: var(--chrome-2);
+	border-color: var(--n700);
 	color: var(--chrome-ink-hi);
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
@@ -564,8 +595,8 @@
 .ecrm-input-btn:hover { background: var(--n150); }
 
 /* sync bars (PSS green "ίδια στοιχεία" toggles) */
-.ecrm-syncbar { display: flex; align-items: center; gap: 9px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
-.ecrm-syncbar input { accent-color: #10b981; width: 16px; height: 16px; }
+.ecrm-syncbar { display: flex; align-items: center; gap: 9px; background: var(--st-routed-bg); border: 1px solid var(--st-routed); color: var(--st-routed); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ecrm-syncbar input { accent-color: var(--st-routed); width: 16px; height: 16px; }
 
 /* Collapsible address blocks. .ecrm-grid sets display:grid, and a class
    declaration beats the [hidden] attribute, so it has to be said explicitly —
@@ -598,10 +629,10 @@
 .ecrm-actbanner--outline .ecrm-actbanner__ic { background: var(--n100); }
 
 /* --- Field validation feedback --- */
-.ecrm-input.is-invalid { border-color: #ef4444 !important; box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
+.ecrm-input.is-invalid { border-color: var(--st-cancel) !important; box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
 .ecrm-input.is-warn { border-color: var(--st-pending) !important; }
 .ecrm-fieldnote { display:block; font-size:12px; margin-top:4px; }
-.ecrm-fieldnote.is-err { color:#dc2626; }
+.ecrm-fieldnote.is-err { color:var(--st-cancel); }
 .ecrm-fieldnote.is-warn { color: var(--st-pending); }
 
 /* GDPR consent */
@@ -609,31 +640,31 @@
 .ecrm-consent input { margin-top:2px; }
 
 /* --- KB required-documents panel --- */
-.ecrm-step__n--kb { background:#dcfce7; color:#15803d; }
+.ecrm-step__n--kb { background:var(--st-routed-bg); color:var(--st-routed); }
 .ecrm-kbdocs__body { display:flex; flex-direction:column; gap:8px; }
-.ecrm-kbdoc { border:1px solid var(--n150); border-radius:10px; padding:0; overflow:hidden; background:#fafcff; }
-.ecrm-kbdoc > summary { cursor:pointer; padding:11px 14px; font-weight:600; font-size:14px; color:#0f172a; list-style:none; }
+.ecrm-kbdoc { border:1px solid var(--n150); border-radius:10px; padding:0; overflow:hidden; background:var(--n25); }
+.ecrm-kbdoc > summary { cursor:pointer; padding:11px 14px; font-weight:600; font-size:14px; color:var(--ink); list-style:none; }
 .ecrm-kbdoc > summary::-webkit-details-marker { display:none; }
 .ecrm-kbdoc > summary::before { content:'▸ '; color:var(--n400); }
 .ecrm-kbdoc[open] > summary::before { content:'▾ '; }
 .ecrm-kbdoc__b { padding:2px 16px 14px; font-size:13.5px; color:var(--n700); line-height:1.6; border-top:1px solid var(--n100); }
-.ecrm-kbdoc__b h4 { margin:10px 0 4px; font-size:13px; color:#0f172a; background:#eef2ff; display:inline-block; padding:2px 10px; border-radius:999px; }
+.ecrm-kbdoc__b h4 { margin:10px 0 4px; font-size:13px; color:var(--ink); background:var(--n100); display:inline-block; padding:2px 10px; border-radius:999px; }
 .ecrm-kbdoc__b ol, .ecrm-kbdoc__b ul { padding-left:20px; margin:4px 0; }
 .ecrm-kbdoc__b table { border-collapse:collapse; margin:8px 0; font-size:12.5px; }
 .ecrm-kbdoc__b th, .ecrm-kbdoc__b td { border:1px solid var(--n200); padding:4px 8px; }
 
 /* --- Duplicate warning --- */
-.ecrm-dupwarn { background:#fff7ed; border:1px solid #fdba74; border-radius:12px; padding:14px 16px; margin:4px 0 8px; }
-.ecrm-dupwarn__head { font-weight:800; color:#c2410c; font-size:14px; margin-bottom:8px; }
+.ecrm-dupwarn { background:var(--st-pending-bg); border:1px solid var(--st-pending); border-radius:12px; padding:14px 16px; margin:4px 0 8px; }
+.ecrm-dupwarn__head { font-weight:800; color:var(--st-pending); font-size:14px; margin-bottom:8px; }
 .ecrm-dupwarn__list { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; }
-.ecrm-dupwarn__list li { font-size:13.5px; color:#7c2d12; line-height:1.5; }
-.ecrm-dupwarn__note { margin-top:8px; font-size:12px; color:#9a3412; }
-.ecrm-pillstat { display:inline-block; padding:1px 8px; border-radius:999px; background:#fed7aa; color:#9a3412; font-size:11px; font-weight:700; }
+.ecrm-dupwarn__list li { font-size:13.5px; color:var(--st-pending); line-height:1.5; }
+.ecrm-dupwarn__note { margin-top:8px; font-size:12px; color:var(--st-pending); }
+.ecrm-pillstat { display:inline-block; padding:1px 8px; border-radius:999px; background:var(--st-pending-bg); color:var(--st-pending); font-size:11px; font-weight:700; }
 
 /* Πεδία που ζητά συγκεκριμένα η αίτηση του επιλεγμένου παρόχου. */
 .ecrm-provform {
-	border-left: 3px solid var(--amber, #f0a500);
+	border-left: 3px solid var(--amber);
 }
 .ecrm-provform .ecrm-step__n {
-	background: var(--amber, #f0a500);
+	background: var(--amber);
 }
