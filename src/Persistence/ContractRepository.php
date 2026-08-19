@@ -352,6 +352,48 @@ final class ContractRepository
     }
 
     /**
+     * Δίνει όλες τις συμβάσεις ενός συνεργάτη σε άλλον.
+     *
+     * Η `reassign()` μετακινεί μία σύμβαση επειδή κάποιος το ζήτησε για αυτήν.
+     * Αυτή μετακινεί ένα ολόκληρο χαρτοφυλάκιο επειδή ο άνθρωπος έφυγε, και οι
+     * δύο πλευρές ελέγχονται με το ίδιο κριτήριο: και ο παλιός και ο νέος
+     * κάτοχος πρέπει να είναι μέσα στο scope αυτού που το ζητά.
+     *
+     * **Δεν αγγίζει τα λεφτά που έχουν ήδη πληρωθεί, και δεν χρειάζεται.** Η
+     * γραμμή της εκκαθάρισης κρατά δικό της `partner_user_id`, οπότε η παλιά
+     * βεβαίωση τυπώνεται σωστά με το όνομα που πληρώθηκε· και η
+     * `ECRM_Payouts::unsettled_rows()` διαλέγει μόνο `payout_id IS NULL`, οπότε
+     * ο νέος κάτοχος δεν πληρώνεται δεύτερη φορά για ό,τι εκκαθαρίστηκε ήδη.
+     *
+     * @return int Πόσες συμβάσεις μετακινήθηκαν.
+     */
+    public function handOver(int $fromUserId, int $toUserId, UserScope $scope): int
+    {
+        global $wpdb;
+
+        if ($fromUserId <= 0 || $toUserId <= 0 || $fromUserId === $toUserId) {
+            return 0;
+        }
+
+        if (! $scope->includes($fromUserId) || ! $scope->includes($toUserId)) {
+            return 0;
+        }
+
+        [$clause, $params] = $this->scopeClause($scope);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $moved = $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE %i SET partner_user_id = %d WHERE partner_user_id = %d{$clause}",
+                [$this->table, $toUserId, $fromUserId, ...$params]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $moved === false ? 0 : (int) $moved;
+    }
+
+    /**
      * Clear extraction payloads older than the retention period.
      *
      * Deliberately unscoped: this is a scheduled maintenance sweep with no

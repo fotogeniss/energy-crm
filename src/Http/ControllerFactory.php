@@ -88,7 +88,7 @@ final class ControllerFactory
             // People.
             new CustomersController($scope, Services::customers()),
             new LeadsController($scope, Services::leads(), Services::contracts(), Services::customers()),
-            new TeamController($scope, Services::team()),
+            new TeamController($scope, Services::team(), Services::contracts()),
             new TeamActivityController($scope, Services::teamActivity()),
 
             // Reporting.

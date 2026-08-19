@@ -108,7 +108,7 @@ final class ContractsBulkController implements Controller
         }
 
         return match ($action) {
-            'status' => $this->changeStatus($rows, (string) $request['value']),
+            'status' => $this->changeStatus($rows, (string) $request['value'], $scope->actorId()),
             'delete' => $this->delete($rows, $scope),
             'assign' => $this->assign($rows, (int) $request['value'], $scope),
             'export' => $this->export($rows, $scope),
@@ -125,7 +125,7 @@ final class ContractsBulkController implements Controller
     /**
      * @param list<array<string, mixed>> $rows
      */
-    private function changeStatus(array $rows, string $to): WP_REST_Response
+    private function changeStatus(array $rows, string $to, int $actorId): WP_REST_Response
     {
         $target = ContractStatus::tryFromSlug($to);
 
@@ -160,8 +160,13 @@ final class ContractsBulkController implements Controller
                 continue;
             }
 
+            // Ποιος το έκανε, και όχι ποιανού είναι. Το πεδίο κουβαλούσε τον
+            // κάτοχο επειδή η ειδοποίηση το χρησιμοποιούσε ως παραλήπτη· τώρα
+            // η ειδοποίηση βρίσκει μόνη της τον κάτοχο από τη σύμβαση, οπότε
+            // το ιστορικό μπορεί επιτέλους να γράψει την αλήθεια: τη μαζική
+            // αλλαγή την έκανε ο διαχειριστής, όχι ο συνεργάτης.
             $moved = $this->lifecycle->moveTo($id, $target->value, [
-                'user_id' => (int) $row['partner_user_id'],
+                'user_id' => $actorId,
                 'from'    => $from,
                 'message' => 'Μαζική αλλαγή κατάστασης',
             ]);
