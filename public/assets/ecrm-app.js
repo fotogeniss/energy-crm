@@ -71,6 +71,26 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 			if (formRoot && window.ECRMForm) { window.ECRMForm.init(formRoot); loaded.form = true; }
 		}
 	}
+	// ---- εμφάνιση: ανοιχτό / σκούρο -----------------------------------------
+	// Το data-theme το γράφει ήδη η PHP στο ίδιο το .ecrm, οπότε εδώ μένει μόνο
+	// η εναλλαγή. Αλλάζει ΠΡΩΤΑ η οθόνη και μετά ειδοποιείται ο διακομιστής: ο
+	// χρήστης δεν περιμένει δίκτυο για να δει το κλικ του. Αν το POST αποτύχει,
+	// η επιλογή ισχύει για τη συνεδρία και χάνεται στο επόμενο refresh — δεν
+	// γυρίζουμε την οθόνη πίσω, γιατί ένα φλας είναι χειρότερο από μια χαμένη
+	// προτίμηση.
+	var themeBtn = app.querySelector('[data-theme-toggle]');
+	if (themeBtn) {
+		themeBtn.addEventListener('click', function () {
+			var next = app.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+			app.setAttribute('data-theme', next);
+			fetch(api('/theme'), {
+				method: 'POST',
+				headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+				body: JSON.stringify({ theme: next })
+			}).catch(function () {});
+		});
+	}
+
 	app.addEventListener('click', function (e) {
 		var btn = e.target.closest('[data-go]');
 		if (!btn) return;

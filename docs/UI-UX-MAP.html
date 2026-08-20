@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — το UX kit απέναντι στο ζωντανό σύστημα</title>
+<style>
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-greek-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-latin-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122}
+:root{--n0:#fff;--n50:#f8f8f6;--n100:#f1f1ee;--n150:#e9e8e4;--n200:#dedcd7;--n400:#a3a099;
+ --n450:#83817a;--n500:#6e6c66;--n600:#5c5a55;--n700:#42413d;--n800:#2a2926;--n900:#1a1a18;
+ --ok:#006926;--warn:#ab5506;--bad:#c32b47;--acc:#16c217;
+ --f:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--n100);color:var(--n800);font-family:var(--f);line-height:1.6}
+main{max-width:1140px;margin:0 auto;padding:32px 18px 90px}
+h1{font-size:29px;font-weight:800;letter-spacing:-.025em;margin:0 0 6px;color:var(--n900)}
+h2{font-size:20px;font-weight:800;letter-spacing:-.015em;margin:0 0 6px;color:var(--n900)}
+h3{font-size:12px;font-weight:800;margin:20px 0 8px;color:var(--n500);letter-spacing:.07em;text-transform:uppercase}
+p{margin:0 0 12px;font-size:14.5px}
+.lead{color:var(--n600);font-size:15.5px;margin-bottom:24px}
+section{background:var(--n0);border:1px solid var(--n200);border-radius:12px;padding:22px 24px;margin-bottom:18px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--n450);margin-bottom:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;margin:10px 0}
+th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--n450);padding:0 9px 7px 0;border-bottom:1px solid var(--n150);vertical-align:bottom}
+td{padding:7px 9px 7px 0;border-bottom:1px solid var(--n100);vertical-align:top}
+td.n,th.n{text-align:center}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--n700)}
+.lv{display:inline-block;min-width:20px;text-align:center;font-weight:800;font-size:11px;padding:1px 7px;border-radius:999px}
+.lv0{background:#e6f4e7;color:var(--ok)} .lv1{background:#eafaea;color:var(--ok)}
+.lv2{background:#fcf2ec;color:var(--warn)} .lv3{background:#fdeaea;color:var(--bad)}
+.y{color:var(--ok);font-weight:800}.n2{color:var(--bad);font-weight:800}.p{color:var(--warn);font-weight:800}
+.callout{border-left:3px solid var(--acc);padding:2px 0 2px 14px;margin:14px 0}
+.callout.bad{border-left-color:var(--bad)}.callout.warn{border-left-color:var(--warn)}
+.callout p{margin:0;font-size:13.5px}
+.zero{background:#eafaea;border:1px solid #a5eba7;border-radius:9px;padding:12px 15px;margin:12px 0;font-size:13.5px}
+.big{font-size:31px;font-weight:800;letter-spacing:-.03em;color:var(--n900);line-height:1.15;margin:6px 0 10px}
+.big span{font-size:13.5px;font-weight:600;color:var(--n500);letter-spacing:0;display:block;margin-top:4px;line-height:1.5}
+.cap{font-size:12px;color:var(--n600);margin:4px 0 14px}
+footer{font-size:12.5px;color:var(--n600);text-align:center;margin-top:26px}
+</style></head><body><main>
+
+<div class="tag">Energy CRM · ανάλυση, όχι πρόταση · 19-20/08/2026</div>
+<h1>Το UX kit απέναντι στο ζωντανό σύστημα</h1>
+<p class="lead">Γράφτηκε ενώ κοιμόσουν, χωρίς να αλλάξει ούτε μία γραμμή λειτουργίας.
+Είναι χάρτης: κάθε μία από τις <b>26 οθόνες</b> του
+<code>energycrmuxcomplete.html</code> απέναντι σε ό,τι ήδη τρέχει, με το αρχείο, το
+endpoint και το επίπεδο ρίσκου δίπλα της.</p>
+
+<section>
+<h2>Το εύρημα</h2>
+<p class="big">25 στις 26<span>οθόνες του kit αντιστοιχούν σε λειτουργία που <b>ήδη
+δουλεύει</b>. Το kit δεν είναι κατασκευή — είναι <b>ανασχεδιασμός</b>.</span></p>
+<p>Μετρήθηκαν: <b>42</b> εγγεγραμμένες διαδρομές REST, <b>24</b> αρχεία JavaScript από τα
+οποία <b>16</b> είναι όψεις, και <b>16</b> όψεις στο μενού του κελύφους. Το kit περιγράφει
+26 και σχεδόν όλες έχουν ήδη δεδομένα, endpoint και κώδικα πίσω τους.</p>
+<div class="zero"><b>Αυτό αλλάζει τη σειρά της δουλειάς.</b> Είχα γράψει ότι η δημόσια
+υπογραφή είναι «επίπεδο 3 — νέα διαδρομή, token, rate limit». <b>Λάθος: υπάρχει.</b> Το
+<code>public/class-ecrm-tracking.php</code> (842 γραμμές) σερβίρει ήδη
+<code>/track/{token}</code>, <code>/track/{token}/sign</code> και
+<code>/track/{token}/upload</code>, με stateless token <code>{id}-{hmac}</code>, με
+ανάκληση ανά σύμβαση, με pad υπογραφής και με ανέβασμα δικαιολογητικών. Η οθόνη B5 του kit
+είναι <b>επανασχεδίαση υπάρχουσας σελίδας</b>, όχι νέο backend.</div>
+<div class="callout warn"><p><b>Και μια δεύτερη διόρθωση δική μου:</b> είχα πει ότι το
+«Χρειάζεται ενέργεια» του dashboard είναι νέο UX. Δεν είναι — το
+<code>ecrm-view-dashboard.js</code> έχει ήδη λίστα «Τι χρειάζεται εσένα» με
+<b>ενέργεια ανά κατάσταση</b> (Συνέχεια / Υπενθύμιση / Επίλυση), τόνο ανά καθυστέρηση,
+και κενή κατάσταση. Ακόμα και ο κανόνας «το <code>routed</code> λείπει επίτηδες, εκεί η
+μπάλα είναι στον πάροχο» είναι γραμμένος σε test.</p></div>
+</section>
+
+<section>
+<h2>Ο χάρτης — 26 οθόνες</h2>
+<p class="cap">Επίπεδα: <span class="lv lv0">0</span> τιμές/CSS μόνο ·
+<span class="lv lv1">1</span> markup χωρίς ροή · <span class="lv lv2">2</span> όψη/JS,
+θέλει προσοχή · <span class="lv lv3">3</span> backend/ασφάλεια.</p>
+<table>
+<thead><tr><th>kit</th><th>υπάρχει σήμερα ως</th><th>endpoint</th><th class="n">λειτουργεί</th><th>τι προσθέτει το kit</th><th class="n">επ.</th></tr></thead>
+<tbody>
+<tr><td><b>A1</b> Πίνακας</td><td><code>ecrm-view-dashboard.js</code></td><td><code>/dashboard</code></td><td class="n"><span class="y">ναι</span></td><td>KPI κλικαριστά → φίλτρο· δείκτες μεταβολής (↑12)</td><td class="n"><span class="lv lv2">2</span></td></tr>
+<tr><td><b>A2</b> Συμβάσεις</td><td><code>ecrm-view-contracts.js</code></td><td><code>/contracts</code></td><td class="n"><span class="y">ναι</span></td><td><b>primary ενέργεια ανά γραμμή</b> — σήμερα οι ενέργειες είναι επικοινωνίας (Κάλεσε/Viber/Email) και εμφανίζονται μόνο στο άνοιγμα γραμμής</td><td class="n"><span class="lv lv2">2</span></td></tr>
+<tr><td><b>A3</b> Λεπτομέρεια</td><td><code>ecrm-view-detail.js</code></td><td><code>/contracts/{id}</code>, <code>/files</code>, <code>/status</code></td><td class="n"><span class="y">ναι</span></td><td>AI rail + checklist δεξιά· κουμπιά ανά κατάσταση</td><td class="n"><span class="lv lv2">2</span></td></tr>
+<tr><td><b>A4</b> Εκκρεμότητες</td><td><code>ecrm-view-pending.js</code></td><td><code>/notifications</code></td><td class="n"><span class="y">ναι</span></td><td>κείμενο κενής κατάστασης</td><td class="n"><span class="lv lv1">1</span></td></tr>
+<tr><td><b>A5</b> Εργασίες</td><td><code>ecrm-view-tasks.js</code></td><td><code>/tasks</code></td><td class="n"><span class="y">ναι</span></td><td>μόνο εμφάνιση</td><td class="n"><span class="lv lv0">0</span></td></tr>
+<tr><td><b>B1-B3</b> Wizard 1-3</td><td><code>ecrm-form.js</code> — <b>μία σελίδα, όχι βήματα</b></td><td><code>/contracts</code>, <code>/extract</code></td><td class="n"><span class="p">μερικώς</span></td><td><b>τέσσερα διακριτά βήματα</b>, μπάρα προόδου, primary disabled ώσπου να συμπληρωθεί η παροχή</td><td class="n"><span class="lv lv3">3</span></td></tr>
+<tr><td><b>B4</b> Έλεγχος & υπογραφή</td><td>στη λεπτομέρεια</td><td><code>/contracts/{id}/sign-link</code>, <code>/pdf</code></td><td class="n"><span class="y">ναι</span></td><td>preview PDF δίπλα στην επιλογή καναλιού</td><td class="n"><span class="lv lv2">2</span></td></tr>
+<tr><td><b>B5</b> Δημόσια υπογραφή</td><td><code>class-ecrm-tracking.php</code></td><td><code>/track/{token}</code> + <code>/sign</code></td><td class="n"><span class="y">ναι</span></td><td>μόνο εμφάνιση — <b>αυτοτελές αρχείο, δικό του CSS</b></td><td class="n"><span class="lv lv1">1</span></td></tr>
+<tr><td><b>B6</b> Success πελάτη</td><td>ίδιο αρχείο (<code>signed-ok</code>)</td><td>—</td><td class="n"><span class="y">ναι</span></td><td>μόνο εμφάνιση</td><td class="n"><span class="lv lv1">1</span></td></tr>
+<tr><td><b>B7</b> Success συνεργάτη</td><td>μήνυμα στη λεπτομέρεια</td><td><code>/contracts/{id}</code></td><td class="n"><span class="p">μερικώς</span></td><td>ξεχωριστή οθόνη με audit (ώρα, IP) και CTA «στάλσιμο σε πάροχο»</td><td class="n"><span class="lv lv2">2</span></td></tr>
+<tr><td><b>B8</b> Link ληγμένο</td><td><code>fail(msg, code)</code> στο tracking</td><td>—</td><td class="n"><span class="p">μερικώς</span></td><td><b>ίδιο μήνυμα για ληγμένο και χρησιμοποιημένο</b> — να ελεγχθεί αν σήμερα διαφέρουν</td><td class="n"><span class="lv lv3">3</span></td></tr>
+<tr><td><b>C1</b> Δίκτυο</td><td><code>ecrm-view-network.js</code></td><td><code>/network</code></td><td class="n"><span class="y">ναι</span></td><td>μόνο εμφάνιση</td><td class="n"><span class="lv lv0">0</span></td></tr>
+<tr><td><b>C2</b> Καρτέλα συνεργάτη</td><td><code>ecrm-view-team.js</code></td><td><code>/team/{id}</code></td><td class="n"><span class="y">ναι</span></td><td>σύνοψη απόδοσης πάνω-πάνω</td><td class="n"><span class="lv lv2">2</span></td></tr>
+<tr><td><b>C3</b> Προμήθειες</td><td><code>ecrm-view-commissions.js</code></td><td><code>/commissions</code></td><td class="n"><span class="y">ναι</span></td><td>μόνο εμφάνιση</td><td class="n"><span class="lv lv0">0</span></td></tr>
+<tr><td><b>C4</b> Εκκαθάριση</td><td>οθόνη wp-admin (<code>admin_post</code>)</td><td>—</td><td class="n"><span class="y">ναι</span></td><td>να μπει <i>μέσα</i> στο CRM αντί για wp-admin</td><td class="n"><span class="lv lv3">3</span></td></tr>
+<tr><td><b>C5</b> Αναφορές</td><td><code>ecrm-view-analytics.js</code></td><td><code>/analytics</code></td><td class="n"><span class="y">ναι</span></td><td>μόνο εμφάνιση</td><td class="n"><span class="lv lv0">0</span></td></tr>
+<tr><td><b>D1</b> Υγεία</td><td>οθόνη wp-admin</td><td>—</td><td class="n"><span class="y">ναι</span></td><td>μόνο εμφάνιση</td><td class="n"><span class="lv lv1">1</span></td></tr>
+<tr><td><b>D2</b> Ρυθμίσεις</td><td>οθόνη wp-admin</td><td>—</td><td class="n"><span class="y">ναι</span></td><td>μόνο εμφάνιση</td><td class="n"><span class="lv lv1">1</span></td></tr>
+<tr><td><b>D3</b> GDPR</td><td><code>admin/class-ecrm-gdpr.php</code></td><td>—</td><td class="n"><span class="y">ναι</span></td><td>confirm «πληκτρολόγησε ΑΦΜ» πριν τη διαγραφή</td><td class="n"><span class="lv lv3">3</span></td></tr>
+<tr><td><b>D4</b> Import Excel</td><td><code>ecrm-view-import.js</code></td><td><code>/import/parse</code> + <code>/apply</code></td><td class="n"><span class="y">ναι</span></td><td>τίποτα ουσιώδες — <b>το preview πριν το apply υπάρχει ήδη</b> ως δύο endpoints</td><td class="n"><span class="lv lv0">0</span></td></tr>
+<tr><td><b>D5</b> Ειδοποιήσεις</td><td>καμπανάκι στο topbar</td><td><code>/notifications</code></td><td class="n"><span class="y">ναι</span></td><td>μόνο εμφάνιση</td><td class="n"><span class="lv lv0">0</span></td></tr>
+<tr><td><b>E1-E3</b> Mobile</td><td>responsive + <code>.ecrm-botnav</code></td><td>ίδια</td><td class="n"><span class="y">ναι</span></td><td>κάρτες πλήρους πλάτους· ένα βήμα ανά οθόνη στη νέα αίτηση</td><td class="n"><span class="lv lv2">2</span></td></tr>
+</tbody></table>
+</section>
+
+<section>
+<h2>Τα πραγματικά κενά, με σειρά</h2>
+<p>Αφαιρώντας ό,τι είναι μόνο εμφάνιση, μένουν <b>έξι</b> πράγματα που όντως δεν
+υπάρχουν:</p>
+<table>
+<thead><tr><th class="n">#</th><th>κενό</th><th class="n">επ.</th><th>γιατί σε αυτή τη σειρά</th></tr></thead>
+<tbody>
+<tr><td class="n">1</td><td><b>Ενέργεια ανά γραμμή στη λίστα συμβάσεων.</b> Ο χάρτης κατάστασης→ενέργειας <b>υπάρχει ήδη</b> στο dashboard· εδώ είναι αντιγραφή του σε δεύτερη όψη.</td><td class="n"><span class="lv lv2">2</span></td><td>Η μεγαλύτερη αλλαγή στην <i>αίσθηση</i> με τον μικρότερο κίνδυνο: μία συνάρτηση, ήδη γραμμένη αλλού.</td></tr>
+<tr><td class="n">2</td><td><b>Επανασχεδίαση της δημόσιας σελίδας υπογραφής.</b></td><td class="n"><span class="lv lv1">1</span></td><td>Αυτοτελές αρχείο με δικό του CSS — <b>δεν αγγίζει τίποτα άλλο</b>. Και είναι η μόνη οθόνη που βλέπει <i>πελάτης</i>.</td></tr>
+<tr><td class="n">3</td><td><b>AI rail + checklist</b> στη λεπτομέρεια.</td><td class="n"><span class="lv lv2">2</span></td><td>Η Λίτσα υπάρχει ήδη ως αιωρούμενο πάνελ· αλλάζει θέση, δεν γεννιέται.</td></tr>
+<tr><td class="n">4</td><td><b>Δείκτες μεταβολής στα KPI</b> (↑12 εβδομάδα).</td><td class="n"><span class="lv lv3">3</span></td><td>Θέλει αριθμό που το <code>/dashboard</code> δεν στέλνει: σύγκριση με προηγούμενη περίοδο. Ερώτημα βάσης σε hot path με 2.000 καρτέλες — <b>θέλει index και μέτρηση</b>.</td></tr>
+<tr><td class="n">5</td><td><b>Λήξη συνδέσμου 48 ώρες.</b></td><td class="n"><span class="lv lv3">3</span></td><td>Είναι η ανοιχτή ερώτηση <b>§6γ (7)</b>, και <b>το kit την απαντά δύο φορές</b> («Link 48h · μία χρήση»). Μία συνθήκη στο <code>verify()</code> — αλλά <b>σπάει SMS που έχουν ήδη σταλεί</b>.</td></tr>
+<tr><td class="n">6</td><td><b>Τέσσερα διακριτά βήματα</b> στη νέα αίτηση.</td><td class="n"><span class="lv lv3">3</span></td><td><b>Τελευταίο, και όχι χωρίς δίχτυ.</b> Λόγος παρακάτω.</td></tr>
+</tbody></table>
+
+<div class="callout bad"><p><b>Γιατί ο wizard είναι τελευταίος και γιατί δεν τον αγγίζω
+μόνος.</b> Το <code>ecrm-form.js</code> είναι η καρδιά του προϊόντος και
+<b>δεν υπάρχει καμία υποδομή δοκιμών JavaScript</b> — γραμμένο στο §3 και στο
+<code>TESTING.md</code>. Το ίδιο αρχείο έχει ήδη δώσει ένα bug που έζησε μήνες (state
+που δεν καθαριζόταν ανάμεσα σε δύο edits, CHANGELOG 2026-08-16 (5)), και η μία γραμμή
+που το διόρθωσε <b>δεν τη φυλάει τίποτα σήμερα</b>. Να σπάσει σε τέσσερα βήματα σημαίνει
+να ξαναγραφτεί η ροή που καταχωρεί συμβάσεις με ΑΦΜ και ΑΔΤ, στα τυφλά. Αυτό θέλει
+πρώτα characterisation — και το characterisation μιας φόρμας χωρίς JS tests γίνεται από
+τη μεριά του <b>server</b>, με τα integration tests που ήδη ξέρουμε να γράφουμε.</p></div>
+</section>
+
+<section>
+<h2>Δύο πράγματα να ελεγχθούν πριν γίνουν</h2>
+<p><b>Το B8 είναι ερώτημα ασφαλείας, όχι εμφάνισης.</b> Ο κανόνας του kit λέει «ίδιο
+μήνυμα για ληγμένο και χρησιμοποιημένο — μην αποκαλύπτεις λεπτομέρειες». Σήμερα το
+tracking έχει <code>fail(msg, code)</code> με <b>κωδικό</b>. Αν ο κωδικός ξεχωρίζει
+«άκυρο token» από «ήδη υπογεγραμμένο», αυτό λέει σε τρίτον ότι <i>υπάρχει</i> σύμβαση
+πίσω από το token. Πρέπει να διαβαστεί ο κώδικας πριν αλλάξει το κείμενο.</p>
+<p><b>Η λήξη 48 ωρών δεν είναι μονόδρομη.</b> Το §6γ (7) το έγραφε ήδη: «δεν μπήκε λήξη
+με τον χρόνο, γιατί θα έσπαγε SMS που έχουν ήδη σταλεί». Το kit απαντά «48 ώρες» δύο
+φορές, οπότε η απόφαση μοιάζει δοσμένη — αλλά η υλοποίηση χρειάζεται μεταβατικό:
+<i>από πότε</i> μετράνε οι 48 ώρες για συμβάσεις που έχουν ήδη ζωντανό σύνδεσμο.</p>
+</section>
+
+<section>
+<h2>Τι δεν έχει σχέδιο πουθενά</h2>
+<p>Επτά ζωντανές οθόνες δεν εμφανίζονται σε κανένα από τα δύο kit:
+<b>Πελάτες</b>, <b>Λήξεις</b>, <b>Προσφορά</b>, <b>Βάση Γνώσης</b>, <b>Leads</b>,
+<b>Ομάδα Live</b>, και η <b>Λίτσα</b>.</p>
+<div class="zero"><b>Και δεν χρειάζονται σχέδιο.</b> Ο διακόπτης της (55)/(56) τις άλλαξε
+κιόλας — μοιράζονται τα ίδια είκοσι ένα ονόματα ρόλου με όλες τις υπόλοιπες. Αυτό ήταν
+ακριβώς το νόημα του «κέλυφος πρώτα»: οι οθόνες που κανείς δεν σχεδίασε ακολουθούν
+δωρεάν.</div>
+</section>
+
+<footer>Energy CRM · <code>docs/UI-UX-MAP.html</code> · ανάλυση, καμία αλλαγή κώδικα<br>
+Πηγές μέτρησης: 42 <code>register_rest_route</code>, 24 αρχεία <code>.js</code>,
+<code>ControllerFactory::all()</code>, και ανάγνωση των όψεων μία προς μία.</footer>
+
+</main></body></html>

@@ -61,6 +61,12 @@ class ECRM_App {
 		) );
 		$tasks_ct = class_exists( 'ECRM_Tasks' ) ? ECRM_Tasks::due_count( (int) $user->ID ) : 0;
 
+		// Η εμφάνιση διαβάζεται ΕΔΩ, πριν τυπωθεί το πρώτο byte HTML, ώστε το
+		// data-theme να βρίσκεται ήδη στο markup. Αν το έγραφε JS μετά το load,
+		// η σελίδα θα άναβε λευκή και μετά θα σκούραινε — ορατό τρεμόπαιγμα σε
+		// κάθε πλοήγηση. Το κλειδί του user meta το ξέρει ΜΟΝΟ το ThemePreference.
+		$theme = \EnergyCRM\Infrastructure\ThemePreference::forUser( (int) $user->ID );
+
 		// Leads with a callback due today or overdue, still open (own scope).
 		$leads_due = (int) $wpdb->get_var( $wpdb->prepare(
 			"SELECT COUNT(*) FROM " . ECRM_DB::table( 'leads' ) . "
@@ -106,7 +112,7 @@ class ECRM_App {
 		ob_start();
 		?>
 		<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $style is a whole attribute fragment, ' style="…"', whose only variable part went through esc_attr() where it was built. Escaping it here would escape the attribute syntax itself. ?>
-		<div class="ecrm ecrm-app" id="ecrm-app" lang="el" data-view="dashboard" data-collapsed="0"<?php echo $style; ?>>
+		<div class="ecrm ecrm-app" id="ecrm-app" lang="el" data-view="dashboard" data-collapsed="0" data-theme="<?php echo esc_attr( $theme ); ?>"<?php echo $style; ?>>
 
 			<div class="ecrm-backdrop" data-mobnav-close></div>
 
@@ -129,6 +135,19 @@ class ECRM_App {
 					<?php endforeach; ?>
 				</nav>
 				<div class="ecrm-sidebar__foot">
+					<?php
+					/*
+					 * Και τα δύο ζεύγη εικονιδίου/ετικέτας τυπώνονται πάντα· ποιο
+					 * φαίνεται το αποφασίζει CSS από το data-theme του .ecrm. Έτσι ο
+					 * διακόπτης δείχνει ΠΟΥ πάει το κλικ, χωρίς η JS να ξέρει από SVG.
+					 */
+					?>
+					<button type="button" class="ecrm-nav__item" data-theme-toggle title="Εναλλαγή εμφάνισης">
+						<span class="ecrm-nav__icon" data-theme-only="light"><?php echo self::icon( 'moon' ); // phpcs:ignore ?></span>
+						<span class="ecrm-nav__icon" data-theme-only="dark"><?php echo self::icon( 'sun' ); // phpcs:ignore ?></span>
+						<span class="ecrm-nav__txt" data-theme-only="light">Σκούρο</span>
+						<span class="ecrm-nav__txt" data-theme-only="dark">Ανοιχτό</span>
+					</button>
 					<?php if ( current_user_can( 'manage_options' ) ) : ?>
 					<a class="ecrm-nav__item" href="<?php echo esc_url( admin_url( 'admin.php?page=energy-crm' ) ); ?>" title="Ρυθμίσεις (WP Admin)">
 						<span class="ecrm-nav__icon"><?php echo self::icon( 'gear' ); // phpcs:ignore ?></span>
@@ -305,6 +324,8 @@ class ECRM_App {
 			'menu'      => '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',
 			'bell'      => '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
 			'chat'      => '<path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/>',
+			'moon'      => '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+			'sun'       => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.9 4.9l1.4 1.4"/><path d="M17.7 17.7l1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M4.9 19.1l1.4-1.4"/><path d="M17.7 6.3l1.4-1.4"/>',
 		];
 		$d = $p[ $name ] ?? '';
 		return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $d . '</svg>';
