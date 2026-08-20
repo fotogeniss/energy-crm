@@ -239,7 +239,7 @@
 .ecrm-head__actions { display: flex; align-items: center; gap: 10px; }
 .ecrm-scope { display: inline-flex; border: 1.5px solid var(--line); border-radius: 999px; overflow: hidden; }
 .ecrm-scope__b { border: none; background: var(--surface); color: var(--muted); font-family: inherit; font-size: 12px; font-weight: 700; padding: 7px 14px; cursor: pointer; }
-.ecrm-scope__b.is-on { background: var(--navy); color: var(--chrome-ink-hi); }
+.ecrm-scope__b.is-on { background: var(--surface-inverse); color: var(--chrome-ink-hi); }
 @media (max-width: 600px) { .ecrm-head__actions { width: 100%; justify-content: space-between; } }
 
 /* import report */
@@ -276,7 +276,7 @@
 .ecrm-litsa[data-open="1"] .ecrm-litsa__panel { display: flex; animation: ecrm-litsa-in .18s ease; }
 @keyframes ecrm-litsa-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-.ecrm-litsa__head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(135deg, var(--surface-inverse-deep), var(--navy)); color: var(--chrome-ink-hi); }
+.ecrm-litsa__head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(135deg, var(--surface-inverse-deep), var(--surface-inverse)); color: var(--chrome-ink-hi); }
 .ecrm-litsa__id { display: flex; align-items: center; gap: 10px; }
 .ecrm-litsa__avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--amber), var(--amber-bright)); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; }
 .ecrm-litsa__id strong { display: block; font-size: 15px; }
@@ -287,7 +287,7 @@
 .ecrm-litsa__body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
 .ecrm-litsa__greet { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; font-size: 13.5px; color: var(--ink); line-height: 1.55; }
 .ecrm-msg { max-width: 82%; padding: 9px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; word-wrap: break-word; }
-.ecrm-msg--me { align-self: flex-end; background: var(--navy); color: var(--chrome-ink-hi); border-bottom-right-radius: 4px; }
+.ecrm-msg--me { align-self: flex-end; background: var(--surface-inverse); color: var(--chrome-ink-hi); border-bottom-right-radius: 4px; }
 .ecrm-msg--bot { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); color: var(--ink); border-bottom-left-radius: 4px; }
 .ecrm-msg--typing { display: flex; gap: 4px; }
 .ecrm-msg--typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: ecrm-bounce 1.2s infinite; }
@@ -299,8 +299,8 @@
 .ecrm-litsa__input { flex: 1; height: 40px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 14px; }
 /* Τρίτο υπόλειμμα iris. */
 .ecrm-litsa__input:focus { outline: none; border-color: var(--amber); box-shadow: none; }
-.ecrm-litsa__send { width: 40px; height: 40px; border: none; border-radius: 10px; background: var(--navy); color: var(--chrome-ink-hi); cursor: pointer; font-size: 15px; }
-.ecrm-litsa__send:hover { background: var(--navy-soft); }
+.ecrm-litsa__send { width: 40px; height: 40px; border: none; border-radius: 10px; background: var(--surface-inverse); color: var(--chrome-ink-hi); cursor: pointer; font-size: 15px; }
+.ecrm-litsa__send:hover { background: var(--surface-inverse-hover); }
 
 /* ============================================================
    Icons + collapsible sidebar
@@ -453,7 +453,7 @@
 .ecrm-btn--amber:hover { filter: brightness(1.04); }
 
 .ecrm-titlewrap { display: flex; align-items: center; gap: 14px; }
-.ecrm-pageicon { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 11px; background: var(--navy); color: var(--on-dark); display: grid; place-items: center; }
+.ecrm-pageicon { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 11px; background: var(--surface-inverse); color: var(--on-dark); display: grid; place-items: center; }
 .ecrm-pageicon svg { width: 22px; height: 22px; }
 
 .ecrm-tabs2 { display: flex; gap: 8px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
@@ -839,6 +839,16 @@
 
 /* --- Export modal --- */
 .ecrm-modalov { position: fixed; inset: 0; background: rgba(6,20,41,.55); z-index: 60; display: flex; align-items: center; justify-content: center; padding: 18px; }
+/* Το modal είναι η ΜΟΝΗ αιωρούμενη επιφάνεια χωρίς περίγραμμα — το πάνελ της
+   Λίτσας, το καμπανάκι και η καθολική αναζήτηση έχουν όλα 1px solid line.
+   Στο ανοιχτό δεν φαινόταν, γιατί τη δουλειά την έκανε το σκοτεινό πέπλο από
+   κάτω. Στο σκούρο το πέπλο δεν κάνει τίποτα: μετρήθηκε ότι μαύρο 42% πάνω σε
+   καμβά #111110 δίνει σκοτείνιασμα 1,01, και ακόμα και στο 80% φτάνει μόλις
+   1,09 — δεν σκουραίνεις ό,τι είναι ήδη σχεδόν μαύρο. Άρα ο διαχωρισμός πρέπει
+   να έρθει από την ΑΚΜΗ: το line-mid δίνει 1,58 απέναντι στην επιφάνεια. Μόνο
+   στο σκούρο, ώστε το ανοιχτό να μη μετακινηθεί ούτε ένα pixel. */
+.ecrm[data-theme="dark"] .ecrm-modal { border: 1px solid var(--line-mid); }
+
 .ecrm-modal { background: var(--surface); border-radius: 18px; width: 100%; max-width: 560px; padding: 26px 26px 20px; position: relative; box-shadow: 0 40px 90px -30px rgba(0,0,0,.5); max-height: 90vh; overflow-y: auto; }
 .ecrm-modal__x { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
 .ecrm-modal__x:hover { color: var(--navy); }
