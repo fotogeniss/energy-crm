@@ -356,14 +356,24 @@
 	background: var(--surface);
 	border: 1px solid var(--line-card);
 	border-radius: var(--radius);
-	padding: 18px 20px;
+	padding: 13px 15px;
 	box-shadow: 0 1px 2px rgba(16,24,40,.04);
 }
 .ecrm-card--ai { border-color: var(--accent-soft); background: linear-gradient(180deg,var(--accent-wash) 0%,var(--surface) 70%); }
 
 .ecrm-step {
 	display: flex; align-items: center; gap: 10px;
-	font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 16px;
+	font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+	color: var(--muted); margin-bottom: 10px;
+}
+/* Ο ίδιος επιλογέας κάνει δύο δουλειές: τίτλος κάρτας (μικρός, κεφαλαία, όπως το
+   UX kit) και κεφαλή βήματος στη φόρμα, που έχει αριθμημένο κύκλο δίπλα. Το
+   :has() ξεχωρίζει τα δύο χωρίς να αγγίξει markup. Αν κάποιος browser δεν το
+   υποστηρίζει, η κεφαλή βήματος δείχνει μικρή αντί για μεγάλη — άσχημο, όχι
+   σπασμένο· γι' αυτό εδώ επιτρέπεται ενώ το light-dark() δεν επιτράπηκε. */
+.ecrm-step:has(.ecrm-step__n) {
+	font-size: 15px; font-weight: 700; letter-spacing: 0; text-transform: none;
+	color: var(--navy); margin-bottom: 16px;
 }
 .ecrm-step__n {
 	width: 24px; height: 24px; flex: 0 0 24px; border-radius: 50%;
@@ -440,7 +450,7 @@
 /* --- customer grid --- */
 .ecrm-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
 .ecrm-field { display: flex; flex-direction: column; gap: 6px; }
-.ecrm-field__label { font-size: 13px; font-weight: 600; color: var(--navy); }
+.ecrm-field__label { font-size: 11.5px; font-weight: 600; color: var(--navy); }
 .ecrm-input, .ecrm-textarea {
 	height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px;
 	font-family: inherit; font-size: 14px; color: var(--ink); background: var(--surface); transition: border-color .14s, box-shadow .14s, background .4s;
@@ -625,8 +635,8 @@
 
 /* --- buttons --- */
 .ecrm-btn {
-	border: none; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 600;
-	padding: 11px 22px; cursor: pointer; line-height: 1;
+	border: none; border-radius: 8px; font-family: inherit; font-size: 12.5px; font-weight: 600;
+	padding: 8px 15px; cursor: pointer; line-height: 1;
 	display: inline-flex; align-items: center; justify-content: center; gap: 8px;
 	transition: background .15s, border-color .15s, color .15s, filter .15s;
 }

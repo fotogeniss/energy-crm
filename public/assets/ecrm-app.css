@@ -17,7 +17,7 @@
 	top: 0;
 	left: 0;
 	bottom: 0;
-	width: 232px;
+	width: 208px;
 	overflow-y: auto;
 	z-index: 30;
 	background: var(--chrome);
@@ -25,21 +25,21 @@
 	border-right: 1px solid var(--chrome-line);
 	display: flex;
 	flex-direction: column;
-	padding: 20px 14px;
+	padding: 14px 10px;
 	transition: width .18s ease;
 }
 .ecrm-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px; }
-.ecrm-brand__mark { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--amber), var(--amber-bright)); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+.ecrm-brand__mark { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--amber), var(--amber-bright)); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; font-size: 18px; }
 .ecrm-brand__txt { font-size: 15px; font-weight: 700; letter-spacing: -.01em; color: var(--chrome-ink-hi); }
 .ecrm-brand__txt strong { font-weight: 800; }
 
 .ecrm-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.ecrm-nav__label { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--chrome-ink-dim); padding: 14px 10px 6px; }
+.ecrm-nav__label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--chrome-ink-dim); padding: 12px 9px 4px; }
 .ecrm-nav__item {
-	display: flex; align-items: center; gap: 12px;
+	display: flex; align-items: center; gap: 10px;
 	background: none; border: none; color: var(--chrome-ink); cursor: pointer;
-	font-family: inherit; font-size: 14px; font-weight: 600; text-align: left; text-decoration: none;
-	padding: 11px 12px; border-radius: 9px; transition: background .14s, color .14s; width: 100%;
+	font-family: inherit; font-size: 12.5px; font-weight: 600; text-align: left; text-decoration: none;
+	padding: 8px 10px; border-radius: 8px; transition: background .14s, color .14s; width: 100%;
 }
 .ecrm-nav__item:hover { background: var(--chrome-wash-1); color: var(--chrome-ink-hi); }
 /* Το φωτοστέφανο ήταν rgba(194,240,74) — το ΛΑΪΜ γραμμένο με το χέρι, που δεν
@@ -66,13 +66,13 @@
 .ecrm-sidebar__foot { border-top: 1px solid var(--chrome-line); padding-top: 12px; margin-top: 12px; }
 
 /* --- main --- */
-.ecrm-main { margin-left: 232px; min-height: 100vh; display: flex; flex-direction: column; transition: margin-left .18s ease; }
+.ecrm-main { margin-left: 208px; min-height: 100vh; display: flex; flex-direction: column; transition: margin-left .18s ease; }
 .ecrm-topbar {
 	position: sticky; top: 0; z-index: 20;
-	display: flex; align-items: center; justify-content: space-between; gap: 16px;
-	padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--line-card);
+	display: flex; align-items: center; justify-content: space-between; gap: 12px;
+	padding: 11px 18px; background: var(--surface); border-bottom: 1px solid var(--line-card);
 }
-.ecrm-topbar__hello { font-size: 14px; color: var(--muted); }
+.ecrm-topbar__hello { font-size: 13px; color: var(--muted); }
 .ecrm-topbar__hello strong { color: var(--ink); }
 /* mobile-only chrome (hidden on desktop) */
 .ecrm-burger { display: none; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; color: var(--navy); cursor: pointer; flex: 0 0 auto; }
@@ -84,25 +84,25 @@
 .ecrm-live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ok); }
 .ecrm-live__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(16,185,129,.5); animation: ecrm-pulse-dot 2s infinite; }
 @keyframes ecrm-pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); } 70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
-.ecrm-btn--sm { padding: 8px 14px; font-size: 13px; }
+.ecrm-btn--sm { padding: 6px 11px; font-size: 11.5px; }
 
 .ecrm-content { padding: 22px 24px 34px; flex: 1; background: var(--bg); }
-.ecrm-view { display: none; flex-direction: column; gap: 18px; }
+.ecrm-view { display: none; flex-direction: column; gap: 14px; }
 .ecrm-view.is-active { display: flex; }
 
 /* --- dashboard --- */
 
 /* --- dashboard: stat cards --- */
 .ecrm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.ecrm-stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
-.ecrm-stat__k { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.ecrm-stat__v { font-size: 34px; font-weight: 800; color: var(--navy); margin-top: 6px; }
+.ecrm-stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.ecrm-stat__k { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ecrm-stat__v { font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 3px; }
 .ecrm-stat.is-pending { border-left: 3px solid var(--st-pending); }
 .ecrm-stat.is-routed { border-left: 3px solid var(--st-active); }
 .ecrm-stat.is-today { border-left: 3px solid var(--accent-hover); }
 
 /* --- dashboard: columns / chart / lists --- */
-.ecrm-cols { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+.ecrm-cols { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
 .ecrm-chart { display: flex; align-items: flex-end; gap: 10px; height: 180px; padding-top: 10px; }
 .ecrm-bar { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; gap: 6px; }
 .ecrm-bar__fill { width: 70%; min-height: 3px; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, var(--amber-bright), var(--amber)); transition: height .5s ease; }
@@ -134,9 +134,9 @@
 .ecrm-tab.is-on b { color: var(--amber); }
 
 .ecrm-tablewrap { overflow-x: auto; border: 1px solid var(--line-card); border-radius: var(--radius); background: var(--surface); }
-.ecrm-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-.ecrm-table th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; background: var(--bg); border-bottom: 1px solid var(--line-card); white-space: nowrap; }
-.ecrm-table td { padding: 12px; border-bottom: 1px solid var(--line-soft); color: var(--navy-soft); }
+.ecrm-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.ecrm-table th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 7px 10px; background: var(--bg); border-bottom: 1px solid var(--line-card); white-space: nowrap; }
+.ecrm-table td { padding: 9px 10px; border-bottom: 1px solid var(--line-soft); color: var(--navy-soft); }
 .ecrm-table tr:last-child td { border-bottom: none; }
 .ecrm-table tbody tr:hover td { background: var(--surface-2); }
 .ecrm-code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 700; color: var(--navy); }
@@ -159,9 +159,9 @@
 .ecrm-rowact.is-quiet { border-color: transparent; background: none; color: var(--muted); font-weight: 600; }
 .ecrm-rowact.is-quiet:hover { color: var(--ink); background: var(--surface-sunk); }
 
-.ecrm-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.ecrm-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
 /* Κύκλος αντί για τη γλυφή «●»: το μέγεθός της άλλαζε με τη γραμματοσειρά. */
-.ecrm-badge::before { content: ""; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: currentColor; }
+.ecrm-badge::before { content: ""; width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: currentColor; }
 /* Δεύτερο κανάλι για τα δύο που ΔΕΝ ξεχωρίζουν σε δυσχρωματοψία: κόκκινο και
    πράσινο μετρήθηκαν ΔE 0.3 προσομοιωμένα, δηλαδή ταυτόσημα — CHANGELOG (3).
    Η διάκριση περνά στο σχήμα, ώστε να μη στηρίζεται στην απόχρωση. */
