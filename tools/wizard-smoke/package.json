@@ -1,0 +1,12 @@
+{
+  "name": "ecrm-wizard-smoke",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Ο μοναδικός αυτόματος έλεγχος του ecrm-form.js. Δες README.md.",
+  "scripts": {
+    "test": "node build.js && node run.js"
+  },
+  "dependencies": {
+    "jsdom": "^30.0.1"
+  }
+}

@@ -239,6 +239,17 @@ class ECRM_Shortcodes {
 				<p class="ecrm-sub">Διάλεξε πάροχο και πρόγραμμα, σύρε τα έγγραφα και η φόρμα συμπληρώνεται μόνη της.</p>
 			</header>
 
+			<!-- Ο wizard: τέσσερα βήματα, όπως οι B1-B4 του UX kit. Η μπάρα είναι
+			     ΚΟΥΜΠΙΑ, όχι διακόσμηση: πίσω ελεύθερα, μπροστά όσο έχεις φτάσει. -->
+			<nav class="ecrm-wsteps" data-wsteps aria-label="Βήματα αίτησης">
+				<button type="button" class="ecrm-wstep__b is-on" data-wgo="1" aria-current="step"><strong>Βήμα 1</strong>Πάροχος &amp; τύπος</button>
+				<button type="button" class="ecrm-wstep__b" data-wgo="2"><strong>Βήμα 2</strong>Έγγραφα &amp; AI</button>
+				<button type="button" class="ecrm-wstep__b" data-wgo="3"><strong>Βήμα 3</strong>Στοιχεία &amp; πρόγραμμα</button>
+				<button type="button" class="ecrm-wstep__b" data-wgo="4"><strong>Βήμα 4</strong>Έλεγχος &amp; υπογραφή</button>
+			</nav>
+
+			<div class="ecrm-wstep" data-wstep="1">
+
 			<section class="ecrm-card">
 				<div class="ecrm-step"><span class="ecrm-step__n">1</span> Επιλογή Παρόχου <span class="ecrm-step__hint" data-selprov></span></div>
 				<div class="ecrm-providers" data-providers><div class="ecrm-loading">Φόρτωση παρόχων…</div></div>
@@ -329,14 +340,15 @@ class ECRM_Shortcodes {
 				</div>
 			</section>
 
+			</div>
+
+			<div class="ecrm-wstep" data-wstep="2" hidden>
+
 			<!-- Auto: required documents from Knowledge Base -->
 			<section class="ecrm-card ecrm-kbdocs" data-kbdocs hidden>
 				<div class="ecrm-step"><span class="ecrm-step__n ecrm-step__n--kb"><svg class="ecrm-i ecrm-i--step" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2M9 12h6M9 16h4"/></svg></span> Απαιτούμενα δικαιολογητικά</div>
 				<div class="ecrm-kbdocs__body" data-kbdocs-body></div>
 			</section>
-
-			<!-- Auto: possible duplicate warning -->
-			<div class="ecrm-dupwarn" data-dupwarn hidden></div>
 
 			<section class="ecrm-card ecrm-card--ai">
 				<div class="ecrm-step"><span class="ecrm-step__n ecrm-step__n--ai">AI</span> Εξαγωγή στοιχείων</div>
@@ -353,6 +365,8 @@ class ECRM_Shortcodes {
 				<button type="button" class="ecrm-btn ecrm-btn--ai" data-extract disabled><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg> Εξαγωγή με AI</button>
 				<div class="ecrm-ai-status" data-ai-status aria-live="polite"></div>
 			</section>
+
+			</div>
 
 			<?php
 			// Helper to print a field. $extra=true marks it for the extra_json bag.
@@ -382,6 +396,13 @@ class ECRM_Shortcodes {
 				);
 			};
 			?>
+
+			<div class="ecrm-wstep" data-wstep="3" hidden>
+
+			<!-- Auto: possible duplicate warning. Ζει ΕΔΩ και όχι πιο πάνω, γιατί
+			     την πυροδοτούν το ΑΦΜ και ο αριθμός παροχής, που είναι αυτής της
+			     οθόνης· σε άλλο βήμα θα εμφανιζόταν εκεί που κανείς δεν κοιτά. -->
+			<div class="ecrm-dupwarn" data-dupwarn hidden></div>
 
 			<section class="ecrm-card">
 				<div class="ecrm-step"><span class="ecrm-step__n">3</span> Στοιχεία Πελάτη</div>
@@ -735,6 +756,10 @@ class ECRM_Shortcodes {
 				<p class="ecrm-hint" data-term-hint>Αν συμπληρώσεις Έναρξη + Διάρκεια, η Λήξη υπολογίζεται αυτόματα.</p>
 			</section>
 
+			</div>
+
+			<div class="ecrm-wstep" data-wstep="4" hidden>
+
 			<!-- Ενέργειες σύμβασης -->
 			<div class="ecrm-actbanners">
 				<button type="button" class="ecrm-actbanner ecrm-actbanner--primary" data-act="pdf">
@@ -755,6 +780,8 @@ class ECRM_Shortcodes {
 				<div class="ecrm-step"><span class="ecrm-step__n">8</span> Σχόλια Αίτησης</div>
 				<textarea class="ecrm-textarea" data-notes name="notes" rows="3" placeholder="Επιπλέον σημειώσεις…"></textarea>
 			</section>
+
+			</div>
 
 			<footer class="ecrm-foot">
 				<?php
@@ -784,8 +811,10 @@ class ECRM_Shortcodes {
 					 * is what the third one does, by sending no status.
 					 */
 					?>
+					<button type="button" class="ecrm-btn ecrm-btn--ghost" data-wprev hidden>&larr; Πίσω</button>
 					<button type="button" class="ecrm-btn ecrm-btn--ghost" data-save-draft>Προσωρινή Αποθήκευση</button>
-					<button type="button" class="ecrm-btn ecrm-btn--primary" data-finalize>Οριστικοποίηση</button>
+					<button type="button" class="ecrm-btn ecrm-btn--primary" data-wnext>Συνέχεια &rarr;</button>
+					<button type="button" class="ecrm-btn ecrm-btn--primary" data-finalize hidden>Οριστικοποίηση</button>
 					<button type="button" class="ecrm-btn ecrm-btn--primary" data-save-changes hidden>Αποθήκευση Αλλαγών</button>
 				</div>
 			</footer>

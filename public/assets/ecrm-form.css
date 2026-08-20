@@ -356,6 +356,42 @@
 .ecrm-title { font-size: 18px; font-weight: 800; letter-spacing: -.01em; margin: 0 0 3px; color: var(--navy); }
 .ecrm-sub { margin: 0; color: var(--muted); font-size: 12.5px; }
 
+/* --- wizard: τα τέσσερα βήματα του kit (B1-B4) --------------------------------
+ *
+ * Η .ecrm-form δεν είχε ΚΑΝΕΝΑΝ κανόνα. Σάρωση και στα δύο φύλλα για οτιδήποτε
+ * ταιριάζει σε `.ecrm-form`, δίνει `margin`/`gap` σε `.ecrm-card`, ή είναι
+ * αδελφικός επιλογέας πάνω σε κάρτα, βρήκε ΕΝΑ αποτέλεσμα: ένα αμυντικό
+ * `margin: 0` μέσα στο πάνελ ανάπτυξης της λίστας. Δηλαδή οι κάρτες της αίτησης
+ * ακουμπούσαν η μία την άλλη, χωρίς κενό. Ο wizard χρειαζόταν ούτως ή άλλως
+ * στοίχιση στη .ecrm-form· την ίδια στιγμή διορθώνεται και αυτό.
+ */
+.ecrm-form { display: flex; flex-direction: column; gap: 12px; }
+.ecrm-wstep { display: flex; flex-direction: column; gap: 12px; }
+/* Ρητό: το `hidden` χάνει από οποιοδήποτε display, και το wrapper είναι flex. */
+.ecrm-wstep[hidden] { display: none; }
+
+.ecrm-wsteps {
+	display: flex; background: var(--surface); border: 1px solid var(--line-card);
+	border-radius: var(--radius); overflow: hidden;
+}
+.ecrm-wstep__b {
+	flex: 1; min-width: 0; text-align: center; padding: 9px 6px;
+	background: none; border: none; border-bottom: 2px solid transparent;
+	font-family: inherit; font-size: 11px; color: var(--muted); cursor: pointer;
+	transition: background .14s, color .14s;
+}
+.ecrm-wstep__b strong {
+	display: block; font-size: 10px; font-weight: 800; letter-spacing: .06em;
+	text-transform: uppercase; margin-bottom: 2px;
+}
+.ecrm-wstep__b + .ecrm-wstep__b { border-left: 1px solid var(--line-card); }
+.ecrm-wstep__b:hover:not(:disabled) { background: var(--surface-track); color: var(--ink); }
+.ecrm-wstep__b.is-done { color: var(--accent-ink); }
+.ecrm-wstep__b.is-on { color: var(--navy); border-bottom-color: var(--amber); background: var(--accent-wash); }
+/* Κλειδωμένο βήμα: ΟΡΑΤΟ αλλά όχι πατημένο. Το κρύψιμο θα έκρυβε μαζί και την
+   πληροφορία «πόσο ακόμη μένει» — που είναι όλος ο λόγος ύπαρξης της μπάρας. */
+.ecrm-wstep__b:disabled { opacity: .45; cursor: default; }
+
 /* --- card --- */
 .ecrm-card {
 	background: var(--surface);
@@ -706,6 +742,10 @@
 	   κινητό το ύψος γυρίζει σε στόχο αφής -- η πυκνότητα δεν αξίζει αστοχία. */
 	.ecrm-input, .ecrm-select { height: 44px; }
 	.ecrm-textarea { min-height: 44px; }
+	/* Τέσσερα βήματα σε πλάτος τηλεφώνου: το κείμενο μικραίνει, η μπάρα μένει
+	   ολόκληρη. Κύλιση θα έκρυβε το τελευταίο βήμα, που είναι ο προορισμός. */
+	.ecrm-wstep__b { font-size: 10px; padding: 8px 3px; }
+	.ecrm-wstep__b strong { font-size: 9px; letter-spacing: .04em; }
 	.ecrm-row__label { width: 100%; flex-basis: 100%; }
 	.ecrm-foot { flex-direction: column; align-items: stretch; }
 	.ecrm-foot__actions { justify-content: stretch; }

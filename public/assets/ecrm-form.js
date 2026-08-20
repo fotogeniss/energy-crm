@@ -34,7 +34,10 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 		var state = {
 			provider_id: null, program_id: null, energy_type: 'power', category: 'home',
 			price_type: 'fixed', customer_type: 'individual', activation_type: null, invoice_code: null,
-			contract_id: 0, customer_id: 0, extracted_json: null, files: []
+			contract_id: 0, customer_id: 0, extracted_json: null, files: [],
+			// wizard: πού είμαστε, και ως πού έχει φτάσει ο agent. Το δεύτερο
+			// ξεκλειδώνει τα κουμπιά της μπάρας — πίσω πάντα, μπροστά ως εκεί.
+			wstep: 1, wmax: 1
 		};
 		var programsCache = [];
 		var mobilePricing = {};
@@ -599,6 +602,11 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 			applyMobileOffer();
 			var modeEl = q('.ecrm-foot__mode strong'); if (modeEl) modeEl.textContent = 'Επεξεργασία #' + (c.code || c.id);
 			var titleEl = q('[data-form-title]'); if (titleEl) titleEl.textContent = 'Επεξεργασία Αίτησης';
+			// Σε ΕΠΕΞΕΡΓΑΣΙΑ ξεκλειδώνουν και τα τέσσερα βήματα αμέσως: η αίτηση
+			// υπάρχει ήδη, και το να ξαναπερπατήσει ο συνεργάτης έναν wizard για
+			// να αλλάξει ένα πεδίο είναι τιμωρία, όχι καθοδήγηση. Ξεκινά στο 1
+			// ώστε να δει πρώτα πάροχο και πρόγραμμα, με ένα κλικ για οπουδήποτε.
+			state.wmax = WSTEPS; goStep(1, false);
 			root.scrollIntoView ? root.scrollIntoView({ behavior: 'smooth', block: 'start' }) : window.scrollTo(0, 0);
 		}
 
@@ -638,6 +646,8 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 			// Last, because it reads state.contract_id, which the first line
 			// of this function has just cleared.
 			setStage('');
+			// Νέα αίτηση: πίσω στο πρώτο βήμα, και τα υπόλοιπα ξανακλειδώνουν.
+			state.wmax = 1; goStep(1, false);
 		}
 
 		_editFn = applyEdit; _resetFn = resetForm;
@@ -909,15 +919,89 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 		 * refuses the rest with 409 since 2026-08-16; this is so the agent is
 		 * never offered a button that will be refused.
 		 */
-		function setStage(status) {
-			state.status = status || '';
+		/* --- Ο wizard: τέσσερα βήματα, όπως B1-B4 του UX kit -------------------
+		 *
+		 * Η ΙΔΙΟΤΗΤΑ ΠΟΥ ΤΟΝ ΚΑΝΕΙ ΑΣΦΑΛΗ, και γιατί δεν χρειάστηκε ούτε μία
+		 * γραμμή backend: το collect() διαβάζει ΟΛΑ τα `.ecrm-input` του root,
+		 * ανεξάρτητα από το αν φαίνονται. Τα βήματα κρύβονται με `hidden` πάνω
+		 * σε wrapper· καμία τιμή δεν σβήνεται, κανένα πεδίο δεν φεύγει από το
+		 * DOM. Το payload είναι ΤΟ ΙΔΙΟ είτε ο agent στέκεται στο βήμα 1 είτε
+		 * στο 4 — άρα ο server, τα 864 unit και τα 297 integration tests
+		 * βλέπουν ακριβώς ό,τι έβλεπαν πριν.
+		 *
+		 * Και ο δεύτερος μηχανισμός απόκρυψης δεν πειράζεται: τα
+		 * applyCustomerType() / applyEnergyType() παίζουν με `style.display`
+		 * ΜΕΣΑ στα βήματα. Γονιός κρυμμένος -> αόρατα τα παιδιά· γονιός ορατός
+		 * -> κάθε παιδί υπακούει στο δικό του display. Συνθέτονται, δεν
+		 * ανταγωνίζονται.
+		 */
+		var WSTEPS = 4;
+
+		function paintWizard() {
+			qa('[data-wstep]').forEach(function (p) {
+				p.hidden = parseInt(p.getAttribute('data-wstep'), 10) !== state.wstep;
+			});
+			qa('[data-wgo]').forEach(function (b) {
+				var n = parseInt(b.getAttribute('data-wgo'), 10);
+				b.classList.toggle('is-on', n === state.wstep);
+				b.classList.toggle('is-done', n < state.wstep);
+				b.disabled = n > state.wmax;
+				if (n === state.wstep) b.setAttribute('aria-current', 'step');
+				else b.removeAttribute('aria-current');
+			});
+			paintFoot();
+		}
+
+		/* Ο ΜΟΝΑΔΙΚΟΣ φράχτης που προσθέτει ο wizard — και δεν είναι καινούριος:
+		 * το save('new') αρνείται ήδη χωρίς πάροχο, και χωρίς πάροχο δεν έχουν
+		 * τι να φορτώσουν ούτε τα προγράμματα, ούτε τα δικαιολογητικά, ούτε τα
+		 * πεδία του παρόχου. Τα βήματα 2 και 3 ΔΕΝ έχουν φράχτη: ο έλεγχος για
+		 * ΑΦΜ και συναίνεση μένει ακριβώς εκεί που ήταν, στην οριστικοποίηση.
+		 * Κάθε νέα άρνηση είναι ένας νέος τρόπος να κολλήσει ο συνεργάτης. */
+		function canLeave(step) {
+			if (step === 1 && !state.provider_id) {
+				toast('Διάλεξε πάροχο πρώτα.', false);
+				return false;
+			}
+			return true;
+		}
+
+		function goStep(n, gated) {
+			n = Math.min(WSTEPS, Math.max(1, n));
+			if (gated && n > state.wstep) {
+				for (var s = state.wstep; s < n; s++) { if (!canLeave(s)) return; }
+			}
+			state.wstep = n;
+			if (n > state.wmax) state.wmax = n;
+			paintWizard();
+			var top = root.querySelector('[data-wsteps]');
+			if (top && top.scrollIntoView) top.scrollIntoView({ block: 'start' });
+		}
+
+		/* Ένα σημείο αποφασίζει τι δείχνει το υποσέλιδο, γιατί δύο κριτήρια
+		 * κρίνουν τα ίδια κουμπιά: το ΣΤΑΔΙΟ (πρόχειρο ή όχι) και το ΒΗΜΑ. Με
+		 * δύο συναρτήσεις που γράφουν στα ίδια `hidden`, όποια τρέξει δεύτερη
+		 * θα κέρδιζε — δηλαδή σφάλμα που εμφανίζεται μόνο σε μια σειρά. */
+		function paintFoot() {
 			var stageable = !state.contract_id || state.status === 'draft';
+			var last = state.wstep === WSTEPS;
 			var draftBtn = q('[data-save-draft]');
 			var finalBtn = q('[data-finalize]');
 			var saveBtn = q('[data-save-changes]');
+			var prevBtn = q('[data-wprev]');
+			var nextBtn = q('[data-wnext]');
+			// Η προσωρινή αποθήκευση μένει διαθέσιμη σε ΚΑΘΕ βήμα: ο συνεργάτης
+			// που τον διακόπτει ο πελάτης στη μέση δεν πρέπει να χάσει τίποτα.
 			if (draftBtn) draftBtn.hidden = !stageable;
-			if (finalBtn) finalBtn.hidden = !stageable;
-			if (saveBtn) saveBtn.hidden = stageable;
+			if (finalBtn) finalBtn.hidden = !(stageable && last);
+			if (saveBtn) saveBtn.hidden = !(!stageable && last);
+			if (prevBtn) prevBtn.hidden = state.wstep === 1;
+			if (nextBtn) nextBtn.hidden = last;
+		}
+
+		function setStage(status) {
+			state.status = status || '';
+			paintFoot();
 		}
 
 		function collect(status) {
@@ -950,6 +1034,19 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 			c.addEventListener('click', function () { setTimeout(applyCustomerType, 0); });
 		});
 		applyCustomerType();
+
+		// wizard: η μπάρα και τα δύο κουμπιά πλοήγησης.
+		// Τα κουμπιά της μπάρας περνούν gated=false επίτηδες: όσα δεν έχουν
+		// ξεκλειδώσει είναι ΗΔΗ disabled, οπότε δεν υπάρχει δρόμος να πηδήξεις
+		// μπροστά από εκεί — και το «πίσω» δεν πρέπει ποτέ να ζητά άδεια.
+		root.querySelectorAll('[data-wgo]').forEach(function (b) {
+			b.addEventListener('click', function () { goStep(parseInt(this.getAttribute('data-wgo'), 10), false); });
+		});
+		var wprevBtn = q('[data-wprev]');
+		if (wprevBtn) wprevBtn.addEventListener('click', function () { goStep(state.wstep - 1, false); });
+		var wnextBtn = q('[data-wnext]');
+		if (wnextBtn) wnextBtn.addEventListener('click', function () { goStep(state.wstep + 1, true); });
+		paintWizard();
 
 		// sync checkbox: copy customer/rep data into the contact person
 		function setVal(name, val) { var el = root.querySelector('[name="' + name + '"]'); if (el && val != null) el.value = val; }
