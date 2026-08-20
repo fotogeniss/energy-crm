@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — η λίστα συμβάσεων ως ουρά δουλειάς</title>
+<style>
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-greek-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-latin-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122}
+.t{--accent:#16c217;--on-accent:#0b3d0c;--radius:12px}
+.t-light{--bg:#f8f8f6;--surface:#fff;--surface-sunk:#f1f1ee;--line-card:#e9e8e4;--line:#dedcd7;--line-mid:#c6c4bd;
+ --ink:#2a2926;--navy:#1a1a18;--navy-soft:#42413d;--muted:#6e6c66;--faint:#83817a;--accent-ink:#0b690c;--accent-wash:#eafaea;--accent-soft:#a5eba7;
+ --st-draft:#6a6d75;--st-draft-bg:#f0f1f3;--st-new:#0072b7;--st-new-bg:#ecf2fc;--st-psig:#0062a8;--st-psig-bg:#ebf0fb;
+ --st-asig:#005499;--st-asig-bg:#eaeefa;--st-signed:#00468a;--st-signed-bg:#e8ebf7;--st-proc:#043875;--st-proc-bg:#e8e9f1;
+ --st-pending:#ab5506;--st-pending-bg:#fcf2ec;--st-resolved:#0b7e36;--st-resolved-bg:#e9f5ea;--st-routed:#006926;--st-routed-bg:#e6f4e7;
+ --st-active:#00531e;--st-active-bg:#e3f0e4;--st-cancel:#c32b47;--st-cancel-bg:#fdeaea;--st-term:#59595b;--st-term-bg:#edeef0}
+.t-dark{--bg:#111110;--surface:#1a1a18;--surface-sunk:#232320;--line-card:#2a2926;--line:#33322e;--line-mid:#3d3c37;
+ --ink:#f1f1ee;--navy:#f8f8f6;--navy-soft:#dedcd7;--muted:#a3a099;--faint:#8a887f;--accent-ink:#6bdd6d;--accent-wash:#12240f;--accent-soft:#1e4a21;
+ --st-draft:#9fa0a3;--st-draft-bg:#343536;--st-new:#79afec;--st-new-bg:#2e353f;--st-psig:#8db8f7;--st-psig-bg:#2f3540;
+ --st-asig:#a2c1ff;--st-asig-bg:#303541;--st-signed:#b9cbff;--st-signed-bg:#31343f;--st-proc:#cdd5ff;--st-proc-bg:#323440;
+ --st-pending:#ffb682;--st-pending-bg:#3f322a;--st-resolved:#75b47e;--st-resolved-bg:#2c382d;--st-routed:#8cc792;--st-routed-bg:#2c382d;
+ --st-active:#a3d9a9;--st-active-bg:#2c382d;--st-cancel:#fb8a91;--st-cancel-bg:#423030;--st-term:#a3a6ad;--st-term-bg:#343536}
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1160px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:29px;font-weight:800;letter-spacing:-.025em;margin:0 0 6px;color:#1a1a18}
+h2{font-size:20px;font-weight:800;letter-spacing:-.015em;margin:0 0 6px;color:#1a1a18}
+h3{font-size:12px;font-weight:800;margin:20px 0 8px;color:#6e6c66;letter-spacing:.07em;text-transform:uppercase}
+p{margin:0 0 12px;font-size:14.5px}
+.lead{color:#5c5a55;font-size:15.5px;margin-bottom:24px}
+section{background:#fff;border:1px solid #dedcd7;border-radius:12px;padding:22px 24px;margin-bottom:18px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#83817a;margin-bottom:8px}
+.cap{font-size:12.5px;color:#5c5a55;margin:6px 0 16px}
+.callout{border-left:3px solid #16c217;padding:2px 0 2px 14px;margin:14px 0}
+.callout.bad{border-left-color:#c32b47}.callout.warn{border-left-color:#ab5506}
+.callout p{margin:0;font-size:13.5px}
+.zero{background:#eafaea;border:1px solid #a5eba7;border-radius:9px;padding:12px 15px;margin:12px 0;font-size:13.5px}
+table.data{border-collapse:collapse;width:100%;font-size:12.5px;margin:8px 0}
+table.data th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#83817a;padding:0 10px 7px 0;border-bottom:1px solid #e9e8e4}
+table.data td{padding:6px 10px 6px 0;border-bottom:1px solid #f1f1ee;vertical-align:middle}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#42413d}
+footer{font-size:12.5px;color:#5c5a55;text-align:center;margin-top:26px}
+.lbl{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#83817a;margin:18px 0 7px}
+
+/* --- η ζωντανή λίστα --- */
+.wrap{background:var(--bg);border-radius:14px;padding:16px;border:1px solid var(--line-card)}
+.tw{border:1px solid var(--line-card);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+table.d{width:100%;border-collapse:collapse;font-size:13px}
+table.d th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:9px 12px;background:var(--bg);border-bottom:1px solid var(--line-card)}
+table.d td{padding:11px 12px;border-bottom:1px solid var(--line-card);color:var(--navy-soft)}
+table.d tr:last-child td{border-bottom:none}
+.who b{display:block;font-size:13px;color:var(--ink);font-weight:700}
+.who s{display:block;text-decoration:none;font-size:11.5px;color:var(--muted)}
+.bdg{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.bdg::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 6px}
+.act{border:1px solid var(--line-mid);background:var(--surface);color:var(--accent-ink);border-radius:8px;
+ padding:5px 11px;font-size:12px;font-weight:700;font-family:inherit;white-space:nowrap}
+.act.q{border-color:transparent;background:none;color:var(--muted);font-weight:600}
+.mini{font-size:11.5px;color:var(--faint)}
+.ex{width:22px;height:22px;border-radius:6px;border:1px solid var(--line-mid);background:var(--surface);color:var(--faint);
+ display:inline-grid;place-items:center;font-size:13px}
+@media (max-width:900px){.hide-s{display:none}}
+</style></head><body><main>
+
+<div class="tag">Energy CRM · πρόταση εμφάνισης · §1.8 · 20/08/2026</div>
+<h1>Η λίστα συμβάσεων ως ουρά δουλειάς</h1>
+<p class="lead">Ο κανόνας του UX kit για την οθόνη A2: <i>«κάθε γραμμή έχει μία primary
+ενέργεια — δεν είναι λίστα για να κοιτάς, είναι ουρά δουλειάς»</i>. Αυτό είναι το πρώτο
+από τα έξι πραγματικά κενά του <code>docs/UI-UX-MAP.html</code>.</p>
+
+<section>
+<h2>Πόσο φθηνό είναι στην πραγματικότητα</h2>
+<p>Το διάβασα πριν το σχεδιάσω, και είναι πολύ μικρότερο απ' ό,τι το είχα βαθμολογήσει.</p>
+<div class="zero"><b>Το κουμπί δεν είναι νέα ενέργεια — είναι ετικέτα.</b> Στο dashboard,
+όπου ο ίδιος χάρτης τρέχει ήδη, το κουμπί «Συνέχεια / Υπενθύμιση / Επίλυση» καλεί
+<code>openDetail(id)</code> και τίποτα άλλο. Στη λίστα, το κλικ πάνω στη γραμμή καλεί
+<b>ήδη</b> <code>openDetail(id)</code>. Άρα η πρόταση <b>δεν προσθέτει καμία λειτουργία,
+κανένα endpoint και καμία εγγραφή</b>: αλλάζει μόνο <i>τι λέει</i> η γραμμή, όχι τι κάνει.</div>
+<p>Αυτό μετατοπίζει το ρίσκο από «επίπεδο 2, όψη με ροή» σε κάτι πολύ πιο κοντά στο 1:
+ένα <code>&lt;td&gt;</code>, μία συνάρτηση ετικέτας, και μία δέσμευση κλικ που κάνει ό,τι
+κάνει ήδη η γραμμή.</p>
+</section>
+
+<section>
+<h2>Ο χάρτης — και η αρχή πίσω του</h2>
+<p><b>Η λέξη λέει ποιος έχει τη μπάλα.</b> Δώδεκα καταστάσεις, <b>επτά</b> λέξεις. Αν μια
+γραμμή λέει «Παρακολούθηση», ξέρεις χωρίς να την ανοίξεις ότι δεν περιμένει εσένα.</p>
+<table class="data">
+<thead><tr><th>κατάσταση</th><th>ετικέτα</th><th>ποιος έχει τη μπάλα</th><th>ενέργεια</th></tr></thead>
+<tbody>
+<tr><td><code>draft</code></td><td>Πρόχειρο</td><td><b>εσύ</b></td><td>Συνέχεια</td></tr>
+<tr><td><code>new</code></td><td>Νέα</td><td><b>εσύ</b></td><td>Υπογραφή</td></tr>
+<tr><td><code>pending_signature</code></td><td>Προς υπογραφή</td><td><b>εσύ</b></td><td>Υπογραφή</td></tr>
+<tr><td><code>awaiting_signature</code></td><td>Αναμονή υπογραφής πελάτη</td><td>ο πελάτης</td><td>Υπενθύμιση</td></tr>
+<tr><td><code>signed</code></td><td>Υπεγράφη</td><td><b>εσύ</b></td><td>Στον πάροχο</td></tr>
+<tr><td><code>pending</code></td><td>Εκκρεμότητα</td><td><b>εσύ</b></td><td>Επίλυση</td></tr>
+<tr><td><code>processing</code></td><td>Σε επεξεργασία</td><td>ο πάροχος</td><td>Παρακολούθηση</td></tr>
+<tr><td><code>resolved</code></td><td>Επιλύθηκε</td><td>ο πάροχος</td><td>Παρακολούθηση</td></tr>
+<tr><td><code>routed</code></td><td>Δρομολογήθηκε</td><td>ο πάροχος</td><td>Παρακολούθηση</td></tr>
+<tr><td><code>active</code></td><td>Ενεργή</td><td>κανείς</td><td>Άνοιγμα</td></tr>
+<tr><td><code>cancelled</code></td><td>Ακυρώθηκε</td><td>κανείς</td><td>Άνοιγμα</td></tr>
+<tr><td><code>terminated</code></td><td>Τερματίστηκε</td><td>κανείς</td><td>Άνοιγμα</td></tr>
+</tbody></table>
+<p class="cap">Οι τρεις παθητικές — Παρακολούθηση και Άνοιγμα — γράφονται <b>πιο ήσυχα</b>
+(χωρίς περίγραμμα, σε <code>--muted</code>), ώστε το μάτι να πέφτει στις έξι που
+περιμένουν εσένα. Αυτό είναι όλο το νόημα της «ουράς δουλειάς».</p>
+<div class="callout"><p><b>Ο χάρτης δεν εφευρέθηκε εδώ.</b> Το <code>routed</code> είναι
+παθητικό γιατί έτσι το αποφάσισε ήδη ο κώδικας: το <code>DashboardAttentionTest</code>
+γράφει ρητά ότι <i>«το routed λείπει επίτηδες — εκεί η μπάλα είναι στον πάροχο»</i>. Η
+πρόταση επεκτείνει τον υπάρχοντα κανόνα στις δώδεκα καταστάσεις, δεν φτιάχνει δεύτερο.</p></div>
+</section>
+
+<section>
+<h2>Πριν</h2>
+<div class="t t-light"><div class="wrap"><div class="tw">
+<table class="d"><thead><tr><th></th><th>Πάροχος</th><th>Πελάτης</th><th>Κατάσταση</th><th class="hide-s">Ενημέρωση</th></tr></thead>
+<tbody>
+<tr><td><span class="ex">+</span></td><td class="who"><b>Protergia</b><s>Value 24μηνο</s></td><td class="who"><b>Μαρία Παπαδοπούλου</b><s>ΑΦΜ 123456789</s></td><td><span class="bdg" style="background:var(--st-asig-bg);color:var(--st-asig)">Αναμονή υπογραφής πελάτη</span></td><td class="mini hide-s">18 Αυγ</td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>Orizon</b><s>10GB + 5GB</s></td><td class="who"><b>Ελένη Κωνσταντίνου</b><s>ΑΦΜ 112233445</s></td><td><span class="bdg" style="background:var(--st-draft-bg);color:var(--st-draft)">Πρόχειρο</span></td><td class="mini hide-s">16 Αυγ</td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>ΔΕΗ</b><s>myHome Online</s></td><td class="who"><b>Ανδρέας Δημητρίου</b><s>ΑΦΜ 445566778</s></td><td><span class="bdg" style="background:var(--st-routed-bg);color:var(--st-routed)">Δρομολογήθηκε</span></td><td class="mini hide-s">12 Αυγ</td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>NRG</b><s>Home Comfort</s></td><td class="who"><b>Σοφία Βασιλείου</b><s>ΑΦΜ 998877665</s></td><td><span class="bdg" style="background:var(--st-pending-bg);color:var(--st-pending)">Εκκρεμότητα</span></td><td class="mini hide-s">14 Αυγ</td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>Protergia</b><s>Επαγγελματικό</s></td><td class="who"><b>Γιάννης Νικολάου</b><s>ΑΦΜ 987654321</s></td><td><span class="bdg" style="background:var(--st-active-bg);color:var(--st-active)">Ενεργή</span></td><td class="mini hide-s">17 Αυγ</td></tr>
+</tbody></table>
+</div></div></div>
+<p class="cap">Για να μάθεις τι χρειάζεται η κάθε γραμμή, πρέπει να την ανοίξεις. Οι
+ενέργειες που εμφανίζονται μετά το άνοιγμα είναι <b>επικοινωνίας</b> — Κάλεσε, Viber,
+Email, Επεξεργασία — και είναι οι ίδιες σε κάθε κατάσταση.</p>
+</section>
+
+<section>
+<h2>Μετά</h2>
+<div class="t t-light"><div class="wrap"><div class="tw">
+<table class="d"><thead><tr><th></th><th>Πάροχος</th><th>Πελάτης</th><th>Κατάσταση</th><th class="hide-s">Ενημέρωση</th><th></th></tr></thead>
+<tbody>
+<tr><td><span class="ex">+</span></td><td class="who"><b>Protergia</b><s>Value 24μηνο</s></td><td class="who"><b>Μαρία Παπαδοπούλου</b><s>ΑΦΜ 123456789</s></td><td><span class="bdg" style="background:var(--st-asig-bg);color:var(--st-asig)">Αναμονή υπογραφής πελάτη</span></td><td class="mini hide-s">18 Αυγ</td><td><button class="act">Υπενθύμιση</button></td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>Orizon</b><s>10GB + 5GB</s></td><td class="who"><b>Ελένη Κωνσταντίνου</b><s>ΑΦΜ 112233445</s></td><td><span class="bdg" style="background:var(--st-draft-bg);color:var(--st-draft)">Πρόχειρο</span></td><td class="mini hide-s">16 Αυγ</td><td><button class="act">Συνέχεια</button></td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>ΔΕΗ</b><s>myHome Online</s></td><td class="who"><b>Ανδρέας Δημητρίου</b><s>ΑΦΜ 445566778</s></td><td><span class="bdg" style="background:var(--st-routed-bg);color:var(--st-routed)">Δρομολογήθηκε</span></td><td class="mini hide-s">12 Αυγ</td><td><button class="act q">Παρακολούθηση</button></td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>NRG</b><s>Home Comfort</s></td><td class="who"><b>Σοφία Βασιλείου</b><s>ΑΦΜ 998877665</s></td><td><span class="bdg" style="background:var(--st-pending-bg);color:var(--st-pending)">Εκκρεμότητα</span></td><td class="mini hide-s">14 Αυγ</td><td><button class="act">Επίλυση</button></td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>Protergia</b><s>Επαγγελματικό</s></td><td class="who"><b>Γιάννης Νικολάου</b><s>ΑΦΜ 987654321</s></td><td><span class="bdg" style="background:var(--st-active-bg);color:var(--st-active)">Ενεργή</span></td><td class="mini hide-s">17 Αυγ</td><td><button class="act q">Άνοιγμα</button></td></tr>
+</tbody></table>
+</div></div></div>
+<p class="cap">Τρεις γραμμές φωνάζουν, δύο ψιθυρίζουν. Χωρίς να ανοίξεις τίποτα ξέρεις ότι
+η Μαρία, η Ελένη και η Σοφία περιμένουν <b>εσένα</b>.</p>
+
+<h3>Και στο σκούρο</h3>
+<div class="t t-dark"><div class="wrap"><div class="tw">
+<table class="d"><thead><tr><th></th><th>Πελάτης</th><th>Κατάσταση</th><th></th></tr></thead>
+<tbody>
+<tr><td><span class="ex">+</span></td><td class="who"><b>Μαρία Παπαδοπούλου</b><s>Protergia · ΑΦΜ 123456789</s></td><td><span class="bdg" style="background:var(--st-asig-bg);color:var(--st-asig)">Αναμονή υπογραφής πελάτη</span></td><td><button class="act">Υπενθύμιση</button></td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>Ελένη Κωνσταντίνου</b><s>Orizon · ΑΦΜ 112233445</s></td><td><span class="bdg" style="background:var(--st-draft-bg);color:var(--st-draft)">Πρόχειρο</span></td><td><button class="act">Συνέχεια</button></td></tr>
+<tr><td><span class="ex">+</span></td><td class="who"><b>Ανδρέας Δημητρίου</b><s>ΔΕΗ · ΑΦΜ 445566778</s></td><td><span class="bdg" style="background:var(--st-routed-bg);color:var(--st-routed)">Δρομολογήθηκε</span></td><td><button class="act q">Παρακολούθηση</button></td></tr>
+</tbody></table>
+</div></div></div>
+<p class="cap">Το κουμπί χρησιμοποιεί <code>--accent-ink</code>, που στο σκούρο αντιστρέφεται
+από <code>#0b690c</code> σε <code>#6bdd6d</code> — μετρημένο <b>10,12</b> πάνω στην κάρτα.
+Το ήσυχο χρησιμοποιεί <code>--muted</code>, <b>6,68</b>.</p>
+</section>
+
+<section>
+<h2>Και ένα εύρημα που ΔΕΝ είναι εμφάνιση</h2>
+<div class="callout bad"><p><b>Ο κανόνας B8 του kit θα έσβηνε λειτουργία.</b> Το kit λέει
+«μετά την υπογραφή το token πεθαίνει· refresh → οθόνη ληγμένου» και «Link 48h · μία
+χρήση». Στο δικό μας σύστημα <b>ο σύνδεσμος υπογραφής ΕΙΝΑΙ ο σύνδεσμος
+παρακολούθησης</b> — ένα token, δύο δουλειές, και είναι γραμμένο ως απόφαση στο
+<code>ControllerFactory</code>: <i>«ο SigningController που εξυπηρετούσε το παλιό
+διαγράφηκε»</i>. Αν πεθάνει μετά την υπογραφή, ο πελάτης <b>χάνει την παρακολούθηση της
+αίτησής του</b> ακριβώς τη στιγμή που αρχίζει να τον ενδιαφέρει.</p></div>
+<p><b>Τι βρήκα διαβάζοντας τον κώδικα, αντί να το υποθέσω:</b> το
+<code>rest_sign</code> είναι ήδη σωστά φυλαγμένο. Άκυρο token → 404 με γενικό μήνυμα·
+συναίνεση υποχρεωτική → 400· η υπογραφή ελέγχεται με regex, magic bytes και όρια
+μεγέθους· και <b>ήδη υπογεγραμμένη → 200 με <code>already: true</code></b>, δηλαδή
+ιδεμποτικό, χωρίς διπλή εγγραφή και χωρίς να αποκαλύπτει τίποτα. Υπάρχει και rate limit
+(60/300s στην ανάγνωση, 10/600s στην υπογραφή).</p>
+<div class="callout warn"><p><b>Άρα η σύστασή μου για το §6γ (7) αλλάζει:</b> όχι «λήξη 48
+ωρών στον σύνδεσμο», αλλά <b>λήξη μόνο της δυνατότητας υπογραφής</b>, με την
+παρακολούθηση να μένει ζωντανή. Είναι η ίδια μία συνθήκη, σε άλλο σημείο: στο
+<code>can_sign</code> αντί στο <code>verify()</code>. Κρατά ό,τι θέλει το kit —
+«ο σύνδεσμος δεν υπογράφεται για πάντα» — χωρίς να πάρει από τον πελάτη αυτό που ήδη
+έχει. <i>Απόφαση δική σου· δεν την παίρνω μόνος.</i></p></div>
+</section>
+
+<section>
+<h2>Τι αλλάζει σε κώδικα, και οι τέσσερις αριθμοί</h2>
+<table class="data"><thead><tr><th>αρχείο</th><th>αλλαγή</th><th>ρίσκο</th></tr></thead>
+<tbody>
+<tr><td><code>ecrm-view-contracts.js</code></td><td>μία συνάρτηση <code>primaryAction(status)</code> και ένα <code>&lt;td&gt;</code> στη γραμμή· η δέσμευση κλικ καλεί το ίδιο <code>openDetail</code> που καλεί ήδη η γραμμή</td><td>καμία νέα λειτουργία</td></tr>
+<tr><td><code>ecrm-app.css</code></td><td>δύο κανόνες για το κουμπί (κανονικό / ήσυχο)</td><td>μόνο εικόνα</td></tr>
+<tr><td>+1 στήλη στο <code>&lt;thead&gt;</code> και στο <code>colspan</code> της γραμμής λεπτομέρειας</td><td>—</td><td><b>το ένα σημείο που πρέπει να προσεχθεί</b>: το <code>colspan</code> είναι σήμερα 8 ή 9 ανάλογα με το αν φαίνεται η στήλη ιδιοκτήτη</td></tr>
+</tbody></table>
+<div class="zero"><b>Οι τέσσερις αριθμοί δεν κινούνται:</b> phpcs <b>251</b>, phpstan
+<b>143</b>, unit <b>864 (1 skipped)</b>, integration <b>297 (1974 assertions)</b>. Κανένα
+PHP, κανένα νέο αρχείο. <i>Και ένα που πρέπει να ειπωθεί: δεν υπάρχει JS test που να
+φυλάει αυτόν τον χάρτη. Ο μόνος έλεγχος είναι τα μάτια σου πάνω σε αυτή τη σελίδα.</i></div>
+</section>
+
+<section>
+<h2>Τι χρειάζεται απόφαση</h2>
+<table class="data"><thead><tr><th class="n">#</th><th>ερώτημα</th><th>προτεινόμενο</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Ενέργεια ανά γραμμή, όπως το «Μετά»;</td><td><b>ναι</b> — μηδέν νέα λειτουργία, μόνο ετικέτα</td></tr>
+<tr><td>2</td><td>Οι παθητικές (Παρακολούθηση, Άνοιγμα) πιο ήσυχες;</td><td><b>ναι</b> — αλλιώς δώδεκα κουμπιά φωνάζουν εξίσου και δεν είναι ουρά</td></tr>
+<tr><td>3</td><td>Οι επτά λέξεις όπως στον πίνακα;</td><td>δες τις· η «Στον πάροχο» είναι η μόνη που δεν υπάρχει ήδη κάπου</td></tr>
+<tr><td>4</td><td>§6γ (7): λήξη <b>της υπογραφής</b> αντί για λήξη του συνδέσμου;</td><td><b>ναι</b> — κρατά την παρακολούθηση ζωντανή· αλλά είναι δική σου απόφαση</td></tr>
+</tbody></table>
+</section>
+
+<footer>Energy CRM · <code>docs/UI-LIST.html</code> · πρόταση κατά §1.8 · 20/08/2026<br>
+Οι δώδεκα καταστάσεις από το <code>ContractStatus::labels()</code>· ο χάρτης επεκτείνει
+αυτόν που ήδη τρέχει στο <code>ecrm-view-dashboard.js</code>.</footer>
+
+</main></body></html>
