@@ -28,7 +28,7 @@
 	padding: 14px 10px;
 	transition: width .18s ease;
 }
-.ecrm-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px; }
+.ecrm-brand { display: flex; align-items: center; gap: 10px; padding: 4px 6px 16px; }
 .ecrm-brand__mark { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--amber), var(--amber-bright)); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; font-size: 18px; }
 .ecrm-brand__txt { font-size: 15px; font-weight: 700; letter-spacing: -.01em; color: var(--chrome-ink-hi); }
 .ecrm-brand__txt strong { font-weight: 800; }
@@ -86,7 +86,7 @@
 @keyframes ecrm-pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); } 70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
 .ecrm-btn--sm { padding: 6px 11px; font-size: 11.5px; }
 
-.ecrm-content { padding: 22px 24px 34px; flex: 1; background: var(--bg); }
+.ecrm-content { padding: 16px 18px 26px; flex: 1; background: var(--bg); }
 .ecrm-view { display: none; flex-direction: column; gap: 14px; }
 .ecrm-view.is-active { display: flex; }
 
@@ -197,7 +197,7 @@
 	.ecrm-topbar__brand { display: inline-block; }
 	.ecrm-topbar__hello { display: none; }
 	.ecrm-topbar { padding: 12px 14px; gap: 10px; }
-	.ecrm-content { padding: 16px 14px 28px; }
+	.ecrm-content { padding: 14px 13px 22px; }
 	.ecrm-cols { grid-template-columns: 1fr; }
 	.ecrm-stats { grid-template-columns: 1fr 1fr; }
 }
@@ -407,7 +407,7 @@
 
 /* refined collapsed rail */
 @media (min-width: 861px) {
-	.ecrm-app[data-collapsed="1"] .ecrm-sidebar { width: 72px; padding: 18px 10px; }
+	.ecrm-app[data-collapsed="1"] .ecrm-sidebar { width: 72px; padding: 14px 10px; }
 	.ecrm-app[data-collapsed="1"] .ecrm-main { margin-left: 72px; }
 	.ecrm-app[data-collapsed="1"] .ecrm-brand { flex-direction: column; gap: 12px; padding: 4px 0 18px; }
 	.ecrm-app[data-collapsed="1"] .ecrm-collapse { position: static; margin: 0; width: 34px; height: 34px; }
@@ -424,7 +424,7 @@
 .ecrm-payhero {
 	display: flex; justify-content: space-between; gap: 20px;
 	background: linear-gradient(135deg, var(--surface-inverse-deep) 0%, var(--surface-inverse) 55%, var(--surface-inverse-soft) 100%);
-	border-radius: 16px; padding: 26px 28px; color: var(--chrome-ink-hi); position: relative; overflow: hidden;
+	border-radius: 16px; padding: 16px 18px; color: var(--chrome-ink-hi); position: relative; overflow: hidden;
 }
 .ecrm-payhero::before {
 	content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -529,8 +529,8 @@
 .ecrm-listhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .ecrm-listhead__count { font-size: 14px; font-weight: 700; color: var(--ink); }
 
-.ecrm-emptybox { text-align: center; padding: 36px 20px; color: var(--muted); }
-.ecrm-emptybox--big { padding: 56px 20px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.ecrm-emptybox { text-align: center; padding: 28px 18px; color: var(--muted); }
+.ecrm-emptybox--big { padding: 44px 20px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .ecrm-emptybox__ico { width: 64px; height: 64px; border-radius: 16px; background: var(--bg); color: var(--navy-soft); display: grid; place-items: center; }
 .ecrm-emptybox__ico svg { width: 32px; height: 32px; opacity: .5; }
 .ecrm-emptybox__txt { font-size: 15px; color: var(--muted); }
@@ -618,7 +618,7 @@
 .ecrm-bellpanel__head { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; }
 .ecrm-bellpanel__head b { font-size: 14px; color: var(--navy); }
 .ecrm-bellpanel__head span { font-size: 11.5px; color: var(--muted); }
-.ecrm-bellpanel__empty { padding: 28px 16px; text-align: center; color: var(--muted); font-size: 13.5px; }
+.ecrm-bellpanel__empty { padding: 22px 16px; text-align: center; color: var(--muted); font-size: 13.5px; }
 .ecrm-bellpanel__list { max-height: 360px; overflow-y: auto; }
 .ecrm-bellitem { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid var(--line); padding: 11px 16px; cursor: pointer; font-family: inherit; }
 .ecrm-bellitem:hover { background: var(--bg); }
@@ -741,7 +741,7 @@
 .ecrm-bulkbar .ecrm-input--sm { color:var(--ink); }
 
 /* --- Knowledge base --- */
-.ecrm-kbsearchbox { background:linear-gradient(160deg,var(--surface-inverse),var(--surface-inverse-soft)); border-radius:16px; padding:18px; margin-bottom:16px; }
+.ecrm-kbsearchbox { background:linear-gradient(160deg,var(--surface-inverse),var(--surface-inverse-soft)); border-radius:16px; padding:14px; margin-bottom:14px; }
 .ecrm-kbsearchbox__q { display:flex; align-items:center; gap:8px; background:var(--surface); border-radius:10px; padding:10px 14px; font-size:15px; }
 .ecrm-kbsearchbox__q input { border:0; outline:0; flex:1; font-size:15px; background:transparent; }
 .ecrm-kbfilters { display:flex; flex-wrap:wrap; gap:16px; margin-top:14px; }
@@ -867,7 +867,7 @@
 @media (max-width: 600px) {
 	.ecrm-stats { grid-template-columns: 1fr 1fr; }
 	.ecrm-live { display: none; }                 /* save topbar space; bell stays */
-	.ecrm-content { padding: 14px 12px 26px; }
+	.ecrm-content { padding: 12px 12px 20px; }
 	.ecrm-card { padding: 16px 14px; }
 	.ecrm-search-row { flex-wrap: wrap; }
 	.ecrm-search-row .ecrm-search { flex: 1 1 100%; }
@@ -902,7 +902,7 @@
    στο σκούρο, ώστε το ανοιχτό να μη μετακινηθεί ούτε ένα pixel. */
 .ecrm[data-theme="dark"] .ecrm-modal { border: 1px solid var(--line-mid); }
 
-.ecrm-modal { background: var(--surface); border-radius: 18px; width: 100%; max-width: 560px; padding: 26px 26px 20px; position: relative; box-shadow: 0 40px 90px -30px rgba(0,0,0,.5); max-height: 90vh; overflow-y: auto; }
+.ecrm-modal { background: var(--surface); border-radius: 18px; width: 100%; max-width: 560px; padding: 18px 18px 14px; position: relative; box-shadow: 0 40px 90px -30px rgba(0,0,0,.5); max-height: 90vh; overflow-y: auto; }
 .ecrm-modal__x { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
 .ecrm-modal__x:hover { color: var(--navy); }
 .ecrm-modal__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--amber); text-transform: uppercase; }
@@ -961,13 +961,13 @@
 
 /* --- Μικρό laptop: το πλαϊνό γίνεται ράγα εικονιδίων από μόνο του --- */
 @media (min-width: 861px) and (max-width: 1279px) {
-	.ecrm-sidebar { width: 68px; padding: 18px 10px; }
+	.ecrm-sidebar { width: 68px; padding: 14px 10px; }
 	.ecrm-main { margin-left: 68px; }
 	.ecrm-brand__txt, .ecrm-nav__label, .ecrm-nav__txt { display: none; }
-	.ecrm-brand { justify-content: center; padding: 4px 0 18px; }
+	.ecrm-brand { justify-content: center; padding: 4px 0 14px; }
 	.ecrm-collapse { display: none; }
 	.ecrm-nav__item { justify-content: center; padding: 11px 0; }
-	.ecrm-content { padding: 20px 18px 30px; }
+	.ecrm-content { padding: 15px 16px 24px; }
 	.ecrm-topbar__hello { display: none; }
 }
 
@@ -976,7 +976,7 @@
 	.ecrm-cols { grid-template-columns: 1fr; }
 	.ecrm-dlgrid { grid-template-columns: repeat(2, 1fr); }
 	.ecrm-stats { grid-template-columns: repeat(2, 1fr); }
-	.ecrm-content { padding: 18px 16px 28px; }
+	.ecrm-content { padding: 14px 14px 22px; }
 	/* Ο πίνακας κρατά όλες τις στήλες εδώ και κυλά πλάγια, όπως ήδη έκανε:
 	   επιλεκτικό κρύψιμο θα ήθελε δεύτερο επίπεδο σήμανσης, και το
 	   nth-last-child δεν κάνει τη δουλειά — μετράει όλα τα αδέλφια, ενώ η
@@ -1001,7 +1001,7 @@
 	   με την κλάση και όχι με :not(), ώστε να μη σπάσει αν αλλάξει το markup. */
 	.ecrm-cell-prov .ecrm-person { display: none; }
 
-	.ecrm-content { padding: 14px 12px 84px; }   /* χώρος για την μπάρα */
+	.ecrm-content { padding: 12px 12px 84px; }   /* χώρος για την μπάρα */
 	.ecrm-cols, .ecrm-dlgrid { grid-template-columns: 1fr; }
 	.ecrm-stats { grid-template-columns: 1fr 1fr; }
 	.ecrm-head--row { flex-direction: column; align-items: stretch; gap: 12px; }
@@ -1077,7 +1077,7 @@
 
 /* ── οι τρεις μετρητές ── */
 .ecrm-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.ecrm-kpi { background: var(--surface); border: 1px solid var(--line-card); border-radius: var(--radius); padding: 16px 18px 18px; }
+.ecrm-kpi { background: var(--surface); border: 1px solid var(--line-card); border-radius: var(--radius); padding: 12px 14px 14px; }
 
 /* Το KPI που αντιστοιχεί σε κατάσταση γίνεται <button> και φιλτράρει τη λίστα.
    Εδώ μόνο το reset του κουμπιού και το σήμα ότι πατιέται — το ίδιο το πλακίδιο

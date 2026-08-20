@@ -418,8 +418,8 @@
 .ecrm-chip.is-on { background: var(--accent-wash); border-color: var(--accent-hover); color: var(--accent-ink); font-weight: 700; }
 
 .ecrm-select {
-	flex: 1; min-width: 200px; height: 42px; padding: 0 12px;
-	border: 1.5px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 14px; color: var(--ink); background: var(--surface);
+	flex: 1; min-width: 200px; height: 36px; padding: 0 11px;
+	border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 13px; color: var(--ink); background: var(--surface);
 }
 .ecrm-select:focus { outline: none; border-color: var(--amber); box-shadow: none; }
 
@@ -431,7 +431,7 @@
    περίγραμμα. Φάνηκε μόνο όταν αποδόθηκε η οθόνη. */
 .ecrm-drop {
 	border: 2px dashed var(--amber-bright); border-radius: 14px; background: var(--accent-wash);
-	padding: 34px 20px; text-align: center; cursor: pointer;
+	padding: 22px 16px; text-align: center; cursor: pointer;
 	transition: background .18s, border-color .18s, box-shadow .18s;
 }
 .ecrm-drop:hover, .ecrm-drop:focus-visible { background: var(--accent-wash); border-color: var(--accent-hover); outline: none; }
@@ -453,14 +453,24 @@
 .ecrm-ai-status { margin-top: 10px; font-size: 13px; color: var(--amber-bright); min-height: 18px; }
 
 /* --- customer grid --- */
-.ecrm-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-.ecrm-field { display: flex; flex-direction: column; gap: 6px; }
-.ecrm-field__label { font-size: 11.5px; font-weight: 600; color: var(--navy); }
+.ecrm-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+/* Η ετικέτα ΥΠΟΧΩΡΕΙ. Στο UX kit είναι 11px σε --muted, όχι σκούρα: σε φόρμα
+   με σαράντα πεδία, σαράντα σκούρες ετικέτες ανταγωνίζονται τις ΤΙΜΕΣ, που
+   είναι το μόνο που διαβάζει ο συνεργάτης όταν ελέγχει. Το --muted δίνει 5,25
+   σε λευκό και 4,94 στο --bg (WCAG 2.x, sRGB) -- πάνω από το 4,5 του AA. */
+.ecrm-field { display: flex; flex-direction: column; gap: 4px; }
+.ecrm-field__label { font-size: 11px; font-weight: 600; color: var(--muted); }
+/* Το «*» δείχνει ΥΠΟΧΡΕΩΤΙΚΟ πεδίο. Μόλις η ετικέτα πήγε σε --muted, ο αστερίσκος
+   πήγε μαζί της και έχασε τη φωνή του — και είναι το μόνο σημάδι που λέει «χωρίς
+   αυτό η αίτηση δεν φεύγει από πρόχειρο». Μένει σκούρος και έντονος. Το
+   διακεκομμένο υπογράμμισμα του abbr[title] μένει: είναι η ένδειξη ότι υπάρχει
+   επεξήγηση από κάτω. */
+.ecrm-field__label abbr { color: var(--navy); font-weight: 800; }
 .ecrm-input, .ecrm-textarea {
-	height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px;
-	font-family: inherit; font-size: 14px; color: var(--ink); background: var(--surface); transition: border-color .14s, box-shadow .14s, background .4s;
+	height: 36px; padding: 0 11px; border: 1px solid var(--line); border-radius: 8px;
+	font-family: inherit; font-size: 13px; color: var(--ink); background: var(--surface); transition: border-color .14s, box-shadow .14s, background .4s;
 }
-.ecrm-textarea { height: auto; padding: 10px 12px; resize: vertical; width: 100%; }
+.ecrm-textarea { height: auto; padding: 9px 11px; resize: vertical; width: 100%; }
 /* Focus: μόνο πράσινο περίγραμμα, ΧΩΡΙΣ φωτοστέφανο — έτσι είναι στο φύλλο. */
 .ecrm-input:hover:not(:focus):not([readonly]), .ecrm-textarea:hover:not(:focus) { border-color: var(--line-mid); }
 .ecrm-input:focus, .ecrm-textarea:focus { outline: none; border-color: var(--amber); box-shadow: none; }
@@ -672,7 +682,7 @@
 /* --- footer --- */
 .ecrm-foot {
 	display: flex; align-items: center; justify-content: space-between; gap: 16px;
-	background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 22px;
+	background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 15px;
 }
 .ecrm-foot__mode { color: var(--muted); font-size: 14px; }
 .ecrm-foot__actions { display: flex; gap: 10px; }
@@ -687,11 +697,15 @@
 .ecrm-toast.is-ok { border-left: 4px solid var(--ok); }
 .ecrm-toast.is-err { border-left: 4px solid var(--err); }
 .ecrm-loading, .ecrm-empty { color: var(--muted); font-size: 14px; padding: 8px 0; }
-.ecrm-gate { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); }
+.ecrm-gate { padding: 20px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); }
 
 /* --- responsive --- */
 @media (max-width: 720px) {
 	.ecrm-grid { grid-template-columns: 1fr 1fr; }
+	/* Τα 36px είναι σωστά πυκνά για ποντίκι και πολύ μικρά για αντίχειρα. Στο
+	   κινητό το ύψος γυρίζει σε στόχο αφής -- η πυκνότητα δεν αξίζει αστοχία. */
+	.ecrm-input, .ecrm-select { height: 44px; }
+	.ecrm-textarea { min-height: 44px; }
 	.ecrm-row__label { width: 100%; flex-basis: 100%; }
 	.ecrm-foot { flex-direction: column; align-items: stretch; }
 	.ecrm-foot__actions { justify-content: stretch; }
@@ -710,7 +724,7 @@
 .ecrm-subhead { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--line-card); }
 .ecrm-input-wrap { display: flex; }
 .ecrm-input-wrap .ecrm-input { border-top-right-radius: 0; border-bottom-right-radius: 0; flex: 1; }
-.ecrm-input-btn { border: 1.5px solid var(--line); border-left: none; background: var(--bg); border-radius: 0 10px 10px 0; padding: 0 14px; cursor: pointer; font-size: 14px; }
+.ecrm-input-btn { border: 1px solid var(--line); border-left: none; background: var(--bg); border-radius: 0 8px 8px 0; padding: 0 12px; cursor: pointer; font-size: 13px; }
 .ecrm-input-btn:hover { background: var(--surface-track); }
 
 /* sync bars (PSS green "ίδια στοιχεία" toggles) */
@@ -725,7 +739,7 @@
 
 /* action banners (PDF / e-sign email / live link) */
 .ecrm-actbanners { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 18px; }
-.ecrm-actbanner { display: flex; align-items: center; gap: 16px; width: 100%; text-align: left; border: none; border-radius: 14px; padding: 16px 20px; cursor: pointer; color: var(--on-accent); font-family: inherit; transition: transform .12s, box-shadow .12s; }
+.ecrm-actbanner { display: flex; align-items: center; gap: 16px; width: 100%; text-align: left; border: none; border-radius: 14px; padding: 12px 15px; cursor: pointer; color: var(--on-accent); font-family: inherit; transition: transform .12s, box-shadow .12s; }
 .ecrm-actbanner:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -10px rgba(0,0,0,.35); }
 .ecrm-actbanner:active { transform: translateY(0); }
 .ecrm-actbanner__ic { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 11px; background: rgba(255,255,255,.22); display: grid; place-items: center; font-size: 20px; }
