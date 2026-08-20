@@ -107,6 +107,33 @@ function bindExpand(box, c, view) {
 	});
 }
 
+/* Δύο γραμμές σε ένα κελί — η μορφή του UX kit (A2). Ο λόγος δεν είναι
+ * αισθητικός: έντεκα στήλες δεν χωράνε σε καμία οθόνη χωρίς οριζόντιο σκρολ,
+ * και ό,τι δεν χωράει δεν διαβάζεται. Πάροχος+πρόγραμμα, πελάτης+ταυτότητα,
+ * παροχή+τιμολόγιο γίνονται τρία κελιά αντί για έξι στήλες. ΚΑΝΕΝΑ δεδομένο δεν
+ * χάνεται· αλλάζει μόνο πού κάθεται. */
+function person(main, sub, cls) {
+	return '<span class="ecrm-person"><strong' + (cls ? ' class="' + cls + '"' : '') + '>' +
+		esc(main || '—') + '</strong><span>' + esc(sub || '—') + '</span></span>';
+}
+
+/* Η δεύτερη γραμμή του πελάτη: ΑΦΜ και αριθμός συμβολαίου, όπως στο kit.
+ *
+ * Ο ΑΦΜ γράφεται ΜΑΣΚΑΡΙΣΜΕΝΟΣ, με τα τέσσερα τελευταία ψηφία. Δεν είναι θέμα
+ * δικαιωμάτων — ο πλήρης ΑΦΜ ταξιδεύει ΗΔΗ στην απάντηση του /contracts
+ * (SELECT cu.afm — ContractQueries::search) και φαίνεται ολόκληρος στο
+ * άνοιγμα της γραμμής και στη λεπτομέρεια. Είναι θέμα ΠΟΣΟΤΗΤΑΣ: η
+ * λεπτομέρεια δείχνει ΕΝΑΝ ΑΦΜ, η λίστα εικοσιπέντε — και μια φωτογραφία
+ * οθόνης ή ένας περαστικός τους παίρνει όλους μαζί. Τα τέσσερα ψηφία αρκούν
+ * για να αναγνωρίσει ο συνεργάτης τη γραμμή του. */
+function subLine(r) {
+	var bits = [];
+	var afm  = r.afm ? String(r.afm) : '';
+	if (afm)    bits.push('ΑΦΜ ' + (afm.length > 4 ? '••••' + afm.slice(-4) : afm));
+	if (r.code) bits.push('#' + r.code);
+	return bits.join(' · ');
+}
+
 /* Η μία λέξη που λέει τι χρειάζεται η γραμμή — και κυρίως ΠΟΙΟΣ έχει τη μπάλα.
  *
  * Ο χάρτης δεν είναι καινούριος: το ecrm-view-dashboard.js τον τρέχει ήδη για τη
@@ -163,21 +190,18 @@ function renderContracts(view, d) {
 			: '<span class="ecrm-cell-mark" style="--h:' + tint(r.provider_name || r.provider_slug || '') + '">' + esc(initials(r.provider_name || '·')) + '</span>';
 		var cust = '<span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(name) + '">' + esc(initials(name)) + '</span>';
 		var act = primaryAction(r.status);
-		var inv = r.invoice_code ? '<span class="ecrm-tariff">' + esc(r.invoice_code) + '</span>' : '<span class="ecrm-muted">—</span>';
 		return '<tr class="ecrm-rowlink" data-id="' + r.id + '">' +
 			'<td class="ecrm-checkcol"><input type="checkbox" class="ecrm-rowcheck" data-cid="' + r.id + '"></td>' +
 			'<td class="ecrm-expandcol"><button type="button" class="ecrm-expand" data-expand="' + r.id + '" aria-label="Λεπτομέρειες">+</button></td>' +
-			'<td><span class="ecrm-cell-prov">' + prov + '<span>' + esc(r.provider_name || '—') + '</span></span></td>' +
-			'<td class="ecrm-col-sec">' + esc(r.program_name || '—') + '</td>' +
-			'<td><span class="ecrm-cell-cust">' + cust + '<span>' + esc(name) + '</span></span></td>' +
+			'<td><span class="ecrm-cell-cust">' + cust + person(name, subLine(r)) + '</span></td>' +
+			'<td><span class="ecrm-cell-prov">' + prov + person(r.provider_name, r.program_name) + '</span></td>' +
 			(showOwner ? '<td class="ecrm-col-sec"><span class="ecrm-cell-owner">' + esc(r.partner_name || '—') + '</span></td>' : '') +
-			'<td class="ecrm-mono ecrm-col-sec">' + esc(r.supply_number || '') + '</td>' +
-			'<td class="ecrm-col-sec">' + inv + '</td>' +
+			'<td class="ecrm-col-sec">' + person(r.supply_number, r.invoice_code, 'ecrm-mono') + '</td>' +
 			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(stLabel) + '</span></td>' +
 			'<td class="ecrm-cell-date ecrm-col-sec"><div>' + fmtDate(r.updated_at) + '</div><div class="ecrm-muted">' + timeAgo(r.updated_at) + '</div></td>' +
 			'<td class="ecrm-rowactcol"><button type="button" class="ecrm-rowact' + (act.quiet ? ' is-quiet' : '') + '">' + esc(act.txt) + '</button></td>' +
 			'</tr>' +
-			'<tr class="ecrm-exprow" data-exprow="' + r.id + '" hidden><td class="ecrm-expaccent" data-status="' + esc(r.status) + '"></td><td colspan="' + (showOwner ? 10 : 9) + '"><div class="ecrm-exppanel" data-exppanel="' + r.id + '"><div class="ecrm-loading">Φόρτωση…</div></div></td></tr>';
+			'<tr class="ecrm-exprow" data-exprow="' + r.id + '" hidden><td class="ecrm-expaccent" data-status="' + esc(r.status) + '"></td><td colspan="' + (showOwner ? 8 : 7) + '"><div class="ecrm-exppanel" data-exppanel="' + r.id + '"><div class="ecrm-loading">Φόρτωση…</div></div></td></tr>';
 	}).join('');
 
 	var table = total
@@ -190,9 +214,9 @@ function renderContracts(view, d) {
 			(can('ecrm_delete_contract') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--danger" data-bulk-delete><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' : '') +
 			'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-clear>Καθαρισμός</button></div>' +
 			'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-table--rich"><thead><tr>' +
-			'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πάροχος</th><th class="ecrm-col-sec">Πρόγραμμα</th><th>Πελάτης</th>' +
+			'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πελάτης</th><th>Πάροχος / πρόγραμμα</th>' +
 			(showOwner ? '<th class="ecrm-col-sec">Συνεργάτης</th>' : '') +
-			'<th class="ecrm-col-sec">ΗΚΑΣΠ / Παροχή</th><th class="ecrm-col-sec">Τιμολόγιο</th><th>Κατάσταση</th><th class="ecrm-col-sec">Ενημέρωση</th><th></th>' +
+			'<th class="ecrm-col-sec">Παροχή / τιμολόγιο</th><th>Κατάσταση</th><th class="ecrm-col-sec">Ενημέρωση</th><th></th>' +
 			'</tr></thead><tbody>' + body + '</tbody></table></div>' +
 			'<div class="ecrm-pager"><span>Σύνολο <b>' + total + '</b> συμβάσεις</span>' +
 			'<div class="ecrm-pager__nav"><button type="button" class="ecrm-pager__b" data-page="prev"' + (contractsState.page <= 1 ? ' disabled' : '') + '>‹ Προηγούμενη</button>' +

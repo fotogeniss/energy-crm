@@ -213,7 +213,7 @@
 .ecrm-detail2__main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .ecrm-dhead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .ecrm-dhead__who { min-width: 0; }
-.ecrm-dhead__name { margin: 0; font-size: 23px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); }
+.ecrm-dhead__name { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -.01em; color: var(--navy); }
 .ecrm-dhead__sub { font-size: 12.5px; color: var(--muted); }
 .ecrm-dhead__acts { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .ecrm-dsum { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -432,7 +432,7 @@
 }
 .ecrm-payhero__main { position: relative; }
 .ecrm-payhero__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--amber-bright); }
-.ecrm-payhero__big { font-size: 46px; font-weight: 800; letter-spacing: -.02em; margin: 8px 0 4px; line-height: 1; }
+.ecrm-payhero__big { font-size: 34px; font-weight: 800; letter-spacing: -.02em; margin: 8px 0 4px; line-height: 1; }
 .ecrm-payhero__sub { font-size: 13px; color: var(--faint-2); }
 /* Προειδοποίηση ότι το ποσό είναι μερικό. Δεν είναι διακοσμητικό: χωρίς αυτό
    το «ΣΥΝΟΛΙΚΑ ΕΣΟΔΑ» λέει ψέματα σιωπηλά όταν ξεπεραστεί το όριο.
@@ -440,12 +440,12 @@
 .ecrm-payhero__warn { margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--st-pending-on-dark); }
 .ecrm-payhero__side { position: relative; text-align: right; border-left: 1px solid var(--chrome-wash-2); padding-left: 22px; }
 .ecrm-payhero__k { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--chrome-ink); }
-.ecrm-payhero__v { font-size: 20px; font-weight: 800; }
+.ecrm-payhero__v { font-size: 17px; font-weight: 800; }
 
 @media (max-width: 600px) {
 	.ecrm-payhero { flex-direction: column; }
 	.ecrm-payhero__side { text-align: left; border-left: none; border-top: 1px solid var(--chrome-wash-2); padding: 14px 0 0; }
-	.ecrm-payhero__big { font-size: 36px; }
+	.ecrm-payhero__big { font-size: 28px; }
 }
 
 .ecrm-topbar { flex-shrink: 0; }
@@ -464,7 +464,13 @@
 }
 .ecrm-expand:hover { border-color: var(--navy-soft); color: var(--navy); }
 
-.ecrm-cell-prov, .ecrm-cell-cust { display: inline-flex; align-items: center; gap: 9px; }
+.ecrm-cell-prov, .ecrm-cell-cust { display: inline-flex; align-items: center; gap: 9px; min-width: 0; }
+/* Δύο γραμμές ανά κελί (UX kit, A2). Ο κύριος όρος πάνω στο μέγεθος του
+   πίνακα, ο δεύτερος από κάτω σε --muted. Το `min-width: 0` και στα δύο είναι
+   αυτό που επιτρέπει στο κείμενο να κοπεί αντί να σπρώξει τη στήλη. */
+.ecrm-person { display: block; min-width: 0; line-height: 1.25; }
+.ecrm-person > strong { display: block; font-weight: 700; color: var(--ink); }
+.ecrm-person > span { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
 .ecrm-cell-logo { width: 26px; height: 26px; object-fit: contain; border-radius: 5px; background: var(--surface); }
 .ecrm-cell-mark {
 	width: 28px; height: 28px; flex: 0 0 28px; border-radius: 7px; display: grid; place-items: center;
@@ -569,7 +575,7 @@
 .ecrm-expbanner { display: flex; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
 .ecrm-expbanner__ico { width: 46px; height: 46px; flex: 0 0 46px; border-radius: 11px; display: grid; place-items: center; font-size: 22px; font-weight: 800; background: var(--st-pending-bg); color: var(--st-pending); }
 .ecrm-expbanner__eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--muted); }
-.ecrm-expbanner__title { font-size: 17px; font-weight: 800; color: var(--navy); margin: 1px 0 3px; }
+.ecrm-expbanner__title { font-size: 14px; font-weight: 800; color: var(--navy); margin: 1px 0 3px; }
 .ecrm-expbanner__sub { font-size: 12.5px; color: var(--muted); }
 .ecrm-expbanner__sub b { color: var(--ink); }
 /* banner tints per status */
@@ -802,7 +808,7 @@
 .ecrm-tlstat.is-online { background:var(--surface-inverse); border-color:var(--surface-inverse); }
 .ecrm-tlstat.is-online .ecrm-tlstat__n { color:var(--st-routed); }
 .ecrm-tlstat.is-online .ecrm-tlstat__l { color:var(--faint-2); }
-.ecrm-tlstat__n { font-size:26px; font-weight:800; color:var(--ink); line-height:1; }
+.ecrm-tlstat__n { font-size:22px; font-weight:800; color:var(--ink); line-height:1; }
 .ecrm-tlstat__l { font-size:12px; color:var(--muted); margin-top:6px; }
 .ecrm-tlnum { text-align:center; font-weight:600; }
 .ecrm-tlrole { font-size:11px; }
@@ -863,7 +869,6 @@
 	.ecrm-live { display: none; }                 /* save topbar space; bell stays */
 	.ecrm-content { padding: 14px 12px 26px; }
 	.ecrm-card { padding: 16px 14px; }
-	.ecrm-title { font-size: 19px; }
 	.ecrm-search-row { flex-wrap: wrap; }
 	.ecrm-search-row .ecrm-search { flex: 1 1 100%; }
 	.ecrm-tlstats { grid-template-columns: repeat(2, 1fr); }
@@ -901,7 +906,7 @@
 .ecrm-modal__x { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
 .ecrm-modal__x:hover { color: var(--navy); }
 .ecrm-modal__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--amber); text-transform: uppercase; }
-.ecrm-modal__title { font-size: 22px; font-weight: 800; color: var(--navy); margin: 6px 0 6px; }
+.ecrm-modal__title { font-size: 16px; font-weight: 800; color: var(--navy); margin: 6px 0 6px; }
 .ecrm-modal__lead { font-size: 13.5px; color: var(--muted); margin: 0 0 16px; line-height: 1.5; }
 .ecrm-modal__lead code { background: var(--st-pending-bg); color: var(--st-pending); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
 .ecrm-modal__card { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
@@ -991,13 +996,15 @@
 	.ecrm-tablewrap { overflow-x: visible; }
 	.ecrm-table th, .ecrm-table td { padding: 11px 8px; }
 	.ecrm-table th { font-size: 10px; }
-	.ecrm-cell-prov span:not(.ecrm-cell-mark) { display: none; }
+	/* Στο κινητό ο πάροχος μένει ΜΟΝΟ ως σήμα: το όνομα και το πρόγραμμα
+	   κοστίζουν πλάτος που το κελί του πελάτη χρειάζεται περισσότερο. Γραμμένο
+	   με την κλάση και όχι με :not(), ώστε να μη σπάσει αν αλλάξει το markup. */
+	.ecrm-cell-prov .ecrm-person { display: none; }
 
 	.ecrm-content { padding: 14px 12px 84px; }   /* χώρος για την μπάρα */
 	.ecrm-cols, .ecrm-dlgrid { grid-template-columns: 1fr; }
 	.ecrm-stats { grid-template-columns: 1fr 1fr; }
 	.ecrm-head--row { flex-direction: column; align-items: stretch; gap: 12px; }
-	.ecrm-title { font-size: 21px; }
 
 	/* Στόχοι αφής παντού, όχι μόνο στη μπάρα. */
 	.ecrm-nav__item { min-height: 46px; }
@@ -1049,7 +1056,7 @@
 .ecrm-hero { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 28px; align-items: center; }
 /* Αναλογικά ψηφία, ΟΧΙ tabular: σε μέγεθος οθόνης το tabular κάνει το «121»
    να φαίνεται αραιό. Το tabular ανήκει σε στήλες αριθμών. */
-.ecrm-hero__n { font-size: 52px; font-weight: 700; letter-spacing: -.04em; line-height: 1; color: var(--navy); }
+.ecrm-hero__n { font-size: 34px; font-weight: 700; letter-spacing: -.04em; line-height: 1; color: var(--navy); }
 .ecrm-hero__lbl { font-size: 13px; color: var(--muted); margin-top: 6px; }
 .ecrm-delta { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700;
 	padding: 3px 9px; border-radius: 999px; margin-left: 12px; vertical-align: 6px; }
@@ -1086,7 +1093,7 @@
 .ecrm-kpi__dot.is-ok { background: var(--st-active); }
 .ecrm-kpi__dot.is-pend { background: var(--st-pending); }
 .ecrm-kpi__dot.is-route { background: var(--st-routed); }
-.ecrm-kpi__v { font-size: 30px; font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--navy); }
+.ecrm-kpi__v { font-size: 22px; font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--navy); }
 .ecrm-kpi__f { font-size: 12px; color: var(--muted); margin-top: 8px; }
 
 /* ── τι χρειάζεται εσένα ── */

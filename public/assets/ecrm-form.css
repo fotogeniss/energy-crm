@@ -348,8 +348,13 @@
 	font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
 	color: var(--amber); margin-bottom: 4px;
 }
-.ecrm-title { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; color: var(--navy); }
-.ecrm-sub { margin: 0; color: var(--muted); font-size: 14px; }
+/* Ο τίτλος οθόνης ήταν 30px. Στο UX kit είναι 15px, μέσα σε μπάρα με γραμμή από
+   κάτω. Εδώ κάθεται μέσα στο περιεχόμενο και όχι σε μπάρα, οπότε θέλει λίγη
+   παραπάνω παρουσία — 18px. Τα 30px ήταν ο δυνατότερος «παλιό CRM» θόρυβος που
+   είχε απομείνει: ένας τίτλος τριπλάσιος από το περιεχόμενό του, σε κάθε οθόνη.
+   Τα -.02em γίνονται -.01em· η αρνητική απόσταση υπήρχε για να δέσει το 30άρι. */
+.ecrm-title { font-size: 18px; font-weight: 800; letter-spacing: -.01em; margin: 0 0 3px; color: var(--navy); }
+.ecrm-sub { margin: 0; color: var(--muted); font-size: 12.5px; }
 
 /* --- card --- */
 .ecrm-card {
@@ -687,7 +692,6 @@
 /* --- responsive --- */
 @media (max-width: 720px) {
 	.ecrm-grid { grid-template-columns: 1fr 1fr; }
-	.ecrm-title { font-size: 24px; }
 	.ecrm-row__label { width: 100%; flex-basis: 100%; }
 	.ecrm-foot { flex-direction: column; align-items: stretch; }
 	.ecrm-foot__actions { justify-content: stretch; }
