@@ -143,6 +143,22 @@
 .ecrm-mono { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; }
 .ecrm-muted { color: var(--muted); font-size: 12px; }
 
+/* Η primary ενέργεια της γραμμής — μία λέξη που λέει ποιος έχει τη μπάλα.
+   Το `is-quiet` είναι για τις καταστάσεις που ΔΕΝ περιμένουν τον συνεργάτη:
+   γράφονται χωρίς περίγραμμα και σε --muted, ώστε το μάτι να πέφτει στις
+   υπόλοιπες. Χωρίς αυτό, δώδεκα κουμπιά φωνάζουν το ίδιο και η λίστα παύει να
+   είναι ουρά. Το κουμπί δεν έχει δικό του handler: το κλικ ανεβαίνει στη
+   γραμμή, που ήδη ανοίγει τη λεπτομέρεια. */
+.ecrm-rowactcol { text-align: right; white-space: nowrap; }
+.ecrm-rowact {
+	border: 1px solid var(--line-mid); background: var(--surface); color: var(--accent-ink);
+	border-radius: 8px; padding: 5px 11px; font-size: 12px; font-weight: 700;
+	font-family: inherit; cursor: pointer; white-space: nowrap;
+}
+.ecrm-rowact:hover { border-color: var(--accent-soft); background: var(--accent-wash); }
+.ecrm-rowact.is-quiet { border-color: transparent; background: none; color: var(--muted); font-weight: 600; }
+.ecrm-rowact.is-quiet:hover { color: var(--ink); background: var(--surface-sunk); }
+
 .ecrm-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
 /* Κύκλος αντί για τη γλυφή «●»: το μέγεθός της άλλαζε με τη γραμματοσειρά. */
 .ecrm-badge::before { content: ""; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: currentColor; }
@@ -1023,6 +1039,16 @@
 /* ── οι τρεις μετρητές ── */
 .ecrm-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .ecrm-kpi { background: var(--surface); border: 1px solid var(--line-card); border-radius: var(--radius); padding: 16px 18px 18px; }
+
+/* Το KPI που αντιστοιχεί σε κατάσταση γίνεται <button> και φιλτράρει τη λίστα.
+   Εδώ μόνο το reset του κουμπιού και το σήμα ότι πατιέται — το ίδιο το πλακίδιο
+   δεν αλλάζει, ώστε τα τρία να μένουν οπτικά αδέλφια. */
+.ecrm-kpi.is-clickable {
+	font-family: inherit; text-align: left; width: 100%; cursor: pointer;
+	transition: border-color .12s, transform .12s;
+}
+.ecrm-kpi.is-clickable:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+.ecrm-kpi.is-clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ecrm-kpi__k { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted-strong); margin-bottom: 9px; }
 .ecrm-kpi__dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 7px; }
 .ecrm-kpi__dot.is-ok { background: var(--st-active); }
