@@ -21,6 +21,17 @@ import { scope, setScope } from '@energy-crm/scope';
 
 var contractsState = { status: '', q: '', page: 1, pageSize: 12 };
 
+/* Ορίζει το φίλτρο κατάστασης από ΕΞΩ, χωρίς να φορτώσει.
+ *
+ * Το καλεί το κέλυφος όταν πατηθεί ένα KPI του dashboard που ξέρει ποια
+ * κατάσταση δείχνει. Δεν φορτώνει μόνο του επίτηδες: το go('contracts') που
+ * ακολουθεί είναι που φορτώνει, και δύο fetch για ένα κλικ είναι σπατάλη σε
+ * σύστημα με 20-40 ταυτόχρονες αιτήσεις. */
+export function setContractsFilter(status) {
+	contractsState.status = typeof status === 'string' ? status : '';
+	contractsState.page = 1;
+}
+
 export function loadContracts() {
 	var view = viewEl('contracts');
 	var url = api('/contracts') + '?status=' + encodeURIComponent(contractsState.status) + '&q=' + encodeURIComponent(contractsState.q) + '&scope=' + encodeURIComponent(scope());
@@ -96,6 +107,34 @@ function bindExpand(box, c, view) {
 	});
 }
 
+/* Η μία λέξη που λέει τι χρειάζεται η γραμμή — και κυρίως ΠΟΙΟΣ έχει τη μπάλα.
+ *
+ * Ο χάρτης δεν είναι καινούριος: το ecrm-view-dashboard.js τον τρέχει ήδη για τη
+ * λίστα «Τι χρειάζεται εσένα», με τις ίδιες λέξεις. Εδώ επεκτείνεται και στις
+ * δώδεκα καταστάσεις αντί για τρεις.
+ *
+ * `quiet` σημαίνει «δεν περιμένει εσένα». Γράφεται πιο σβηστά ώστε το μάτι να
+ * πέφτει στις γραμμές που περιμένουν — αυτό είναι όλο το νόημα της ουράς. Το
+ * routed είναι quiet για τον ίδιο λόγο που λείπει από το dashboard, γραμμένο στο
+ * DashboardAttentionTest: εκεί η μπάλα είναι στον πάροχο.
+ *
+ * Το κουμπί ΔΕΝ κάνει τίποτα δικό του. Αφήνεται να ανέβει στο κλικ της γραμμής,
+ * που ήδη καλεί openDetail — μηδέν νέα λειτουργία, μηδέν δεύτερος δρόμος. */
+function primaryAction(status) {
+	switch (status) {
+		case 'draft':              return { txt: 'Συνέχεια',      quiet: false };
+		case 'new':                return { txt: 'Υπογραφή',      quiet: false };
+		case 'pending_signature':  return { txt: 'Υπογραφή',      quiet: false };
+		case 'awaiting_signature': return { txt: 'Υπενθύμιση',    quiet: false };
+		case 'signed':             return { txt: 'Στον πάροχο',   quiet: false };
+		case 'pending':            return { txt: 'Επίλυση',       quiet: false };
+		case 'processing':
+		case 'resolved':
+		case 'routed':             return { txt: 'Παρακολούθηση', quiet: true };
+		default:                   return { txt: 'Άνοιγμα',       quiet: true };
+	}
+}
+
 function renderContracts(view, d) {
 	var statuses = d.statuses || {}, counts = d.counts || {};
 	var allRows = d.rows || [];
@@ -123,6 +162,7 @@ function renderContracts(view, d) {
 			? '<img class="ecrm-cell-logo" src="' + esc(r.provider_logo) + '" alt="">'
 			: '<span class="ecrm-cell-mark" style="--h:' + tint(r.provider_name || r.provider_slug || '') + '">' + esc(initials(r.provider_name || '·')) + '</span>';
 		var cust = '<span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(name) + '">' + esc(initials(name)) + '</span>';
+		var act = primaryAction(r.status);
 		var inv = r.invoice_code ? '<span class="ecrm-tariff">' + esc(r.invoice_code) + '</span>' : '<span class="ecrm-muted">—</span>';
 		return '<tr class="ecrm-rowlink" data-id="' + r.id + '">' +
 			'<td class="ecrm-checkcol"><input type="checkbox" class="ecrm-rowcheck" data-cid="' + r.id + '"></td>' +
@@ -135,8 +175,9 @@ function renderContracts(view, d) {
 			'<td class="ecrm-col-sec">' + inv + '</td>' +
 			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(stLabel) + '</span></td>' +
 			'<td class="ecrm-cell-date ecrm-col-sec"><div>' + fmtDate(r.updated_at) + '</div><div class="ecrm-muted">' + timeAgo(r.updated_at) + '</div></td>' +
+			'<td class="ecrm-rowactcol"><button type="button" class="ecrm-rowact' + (act.quiet ? ' is-quiet' : '') + '">' + esc(act.txt) + '</button></td>' +
 			'</tr>' +
-			'<tr class="ecrm-exprow" data-exprow="' + r.id + '" hidden><td class="ecrm-expaccent" data-status="' + esc(r.status) + '"></td><td colspan="' + (showOwner ? 9 : 8) + '"><div class="ecrm-exppanel" data-exppanel="' + r.id + '"><div class="ecrm-loading">Φόρτωση…</div></div></td></tr>';
+			'<tr class="ecrm-exprow" data-exprow="' + r.id + '" hidden><td class="ecrm-expaccent" data-status="' + esc(r.status) + '"></td><td colspan="' + (showOwner ? 10 : 9) + '"><div class="ecrm-exppanel" data-exppanel="' + r.id + '"><div class="ecrm-loading">Φόρτωση…</div></div></td></tr>';
 	}).join('');
 
 	var table = total
@@ -151,7 +192,7 @@ function renderContracts(view, d) {
 			'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-table--rich"><thead><tr>' +
 			'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πάροχος</th><th class="ecrm-col-sec">Πρόγραμμα</th><th>Πελάτης</th>' +
 			(showOwner ? '<th class="ecrm-col-sec">Συνεργάτης</th>' : '') +
-			'<th class="ecrm-col-sec">ΗΚΑΣΠ / Παροχή</th><th class="ecrm-col-sec">Τιμολόγιο</th><th>Κατάσταση</th><th class="ecrm-col-sec">Ενημέρωση</th>' +
+			'<th class="ecrm-col-sec">ΗΚΑΣΠ / Παροχή</th><th class="ecrm-col-sec">Τιμολόγιο</th><th>Κατάσταση</th><th class="ecrm-col-sec">Ενημέρωση</th><th></th>' +
 			'</tr></thead><tbody>' + body + '</tbody></table></div>' +
 			'<div class="ecrm-pager"><span>Σύνολο <b>' + total + '</b> συμβάσεις</span>' +
 			'<div class="ecrm-pager__nav"><button type="button" class="ecrm-pager__b" data-page="prev"' + (contractsState.page <= 1 ? ' disabled' : '') + '>‹ Προηγούμενη</button>' +

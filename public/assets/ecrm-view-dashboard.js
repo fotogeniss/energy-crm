@@ -74,17 +74,22 @@ function heroHTML(c, lvl, monthly) {
 		'</div></div></div>';
 }
 
+/* Το `status` δίνεται μόνο όπου το KPI ΕΙΝΑΙ κατάσταση σύμβασης. Το «Σήμερα»
+ * είναι φίλτρο ημερομηνίας και η λίστα δεν φιλτράρει έτσι — οπότε μένει
+ * ανενεργό αντί να στέλνει κάπου που δεν δείχνει το ίδιο πράγμα. */
 var KPI = [
 	{ k: 'today',   label: 'Σήμερα',          cls: 'is-ok'   },
-	{ k: 'pending', label: 'Εκκρεμότητες',    cls: 'is-pend' },
-	{ k: 'routed',  label: 'Δρομολογήθηκαν',  cls: 'is-route', foot: 'περιμένουν τον πάροχο' }
+	{ k: 'pending', label: 'Εκκρεμότητες',    cls: 'is-pend', status: 'pending' },
+	{ k: 'routed',  label: 'Δρομολογήθηκαν',  cls: 'is-route', foot: 'περιμένουν τον πάροχο', status: 'routed' }
 ];
 
 function kpisHTML(c) {
 	return '<div class="ecrm-kpis">' + KPI.map(function (x) {
-		return '<div class="ecrm-kpi"><div class="ecrm-kpi__k"><span class="ecrm-kpi__dot ' + esc(x.cls) + '"></span>' + esc(x.label) + '</div>' +
+		var tag = x.status ? 'button' : 'div';
+		var att = x.status ? ' type="button" data-go="contracts" data-status="' + esc(x.status) + '"' : '';
+		return '<' + tag + ' class="ecrm-kpi' + (x.status ? ' is-clickable' : '') + '"' + att + '><div class="ecrm-kpi__k"><span class="ecrm-kpi__dot ' + esc(x.cls) + '"></span>' + esc(x.label) + '</div>' +
 			'<div class="ecrm-kpi__v">' + (Number(c[x.k]) || 0) + '</div>' +
-			(x.foot ? '<div class="ecrm-kpi__f">' + esc(x.foot) + '</div>' : '') + '</div>';
+			(x.foot ? '<div class="ecrm-kpi__f">' + esc(x.foot) + '</div>' : '') + '</' + tag + '>';
 	}).join('') + '</div>';
 }
 

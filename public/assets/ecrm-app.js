@@ -1,7 +1,7 @@
 import { api, esc, fetch, H } from '@energy-crm/util';
 import { wire } from '@energy-crm/navigate';
 import { openDetail } from '@energy-crm/view-detail';
-import { loadContracts } from '@energy-crm/view-contracts';
+import { loadContracts, setContractsFilter } from '@energy-crm/view-contracts';
 import { loadPending } from '@energy-crm/view-pending';
 import { loadCommissions } from '@energy-crm/view-commissions';
 import { loadAnalytics } from '@energy-crm/view-analytics';
@@ -96,6 +96,12 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 		if (!btn) return;
 		e.preventDefault();
 		var g = btn.getAttribute('data-go');
+		// Ένα KPI που ξέρει ποια κατάσταση δείχνει φιλτράρει τη λίστα αντί απλώς
+		// να τη δείχνει. Μπαίνει ΠΡΙΝ το go(), γιατί το go() είναι που φορτώνει —
+		// αλλιώς θα γινόταν δεύτερο fetch για ένα κλικ.
+		if (g === 'contracts' && btn.hasAttribute('data-status')) {
+			setContractsFilter(btn.getAttribute('data-status'));
+		}
 		// Clicking the sidebar "Νέα Σύμβαση" starts a fresh form.
 		if (g === 'new-contract' && btn.classList.contains('ecrm-nav__item') && window.ECRMForm && window.ECRMForm.reset) {
 			window.ECRMForm.reset();
