@@ -133,40 +133,76 @@ function renderDetail(view, d) {
 		}).join('') + '</ul>'
 		: '<div class="ecrm-empty">Καμία καταγραφή.</div>';
 
+	// Το checklist του rail βγαίνει από πεδία που ΗΔΗ υπάρχουν στην οθόνη — δεν
+	// εφευρίσκεται κατάσταση που το backend δεν στέλνει. Πέντε γραμμές, καθεμιά
+	// με ένα ερώτημα που ο συνεργάτης μπορεί να απαντήσει κοιτώντας δίπλα.
+	var SIGNED_ON = ['signed', 'processing', 'pending', 'resolved', 'routed', 'active'];
+	var checks = [
+		{ ok: !!(c.afm && c.adt),               txt: 'Στοιχεία ταυτότητας' },
+		{ ok: !!c.supply_number,                txt: 'Αριθμός παροχής' },
+		{ ok: !!c.program_name,                 txt: 'Πρόγραμμα' },
+		{ ok: SIGNED_ON.indexOf(c.status) >= 0, txt: 'Υπογραφή πελάτη' },
+		{ ok: !!c.consent_at,                   txt: 'Συναίνεση GDPR' }
+	];
+	var done = checks.filter(function (x) { return x.ok; }).length;
+	var checklistHTML = '<ul class="ecrm-rcheck">' + checks.map(function (x) {
+		return '<li class="' + (x.ok ? 'is-ok' : '') + '"><span class="ecrm-rcheck__m">' + (x.ok ? '✓' : '○') + '</span>' + esc(x.txt) + '</li>';
+	}).join('') + '</ul>';
+
+	function kv(label, val) {
+		return '<div class="ecrm-kv"><span>' + esc(label) + '</span><b>' + (val ? esc(val) : '—') + '</b></div>';
+	}
+
 	view.innerHTML = '' +
-		'<div class="ecrm-detailhead"><button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-go="contracts"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Πίσω</button>' +
-		'<div><div class="ecrm-eyebrow">' + esc(c.code || '') + '</div><h2 class="ecrm-title">' + esc(name) + '</h2></div>' +
+		'<div class="ecrm-detail2"><div class="ecrm-detail2__main">' +
+
+		'<div class="ecrm-dhead">' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-go="contracts"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Πίσω</button>' +
+		'<div class="ecrm-dhead__who"><h2 class="ecrm-dhead__name">' + esc(name) + '</h2>' +
+		'<div class="ecrm-dhead__sub">' + esc(c.code || '') + (c.created_at ? ' · δημιουργία ' + esc(fmtDate(c.created_at)) : '') + '</div></div>' +
+		'<div class="ecrm-dhead__acts">' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-printform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg> PDF έντυπο</button>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-detail-edit>' + svgIcon('edit') + ' Επεξεργασία</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-printform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg> Εκτύπωση εντύπου</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Αποστολή για υπογραφή</button>' +
-		(c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-track="' + esc(c.track_url) + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg> Link παρακολούθησης</button>' : '') +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-task-new="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Εργασία</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm ecrm-btn--danger" data-detail-del="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' +
-		'<span class="ecrm-badge ecrm-badge--' + esc(c.status) + '">' + esc(statuses[c.status] || c.status) + '</span>' +
+		'</div></div>' +
+
+		'<div class="ecrm-dsum"><span class="ecrm-badge ecrm-badge--' + esc(c.status) + '">' + esc(statuses[c.status] || c.status) + '</span>' +
+		'<span class="ecrm-dsum__t">' + esc([c.afm ? 'ΑΦΜ ' + c.afm : '', c.provider_name, c.program_name].filter(Boolean).join(' · ')) + '</span>' +
 		(c.consent_at ? '<span class="ecrm-chip-consent" title="Συναίνεση: ' + esc(fmtDate(c.consent_at)) + '">✓ GDPR</span>' : '') +
 		'</div>' +
 
 		'<div class="ecrm-cols">' +
-		'<div class="ecrm-card"><div class="ecrm-step">Στοιχεία πελάτη</div><div class="ecrm-dlgrid">' +
-		field('ΑΦΜ', c.afm) + field('ΔΟΥ', c.doy) + field('ΑΔΤ', c.adt) +
-		field('Όνομα', c.first_name) + field('Επίθετο', c.last_name) + field('Πατρώνυμο', c.father_name) +
-		field('Ημ. Γέννησης', c.birth_date) + field('Κινητό', c.mobile) + field('Τηλέφωνο', c.phone) +
-		field('Email', c.email) + field('Διεύθυνση', [c.street, c.street_no].filter(Boolean).join(' ')) +
-		field('Πόλη', c.city) + field('Νομός', c.region) + field('ΤΚ', c.postal_code) +
-		'</div></div>' +
-		'<div class="ecrm-card"><div class="ecrm-step">Στοιχεία αίτησης</div><div class="ecrm-dlgrid">' +
-		field('Πάροχος', c.provider_name) + field('Πρόγραμμα', c.program_name) + field('Είδος', energy) +
-		field('Ενεργοποίηση', acts[c.activation_type] || c.activation_type) +
-		field('Αριθμός Παροχής', c.supply_number) + field('Μετρητής', c.meter_number) + field('Τιμολόγιο', c.invoice_code) +
-		'</div>' + (c.notes ? '<div class="ecrm-notes"><strong>Σχόλια:</strong> ' + esc(c.notes) + '</div>' : '') + '</div>' +
+		'<div class="ecrm-card"><div class="ecrm-step">Στοιχεία πελάτη</div>' +
+		kv('Ονοματεπώνυμο', name) + kv('ΑΦΜ', c.afm) + kv('ΔΟΥ', c.doy) + kv('ΑΔΤ', c.adt) +
+		kv('Πατρώνυμο', c.father_name) + kv('Ημ. γέννησης', c.birth_date) +
+		kv('Κινητό', c.mobile) + kv('Τηλέφωνο', c.phone) + kv('Email', c.email) +
 		'</div>' +
+		'<div class="ecrm-card"><div class="ecrm-step">Παροχή / διεύθυνση</div>' +
+		kv('Αρ. παροχής', c.supply_number) + kv('Μετρητής', c.meter_number) + kv('Τιμολόγιο', c.invoice_code) +
+		kv('Διεύθυνση', [c.street, c.street_no].filter(Boolean).join(' ')) +
+		kv('Πόλη / ΤΚ', [c.city, c.postal_code].filter(Boolean).join(' · ')) + kv('Νομός', c.region) +
+		kv('Πάροχος', c.provider_name) + kv('Πρόγραμμα', c.program_name) + kv('Είδος', energy) +
+		kv('Ενεργοποίηση', acts[c.activation_type] || c.activation_type) +
+		(c.notes ? '<div class="ecrm-notes"><strong>Σχόλια:</strong> ' + esc(c.notes) + '</div>' : '') +
+		'</div></div>' +
 
 		'<div class="ecrm-cols">' +
+		'<div class="ecrm-card"><div class="ecrm-step">Ιστορικό ροής</div>' + timeline + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Αλλαγή κατάστασης</div>' + statusFlow + '</div>' +
-		'<div class="ecrm-card"><div class="ecrm-step">Ιστορικό</div>' + timeline + '</div>' +
 		'</div>' +
-		filesCard(c);
+		filesCard(c) +
+		'</div>' +
+
+		'<aside class="ecrm-drail">' +
+		'<div class="ecrm-card ecrm-rcard' + (done === checks.length ? ' is-ok' : '') + '">' +
+		'<div class="ecrm-step">Checklist &nbsp;<b>' + done + '/' + checks.length + '</b></div>' + checklistHTML + '</div>' +
+		'<div class="ecrm-drail__acts">' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Αποστολή για υπογραφή</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +
+		(c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-track="' + esc(c.track_url) + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg> Link παρακολούθησης</button>' : '') +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-task-new="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέα εργασία</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--danger" data-detail-del="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' +
+		'</div></aside></div>';
+
 
 	view.querySelectorAll('.ecrm-statuschip').forEach(function (b) {
 		b.addEventListener('click', function () {

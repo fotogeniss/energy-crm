@@ -204,9 +204,44 @@
 
 /* --- contract detail --- */
 .ecrm-rowlink { cursor: pointer; }
-.ecrm-detailhead { display: flex; align-items: center; gap: 16px; }
-.ecrm-detailhead .ecrm-title { margin: 0; font-size: 24px; }
-.ecrm-detailhead .ecrm-badge { margin-left: auto; }
+/* --- Λεπτομέρεια σύμβασης: κύριο + rail ------------------------------------
+   Η δομή του UX kit (A3). Το rail κρατά ΤΙ ΛΕΙΠΕΙ και μετά τη ροή· η κεφαλή
+   κρατά δύο ενέργειες αντί για οκτώ, γιατί οκτώ ισότιμα κουμπιά σε μια σειρά
+   δεν είναι επιλογή, είναι λίστα. Οι υπόλοιπες ΔΕΝ χάθηκαν — κατέβηκαν στο
+   rail, με τα ίδια ακριβώς data-hooks, οπότε κανένας handler δεν άλλαξε. */
+.ecrm-detail2 { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.ecrm-detail2__main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.ecrm-dhead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ecrm-dhead__who { min-width: 0; }
+.ecrm-dhead__name { margin: 0; font-size: 23px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); }
+.ecrm-dhead__sub { font-size: 12.5px; color: var(--muted); }
+.ecrm-dhead__acts { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.ecrm-dsum { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ecrm-dsum__t { font-size: 13px; color: var(--muted); }
+
+/* Ετικέτα πάνω, τιμή κάτω: το ζευγάρι διαβάζεται σε μια κάθετη ματιά, ενώ το
+   παλιό πλέγμα ετικέτα-δίπλα-τιμή ανάγκαζε το μάτι να πηγαινοέρχεται. */
+.ecrm-kv { padding: 7px 0; border-bottom: 1px solid var(--line-soft); }
+.ecrm-kv:last-child { border-bottom: none; }
+.ecrm-kv span { display: block; font-size: 11.5px; color: var(--muted); }
+.ecrm-kv b { display: block; font-size: 14px; font-weight: 700; color: var(--ink); word-break: break-word; }
+
+.ecrm-drail { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 76px; }
+.ecrm-drail__acts { display: flex; flex-direction: column; gap: 8px; }
+.ecrm-drail__acts .ecrm-btn { width: 100%; justify-content: flex-start; }
+.ecrm-rcard.is-ok { border-color: var(--accent-soft); background: var(--accent-wash); }
+.ecrm-rcheck { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.ecrm-rcheck li { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); }
+.ecrm-rcheck li.is-ok { color: var(--ink); }
+.ecrm-rcheck__m { width: 18px; flex: 0 0 18px; text-align: center; font-weight: 800; color: var(--line-strong); }
+.ecrm-rcheck li.is-ok .ecrm-rcheck__m { color: var(--accent-ink); }
+
+@media (max-width: 1100px) {
+	.ecrm-detail2 { grid-template-columns: 1fr; }
+	.ecrm-drail { position: static; }
+	.ecrm-drail__acts { flex-direction: row; flex-wrap: wrap; }
+	.ecrm-drail__acts .ecrm-btn { width: auto; }
+}
 
 .ecrm-dlgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 18px; }
 .ecrm-dl dt { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0; }
@@ -242,8 +277,6 @@
 
 @media (max-width: 860px) {
 	.ecrm-dlgrid { grid-template-columns: 1fr 1fr; }
-	.ecrm-detailhead { flex-wrap: wrap; }
-	.ecrm-detailhead .ecrm-badge { margin-left: 0; }
 }
 
 /* contracts header with action on the right */
@@ -848,7 +881,6 @@
 }
 
 @media (max-width: 600px) {
-	.ecrm-detailhead { flex-wrap: wrap; }
 	.ecrm-head--row { flex-direction: column; align-items: stretch; gap: 10px; }
 	.ecrm-head--row .ecrm-btn { width: 100%; }
 }
