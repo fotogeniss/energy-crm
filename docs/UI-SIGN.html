@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — η δημόσια σελίδα υπογραφής (B5 · B6 · B8)</title>
+<style>
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-greek-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:url("../public/assets/fonts/manrope-latin-wght-normal.woff2") format("woff2-variations");
+ unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122}
+
+/* ---------- το φύλλο της πρότασης (ίδιο με UI-LIST / UI-TEXT) ---------- */
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1160px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:29px;font-weight:800;letter-spacing:-.025em;margin:0 0 6px;color:#1a1a18}
+h2{font-size:20px;font-weight:800;letter-spacing:-.015em;margin:0 0 6px;color:#1a1a18}
+h3{font-size:12px;font-weight:800;margin:20px 0 8px;color:#6e6c66;letter-spacing:.07em;text-transform:uppercase}
+p{margin:0 0 12px;font-size:14.5px}
+.lead{color:#5c5a55;font-size:15.5px;margin-bottom:24px}
+section{background:#fff;border:1px solid #dedcd7;border-radius:12px;padding:22px 24px;margin-bottom:18px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#83817a;margin-bottom:8px}
+.cap{font-size:12.5px;color:#5c5a55;margin:6px 0 16px}
+.callout{border-left:3px solid #16c217;padding:2px 0 2px 14px;margin:14px 0}
+.callout.bad{border-left-color:#c32b47}.callout.warn{border-left-color:#ab5506}
+.callout p{margin:0;font-size:13.5px}
+.zero{background:#eafaea;border:1px solid #a5eba7;border-radius:9px;padding:12px 15px;margin:12px 0;font-size:13.5px}
+.red{background:#fdeaea;border:1px solid #f3bfc5;border-radius:9px;padding:12px 15px;margin:12px 0;font-size:13.5px}
+table.data{border-collapse:collapse;width:100%;font-size:12.5px;margin:8px 0}
+table.data th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#83817a;padding:0 10px 7px 0;border-bottom:1px solid #e9e8e4}
+table.data td{padding:6px 10px 6px 0;border-bottom:1px solid #f1f1ee;vertical-align:middle}
+table.data td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#42413d}
+footer{font-size:12.5px;color:#5c5a55;text-align:center;margin-top:26px}
+.lbl{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#83817a;margin:18px 0 7px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.stage{background:#141412;border-radius:12px;padding:22px 16px;display:flex;justify-content:center}
+.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;border:1px solid rgba(0,0,0,.15)}
+@media (max-width:900px){.pair{grid-template-columns:1fr}}
+
+/* ---------- η ζωντανή σελίδα: ΟΛΕΣ οι μετρικές είναι μεταβλητές ----------
+   Το ίδιο markup μπαίνει δύο φορές. Ό,τι αλλάζει η πρόταση είναι τιμή εδώ,
+   και ο πίνακας των 25 μετρικών παρακάτω ΕΙΝΑΙ αυτή η λίστα. */
+.pg{--accent:#16c217;
+ --surface:#fff;--chrome:#1a1a18;
+ --ink:#2a2926;--ink2:#5c5a55;--ink3:#a3a099;
+ --line:#e9e8e4;--line2:#dedcd7;--fill:#f8f8f6;
+ --ok:#0f5f29;--ok-bg:#e1f0e6;--err:#c42a47;--err-bg:#fceaee;
+ width:100%;max-width:520px;background:var(--surface);overflow:hidden;color:var(--ink);
+ font-family:"Manrope",-apple-system,sans-serif;line-height:1.5;
+ border-radius:var(--r-card);box-shadow:0 24px 60px -24px rgba(0,0,0,.55)}
+
+.pg.old{--r-card:16px;--pad-head:20px 24px;--fs-h1:18px;--fs-hp:13px;--pad-body:22px 24px;
+ --fs-row:14px;--pad-row:9px;--mt-steps:22px;--mb-steps:6px;--pb-step:18px;--dot:28px;--fs-dot:14px;--fs-lbl:16px;
+ --pad-badge:6px 12px;--fs-badge:13px;--mt-block:22px;--pt-block:18px;--fs-h2:15px;--fs-lead:13px;
+ --h-pad:180px;--r-pad:12px;--h-sign:48px;--fs-sign:15.5px;--pad-clear:7px 12px;--fs-clear:12px;--fs-consent:12.5px;
+ --pad-doc:11px;--fs-doc:14px;--pad-up:8px 14px;--fs-up:13px;
+ --pad-cancel:30px 10px;--x:58px;--fs-x:28px;--pad-signed:18px 10px;--v:52px;--fs-v:26px;
+ --pad-foot:14px;--fs-foot:12px}
+
+.pg.new{--r-card:12px;--pad-head:14px 18px;--fs-h1:15px;--fs-hp:12px;--pad-body:16px 18px;
+ --fs-row:13px;--pad-row:7px;--mt-steps:16px;--mb-steps:4px;--pb-step:13px;--dot:24px;--fs-dot:12.5px;--fs-lbl:13px;
+ --pad-badge:3px 10px;--fs-badge:11.5px;--mt-block:16px;--pt-block:14px;--fs-h2:13px;--fs-lead:12.5px;
+ --h-pad:150px;--r-pad:8px;--h-sign:46px;--fs-sign:14px;--pad-clear:6px 11px;--fs-clear:11.5px;--fs-consent:12px;
+ --pad-doc:8px;--fs-doc:13px;--pad-up:6px 11px;--fs-up:12px;
+ --pad-cancel:22px 10px;--x:46px;--fs-x:22px;--pad-signed:14px 10px;--v:44px;--fs-v:20px;
+ --pad-foot:11px;--fs-foot:11.5px}
+
+.pg .head{background:var(--chrome);color:#fff;padding:var(--pad-head)}
+.pg .head h1{margin:0;font-size:var(--fs-h1);font-weight:700;letter-spacing:-.02em;color:#fff}
+.pg .head p{margin:4px 0 0;color:var(--ink3);font-size:var(--fs-hp)}
+.pg .body{padding:var(--pad-body)}
+.pg .row{display:flex;justify-content:space-between;gap:14px;padding:var(--pad-row) 0;border-bottom:1px solid var(--line);font-size:var(--fs-row)}
+.pg .row:last-of-type{border-bottom:0}
+.pg .row span{color:var(--ink2)}
+.pg .row b{color:var(--ink);font-weight:600;text-align:right}
+.pg .steps{list-style:none;margin:var(--mt-steps) 0 var(--mb-steps);padding:0}
+.pg .steps li{display:flex;align-items:flex-start;gap:12px;padding-bottom:var(--pb-step);position:relative}
+.pg .steps li:not(:last-child)::before{content:"";position:absolute;left:calc(var(--dot) / 2 - 1px);top:var(--dot);bottom:-2px;width:2px;background:var(--line)}
+.pg .steps li.done:not(:last-child)::before{background:var(--accent)}
+.pg .dot{flex:0 0 var(--dot);width:var(--dot);height:var(--dot);border-radius:50%;background:var(--line);color:var(--ink3);
+ display:grid;place-items:center;font-weight:700;font-size:var(--fs-dot);z-index:1}
+.pg .steps li.done .dot{background:var(--accent);color:#0b3d0c}
+.pg .steps li.current .dot{background:var(--chrome);color:#fff;box-shadow:0 0 0 4px rgba(26,26,24,.12)}
+.pg .steps .lbl{padding-top:3px;font-weight:600;color:var(--ink3);font-size:var(--fs-lbl);margin:0;letter-spacing:0;text-transform:none}
+.pg .steps li.done .lbl,.pg .steps li.current .lbl{color:var(--ink)}
+.pg .badge{display:inline-block;padding:var(--pad-badge);border-radius:999px;font-size:var(--fs-badge);
+ font-weight:700;background:var(--fill);color:var(--ink);border:1px solid var(--line2)}
+.pg .badge.cancel{background:var(--err-bg);color:var(--err);border-color:#f3bfc5}
+.pg .center{text-align:center}
+.pg .block{margin-top:var(--mt-block);border-top:1px solid var(--line);padding-top:var(--pt-block)}
+.pg .block h2{font-size:var(--fs-h2);margin:0 0 4px;color:var(--ink);font-weight:700;letter-spacing:0;text-transform:none}
+.pg .block p.ld{margin:0 0 12px;font-size:var(--fs-lead);color:var(--ink2)}
+.pg .pad{border:2px dashed var(--line2);border-radius:var(--r-pad);background:var(--fill);height:var(--h-pad);
+ display:grid;place-items:center;color:var(--ink3);font-size:12px}
+.pg .padbar{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.pg .padbar small{color:var(--ink3);font-size:12px}
+.pg .btn-clear{background:var(--fill);color:var(--ink2);padding:var(--pad-clear);font-size:var(--fs-clear);
+ border:1px solid var(--line2);border-radius:8px;font-family:inherit;font-weight:600}
+.pg .btn-sign{background:var(--accent);color:#0b3d0c;width:100%;margin-top:14px;height:var(--h-sign);
+ font-size:var(--fs-sign);font-weight:700;border:0;border-radius:8px;font-family:inherit}
+.pg .consent{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:var(--fs-consent);color:var(--ink2);line-height:1.5}
+.pg .consent i{flex:0 0 18px;width:18px;height:18px;border:1.5px solid var(--line2);border-radius:4px;margin-top:1px;background:var(--surface)}
+.pg .doc-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:var(--pad-doc) 0;border-bottom:1px solid var(--line)}
+.pg .doc-item:last-of-type{border-bottom:0}
+.pg .doc-lbl{font-size:var(--fs-doc);font-weight:600;color:var(--ink)}
+.pg .doc-ok{color:var(--ok);font-weight:700;font-size:13px;white-space:nowrap}
+.pg .up-btn{border:1px solid var(--line2);background:var(--surface);color:var(--ink);border-radius:8px;
+ padding:var(--pad-up);font-size:var(--fs-up);font-weight:600;font-family:inherit;white-space:nowrap}
+.pg .cancel-box{text-align:center;padding:var(--pad-cancel)}
+.pg .cancel-box .x{width:var(--x);height:var(--x);border-radius:50%;background:var(--err-bg);color:var(--err);
+ display:grid;place-items:center;font-size:var(--fs-x);margin:0 auto 12px}
+.pg .signed-ok{text-align:center;padding:var(--pad-signed)}
+.pg .signed-ok .v{width:var(--v);height:var(--v);border-radius:50%;background:var(--ok-bg);color:var(--ok);
+ display:grid;place-items:center;font-size:var(--fs-v);margin:0 auto 12px}
+.pg .signed-ok p{color:var(--ok);font-weight:700;margin:0;font-size:14px}
+.pg .foot{text-align:center;font-size:var(--fs-foot);color:var(--ink3);padding:var(--pad-foot);border-top:1px solid var(--line)}
+.pg .note{margin:12px 0 0;font-size:13px}
+/* Η ΣΗΜΕΡΙΝΗ οθόνη σφάλματος: γυμνή κόκκινη παράγραφος μέσα στο .body. */
+.pg .fail-old{color:#b91c1c;line-height:1.5;margin:0;font-size:16px}
+.pg .fail-old small{color:#94a3b8}
+/* Η ΠΡΟΤΑΣΗ: ίδιο κείμενο, δομή κάρτας. */
+.pg .fail-new{text-align:center;padding:var(--pad-cancel)}
+.pg .fail-new .x{width:var(--x);height:var(--x);border-radius:50%;background:var(--fill);color:var(--ink3);
+ border:1px solid var(--line2);display:grid;place-items:center;font-size:var(--fs-x);margin:0 auto 12px}
+.pg .fail-new p{margin:0;font-size:13.5px;color:var(--ink2);line-height:1.5}
+.pg .fail-new code{display:block;margin-top:10px;color:var(--ink3);font-size:11px}
+</style></head><body><main>
+
+<div class="tag">Energy CRM · πρόταση εμφάνισης · §1.8 · 20/08/2026</div>
+<h1>Η δημόσια σελίδα υπογραφής — B5 · B6 · B8</h1>
+<p class="lead">Η μόνη οθόνη του συστήματος που βλέπει <b>πελάτης</b>. Ζει ολόκληρη σε ένα
+αρχείο, <code>public/class-ecrm-tracking.php</code>, με δικό της <code>&lt;style&gt;</code> 79 γραμμών
+— δεν μοιράζεται ούτε μία κλάση με το CRM. Αυτή είναι η πρόταση πριν αλλάξει μία γραμμή.</p>
+
+<section>
+<h2>1. Πρώτα το B8, γιατί ο χάρτης το είχε βαθμολογήσει λάθος</h2>
+<p>Το <code>docs/UI-UX-MAP.html</code> έγραψε για το B8: <i>«ίδιο μήνυμα για ληγμένο και
+χρησιμοποιημένο — να ελεγχθεί αν σήμερα διαφέρουν», επίπεδο 3</i>. Ελέγχθηκε, γραμμή προς
+γραμμή. <b>Δεν είναι ερώτημα ασφαλείας — είναι ήδη κλειστό.</b></p>
+<table class="data">
+<thead><tr><th>περίπτωση</th><th>πού</th><th>τι γυρίζει</th><th>διαρροή;</th></tr></thead>
+<tbody>
+<tr><td>άκυρο / ανακληθέν token</td><td class="n"><code>rest_get()</code> γρ. 220</td><td class="n"><b>404</b> <code>invalid_token</code></td><td>—</td></tr>
+<tr><td>έγκυρο token, σβησμένη γραμμή</td><td class="n"><code>rest_get()</code> γρ. 240</td><td class="n"><b>404</b> <code>not_found</code></td><td>—</td></tr>
+<tr><td>ήδη υπογεγραμμένη</td><td class="n"><code>rest_sign()</code> γρ. 296</td><td class="n"><b>200</b> <code>already:true</code></td><td>—</td></tr>
+<tr><td>ανάκληση συνδέσμου</td><td class="n"><code>revoke()</code> γρ. 91</td><td class="n"><code>track_key = NULL</code> → 404</td><td>—</td></tr>
+</tbody></table>
+<div class="zero"><b>Ίδιος κωδικός HTTP στις δύο αποτυχίες, άρα κανένα existence oracle.</b>
+Και η δεύτερη δεν φτάνεται καν χωρίς κλειδί: η <code>verify()</code> (γρ. 75) απαιτεί
+<code>hash_equals</code> πάνω σε HMAC με το αποθηκευμένο <code>track_key</code> και
+<b>ποτέ δεν παράγει κλειδί</b> — το γιατί είναι γραμμένο στις γρ. 67-73. Άρα το
+<code>not_found</code> το βλέπει <b>μόνο ο νόμιμος κάτοχος</b> του συνδέσμου.</div>
+<div class="callout warn"><p><b>Ο κανόνας του kit, αν εφαρμοζόταν τυφλά, θα χειροτέρευε τη
+σελίδα.</b> Τα δύο διαφορετικά κείμενα (γρ. 659 «η αίτηση δεν βρέθηκε» / γρ. 661 «ο σύνδεσμος
+δεν είναι έγκυρος») διαφοροποιούν μόνο για εκείνον που κρατά έγκυρο σύνδεσμο — δηλαδή είναι
+<b>χρήσιμη</b> πληροφορία, όχι διαρροή. Η πρόταση τα κρατά και τα δύο.</p></div>
+<p><b>Και δεν φτιάχνεται ξεχωριστή οθόνη «ληγμένο».</b> Σε αυτό το σύστημα ο σύνδεσμος
+υπογραφής <b>είναι</b> ο σύνδεσμος παρακολούθησης (§6γ (7)): μετά την υπογραφή το GET
+συνεχίζει να γυρίζει 200 με <code>signed:true</code> και <code>can_sign:false</code>, δηλαδή
+ο πελάτης βλέπει τη <b>δική του αίτηση να προχωράει</b>. Οθόνη άρνησης εκεί θα έσβηνε
+λειτουργία. Το B8 αφορά <b>μόνο</b> την οθόνη του πραγματικά άκυρου συνδέσμου, που σήμερα
+είναι μια γυμνή κόκκινη παράγραφος (γρ. 632-635).</p>
+<p><b>Άρα το B8 πέφτει από επίπεδο 3 σε επίπεδο 1.</b></p>
+</section>
+
+<section>
+<h2>2. Γιατί δείχνει παλιά: πάρθηκαν τα χρώματα, όχι η γεωμετρία</h2>
+<p>Η σελίδα πήρε την <b>ταυτότητα</b> στις 18/08 — το σχόλιο της γρ. 531 το λέει ρητά,
+έφυγαν navy και amber. Τη <b>γεωμετρία</b> δεν την πήρε ποτέ. Είναι ακριβώς η διάγνωση που
+ξεκλείδωσε την 20ή Αυγούστου (CHANGELOG 63), επιζώσα σε ένα μόνο αρχείο — και στο μόνο που
+βλέπει πελάτης.</p>
+<table class="data">
+<thead><tr><th>μέτρο</th><th>δημόσια σελίδα σήμερα</th><th>CRM μετά τις (63)/(64)</th></tr></thead>
+<tbody>
+<tr><td>padding κάρτας</td><td class="n"><b>22px 24px</b> · 20px 24px</td><td class="n">13px 15px</td></tr>
+<tr><td>τίτλος</td><td class="n">18px</td><td class="n">18px (περιεχόμενο) · <b>15px σε μπάρα</b></td></tr>
+<tr><td>σώμα κειμένου</td><td class="n">14px</td><td class="n">12.5px</td></tr>
+<tr><td>ετικέτα βήματος</td><td class="n"><b>16px</b> — κληρονομημένο</td><td class="n">12.5px</td></tr>
+<tr><td>radius</td><td class="n"><b>16px</b> · 12px</td><td class="n">8px · 12px το πολύ</td></tr>
+<tr><td>κουκκίδα βήματος</td><td class="n">28×28</td><td class="n">—</td></tr>
+</tbody></table>
+<div class="red"><b>Το 16px δεν το έγραψε κανείς — και είναι το μεγαλύτερο κείμενο της
+σελίδας μετά τους τίτλους.</b> Το <code>body</code> της σελίδας (γρ. 545) <b>δεν δηλώνει
+<code>font-size</code></b>. Ό,τι δεν παίρνει δικό του μέγεθος πέφτει στην προεπιλογή του
+browser, τα 16px: η ετικέτα κάθε βήματος («Καταχώρηση», «Προς υπογραφή»…) και η παράγραφος
+της ακύρωσης. Δηλαδή <b>η λίστα βημάτων φωνάζει πιο δυνατά από τα στοιχεία της σύμβασης</b>,
+που είναι 14px. Καμία δοκιμή δεν το βλέπει· φαίνεται μόνο μετρώντας.</div>
+</section>
+
+<section>
+<h2>3. Επτά χρώματα που ξέφυγαν — και το ένα ταξιδεύει μέσα στο PDF</h2>
+<p>Ο <code>ColourIsDecidedInOnePlaceTest</code> σαρώνει <code>public/assets/*.css</code>.
+Αυτό το αρχείο είναι <code>public/*.php</code>: <b>ο φύλακας δεν το βλέπει καθόλου</b>.</p>
+<table class="data">
+<thead><tr><th>τιμή</th><th>πού</th><th>τι είναι</th></tr></thead>
+<tbody>
+<tr><td class="n"><span class="swatch" style="background:#0a1f3d"></span><code>#0a1f3d</code></td><td class="n">γρ. 787, <code>strokeStyle</code></td><td><b>το μελάνι της υπογραφής</b> — το παλιό navy</td></tr>
+<tr><td class="n"><span class="swatch" style="background:#b91c1c"></span><code>#b91c1c</code></td><td class="n">γρ. 633, 745</td><td>κόκκινο σφάλματος (×2)</td></tr>
+<tr><td class="n"><span class="swatch" style="background:#94a3b8"></span><code>#94a3b8</code></td><td class="n">γρ. 634</td><td>slate — ο κωδικός σφάλματος</td></tr>
+<tr><td class="n"><span class="swatch" style="background:#64748b"></span><code>#64748b</code></td><td class="n">γρ. 682, 745</td><td>slate — κείμενο ακύρωσης, ουδέτερο μήνυμα (×2)</td></tr>
+<tr><td class="n"><span class="swatch" style="background:#15803d"></span><code>#15803d</code></td><td class="n">γρ. 745</td><td>πράσινο επιτυχίας</td></tr>
+<tr><td class="n"><span class="swatch" style="background:#a3a099"></span><code>#a3a099</code></td><td class="n">γρ. 552</td><td>αντίγραφο του <code>--ink3</code> που υπάρχει δίπλα</td></tr>
+</tbody></table>
+<div class="red"><b>Η υπογραφή του πελάτη σχεδιάζεται με το χρώμα που ξηλώθηκε από όλο το
+plugin στις 17-19/8.</b> Και δεν είναι CSS: το καμβά γίνεται PNG, το PNG μπαίνει στο
+υπογεγραμμένο PDF (<code>rest_sign()</code>), άρα το παλιό navy <b>αποθηκεύεται μέσα στο
+νόμιμο έγγραφο</b> και μένει εκεί για πάντα. Η πρόταση: <code>#2a2926</code>, το
+<code>--ink</code> — μελάνι, όχι χρώμα μάρκας. Είναι η μόνη αλλαγή της παρτίδας που αγγίζει
+JS (επίπεδο 2) και η μόνη που αλλάζει <b>δεδομένο</b>, όχι εμφάνιση.</div>
+</section>
+
+<section>
+<h2>4. Η πρόταση — οθόνη 1: εκκρεμεί υπογραφή (B5)</h2>
+<p class="cap">Ίδιο markup, ίδια χρώματα, ίδια ροή. Αλλάζουν <b>μόνο τιμές</b>. Αριστερά
+σήμερα, δεξιά η πρόταση.</p>
+<div class="pair">
+ <div>
+  <div class="lbl">σήμερα</div>
+  <div class="stage"><div class="pg old">
+   <div class="head"><h1>Παρακολούθηση Αίτησης</h1><p>Energy Solutions</p></div>
+   <div class="body">
+    <div class="row"><span>Κωδικός</span><b>CR-10482</b></div>
+    <div class="row"><span>Πάροχος</span><b>Protergia</b></div>
+    <div class="row"><span>Υπηρεσία</span><b>Ρεύμα</b></div>
+    <div class="row"><span>Πελάτης</span><b>Γεώργιος Παπαδόπουλος</b></div>
+    <div class="row"><span>Τελευταία ενημέρωση</span><b>20/08/2026 18:04</b></div>
+    <ul class="steps">
+     <li class="done"><span class="dot">✓</span><span class="lbl">Καταχώρηση</span></li>
+     <li class="current"><span class="dot">2</span><span class="lbl">Προς υπογραφή</span></li>
+     <li><span class="dot">3</span><span class="lbl">Σε επεξεργασία</span></li>
+     <li><span class="dot">4</span><span class="lbl">Δρομολόγηση</span></li>
+     <li><span class="dot">5</span><span class="lbl">Ενεργοποίηση</span></li>
+    </ul>
+    <div class="center"><span class="badge">Προς υπογραφή</span></div>
+    <div class="block">
+     <h2>Υπογραφή σύμβασης</h2>
+     <p class="ld">Υπογράψτε στο πλαίσιο με το δάχτυλο ή το ποντίκι για να ολοκληρωθεί η αίτησή σας.</p>
+     <div class="pad">υπογραφή</div>
+     <div class="padbar"><small>Σχεδιάστε την υπογραφή σας παραπάνω</small><button class="btn-clear">Καθαρισμός</button></div>
+     <label class="consent"><i></i> Συναινώ στην επεξεργασία των προσωπικών μου δεδομένων για τη σύναψη/διαχείριση της σύμβασης και αποδέχομαι την ηλεκτρονική υπογραφή ως δεσμευτική.</label>
+     <button class="btn-sign">Υπογραφή &amp; Αποστολή</button>
+    </div>
+    <div class="block">
+     <h2>Δικαιολογητικά</h2>
+     <p class="ld">Ανεβάστε τα απαραίτητα έγγραφα (φωτογραφία ή PDF).</p>
+     <div class="doc-item"><span class="doc-lbl">Ταυτότητα</span><span class="doc-ok">✓ Ανέβηκε</span></div>
+     <div class="doc-item"><span class="doc-lbl">Λογαριασμός ρεύματος</span><button class="up-btn">Ανέβασμα</button></div>
+     <div class="doc-item"><span class="doc-lbl">Άλλο έγγραφο</span><button class="up-btn">Ανέβασμα</button></div>
+    </div>
+   </div>
+   <div class="foot">Ασφαλής σύνδεσμος παρακολούθησης</div>
+  </div></div>
+ </div>
+ <div>
+  <div class="lbl">πρόταση</div>
+  <div class="stage"><div class="pg new">
+   <div class="head"><h1>Παρακολούθηση Αίτησης</h1><p>Energy Solutions</p></div>
+   <div class="body">
+    <div class="row"><span>Κωδικός</span><b>CR-10482</b></div>
+    <div class="row"><span>Πάροχος</span><b>Protergia</b></div>
+    <div class="row"><span>Υπηρεσία</span><b>Ρεύμα</b></div>
+    <div class="row"><span>Πελάτης</span><b>Γεώργιος Παπαδόπουλος</b></div>
+    <div class="row"><span>Τελευταία ενημέρωση</span><b>20/08/2026 18:04</b></div>
+    <ul class="steps">
+     <li class="done"><span class="dot">✓</span><span class="lbl">Καταχώρηση</span></li>
+     <li class="current"><span class="dot">2</span><span class="lbl">Προς υπογραφή</span></li>
+     <li><span class="dot">3</span><span class="lbl">Σε επεξεργασία</span></li>
+     <li><span class="dot">4</span><span class="lbl">Δρομολόγηση</span></li>
+     <li><span class="dot">5</span><span class="lbl">Ενεργοποίηση</span></li>
+    </ul>
+    <div class="center"><span class="badge">Προς υπογραφή</span></div>
+    <div class="block">
+     <h2>Υπογραφή σύμβασης</h2>
+     <p class="ld">Υπογράψτε στο πλαίσιο με το δάχτυλο ή το ποντίκι για να ολοκληρωθεί η αίτησή σας.</p>
+     <div class="pad">υπογραφή</div>
+     <div class="padbar"><small>Σχεδιάστε την υπογραφή σας παραπάνω</small><button class="btn-clear">Καθαρισμός</button></div>
+     <label class="consent"><i></i> Συναινώ στην επεξεργασία των προσωπικών μου δεδομένων για τη σύναψη/διαχείριση της σύμβασης και αποδέχομαι την ηλεκτρονική υπογραφή ως δεσμευτική.</label>
+     <button class="btn-sign">Υπογραφή &amp; Αποστολή</button>
+    </div>
+    <div class="block">
+     <h2>Δικαιολογητικά</h2>
+     <p class="ld">Ανεβάστε τα απαραίτητα έγγραφα (φωτογραφία ή PDF).</p>
+     <div class="doc-item"><span class="doc-lbl">Ταυτότητα</span><span class="doc-ok">✓ Ανέβηκε</span></div>
+     <div class="doc-item"><span class="doc-lbl">Λογαριασμός ρεύματος</span><button class="up-btn">Ανέβασμα</button></div>
+     <div class="doc-item"><span class="doc-lbl">Άλλο έγγραφο</span><button class="up-btn">Ανέβασμα</button></div>
+    </div>
+   </div>
+   <div class="foot">Ασφαλής σύνδεσμος παρακολούθησης</div>
+  </div></div>
+ </div>
+</div>
+<div class="callout"><p><b>Το κέρδος δεν είναι αισθητικό, είναι σκρολ.</b> Καθαρή αριθμητική
+πάνω στις τιμές: η κεφαλή χάνει 12px, το σώμα 12px, κάθε μία από τις πέντε γραμμές στοιχείων
+4px (=20), κάθε ένα από τα πέντε βήματα 9px (=45), τα δύο μπλοκ 10px. <b>Πάνω από 100px σε μια
+οθόνη 520px πλάτος</b> — σε κινητό αυτό είναι η διαφορά ανάμεσα στο «φαίνεται το κουμπί
+υπογραφής» και «πρέπει να σκρολάρεις για να το βρεις».</p></div>
+</section>
+
+<section>
+<h2>Οθόνη 2: υπογεγραμμένη (B6)</h2>
+<p class="cap">Το ίδιο σώμα, χωρίς το μπλοκ υπογραφής, με τη βεβαίωση στη θέση του. Ο πελάτης
+<b>συνεχίζει να βλέπει την πορεία</b> — αυτό ακριβώς προστατεύει το §6γ (7).</p>
+<div class="pair">
+ <div>
+  <div class="lbl">σήμερα</div>
+  <div class="stage"><div class="pg old">
+   <div class="head"><h1>Παρακολούθηση Αίτησης</h1><p>Energy Solutions</p></div>
+   <div class="body">
+    <div class="row"><span>Κωδικός</span><b>CR-10482</b></div>
+    <div class="row"><span>Πελάτης</span><b>Γεώργιος Παπαδόπουλος</b></div>
+    <ul class="steps">
+     <li class="done"><span class="dot">✓</span><span class="lbl">Καταχώρηση</span></li>
+     <li class="done"><span class="dot">✓</span><span class="lbl">Προς υπογραφή</span></li>
+     <li class="current"><span class="dot">3</span><span class="lbl">Σε επεξεργασία</span></li>
+     <li><span class="dot">4</span><span class="lbl">Δρομολόγηση</span></li>
+     <li><span class="dot">5</span><span class="lbl">Ενεργοποίηση</span></li>
+    </ul>
+    <div class="center"><span class="badge">Υπεγράφη</span></div>
+    <div class="signed-ok"><div class="v">✓</div><p>Η σύμβαση υπεγράφη ηλεκτρονικά</p></div>
+   </div>
+   <div class="foot">Ασφαλής σύνδεσμος παρακολούθησης</div>
+  </div></div>
+ </div>
+ <div>
+  <div class="lbl">πρόταση</div>
+  <div class="stage"><div class="pg new">
+   <div class="head"><h1>Παρακολούθηση Αίτησης</h1><p>Energy Solutions</p></div>
+   <div class="body">
+    <div class="row"><span>Κωδικός</span><b>CR-10482</b></div>
+    <div class="row"><span>Πελάτης</span><b>Γεώργιος Παπαδόπουλος</b></div>
+    <ul class="steps">
+     <li class="done"><span class="dot">✓</span><span class="lbl">Καταχώρηση</span></li>
+     <li class="done"><span class="dot">✓</span><span class="lbl">Προς υπογραφή</span></li>
+     <li class="current"><span class="dot">3</span><span class="lbl">Σε επεξεργασία</span></li>
+     <li><span class="dot">4</span><span class="lbl">Δρομολόγηση</span></li>
+     <li><span class="dot">5</span><span class="lbl">Ενεργοποίηση</span></li>
+    </ul>
+    <div class="center"><span class="badge">Υπεγράφη</span></div>
+    <div class="signed-ok"><div class="v">✓</div><p>Η σύμβαση υπεγράφη ηλεκτρονικά</p></div>
+   </div>
+   <div class="foot">Ασφαλής σύνδεσμος παρακολούθησης</div>
+  </div></div>
+ </div>
+</div>
+</section>
+
+<section>
+<h2>Οθόνη 3: άκυρος σύνδεσμος (B8)</h2>
+<p class="cap">Το κείμενο <b>δεν αλλάζει</b> — αλλάζει μόνο ότι παύει να είναι γυμνή κόκκινη
+παράγραφος μέσα σε άδεια κάρτα.</p>
+<div class="pair">
+ <div>
+  <div class="lbl">σήμερα — γρ. 632-635</div>
+  <div class="stage"><div class="pg old">
+   <div class="head"><h1>Παρακολούθηση Αίτησης</h1><p>Energy Solutions</p></div>
+   <div class="body">
+    <p class="fail-old">Ο σύνδεσμος δεν είναι έγκυρος ή έληξε. Ζητήστε νέο σύνδεσμο από τον
+    συνεργάτη σας.<br><small>(κωδ. BAD_LINK)</small></p>
+   </div>
+   <div class="foot">Ασφαλής σύνδεσμος παρακολούθησης</div>
+  </div></div>
+ </div>
+ <div>
+  <div class="lbl">πρόταση</div>
+  <div class="stage"><div class="pg new">
+   <div class="head"><h1>Παρακολούθηση Αίτησης</h1><p>Energy Solutions</p></div>
+   <div class="body">
+    <div class="fail-new">
+     <div class="x">!</div>
+     <p>Ο σύνδεσμος δεν είναι έγκυρος ή έληξε.<br>Ζητήστε νέο σύνδεσμο από τον συνεργάτη σας.</p>
+     <code>κωδ. BAD_LINK</code>
+    </div>
+   </div>
+   <div class="foot">Ασφαλής σύνδεσμος παρακολούθησης</div>
+  </div></div>
+ </div>
+</div>
+<div class="callout"><p><b>Ουδέτερο, όχι κόκκινο.</b> Ο πελάτης που πάτησε παλιό σύνδεσμο δεν
+έκανε τίποτα λάθος και δεν έχει πρόβλημα ασφαλείας — έχει σύνδεσμο που δεν ισχύει πια. Το
+κόκκινο μένει εκεί που το χρώμα <b>είναι</b> η πληροφορία: στην ακυρωμένη αίτηση, όπως το
+λέει ήδη το σχόλιο της γρ. 570.</p></div>
+</section>
+
+<section>
+<h2>5. Οι 25 μετρικές</h2>
+<p class="cap">Ό,τι αλλάζει, ολόκληρο. Καμία τιμή δεν διαλέχτηκε με το μάτι: όλες οι «πριν»
+διαβάστηκαν από το <code>&lt;style&gt;</code> του αρχείου, όλες οι «μετά» είναι τιμή που
+υπάρχει ήδη στο <code>ecrm-app.css</code> μετά τις (63)/(64)/(65).</p>
+<table class="data">
+<thead><tr><th style="width:26%">επιλογέας</th><th style="width:26%">πριν</th><th style="width:24%">μετά</th><th>γιατί</th></tr></thead>
+<tbody>
+<tr><td><code>.card</code></td><td class="n">radius 16px</td><td class="n">12px</td><td>μεγαλύτερο radius του kit</td></tr>
+<tr><td><code>.head</code></td><td class="n">20px 24px</td><td class="n">14px 18px</td><td>είναι μπάρα· <code>.ecrm-topbar</code> = 11px 18px</td></tr>
+<tr><td><code>.head h1</code></td><td class="n">18px</td><td class="n">15px</td><td>τίτλος <b>σε μπάρα</b>, όχι σε περιεχόμενο</td></tr>
+<tr><td><code>.head p</code></td><td class="n">13px</td><td class="n">12px</td><td>υπότιτλος</td></tr>
+<tr><td><code>.body</code></td><td class="n">22px 24px</td><td class="n">16px 18px</td><td>= <code>.ecrm-content</code> (65)</td></tr>
+<tr><td><code>.row</code></td><td class="n">14px</td><td class="n">13px</td><td>στοιχεία σύμβασης· λίγο πάνω από το CRM γιατί τα διαβάζει πελάτης</td></tr>
+<tr><td><code>.row</code> padding</td><td class="n">9px 0</td><td class="n">7px 0</td><td>= <code>.ecrm-table th</code></td></tr>
+<tr><td><code>.steps</code></td><td class="n">margin 22/6</td><td class="n">16/4</td><td></td></tr>
+<tr><td><code>.steps li</code></td><td class="n">pb 18px</td><td class="n">13px</td><td>πέντε βήματα × 5px</td></tr>
+<tr><td><code>.dot</code></td><td class="n">28px / 14px</td><td class="n">24px / 12.5px</td><td>η γραμμή σύνδεσης ακολουθεί με <code>calc()</code></td></tr>
+<tr><td><code>.steps .lbl</code></td><td class="n"><b>16px</b> κληρονομημένο</td><td class="n">13px</td><td>δεν το είχε γράψει κανείς — δες §2</td></tr>
+<tr><td><code>.badge</code></td><td class="n">6px 12px / 13px</td><td class="n">3px 10px / 11.5px</td><td>= <code>.ecrm-badge</code> (63)</td></tr>
+<tr><td><code>.sign</code>, <code>.docs</code></td><td class="n">mt 22 / pt 18</td><td class="n">16 / 14</td><td></td></tr>
+<tr><td><code>.sign h2</code>, <code>.docs h2</code></td><td class="n">15px</td><td class="n">13px</td><td><b>όχι</b> 10.5px ΚΕΦΑΛΑΙΑ του <code>.ecrm-step</code>: ο πελάτης δεν ξέρει τη σελίδα</td></tr>
+<tr><td><code>p.lead</code></td><td class="n">13px</td><td class="n">12.5px</td><td></td></tr>
+<tr><td><code>.pad</code></td><td class="n">180px / radius 12</td><td class="n">150px / 8</td><td>επιστρέφει στα 180 κάτω από 560px — δες §6</td></tr>
+<tr><td><code>.btn--sign</code></td><td class="n">48px / 15.5px</td><td class="n">46px / 14px</td><td>μένει <b>πάνω από 44px</b>, κανόνας §1.9</td></tr>
+<tr><td><code>.btn--clear</code></td><td class="n">7px 12px / 12px</td><td class="n">6px 11px / 11.5px</td><td>= <code>.ecrm-btn--sm</code></td></tr>
+<tr><td><code>.consent</code></td><td class="n">12.5px</td><td class="n">12px</td><td>το κουτάκι μένει 18px</td></tr>
+<tr><td><code>.doc-item</code></td><td class="n">11px 0</td><td class="n">8px 0</td><td></td></tr>
+<tr><td><code>.doc-lbl</code></td><td class="n">14px</td><td class="n">13px</td><td></td></tr>
+<tr><td><code>.up-btn</code></td><td class="n">8px 14px / 13px</td><td class="n">6px 11px / 12px</td><td>παίρνει <code>min-height:40px</code> στο κινητό</td></tr>
+<tr><td><code>.cancel-box</code></td><td class="n">30px 10px · x 58/28</td><td class="n">22px 10px · 46/22</td><td></td></tr>
+<tr><td><code>.signed-ok</code></td><td class="n">18px 10px · v 52/26</td><td class="n">14px 10px · 44/20</td><td></td></tr>
+<tr><td><code>.foot</code></td><td class="n">14px / 12px</td><td class="n">11px / 11.5px</td><td></td></tr>
+</tbody></table>
+</section>
+
+<section>
+<h2>6. Τι ΔΕΝ αλλάζει, και τι με προστατεύει</h2>
+<div class="zero"><b>Καμία γραμμή markup, κανένα endpoint, καμία ροή, κανένα χρώμα του
+<code>:root</code>.</b> Η <code>render()</code>, η <code>docsHtml()</code>, η
+<code>rest_get()</code>, η <code>rest_sign()</code> και η <code>verify()</code> μένουν
+ανέγγιχτες. Οι μόνες αλλαγές εκτός του <code>&lt;style&gt;</code> είναι <b>έξι</b> literal
+χρώματα που γίνονται tokens και το μελάνι της υπογραφής.</div>
+<h3>Το δίχτυ</h3>
+<p><b>Καμία οθόνη του CRM δεν μπορεί να παλινδρομήσει.</b> Το αρχείο δεν ορίζει ούτε
+χρησιμοποιεί καμία κλάση <code>.ecrm-*</code> και δεν φορτώνει κανένα κοινό φύλλο — το
+<code>ecrm-app.css</code> δεν φτάνει ποτέ εδώ. Η επιφάνεια της αλλαγής είναι ένα
+<code>&lt;style&gt;</code> σε ένα αρχείο.</p>
+<p>Τι <b>δεν</b> φυλάει τίποτα, και γι' αυτό γράφεται: η οθόνη αυτή δεν έχει καμία δοκιμή.
+Ο <code>NoRemoteFontsTest</code> σαρώνει το αρχείο <b>μόνο</b> για CDN γραμματοσειρών (και
+πρέπει να μείνει πράσινος — το <code>LocalFonts::styleTag()</code> της γρ. 559 δεν
+πειράζεται). Ο <code>ColourIsDecidedInOnePlaceTest</code> δεν το βλέπει καθόλου. Ο έλεγχος
+είναι ανθρώπινος: <b>άνοιξε έναν πραγματικό σύνδεσμο υπογραφής σε κινητό</b> και υπόγραψε.</p>
+<h3>Κινητό — ο κανόνας §1.9 δεν κάμπτεται</h3>
+<p>Η πυκνότητα είναι για ποντίκι. Κάτω από 560px επανέρχονται: <code>.pad</code> στα 180px,
+<code>.up-btn</code> και <code>.btn--clear</code> σε <code>min-height:40px</code>, και το
+κουμπί υπογραφής μένει 46px παντού. Ακριβώς το μοτίβο της (65), όπου τα 36px input γύρισαν
+σε 44px στο κινητό.</p>
+<h3>Ρίσκο</h3>
+<p><b>0</b> για τις 25 μετρικές (τιμές CSS) · <b>1</b> για την οθόνη B8 (δομή μέσα σε ένα
+<code>innerHTML</code> string) · <b>2</b> για το μελάνι της υπογραφής (μία ανάθεση σε JS).
+Οι τέσσερις αριθμοί δεν κινούνται: κανένα νέο αρχείο PHP, καμία αλλαγή λογικής.</p>
+</section>
+
+<section>
+<h2>7. Τι θέλει απόφαση δική σου</h2>
+<table class="data">
+<thead><tr><th style="width:30%">ερώτημα</th><th>η πρόταση</th></tr></thead>
+<tbody>
+<tr><td><b>B8: δύο μηνύματα ή ένα;</b></td><td>Μένουν <b>δύο</b>. Δεν υπάρχει διαρροή (§1), και το ενιαίο μήνυμα αφαιρεί χρήσιμη πληροφορία από τον νόμιμο κάτοχο.</td></tr>
+<tr><td><b>Ξεχωριστή οθόνη «ληγμένο»;</b></td><td><b>Όχι.</b> Ο σύνδεσμος υπογραφής είναι ο σύνδεσμος παρακολούθησης· άρνηση εκεί σβήνει λειτουργία.</td></tr>
+<tr><td><b>Το μελάνι της υπογραφής</b></td><td><code>#2a2926</code> (<code>--ink</code>). Αλλάζει <b>μελλοντικές</b> υπογραφές· οι ήδη αποθηκευμένες μένουν navy — δεν ξαναγράφονται.</td></tr>
+<tr><td><b>Λήξη 48 ωρών</b></td><td>Εκτός παρτίδας. Είναι το §6γ (7) και θέλει μεταβατικό για τα SMS που έχουν ήδη σταλεί.</td></tr>
+</tbody></table>
+</section>
+
+<footer>Energy CRM · <code>docs/UI-SIGN.html</code> · πρόταση κατά §1.8 — καμία αλλαγή κώδικα.<br>
+Πηγές μέτρησης: <code>public/class-ecrm-tracking.php</code> με αριθμούς γραμμών, και οι τιμές του
+<code>ecrm-app.css</code> μετά τις (63)/(64)/(65).</footer>
+
+</main></body></html>
