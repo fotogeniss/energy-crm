@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Energy CRM — Πλήρες UX (όλες οι σελίδες)</title>
+<style>
+:root{
+  --bg:#0f1218;--surface:#171b24;--surface-2:#1e2430;--surface-3:#12161f;
+  --border:#2a3140;--border2:#3a455c;
+  --text:#eef1f6;--muted:#8b95a8;--muted2:#aab3c5;
+  --accent:#c2f04a;--accent-dim:rgba(194,240,74,.14);--accent-text:#1a2208;
+  --ok:#3dd68c;--ok-dim:rgba(61,214,140,.15);
+  --warn:#ffb020;--warn-dim:rgba(255,176,32,.15);
+  --bad:#ff6b6b;--bad-dim:rgba(255,107,107,.15);
+  --info:#5b9fff;--info-dim:rgba(91,159,255,.15);
+  --font:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --r:12px;--rl:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:#080a0e;color:var(--text);line-height:1.4;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+button,input,select,textarea{font-family:inherit}
+
+/* kit nav */
+.kit{
+  position:sticky;top:0;z-index:200;
+  background:#0c0e14f2;backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:10px 14px;
+}
+.kit-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.kit-brand{font-weight:800;font-size:13px;color:var(--accent);margin-right:6px}
+.kit-cat{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);width:100%;margin:6px 0 2px}
+.kit-links{display:flex;flex-wrap:wrap;gap:4px}
+.kit-links a{
+  text-decoration:none;color:var(--muted);font-size:11px;
+  padding:4px 8px;border-radius:6px;border:1px solid transparent;
+}
+.kit-links a:hover{color:var(--text);background:var(--surface-2)}
+.kit-links a:target,.kit-links a.on{color:var(--accent);background:var(--accent-dim);border-color:rgba(194,240,74,.25)}
+
+.sec{max-width:1200px;margin:0 auto;padding:28px 14px 8px}
+.sec>h2{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:6px}
+.sec>p.d{font-size:13px;color:var(--muted);margin-bottom:12px;max-width:760px}
+
+/* shell */
+.shell{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);
+  overflow:hidden;display:grid;grid-template-columns:200px 1fr;min-height:540px;
+  box-shadow:0 16px 48px rgba(0,0,0,.4);margin-bottom:10px;
+}
+.shell.w{grid-template-columns:200px 1fr 290px}
+.shell.ns{grid-template-columns:1fr}
+.side{background:var(--surface-3);border-right:1px solid var(--border);padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+.logo{display:flex;gap:8px;align-items:center;padding:2px 8px 14px;font-weight:700;font-size:13px}
+.logo i{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#8fd41a);display:grid;place-items:center;color:var(--accent-text);font-style:normal;font-weight:800;font-size:12px}
+.nl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:10px 8px 4px}
+.side a{display:block;padding:7px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:12.5px}
+.side a.on{background:var(--accent-dim);color:var(--accent);font-weight:600}
+.main{display:flex;flex-direction:column;min-width:0}
+.top{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#141821}
+.top h1{font-size:15px}
+.sub{color:var(--muted);font-size:12px}
+.sp{margin-left:auto}
+.content{padding:14px}
+.rail{border-left:1px solid var(--border);background:#141821;padding:12px}
+
+.btn{border:0;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-p{background:var(--accent);color:var(--accent-text)}
+.btn-g{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-d{background:transparent;border:1px solid #5a3030;color:var(--bad)}
+.btn-b{width:100%}
+.btn-lg{padding:11px 14px;font-size:13.5px;border-radius:10px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:11px}
+.stat span{font-size:11px;color:var(--muted);display:block;margin-bottom:3px}
+.stat strong{font-size:19px;letter-spacing:-.02em}
+.stat em{font-style:normal;font-size:11px;color:var(--ok);display:block;margin-top:3px}
+
+.card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:11px;margin-bottom:8px}
+.card h3{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+.card.acc{background:var(--accent-dim);border-color:rgba(194,240,74,.25)}
+.card.warn{background:var(--warn-dim);border-color:rgba(255,176,32,.35)}
+.card.ok{background:var(--ok-dim);border-color:rgba(61,214,140,.35)}
+.g2{display:grid;grid-template-columns:1.25fr 1fr;gap:10px}
+.g2e{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:7px 9px;border-bottom:1px solid var(--border)}
+td{padding:10px 9px;border-bottom:1px solid rgba(42,49,64,.5);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.b-ok{background:var(--ok-dim);color:var(--ok)}
+.b-warn{background:var(--warn-dim);color:var(--warn)}
+.b-bad{background:var(--bad-dim);color:var(--bad)}
+.b-info{background:var(--info-dim);color:var(--info)}
+.b-mute{background:rgba(139,149,168,.15);color:var(--muted2)}
+
+.person strong{display:block;font-size:13px}
+.person span{font-size:11.5px;color:var(--muted)}
+.mu{color:var(--muted);font-size:11.5px}
+
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;font-size:11.5px;cursor:pointer}
+.chip.on{background:var(--accent-dim);color:var(--accent);border-color:transparent;font-weight:600}
+
+.field{margin-bottom:8px}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:600}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:8px 10px;color:var(--text);font-size:13px;outline:0
+}
+.field input:focus,.field select:focus{border-color:rgba(194,240,74,.5);box-shadow:0 0 0 3px var(--accent-dim)}
+.field input.ai{border-color:rgba(61,214,140,.4)}
+.field .src{font-size:10px;color:var(--ok);margin-top:2px}
+
+.steps{display:flex;background:var(--surface-3);border-bottom:1px solid var(--border)}
+.step{flex:1;text-align:center;padding:10px 3px;color:var(--muted);font-size:11px;position:relative}
+.step strong{display:block;font-size:10px;letter-spacing:.04em;text-transform:uppercase}
+.step.done{color:var(--ok)}
+.step.on{color:var(--accent)}
+.step.on::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:2px;background:var(--accent)}
+
+.choice{border:1px solid var(--border);background:var(--surface-2);border-radius:var(--r);padding:11px;cursor:pointer;margin-bottom:6px}
+.choice.on{box-shadow:0 0 0 2px var(--accent);background:var(--accent-dim);border-color:transparent}
+.search{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:8px 11px;color:var(--muted);font-size:13px;flex:1;max-width:300px}
+.search input{border:0;outline:0;background:transparent;color:var(--text);width:100%;font-size:13px}
+
+.note{font-size:12.5px;color:var(--muted);line-height:1.45;padding:9px 11px;border-radius:9px;margin-bottom:24px;background:rgba(194,240,74,.05);border:1px dashed rgba(194,240,74,.22)}
+.note strong{color:var(--accent)}
+
+/* phone */
+.phones{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-bottom:10px}
+.phone{width:290px;background:#0c0e14;border:1px solid var(--border);border-radius:30px;padding:9px 7px 12px;box-shadow:0 18px 48px rgba(0,0,0,.45)}
+.notch{width:86px;height:5px;border-radius:3px;background:#222;margin:3px auto 8px}
+.ps{background:var(--bg);border-radius:20px;overflow:hidden;min-height:520px;display:flex;flex-direction:column}
+.bnav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);background:var(--surface-3);padding:7px 2px 9px}
+.bnav span{text-align:center;font-size:9.5px;color:var(--muted);display:flex;flex-direction:column;gap:2px;align-items:center}
+.bnav span.on{color:var(--accent)}
+
+.toc{max-width:1200px;margin:20px auto;padding:0 14px 40px}
+.toc h2{font-size:14px;margin-bottom:10px;color:var(--accent)}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.toc a{display:block;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-size:12.5px}
+.toc a span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+
+@media(max-width:900px){
+  .shell,.shell.w{grid-template-columns:1fr}
+  .side,.rail{display:none}
+  .stats{grid-template-columns:1fr 1fr}
+  .g2,.g2e,.g3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== KIT NAV ===================== -->
+<nav class="kit">
+  <div class="kit-top">
+    <span class="kit-brand">Energy CRM · UX Complete</span>
+    <span class="mu">Όλες οι σελίδες · ίδια λογική UI</span>
+  </div>
+  <div class="kit-cat">Α. Κύρια εφαρμογή</div>
+  <div class="kit-links">
+    <a href="#p-dashboard">Πίνακας</a>
+    <a href="#p-contracts">Συμβάσεις</a>
+    <a href="#p-detail">Λεπτομέρεια</a>
+    <a href="#p-pending">Εκκρεμότητες</a>
+    <a href="#p-tasks">Εργασίες</a>
+  </div>
+  <div class="kit-cat">Β. Ροή αίτησης</div>
+  <div class="kit-links">
+    <a href="#p-new1">Νέα · Βήμα 1</a>
+    <a href="#p-new2">Νέα · Βήμα 2</a>
+    <a href="#p-new3">Νέα · Βήμα 3</a>
+    <a href="#p-step4">Βήμα 4 υπογραφή</a>
+    <a href="#p-public">Public sign</a>
+    <a href="#p-success-c">Success πελάτη</a>
+    <a href="#p-success-p">Success συνεργάτη</a>
+    <a href="#p-expired">Link ληγμένο</a>
+  </div>
+  <div class="kit-cat">Γ. Δίκτυο &amp; χρήματα</div>
+  <div class="kit-links">
+    <a href="#p-network">Συνεργάτες</a>
+    <a href="#p-partner">Καρτέλα συνεργάτη</a>
+    <a href="#p-commissions">Προμήθειες</a>
+    <a href="#p-payout">Εκκαθάριση</a>
+    <a href="#p-reports">Αναφορές</a>
+  </div>
+  <div class="kit-cat">Δ. Σύστημα</div>
+  <div class="kit-links">
+    <a href="#p-health">Υγεία</a>
+    <a href="#p-settings">Ρυθμίσεις</a>
+    <a href="#p-gdpr">GDPR εργαλεία</a>
+    <a href="#p-import">Import Excel</a>
+    <a href="#p-notifs">Ειδοποιήσεις</a>
+  </div>
+  <div class="kit-cat">Ε. Mobile</div>
+  <div class="kit-links">
+    <a href="#p-m-list">Mobile λίστα</a>
+    <a href="#p-m-detail">Mobile λεπτομέρεια</a>
+    <a href="#p-m-new">Mobile νέα αίτηση</a>
+  </div>
+</nav>
+
+<!-- TOC -->
+<div class="toc" id="toc">
+  <h2>Πίνακας περιεχομένων UX</h2>
+  <div class="toc-grid">
+    <a href="#p-dashboard">1. Πίνακας<span>Dashboard · KPI · ενέργειες</span></a>
+    <a href="#p-contracts">2. Συμβάσεις<span>Λίστα · φίλτρα · scope</span></a>
+    <a href="#p-detail">3. Λεπτομέρεια<span>Timeline · έγγραφα · AI</span></a>
+    <a href="#p-pending">4. Εκκρεμότητες<span>Ουρά δουλειάς</span></a>
+    <a href="#p-tasks">5. Εργασίες<span>Tasks · προθεσμίες</span></a>
+    <a href="#p-new1">6–9. Ροή αίτησης<span>Wizard 1→4 + public</span></a>
+    <a href="#p-network">10. Δίκτυο<span>Ιεραρχία</span></a>
+    <a href="#p-commissions">11. Προμήθειες<span>€20 · εκκαθαρίσεις</span></a>
+    <a href="#p-reports">12. Αναφορές<span>Μήνας · πάροχος</span></a>
+    <a href="#p-health">13. Υγεία<span>Ops · errors</span></a>
+    <a href="#p-settings">14. Ρυθμίσεις<span>API · GDPR</span></a>
+    <a href="#p-import">15. Import<span>Excel παρόχου</span></a>
+    <a href="#p-m-list">16. Mobile<span>Λίστα · detail · form</span></a>
+  </div>
+</div>
+
+<!-- ============================================================
+     A1 DASHBOARD
+     ============================================================ -->
+<div class="sec" id="p-dashboard">
+  <h2>A1 · Πίνακας</h2>
+  <p class="d">Πρώτη οθόνη μετά το login. Δείχνει τι χρειάζεται ενέργεια σήμερα — όχι απλά μετρητές.</p>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <div class="nl">Κύρια</div>
+      <a class="on" href="#p-dashboard">Πίνακας</a>
+      <a href="#p-contracts">Συμβάσεις</a>
+      <a href="#p-pending">Εκκρεμότητες</a>
+      <a href="#p-tasks">Εργασίες</a>
+      <div class="nl">Δίκτυο</div>
+      <a href="#p-network">Συνεργάτες</a>
+      <a href="#p-commissions">Προμήθειες</a>
+      <a href="#p-reports">Αναφορές</a>
+      <div class="nl">Σύστημα</div>
+      <a href="#p-health">Υγεία</a>
+      <a href="#p-settings">Ρυθμίσεις</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Πίνακας</h1><div class="sub">Καλημέρα, Κώστα · Πέμπτη 20 Αυγ</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-p">+ Νέα αίτηση</button>
+      </div>
+      <div class="content">
+        <div class="stats">
+          <div class="stat"><span>Ανοιχτές αιτήσεις</span><strong>128</strong><em>↑ 12 αυτή την εβδομάδα</em></div>
+          <div class="stat"><span>Αναμονή υπογραφής</span><strong>34</strong><em style="color:var(--warn)">8 λήγουν σήμερα</em></div>
+          <div class="stat"><span>Κλεισμένες (μήνας)</span><strong>91</strong><em>→ €1.820 προμήθεια</em></div>
+          <div class="stat"><span>Εργασίες μου</span><strong>7</strong><em style="color:var(--muted)">3 εκπρόθεσμες</em></div>
+        </div>
+        <div class="g2">
+          <div class="card" style="margin:0">
+            <h3>Χρειάζεται ενέργεια</h3>
+            <table>
+              <tr>
+                <td><div class="person"><strong>Μ. Παπαδοπούλου</strong><span>#CR-10482 · Protergia</span></div></td>
+                <td><span class="badge b-warn">Υπογραφή</span></td>
+                <td><button class="btn btn-g">Υπενθύμιση</button></td>
+              </tr>
+              <tr>
+                <td><div class="person"><strong>Ε. Κωνσταντίνου</strong><span>#CR-10455 · Orizon</span></div></td>
+                <td><span class="badge b-mute">Πρόχειρο</span></td>
+                <td><button class="btn btn-g">Συνέχεια</button></td>
+              </tr>
+              <tr>
+                <td><div class="person"><strong>Σ. Βασιλείου</strong><span>#CR-10412 · NRG</span></div></td>
+                <td><span class="badge b-bad">Απόρριψη</span></td>
+                <td><button class="btn btn-g">Επίλυση</button></td>
+              </tr>
+              <tr>
+                <td><div class="person"><strong>Α. Δημητρίου</strong><span>#CR-10440 · Protergia</span></div></td>
+                <td><span class="badge b-info">Στον πάροχο</span></td>
+                <td><button class="btn btn-g">Παρακολούθηση</button></td>
+              </tr>
+            </table>
+          </div>
+          <div class="card" style="margin:0">
+            <h3>Τελευταία δραστηριότητα</h3>
+            <p style="font-size:12.5px;margin-bottom:10px"><strong>Υπογραφή · Γ. Νικολάου</strong><br><span class="mu">πριν 12 λεπτά · Protergia</span></p>
+            <p style="font-size:12.5px;margin-bottom:10px"><strong>AI extract · νέα ταυτότητα</strong><br><span class="mu">πριν 40 λεπτά · εσύ</span></p>
+            <p style="font-size:12.5px;margin-bottom:10px"><strong>Import Excel Protergia</strong><br><span class="mu">χθες · 14 αλλαγές status</span></p>
+            <p style="font-size:12.5px"><strong>Εκκαθάριση #12 κλειστή</strong><br><span class="mu">χθες · €280</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Κάθε γραμμή έχει μία primary ενέργεια. Δεν είναι «λίστα για να κοιτάς» — είναι ουρά δουλειάς. KPI κλικαριστά → φίλτρο στη λίστα συμβάσεων.</div>
+</div>
+
+<!-- ============================================================
+     A2 CONTRACTS LIST
+     ============================================================ -->
+<div class="sec" id="p-contracts">
+  <h2>A2 · Συμβάσεις — λίστα</h2>
+  <p class="d">Κεντρικός πίνακας εργασίας. Δύο γραμμές ανά κελί · ενέργεια ανά status · scope δικά μου/ομάδας.</p>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a href="#p-dashboard">Πίνακας</a>
+      <a class="on" href="#p-contracts">Συμβάσεις</a>
+      <a href="#p-pending">Εκκρεμότητες</a>
+      <a href="#p-tasks">Εργασίες</a>
+      <a href="#p-commissions">Προμήθειες</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Συμβάσεις</h1><div class="sub">Όλες οι αιτήσεις στο scope σου</div></div>
+        <div class="search"><span>⌕</span><input placeholder="ΑΦΜ, όνομα, κωδικός…" /></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">Εξαγωγή</button>
+        <button class="btn btn-p">+ Νέα αίτηση</button>
+      </div>
+      <div class="content">
+        <div class="stats">
+          <div class="stat"><span>Ανοιχτές</span><strong>128</strong></div>
+          <div class="stat"><span>Υπογραφή</span><strong>34</strong></div>
+          <div class="stat"><span>Κλεισμένες</span><strong>91</strong></div>
+          <div class="stat"><span>Προμήθεια μήνα</span><strong>€1.820</strong></div>
+        </div>
+        <div class="card" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <div class="chips">
+            <button class="chip on">Όλες</button>
+            <button class="chip">Πρόχειρο</button>
+            <button class="chip">Αναμονή</button>
+            <button class="chip">Υπογεγραμμένες</button>
+            <button class="chip">Στον πάροχο</button>
+            <button class="chip">Απορρίψεις</button>
+          </div>
+          <div class="sp"></div>
+          <div class="chips">
+            <button class="chip on">Δικά μου</button>
+            <button class="chip">Ομάδας</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0;margin:0;overflow:hidden">
+          <table>
+            <thead><tr><th>Πελάτης</th><th>Πάροχος / πρόγραμμα</th><th>Κατάσταση</th><th>Ημ/νία</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="person"><strong>Μαρία Παπαδοπούλου</strong><span>ΑΦΜ 123456789 · #CR-10482</span></div></td>
+                <td><div class="person"><strong>Protergia</strong><span>Value 24μηνο · οικιακό</span></div></td>
+                <td><span class="badge b-warn">Αναμονή υπογραφής</span></td>
+                <td class="mu">18 Αυγ</td>
+                <td><button class="btn btn-g">Υπενθύμιση</button></td>
+              </tr>
+              <tr>
+                <td><div class="person"><strong>Γιάννης Νικολάου</strong><span>ΑΦΜ 987654321 · #CR-10471</span></div></td>
+                <td><div class="person"><strong>Protergia</strong><span>Επαγγελματικό Fixed</span></div></td>
+                <td><span class="badge b-ok">Υπογεγραμμένη</span></td>
+                <td class="mu">17 Αυγ</td>
+                <td><button class="btn btn-g">Άνοιγμα</button></td>
+              </tr>
+              <tr>
+                <td><div class="person"><strong>Ελένη Κωνσταντίνου</strong><span>ΑΦΜ 112233445 · #CR-10455</span></div></td>
+                <td><div class="person"><strong>Orizon</strong><span>Κινητή 10GB + 5GB</span></div></td>
+                <td><span class="badge b-mute">Πρόχειρο</span></td>
+                <td class="mu">16 Αυγ</td>
+                <td><button class="btn btn-g">Συνέχεια</button></td>
+              </tr>
+              <tr>
+                <td><div class="person"><strong>Αλέξανδρος Δημητρίου</strong><span>ΑΦΜ 556677889 · #CR-10440</span></div></td>
+                <td><div class="person"><strong>Protergia</strong><span>Green Home</span></div></td>
+                <td><span class="badge b-info">Στάλθηκε παρόχου</span></td>
+                <td class="mu">15 Αυγ</td>
+                <td><button class="btn btn-g">Παρακολούθηση</button></td>
+              </tr>
+              <tr>
+                <td><div class="person"><strong>Σοφία Βασιλείου</strong><span>ΑΦΜ 998877665 · #CR-10412</span></div></td>
+                <td><div class="person"><strong>NRG</strong><span>Home Comfort</span></div></td>
+                <td><span class="badge b-bad">Απορρίφθηκε</span></td>
+                <td class="mu">14 Αυγ</td>
+                <td><button class="btn btn-g">Επίλυση</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>Action map:</strong> πρόχειρο→Συνέχεια · αναμονή→Υπενθύμιση · υπογεγραμμένη→Άνοιγμα · πάροχος→Παρακολούθηση · απόρριψη→Επίλυση. Πάντα <code>esc()</code> σε όνομα/ΑΦΜ.</div>
+</div>
+
+<!-- ============================================================
+     A3 DETAIL
+     ============================================================ -->
+<div class="sec" id="p-detail">
+  <h2>A3 · Λεπτομέρεια σύμβασης</h2>
+  <p class="d">Πλήρης καρτέλα: στοιχεία, timeline, έγγραφα, AI/checklist rail.</p>
+  <div class="shell w">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a class="on" href="#p-contracts">Συμβάσεις</a>
+      <a href="#p-tasks">Εργασίες</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <button class="btn btn-g">← Πίσω</button>
+        <div><h1>Μαρία Παπαδοπούλου</h1><div class="sub">#CR-10482 · δημιουργία 18 Αυγ 2026</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">PDF έντυπο</button>
+        <button class="btn btn-g">Υπενθύμιση</button>
+        <button class="btn btn-p">Συνέχεια ροής</button>
+      </div>
+      <div class="content">
+        <p style="margin-bottom:12px"><span class="badge b-warn">Αναμονή υπογραφής</span> <span class="mu" style="margin-left:6px">ΑΦΜ 123456789 · Protergia · Value 24μηνο</span></p>
+        <div class="g2e">
+          <div class="card">
+            <h3>Στοιχεία πελάτη</h3>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">Ονοματεπώνυμο</span><br><strong>Μαρία Παπαδοπούλου</strong></p>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">ΑΦΜ</span><br><strong>123456789</strong></p>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">ΑΔΤ</span><br><strong>ΑΒ 123456</strong></p>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">Τηλέφωνο</span><br><strong>694 123 4567</strong></p>
+            <p style="font-size:13px"><span class="mu">Email</span><br><strong>maria.p@email.gr</strong></p>
+          </div>
+          <div class="card">
+            <h3>Παροχή / διεύθυνση</h3>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">Αρ. παροχής</span><br><strong>1234567890</strong></p>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">Διεύθυνση</span><br><strong>Λεωφ. Κηφισίας 120</strong></p>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">Πόλη / ΤΚ</span><br><strong>Μαρούσι · 15125</strong></p>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">Πρόγραμμα</span><br><strong>Value 24μηνο</strong></p>
+            <p style="font-size:13px"><span class="mu">Πάροχος</span><br><strong>Protergia</strong></p>
+          </div>
+        </div>
+        <div class="g2e">
+          <div class="card">
+            <h3>Ιστορικό ροής</h3>
+            <p style="font-size:12.5px;margin-bottom:7px">✓ Δημιουργία πρόχειρου <span class="mu">· 18 Αυγ 10:12 · Κώστας Ν.</span></p>
+            <p style="font-size:12.5px;margin-bottom:7px">✓ AI συμπλήρωση από ταυτότητα <span class="mu">· 10:14</span></p>
+            <p style="font-size:12.5px;margin-bottom:7px">✓ Έντυπο PDF έτοιμο <span class="mu">· 10:15</span></p>
+            <p style="font-size:12.5px;margin-bottom:7px;color:var(--accent)">● Αναμονή υπογραφής <span class="mu">· τώρα</span></p>
+            <p style="font-size:12.5px;color:var(--muted)">○ Αποστολή παρόχου</p>
+          </div>
+          <div class="card">
+            <h3>Έγγραφα</h3>
+            <p style="font-size:12.5px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">🪪 Ταυτότητα (scan) <button class="btn btn-g">Προβολή</button></p>
+            <p style="font-size:12.5px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">📄 Αίτηση Protergia <button class="btn btn-g">Λήψη</button></p>
+            <p style="font-size:12.5px;display:flex;justify-content:space-between;align-items:center">✍️ Υπογραφή · εκκρεμεί <button class="btn btn-g">Αποστολή link</button></p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <aside class="rail">
+      <h3 style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px">AI βοήθεια</h3>
+      <div class="card acc">
+        <strong style="color:var(--accent);font-size:12px">Εξαγωγή OK</strong>
+        <p class="mu" style="margin-top:4px;font-size:12px">Όνομα, ΑΦΜ, ΑΔΤ, διεύθυνση πέρασαν. Έλεγξε οπτικά το ΑΦΜ.</p>
+      </div>
+      <h3 style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:10px 0 6px">Checklist</h3>
+      <p style="font-size:12.5px;margin-bottom:5px">☑ Στοιχεία ταυτότητας</p>
+      <p style="font-size:12.5px;margin-bottom:5px">☑ Αριθμός παροχής</p>
+      <p style="font-size:12.5px;margin-bottom:5px">☑ Πρόγραμμα</p>
+      <p style="font-size:12.5px;margin-bottom:5px">☐ Υπογραφή πελάτη</p>
+      <p style="font-size:12.5px;margin-bottom:12px">☐ Συναίνεση GDPR + AI</p>
+      <button class="btn btn-p btn-b" style="margin-bottom:6px">Αποστολή για υπογραφή</button>
+      <button class="btn btn-g btn-b" style="margin-bottom:6px">Επεξεργασία πεδίων</button>
+      <button class="btn btn-d btn-b">Ακύρωση αίτησης</button>
+    </aside>
+  </div>
+  <div class="note"><strong>UX:</strong> Timeline μόνο από πραγματικά events (moveTo). Κουμπιά rail ανάλογα status — όχι όλα ενεργά πάντα.</div>
+</div>
+
+<!-- ============================================================
+     A4 PENDING
+     ============================================================ -->
+<div class="sec" id="p-pending">
+  <h2>A4 · Εκκρεμότητες</h2>
+  <p class="d">Φιλτραρισμένη ουρά: μόνο ό,τι περιμένει δική σου ενέργεια (υπογραφή, διόρθωση, απάντηση παρόχου).</p>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a href="#p-dashboard">Πίνακας</a>
+      <a href="#p-contracts">Συμβάσεις</a>
+      <a class="on" href="#p-pending">Εκκρεμότητες</a>
+      <a href="#p-tasks">Εργασίες</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Εκκρεμότητες</h1><div class="sub">34 στοιχεία · ταξινόμηση κατά προθεσμία</div></div>
+        <div class="sp"></div>
+        <div class="chips">
+          <button class="chip on">Όλα</button>
+          <button class="chip">Υπογραφές</button>
+          <button class="chip">Απορρίψεις</button>
+          <button class="chip">Πάροχος</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card" style="margin:0;padding:0;overflow:hidden">
+          <table>
+            <thead><tr><th>Τι εκκρεμεί</th><th>Πελάτης</th><th>Προθεσμία</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="badge b-warn">Υπογραφή</span></td>
+                <td><div class="person"><strong>Μ. Παπαδοπούλου</strong><span>Protergia · #CR-10482</span></div></td>
+                <td style="color:var(--bad);font-weight:600">Σήμερα</td>
+                <td><button class="btn btn-p">Υπενθύμιση</button></td>
+              </tr>
+              <tr>
+                <td><span class="badge b-warn">Υπογραφή</span></td>
+                <td><div class="person"><strong>Π. Γεωργίου</strong><span>Protergia · #CR-10490</span></div></td>
+                <td style="color:var(--warn);font-weight:600">Αύριο</td>
+                <td><button class="btn btn-g">Υπενθύμιση</button></td>
+              </tr>
+              <tr>
+                <td><span class="badge b-bad">Απόρριψη παρόχου</span></td>
+                <td><div class="person"><strong>Σ. Βασιλείου</strong><span>NRG · λάθος ΑΦΜ</span></div></td>
+                <td class="mu">—</td>
+                <td><button class="btn btn-g">Διόρθωση</button></td>
+              </tr>
+              <tr>
+                <td><span class="badge b-info">Απάντηση παρόχου</span></td>
+                <td><div class="person"><strong>Α. Δημητρίου</strong><span>Αναμονή ενεργοποίησης</span></div></td>
+                <td class="mu">3 ημέρες</td>
+                <td><button class="btn btn-g">Άνοιγμα</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Ξεχωριστή σελίδα από «Συμβάσεις» για εστίαση. Κενή κατάσταση: «Δεν έχεις εκκρεμότητες — καλή δουλειά.»</div>
+</div>
+
+<!-- ============================================================
+     A5 TASKS
+     ============================================================ -->
+<div class="sec" id="p-tasks">
+  <h2>A5 · Εργασίες</h2>
+  <p class="d">Tasks συνδεδεμένα με σύμβαση/πελάτη. Complete με checkbox.</p>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a href="#p-contracts">Συμβάσεις</a>
+      <a class="on" href="#p-tasks">Εργασίες</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Εργασίες</h1><div class="sub">Ανάθεση · προθεσμία · σύμβαση</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">Μόνο δικές μου</button>
+        <button class="btn btn-p">+ Εργασία</button>
+      </div>
+      <div class="content">
+        <div class="card" style="margin:0">
+          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(42,49,64,.5)">
+            <input type="checkbox" style="margin-top:3px;accent-color:var(--accent)" />
+            <div style="flex:1"><strong style="font-size:13px">Υπενθύμιση υπογραφής · Μαρία Π.</strong><br><span class="mu">Κ. ΝΙΚΑΣ · #CR-10482 · μέχρι σήμερα 18:00</span></div>
+            <span class="badge b-warn">Σήμερα</span>
+          </div>
+          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(42,49,64,.5)">
+            <input type="checkbox" style="margin-top:3px;accent-color:var(--accent)" />
+            <div style="flex:1"><strong style="font-size:13px">Συμπλήρωση αρ. παροχής</strong><br><span class="mu">Ε. Κωνσταντίνου · πρόχειρο · #CR-10455</span></div>
+            <span class="badge b-info">Ανοιχτή</span>
+          </div>
+          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(42,49,64,.5)">
+            <input type="checkbox" style="margin-top:3px;accent-color:var(--accent)" />
+            <div style="flex:1"><strong style="font-size:13px">Επανυποβολή μετά απόρριψη NRG</strong><br><span class="mu">Σ. Βασιλείου · λάθος ΑΦΜ</span></div>
+            <span class="badge b-bad">Επείγον</span>
+          </div>
+          <div style="display:flex;gap:10px;padding:10px 0">
+            <input type="checkbox" checked disabled style="margin-top:3px" />
+            <div style="flex:1"><strong style="font-size:13px;opacity:.55;text-decoration:line-through">Έλεγχος PDF Protergia</strong><br><span class="mu">Ολοκληρώθηκε χθες</span></div>
+            <span class="badge b-ok">OK</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Υπότιτλος πάντα πελάτης · κωδικός σύμβασης. Κενός υπότιτλος μόνο αν task χωρίς contract_id (σωστό).</div>
+</div>
+
+<!-- ============================================================
+     B NEW APPLICATION STEPS
+     ============================================================ -->
+<div class="sec" id="p-new1">
+  <h2>B1 · Νέα αίτηση — Βήμα 1 · Πάροχος &amp; τύπος</h2>
+  <div class="shell w">
+    <aside class="side"><div class="logo"><i>Ε</i> Energy CRM</div><a class="on" href="#p-new1">Νέα αίτηση</a></aside>
+    <section class="main">
+      <div class="top">
+        <button class="btn btn-g">← Συμβάσεις</button>
+        <div><h1>Νέα αίτηση</h1><div class="sub">Βήμα 1 από 4</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">Αποθήκευση πρόχειρου</button>
+      </div>
+      <div class="steps">
+        <div class="step on"><strong>Βήμα 1</strong>Πάροχος &amp; τύπος</div>
+        <div class="step"><strong>Βήμα 2</strong>Έγγραφα &amp; AI</div>
+        <div class="step"><strong>Βήμα 3</strong>Στοιχεία</div>
+        <div class="step"><strong>Βήμα 4</strong>Υπογραφή</div>
+      </div>
+      <div class="content">
+        <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px">Πάροχος</h3>
+        <div class="g3" style="margin-bottom:16px">
+          <div class="choice on" style="text-align:center"><strong>Protergia</strong><br><span class="mu">Ρεύμα · οικιακό / επαγγ.</span></div>
+          <div class="choice" style="text-align:center"><strong>NRG</strong><br><span class="mu">Ρεύμα</span></div>
+          <div class="choice" style="text-align:center"><strong>Orizon</strong><br><span class="mu">Κινητή</span></div>
+          <div class="choice" style="text-align:center"><strong>Volton</strong><br><span class="mu">Ρεύμα</span></div>
+          <div class="choice" style="text-align:center"><strong>Elpedison</strong><br><span class="mu">Ρεύμα / αέριο</span></div>
+          <div class="choice" style="text-align:center"><strong>Άλλος…</strong><br><span class="mu">Επιλογή λίστας</span></div>
+        </div>
+        <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px">Τύπος αίτησης</h3>
+        <div class="chips" style="margin-bottom:16px">
+          <button class="chip on">Νέα σύνδεση</button>
+          <button class="chip">Μεταφορά / αλλαγή παρόχου</button>
+          <button class="chip">Επαγγελματικό</button>
+          <button class="chip">Ανανέωση</button>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button class="btn btn-g">Ακύρωση</button>
+          <button class="btn btn-p">Συνέχεια · Έγγραφα</button>
+        </div>
+      </div>
+    </section>
+    <aside class="rail">
+      <h3 style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px">Σύνοψη</h3>
+      <div class="card">
+        <p style="font-size:12.5px;display:flex;justify-content:space-between;margin-bottom:6px"><span class="mu">Πάροχος</span><strong>Protergia</strong></p>
+        <p style="font-size:12.5px;display:flex;justify-content:space-between"><span class="mu">Τύπος</span><strong>Νέα σύνδεση</strong></p>
+      </div>
+      <div class="card acc"><strong style="color:var(--accent);font-size:12px">Συμβουλή</strong><p class="mu" style="font-size:12px;margin-top:4px">Διάλεξε πάροχο πρώτα — τα έντυπα και τα προγράμματα αλλάζουν ανά πάροχο.</p></div>
+    </aside>
+  </div>
+  <div class="note"><strong>UX:</strong> Χωρίς πάροχο δεν προχωράς. Πρόχειρο αποθηκεύει και βήμα 1.</div>
+</div>
+
+<div class="sec" id="p-new2">
+  <h2>B2 · Νέα αίτηση — Βήμα 2 · Έγγραφα &amp; AI</h2>
+  <div class="shell w">
+    <aside class="side"><div class="logo"><i>Ε</i> Energy CRM</div><a class="on" href="#p-new2">Νέα αίτηση</a></aside>
+    <section class="main">
+      <div class="top">
+        <button class="btn btn-g">← Πίσω</button>
+        <div><h1>Έγγραφα &amp; AI</h1><div class="sub">Βήμα 2 από 4 · Protergia</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">Αποθήκευση πρόχειρου</button>
+      </div>
+      <div class="steps">
+        <div class="step done"><strong>Βήμα 1</strong>Πάροχος</div>
+        <div class="step on"><strong>Βήμα 2</strong>Έγγραφα &amp; AI</div>
+        <div class="step"><strong>Βήμα 3</strong>Στοιχεία</div>
+        <div class="step"><strong>Βήμα 4</strong>Υπογραφή</div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <h3>Σάρωση ταυτότητας</h3>
+          <div style="border:1.5px dashed rgba(194,240,74,.45);border-radius:12px;padding:22px;text-align:center;background:var(--accent-dim)">
+            <strong>Ταυτότητα ανεβασμένη</strong>
+            <p class="mu" style="margin-top:4px">id-front.jpg · 1.1 MB · πίσω όψη προαιρετικά</p>
+          </div>
+          <p style="margin-top:10px;font-size:12.5px;color:var(--ok)">✓ AI εξαγωγή ολοκληρώθηκε — τα πεδία γέμισαν. Διόρθωσε αν χρειάζεται.</p>
+        </div>
+        <div class="g2e">
+          <div class="field"><label>Όνομα</label><input class="ai" value="Μαρία" /><div class="src">από ταυτότητα</div></div>
+          <div class="field"><label>Επώνυμο</label><input class="ai" value="Παπαδοπούλου" /><div class="src">από ταυτότητα</div></div>
+          <div class="field"><label>ΑΦΜ</label><input class="ai" value="123456789" /><div class="src">έλεγχος ψηφίων</div></div>
+          <div class="field"><label>ΑΔΤ</label><input class="ai" value="ΑΒ 123456" /><div class="src">από ταυτότητα</div></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button class="btn btn-g">Πίσω</button>
+          <button class="btn btn-p">Συνέχεια · Στοιχεία</button>
+        </div>
+      </div>
+    </section>
+    <aside class="rail">
+      <div class="card"><p style="font-size:12.5px;display:flex;justify-content:space-between;margin-bottom:4px"><span class="mu">Πάροχος</span><strong>Protergia</strong></p><p style="font-size:12.5px;display:flex;justify-content:space-between"><span class="mu">Έγγραφα</span><strong>1 / 2</strong></p></div>
+      <p style="font-size:12.5px;margin-bottom:4px">☑ Πάροχος</p>
+      <p style="font-size:12.5px;margin-bottom:4px">☑ Ταυτότητα / AI</p>
+      <p style="font-size:12.5px">☐ Αρ. παροχής</p>
+    </aside>
+  </div>
+  <div class="note"><strong>UX:</strong> Πράσινο περίγραμμα = ήρθε από AI. Ο χρήστης κερδίζει πάντα αν διορθώσει. Μην ξανατρέχεις AI πάνω σε διορθωμένο πεδίο χωρίς confirm.</div>
+</div>
+
+<div class="sec" id="p-new3">
+  <h2>B3 · Νέα αίτηση — Βήμα 3 · Στοιχεία &amp; πρόγραμμα</h2>
+  <div class="shell w">
+    <aside class="side"><div class="logo"><i>Ε</i> Energy CRM</div><a class="on" href="#p-new3">Νέα αίτηση</a></aside>
+    <section class="main">
+      <div class="top">
+        <button class="btn btn-g">← Πίσω</button>
+        <div><h1>Στοιχεία &amp; πρόγραμμα</h1><div class="sub">Βήμα 3 από 4</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">Αποθήκευση πρόχειρου</button>
+      </div>
+      <div class="steps">
+        <div class="step done"><strong>1</strong>Πάροχος</div>
+        <div class="step done"><strong>2</strong>AI</div>
+        <div class="step on"><strong>3</strong>Στοιχεία</div>
+        <div class="step"><strong>4</strong>Υπογραφή</div>
+      </div>
+      <div class="content">
+        <div class="g2e">
+          <div class="field"><label>Κινητό</label><input value="694 123 4567" /></div>
+          <div class="field"><label>Email</label><input value="maria.p@email.gr" /></div>
+          <div class="field"><label>Οδός</label><input class="ai" value="Λεωφ. Κηφισίας" /></div>
+          <div class="field"><label>Αριθμός</label><input class="ai" value="120" /></div>
+          <div class="field"><label>ΤΚ</label><input class="ai" value="15125" /></div>
+          <div class="field"><label>Πόλη</label><input class="ai" value="Μαρούσι" /></div>
+          <div class="field"><label>Αριθμός παροχής *</label><input placeholder="10 ψηφία" /></div>
+          <div class="field"><label>Τύπος μετρητή</label><select><option>Μονοφασικό</option><option>Τριφασικό</option></select></div>
+        </div>
+        <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:12px 0 8px">Πρόγραμμα</h3>
+        <div class="choice on" style="display:flex;align-items:center;gap:10px">
+          <div style="flex:1"><strong>Value 24μηνο</strong><br><span class="mu">Οικιακό · σταθερή χρέωση</span></div>
+          <strong style="color:var(--accent)">€0,142/kWh</strong>
+        </div>
+        <div class="choice" style="display:flex;align-items:center;gap:10px">
+          <div style="flex:1"><strong>Green Home</strong><br><span class="mu">Οικιακό · πράσινο</span></div>
+          <strong style="color:var(--muted)">€0,151/kWh</strong>
+        </div>
+        <div class="choice" style="display:flex;align-items:center;gap:10px">
+          <div style="flex:1"><strong>Flexible</strong><br><span class="mu">Κυμαινόμενο</span></div>
+          <strong style="color:var(--muted)">€0,138/kWh</strong>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+          <button class="btn btn-g">Πίσω</button>
+          <button class="btn btn-p">Συνέχεια · Έλεγχος &amp; PDF</button>
+        </div>
+      </div>
+    </section>
+    <aside class="rail">
+      <div class="card">
+        <p style="font-size:12.5px;display:flex;justify-content:space-between;margin-bottom:4px"><span class="mu">Πελάτης</span><strong>Μ. Παπαδοπούλου</strong></p>
+        <p style="font-size:12.5px;display:flex;justify-content:space-between;margin-bottom:4px"><span class="mu">Πάροχος</span><strong>Protergia</strong></p>
+        <p style="font-size:12.5px;display:flex;justify-content:space-between"><span class="mu">Πρόγραμμα</span><strong>Value 24μηνο</strong></p>
+      </div>
+      <p style="font-size:12.5px;margin-bottom:4px">☑ ΑΦΜ</p>
+      <p style="font-size:12.5px;margin-bottom:4px">☐ Αρ. παροχής <span class="mu">(υποχρεωτικό)</span></p>
+      <p style="font-size:12.5px">☑ Πρόγραμμα</p>
+      <div class="card warn" style="margin-top:10px"><p style="font-size:12px">Χωρίς αριθμό παροχής δεν ενεργοποιείται το επόμενο βήμα.</p></div>
+    </aside>
+  </div>
+  <div class="note"><strong>UX:</strong> Primary disabled μέχρι να συμπληρωθεί παροχή (+ ΑΦΜ ήδη required από backend).</div>
+</div>
+
+<!-- STEP 4 -->
+<div class="sec" id="p-step4">
+  <h2>B4 · Βήμα 4 · Έλεγχος &amp; υπογραφή (εντός CRM)</h2>
+  <div class="shell w">
+    <aside class="side"><div class="logo"><i>Ε</i> Energy CRM</div><a class="on" href="#p-step4">Υπογραφή</a></aside>
+    <section class="main">
+      <div class="top">
+        <button class="btn btn-g">← Πίσω</button>
+        <div><h1>Έλεγχος &amp; υπογραφή</h1><div class="sub">#CR-10482 · Protergia</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">Κατέβασμα PDF</button>
+        <button class="btn btn-d">Ακύρωση</button>
+      </div>
+      <div class="steps">
+        <div class="step done"><strong>1</strong>Πάροχος</div>
+        <div class="step done"><strong>2</strong>AI</div>
+        <div class="step done"><strong>3</strong>Στοιχεία</div>
+        <div class="step on"><strong>4</strong>Υπογραφή</div>
+      </div>
+      <div class="content">
+        <div class="card" style="background:#0c0e13;min-height:300px;display:flex;align-items:center;justify-content:center;margin:0">
+          <div style="background:#f7f7f5;color:#222;width:min(380px,100%);padding:18px;border-radius:4px;font-size:11px;box-shadow:0 8px 28px rgba(0,0,0,.4)">
+            <strong style="font-size:12px">ΑΙΤΗΣΗ ΣΥΜΒΑΣΗΣ ΠΡΟΜΗΘΕΙΑΣ ΗΕ</strong>
+            <p style="color:#666;margin:4px 0 10px">Protergia · Value 24μηνο · #CR-10482</p>
+            <p style="margin-bottom:4px"><span style="color:#666">Ονοματεπώνυμο</span><br><strong>Μαρία Παπαδοπούλου</strong></p>
+            <p style="margin-bottom:4px"><span style="color:#666">ΑΦΜ</span><br><strong>123456789</strong></p>
+            <p style="margin-bottom:10px"><span style="color:#666">Παροχή</span><br><strong>1234567890 · Κηφισίας 120</strong></p>
+            <p style="color:#666;margin-bottom:4px">Υπογραφή πελάτη</p>
+            <div style="border:1.5px dashed #999;height:52px;display:grid;place-items:center;color:#888;background:#fafafa">Εκκρεμεί</div>
+            <p style="margin-top:8px;display:inline-block;border:1px solid #c2f04a;padding:2px 6px;font-size:9px;color:#3d5a00;background:rgba(194,240,74,.25)">ΠΡΟΕΠΙΣΚΟΠΗΣΗ · ΔΕΝ ΕΧΕΙ ΥΠΟΓΡΑΦΕΙ</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <aside class="rail">
+      <div class="card warn"><strong style="font-size:13px">Εκκρεμεί υπογραφή</strong><p class="mu" style="font-size:12px;margin-top:4px">Έλεγξε το έντυπο και διάλεξε κανάλι.</p></div>
+      <p style="font-size:12px;margin-bottom:4px">☑ Ονοματεπώνυμο / ΑΦΜ στο PDF</p>
+      <p style="font-size:12px;margin-bottom:4px">☑ Αρ. παροχής</p>
+      <p style="font-size:12px;margin-bottom:4px">☑ Πρόγραμμα</p>
+      <p style="font-size:12px;margin-bottom:10px">☐ Πελάτης είδε το έντυπο</p>
+      <h3 style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px">Κανάλι</h3>
+      <div class="choice on"><strong style="font-size:12.5px">📱 Link κινητού</strong><br><span class="mu">SMS / Viber</span></div>
+      <div class="choice"><strong style="font-size:12.5px">🏪 Στο κατάστημα</strong><br><span class="mu">Tablet συνεργάτη</span></div>
+      <div class="choice"><strong style="font-size:12.5px">✉️ Email</strong></div>
+      <div class="field" style="margin-top:8px"><label>Κινητό</label><input value="694 123 4567" /></div>
+      <p style="font-size:11.5px;color:var(--muted);margin:8px 0">☐ Ο πελάτης ενημερώθηκε (GDPR + AI)</p>
+      <button class="btn btn-p btn-b" style="margin-bottom:6px">Αποστολή για υπογραφή</button>
+      <button class="btn btn-g btn-b">Υπογραφή τώρα</button>
+    </aside>
+  </div>
+  <div class="note"><strong>UX:</strong> Χωρίς checkbox συναίνεσης → disabled αποστολή. Link 48h · μία χρήση.</div>
+</div>
+
+<!-- PUBLIC / SUCCESS / EXPIRED -->
+<div class="sec" id="p-public">
+  <h2>B5 · Δημόσια σελίδα υπογραφής (token)</h2>
+  <p class="d">Χωρίς login CRM. Μόνο ό,τι χρειάζεται ο πελάτης στο κινητό.</p>
+  <div class="phones">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ps">
+        <div style="padding:14px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--accent),#8fd41a);display:grid;place-items:center;color:var(--accent-text);font-weight:800;font-size:11px">Ε</div>
+            <span class="mu" style="font-size:12px">Ασφαλής υπογραφή</span>
+          </div>
+          <h1 style="font-size:16px">Υπογραφή αίτησης</h1>
+          <p class="mu" style="font-size:12px">Protergia · Value 24μηνο · #CR-10482</p>
+        </div>
+        <div style="padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:10px">
+          <div class="card" style="margin:0">
+            <p style="font-size:12.5px;display:flex;justify-content:space-between;margin-bottom:3px"><span class="mu">Πελάτης</span><strong>Μ. Παπαδοπούλου</strong></p>
+            <p style="font-size:12.5px;display:flex;justify-content:space-between;margin-bottom:3px"><span class="mu">ΑΦΜ</span><strong>123456789</strong></p>
+            <p style="font-size:12.5px;display:flex;justify-content:space-between"><span class="mu">Λήξη link</span><strong>48 ώρες</strong></p>
+          </div>
+          <div class="card" style="margin:0;display:flex;gap:8px;align-items:center">
+            <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-dim);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:10px">PDF</div>
+            <div><strong style="font-size:12.5px">Δες το έντυπο</strong><br><span class="mu">3 σελίδες · άνοιγμα υποχρεωτικό</span></div>
+          </div>
+          <div>
+            <p class="mu" style="font-size:11px;font-weight:600;margin-bottom:4px">Η υπογραφή σου</p>
+            <div style="background:#fff;border:2px dashed #ccc;border-radius:10px;height:130px;display:grid;place-items:center;color:#999;font-size:12px">Υπόγραψε με το δάχτυλο</div>
+            <p style="text-align:right;margin-top:3px"><a href="#" style="font-size:11px">Καθαρισμός</a></p>
+          </div>
+          <p style="font-size:11px;color:var(--muted)">☐ Διάβασα το έντυπο και συμφωνώ (συμπ. επεξεργασία εγγράφων με AI)</p>
+          <button class="btn btn-p btn-lg btn-b">Ολοκλήρωση υπογραφής</button>
+          <p class="mu" style="text-align:center;font-size:10px">🔒 Μία χρήση · κρυπτογραφημένη σύνδεση</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note"><strong>Ασφάλεια UX:</strong> Δεν φαίνεται sidebar, άλλες συμβάσεις, προμήθειες. Token hash στη DB.</div>
+</div>
+
+<div class="sec" id="p-success-c">
+  <h2>B6 · Success — πελάτης (μετά υπογραφή)</h2>
+  <div class="phones">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ps" style="justify-content:center;align-items:center;text-align:center;padding:28px 16px">
+        <div style="width:58px;height:58px;border-radius:50%;border:2px solid var(--ok);background:var(--ok-dim);display:grid;place-items:center;font-size:26px;color:var(--ok);margin:0 auto 10px">✓</div>
+        <h1 style="font-size:18px;margin-bottom:4px">Υπογράφηκε</h1>
+        <p class="mu" style="font-size:12.5px;margin-bottom:10px">Η αίτησή σου καταχωρήθηκε επιτυχώς.</p>
+        <div style="border:2px solid var(--ok);color:var(--ok);padding:5px 10px;font-size:10px;font-weight:800;border-radius:7px;display:inline-block;margin-bottom:12px">20 Αυγ 2026 · 14:32</div>
+        <div class="card" style="width:100%;text-align:left;margin-bottom:12px">
+          <p style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:3px"><span class="mu">Κωδικός</span><strong>#CR-10482</strong></p>
+          <p style="font-size:12px;display:flex;justify-content:space-between"><span class="mu">Κατάσταση</span><strong style="color:var(--ok)">Υπογεγραμμένη</strong></p>
+        </div>
+        <button class="btn btn-p btn-b btn-lg">Λήψη αντιγράφου PDF</button>
+        <p class="mu" style="margin-top:10px;font-size:11px">Μπορείς να κλείσεις αυτή τη σελίδα</p>
+      </div>
+    </div>
+  </div>
+  <div class="note"><strong>UX:</strong> Μετά την υπογραφή το token πεθαίνει. Refresh → οθόνη ληγμένου/χρησιμοποιημένου.</div>
+</div>
+
+<div class="sec" id="p-success-p">
+  <h2>B7 · Success — συνεργάτης (εντός CRM)</h2>
+  <div class="shell ns" style="max-width:520px">
+    <section class="main">
+      <div class="content">
+        <div style="width:52px;height:52px;border-radius:50%;border:2px solid var(--ok);background:var(--ok-dim);display:grid;place-items:center;font-size:22px;color:var(--ok);margin-bottom:10px">✓</div>
+        <h1 style="font-size:18px;margin-bottom:4px">Η σύμβαση υπογράφηκε</h1>
+        <p class="mu" style="margin-bottom:12px">#CR-10482 · Μαρία Παπαδοπούλου · Protergia Value 24μηνο</p>
+        <div class="g2e" style="margin-bottom:10px">
+          <div class="card" style="margin:0"><span class="mu" style="font-size:11px">Ώρα</span><br><strong style="font-size:13px">20/08/2026 14:32</strong></div>
+          <div class="card" style="margin:0"><span class="mu" style="font-size:11px">Κανάλι</span><br><strong style="font-size:13px">Link κινητού</strong></div>
+          <div class="card" style="margin:0"><span class="mu" style="font-size:11px">IP πελάτη</span><br><strong style="font-size:13px">85.72.xxx.xxx</strong></div>
+          <div class="card" style="margin:0"><span class="mu" style="font-size:11px">Status</span><br><strong style="font-size:13px;color:var(--ok)">Υπογεγραμμένη</strong></div>
+        </div>
+        <div class="card acc">
+          <strong style="color:var(--accent);font-size:12px">Επόμενα βήματα</strong>
+          <p class="mu" style="font-size:12.5px;margin-top:4px">1. Έλεγχος τελικού PDF · 2. Στάλσιμο στον πάροχο · 3. Προμήθεια όταν κλείσει πελάτης</p>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-p">Στάλσιμο σε πάροχο</button>
+          <button class="btn btn-g">Άνοιγμα σύμβασης</button>
+          <button class="btn btn-g">Νέα αίτηση</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Audit ορατό στον συνεργάτη. Primary CTA = επόμενο business βήμα (πάροχος), όχι «πίσω στη λίστα».</div>
+</div>
+
+<div class="sec" id="p-expired">
+  <h2>B8 · Link ληγμένο / χρησιμοποιημένο</h2>
+  <div class="phones">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ps" style="justify-content:center;align-items:center;text-align:center;padding:32px 18px">
+        <div style="width:52px;height:52px;border-radius:50%;border:2px solid var(--warn);background:var(--warn-dim);display:grid;place-items:center;font-size:22px;color:var(--warn);margin:0 auto 10px">!</div>
+        <h1 style="font-size:17px;margin-bottom:6px">Ο σύνδεσμος δεν είναι ενεργός</h1>
+        <p class="mu" style="font-size:13px;margin-bottom:14px">Έληξε ή χρησιμοποιήθηκε ήδη. Ζήτησε νέο σύνδεσμο υπογραφής από το κατάστημα.</p>
+        <p class="mu" style="font-size:11px">Κωδ. αναφοράς · #CR-10482</p>
+      </div>
+    </div>
+  </div>
+  <div class="note"><strong>UX:</strong> Ίδιο μήνυμα για expired και used — μην αποκαλύπτεις λεπτομέρειες ασφαλείας.</div>
+</div>
+
+<!-- ============================================================
+     C NETWORK & MONEY
+     ============================================================ -->
+<div class="sec" id="p-network">
+  <h2>C1 · Δίκτυο συνεργατών</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a class="on" href="#p-network">Συνεργάτες</a>
+      <a href="#p-commissions">Προμήθειες</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Δίκτυο</h1><div class="sub">Ιεραρχία · τι βλέπει ποιος</div></div>
+        <div class="sp"></div>
+        <div class="search"><span>⌕</span><input placeholder="Όνομα συνεργάτη…" /></div>
+        <button class="btn btn-p">+ Συνεργάτης</button>
+      </div>
+      <div class="content">
+        <div class="card" style="margin:0">
+          <p style="padding:8px 0;display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid rgba(42,49,64,.4)"><span><span class="mu">L0 · </span><strong>Διαχείριση εταιρείας</strong></span><span class="badge b-ok">Admin</span></p>
+          <p style="padding:8px 0 8px 16px;display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid rgba(42,49,64,.4)"><span><span class="mu">L1 · </span><a href="#p-partner">Κώστας Ν.</a></span><span class="mu">12 ενεργοί · €420 / μήνα</span></p>
+          <p style="padding:8px 0 8px 32px;font-size:13px;border-bottom:1px solid rgba(42,49,64,.4)"><span class="mu">L2 · </span>Κατάστημα Μαρούσι <span class="mu">· 8 αιτήσεις ανοιχτές</span></p>
+          <p style="padding:8px 0 8px 32px;font-size:13px;border-bottom:1px solid rgba(42,49,64,.4)"><span class="mu">L2 · </span>Κατάστημα Περιστέρι <span class="mu">· 5 αιτήσεις</span></p>
+          <p style="padding:8px 0 8px 16px;font-size:13px"><span class="mu">L1 · </span>Άλλος συνεργάτης <span class="mu">· 3 ενεργοί</span></p>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Click σε όνομα → καρτέλα συνεργάτη. Admin βλέπει όλο το δέντρο· L1 μόνο κάτω κλάδο.</div>
+</div>
+
+<div class="sec" id="p-partner">
+  <h2>C2 · Καρτέλα συνεργάτη</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a class="on" href="#p-network">Συνεργάτες</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <button class="btn btn-g">← Δίκτυο</button>
+        <div><h1>Κώστας Ν.</h1><div class="sub">L1 · ενεργός · από Μαρ 2025</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">Επεξεργασία</button>
+      </div>
+      <div class="content">
+        <div class="stats">
+          <div class="stat"><span>Ανοιχτές</span><strong>23</strong></div>
+          <div class="stat"><span>Κλεισμένες μήνα</span><strong>18</strong></div>
+          <div class="stat"><span>Προμήθεια μήνα</span><strong>€360</strong></div>
+          <div class="stat"><span>Καταστήματα</span><strong>2</strong></div>
+        </div>
+        <div class="g2e">
+          <div class="card">
+            <h3>Στοιχεία</h3>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">Email</span><br><strong>kostas@email.gr</strong></p>
+            <p style="font-size:13px;margin-bottom:6px"><span class="mu">Τηλέφωνο</span><br><strong>694 000 0000</strong></p>
+            <p style="font-size:13px"><span class="mu">Ρόλος</span><br><strong>Partner L1</strong></p>
+          </div>
+          <div class="card">
+            <h3>Κάτω δίκτυο</h3>
+            <p style="font-size:13px;margin-bottom:6px">Κατάστημα Μαρούσι · 8 ανοιχτές</p>
+            <p style="font-size:13px">Κατάστημα Περιστέρι · 5 ανοιχτές</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Γρήγορη εικόνα απόδοσης χωρίς να μπεις σε κάθε σύμβαση.</div>
+</div>
+
+<div class="sec" id="p-commissions">
+  <h2>C3 · Προμήθειες</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a class="on" href="#p-commissions">Προμήθειες</a>
+      <a href="#p-payout">Εκκαθαρίσεις</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Προμήθειες</h1><div class="sub">€20 / κλεισμένο συμβόλαιο</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">CSV</button>
+        <button class="btn btn-p">Νέα εκκαθάριση</button>
+      </div>
+      <div class="content">
+        <div class="stats">
+          <div class="stat"><span>Προς πληρωμή</span><strong>€640</strong></div>
+          <div class="stat"><span>Πληρωμένα (μήνας)</span><strong>€1.180</strong></div>
+          <div class="stat"><span>Κλεισίματα</span><strong>32</strong></div>
+          <div class="stat"><span>Εκκρεμείς εκκαθ.</span><strong>1</strong></div>
+        </div>
+        <div class="card" style="padding:0;margin:0;overflow:hidden">
+          <table>
+            <thead><tr><th>Σύμβαση</th><th>Συνεργάτης</th><th>Ποσό</th><th>Κατάσταση</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="person"><strong>#CR-10471</strong><span>Γ. Νικολάου · Protergia</span></div></td>
+                <td>Κώστας Ν.</td>
+                <td>€20</td>
+                <td><span class="badge b-warn">Προς πληρωμή</span></td>
+                <td><button class="btn btn-g">Στη δέσμη</button></td>
+              </tr>
+              <tr>
+                <td><div class="person"><strong>#CR-10302</strong><span>Α. Δημητρίου</span></div></td>
+                <td>Κώστας Ν.</td>
+                <td>€20</td>
+                <td><span class="badge b-ok">Πληρώθηκε</span></td>
+                <td><button class="btn btn-g">Απόδειξη</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Ποσά read-only από backend (όχι client calc). Διπλή πληρωμή ήδη κλειδωμένη στον κώδικα.</div>
+</div>
+
+<div class="sec" id="p-payout">
+  <h2>C4 · Εκκαθάριση προμηθειών</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a href="#p-commissions">Προμήθειες</a>
+      <a class="on" href="#p-payout">Εκκαθάριση</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <button class="btn btn-g">← Προμήθειες</button>
+        <div><h1>Νέα εκκαθάριση</h1><div class="sub">Επίλεξε απλήρωτες γραμμές · κλείδωμα μετά την έκδοση</div></div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <h3>Επιλεγμένα · 14 συμβάσεις · σύνολο €280</h3>
+          <table>
+            <tr><td>#CR-10471</td><td>Κώστας Ν.</td><td>€20</td><td><input type="checkbox" checked style="accent-color:var(--accent)" /></td></tr>
+            <tr><td>#CR-10460</td><td>Κώστας Ν.</td><td>€20</td><td><input type="checkbox" checked style="accent-color:var(--accent)" /></td></tr>
+            <tr><td>#CR-10451</td><td>Άλλος</td><td>€20</td><td><input type="checkbox" checked style="accent-color:var(--accent)" /></td></tr>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button class="btn btn-g">Ακύρωση</button>
+          <button class="btn btn-p">Έκδοση εκκαθάρισης #13</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Μετά την έκδοση οι γραμμές γίνονται «Πληρώθηκε» και δεν ξαναεπιλέγονται.</div>
+</div>
+
+<div class="sec" id="p-reports">
+  <h2>C5 · Αναφορές</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a class="on" href="#p-reports">Αναφορές</a>
+      <a href="#p-commissions">Προμήθειες</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Αναφορές</h1><div class="sub">Μήνας · πάροχος · συνεργάτης</div></div>
+        <div class="sp"></div>
+        <select class="btn btn-g" style="padding:7px 10px"><option>Αύγουστος 2026</option><option>Ιούλιος 2026</option></select>
+        <button class="btn btn-g">CSV</button>
+      </div>
+      <div class="content">
+        <div class="stats">
+          <div class="stat"><span>Αιτήσεις</span><strong>156</strong></div>
+          <div class="stat"><span>Κλεισμένες</span><strong>91</strong></div>
+          <div class="stat"><span>Conversion</span><strong>58%</strong></div>
+          <div class="stat"><span>Προμήθεια</span><strong>€1.820</strong></div>
+        </div>
+        <div class="g2e">
+          <div class="card">
+            <h3>Ανά πάροχο</h3>
+            <p style="font-size:13px;display:flex;justify-content:space-between;margin-bottom:6px"><span>Protergia</span><strong>72</strong></p>
+            <p style="font-size:13px;display:flex;justify-content:space-between;margin-bottom:6px"><span>Orizon</span><strong>14</strong></p>
+            <p style="font-size:13px;display:flex;justify-content:space-between"><span>NRG</span><strong>5</strong></p>
+          </div>
+          <div class="card">
+            <h3>Ανά status</h3>
+            <p style="font-size:13px;display:flex;justify-content:space-between;margin-bottom:6px"><span>Υπογεγραμμένες</span><strong>91</strong></p>
+            <p style="font-size:13px;display:flex;justify-content:space-between;margin-bottom:6px"><span>Σε εξέλιξη</span><strong>52</strong></p>
+            <p style="font-size:13px;display:flex;justify-content:space-between"><span>Απορρίψεις</span><strong>13</strong></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Απλά aggregates πρώτα. Charts αργότερα αν χρειαστούν — όχι στην πρώτη έκδοση.</div>
+</div>
+
+<!-- ============================================================
+     D SYSTEM
+     ============================================================ -->
+<div class="sec" id="p-health">
+  <h2>D1 · Υγεία συστήματος</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a class="on" href="#p-health">Υγεία</a>
+      <a href="#p-settings">Ρυθμίσεις</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Υγεία</h1><div class="sub">Τι δεν πάει · τι έσπασε</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">Ανανέωση</button>
+      </div>
+      <div class="content">
+        <div class="stats">
+          <div class="stat"><span>Σφάλματα 24h</span><strong>2</strong></div>
+          <div class="stat"><span>PDF fails</span><strong>0</strong></div>
+          <div class="stat"><span>AI fails</span><strong>1</strong></div>
+          <div class="stat"><span>Cron</span><strong style="color:var(--ok)">OK</strong></div>
+        </div>
+        <div class="card">
+          <h3>Έλεγχοι</h3>
+          <p style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(42,49,64,.4);font-size:13px"><span>PII encryption</span><span class="badge b-ok">ΕΝΕΡΓΟ</span></p>
+          <p style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(42,49,64,.4);font-size:13px"><span>Orphan documents</span><span class="badge b-ok">Καθαρό</span></p>
+          <p style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(42,49,64,.4);font-size:13px"><span>Key rotation guard</span><span class="badge b-ok">OK</span></p>
+          <p style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(42,49,64,.4);font-size:13px"><span>Δοκιμαστικοί πελάτες</span><span class="badge b-warn">41</span></p>
+          <p style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px"><span>DPA Anthropic</span><span class="badge b-warn">Εκκρεμεί αρχείο</span></p>
+        </div>
+        <div class="card" style="margin:0">
+          <h3>Τελευταία συμβάντα</h3>
+          <table>
+            <tr><td class="mu">18:02</td><td>AI extract timeout</td><td><span class="badge b-bad">error</span></td><td class="mu">#E-2041</td></tr>
+            <tr><td class="mu">16:40</td><td>Backup completed</td><td><span class="badge b-ok">ok</span></td><td></td></tr>
+            <tr><td class="mu">14:32</td><td>Sign completed #CR-10482</td><td><span class="badge b-info">info</span></td><td></td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Κωδικός αναφοράς σε κάθε error για support. Deep link σε tools (preflight) — όχι επανυλοποίηση.</div>
+</div>
+
+<div class="sec" id="p-settings">
+  <h2>D2 · Ρυθμίσεις</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a class="on" href="#p-settings">Ρυθμίσεις</a>
+      <a href="#p-gdpr">GDPR</a>
+      <a href="#p-health">Υγεία</a>
+    </aside>
+    <section class="main">
+      <div class="top"><div><h1>Ρυθμίσεις</h1><div class="sub">API · εμφάνιση · ειδοποιήσεις · χωρίς secrets στην οθόνη</div></div></div>
+      <div class="content">
+        <div class="g2e">
+          <div class="card">
+            <h3>Anthropic / AI</h3>
+            <p style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span>API key</span><span class="badge b-ok">Ορισμένο</span></p>
+            <p style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span>DPA / Commercial Terms</span><span class="badge b-warn">Εκκρεμεί</span></p>
+            <p style="display:flex;justify-content:space-between;font-size:13px"><span>Άρθρο 30</span><span class="badge b-warn">Εκκρεμεί</span></p>
+          </div>
+          <div class="card">
+            <h3>Ειδοποιήσεις</h3>
+            <p style="font-size:13px;margin-bottom:6px">☑ Email σε νέα υπογραφή</p>
+            <p style="font-size:13px;margin-bottom:6px">☑ Email σε απόρριψη παρόχου</p>
+            <p style="font-size:13px">☐ Ημερήσιο summary</p>
+          </div>
+          <div class="card">
+            <h3>Προεπιλογές αίτησης</h3>
+            <p style="font-size:13px;margin-bottom:6px">Προεπιλεγμένος πάροχος: <strong>Protergia</strong></p>
+            <p style="font-size:13px">Λήξη sign link: <strong>48 ώρες</strong></p>
+          </div>
+          <div class="card">
+            <h3>Εμφάνιση</h3>
+            <p style="font-size:13px;margin-bottom:6px">Θέμα: <strong>Ανθρακί + lime</strong></p>
+            <p style="font-size:13px">Γλώσσα: <strong>Ελληνικά</strong></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Ποτέ ολόκληρο API key. Μόνο «ορισμένο / λείπει».</div>
+</div>
+
+<div class="sec" id="p-gdpr">
+  <h2>D3 · GDPR εργαλεία</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a href="#p-settings">Ρυθμίσεις</a>
+      <a class="on" href="#p-gdpr">GDPR</a>
+    </aside>
+    <section class="main">
+      <div class="top"><div><h1>GDPR</h1><div class="sub">Εξαγωγή · διαγραφή · συναίνεση</div></div></div>
+      <div class="content">
+        <div class="card">
+          <h3>Αναζήτηση υποκειμένου</h3>
+          <div class="field"><label>ΑΦΜ ή email πελάτη</label><input placeholder="π.χ. 123456789" /></div>
+          <button class="btn btn-p">Εύρεση</button>
+        </div>
+        <div class="g2e">
+          <div class="card">
+            <h3>Εξαγωγή (Άρθρο 15)</h3>
+            <p class="mu" style="font-size:12.5px;margin-bottom:8px">Κατεβάζει JSON/CSV με όλα τα πεδία που κρατάμε για τον πελάτη.</p>
+            <button class="btn btn-g">Εξαγωγή δεδομένων</button>
+          </div>
+          <div class="card">
+            <h3>Διαγραφή / ανωνυμοποίηση</h3>
+            <p class="mu" style="font-size:12.5px;margin-bottom:8px">Σβήνει PII από όλους τους πίνακες + αρχεία δίσκου. Μη αντιστρεπτό.</p>
+            <button class="btn btn-d">Διαγραφή υποκειμένου</button>
+          </div>
+        </div>
+        <div class="card" style="margin:0">
+          <h3>Κείμενο συναίνεσης</h3>
+          <p class="mu" style="font-size:12.5px;margin-bottom:8px">Εμφανίζεται στη φόρμα και στο public sign. Πρέπει να αναφέρει επεξεργασία AI εγγράφων.</p>
+          <button class="btn btn-g">Επεξεργασία κειμένου</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Διαγραφή απαιτεί confirm «πληκτρολόγησε ΑΦΜ». Μετά → audit log.</div>
+</div>
+
+<div class="sec" id="p-import">
+  <h2>D4 · Import Excel παρόχου</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a class="on" href="#p-import">Import</a>
+      <a href="#p-contracts">Συμβάσεις</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Εισαγωγή Excel παρόχου</h1><div class="sub">Ενημέρωση status από αρχείο Protergia / άλλου</div></div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <h3>1. Πάροχος</h3>
+          <div class="chips"><button class="chip on">Protergia</button><button class="chip">NRG</button><button class="chip">Άλλος</button></div>
+        </div>
+        <div class="card">
+          <h3>2. Αρχείο</h3>
+          <div style="border:1.5px dashed var(--border2);border-radius:10px;padding:20px;text-align:center">
+            <strong>Σύρε Excel εδώ</strong>
+            <p class="mu" style="margin-top:4px">.xlsx · μέγ. 5 MB</p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>3. Προεπισκόπηση αλλαγών</h3>
+          <table>
+            <tr><td>#CR-10440</td><td class="mu">Στάλθηκε</td><td>→</td><td><span class="badge b-ok">Ενεργό</span></td></tr>
+            <tr><td>#CR-10412</td><td class="mu">Στάλθηκε</td><td>→</td><td><span class="badge b-bad">Απορρίφθηκε</span></td></tr>
+          </table>
+          <p class="mu" style="margin-top:8px;font-size:12px">14 γραμμές θα ενημερωθούν · 2 άγνωστα IDs θα αγνοηθούν</p>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button class="btn btn-g">Ακύρωση</button>
+          <button class="btn btn-p">Εφαρμογή αλλαγών</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Ποτέ silent status change — πάντα preview. Μετά το apply → activity «Import Excel · Ν αλλαγές».</div>
+</div>
+
+<div class="sec" id="p-notifs">
+  <h2>D5 · Ειδοποιήσεις (panel)</h2>
+  <div class="shell">
+    <aside class="side">
+      <div class="logo"><i>Ε</i> Energy CRM</div>
+      <a href="#p-dashboard">Πίνακας</a>
+      <a class="on" href="#p-notifs">Ειδοποιήσεις</a>
+    </aside>
+    <section class="main">
+      <div class="top">
+        <div><h1>Ειδοποιήσεις</h1><div class="sub">12 αδιάβαστες</div></div>
+        <div class="sp"></div>
+        <button class="btn btn-g">Όλα διαβασμένα</button>
+      </div>
+      <div class="content">
+        <div class="card" style="margin:0">
+          <p style="padding:10px 0;border-bottom:1px solid rgba(42,49,64,.4);font-size:13px"><strong>Υπογραφή ολοκληρώθηκε</strong><br><span class="mu">#CR-10482 · Μ. Παπαδοπούλου · πριν 12 λεπτά</span></p>
+          <p style="padding:10px 0;border-bottom:1px solid rgba(42,49,64,.4);font-size:13px"><strong>Απόρριψη παρόχου</strong><br><span class="mu">#CR-10412 · NRG · λάθος ΑΦΜ · πριν 2 ώρες</span></p>
+          <p style="padding:10px 0;font-size:13px"><strong>Link υπογραφής λήγει αύριο</strong><br><span class="mu">#CR-10490 · Π. Γεωργίου</span></p>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="note"><strong>UX:</strong> Κλικ → ανοίγει τη σύμβαση. Bell στο top bar με badge count.</div>
+</div>
+
+<!-- ============================================================
+     E MOBILE
+     ============================================================ -->
+<div class="sec" id="p-m-list">
+  <h2>E1 · Mobile — λίστα συμβάσεων</h2>
+  <div class="phones">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ps">
+        <div style="padding:12px 12px 6px;display:flex;justify-content:space-between;align-items:center">
+          <h1 style="font-size:17px">Συμβάσεις</h1>
+          <span style="background:var(--accent-dim);color:var(--accent);padding:4px 9px;border-radius:7px;font-size:11px;font-weight:700">+ Νέα</span>
+        </div>
+        <div style="margin:0 12px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-size:12.5px;color:var(--muted)">⌕ ΑΦΜ ή όνομα…</div>
+        <div style="padding:0 12px 64px;display:flex;flex-direction:column;gap:7px;flex:1">
+          <div class="card" style="margin:0">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><strong style="font-size:13.5px">Μαρία Παπαδοπούλου</strong><span class="badge b-warn">Αναμονή</span></div>
+            <p class="mu">Protergia · ΑΦΜ 123456789</p>
+            <button class="btn btn-g btn-b" style="margin-top:7px;color:var(--accent)">Υπενθύμιση υπογραφής</button>
+          </div>
+          <div class="card" style="margin:0">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><strong style="font-size:13.5px">Γιάννης Νικολάου</strong><span class="badge b-ok">OK</span></div>
+            <p class="mu">Protergia · Επαγγελματικό</p>
+            <button class="btn btn-g btn-b" style="margin-top:7px">Άνοιγμα</button>
+          </div>
+          <div class="card" style="margin:0">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><strong style="font-size:13.5px">Ελένη Κωνσταντίνου</strong><span class="badge b-mute">Πρόχειρο</span></div>
+            <p class="mu">Orizon · 10GB</p>
+            <button class="btn btn-g btn-b" style="margin-top:7px;color:var(--accent)">Συνέχεια αίτησης</button>
+          </div>
+        </div>
+        <div class="bnav">
+          <span>▣<br>Αρχή</span>
+          <span class="on">☰<br>Συμβάσεις</span>
+          <span>◎<br>Εκκρεμή</span>
+          <span>€<br>Προμήθειες</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note"><strong>UX:</strong> Κάρτες πλήρους πλάτους · μία primary action · κάτω tab bar.</div>
+</div>
+
+<div class="sec" id="p-m-detail">
+  <h2>E2 · Mobile — λεπτομέρεια</h2>
+  <div class="phones">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ps">
+        <div style="padding:12px;border-bottom:1px solid var(--border)">
+          <button class="btn btn-g" style="margin-bottom:8px">← Πίσω</button>
+          <h1 style="font-size:16px">Μαρία Παπαδοπούλου</h1>
+          <p class="mu">#CR-10482</p>
+          <p style="margin-top:6px"><span class="badge b-warn">Αναμονή υπογραφής</span></p>
+        </div>
+        <div style="padding:12px;flex:1">
+          <div class="card">
+            <p style="font-size:12.5px;margin-bottom:4px"><span class="mu">ΑΦΜ</span> · 123456789</p>
+            <p style="font-size:12.5px;margin-bottom:4px"><span class="mu">Πάροχος</span> · Protergia</p>
+            <p style="font-size:12.5px"><span class="mu">Παροχή</span> · 1234567890</p>
+          </div>
+          <div class="card">
+            <h3>Έγγραφα</h3>
+            <p style="font-size:12.5px;margin-bottom:6px">📄 Έντυπο · <a href="#">Λήψη</a></p>
+            <p style="font-size:12.5px">🪪 Ταυτότητα · <a href="#">Προβολή</a></p>
+          </div>
+          <button class="btn btn-p btn-b btn-lg">Αποστολή για υπογραφή</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note"><strong>UX:</strong> Λιγότερα πεδία από desktop· secondary σε «περισσότερα».</div>
+</div>
+
+<div class="sec" id="p-m-new">
+  <h2>E3 · Mobile — νέα αίτηση (συμπυκνωμένο)</h2>
+  <div class="phones">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ps">
+        <div style="padding:12px;border-bottom:1px solid var(--border)">
+          <div class="steps" style="border:0;background:transparent;padding:0">
+            <div class="step done" style="padding:4px"><strong>1</strong></div>
+            <div class="step on" style="padding:4px"><strong>2</strong></div>
+            <div class="step" style="padding:4px"><strong>3</strong></div>
+            <div class="step" style="padding:4px"><strong>4</strong></div>
+          </div>
+          <h1 style="font-size:15px;margin-top:6px">Έγγραφα &amp; AI</h1>
+        </div>
+        <div style="padding:12px;flex:1;display:flex;flex-direction:column;gap:8px">
+          <div style="border:1.5px dashed rgba(194,240,74,.4);border-radius:10px;padding:16px;text-align:center;background:var(--accent-dim)">
+            <strong style="font-size:13px">Ανέβασε ταυτότητα</strong>
+            <p class="mu" style="font-size:11px;margin-top:3px">κάμερα ή αρχείο</p>
+          </div>
+          <div class="field"><label>ΑΦΜ</label><input class="ai" placeholder="θα γεμίσει από AI" /></div>
+          <div class="field"><label>Ονοματεπώνυμο</label><input class="ai" /></div>
+          <div class="sp"></div>
+          <button class="btn btn-p btn-b btn-lg">Συνέχεια</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note"><strong>UX:</strong> Ίδια 4 βήματα με desktop· ένα βήμα ανά οθόνη· μεγάλα CTA.</div>
+</div>
+
+<!-- FOOTER MAP -->
+<div class="sec" style="padding-bottom:48px">
+  <div class="note">
+    <strong>Πλήρης χάρτης UX Energy CRM</strong><br><br>
+    <strong>Α. Κύρια:</strong> Πίνακας · Συμβάσεις · Λεπτομέρεια · Εκκρεμότητες · Εργασίες<br>
+    <strong>Β. Ροή:</strong> Νέα 1–3 · Step 4 CRM · Public sign · Success πελάτη/συνεργάτη · Expired link<br>
+    <strong>Γ. Δίκτυο/χρήματα:</strong> Δίκτυο · Καρτέλα συνεργάτη · Προμήθειες · Εκκαθάριση · Αναφορές<br>
+    <strong>Δ. Σύστημα:</strong> Υγεία · Ρυθμίσεις · GDPR · Import Excel · Ειδοποιήσεις<br>
+    <strong>Ε. Mobile:</strong> Λίστα · Λεπτομέρεια · Νέα αίτηση<br><br>
+    Design: ανθρακί + lime <code>#c2f04a</code> · system fonts · χωρίς Google Fonts.<br>
+    Συνοδευτικά: <code>ecrm-ui.css</code> · <code>ecrm-ui-skeleton.html</code>
+  </div>
+</div>
+
+</body>
+</html>

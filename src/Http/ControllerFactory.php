@@ -100,6 +100,7 @@ final class ControllerFactory
             new TasksController($scope, Services::tasks(), Services::contracts()),
             new NotificationsController($scope),
             new SavedFiltersController($scope),
+            new ThemeController($scope),
 
             // Catalogue and form metadata.
             new CatalogueController($scope, Services::providers(), $queries),

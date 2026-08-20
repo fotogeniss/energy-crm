@@ -44,9 +44,25 @@
 .ecrm-nav__item:hover { background: var(--chrome-wash-1); color: var(--chrome-ink-hi); }
 /* Το φωτοστέφανο ήταν rgba(194,240,74) — το ΛΑΪΜ γραμμένο με το χέρι, που δεν
    περνούσε ποτέ από μεταβλητή. Θα έμενε λάιμ κάτω από πράσινο κουμπί. */
-.ecrm-nav__item.is-active { background: var(--amber); color: var(--on-accent); font-weight: 700; box-shadow: 0 2px 10px rgba(22,194,23,.28); }
-.ecrm-nav__item.is-active .ecrm-nav__icon { color: var(--on-accent); }
+/* Ενεργό μενού: πλύση accent και πράσινο γράμμα, όπως το UX kit — όχι
+   συμπαγές γέμισμα. Δύο δηλώσεις background επίτηδες: η πρώτη είναι το
+   εφεδρικό για browser χωρίς color-mix, η δεύτερη ακολουθεί το accent ό,τι
+   κι αν έχει οριστεί στις ρυθμίσεις. Μετρημένο πάνω στο --chrome #171715:
+   πλύση 1,40 από το φόντο, γράμμα 7,47. Το box-shadow έφυγε — μια πλύση δεν
+   ρίχνει λάμψη. */
+.ecrm-nav__item.is-active {
+	background: var(--chrome-accent-wash);
+	background: color-mix(in srgb, var(--amber) 20%, transparent);
+	color: var(--amber-bright); font-weight: 700;
+}
+.ecrm-nav__item.is-active .ecrm-nav__icon { color: var(--amber-bright); }
 .ecrm-nav__icon { width: 20px; text-align: center; font-size: 15px; }
+/* Ο διακόπτης εμφάνισης. Και τα δύο ζεύγη εικονιδίου/ετικέτας υπάρχουν στο
+   markup· κρύβεται εκείνο που ΕΙΝΑΙ σε ισχύ, ώστε το κουμπί να δείχνει πάντα
+   πού πάει το κλικ. Μηδέν JS για εικονίδια, μηδέν δεύτερο SVG να συγχρονιστεί. */
+.ecrm[data-theme="light"] [data-theme-only="dark"],
+.ecrm[data-theme="dark"] [data-theme-only="light"] { display: none; }
+
 .ecrm-sidebar__foot { border-top: 1px solid var(--chrome-line); padding-top: 12px; margin-top: 12px; }
 
 /* --- main --- */
@@ -127,7 +143,7 @@
 .ecrm-mono { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; }
 .ecrm-muted { color: var(--muted); font-size: 12px; }
 
-.ecrm-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.ecrm-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
 /* Κύκλος αντί για τη γλυφή «●»: το μέγεθός της άλλαζε με τη γραμματοσειρά. */
 .ecrm-badge::before { content: ""; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: currentColor; }
 /* Δεύτερο κανάλι για τα δύο που ΔΕΝ ξεχωρίζουν σε δυσχρωματοψία: κόκκινο και

@@ -157,6 +157,10 @@
 	--chrome-wash-2: #ffffff1a;
 	--chrome-wash-3: #ffffff26;
 	--chrome-ring: #ffffff55;
+	/* Η πλύση του accent πάνω στο ανθρακί, για το ενεργό μενού. Είναι
+	   ΕΦΕΔΡΙΚΟ: ο κανόνας δοκιμάζει πρώτα color-mix ώστε να ακολουθεί το
+	   ρυθμιζόμενο accent, και πέφτει εδώ όπου το color-mix δεν υποστηρίζεται. */
+	--chrome-accent-wash: #16c21733;
 
 	/* Κείμενο ΠΑΝΩ στο accent. Τρίτη τιμή σε τρεις παλέτες, και κάθε φορά την
 	 * ορίζει το accent: iris σκούρο → λευκό, λάιμ ανοιχτό → σκούρο, πράσινο
@@ -219,7 +223,7 @@
 	--surface: var(--n0);
 	--ok: var(--st-routed);
 	--err: var(--st-cancel);
-	--radius: 10px;
+	--radius: 12px;
 
 	/* Η "Inter" ήταν δηλωμένη εδώ αλλά ΠΟΤΕ φορτωμένη: κανένα @font-face,
 	 * κανένα enqueue. Το stack έλεγε ψέματα και όλοι έβλεπαν Segoe UI. */
