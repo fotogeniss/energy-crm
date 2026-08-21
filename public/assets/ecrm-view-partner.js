@@ -130,10 +130,10 @@ function recentRows(list, statuses) {
 		return '<tr class="ecrm-rowlink" data-open="' + r.id + '">' +
 			'<td><strong>' + esc(r.customer) + '</strong>' +
 			(r.code ? '<div class="ecrm-muted ecrm-tlrole">' + esc(r.code) + '</div>' : '') + '</td>' +
-			'<td class="ecrm-muted">' + esc(r.provider) + '</td>' +
+			'<td class="ecrm-muted ecrm-col-sec">' + esc(r.provider) + '</td>' +
 			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' +
 			esc(statuses[r.status] || r.status) + '</span></td>' +
-			'<td class="ecrm-muted">' + esc(fmtDate(r.updated)) + '</td>' +
+			'<td class="ecrm-muted ecrm-col-sec">' + esc(fmtDate(r.updated)) + '</td>' +
 			'</tr>';
 	}).join('');
 }
@@ -169,9 +169,14 @@ function renderPartner(view, d) {
 		(m.is_self ? ' <span class="ecrm-muted">(εσύ)</span>' : '') + '</h2>' +
 		'<p class="ecrm-sub">' + esc(m.role_label || '—') + ' · μέλος από ' + esc(fmtDate(m.joined)) + '</p>' +
 		'</div>' +
+		// Σε κινητό το .ecrm-head--row γίνεται στήλη με align-items:stretch,
+		// οπότε ένα γυμνό badge τεντωνόταν σε όλο το πλάτος και διαβαζόταν ως
+		// μπάρα. Το περιτύλιγμα τρώει το stretch· το badge μένει στο μέγεθός του.
+		'<div>' +
 		(m.active
 			? '<span class="ecrm-badge ecrm-badge--active">Ενεργός</span>'
 			: '<span class="ecrm-badge ecrm-badge--cancelled">Ανενεργός</span>') +
+		'</div>' +
 		'</header>' +
 
 		kpiCards(d.kpi || {}) +
@@ -179,7 +184,12 @@ function renderPartner(view, d) {
 		'<div class="ecrm-pgrid">' +
 		'<div class="ecrm-card"><div class="ecrm-step">Τελευταίες συμβάσεις</div>' +
 		'<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr>' +
-		'<th>Πελάτης</th><th>Πάροχος</th><th>Κατάσταση</th><th>Ενημερώθηκε</th>' +
+		// .ecrm-col-sec: η σύμβαση που ήδη έχει ο κώδικας για «φύγε στο κινητό»
+		// (@media 767px). Χωρίς αυτήν ο πίνακας κρατούσε και τις τέσσερις στήλες
+		// σε 390px και έσπρωχνε την κάρτα 65px έξω από την οθόνη — φάνηκε μόνο
+		// σε απόδοση σε πλάτος κινητού. Μένουν Πελάτης και Κατάσταση.
+		'<th>Πελάτης</th><th class="ecrm-col-sec">Πάροχος</th><th>Κατάσταση</th>' +
+		'<th class="ecrm-col-sec">Ενημερώθηκε</th>' +
 		'</tr></thead><tbody>' + recentRows(d.recent || [], statuses) + '</tbody></table></div></div>' +
 
 		'<div class="ecrm-pgrid__side">' +
