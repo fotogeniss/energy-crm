@@ -230,6 +230,22 @@
 .ecrm-drail__acts { display: flex; flex-direction: column; gap: 8px; }
 .ecrm-drail__acts .ecrm-btn { width: 100%; justify-content: flex-start; }
 .ecrm-rcard.is-ok { border-color: var(--accent-soft); background: var(--accent-wash); }
+/* Η κάρτα audit ΔΕΝ παίρνει την πράσινη πλύση, και το λάθος το είδα σε
+   screenshot αφού το είχα ήδη γράψει. Το --accent-wash σημαίνει ΕΝΑ πράγμα σε
+   αυτό το rail: «το checklist είναι πλήρες». Βάφοντας και το audit ίδιο, οι δύο
+   κάρτες κάθονταν κολλητά με ίδιο φόντο και ίδιο περίγραμμα και διαβάζονταν ως
+   ΕΝΑ κουτί χωρισμένο με μια γραμμή — και το πράσινο έπαυε να σημαίνει κάτι,
+   αφού το φορούσαν και οι δύο. Ίδια οικογένεια με τα δύο πράσινα της 17/8 που
+   απείχαν ΔE 2.0. Μένει απλή κάρτα: το ότι υπάρχει σημαίνει ήδη «υπογράφηκε». */
+/* Η γραμμή κατάστασης της κάρτας audit ΔΕΝ είναι .ecrm-kv, και ο λόγος κόστισε
+   ένα screenshot: μέσα σε .ecrm-kv το badge έπεφτε πάνω στον .ecrm-kv span
+   (ειδικότητα 0,1,1) που νικά το .ecrm-badge--* (0,1,0) — το πιλάκι έβγαινε
+   ΓΚΡΙ (--muted αντί για --st-signed), display:block και σε λάθος μέγεθος.
+   Καμία αναζήτηση δεν το βρίσκει: και οι δύο κανόνες είναι σωστοί μόνοι τους.
+   Εδώ η ετικέτα είναι ΚΕΙΜΕΝΟ, όχι <span>, οπότε δεν υπάρχει απόγονος να
+   διεκδικήσει το badge — μηδέν κανόνας που να παλεύει άλλον κανόνα. */
+.ecrm-rcard__status { display: flex; align-items: center; gap: 8px; padding: 9px 0 1px;
+	font-size: var(--fs-11-5); color: var(--muted); }
 .ecrm-rcheck { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
 .ecrm-rcheck li { display: flex; align-items: center; gap: 9px; font-size: var(--fs-13); color: var(--muted); }
 .ecrm-rcheck li.is-ok { color: var(--ink); }

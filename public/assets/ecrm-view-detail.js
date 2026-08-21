@@ -91,6 +91,48 @@ function filesCard(c) {
 
 	return '<div class="ecrm-card">' + checklist + '<div class="ecrm-step">Έγγραφα</div>' + list + upload + '</div>';
 }
+/* Η ώρα υπογραφής, ΧΩΡΙΣ να περάσει από Date.
+ *
+ * Το `signed_at` γράφεται με `current_time('mysql')`, δηλαδή είναι ΤΟΠΙΚΗ ώρα
+ * του site. Οι `fmtDate()`/`timeAgo()` του format.js προσθέτουν 'Z' και τη
+ * διαβάζουν ως UTC — γι' αυτό γράφουν «Same UTC caveat» πάνω τους. Σε σχετική
+ * ένδειξη («2ω πριν») η μετατόπιση περνά απαρατήρητη· σε πεδίο AUDIT θα έδειχνε
+ * ώρα +3 από την πραγματική, που είναι χειρότερο από το να μη δείχνει τίποτα.
+ *
+ * Η συμβολοσειρά ΕΙΝΑΙ ήδη η ώρα που θέλουμε να δείξουμε. Την κόβουμε, δεν την
+ * ερμηνεύουμε: μηδέν ζώνη ώρας, ίδιο αποτέλεσμα σε όποια χώρα κι αν κάθεται ο
+ * browser του συνεργάτη. */
+function signStamp(sql) {
+	var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(String(sql || ''));
+
+	return m ? m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5] : '';
+}
+
+/* Το IP του πελάτη, μασκαρισμένο — απόφαση ιδιοκτήτη 2026-08-21.
+ *
+ * Κρατά τα δύο πρώτα τμήματα και σβήνει τα υπόλοιπα, όπως το δείχνει το ίδιο το
+ * UX kit (`85.72.xxx.xxx`). Δέχεται και IPv6, γιατί ο `RequestIp::current()`
+ * περνά τις τιμές από `FILTER_VALIDATE_IP` και δεν υπόσχεται IPv4.
+ *
+ * ΠΡΟΣΟΧΗ, και είναι γραμμένο εδώ ώστε να μη διαβαστεί ως εγγύηση: η μάσκα
+ * ΔΕΝ κρύβει το IP από την οθόνη. Το `class-ecrm-tracking.php` το γράφει
+ * ολόκληρο μέσα στο `message` του `status_change`, που τυπώνεται αυτούσιο στο
+ * «Ιστορικό ροής» της ίδιας καρτέλας. Είναι διακριτικότητα στην κύρια θέση, όχι
+ * απόκρυψη. Αν ζητηθεί πραγματική απόκρυψη, το σημείο είναι το μήνυμα. */
+function maskIp(ip) {
+	ip = String(ip == null ? '' : ip).trim();
+
+	if (!ip) return '';
+
+	if (ip.indexOf(':') >= 0) {
+		return ip.split(':').slice(0, 2).join(':') + ':\u2022\u2022\u2022';
+	}
+
+	var p = ip.split('.');
+
+	return p.length === 4 ? p[0] + '.' + p[1] + '.\u2022\u2022\u2022.\u2022\u2022\u2022' : '\u2022\u2022\u2022';
+}
+
 function renderDetail(view, d) {
 	var c = d.contract, statuses = d.statuses || {}, acts = d.activation_types || {};
 	var name = c.company_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || '—';
@@ -153,6 +195,21 @@ function renderDetail(view, d) {
 		return '<div class="ecrm-kv"><span>' + esc(label) + '</span><b>' + (val ? esc(val) : '—') + '</b></div>';
 	}
 
+	/* Το audit της υπογραφής — μπαίνει ΜΟΝΟ όταν υπάρχει `signed_at`, οπότε σε
+	   πρόχειρη ή ανυπόγραφη σύμβαση το rail μένει ακριβώς όπως ήταν. Καμία νέα
+	   κλήση: το `signed_at` και το `signed_ip` είναι στήλες του πίνακα
+	   (EnsureLegacyColumns), γράφονται από το `applyTransition()` μέσω του
+	   WritableColumns, και ταξιδεύουν ήδη με το `SELECT c.*` της findDetailed(). */
+	var auditCard = c.signed_at
+		? '<div class="ecrm-card ecrm-rcard--audit">' +
+			'<div class="ecrm-step">Υπογραφή &nbsp;<b>\u2713</b></div>' +
+			kv('Ώρα', signStamp(c.signed_at)) +
+			kv('IP πελάτη', maskIp(c.signed_ip)) +
+			'<div class="ecrm-rcard__status">Κατάσταση <span class="ecrm-badge ecrm-badge--' +
+			esc(c.status) + '">' + esc(statuses[c.status] || c.status) + '</span></div>' +
+			'</div>'
+		: '';
+
 	view.innerHTML = '' +
 		'<div class="ecrm-detail2"><div class="ecrm-detail2__main">' +
 
@@ -193,6 +250,7 @@ function renderDetail(view, d) {
 		'</div>' +
 
 		'<aside class="ecrm-drail">' +
+		auditCard +
 		'<div class="ecrm-card ecrm-rcard' + (done === checks.length ? ' is-ok' : '') + '">' +
 		'<div class="ecrm-step">Checklist &nbsp;<b>' + done + '/' + checks.length + '</b></div>' + checklistHTML + '</div>' +
 		'<div class="ecrm-drail__acts">' +

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<title>docs/UI-DARK-DEFAULT.html — πρόταση: σκούρο ως προεπιλογή</title>
+<style>
+  :root{
+    --n0:#ffffff;--n25:#fdfdfc;--n50:#f8f8f6;--n100:#f1f1ee;--n150:#e9e8e4;--n200:#dedcd7;
+    --n300:#c6c4bd;--n400:#a3a099;--n450:#83817a;--n500:#6e6c66;--n700:#42413d;--n800:#2a2926;--n900:#1a1a18;
+    --p50:#eafaea;--p100:#d2f5d3;--p300:#6bdd6d;--p400:#16c217;--p500:#12a413;--p600:#0e8610;--p700:#0b690c;
+    --chrome:#171715;--chrome-2:#1f1f1c;--chrome-ink:#a8a69f;--chrome-ink-hi:#ffffff;
+    --on-accent:#0b3d0c;
+  }
+  body{font:15px/1.55 -apple-system,"Segoe UI",Manrope,sans-serif;max-width:1180px;margin:36px auto;padding:0 20px;color:#1c1c1a;background:#fff}
+  h1{font-size:21px;margin-bottom:4px}
+  .meta{color:#666;font-size:13.5px;margin-bottom:18px}
+  h2{font-size:16px;margin-top:34px}
+  .callout{background:#f7f6f2;border-left:3px solid #c2b280;padding:10px 14px;margin:14px 0;font-size:14px}
+  code{background:#f2f1ee;padding:1px 4px;border-radius:3px;font-size:13px}
+  .cols{display:flex;gap:20px;margin:18px 0;align-items:flex-start}
+  .col{flex:1;min-width:0}
+  .col h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#666;margin:0 0 10px}
+  .frame{border:1px solid #ddd;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+
+  /* ---- Ζωντανό demo shell, ίδιες κλάσεις/τιμές με το ecrm-app.css / ecrm-form.css ---- */
+  .demo{display:flex;height:420px;font-family:"Manrope",-apple-system,"Segoe UI",sans-serif;font-size:13px}
+  .demo .sidebar{width:150px;flex:0 0 150px;background:var(--chrome);color:var(--chrome-ink);padding:14px 10px;display:flex;flex-direction:column;gap:10px}
+  .demo .brand{display:flex;align-items:center;gap:8px;color:var(--chrome-ink-hi);font-weight:700;margin-bottom:8px}
+  .demo .mark{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--p300),var(--p400));color:var(--on-accent);display:grid;place-items:center;font-weight:800;font-size:11px}
+  .demo .nav a{display:block;padding:6px 8px;border-radius:7px;color:var(--chrome-ink);text-decoration:none;font-size:12.5px;margin-bottom:2px}
+  .demo .nav a.on{background:#16c21733;color:#fff}
+  .demo .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .demo .topbar{height:44px;flex:0 0 44px;border-bottom:1px solid var(--line,#e9e8e4);display:flex;align-items:center;padding:0 14px;font-size:12.5px;font-weight:600}
+  .demo .content{flex:1;padding:14px;overflow:auto}
+  .demo .stats{display:flex;gap:8px;margin-bottom:12px}
+  .demo .stat{flex:1;border:1px solid var(--line,#e9e8e4);border-radius:10px;padding:9px 10px}
+  .demo .stat b{display:block;font-size:18px;margin-bottom:2px}
+  .demo .stat span{font-size:11px;color:var(--muted,#6e6c66)}
+  .demo table{width:100%;border-collapse:collapse;font-size:12px}
+  .demo td{padding:7px 9px;border-bottom:1px solid var(--line-card,#e9e8e4)}
+  .demo .name{font-weight:600}
+  .demo .sub{font-size:11px;color:var(--muted,#6e6c66)}
+  .demo .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:10.5px;font-weight:700}
+  .demo .badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+
+  /* ---- ΣΗΜΕΡΑ: ανοιχτό (η ρητή προεπιλογή, ThemePreference::FALLBACK) ---- */
+  .light-canvas{background:var(--n50);color:var(--n800)}
+  .light-canvas .topbar{background:var(--n0);color:var(--n800)}
+  .light-canvas .stat,.light-canvas table{background:var(--n0)}
+  .light-canvas .badge.new{background:#ecf2fc;color:#0072b7}
+  .light-canvas .badge.psig{background:#fcf2ec;color:#ab5506}
+  .light-canvas .badge.signed{background:#e8ebf7;color:#00468a}
+  .light-canvas .badge.active{background:#e3f0e4;color:#00531e}
+  .light-canvas .badge.cancel{background:#fdeaea;color:#c32b47}
+
+  /* ---- ΠΡΟΤΑΣΗ: σκούρο ως προεπιλογή — ίδιες τιμές με .ecrm[data-theme="dark"], μηδέν νέο χρώμα ---- */
+  .dark-canvas{background:#111110;color:#f1f1ee}
+  .dark-canvas .topbar{background:#1a1a18;color:#f1f1ee;border-bottom-color:#2a2926}
+  .dark-canvas .stat,.dark-canvas table{background:#1a1a18;border-color:#2a2926}
+  .dark-canvas td{border-bottom-color:#2a2926}
+  .dark-canvas .sub{color:#a3a099}
+  .dark-canvas .badge.new{background:#2e353f;color:#79afec}
+  .dark-canvas .badge.psig{background:#3f322a;color:#ffb682}
+  .dark-canvas .badge.signed{background:#31343f;color:#b9cbff}
+  .dark-canvas .badge.active{background:#2c382d;color:#a3d9a9}
+  .dark-canvas .badge.cancel{background:#423030;color:#fb8a91}
+
+  .verdict{margin-top:6px;font-size:12px;color:#0e7a10}
+  footer{margin-top:44px;color:#888;font-size:12.5px;border-top:1px solid #eee;padding-top:14px}
+</style>
+</head>
+<body>
+
+<h1>Πρόταση: το σκούρο γίνεται προεπιλογή</h1>
+<div class="callout" style="border-left-color:#b3261e;background:#fbf0ef">
+<b>ΛΑΘΟΣ ΕΡΩΤΗΜΑ — διορθώθηκε 2026-08-21, λίγες ώρες αφού γράφτηκε.</b> Ρωτούσε «σκούρο <i>αντί για</i>
+ανοιχτό;». Ο ιδιοκτήτης απάντησε το πραγματικό: <b>και τα δύο, με κουμπί εναλλαγής</b> — και ο διακόπτης
+<b>υπάρχει ήδη</b> από τις 19/08 (CHANGELOG (55)/(56)). Η μία γραμμή στο
+<code>ThemePreference::FALLBACK</code> που προτείνει εδώ <b>δεν είναι το ζητούμενο</b>. Κρατιέται γιατί η
+δίπλα-δίπλα σύγκριση των δύο παλετών παραμένει χρήσιμη ως εικόνα.
+</div>
+<p class="meta">2026-08-21 · κατά §1.8 — HTML πριν τον κώδικα. Πρόταση του βοηθού, εκκρεμεί έγκριση ιδιοκτήτη. Αφορά §6γ(8) / <code>docs/UI-KIT-DIFF.html</code> εύρημα #1.</p>
+
+<div class="callout">
+<b>Τι πραγματικά αλλάζει, με έναν αριθμό:</b> μία γραμμή στο <code>src/Infrastructure/ThemePreference.php:35</code> —
+<code>FALLBACK = self::LIGHT</code> → <code>FALLBACK = self::DARK</code>. Καμία νέα τιμή χρώματος: οι δύο στήλες παρακάτω
+χρησιμοποιούν <b>ακριβώς</b> τα ίδια tokens που ζουν ήδη στο <code>ecrm-form.css</code> (σκούρο: γραμμές 327-383,
+εγκρίθηκε 19/08 πάνω στο <code>docs/UI-SHELL.html</code>) — μόνο ποιο από τα δύο βλέπει πρώτος ο χρήστης, χωρίς να
+πατήσει τον διακόπτη. Ο διακόπτης μένει· απλώς αλλάζει ποιο είναι το «χωρίς επιλογή».
+</div>
+
+<h2>Πλαϊνό + Πίνακας + Λίστα, δίπλα-δίπλα</h2>
+<div class="cols">
+  <div class="col">
+    <h3>Σήμερα — προεπιλογή ανοιχτό</h3>
+    <div class="frame demo light-canvas">
+      <div class="sidebar">
+        <div class="brand"><span class="mark">E</span> Energy CRM</div>
+        <div class="nav">
+          <a class="on">🏠 Πίνακας</a>
+          <a>📄 Συμβάσεις</a>
+          <a>✓ Εργασίες</a>
+          <a>👥 Δίκτυο</a>
+          <a>€ Προμήθειες</a>
+        </div>
+      </div>
+      <div class="main">
+        <div class="topbar">Πίνακας</div>
+        <div class="content">
+          <div class="stats">
+            <div class="stat"><b>128</b><span>Ανοιχτές</span></div>
+            <div class="stat"><b>14</b><span>Προς υπογραφή</span></div>
+            <div class="stat"><b>€2.340</b><span>Κλεισμένες μήνα</span></div>
+          </div>
+          <table>
+            <tr><td><span class="name">Μαρία Παπαδοπούλου</span><br><span class="sub">ΑΦΜ ••••6789 · #CR-10482</span></td><td><span class="badge new">Νέα</span></td></tr>
+            <tr><td><span class="name">Γιώργος Νικολάου</span><br><span class="sub">Protergia · Οικιακό</span></td><td><span class="badge psig">Εκκρεμότητα</span></td></tr>
+            <tr><td><span class="name">Ελένη Ιωάννου</span><br><span class="sub">NRG · Δίμηνο</span></td><td><span class="badge signed">Υπογράφηκε</span></td></tr>
+            <tr><td><span class="name">Κώστας Νίκας</span><br><span class="sub">ORIZON-0036</span></td><td><span class="badge active">Ενεργή</span></td></tr>
+            <tr><td><span class="name">Δήμητρα Χριστοδούλου</span><br><span class="sub">#CR-10201</span></td><td><span class="badge cancel">Ακυρώθηκε</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="verdict">✓ αυτό βλέπει κάθε νέος χρήστης σήμερα, χωρίς να αγγίξει τίποτα</p>
+  </div>
+
+  <div class="col">
+    <h3>Πρόταση — προεπιλογή σκούρο</h3>
+    <div class="frame demo dark-canvas">
+      <div class="sidebar">
+        <div class="brand"><span class="mark">E</span> Energy CRM</div>
+        <div class="nav">
+          <a class="on">🏠 Πίνακας</a>
+          <a>📄 Συμβάσεις</a>
+          <a>✓ Εργασίες</a>
+          <a>👥 Δίκτυο</a>
+          <a>€ Προμήθειες</a>
+        </div>
+      </div>
+      <div class="main">
+        <div class="topbar">Πίνακας</div>
+        <div class="content">
+          <div class="stats">
+            <div class="stat"><b>128</b><span>Ανοιχτές</span></div>
+            <div class="stat"><b>14</b><span>Προς υπογραφή</span></div>
+            <div class="stat"><b>€2.340</b><span>Κλεισμένες μήνα</span></div>
+          </div>
+          <table>
+            <tr><td><span class="name">Μαρία Παπαδοπούλου</span><br><span class="sub">ΑΦΜ ••••6789 · #CR-10482</span></td><td><span class="badge new">Νέα</span></td></tr>
+            <tr><td><span class="name">Γιώργος Νικολάου</span><br><span class="sub">Protergia · Οικιακό</span></td><td><span class="badge psig">Εκκρεμότητα</span></td></tr>
+            <tr><td><span class="name">Ελένη Ιωάννου</span><br><span class="sub">NRG · Δίμηνο</span></td><td><span class="badge signed">Υπογράφηκε</span></td></tr>
+            <tr><td><span class="name">Κώστας Νίκας</span><br><span class="sub">ORIZON-0036</span></td><td><span class="badge active">Ενεργή</span></td></tr>
+            <tr><td><span class="name">Δήμητρα Χριστοδούλου</span><br><span class="sub">#CR-10201</span></td><td><span class="badge cancel">Ακυρώθηκε</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="verdict">✓ αυτό βλέπει κάθε νέος χρήστης αν εγκριθεί — ίδιο markup, ίδια tokens, μόνο η προεπιλογή αλλάζει</p>
+  </div>
+</div>
+
+<h2>Τι είναι ήδη ελεγμένο, και δεν χρειάζεται νέος έλεγχος</h2>
+<div class="callout">
+Η σκούρη παλέτα δεν είναι νέα — εγκρίθηκε και υλοποιήθηκε 19/08/2026, με μετρημένη αντίθεση σε κάθε επιφάνεια
+(<code>ecrm-form.css</code>, σχόλιο πάνω από <code>.ecrm[data-theme="dark"]</code>): ελάχιστο κείμενο 4,92:1, εικονίδιο
+4,43:1, badge 4,70:1 — καμία τιμή κάτω από το όριο WCAG. Η δωδεκάδα καταστάσεων έχει δικές της σκούρες τιμές
+(<code>docs/UI-STATUS.html</code>, κλειστό). <b>Αυτή η πρόταση δεν ανοίγει νέο σχεδιαστικό ερώτημα</b> — μόνο αν το
+ήδη-εγκεκριμένο σκούρο γίνεται η πρώτη εντύπωση αντί για δεύτερη επιλογή.
+</div>
+
+<h2>Τι ΔΕΝ λύνει αυτή η πρόταση</h2>
+<p>Τα άλλα τέσσερα κενά του <code>docs/UI-KIT-DIFF.html</code> — Υγεία/Ρυθμίσεις εκτός κελύφους, ο ανασχεδιασμός του
+Πίνακα, η ανεξάρτητη δημόσια σελίδα υπογραφής, το <code>--amber</code> σε πράσινο αντί για λάιμ — μένουν ανοιχτά.
+Κανένα δεν εξαρτάται τεχνικά από αυτό, αλλά η ανάγνωση κάθε οθόνης «πώς θα δείχνει» ταιριάζει καλύτερα μόλις
+απαντηθεί αυτό πρώτα.</p>
+
+<h2>Απόφαση</h2>
+<p><b>Ναι, γίνεται το σκούρο προεπιλογή</b> — προχωράει η αλλαγή στο <code>ThemePreference::FALLBACK</code>.<br>
+<b>Όχι, μένει το ανοιχτό προεπιλογή</b> — ο διακόπτης μένει όπως είναι, προχωράμε στο επόμενο κενό του
+<code>UI-KIT-DIFF.html</code>.</p>
+
+<footer>Energy CRM · <code>docs/UI-DARK-DEFAULT.html</code> · πρόταση κατά §1.8 · μηδέν αγγιγμένος κώδικας · όλα τα
+χρώματα εδώ αντιγράφηκαν από <code>ecrm-form.css</code>, δεν εφευρέθηκαν</footer>
+
+</body>
+</html>
