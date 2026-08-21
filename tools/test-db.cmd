@@ -76,22 +76,19 @@ rem  κεφαλιδα, ωστε να ΜΟΙΑΖΕΙ οτι δουλεψε. Τα 
 rem  Το `for /f` πιο πανω δουλευε γιατι ανοιγει δικο του `cmd /c`.
 call wp db query "CREATE DATABASE IF NOT EXISTS %ECRM_TEST_DB_NAME% DEFAULT CHARACTER SET utf8mb4" >nul 2>&1
 
-rem  Ο κωδικος εξοδου του `wp db query` ΔΕΝ ρωταται. Η δευτερη γραφη τον ρωτουσε
-rem  και τυπωνε «δεν μπορεσα να φτιαξω τη βαση» ενω η βαση υπηρχε και ολα δουλεψαν
-rem  — προειδοποιηση που κραζει λυκο ειναι προειδοποιηση που κανεις δεν ξαναδιαβαζει.
-rem  Σημασια δεν εχει αν πετυχε η εντολη· εχει αν ΥΠΑΡΧΕΙ η βαση. Αυτο ρωταμε.
-set ECRM_DB_FOUND=
-for /f "usebackq delims=" %%i in (`wp db query "SELECT 1 FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='%ECRM_TEST_DB_NAME%'" --skip-column-names 2^>nul`) do set ECRM_DB_FOUND=%%i
-
-if not defined ECRM_DB_FOUND (
-  echo.
-  echo   Η βαση "%ECRM_TEST_DB_NAME%" δεν υπαρχει και δεν μπορεσα να τη φτιαξω.
-  echo   Φτιαξ' την απο το Adminer ^(Local: Database -^> Open Adminer^):
-  echo       CREATE DATABASE %ECRM_TEST_DB_NAME%;
-  echo.
-  chcp %ECRM_OLD_CP% >nul 2>&1
-  exit /b 1
-)
+rem  ΚΑΙ ΤΙΠΟΤΑ ΑΛΛΟ. Εδω υπηρξε ελεγχος «υπαρχει η βαση;» με ερωτημα στο
+rem  information_schema, και ΜΠΛΟΚΑΡΕ βαση που υπηρχε — ειχε μολις τρεξει
+rem  311 tests μεσα της. Το ερωτημα εβγαινε αδειο για δικο του λογο (το
+rem  `wp db query` δεν δεχεται σκετο --skip-column-names), και το stderr ηταν
+rem  κρυμμενο σε `2>nul`, οποτε η αποτυχια ηταν αδιαβαστη· μετα η ΑΠΟΥΣΙΑ
+rem  αποτελεσματος διαβαστηκε ως «δεν υπαρχει». Δυο λαθη μαζι:
+rem
+rem    1. Εκρυψα το stderr και μετα εμπιστευτηκα τη σιωπη.
+rem    2. Εβαλα δευτερο, χειροτερο κριτη ΜΠΡΟΣΤΑ απο εναν αξιοπιστο.
+rem
+rem  Το bootstrap του WordPress ειναι ο κριτης: φτιαχνει τους πινακες και, αν η
+rem  βαση λειπει, σταματα με καθαρο μηνυμα της MySQL. Δεν χρειαζεται προφητη
+rem  απο μπροστα — χρειαζεται να μη μπαινει τιποτα εμποδιο.
 
 if /i "%1"=="all" (
   call composer check:all
@@ -103,6 +100,9 @@ rem --- Ρητο τελος. Ενα script που πεθαινει σιωπηλ�
 if errorlevel 1 (
   echo.
   echo   ---^> ΑΠΕΤΥΧΕ. Κωδικος: !errorlevel!
+  echo.
+  echo   Αν το μηνυμα ελεγε «Unknown database», φτιαξ' τη απο το Adminer
+  echo   ^(Local: Database -^> Open Adminer^):  CREATE DATABASE %ECRM_TEST_DB_NAME%;
 ) else (
   echo.
   echo   ---^> ΤΕΛΟΣ, καθαρο.
