@@ -2,6 +2,7 @@
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
+import { openPartner } from '@energy-crm/navigate';
 
 var teamTab = 'ecrm_seller';
 export function loadTeam() {
@@ -22,11 +23,17 @@ function renderTeam(view, d) {
 		return '<button type="button" class="ecrm-tab2' + (teamTab === r ? ' is-on' : '') + '" data-ttab="' + r + '">' + (r === 'ecrm_seller' ? 'Πωλητές' : 'Καταχωρητές') + ' <span>' + n + '</span></button>';
 	}).join('');
 
+	// Η στήλη «Τηλέφωνο» τύπωνε ΠΑΝΤΑ παύλα: δεν υπάρχει τηλέφωνο μέλους
+	// πουθενά στη βάση, οπότε ήταν στήλη που δεν μπορούσε να δείξει τίποτα —
+	// «διακοσμητικό ψέμα», ίδια οικογένεια με την κάρτα «ΑΙ βοήθεια» του §6β.
+	// Στη θέση της μπαίνει το m.contracts, που το /team ΗΔΗ έστελνε και που
+	// αυτή η οθόνη πετούσε (το ecrm-view-network.js το χρησιμοποιεί κανονικά).
+	// Δεδομένο που υπήρχε και αγνοούνταν, πλάι σε στήλη που δεν είχε τι να πει.
 	var rows = list.map(function (m) {
-		return '<tr>' +
+		return '<tr class="ecrm-rowlink" data-member="' + m.id + '">' +
 			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(m.name) + '">' + esc(initials(m.name)) + '</span><span>' + esc(m.name) + '</span></span></td>' +
 			'<td>' + esc(m.email) + '</td>' +
-			'<td class="ecrm-muted">—</td>' +
+			'<td class="ecrm-tlnum">' + (m.contracts || 0) + '</td>' +
 			'<td>' + (m.active ? '<span class="ecrm-badge ecrm-badge--active">Ενεργός</span>' : '<span class="ecrm-badge ecrm-badge--cancelled">Ανενεργός</span>') + '</td>' +
 			'<td><button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-toggle="' + m.id + '">' + (m.active ? 'Απενεργοποίηση' : 'Ενεργοποίηση') + '</button> ' +
 			'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-remove="' + m.id + '">Αφαίρεση</button></td>' +
@@ -34,7 +41,7 @@ function renderTeam(view, d) {
 	}).join('');
 
 	var table = list.length
-		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Ονοματεπώνυμο</th><th>Email</th><th>Τηλέφωνο</th><th>Κατάσταση</th><th>Ενέργειες</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Ονοματεπώνυμο</th><th>Email</th><th>Συμβάσεις</th><th>Κατάσταση</th><th>Ενέργειες</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
 		: '<div class="ecrm-emptybox"><div class="ecrm-emptybox__txt">Κανένα μέλος ' + (teamTab === 'ecrm_seller' ? 'στους πωλητές' : 'στους καταχωρητές') + ' ακόμα.</div></div>';
 
 	var canManage = d.can_manage;
@@ -59,6 +66,15 @@ function renderTeam(view, d) {
 	view.querySelectorAll('[data-ttab]').forEach(function (b) { b.addEventListener('click', function () { teamTab = this.getAttribute('data-ttab'); renderTeam(view, d); }); });
 	var showAdd = view.querySelector('[data-show-add]');
 	if (showAdd) showAdd.addEventListener('click', function () { var w = view.querySelector('[data-addwrap]'); if (w) { w.hidden = !w.hidden; if (!w.hidden) w.scrollIntoView({ behavior: 'smooth' }); } });
+	// Η γραμμή ανοίγει την καρτέλα, ΕΚΤΟΣ αν πατήθηκε κουμπί μέσα της: τα
+	// «Απενεργοποίηση» και «Αφαίρεση» κάθονται στην ίδια γραμμή, και χωρίς
+	// αυτόν τον έλεγχο κάθε τους πάτημα θα άνοιγε και την καρτέλα από κάτω.
+	view.querySelectorAll('[data-member]').forEach(function (row) {
+		row.addEventListener('click', function (ev) {
+			if (ev.target.closest('button')) { return; }
+			openPartner(this.getAttribute('data-member'));
+		});
+	});
 	view.querySelectorAll('[data-toggle]').forEach(function (b) { b.addEventListener('click', function () { teamOp(this.getAttribute('data-toggle'), 'toggle'); }); });
 	view.querySelectorAll('[data-remove]').forEach(function (b) { b.addEventListener('click', function () { if (confirm('Αφαίρεση μέλους από την ομάδα;')) teamOp(this.getAttribute('data-remove'), 'remove'); }); });
 	var addBtn = view.querySelector('[data-add-member]');

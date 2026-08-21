@@ -1093,6 +1093,22 @@
 
 /* ── οι τρεις μετρητές ── */
 .ecrm-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+/* Η καρτέλα συνεργάτη θέλει τέσσερα πλακίδια αντί για τρία. Modifier και όχι
+   νέα κλάση: το πλακίδιο, η ετικέτα, η τιμή και η υποσημείωση είναι ίδια —
+   μόνο το πλήθος των στηλών αλλάζει, και μαζί του τα σημεία που σπάει. */
+.ecrm-kpis--4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Το πλέγμα της καρτέλας συνεργάτη: λίστα αριστερά, πλαϊνό δεξιά.
+   ΔΕΝ χρησιμοποιείται το .ecrm-detailgrid, που έμοιαζε ό,τι πρέπει: δεν έχει
+   ΚΑΝΕΝΑΝ βασικό κανόνα — μόνο δύο grid-template-columns μέσα σε media
+   queries, χωρίς display:grid πουθενά. Πάνω από 900px δεν κάνει απολύτως
+   τίποτα. Είναι νεκρό υπόλειμμα οθόνης που αφαιρέθηκε, και φάνηκε μόνο
+   όταν αποδόθηκε η οθόνη: οι δύο στήλες έβγαιναν η μία κάτω από την άλλη. */
+.ecrm-pgrid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 1000px) { .ecrm-pgrid { grid-template-columns: 1fr; } }
+.ecrm-pgrid__side { display: flex; flex-direction: column; gap: 14px; }
+@media (max-width: 1100px) { .ecrm-kpis--4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .ecrm-kpis--4 { grid-template-columns: 1fr; } }
 .ecrm-kpi { background: var(--surface); border: 1px solid var(--line-card); border-radius: var(--radius); padding: 12px 14px 14px; }
 
 /* Το KPI που αντιστοιχεί σε κατάσταση γίνεται <button> και φιλτράρει τη λίστα.

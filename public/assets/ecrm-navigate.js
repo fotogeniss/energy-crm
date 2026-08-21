@@ -17,7 +17,7 @@
  */
 
 /**
- * @type {{ go?: Function, openDetail?: Function, openEdit?: Function }}
+ * @type {{ go?: Function, openDetail?: Function, openEdit?: Function, openPartner?: Function }}
  */
 var handlers = {};
 
@@ -42,6 +42,20 @@ export function go(view) {
 export function openDetail(contractId) {
 	if (typeof handlers.openDetail === 'function') {
 		handlers.openDetail(contractId);
+	}
+}
+
+/**
+ * Open one team member's card.
+ *
+ * Περνά από εδώ και όχι με απευθείας import από την «Η ομάδα μου» για τον ίδιο
+ * λόγο που περνά και το openDetail: το κέλυφος εισάγει ήδη κάθε όψη, οπότε μια
+ * όψη που εισάγει άλλη αρχίζει να πλέκει γράφο που κανείς δεν κρατά στο μυαλό
+ * του. Η κατεύθυνση κάθε import μένει μονόδρομη.
+ */
+export function openPartner(memberId) {
+	if (typeof handlers.openPartner === 'function') {
+		handlers.openPartner(memberId);
 	}
 }
 
