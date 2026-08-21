@@ -82,6 +82,39 @@ export ECRM_TEST_DB_HOST=127.0.0.1
 composer test:integration
 ```
 
+## Ένα script, ώστε να μη ξαναπεραστούν με το χέρι
+
+```
+tools\test-db.cmd        μόνο τα integration
+tools\test-db.cmd all    phpcs + phpstan + unit + integration
+```
+
+Μέσα από το **Site Shell** του Local, όχι από σκέτο `cmd`.
+
+Το `set` του cmd.exe ζει **μόνο σε εκείνο το παράθυρο**. Κάθε φορά που ανοίγεις
+νέο Site Shell, το `ECRM_TEST_DB_NAME` λείπει ξανά και το bootstrap σταματά — που
+είναι το σωστό, αλλά μοιάζει με «χάλασε κάτι». Δεν χάλασε: απλώς δεν υπάρχει
+default, γιατί ό,τι μπει εκεί **διαγράφεται ολόκληρο**.
+
+Τα στοιχεία σύνδεσης **δεν είναι γραμμένα μέσα στο script.** Τα ρωτάει από το
+ίδιο το WordPress (`wp config get DB_HOST` κ.λπ.), ώστε να μη σαπίσουν όταν
+αλλάξει η θύρα του Local — που αλλάζει, και δεν είναι πάντα η 3306.
+
+## Όταν βγάζει σφάλμα
+
+| τι λέει | τι σημαίνει | τι κάνεις |
+|---|---|---|
+| `No test database named` | δεν δηλώθηκε `ECRM_TEST_DB_NAME` — συνήθως επειδή είναι **νέο παράθυρο** | `tools\test-db.cmd` |
+| `is the site's own database` | το δίχτυ έπιασε. **Καλώς.** Θα έσβηνε κάθε πελάτη | δώσε άλλο όνομα βάσης |
+| `Unknown database 'energy_crm_tests'` | δεν φτιάχτηκε ποτέ | το script τη φτιάχνει· αλλιώς Adminer → `CREATE DATABASE energy_crm_tests;` |
+| `Access denied for user` | άλλος χρήστης/κωδικός από του site | `wp config get DB_USER` και `DB_PASSWORD`, και δώσ' τα ρητά |
+| `Undefined constant WP_TESTS_DOMAIN` | η **δεύτερη** διεργασία PHP δεν βρήκε το config | δες παρακάτω: `ECRM_TEST_PHP_BINARY` |
+| `EXIT=0` **χωρίς καθόλου output από το phpunit** | το `vendor/bin/phpunit` είναι **0 bytes** — έχει ξανασυμβεί | `composer reinstall phpunit/phpunit`. Το `composer install` λέει «Nothing to install» και **δεν** το διορθώνει. §3 του HANDOVER |
+
+Η τελευταία γραμμή είναι η επικίνδυνη: πράσινο που δεν έτρεξε τίποτα. Αν δεις
+`EXIT=0` και **δεν** δεις γραμμή τύπου `OK (311 tests, 2047 assertions)`, δεν
+πέρασε τίποτα — δεν τρέχει τίποτα.
+
 ## Πού βρίσκει το WordPress
 
 Από τη διαδρομή του plugin, ανεβαίνοντας τρία επίπεδα

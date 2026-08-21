@@ -11,6 +11,7 @@
 import { api, esc, fetch, H, rejectedNote, toast, viewEl } from '@energy-crm/util';
 import { energyLabel, fmtDate, svgIcon, timeAgo } from '@energy-crm/format';
 import { go, openEdit } from '@energy-crm/navigate';
+import { confirmTyped, openDialog } from '@energy-crm/dialog';
 
 function copyText(text) {
 	text = String(text == null ? '' : text);
@@ -278,15 +279,41 @@ function renderDetail(view, d) {
 
 	var delBtn = view.querySelector('[data-detail-del]');
 	if (delBtn) delBtn.addEventListener('click', function () {
-		if (!window.confirm('Διαγραφή της αίτησης ' + (c.code || '') + ';\nΗ ενέργεια είναι οριστική και θα διαγράψει και τα σχετικά έγγραφα/υπογραφές.')) return;
-		var b = this; b.disabled = true; var t = b.textContent; b.textContent = 'Διαγραφή…';
-		fetch(api('/contracts/' + c.id), { method: 'DELETE', headers: H() })
-			.then(function (r) { return r.text().then(function (x) { try { return JSON.parse(x); } catch (e) { throw new Error('HTTP ' + r.status); } }); })
-			.then(function (d2) {
-				if (d2 && d2.ok) { toast('Η αίτηση διαγράφηκε.', true); go('contracts'); }
-				else { b.disabled = false; b.textContent = t; toast((d2 && d2.error) || 'Αποτυχία διαγραφής.', false); }
-			})
-			.catch(function (err) { b.disabled = false; b.textContent = t; toast((err && err.message) || 'Σφάλμα δικτύου.', false); });
+		var b = this;
+
+		function doDelete() {
+			b.disabled = true; var t = b.textContent; b.textContent = 'Διαγραφή…';
+			fetch(api('/contracts/' + c.id), { method: 'DELETE', headers: H() })
+				.then(function (r) { return r.text().then(function (x) { try { return JSON.parse(x); } catch (e) { throw new Error('HTTP ' + r.status); } }); })
+				.then(function (d2) {
+					if (d2 && d2.ok) { toast('Η αίτηση διαγράφηκε.', true); go('contracts'); }
+					else { b.disabled = false; b.textContent = t; toast((d2 && d2.error) || 'Αποτυχία διαγραφής.', false); }
+				})
+				.catch(function (err) { b.disabled = false; b.textContent = t; toast((err && err.message) || 'Σφάλμα δικτύου.', false); });
+		}
+
+		/* Η πύλη με πληκτρολόγηση ΜΟΝΟ όταν η αίτηση έχει βγει από το πρόχειρο.
+		   Ένα πρόχειρο δεν έχει έγγραφα, ούτε υπογραφή, ούτε ιστορικό — δεν
+		   υπάρχει τίποτα να χαθεί, και μια τελετουργία που ζητιέται και εκεί
+		   μαθαίνει τον χρήστη να την προσπερνά παντού. Απόφαση 21/08. */
+		if (c.status === 'draft') {
+			if (!window.confirm('Διαγραφή του πρόχειρου ' + (c.code || '') + ';')) { return; }
+			doDelete();
+			return;
+		}
+
+		// Ο κωδικός είναι αυτό που ξεχωρίζει ΑΥΤΗ την αίτηση από τη διπλανή.
+		// Πέφτει στο id μόνο αν δεν έχει αποδοθεί ακόμη κωδικός — δεν μένει
+		// ποτέ χωρίς κάτι να πληκτρολογηθεί.
+		var hasCode = !!c.code;
+		confirmTyped({
+			expect: hasCode ? String(c.code) : String(c.id),
+			expectLabel: hasCode ? 'Πληκτρολόγησε τον κωδικό της αίτησης' : 'Πληκτρολόγησε τον αριθμό της αίτησης',
+			title: 'Διαγραφή αίτησης ' + (c.code || ('#' + c.id)),
+			lead: ['Η ενέργεια είναι ', { b: 'οριστική' }, ' και θα διαγράψει και τα σχετικά έγγραφα και τις ', { b: 'υπογραφές' }, '.'],
+			confirm: 'Οριστική διαγραφή',
+			onConfirm: doDelete,
+		});
 	});
 	var printBtn = view.querySelector('[data-printform]');
 	if (printBtn) printBtn.addEventListener('click', function () {
@@ -337,15 +364,65 @@ function renderDetail(view, d) {
 		});
 	});
 
+	/* Μία φόρμα αντί για δύο prompt στη σειρά.
+	 *
+	 * Το δεύτερο prompt ζητούσε ΗΜΕΡΟΜΗΝΙΑ ΩΣ ΚΕΙΜΕΝΟ, με το σχήμα μέσα σε
+	 * παρένθεση: «π.χ. 2026-06-20 10:00». Καμία επικύρωση, κανένα ημερολόγιο,
+	 * και ό,τι γραφόταν πήγαινε αυτούσιο στο due_at. Το datetime-local δίνει
+	 * ημερολόγιο στο desktop και NATIVE επιλογέα στο κινητό — εκεί που ο
+	 * συνεργάτης δουλεύει — και στέλνει πάντα «2026-06-20T10:00».
+	 *
+	 * Το «T» δεν χρειάστηκε τίποτα στον server: το TasksController::dueDate()
+	 * ήδη κάνει str_replace('T', ' ', …). Ο server ήταν έτοιμος από την αρχή·
+	 * το πεδίο εισόδου ήταν που δεν ήταν. */
 	var taskNew = view.querySelector('[data-task-new]');
 	if (taskNew) taskNew.addEventListener('click', function () {
-		var title = prompt('Τίτλος εργασίας / επανάκλησης:', 'Επανάκληση πελάτη');
-		if (!title) return;
-		var when = prompt('Πότε; (π.χ. 2026-06-20 10:00 — άφησέ το κενό για χωρίς ημερομηνία)', '');
-		fetch(api('/tasks'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ title: title, due_at: when || '', contract_id: c.id }) })
-			.then(function (r) { return r.json(); })
-			.then(function (res) { if (res && res.ok) toast('Δημιουργήθηκε εργασία.'); else toast((res && res.error) || 'Αποτυχία.', false); })
-			.catch(function () { toast('Σφάλμα δικτύου.', false); });
+		var body =
+			'<div class="ecrm-modal__card ecrm-modal__stack">' +
+				'<label class="ecrm-field"><span class="ecrm-field__label">Τίτλος</span>' +
+				'<input class="ecrm-input" data-task-title value="Επανάκληση πελάτη">' +
+				'<span class="ecrm-field__err" data-task-err hidden>Ο τίτλος δεν μπορεί να είναι κενός.</span></label>' +
+				'<label class="ecrm-field"><span class="ecrm-field__label">Πότε — προαιρετικό</span>' +
+				'<input class="ecrm-input" type="datetime-local" data-task-due></label>' +
+			'</div>';
+
+		openDialog({
+			eyebrow: 'Νέα εργασία',
+			title: 'Εργασία για ' + (c.code || ('#' + c.id)),
+			body: body,
+			confirm: 'Δημιουργία',
+			onConfirm: function (el, close, btn) {
+				var title = (el.querySelector('[data-task-title]').value || '').trim();
+				var when = el.querySelector('[data-task-due]').value || '';
+
+				// Ο τίτλος είναι το μόνο υποχρεωτικό. Το prompt το έλυνε με
+				// σιωπηλή έξοδο· εδώ ο χρήστης βλέπει ΓΙΑΤΙ δεν έγινε τίποτα.
+				// Και με λέξεις, όχι μόνο με κόκκινο περίγραμμα: η πρώτη γραφή
+				// έβαφε μόνο το πλαίσιο, και στην απόδοση ήταν ένα κόκκινο κουτί
+				// που δεν έλεγε τι του λείπει.
+				var titleField = el.querySelector('[data-task-title]');
+				var titleErr = el.querySelector('[data-task-err]');
+
+				if (!title) {
+					titleField.classList.add('is-err');
+					titleErr.hidden = false;
+					titleField.focus();
+					return;
+				}
+
+				titleField.classList.remove('is-err');
+				titleErr.hidden = true;
+
+				btn.disabled = true;
+				fetch(api('/tasks'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ title: title, due_at: when, contract_id: c.id }) })
+					.then(function (r) { return r.json(); })
+					.then(function (res) {
+						if (res && res.ok) { close(); toast('Δημιουργήθηκε εργασία.'); }
+						else { btn.disabled = false; toast((res && res.error) || 'Αποτυχία.', false); }
+					})
+					.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+			},
+		});
 	});
 
 	var docGo = view.querySelector('[data-docup-go]');
