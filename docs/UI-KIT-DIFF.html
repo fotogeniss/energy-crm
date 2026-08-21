@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<title>docs/UI-KIT-DIFF.html — UI-KIT.html έναντι ζωντανού κώδικα</title>
+<style>
+  body{font:15px/1.55 -apple-system,"Segoe UI",Manrope,sans-serif;max-width:920px;margin:40px auto;padding:0 20px;color:#1c1c1a;background:#fff}
+  h1{font-size:22px;margin-bottom:4px}
+  h2{font-size:17px;margin-top:36px;border-bottom:1px solid #ddd;padding-bottom:6px}
+  h3{font-size:14.5px;margin-top:26px;color:#333}
+  code{background:#f2f1ee;padding:1px 4px;border-radius:3px;font-size:13px}
+  table{border-collapse:collapse;width:100%;margin:10px 0 20px;font-size:13.5px}
+  th,td{border-bottom:1px solid #e4e2dd;text-align:left;padding:6px 8px;vertical-align:top}
+  th{color:#666;font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.02em}
+  .done{color:#0e7a10;font-weight:600}
+  .partial{color:#a06a00;font-weight:600}
+  .missing{color:#b3261e;font-weight:600}
+  .unknown{color:#666;font-weight:600}
+  .meta{color:#666;font-size:13.5px}
+  .callout{background:#f7f6f2;border-left:3px solid #c2b280;padding:10px 14px;margin:14px 0;font-size:14px}
+  .callout.bad{border-left-color:#b3261e;background:#fbf0ef}
+  footer{margin-top:50px;color:#888;font-size:12.5px;border-top:1px solid #eee;padding-top:14px}
+</style>
+</head>
+<body>
+
+<h1>UI-KIT.html έναντι ζωντανού κώδικα — ξαναμέτρημα</h1>
+<div class="callout bad" style="border-left-color:#b3261e;background:#fbf0ef">
+<b>ΑΚΥΡΟ ΩΣ ΛΙΣΤΑ ΕΡΓΑΣΙΑΣ — 2026-08-21, την ίδια μέρα που γράφτηκε.</b> Αυτό το αρχείο διαφωνεί το
+<code>docs/UI-KIT.html</code> (13 οθόνες). Ο ιδιοκτήτης εννοούσε το <code>docs/UI-UX-KIT.html</code>
+(26 οθόνες) — επαληθεύτηκε με md5 πάνω στο αρχείο που ανέβασε ο ίδιος, όχι από το όνομα. Ρώτησα με
+λάθος όνομα, πήρα «ναι», και παρήγγειλα audit σε λάθος αρχείο. <b>Η σωστή ανάλυση είναι το
+<code>docs/UI-UX-MAP.html</code></b>, που διαφωνεί ακριβώς το σωστό kit. Κρατιέται μόνο ως ιστορικό:
+οι ενότητες «ήδη έτοιμα» και οι μετρήσεις κώδικα παραμένουν αληθείς, η σύγκριση όχι.
+</div>
+<p class="meta">2026-08-21 · μέτρηση grep/read πάνω στο τρέχον <code>ui-kit</code> branch, μετά την απόφαση πλήρους υιοθέτησης του §6γ(8). <b>Δεν</b> χρησιμοποιεί το <code>docs/UI-UX-MAP.html</code> ως πηγή — εκείνο διαφωνεί ένα διαφορετικό, μεταγενέστερο αρχείο (<code>docs/UI-UX-KIT.html</code>, 19/8 23:06 — μετά το <code>UI-KIT.html</code>, 19/8 09:35) και δηλώνει ρητά ότι σαπίζει.</p>
+
+<div class="callout bad">
+<b>Ο κανόνας που ίσχυσε εδώ:</b> κάθε ισχυρισμός παρακάτω έχει αναφορά αρχείο:γραμμή. Όπου δεν επιβεβαιώθηκε με ανάγνωση, γράφεται «ΔΕΝ ΕΠΙΒΕΒΑΙΩΘΗΚΕ» αντί για εικασία — ακριβώς επειδή αυτό το ίδιο project έχει ήδη χάσει χρόνο τρεις φορές εμπιστευόμενο doc που είχε σαπίσει.
+</div>
+
+<h2>1. Τα μεγαλύτερα κενά, με σειρά επίδρασης</h2>
+
+<ol>
+<li><b>Ο σκούρος καμβάς δεν είναι πουθενά προεπιλογή — και είναι τεκμηριωμένη, σκόπιμη απόφαση, όχι παράλειψη.</b>
+<code>src/Infrastructure/ThemePreference.php:35</code>: <code>public const FALLBACK = self::LIGHT;</code>, με σχόλιο στη γραμμή 32: «Προεπιλογή το ανοιχτό, και είναι απόφαση όχι παράλειψη». Επιβεβαιώθηκε και στο CSS: <code>ecrm-form.css:81</code> ορίζει την <b>ανοιχτόχρωμη</b> παλέτα χωρίς συνθήκη· η σκούρη ενεργοποιείται μόνο κάτω από <code>.ecrm[data-theme="dark"]</code> (γραμμή 327). Το <code>class-ecrm-app.php:115</code> γράφει το <code>data-theme</code> server-side από την ίδια προεπιλογή. <b>Αυτό μπλοκάρει τα πάντα παρακάτω</b>: κάθε άλλη διόρθωση οθόνης θα χρειαστεί ξαναέλεγχο κάτω από σκούρο μόλις αυτό αλλάξει.</li>
+
+<li><b>Υγεία (11) και Ρυθμίσεις (12) δεν ζουν καν μέσα στο κέλυφος του CRM — είναι απλές σελίδες wp-admin.</b>
+<code>src/Admin/HealthPage.php:72</code> και <code>admin/class-ecrm-admin.php:180-181</code> τυπώνουν <code>&lt;div class="wrap"&gt;</code>/<code>form-table</code> — καμία κλάση <code>.ecrm</code>, κανένα token, κανένα πλαϊνό, κανένα θέμα. Το UI-KIT.html τις δείχνει ως πλήρεις οθόνες μέσα στο πλαϊνό. Καμία σχέση σήμερα, ανεξάρτητα από το #1.</li>
+
+<li><b>Ο Πίνακας (1) ξαναχτίστηκε στις 18/8 σε τελείως άλλη λογική από ό,τι δείχνει το UI-KIT.html.</b>
+<code>ecrm-view-dashboard.js:1-15</code> το λέει ρητά: «το προηγούμενο έδειχνε τέσσερα ισότιμα πλακίδια». Το ζωντανό έχει hero νούμερο + μετρητή επιπέδου + 3 KPI chips + γράφημα τάσης + γράφημα παρόχων + ροή. Το kit δείχνει 4 επίπεδα πλακίδια + πίνακα «χρειάζεται ενέργεια» + ροή. Δεν συμφωνούν οθόνη-προς-οθόνη· η υιοθέτηση του kit εδώ είναι απόφαση αντιστροφής, όχι CSS.</li>
+
+<li><b>Η δημόσια σελίδα υπογραφής (6-7) είναι τρίτο, ανεξάρτητο σύστημα σχεδίασης.</b>
+<code>class-ecrm-tracking.php:537-543</code> έχει δικό της <code>:root</code> (<code>--page</code>, <code>--chrome</code>, <code>--surface:#fff</code>), εντελώς αποκομμένο από τα tokens του <code>.ecrm</code>. Κάνει επίσης περισσότερα απ' ό,τι δείχνει το kit (progress tracker + upload εγγράφων).</li>
+
+<li><b>Ασυμφωνία ταυτότητας χρώματος.</b> Το kit χρησιμοποιεί λάιμ <code>#c2f04a</code>. Το ζωντανό token <code>--amber</code> λύνεται σήμερα σε <b>πράσινο</b> (<code>ecrm-form.css:265-266,114-115</code> → <code>#16c217</code>). Cross-cutting αλλά φθηνό: ένα token.</li>
+</ol>
+
+<h2>2. Επιβεβαιωμένα ήδη έτοιμα — μην τα ξαναφτιάξεις</h2>
+<table>
+<tr><th>Τι</th><th>Απόδειξη</th></tr>
+<tr><td>Λίστα: δύο γραμμές ανά κελί</td><td><code>ecrm-view-contracts.js:110-135</code></td></tr>
+<tr><td>Λίστα: ενέργεια ανά γραμμή, ανά κατάσταση</td><td><code>ecrm-view-contracts.js:150-163</code>, <code>primaryAction()</code></td></tr>
+<tr><td>Λεπτομέρεια: κύριο + rail layout</td><td><code>ecrm-view-detail.js:156-204</code></td></tr>
+<tr><td>Λεπτομέρεια: checklist 5 σημείων στο rail</td><td><code>ecrm-view-detail.js:140-150</code></td></tr>
+<tr><td>Wizard 4 βημάτων, ίδιες ετικέτες με το kit</td><td><code>class-ecrm-shortcodes.php:244-248</code></td></tr>
+<tr><td>Κλίμακα τυπογραφίας ως tokens, με φύλακα test</td><td><code>ecrm-form.css:47-79</code></td></tr>
+<tr><td><b>Παλέτα 12 καταστάσεων, με σκούρες τιμές έτοιμες</b></td><td><code>ecrm-form.css:160-183</code> (φως), <code>:378-383</code> (σκούρο) — CHANGELOG (46)/(47)/(49)/(50), έκλεισε 19/8. <b>Μην το ξαναβάλεις ως κενό.</b></td></tr>
+<tr><td>Κάτω μπάρα mobile</td><td><code>ecrm-app.css:1018-1037</code></td></tr>
+<tr><td>Τοπικές γραμματοσειρές, μηδέν Google Fonts (κέλυφος <b>και</b> δημόσια σελίδα)</td><td><code>public/assets/fonts/manrope-*.woff2</code>· <code>class-ecrm-tracking.php:525-528</code></td></tr>
+<tr><td>Δείκτης delta προηγούμενου μήνα στο hero — <b>χωρίς backend αλλαγή</b></td><td><code>ecrm-view-dashboard.js:34-58</code>: το API στέλνει ήδη τους 12 μήνες, η διαφορά βγαίνει client-side δωρεάν</td></tr>
+</table>
+
+<h2>3. Ανά οθόνη</h2>
+
+<h3>1 · Πίνακας</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>4 επίπεδα πλακίδια</td><td class="missing">ΛΕΙΠΕΙ</td><td>Backend γυρνά μόνο <code>today, pending, routed, month</code> — <code>DashboardRepository.php:45-48</code>· ζωντανό UI έχει hero+chips</td></tr>
+<tr><td>Delta ανά πλακίδιο</td><td class="partial">ΜΙΣΟ</td><td>Μόνο στο hero, όχι σε 3 από τα 4 (γιατί δεν υπάρχουν αυτά τα 4)</td></tr>
+<tr><td>Πίνακας «χρειάζεται ενέργεια»</td><td class="done">ΕΓΙΝΕ (λίστα, όχι table)</td><td><code>attentionHTML()</code>, <code>:114-131</code></td></tr>
+<tr><td>Ροή δραστηριότητας</td><td class="done">ΕΓΙΝΕ</td><td><code>feedHTML()</code>, <code>:205-216</code></td></tr>
+</table>
+
+<h3>2 · Συμβάσεις (λίστα)</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>Status chips με μετρητές</td><td class="done">ΕΓΙΝΕ, πλουσιότερο</td><td><code>:170-173</code></td></tr>
+<tr><td>Δικά μου / Ομάδας</td><td class="done">ΕΓΙΝΕ</td><td><code>:230</code></td></tr>
+<tr><td>Αναζήτηση</td><td class="done">ΕΓΙΝΕ</td><td><code>:233,243-247</code></td></tr>
+<tr><td>Export</td><td class="done">ΕΓΙΝΕ</td><td><code>:231</code></td></tr>
+<tr><td>Σκούρος καμβάς όπως το kit</td><td class="missing">ΛΕΙΠΕΙ (default)</td><td>βλ. §1.1</td></tr>
+</table>
+
+<h3>3 · Λεπτομέρεια σύμβασης</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>Κύριο + rail</td><td class="done">ΕΓΙΝΕ</td><td><code>:156-204</code></td></tr>
+<tr><td>Στοιχεία πελάτη / Παροχή</td><td class="done">ΕΓΙΝΕ</td><td><code>:174-186</code></td></tr>
+<tr><td>Ιστορικό ροής</td><td class="done">ΕΓΙΝΕ</td><td><code>:127-134</code></td></tr>
+<tr><td>Preview PDF δίπλα στο κανάλι</td><td class="partial">ΜΙΣΟ</td><td><code>filesCard()</code>, <code>:50-93</code> — λίστα, όχι preview thumbnail</td></tr>
+<tr><td>Κάρτα «ΑΙ βοήθεια»</td><td class="missing">ΛΕΙΠΕΙ</td><td>Καμία αναφορά σε <code>renderDetail()</code>· backend δεν στέλνει τέτοιο πεδίο</td></tr>
+<tr><td>Audit trail συνεργάτη (ώρα/IP)</td><td class="missing">ΛΕΙΠΕΙ</td><td><code>signed_ip</code> υπάρχει (<code>class-ecrm-tracking.php:356</code>) αλλά καμία οθόνη CRM δεν το δείχνει</td></tr>
+</table>
+
+<h3>4 · Νέα αίτηση (wizard)</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>4 βήματα, ίδιες ετικέτες</td><td class="done">ΕΓΙΝΕ</td><td><code>:244-248</code></td></tr>
+<tr><td>AI εξαγωγή + πεδία σε ένα βήμα (όπως το kit)</td><td class="partial">ΔΟΜΙΚΗ ΔΙΑΦΟΡΑ</td><td>Ζωντανό: upload+AI στο βήμα 2, πεδία στο 3 — ισοδύναμο, όχι ίδιο layout</td></tr>
+<tr><td>Drag/drop + «AI εξαγωγή»</td><td class="done">ΕΓΙΝΕ</td><td><code>:357-366</code></td></tr>
+</table>
+
+<h3>5 · Βήμα 4 · Έλεγχος & υπογραφή (CRM)</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>Preview PDF inline</td><td class="missing">ΛΕΙΠΕΙ</td><td><code>:761-784</code> — μόνο banners ενεργειών, καμία ενσωματωμένη προεπισκόπηση</td></tr>
+<tr><td>3 κανάλια με επιλεγμένη κατάσταση</td><td class="partial">ΜΙΣΟ</td><td>2 πραγματικά κανάλια (<code>email</code>, <code>livelink</code>) — <code>:769-776</code></td></tr>
+<tr><td>Συναίνεση GDPR+AI</td><td class="done">ΕΓΙΝΕ, διαφορετικό scope</td><td><code>:799</code> — footer wizard, όχι ειδικά αυτού του βήματος</td></tr>
+</table>
+
+<h3>6-7 · Δημόσια υπογραφή / Success</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>Εστιασμένη κάρτα υπογραφής</td><td class="partial">ΜΙΣΟ</td><td>Ζωντανό = tracking+sign+upload μαζί (<code>:499-872</code>)</td></tr>
+<tr><td>Signature pad</td><td class="done">ΕΓΙΝΕ</td><td><code>:732,805-864</code></td></tr>
+<tr><td>Σκούρο/λάιμ όπως το kit</td><td class="missing">ΛΕΙΠΕΙ</td><td>δικό της σύστημα, βλ. §1.4</td></tr>
+<tr><td>CRM-side success οθόνη (ώρα/IP/επόμενα βήματα)</td><td class="missing">ΛΕΙΠΕΙ</td><td>Μόνο <code>toast()</code>, καμία πλήρης οθόνη</td></tr>
+</table>
+
+<h3>8 · Εργασίες</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>Checkbox γραμμές, τίτλος/υπότιτλος, προθεσμία</td><td class="done">ΕΓΙΝΕ</td><td><code>:119-133</code></td></tr>
+<tr><td>Φίλτρα (ανοιχτές/σήμερα/εκπρόθεσμες/έγιναν)</td><td class="done">ΕΓΙΝΕ, πλουσιότερο</td><td><code>:91-94</code></td></tr>
+</table>
+
+<h3>9 · Προμήθειες</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>Γραμμή ανά σύμβαση/συνεργάτη</td><td class="missing">ΛΕΙΠΕΙ</td><td>Ζωντανό αθροίζει ανά μήνα — <code>:30-37</code></td></tr>
+<tr><td>«Νέα εκκαθάριση» εδώ</td><td class="missing">ΛΕΙΠΕΙ</td><td>Ζει σε wp-admin, <code>admin/class-ecrm-payouts.php</code> — δεμένο με §6γ(3)-(6)</td></tr>
+<tr><td>4 πλακίδια στατιστικών</td><td class="partial">ΜΙΣΟ</td><td>Ζωντανό έχει 3, όχι «εκκρεμείς» — <code>:63-66</code></td></tr>
+</table>
+
+<h3>10 · Δίκτυο συνεργατών</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>Πολυεπίπεδη ιεραρχία με εσοχές</td><td class="missing">ΛΕΙΠΕΙ</td><td>Ζωντανό = επίπεδος πίνακας άμεσων υποσυνεργατών — <code>:16-34</code></td></tr>
+<tr><td>KPI απόδοσης συνεργάτη</td><td class="missing">ΛΕΙΠΕΙ</td><td>Ούτε εδώ ούτε στο <code>ecrm-view-team.js:14-38</code></td></tr>
+</table>
+
+<h3>11 · Υγεία / 12 · Ρυθμίσεις</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>Μέσα στο κέλυφος .ecrm, σκούρο</td><td class="missing">ΛΕΙΠΕΙ</td><td>wp-admin <code>.wrap</code>/<code>form-table</code> και στα δύο — βλ. §1.2</td></tr>
+<tr><td>Έλεγχοι υγείας (περιεχόμενο)</td><td class="done">ΥΠΑΡΧΕΙ, άλλη παρουσίαση</td><td><code>HealthChecks.php</code> — <code>secrets/encryption/documents/schema/commissions/scheduled/platform</code></td></tr>
+<tr><td>GDPR export/delete</td><td class="done">ΥΠΑΡΧΕΙ, αλλού</td><td><code>PrivacyTools.php</code> — μέσω WP Tools, όχι μέσα σε οθόνη Ρυθμίσεων του kit</td></tr>
+</table>
+
+<h3>13 · Mobile λίστα</h3>
+<table><tr><th>Feature</th><th>Κατάσταση</th><th>Απόδειξη</th></tr>
+<tr><td>Κάτω μπάρα</td><td class="done">ΕΓΙΝΕ, διαφορετικά items</td><td><code>ecrm-app.css:1018-1037</code></td></tr>
+<tr><td>Κάρτα ανά σύμβαση (όχι table)</td><td class="missing">ΛΕΙΠΕΙ</td><td><code>ecrm-app.css:990-1016</code> κρύβει στήλες, δεν αλλάζει σε κάρτες</td></tr>
+</table>
+
+<h2>4. Το μικρότερο, πιο ασφαλές πρώτο βήμα</h2>
+<div class="callout">
+<b>Πρόταση, όχι απόφαση — §1.8 απαιτεί HTML πρόταση πριν από κώδικα.</b> Το ερώτημα που μπλοκάρει τα πάντα παρακάτω είναι ένα: <b>γίνεται το σκούρο η πραγματική προεπιλογή (<code>ThemePreference::FALLBACK</code>), ή μένει προσβάσιμο μόνο μέσω του υπάρχοντος διακόπτη;</b> Φθηνό να δοκιμαστεί (μία σταθερά + ήδη έτοιμα tokens), αναστρέψιμο, και κάθε άλλη διόρθωση σε αυτό το έγγραφο πρέπει να ξαναελεγχθεί μόλις απαντηθεί — άρα προηγείται. Όλα τα υπόλοιπα (μετακόμιση Υγείας/Ρυθμίσεων στο κέλυφος, συμφωνία Πίνακα, γραμμές Προμηθειών, δέντρο Δικτύου) είναι μεγαλύτερες, ανεξάρτητες αποφάσεις που θέλουν δικό τους πέρασμα.
+</div>
+
+<footer>Energy CRM · <code>docs/UI-KIT-DIFF.html</code> · ανάλυση, καμία αλλαγή κώδικα · μέθοδος: grep + ανάγνωση πηγαίου κώδικα, screen-by-screen κατά του <code>docs/UI-KIT.html</code></footer>
+
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<title>docs/UI-SIGN-AUDIT.html — B7: το audit της υπογραφής</title>
+<style>
+  body{font:15px/1.55 -apple-system,"Segoe UI",Manrope,sans-serif;max-width:1180px;margin:36px auto;padding:0 20px;color:#1c1c1a;background:#fff}
+  h1{font-size:21px;margin-bottom:4px}
+  h2{font-size:16px;margin-top:38px;border-bottom:1px solid #e4e2dd;padding-bottom:6px}
+  h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:#666;margin:0 0 10px}
+  .meta{color:#666;font-size:13.5px;margin-bottom:18px}
+  code{background:#f2f1ee;padding:1px 4px;border-radius:3px;font-size:12.5px}
+  .callout{background:#f7f6f2;border-left:3px solid #c2b280;padding:11px 14px;margin:16px 0;font-size:14px}
+  .callout.bad{border-left-color:#b3261e;background:#fbf0ef}
+  .callout.ok{border-left-color:#16c217;background:#f0faf0}
+  table{border-collapse:collapse;width:100%;margin:10px 0 18px;font-size:13.5px}
+  th,td{border-bottom:1px solid #e4e2dd;text-align:left;padding:6px 8px;vertical-align:top}
+  th{color:#666;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.02em}
+  .cols{display:flex;gap:18px;margin:16px 0;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1;min-width:330px}
+  .frame{border:1px solid #ddd;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+  .verdict{font-size:12px;color:#0e7a10;margin-top:6px}
+
+  /* ============ Ζωντανά tokens, αντιγραμμένα από ecrm-form.css ============ */
+  .t{ --n0:#ffffff;--n50:#f8f8f6;--n100:#f1f1ee;--n150:#e9e8e4;--n200:#dedcd7;--n300:#c6c4bd;
+      --n450:#83817a;--n500:#6e6c66;--n800:#2a2926;--n900:#1a1a18;
+      --bg:#f8f8f6;--surface:#ffffff;--ink:#2a2926;--navy:#1a1a18;--muted:#6e6c66;
+      --line:#dedcd7;--line-card:#e9e8e4;--line-soft:#f1f1ee;--line-strong:#a3a099;
+      --accent:#16c217;--accent-ink:#0b690c;--accent-wash:#eafaea;--accent-soft:#a5eba7;--on-accent:#0b3d0c;
+      --st-signed:#00468a;--st-signed-bg:#e8ebf7;--st-active:#00531e;--st-active-bg:#e3f0e4;
+      --ok:#006926;
+      font-family:"Manrope",-apple-system,"Segoe UI",sans-serif;
+      background:var(--bg);color:var(--ink); }
+  .t.dark{ --bg:#111110;--surface:#1a1a18;--ink:#f1f1ee;--navy:#f8f8f6;--muted:#a3a099;
+      --line:#33322e;--line-card:#2a2926;--line-soft:#232320;--line-strong:#4d4b45;
+      --accent-ink:#6bdd6d;--accent-wash:#12240f;--accent-soft:#1e4a21;
+      --st-signed:#b9cbff;--st-signed-bg:#31343f;--st-active:#a3d9a9;--st-active-bg:#2c382d;
+      --ok:#8cc792; }
+
+  .t .card{background:var(--surface);border:1px solid var(--line-card);border-radius:12px;padding:12px 14px}
+  .t .step{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .t .kv{padding:7px 0;border-bottom:1px solid var(--line-soft)}
+  .t .kv:last-child{border-bottom:none}
+  .t .kv span{display:block;font-size:11.5px;color:var(--muted)}
+  .t .kv b{display:block;font-size:14px;font-weight:700;color:var(--ink)}
+  .t .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+  .t .badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+  .t .badge.signed{background:var(--st-signed-bg);color:var(--st-signed)}
+  .t .btn{display:flex;align-items:center;gap:7px;width:100%;padding:8px 11px;border-radius:9px;font-size:12.5px;
+          font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;margin-bottom:7px;font-family:inherit}
+  .t .btn.p{background:var(--accent);border-color:var(--accent);color:#fff}
+  .t.dark .btn.p{color:#fff}
+
+  /* Α: πλήρης οθόνη */
+  .scr{padding:22px 20px}
+  .tick{width:48px;height:48px;border-radius:50%;border:2px solid var(--ok);background:var(--accent-wash);
+        display:grid;place-items:center;font-size:21px;color:var(--ok);margin-bottom:11px}
+  .scr h4{font-size:17px;font-weight:800;color:var(--navy);margin:0 0 3px}
+  .scr .sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px}
+  .grid2 .card{padding:9px 11px}
+  .grid2 .card span{display:block;font-size:11px;color:var(--muted);margin-bottom:2px}
+  .grid2 .card strong{font-size:13px;color:var(--ink)}
+  .next{background:var(--accent-wash);border:1px solid var(--accent-soft);border-radius:10px;padding:10px 12px;margin-bottom:13px}
+  .next b{color:var(--accent-ink);font-size:12px}
+  .next p{font-size:12.5px;color:var(--muted);margin:4px 0 0}
+  .row{display:flex;gap:7px;flex-wrap:wrap}
+  .row .btn{width:auto;margin:0}
+
+  /* Β: rail */
+  .rail{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:15px;padding:18px}
+  .rail .main{display:flex;flex-direction:column;gap:13px;min-width:0}
+  .ph{border:1px dashed var(--line-strong);border-radius:11px;padding:16px 13px;color:var(--muted);font-size:12px;text-align:center}
+  .rail aside{display:flex;flex-direction:column;gap:11px}
+  .aud{border-color:var(--accent-soft);background:var(--accent-wash)}
+  footer{margin-top:46px;color:#888;font-size:12.5px;border-top:1px solid #eee;padding-top:14px}
+</style>
+</head>
+<body>
+
+<h1>B7 — το audit της υπογραφής, ορατό στον συνεργάτη</h1>
+<p class="meta">2026-08-21 · πρόταση κατά §1.8, πριν από κώδικα · πρώτο βήμα της υλοποίησης του <code>docs/UI-UX-KIT.html</code> με την απόφαση «μορφή από το kit, χρώματα από τον κώδικα» · μηδέν αγγιγμένος κώδικας</p>
+
+<h2>1. Τι υπάρχει ήδη — μετρημένο, όχι υποτεθειμένο</h2>
+
+<div class="callout ok">
+<b>Καμία αλλαγή σε backend ή schema. Τα δεδομένα φτάνουν ήδη στην οθόνη σήμερα.</b> Η αλυσίδα, επαληθευμένη άκρη σε άκρη:
+</div>
+
+<table>
+<tr><th>Κρίκος</th><th>Απόδειξη</th></tr>
+<tr><td>Το IP καταγράφεται τη στιγμή της υπογραφής</td><td><code>class-ecrm-tracking.php:356</code> — <code>'extra' =&gt; [ 'signed_at' =&gt; $now, 'signed_ip' =&gt; $ip ]</code></td></tr>
+<tr><td>Το <code>extra</code> γράφεται σε <b>στήλες σύμβασης</b>, όχι μόνο σε log</td><td><code>ContractTransitions::applyTransition()</code> → <code>WritableColumns::filter()</code>· <code>WritableColumns.php:64-65</code> περιέχει <code>signed_at</code> και <code>signed_ip</code></td></tr>
+<tr><td>Οι στήλες υπάρχουν πραγματικά στη βάση</td><td><code>Schema/Migrations/EnsureLegacyColumns.php:42</code> — <code>'signed_ip' =&gt; 'VARCHAR(64) NULL'</code></td></tr>
+<tr><td>Το endpoint τις επιστρέφει</td><td><code>ContractDetails::detailed()</code> κάνει <code>SELECT c.*</code> (<code>ContractDetails.php:150</code>) — άρα <b>και οι δύο</b> ταξιδεύουν ήδη στο <code>/contracts/{id}</code></td></tr>
+<tr><td>Η οθόνη δεν τις δείχνει πουθενά</td><td><code>ecrm-view-detail.js</code>: αναφορές σε <code>signed_ip</code>/<code>signed_at</code>/IP = <b>μηδέν</b></td></tr>
+</table>
+
+<p><b>Δηλαδή η δουλειά είναι καθαρά οθόνη.</b> Προσθετική: κανένας υπάρχων handler, καμία υπάρχουσα συμπεριφορά δεν αλλάζει.</p>
+
+<div class="callout bad">
+<b>ΕΝΑ ΑΠΟ ΤΑ ΤΕΣΣΕΡΑ ΠΛΑΚΙΔΙΑ ΤΟΥ KIT ΔΕΝ ΜΠΟΡΕΙ ΝΑ ΓΙΝΕΙ, ΚΑΙ ΤΟ ΑΦΑΙΡΩ.</b><br>
+Το B7 του kit δείχνει <b>Ώρα · Κανάλι · IP πελάτη · Status</b>. Το «Κανάλι» (<i>«Link κινητού»</i>) <b>δεν υπάρχει πουθενά</b>: μηδέν στήλη <code>channel</code> στο <code>WritableColumns</code> και μηδέν στο schema. Θα ήταν ακριβώς η «κάρτα ΑΙ βοήθεια» ξανά — κουτί που δείχνει σταθερό κείμενο επειδή δεν έχει τι να ρωτήσει. <b>Μένουν τρία πλακίδια.</b> Αν το κανάλι το θέλεις πραγματικά, είναι νέα στήλη + γράψιμο σε δύο σημεία, και είναι <i>ξεχωριστή</i> δουλειά — όχι σιωπηλό placeholder μέσα σε αυτήν.
+</div>
+
+<h2>2. Εκδοχή Α — πλήρης οθόνη success (όπως το kit)</h2>
+<p class="meta">Ό,τι δείχνει το B7, στα χρώματα του κώδικα. Εμφανίζεται <b>μία φορά</b>, μόλις υπογραφτεί.</p>
+
+<div class="cols">
+  <div class="col"><h3>Ανοιχτό</h3>
+    <div class="frame t"><div class="scr">
+      <div class="tick">✓</div>
+      <h4>Η σύμβαση υπογράφηκε</h4>
+      <div class="sub">#CR-10482 · Μαρία Παπαδοπούλου · Protergia Value 24μηνο</div>
+      <div class="grid2">
+        <div class="card"><span>Ώρα</span><strong>20/08/2026 14:32</strong></div>
+        <div class="card"><span>IP πελάτη</span><strong>85.72.•••.•••</strong></div>
+        <div class="card"><span>Κατάσταση</span><strong><span class="badge signed">Υπογεγραμμένη</span></strong></div>
+      </div>
+      <div class="next"><b>Επόμενα βήματα</b><p>1. Έλεγχος τελικού PDF · 2. Στάλσιμο στον πάροχο · 3. Προμήθεια όταν κλείσει</p></div>
+      <div class="row">
+        <button class="btn p">Στάλσιμο σε πάροχο</button>
+        <button class="btn">Άνοιγμα σύμβασης</button>
+      </div>
+    </div></div>
+  </div>
+  <div class="col"><h3>Σκούρο</h3>
+    <div class="frame t dark"><div class="scr">
+      <div class="tick">✓</div>
+      <h4>Η σύμβαση υπογράφηκε</h4>
+      <div class="sub">#CR-10482 · Μαρία Παπαδοπούλου · Protergia Value 24μηνο</div>
+      <div class="grid2">
+        <div class="card"><span>Ώρα</span><strong>20/08/2026 14:32</strong></div>
+        <div class="card"><span>IP πελάτη</span><strong>85.72.•••.•••</strong></div>
+        <div class="card"><span>Κατάσταση</span><strong><span class="badge signed">Υπογεγραμμένη</span></strong></div>
+      </div>
+      <div class="next"><b>Επόμενα βήματα</b><p>1. Έλεγχος τελικού PDF · 2. Στάλσιμο στον πάροχο · 3. Προμήθεια όταν κλείσει</p></div>
+      <div class="row">
+        <button class="btn p">Στάλσιμο σε πάροχο</button>
+        <button class="btn">Άνοιγμα σύμβασης</button>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<p><b>Κόστος:</b> νέα οθόνη, νέο routing, και το «Επόμενα βήματα» είναι <i>στατικό κείμενο</i> — σωστό σήμερα, αλλά τίποτα δεν το κρατά συγχρονισμένο με τη ροή. <b>Κέρδος:</b> το πιο δυνατό σημείο για CTA — ο συνεργάτης μόλις τελείωσε κάτι και ξέρει τι ακολουθεί.</p>
+
+<h2>3. Εκδοχή Β — μπλοκ audit μέσα στο rail της λεπτομέρειας</h2>
+<p class="meta">Μπαίνει στο υπάρχον <code>.ecrm-drail</code>, πάνω από το Checklist. Ορατό <b>πάντα</b>, όχι μόνο τη στιγμή της υπογραφής.</p>
+
+<div class="cols">
+  <div class="col"><h3>Ανοιχτό</h3>
+    <div class="frame t"><div class="rail">
+      <div class="main">
+        <div class="ph">κεφαλή · στοιχεία πελάτη · παροχή</div>
+        <div class="ph">Ιστορικό ροής · Αλλαγή κατάστασης</div>
+        <div class="ph">Έγγραφα</div>
+      </div>
+      <aside>
+        <div class="card aud">
+          <div class="step">Υπογραφή ✓</div>
+          <div class="kv"><span>Ώρα</span><b>20/08/2026 14:32</b></div>
+          <div class="kv"><span>IP πελάτη</span><b>85.72.•••.•••</b></div>
+          <div class="kv"><span>Κατάσταση</span><b><span class="badge signed">Υπογεγραμμένη</span></b></div>
+        </div>
+        <div class="card"><div class="step">Checklist &nbsp;<b>5/5</b></div>
+          <div style="font-size:12.5px;color:var(--muted)">ταυτότητα · παροχή · πρόγραμμα · υπογραφή · GDPR</div></div>
+        <button class="btn p">Αποστολή για υπογραφή</button>
+        <button class="btn">Λήψη εντύπου παρόχου</button>
+      </aside>
+    </div></div>
+  </div>
+  <div class="col"><h3>Σκούρο</h3>
+    <div class="frame t dark"><div class="rail">
+      <div class="main">
+        <div class="ph">κεφαλή · στοιχεία πελάτη · παροχή</div>
+        <div class="ph">Ιστορικό ροής · Αλλαγή κατάστασης</div>
+        <div class="ph">Έγγραφα</div>
+      </div>
+      <aside>
+        <div class="card aud">
+          <div class="step">Υπογραφή ✓</div>
+          <div class="kv"><span>Ώρα</span><b>20/08/2026 14:32</b></div>
+          <div class="kv"><span>IP πελάτη</span><b>85.72.•••.•••</b></div>
+          <div class="kv"><span>Κατάσταση</span><b><span class="badge signed">Υπογεγραμμένη</span></b></div>
+        </div>
+        <div class="card"><div class="step">Checklist &nbsp;<b>5/5</b></div>
+          <div style="font-size:12.5px;color:var(--muted)">ταυτότητα · παροχή · πρόγραμμα · υπογραφή · GDPR</div></div>
+        <button class="btn p">Αποστολή για υπογραφή</button>
+        <button class="btn">Λήψη εντύπου παρόχου</button>
+      </aside>
+    </div></div>
+  </div>
+</div>
+
+<p><b>Κόστος:</b> καμία νέα οθόνη, καμία νέα διαδρομή — μία κάρτα μέσα σε υπάρχον <code>&lt;aside&gt;</code>, με το ίδιο <code>.ecrm-kv</code> που ήδη χρησιμοποιεί η οθόνη. <b>Κέρδος:</b> το audit είναι εκεί και <i>αύριο</i>, όταν κάποιος ρωτήσει «πότε υπέγραψε;» — και όχι μόνο στο δευτερόλεπτο της υπογραφής.</p>
+
+<h2>4. Η σύγκριση, χωρίς διακοσμητικά</h2>
+<table>
+<tr><th></th><th>Α · πλήρης οθόνη</th><th>Β · μπλοκ στο rail</th></tr>
+<tr><td>Νέο markup</td><td>ολόκληρη οθόνη + routing</td><td><b>μία κάρτα</b> σε υπάρχον rail</td></tr>
+<tr><td>Πότε φαίνεται</td><td>μία φορά, μετά την υπογραφή</td><td><b>πάντα</b>, σε κάθε υπογεγραμμένη</td></tr>
+<tr><td>Νέο CSS</td><td>ναι, δικό της</td><td><b>σχεδόν μηδέν</b> — <code>.ecrm-card</code>, <code>.ecrm-kv</code>, <code>.ecrm-step</code> υπάρχουν</td></tr>
+<tr><td>Ρίσκο σε υπάρχουσα ροή</td><td>νέα διαδρομή = νέο σημείο αποτυχίας</td><td><b>μηδέν</b> — προσθετικό</td></tr>
+<tr><td>Ισχυρό CTA «επόμενο βήμα»</td><td><b>ναι</b></td><td>όχι (τα κουμπιά υπάρχουν ήδη από κάτω)</td></tr>
+<tr><td>Απαντά «πότε υπέγραψε;» εκ των υστέρων</td><td>όχι</td><td><b>ναι</b></td></tr>
+</table>
+
+<div class="callout">
+<b>Προτείνω το Β</b> — και όχι επειδή είναι το φθηνό. Το ερώτημα που λύνει το audit είναι <i>αναδρομικό</i>: κανείς δεν ρωτά «από ποιο IP υπέγραψε» τη στιγμή που υπογράφει· ρωτά τρεις εβδομάδες μετά, όταν ο πάροχος ή ο πελάτης αμφισβητήσει. Η εκδοχή Α δείχνει την πληροφορία ακριβώς τη <b>μία</b> στιγμή που κανείς δεν τη χρειάζεται και μετά την κρύβει για πάντα.<br><br>
+<i>Και δεν αποκλείονται: αν αργότερα θέλεις και την οθόνη Α για το CTA, το μπλοκ του Β παραμένει σωστό — η μία δεν ακυρώνει την άλλη.</i>
+</div>
+
+<h2>5. Το IP: μασκαρισμένο ή ολόκληρο;</h2>
+<p><b>Το ίδιο το kit το μασκάρει</b> — γράφει <code>85.72.xxx.xxx</code>, όχι πλήρες IP. Το κράτησα (ως <code>85.72.•••.•••</code>) και συμφωνεί από μόνο του με την απόφαση μασκαρίσματος του ΑΦΜ στη λίστα (§6γ 10): ίδιο σκεπτικό, ποσότητα και όχι δικαίωμα.</p>
+<p><b>Αλλά εδώ το σκεπτικό είναι πιο αδύναμο απ' ό,τι στον ΑΦΜ, και το λέω:</b> ένα IP σε <i>μία</i> καρτέλα δεν είναι «εικοσιπέντε μαζί σε μια φωτογραφία οθόνης». Και ένα μασκαρισμένο IP <b>δεν κάνει τη δουλειά του audit</b> — αν χρειαστεί σε διαφορά με πάροχο, τα μισά ψηφία δεν αποδεικνύουν τίποτα. <b>Η πρότασή μου: ολόκληρο.</b> Είναι οθόνη που τη βλέπει μόνο ο συνεργάτης της σύμβασης, το IP του πελάτη είναι ήδη στο μήνυμα του ιστορικού ροής (<code>class-ecrm-tracking.php:354</code> γράφει <code>(IP …)</code> στο <code>message</code>), οπότε το μασκάρισμα εδώ κρύβει κάτι που φαίνεται ήδη δυο εκατοστά πιο κάτω στην ίδια οθόνη. <b>Δική σου η απόφαση</b> — αλλάζει μία γραμμή.</p>
+
+<h2>6. Τι χρειάζεται για να γίνει</h2>
+<table>
+<tr><th>Αρχείο</th><th>Τι</th></tr>
+<tr><td><code>public/assets/ecrm-view-detail.js</code></td><td>μία συνάρτηση <code>signAuditCard(c)</code>, που επιστρέφει κενό αν <code>!c.signed_at</code> — και μία γραμμή στο <code>&lt;aside&gt;</code></td></tr>
+<tr><td><code>public/assets/ecrm-app.css</code></td><td><b>ίσως τίποτα.</b> Αν το μπλοκ χρειαστεί δικό του τόνο, ένας κανόνας <code>.ecrm-rcard--audit</code></td></tr>
+<tr><td>Backend / schema / REST</td><td><b>τίποτα.</b> Δες §1</td></tr>
+<tr><td>Tests</td><td>Το <code>tools/wizard-smoke/</code> δεν αγγίζει αυτό το αρχείο. Η PHP σουίτα δεν βλέπει JS όψεις — <b>ο έλεγχος είναι το μάτι σου στην οθόνη</b>, όπως λέει το §6α.1</td></tr>
+</table>
+
+<footer>Energy CRM · <code>docs/UI-SIGN-AUDIT.html</code> · πρόταση κατά §1.8 · όλα τα χρώματα αντιγράφηκαν από <code>ecrm-form.css</code>, δεν εφευρέθηκαν · κάθε ισχυρισμός για δεδομένα επαληθεύτηκε με ανάγνωση πηγαίου κώδικα</footer>
+
+</body>
+</html>
