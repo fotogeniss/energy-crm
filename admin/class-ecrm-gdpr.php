@@ -89,13 +89,38 @@ class ECRM_GDPR {
 			echo '<td>' . esc_html( trim( ( $r['email'] ?? '' ) . ' ' . ( $r['mobile'] ?? '' ) ) ?: '—' ) . '</td>';
 			echo '<td>';
 			echo '<a class="button button-small" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ecrm_gdpr_export&id=' . (int) $r['id'] ), 'ecrm_gdpr_export' ) ) . '">Εξαγωγή JSON</a> ';
-			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline" onsubmit="return confirm(\'Μη αναστρέψιμη ανωνυμοποίηση όλων των προσωπικών δεδομένων αυτού του πελάτη. Συνέχεια;\')">';
+			// Το «Συνέχεια;» του browser confirm() δεν διαβάζει τίποτα — ένα ρεφλεξικό
+			// Enter το περνά. Μη αναστρέψιμη ανωνυμοποίηση σε δεδομένα ΑΦΜ/ΑΔΤ θέλει κάτι
+			// που δεν περνά χωρίς να διαβαστεί: πληκτρολόγηση του ίδιου του ΑΦΜ. Όταν ο
+			// πελάτης δεν έχει καταχωρημένο ΑΦΜ, η πληκτρολόγηση πέφτει στο αναγνωριστικό
+			// της εγγραφής — πάντα υπάρχει, ποτέ κενό.
+			$erase_token = $r['afm'] ?: ( 'ΠΕΛΑΤΗΣ #' . (int) $r['id'] );
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ecrm-gdpr-erase" data-erase-token="' . esc_attr( $erase_token ) . '" style="display:inline-flex;gap:6px;align-items:center">';
 			wp_nonce_field( 'ecrm_gdpr_erase' );
 			echo '<input type="hidden" name="action" value="ecrm_gdpr_erase"><input type="hidden" name="id" value="' . (int) $r['id'] . '">';
-			echo '<button class="button button-small button-link-delete">Διαγραφή δεδομένων</button></form>';
+			// width:150px έκοβε το placeholder στη μέση («...πληκτρολόγησε: 1234567»
+			// αντί για ολόκληρο το ΑΦΜ) — φάνηκε μόνο σε πραγματική απόδοση, όχι
+			// διαβάζοντας τον κώδικα. 200px χωράει ένα ελληνικό 9ψήφιο ΑΦΜ πλήρες·
+			// το title δίνει το πλήρες κείμενο και σε μεγαλύτερα (π.χ. «ΠΕΛΑΤΗΣ ##»).
+			echo '<input type="text" class="ecrm-gdpr-erase__input" placeholder="' . esc_attr( 'πληκτρολόγησε: ' . $erase_token ) . '" title="' . esc_attr( 'πληκτρολόγησε ακριβώς: ' . $erase_token ) . '" autocomplete="off" style="width:200px">';
+			echo '<button type="submit" class="button button-small button-link-delete" disabled>Διαγραφή δεδομένων</button></form>';
 			echo '</td></tr>';
 		}
 		echo '</tbody></table></div>';
+
+		// Ενεργοποιεί κάθε κουμπί διαγραφής μόνο όταν το πεδίο ταιριάζει ΑΚΡΙΒΩΣ με το
+		// data-erase-token — όχι case-insensitive, όχι trim επιεικές: μια μη
+		// αναστρέψιμη ανωνυμοποίηση σε ΑΦΜ/ΑΔΤ δεν έχει «σχεδόν σωστό». Ένα script για
+		// όλες τις γραμμές, όχι ένα ανά φόρμα — το ίδιο listener απλώς διαβάζει το
+		// data-erase-token της δικής του φόρμας. Ίδιο ύφος με την υπόλοιπη μέθοδο
+		// (echo, χωρίς εναλλαγή προτύπου), δεν εισάγεται δεύτερο ύφος.
+		echo '<script>(function(){document.querySelectorAll(".ecrm-gdpr-erase").forEach(function(form){' .
+			'var need=form.getAttribute("data-erase-token")||"";' .
+			'var input=form.querySelector(".ecrm-gdpr-erase__input");' .
+			'var btn=form.querySelector(\'button[type="submit"]\');' .
+			'if(!input||!btn)return;' .
+			'input.addEventListener("input",function(){btn.disabled=(input.value!==need);});' .
+			'});})();</script>';
 	}
 
 	/**
