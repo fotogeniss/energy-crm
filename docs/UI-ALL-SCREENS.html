@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="el" data-kit="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Energy CRM — Όλες οι οθόνες, με τις αποφάσεις που πάρθηκαν</title>
+<!-- Manrope: στο plugin φορτώνεται τοπικά ως woff2. Εδώ μέσω Google Fonts, που
+     είναι η μόνη εξωτερική πηγή που επιτρέπεται. Αν δεν φορτώσει (offline),
+     πέφτει στο ίδιο fallback stack που δηλώνει και το --font του κώδικα. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   1. ΤΑ TOKENS — ΑΝΤΙΓΡΑΦΗ ΑΠΟ ΤΟΝ ΚΩΔΙΚΑ, ΟΧΙ ΞΑΝΑΓΡΑΨΙΜΟ
+   ────────────────────────────────────────────────────────────────────────
+   Κάθε τιμή παρακάτω είναι αντιγραμμένη αυτούσια από το
+   public/assets/ecrm-form.css (:root/.ecrm γραμμές 80-322 και
+   .ecrm[data-theme="dark"] γραμμές 327-390). Καμία δεν επινοήθηκε εδώ.
+
+   Αυτό είναι το μισό της απόφασης «μορφή από kit, χρώματα από κώδικα»:
+   οι δώδεκα καταστάσεις, το --on-accent και οι 29 σημασιολογικές τιμές
+   μετρήθηκαν 19/08 πάνω ΑΚΡΙΒΩΣ σε αυτούς τους αριθμούς. Αν τους άλλαζα
+   εδώ για να μοιάσει στο kit, θα ακύρωνα κάθε μέτρηση αντίθεσης.
+
+   Ο επιλογέας είναι ο ΙΔΙΟΣ με την παραγωγή: .ecrm[data-theme="dark"].
+   Δηλαδή ο διακόπτης φωτός/σκότους εδώ κάνει ό,τι ακριβώς κάνει και το
+   public/class-ecrm-app.php ζωντανά — δεν είναι απομίμηση.
+   ════════════════════════════════════════════════════════════════════════ */
+.ecrm {
+	/* ουδέτερα — θερμά, όχι ψυχρά (η μία από τις τρεις συγκρούσεις με το kit) */
+	--n0:#ffffff; --n25:#fdfdfc; --n50:#f8f8f6; --n100:#f1f1ee; --n150:#e9e8e4;
+	--n200:#dedcd7; --n300:#c6c4bd; --n400:#a3a099; --n450:#83817a; --n500:#6e6c66;
+	--n600:#5c5a55; --n700:#42413d; --n800:#2a2926; --n900:#1a1a18; --n950:#111110;
+
+	/* πράσινο #16c217 — όχι το λάιμ #c2f04a του kit (δεύτερη σύγκρουση) */
+	--p50:#eafaea; --p100:#d2f5d3; --p200:#a5eba7; --p300:#6bdd6d; --p400:#16c217;
+	--p500:#12a413; --p600:#0e8610; --p700:#0b690c; --p800:#084e09;
+
+	--chrome:#171715; --chrome-2:#1f1f1c; --chrome-line:#ffffff14;
+	--chrome-ink:#a8a69f; --chrome-ink-hi:#ffffff; --chrome-ink-dim:#ffffff4d;
+	--chrome-wash-1:#ffffff0f; --chrome-wash-2:#ffffff1a; --chrome-wash-3:#ffffff26;
+	--chrome-ring:#ffffff55; --chrome-accent-wash:#16c21733;
+
+	/* οι δώδεκα καταστάσεις, ελάχιστη αντίθεση 4,56:1 μετρημένη 19/08 */
+	--st-draft:#6a6d75;   --st-draft-bg:#f0f1f3;
+	--st-term:#59595b;    --st-term-bg:#edeef0;
+	--st-new:#0072b7;     --st-new-bg:#ecf2fc;
+	--st-psig:#0062a8;    --st-psig-bg:#ebf0fb;
+	--st-asig:#005499;    --st-asig-bg:#eaeefa;
+	--st-signed:#00468a;  --st-signed-bg:#e8ebf7;
+	--st-proc:#043875;    --st-proc-bg:#e8e9f1;
+	--st-pending:#ab5506; --st-pending-bg:#fcf2ec;
+	--st-pending-on-dark:#f0b429;
+	--st-resolved:#0b7e36;--st-resolved-bg:#e9f5ea;
+	--st-routed:#006926;  --st-routed-bg:#e6f4e7;
+	--st-active:#00531e;  --st-active-bg:#e3f0e4;
+	--st-cancel:#c32b47;  --st-cancel-bg:#fdeaea;
+
+	--cat-teal:#007a79;   --cat-teal-bg:#e3f4f3;
+	--cat-violet:#9255a3; --cat-violet-bg:#f6eef8;
+	--brand-viber:#7360f2; --brand-viber-hi:#5b46e0;
+	--medal-gold:#c9971f; --medal-silver:#9aa0a6; --medal-bronze:#a4703a;
+
+	--on-accent:#0b3d0c; --on-dark:#ffffff;
+
+	/* σημασιολογικό στρώμα */
+	--surface-2:var(--n25); --surface-sunk:var(--n100); --surface-track:var(--n150);
+	--surface-inverse:var(--n900); --surface-inverse-soft:var(--n800);
+	--surface-inverse-deep:var(--n950); --surface-inverse-hover:var(--n700);
+	--line-card:var(--n150); --line-mid:var(--n300); --line-strong:var(--n400);
+	--line-inverse:var(--n700); --fill-mute:var(--n300); --fill-mute-strong:var(--n400);
+	--faint:var(--n450); --faint-2:var(--n300); --muted-strong:var(--n600);
+	--accent-hover:var(--p500); --accent-deep:var(--p600); --accent-ink:var(--p700);
+	--accent-wash:var(--p50); --accent-wash-2:var(--p100); --accent-soft:var(--p200);
+
+	--navy:var(--n900); --navy-soft:var(--n700); --amber:var(--p400); --amber-bright:var(--p300);
+	--ink:var(--n800); --muted:var(--n500); --line:var(--n200); --line-soft:var(--n100);
+	--bg:var(--n50); --surface:var(--n0); --ok:var(--st-routed); --err:var(--st-cancel);
+	--radius:12px;
+
+	/* τυπογραφία — τα 18 σκαλιά, όπως μετρήθηκαν στην (69) */
+	--fs-34:34px; --fs-28:28px; --fs-26:26px; --fs-22:22px; --fs-18:18px; --fs-17:17px;
+	--fs-16:16px; --fs-15:15px; --fs-14:14px; --fs-13-5:13.5px; --fs-13:13px;
+	--fs-12-5:12.5px; --fs-12:12px; --fs-11-5:11.5px; --fs-11:11px; --fs-10-5:10.5px;
+	--fs-10:10px; --fs-9:9px;
+
+	/* Manrope — όχι Segoe UI (τρίτη σύγκρουση· το Segoe του kit ήταν placeholder,
+	   γιατί ένα αυτόνομο mockup δεν έχει τα woff2 του plugin) */
+	--font:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+
+	font-family:var(--font); color:var(--ink);
+	-webkit-font-smoothing:antialiased;
+}
+
+/* Ο σκούρος καμβάς, ολοκληρωμένος 19/08. Σχεδιασμένος ΚΑΤΑ ΡΟΛΟ, όχι με
+   αντιστροφή ράμπας: η κάρτα επιπλέει πάνω από τον καμβά και στα δύο θέματα,
+   και οι γραμμές που στο ανοιχτό είναι πιο σκούρες από την κάρτα, στο σκούρο
+   γίνονται πιο ΑΝΟΙΧΤΕΣ. */
+.ecrm[data-theme="dark"] {
+	--bg:#111110; --surface:#1a1a18; --surface-2:#1f1f1c; --surface-sunk:#232320;
+	--surface-track:#2a2926;
+	--surface-inverse:#2a2926; --surface-inverse-soft:#33322e;
+	--surface-inverse-deep:#232320; --surface-inverse-hover:#4d4b45;
+	--line-inverse:#4d4b45;
+	--line-soft:#232320; --line-card:#2a2926; --line:#33322e; --line-mid:#3d3c37;
+	--line-strong:#4d4b45; --fill-mute:#3d3c37; --fill-mute-strong:#4d4b45;
+	--ink:#f1f1ee; --navy:#f8f8f6; --navy-soft:#dedcd7; --muted:#a3a099;
+	--muted-strong:#c6c4bd; --faint:#8a887f; --faint-2:#a3a099;
+	/* το πράσινο ΚΕΙΜΕΝΟ αντιστρέφεται· το accent ως ΓΕΜΙΣΜΑ μένει ίδιο */
+	--accent-ink:#6bdd6d; --accent-hover:#6bdd6d; --accent-deep:#a5eba7;
+	--accent-wash:#12240f; --accent-wash-2:#17351a; --accent-soft:#1e4a21;
+	--st-draft:#9fa0a3;   --st-draft-bg:#343536;
+	--st-term:#a3a6ad;    --st-term-bg:#343536;
+	--st-new:#79afec;     --st-new-bg:#2e353f;
+	--st-psig:#8db8f7;    --st-psig-bg:#2f3540;
+	--st-asig:#a2c1ff;    --st-asig-bg:#303541;
+	--st-signed:#b9cbff;  --st-signed-bg:#31343f;
+	--st-proc:#cdd5ff;    --st-proc-bg:#323440;
+	--st-pending:#ffb682; --st-pending-bg:#3f322a;
+	--st-resolved:#75b47e;--st-resolved-bg:#2c382d;
+	--st-routed:#8cc792;  --st-routed-bg:#2c382d;
+	--st-active:#a3d9a9;  --st-active-bg:#2c382d;
+	--st-cancel:#fb8a91;  --st-cancel-bg:#423030;
+	--cat-teal:#5ec0be;   --cat-teal-bg:#333535;
+	--cat-violet:#cca2d6; --cat-violet-bg:#3a323c;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   2. Η ΓΕΩΜΕΤΡΙΑ — ΑΠΟ ΤΟ KIT, ΞΑΝΑΣΤΟΧΕΥΜΕΝΗ ΣΤΑ TOKENS
+   ────────────────────────────────────────────────────────────────────────
+   Οι διαστάσεις, τα πλέγματα και οι αποστάσεις είναι του UI-UX-KIT.html
+   (πλαϊνό 200px, rail 290px, radius 12/18, κάρτες 11px padding). Άλλαξαν
+   ΜΟΝΟ τα χρώματα, από τα δικά του lime/ψυχρά στα tokens του κώδικα.
+   ════════════════════════════════════════════════════════════════════════ */
+.ecrm *, .ecrm *::before, .ecrm *::after { box-sizing:border-box; }
+.ecrm p, .ecrm h1, .ecrm h2, .ecrm h3, .ecrm table { margin:0; }
+
+.shell{
+	background:var(--surface); border:1px solid var(--line-card); border-radius:18px;
+	overflow:hidden; display:grid; grid-template-columns:200px 1fr; min-height:520px;
+	box-shadow:0 10px 30px rgba(0,0,0,.10);
+}
+.shell.w{grid-template-columns:200px 1fr 290px}
+.shell.ns{grid-template-columns:1fr; min-height:0}
+.side{background:var(--chrome); border-right:1px solid var(--chrome-line); padding:14px 10px; display:flex; flex-direction:column; gap:2px}
+.logo{display:flex; gap:8px; align-items:center; padding:2px 8px 14px; font-weight:800; font-size:var(--fs-13); color:var(--chrome-ink-hi)}
+.logo i{width:28px;height:28px;border-radius:8px;background:var(--p400);display:grid;place-items:center;color:var(--on-accent);font-style:normal;font-weight:800;font-size:var(--fs-12)}
+.nl{font-size:var(--fs-10);text-transform:uppercase;letter-spacing:.1em;color:var(--chrome-ink-dim);padding:10px 8px 4px}
+.side a{display:block;padding:7px 10px;border-radius:8px;color:var(--chrome-ink);text-decoration:none;font-size:var(--fs-12-5)}
+.side a.on{background:var(--chrome-accent-wash);color:var(--p300);font-weight:700}
+.main{display:flex;flex-direction:column;min-width:0;background:var(--bg)}
+.top{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface)}
+.top h1{font-size:var(--fs-15);font-weight:800;letter-spacing:-.01em;color:var(--navy)}
+.sub{color:var(--muted);font-size:var(--fs-12)}
+.sp{margin-left:auto}
+.content{padding:14px}
+.rail{border-left:1px solid var(--line);background:var(--surface);padding:12px}
+
+.btn{border:0;border-radius:8px;padding:7px 11px;font-size:var(--fs-12);font-weight:700;cursor:pointer;font-family:inherit}
+.btn-p{background:var(--p400);color:var(--on-accent)}
+.btn-g{background:transparent;border:1px solid var(--line-mid);color:var(--muted-strong)}
+.btn-d{background:transparent;border:1px solid var(--st-cancel);color:var(--st-cancel)}
+.btn-b{width:100%}
+.btn-lg{padding:11px 14px;font-size:var(--fs-13-5);border-radius:10px}
+/* Το ανενεργό κουμπί ήταν --muted πάνω σε --faint-2: μετρήθηκε 3,01:1. Το WCAG
+   εξαιρεί ρητά τα ανενεργά στοιχεία, αλλά εδώ το ανενεργό κουμπί ΕΙΝΑΙ το μήνυμα
+   (D3: «δεν μπορείς ακόμη»· A2: «η μπάλα είναι στον πάροχο») — αν δεν διαβάζεται,
+   δεν λέει τίποτα. Σε --surface-sunk δίνει 4,64:1 στο ανοιχτό και 6,04:1 στο
+   σκούρο, με το ΙΔΙΟ --muted. Δεν χρειάστηκε νέο χρώμα, μόνο άλλο φόντο. */
+.btn[disabled]{background:var(--surface-sunk);color:var(--muted);cursor:default;border:1px solid var(--line)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--surface-2);border:1px solid var(--line-card);border-radius:12px;padding:11px}
+.stat span{font-size:var(--fs-11);color:var(--muted);display:block;margin-bottom:3px}
+.stat strong{font-size:var(--fs-18);letter-spacing:-.02em;color:var(--navy)}
+.stat em{font-style:normal;font-size:var(--fs-11);color:var(--accent-ink);display:block;margin-top:3px;font-weight:700}
+.stat em.dn{color:var(--st-cancel)}
+
+.card{background:var(--surface-2);border:1px solid var(--line-card);border-radius:12px;padding:11px;margin-bottom:8px}
+.card h3{font-size:var(--fs-10);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;font-weight:700}
+.card.acc{background:var(--accent-wash);border-color:var(--accent-soft)}
+.card.warn{background:var(--st-pending-bg);border-color:var(--st-pending)}
+.card.ok{background:var(--accent-wash);border-color:var(--accent-soft)}
+.g2{display:grid;grid-template-columns:1.25fr 1fr;gap:10px}
+.g2e{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:var(--fs-12-5)}
+.tbl th{text-align:left;color:var(--muted);font-size:var(--fs-10);text-transform:uppercase;letter-spacing:.05em;padding:7px 9px;border-bottom:1px solid var(--line);font-weight:700}
+.tbl td{padding:10px 9px;border-bottom:1px solid var(--line-soft);vertical-align:middle;color:var(--ink)}
+.tbl tr:last-child td{border-bottom:0}
+
+/* Τα badge γράφουν με το χρώμα της κατάστασης πάνω στην πινελιά της, σε 11,5px
+   bold — που ΔΕΝ είναι «large text» κατά WCAG, άρα ισχύει το όριο 4,5:1.
+   Γι' αυτό υπάρχουν δώδεκα ξεχωριστές τιμές και όχι πέντε οικογένειες. */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:var(--fs-11-5);font-weight:700;white-space:nowrap}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
+.b-draft{background:var(--st-draft-bg);color:var(--st-draft)}
+.b-term{background:var(--st-term-bg);color:var(--st-term)}
+.b-new{background:var(--st-new-bg);color:var(--st-new)}
+.b-psig{background:var(--st-psig-bg);color:var(--st-psig)}
+.b-asig{background:var(--st-asig-bg);color:var(--st-asig)}
+.b-signed{background:var(--st-signed-bg);color:var(--st-signed)}
+.b-proc{background:var(--st-proc-bg);color:var(--st-proc)}
+.b-pending{background:var(--st-pending-bg);color:var(--st-pending)}
+.b-resolved{background:var(--st-resolved-bg);color:var(--st-resolved)}
+.b-routed{background:var(--st-routed-bg);color:var(--st-routed)}
+.b-active{background:var(--st-active-bg);color:var(--st-active)}
+.b-cancel{background:var(--st-cancel-bg);color:var(--st-cancel)}
+/* «Ακυρώθηκε» και «Εκκρεμότητα» φέρουν ΣΧΗΜΑ πέρα από απόχρωση: κόκκινο και
+   πράσινο μένουν όμοια σε δυσχρωματοψία και καμία παλέτα δεν το λύνει. */
+.b-cancel::before{content:"✕";width:auto;height:auto;border-radius:0;background:none;font-size:var(--fs-9);font-weight:800}
+.b-pending::before{content:"!";width:auto;height:auto;border-radius:0;background:none;font-size:var(--fs-10);font-weight:800}
+
+.person strong{display:block;font-size:var(--fs-13);color:var(--navy)}
+.person span{font-size:var(--fs-11-5);color:var(--muted)}
+.mu{color:var(--muted);font-size:var(--fs-11-5)}
+
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{border:1px solid var(--line-mid);background:transparent;color:var(--muted-strong);border-radius:999px;padding:4px 10px;font-size:var(--fs-11-5);cursor:pointer;font-family:inherit}
+.chip.on{background:var(--accent-wash);color:var(--accent-ink);border-color:var(--accent-soft);font-weight:700}
+
+.field{margin-bottom:8px}
+.field label{display:block;font-size:var(--fs-11);color:var(--muted);margin-bottom:3px;font-weight:700}
+.field input,.field select,.field textarea{
+	width:100%;background:var(--surface);border:1px solid var(--line-mid);border-radius:8px;
+	padding:8px 10px;color:var(--ink);font-size:var(--fs-13);outline:0;font-family:inherit
+}
+.field input:focus,.field select:focus{border-color:var(--p400);box-shadow:0 0 0 3px var(--accent-wash-2)}
+.field input.ai{border-color:var(--accent-soft)}
+.field .src{font-size:var(--fs-10);color:var(--accent-ink);margin-top:2px;font-weight:700}
+
+.steps{display:flex;background:var(--surface-sunk);border-bottom:1px solid var(--line)}
+.step{flex:1;text-align:center;padding:10px 3px;color:var(--muted);font-size:var(--fs-11);position:relative}
+.step strong{display:block;font-size:var(--fs-10);letter-spacing:.04em;text-transform:uppercase}
+.step.done{color:var(--accent-ink)}
+.step.on{color:var(--navy);font-weight:800}
+.step.on::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:2px;background:var(--p400)}
+
+.choice{border:1px solid var(--line-card);background:var(--surface);border-radius:12px;padding:11px;cursor:pointer;margin-bottom:6px}
+.choice.on{box-shadow:0 0 0 2px var(--p400);background:var(--accent-wash);border-color:transparent}
+.search{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line-mid);border-radius:10px;padding:8px 11px;color:var(--muted);font-size:var(--fs-13);flex:1;max-width:300px}
+
+.bar{height:6px;border-radius:999px;background:var(--surface-track);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--p400);border-radius:999px}
+
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:var(--fs-12-5)}
+.kv:last-child{border-bottom:0}
+.kv b{color:var(--muted);font-weight:600}
+.kv span{color:var(--ink);font-weight:700;text-align:right}
+
+.tl{position:relative;padding-left:16px}
+.tl li{list-style:none;position:relative;padding:0 0 12px 0;font-size:var(--fs-12);color:var(--ink)}
+.tl li::before{content:"";position:absolute;left:-16px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--fill-mute)}
+.tl li.on::before{background:var(--p400)}
+.tl li::after{content:"";position:absolute;left:-13px;top:14px;bottom:0;width:1px;background:var(--line)}
+.tl li:last-child::after{display:none}
+.tl li span{display:block;color:var(--muted);font-size:var(--fs-11)}
+
+/* phone */
+.phones{display:flex;flex-wrap:wrap;gap:16px;justify-content:center}
+.phone{width:290px;background:var(--chrome);border:1px solid var(--line-card);border-radius:30px;padding:9px 7px 12px;box-shadow:0 14px 36px rgba(0,0,0,.22)}
+.notch{width:86px;height:5px;border-radius:3px;background:var(--chrome-wash-3);margin:3px auto 8px}
+.ps{background:var(--bg);border-radius:20px;overflow:hidden;min-height:500px;display:flex;flex-direction:column}
+.bnav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--surface);padding:7px 2px 9px;margin-top:auto}
+.bnav span{text-align:center;font-size:var(--fs-9);color:var(--muted);display:flex;flex-direction:column;gap:2px;align-items:center}
+.bnav span.on{color:var(--accent-ink);font-weight:800}
+
+/* ════════════════════════════════════════════════════════════════════════
+   3. Η ΣΕΛΙΔΑ ΓΥΡΩ ΑΠΟ ΤΙΣ ΟΘΟΝΕΣ (δεν είναι προϊόν — είναι το χαρτί)
+   ════════════════════════════════════════════════════════════════════════ */
+:root{
+	--pg:#f6f6f4; --pg2:#ffffff; --pg-ink:#1a1a18; --pg-mu:#6e6c66;
+	--pg-line:#dedcd7; --pg-acc:#0b690c; --pg-acc-bg:#eafaea;
+	--pg-warn:#ab5506; --pg-warn-bg:#fcf2ec; --pg-bad:#c32b47; --pg-bad-bg:#fdeaea;
+}
+html[data-kit="dark"]{
+	--pg:#0d0d0c; --pg2:#161614; --pg-ink:#f1f1ee; --pg-mu:#a3a099;
+	--pg-line:#33322e; --pg-acc:#6bdd6d; --pg-acc-bg:#12240f;
+	--pg-warn:#ffb682; --pg-warn-bg:#3f322a; --pg-bad:#fb8a91; --pg-bad-bg:#423030;
+}
+*{box-sizing:border-box}
+body{
+	margin:0; background:var(--pg); color:var(--pg-ink); line-height:1.45;
+	font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+	-webkit-font-smoothing:antialiased;
+}
+/* Η μπάρα ήταν sticky ΜΑΖΙ με τους 26 συνδέσμους — ύψος ~250px, δηλαδή το ένα
+   τέταρτο της οθόνης μόνιμα κατειλημμένο, και κάθε άλμα σε #ενότητα προσγειωνόταν
+   ΚΑΤΩ από αυτήν. Φάνηκε μόνο στην απόδοση. Τώρα κολλάει μόνο η γραμμή με τον
+   διακόπτη (48px)· το ευρετήριο κυλάει μαζί με τη σελίδα. */
+.topbar{
+	position:sticky; top:0; z-index:200; background:var(--pg2);
+	border-bottom:1px solid var(--pg-line); padding:9px 16px;
+}
+.navblock{background:var(--pg2);border-bottom:1px solid var(--pg-line);padding:2px 16px 12px}
+.topbar-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;max-width:1240px;margin:0 auto}
+.brand{font-weight:800;font-size:14px;color:var(--pg-acc)}
+.brand small{display:block;font-weight:600;font-size:11px;color:var(--pg-mu)}
+.themebtn{
+	margin-left:auto; display:inline-flex; align-items:center; gap:7px;
+	border:1px solid var(--pg-line); background:var(--pg); color:var(--pg-ink);
+	border-radius:999px; padding:7px 14px; font-size:12.5px; font-weight:700;
+	cursor:pointer; font-family:inherit;
+}
+.themebtn:hover{border-color:var(--pg-acc)}
+.themebtn .dot{width:9px;height:9px;border-radius:50%;background:#16c217;flex:none}
+.navwrap{max-width:1240px;margin:8px auto 0}
+.navcat{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--pg-mu);margin:7px 0 3px;font-weight:700}
+.navlinks{display:flex;flex-wrap:wrap;gap:4px}
+.navlinks a{text-decoration:none;color:var(--pg-mu);font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid transparent}
+.navlinks a:hover{color:var(--pg-ink);background:var(--pg)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px 60px}
+.lead{padding:26px 0 6px;max-width:820px}
+.lead h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 8px}
+.lead p{color:var(--pg-mu);font-size:14px;margin:0 0 10px}
+
+/* Το άλμα σε #ενότητα σταματά ΚΑΤΩ από την κολλημένη μπάρα, όχι από πάνω της. */
+.sec{padding:30px 0 4px;scroll-margin-top:62px}
+.sec-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:5px}
+.sec-h h2{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--pg-mu);margin:0;font-weight:800}
+.sec-h .t{font-size:16px;font-weight:800;color:var(--pg-ink)}
+.sec>p.d{font-size:13px;color:var(--pg-mu);margin:0 0 12px;max-width:820px}
+
+.tag{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:10.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+.t-done{background:var(--pg-acc-bg);color:var(--pg-acc)}
+.t-todo{background:var(--pg-warn-bg);color:var(--pg-warn)}
+.t-dec{background:var(--pg-bad-bg);color:var(--pg-bad)}
+.t-css{background:var(--pg);color:var(--pg-mu);border:1px solid var(--pg-line)}
+
+.note{
+	font-size:12.5px;color:var(--pg-mu);line-height:1.5;padding:10px 12px;
+	border-radius:10px;margin:10px 0 0;background:var(--pg2);border:1px solid var(--pg-line);
+}
+.note b{color:var(--pg-ink)}
+.note.warn{background:var(--pg-warn-bg);border-color:var(--pg-warn);color:var(--pg-ink)}
+.note.warn b{color:var(--pg-warn)}
+.note.acc{background:var(--pg-acc-bg);border-color:var(--pg-acc);color:var(--pg-ink)}
+.note.acc b{color:var(--pg-acc)}
+code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.92em;background:var(--pg);border:1px solid var(--pg-line);border-radius:4px;padding:1px 4px}
+
+.foot{border-top:1px solid var(--pg-line);margin-top:40px;padding:18px 0 0;font-size:12px;color:var(--pg-mu)}
+
+@media (max-width:900px){
+	.shell,.shell.w{grid-template-columns:1fr}
+	.side{display:none}
+	.rail{border-left:0;border-top:1px solid var(--line)}
+	.stats{grid-template-columns:1fr 1fr}
+	.g2,.g2e,.g3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+<div class="topbar-row">
+<div class="brand">Energy CRM — όλες οι οθόνες<small>μορφή από το UX kit · χρώματα από τον κώδικα</small></div>
+<button class="themebtn" id="tg" type="button" aria-pressed="false">
+<span class="dot"></span><span id="tgl">Σκούρο θέμα</span>
+</button>
+</div>
+</div>
+<div class="navblock">
+<div class="navwrap">
+<div class="navcat">A · Καθημερινή ροή</div>
+<div class="navlinks">
+<a href="#a1">A1 Πίνακας</a><a href="#a2">A2 Συμβάσεις</a><a href="#a3">A3 Λεπτομέρεια</a><a href="#a4">A4 Εκκρεμότητες</a><a href="#a5">A5 Εργασίες</a>
+</div>
+<div class="navcat">B · Αίτηση &amp; υπογραφή</div>
+<div class="navlinks">
+<a href="#b1">B1 Βήμα 1</a><a href="#b2">B2 Βήμα 2</a><a href="#b3">B3 Βήμα 3</a><a href="#b4">B4 Βήμα 4</a><a href="#b5">B5 Δημόσια υπογραφή</a><a href="#b6">B6 Success πελάτη</a><a href="#b7">B7 Success συνεργάτη</a><a href="#b8">B8 Link ληγμένο</a>
+</div>
+<div class="navcat">C · Δίκτυο &amp; χρήματα</div>
+<div class="navlinks">
+<a href="#c1">C1 Δίκτυο</a><a href="#c2">C2 Καρτέλα συνεργάτη</a><a href="#c3">C3 Προμήθειες</a><a href="#c4">C4 Εκκαθάριση</a><a href="#c5">C5 Αναφορές</a>
+</div>
+<div class="navcat">D · Διαχείριση</div>
+<div class="navlinks">
+<a href="#d1">D1 Υγεία</a><a href="#d2">D2 Ρυθμίσεις</a><a href="#d3">D3 GDPR</a><a href="#d4">D4 Import</a><a href="#d5">D5 Ειδοποιήσεις</a>
+</div>
+<div class="navcat">E · Κινητό</div>
+<div class="navlinks"><a href="#e1">E1-E3 Τρεις οθόνες</a></div>
+</div>
+</div>
+
+<div class="wrap">
+
+<div class="lead">
+<h1>Όλες οι οθόνες, με ό,τι έχει αποφασιστεί μέχρι σήμερα</h1>
+<p>Είκοσι έξι οθόνες σε ένα αρχείο, ζωγραφισμένες με τη <b>γεωμετρία του <code>UI-UX-KIT.html</code></b> και τα
+<b>χρώματα του κώδικα</b> — η απόφαση «μορφή από kit, χρώματα από κώδικα», εφαρμοσμένη.
+Ο διακόπτης πάνω δεξιά αλλάζει φως/σκοτάδι με τον <b>ίδιο επιλογέα που τρέχει ζωντανά</b>
+(<code>.ecrm[data-theme="dark"]</code>), όχι με απομίμηση.</p>
+<p>Κάθε οθόνη φέρει σήμα: <span class="tag t-done">έγινε</span> είναι ήδη στον κώδικα,
+<span class="tag t-todo">μένει</span> είναι δουλειά, <span class="tag t-dec">απόφαση</span> περιμένει εσένα,
+<span class="tag t-css">μόνο CSS</span> αλλάζει μόνο εμφάνιση.</p>
+</div>
+
+<div class="note acc"><b>Γιατί δεν άλλαξα τα χρώματα προς το kit.</b> Οι δώδεκα καταστάσεις, το
+<code>--on-accent</code> και οι 29 σημασιολογικές τιμές μετρήθηκαν στις 19/08 πάνω <b>ακριβώς</b> σε αυτούς
+τους αριθμούς — WCAG 2.x, CIEDE2000, προσομοίωση δυσχρωματοψίας Viénot–Brettel. Αν έπαιρνα το λάιμ
+<code>#c2f04a</code> και τα ψυχρά ουδέτερα του kit, κάθε μία από αυτές τις μετρήσεις θα ξαναγινόταν από
+την αρχή. Το <code>Segoe UI</code> του kit δεν ήταν καν απόφαση: ένα αυτόνομο mockup δεν έχει τα woff2 του
+plugin, οπότε δηλώνει αναγκαστικά system fonts.</div>
+
+<div class="note warn"><b>Τι ΔΕΝ είναι αυτό το αρχείο.</b> Δεν είναι στιγμιότυπο του τι τρέχει σήμερα.
+Οι οθόνες με σήμα <span class="tag t-todo">μένει</span> δείχνουν την <b>πρόταση</b>, όχι τον ζωντανό κώδικα —
+γι' αυτό υπάρχει ο κανόνας §1.8. Ό,τι έχει <span class="tag t-done">έγινε</span> είναι επαληθευμένο με
+ανάγνωση του αρχείου, με γραμμή δίπλα.</div>
+
+<section class="sec" id="a1">
+<div class="sec-h"><h2>A1</h2><span class="t">Πίνακας</span><span class="tag t-todo">μένει — 1 από 4</span></div>
+<p class="d">Οι τέσσερις μετρητές, η λίστα «χρειάζεται ενέργεια» και η δραστηριότητα <b>υπάρχουν ήδη</b> (<code>ecrm-view-dashboard.js</code>). Αυτό που δείχνει η εικόνα και δεν υπάρχει είναι οι <b>δείκτες μεταβολής στις τρεις κάρτες KPI</b> — το πράσινο «&uarr; 12» κάτω από κάθε αριθμό.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#" class="on">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Πίνακας</h1><span class="sub">Αύγουστος 2026</span><span class="sp"></span><button class="btn btn-p">+ Νέα αίτηση</button></div><div class="content">
+<div class="stats">
+<div class="stat"><span>Ενεργές συμβάσεις</span><strong>128</strong><em>&uarr; 12 τον μήνα</em></div>
+<div class="stat"><span>Προς υπογραφή</span><strong>9</strong><em class="dn">&darr; 3</em></div>
+<div class="stat"><span>Σε επεξεργασία παρόχου</span><strong>21</strong><em>&uarr; 4</em></div>
+<div class="stat"><span>Προμήθεια μήνα</span><strong>&euro;1.840</strong><em>&uarr; 18%</em></div>
+</div>
+<div class="g2">
+<div>
+<div class="card"><h3>Χρειάζεται ενέργεια</h3>
+<table class="tbl">
+<tr><td class="person"><strong>Μαρία Παπαδοπούλου</strong><span>Protergia &middot; Ρεύμα</span></td>
+<td><span class="badge b-pending">Εκκρεμότητα</span></td>
+<td class="mu">4 μέρες</td><td><button class="btn btn-p">Επίλυση</button></td></tr>
+<tr><td class="person"><strong>Γιώργος Αντωνίου</strong><span>NRG &middot; Ρεύμα + Αέριο</span></td>
+<td><span class="badge b-psig">Προς υπογραφή</span></td>
+<td class="mu">2 μέρες</td><td><button class="btn btn-g">Υπενθύμιση</button></td></tr>
+<tr><td class="person"><strong>Ελένη Κ.</strong><span>Elpedison &middot; Ρεύμα</span></td>
+<td><span class="badge b-draft">Πρόχειρο</span></td>
+<td class="mu">σήμερα</td><td><button class="btn btn-p">Συνέχεια</button></td></tr>
+</table></div>
+<div class="card"><h3>Τελευταία δραστηριότητα</h3>
+<ul class="tl">
+<li class="on">Υπογράφηκε &mdash; Δημήτρης Λ.<span>πριν 2 ώρες</span></li>
+<li>Στάλθηκε στον πάροχο &mdash; Άννα Μ.<span>χθες 18:40</span></li>
+<li>Ανέβηκε ταυτότητα &mdash; Νίκος Π.<span>χθες 12:05</span></li>
+</ul></div>
+</div>
+<div>
+<div class="card"><h3>Ανά κατάσταση</h3>
+<div class="kv"><b>Ενεργή</b><span><span class="badge b-active">62</span></span></div>
+<div class="kv"><b>Σε δρομολόγηση</b><span><span class="badge b-routed">21</span></span></div>
+<div class="kv"><b>Υπογεγραμμένη</b><span><span class="badge b-signed">14</span></span></div>
+<div class="kv"><b>Εκκρεμότητα</b><span><span class="badge b-pending">7</span></span></div>
+<div class="kv"><b>Ακυρώθηκε</b><span><span class="badge b-cancel">3</span></span></div>
+</div>
+<div class="card acc"><h3>Στόχος μήνα</h3>
+<div style="font-size:var(--fs-22);font-weight:800;color:var(--accent-ink);margin-bottom:6px">128 / 150</div>
+<div class="bar"><i style="width:85%"></i></div>
+<p class="mu" style="margin-top:7px">22 ακόμη για το bonus κλιμάκιο.</p></div>
+</div>
+</div>
+</div></div></div></div>
+<div class="note warn"><b>Γιατί είναι το ακριβότερο του πίνακα.</b> Ο δείκτης στο hero προμήθειας υπάρχει και <b>δεν χρειάστηκε νέο πεδίο</b>: η <code>prevMonth()</code> τον βγάζει από το <code>monthly</code> που ήδη έρχεται. Οι τρεις κάρτες KPI θέλουν <b>προηγούμενο μετρητή ανά κατάσταση</b>, που το <code>/dashboard</code> δεν στέλνει — δηλαδή νέο ερώτημα βάσης σε διαδρομή που φορτώνει σε κάθε είσοδο. Είναι το μόνο σημείο όπου η επιφύλαξη «ερώτημα σε hot path» στέκει πραγματικά.</div>
+</section>
+
+<section class="sec" id="a2">
+<div class="sec-h"><h2>A2</h2><span class="t">Συμβάσεις — λίστα</span><span class="tag t-done">έγινε</span></div>
+<p class="d">Η <b>πρωτεύουσα ενέργεια ανά γραμμή</b> — αυτό που ζητούσε το kit — μπήκε με τις (59) και (61), και μάλιστα <b>πληρέστερα από την πρόταση</b>: <code>primaryAction()</code> στο <code>ecrm-view-contracts.js:150</code> καλύπτει <b>και τις δώδεκα καταστάσεις</b>, όχι τρεις.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#" class="on">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Συμβάσεις</h1><span class="sub">128 εγγραφές</span><span class="sp"></span><button class="btn btn-p">+ Νέα αίτηση</button></div><div class="content">
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+<div class="search">&#128269; Αναζήτηση σε όνομα, ΑΦΜ, παροχή&hellip;</div>
+<button class="btn btn-g">Φίλτρα</button>
+</div>
+<div class="chips" style="margin-bottom:10px">
+<button class="chip on">Όλες &middot; 128</button><button class="chip">Προς υπογραφή &middot; 9</button>
+<button class="chip">Εκκρεμότητα &middot; 7</button><button class="chip">Δρομολογημένες &middot; 21</button>
+<button class="chip">Ενεργές &middot; 62</button>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+<table class="tbl">
+<thead><tr><th>Πελάτης</th><th>Κατάσταση</th><th>Προμήθεια</th><th style="text-align:right">Ενέργεια</th></tr></thead>
+<tbody>
+<tr><td class="person"><strong>Μαρία Παπαδοπούλου</strong><span>Protergia &middot; Ρεύμα</span></td><td><span class="badge b-pending">Εκκρεμότητα</span></td><td class="mu">&euro;20</td><td style="text-align:right"><button class="btn btn-p">Επίλυση</button></td></tr>
+<tr><td class="person"><strong>Γιώργος Αντωνίου</strong><span>NRG &middot; Ρεύμα + Αέριο</span></td><td><span class="badge b-psig">Προς υπογραφή</span></td><td class="mu">&euro;35</td><td style="text-align:right"><button class="btn btn-g">Υπενθύμιση</button></td></tr>
+<tr><td class="person"><strong>Δημήτρης Λαμπρόπουλος</strong><span>Orizon &middot; Ρεύμα</span></td><td><span class="badge b-signed">Υπογεγραμμένη</span></td><td class="mu">&euro;20</td><td style="text-align:right"><button class="btn btn-p">Στον πάροχο</button></td></tr>
+<tr><td class="person"><strong>Άννα Μιχαηλίδου</strong><span>Elpedison &middot; Αέριο</span></td><td><span class="badge b-routed">Δρομολογήθηκε</span></td><td class="mu">&euro;25</td><td style="text-align:right"><button class="btn btn-g" disabled>Παρακολούθηση</button></td></tr>
+<tr><td class="person"><strong>Νίκος Παπαδάκης</strong><span>Protergia &middot; Ρεύμα</span></td><td><span class="badge b-active">Ενεργή</span></td><td class="mu">&euro;20</td><td style="text-align:right" class="mu">&mdash;</td></tr>
+<tr><td class="person"><strong>Ελένη Καραγιάννη</strong><span>NRG &middot; Ρεύμα</span></td><td><span class="badge b-draft">Πρόχειρο</span></td><td class="mu">&mdash;</td><td style="text-align:right"><button class="btn btn-p">Συνέχεια</button></td></tr>
+<tr><td class="person"><strong>Κώστας Βλάχος</strong><span>Orizon &middot; Ρεύμα</span></td><td><span class="badge b-cancel">Ακυρώθηκε</span></td><td class="mu">&mdash;</td><td style="text-align:right" class="mu">&mdash;</td></tr>
+</tbody></table></div>
+</div></div></div></div>
+<div class="note"><b>Πώς μοιράζονται οι δώδεκα.</b> Έξι περιμένουν τον <b>συνεργάτη</b> (ενεργό κουμπί), τρεις τον <b>πάροχο</b> — εκεί το κουμπί λέει «Παρακολούθηση» και είναι <b>σβηστό</b>, γιατί η μπάλα δεν είναι στο γήπεδό μας — και τρεις κανέναν. Ο κανόνας «το <code>routed</code> λείπει επίτηδες» είναι γραμμένος σε test, δεν είναι συμφωνία προφορική.</div>
+</section>
+
+<section class="sec" id="a3">
+<div class="sec-h"><h2>A3</h2><span class="t">Λεπτομέρεια σύμβασης</span><span class="tag t-done">έγινε 21/08</span></div>
+<p class="d">Η <b>κάρτα audit</b> πάνω δεξιά είναι το B7, υλοποιημένο χθες — CHANGELOG (72). Ώρα, IP και κατάσταση, <b>μόνο</b> όταν υπάρχει <code>signed_at</code>. Το checklist και τα κουμπιά ανά κατάσταση υπήρχαν ήδη.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell w"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#" class="on">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Μαρία Παπαδοπούλου</h1><span class="sub">Σύμβαση #4821 &middot; Protergia</span><span class="sp"></span><span class="badge b-signed">Υπογεγραμμένη</span></div><div class="content">
+<div class="card"><h3>Στοιχεία πελάτη</h3>
+<div class="kv"><b>Ονοματεπώνυμο</b><span>Μαρία Παπαδοπούλου</span></div>
+<div class="kv"><b>ΑΦΜ</b><span>123456789</span></div>
+<div class="kv"><b>Κινητό</b><span>697 123 4567</span></div>
+<div class="kv"><b>Email</b><span>maria@example.gr</span></div>
+</div>
+<div class="card"><h3>Παροχή / διεύθυνση</h3>
+<div class="kv"><b>Αριθμός παροχής</b><span>4 1234567 89</span></div>
+<div class="kv"><b>Διεύθυνση</b><span>Ερμού 24, Αθήνα</span></div>
+<div class="kv"><b>Πάροχος</b><span>Protergia &middot; Ρεύμα</span></div>
+</div>
+<div class="card"><h3>Ιστορικό ροής</h3>
+<ul class="tl">
+<li class="on">Υπογράφηκε από τον πελάτη<span>21/08/2026 14:32 &middot; IP 85.72.140.19</span></li>
+<li>Στάλθηκε σύνδεσμος υπογραφής<span>21/08/2026 11:04</span></li>
+<li>Ανέβηκε ταυτότητα<span>20/08/2026 16:20</span></li>
+<li>Δημιουργήθηκε<span>20/08/2026 15:58</span></li>
+</ul></div>
+</div></div><div class="rail">
+<div class="card" style="margin-bottom:8px">
+<h3>Υπογραφή</h3>
+<div class="kv"><b>Ημερομηνία</b><span>21/08/2026</span></div>
+<div class="kv"><b>Ώρα</b><span>14:32</span></div>
+<div class="kv"><b>IP πελάτη</b><span>85.72.&bull;&bull;&bull;.&bull;&bull;&bull;</span></div>
+<div style="display:flex;align-items:center;gap:8px;padding:9px 0 1px;font-size:var(--fs-11-5);color:var(--muted)">
+Κατάσταση <span class="badge b-signed">Υπογεγραμμένη</span></div>
+</div>
+<div class="card ok"><h3>Checklist</h3>
+<div class="kv"><b>Ταυτότητα</b><span style="color:var(--accent-ink)">&#10003;</span></div>
+<div class="kv"><b>Λογαριασμός</b><span style="color:var(--accent-ink)">&#10003;</span></div>
+<div class="kv"><b>Υπογραφή</b><span style="color:var(--accent-ink)">&#10003;</span></div>
+<div class="kv"><b>IBAN</b><span class="mu">&mdash;</span></div>
+</div>
+<button class="btn btn-p btn-b btn-lg" style="margin-bottom:6px">Στάλσιμο σε πάροχο</button>
+<button class="btn btn-g btn-b">Λήψη εντύπου παρόχου</button>
+</div></div></div>
+<div class="note"><b>Τρία πράγματα σε αυτή την οθόνη που αξίζουν λέξη.</b><br>
+<b>1. Η ώρα δεν περνά από <code>Date</code>.</b> Το <code>signed_at</code> γράφεται με <code>current_time('mysql')</code>, δηλαδή <b>τοπική</b> ώρα του site, ενώ οι <code>fmtDate()</code>/<code>timeAgo()</code> προσθέτουν <code>'Z'</code> και τη διαβάζουν ως UTC. Σε σχετική ένδειξη («2ω πριν») η μετατόπιση περνά απαρατήρητη· σε πεδίο audit θα έγραφε ώρα <b>+3 από την πραγματική</b> — χειρότερο από το να μη γράφει τίποτα. Η <code>signStamp()</code> κόβει τη συμβολοσειρά, δεν την ερμηνεύει.<br>
+<b>2. Το μασκαρισμένο IP δεν είναι απόκρυψη.</b> Το <code>class-ecrm-tracking.php:354</code> γράφει το <b>πλήρες</b> IP μέσα στο «Ιστορικό ροής» &mdash; ορατό λίγα εκατοστά πιο κάτω, στην ίδια οθόνη (κοίτα το). Η μάσκα είναι διακριτικότητα στην κύρια θέση. Είχα προτείνει ολόκληρο και αποφάσισες μάσκα· γράφεται για να μη διαβαστεί ως δική μου επιλογή ούτε ως παράλειψη.<br>
+<b>3. Η κάρτα audit ΔΕΝ είναι πράσινη — και αυτό ήταν διόρθωση.</b> Πρώτη εκδοχή της είχε την ίδια πράσινη πλύση με το checklist από κάτω· στην απόδοση οι δύο κάρτες <b>διαβάζονταν ως μία</b> και το πράσινο έχανε το νόημά του. Εδώ φαίνεται η διορθωμένη: πράσινο μόνο στο checklist, όπου σημαίνει «όλα μέσα».</div>
+</section>
+
+<section class="sec" id="a4">
+<div class="sec-h"><h2>A4</h2><span class="t">Εκκρεμότητες</span><span class="tag t-css">μόνο κείμενο</span></div>
+<p class="d">Λειτουργεί πλήρως (<code>ecrm-view-pending.js</code>, <code>/notifications</code>). Το kit προσθέτει μόνο <b>κείμενο κενής κατάστασης</b> &mdash; τι γράφει η οθόνη όταν δεν υπάρχει τίποτα.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#" class="on">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Εκκρεμότητες</h1><span class="sub">4 ανοιχτές</span></div><div class="content">
+<div class="card warn"><h3>Απαιτούν ενέργεια σήμερα</h3>
+<table class="tbl">
+<tr><td class="person"><strong>Μαρία Π.</strong><span>Λείπει λογαριασμός ρεύματος</span></td>
+<td class="mu">4 μέρες</td><td style="text-align:right"><button class="btn btn-p">Επίλυση</button></td></tr>
+<tr><td class="person"><strong>Νίκος Π.</strong><span>Ο πάροχος ζήτησε διόρθωση ΑΦΜ</span></td>
+<td class="mu">2 μέρες</td><td style="text-align:right"><button class="btn btn-p">Επίλυση</button></td></tr>
+</table></div>
+<div class="card"><h3>Σε αναμονή παρόχου</h3>
+<table class="tbl">
+<tr><td class="person"><strong>Άννα Μ.</strong><span>Elpedison &middot; στάλθηκε 19/08</span></td>
+<td><span class="badge b-routed">Δρομολογήθηκε</span></td>
+<td class="mu" style="text-align:right">η μπάλα είναι στον πάροχο</td></tr>
+<tr><td class="person"><strong>Δημήτρης Λ.</strong><span>Orizon &middot; στάλθηκε 20/08</span></td>
+<td><span class="badge b-proc">Σε επεξεργασία</span></td>
+<td class="mu" style="text-align:right">η μπάλα είναι στον πάροχο</td></tr>
+</table></div>
+</div></div></div></div>
+</section>
+
+<section class="sec" id="a5">
+<div class="sec-h"><h2>A5</h2><span class="t">Εργασίες</span><span class="tag t-css">μόνο CSS</span></div>
+<p class="d">Λειτουργεί (<code>ecrm-view-tasks.js</code>, <code>/tasks</code>). Καμία διαφορά ουσίας από το kit — μόνο εμφάνιση.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#" class="on">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Εργασίες</h1><span class="sub">3 για σήμερα</span><span class="sp"></span><button class="btn btn-p">+ Νέα εργασία</button></div><div class="content">
+<div class="chips" style="margin-bottom:10px">
+<button class="chip on">Σήμερα &middot; 3</button><button class="chip">Εβδομάδα &middot; 11</button>
+<button class="chip">Ληγμένες &middot; 2</button><button class="chip">Όλες</button>
+</div>
+<div class="card" style="padding:0">
+<table class="tbl">
+<tr><td style="width:26px"><input type="checkbox"></td>
+<td class="person"><strong>Επανάκληση &mdash; Ελένη Κ.</strong><span>Σήμερα 17:00</span></td>
+<td><span class="badge b-pending">Σήμερα</span></td></tr>
+<tr><td><input type="checkbox"></td>
+<td class="person"><strong>Συλλογή ταυτότητας &mdash; Γιώργος Α.</strong><span>Αύριο 10:30</span></td>
+<td><span class="badge b-new">Αύριο</span></td></tr>
+<tr><td><input type="checkbox" checked></td>
+<td class="person" style="opacity:.55"><strong style="text-decoration:line-through">Αποστολή σε πάροχο &mdash; Δημήτρης Λ.</strong><span>Ολοκληρώθηκε</span></td>
+<td><span class="badge b-resolved">Έγινε</span></td></tr>
+</table></div>
+</div></div></div></div>
+<div class="note warn"><b>Ένα ίχνος από το A5 που δεν φαίνεται στην εικόνα.</b> Οι εργασίες δημιουργούνται σήμερα με <b>δύο διαδοχικά <code>prompt()</code> του browser</b> (<code>ecrm-view-detail.js:342,344</code>): ένα για τον τίτλο, ένα για την ημερομηνία, με οδηγία «π.χ. 2026-06-20 10:00» μέσα σε παρένθεση. Δεν είναι στον πίνακα εργασίας γιατί κανείς δεν το σημείωσε &mdash; αλλά είναι η <b>ίδια οικογένεια</b> με το D3 που μόλις έκλεισε: διάλογος browser εκεί που χρειάζεται πραγματικό UI.</div>
+</section>
+
+<section class="sec" id="b1">
+<div class="sec-h"><h2>B1</h2><span class="t">Νέα αίτηση — Βήμα 1 · Πάροχος &amp; τύπος</span><span class="tag t-done">έγινε</span></div>
+<p class="d">Ο wizard τεσσάρων βημάτων μπήκε με την (66) &mdash; <b>μαζί με το δίχτυ που ζητούσε ο ίδιος ο χάρτης</b>: <code>tools/wizard-smoke/</code>, 29 έλεγχοι σε jsdom.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell w"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#" class="on">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Νέα αίτηση</h1><span class="sub">Βήμα 1 από 4</span></div>
+<div class="steps"><div class="step on"><strong>Βήμα 1</strong>Πάροχος</div><div class="step"><strong>Βήμα 2</strong>Έγγραφα</div><div class="step"><strong>Βήμα 3</strong>Στοιχεία</div><div class="step"><strong>Βήμα 4</strong>Υπογραφή</div></div>
+<div class="content">
+<h3 style="font-size:var(--fs-11);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;font-weight:700">Πάροχος</h3>
+<div class="g2e" style="margin-bottom:14px">
+<div class="choice on"><strong style="font-size:var(--fs-13-5)">Protergia</strong><div class="mu">Ρεύμα &middot; Αέριο</div></div>
+<div class="choice"><strong style="font-size:var(--fs-13-5)">NRG</strong><div class="mu">Ρεύμα &middot; Αέριο</div></div>
+<div class="choice"><strong style="font-size:var(--fs-13-5)">Elpedison</strong><div class="mu">Ρεύμα &middot; Αέριο</div></div>
+<div class="choice"><strong style="font-size:var(--fs-13-5)">Orizon</strong><div class="mu">Ρεύμα</div></div>
+</div>
+<h3 style="font-size:var(--fs-11);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;font-weight:700">Τύπος αίτησης</h3>
+<div class="g3">
+<div class="choice on"><strong style="font-size:var(--fs-13-5)">Ρεύμα</strong></div>
+<div class="choice"><strong style="font-size:var(--fs-13-5)">Αέριο</strong></div>
+<div class="choice"><strong style="font-size:var(--fs-13-5)">Ρεύμα + Αέριο</strong></div>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn btn-g">Ακύρωση</button><span style="flex:1"></span>
+<button class="btn btn-p btn-lg">Επόμενο &rarr;</button></div>
+</div></div><div class="rail">
+<div class="card"><h3>Σύνοψη</h3>
+<div class="kv"><b>Πάροχος</b><span>Protergia</span></div>
+<div class="kv"><b>Τύπος</b><span>Ρεύμα</span></div>
+<div class="kv"><b>Πελάτης</b><span class="mu">&mdash;</span></div>
+<div class="kv"><b>Παροχή</b><span class="mu">&mdash;</span></div>
+</div>
+<div class="card"><h3>Πρόοδος</h3>
+<div class="bar"><i style="width:25%"></i></div>
+<p class="mu" style="margin-top:7px">Βήμα 1 από 4.</p></div>
+</div></div></div>
+<div class="note acc"><b>Γιατί μπήκε πρώτα το δίχτυ και όχι ο wizard.</b> Το <code>ecrm-form.js</code> είναι η καρδιά του προϊόντος και δεν είχε <b>καμία</b> υποδομή δοκιμών JavaScript. Το ίδιο αρχείο είχε ήδη δώσει ένα bug που έζησε μήνες (state που δεν καθαριζόταν ανάμεσα σε δύο edits) και η μία γραμμή που το διόρθωσε δεν τη φύλαγε τίποτα. Ο κρίσιμος από τους 29 ελέγχους είναι αυτός που αποδεικνύει ότι <b>το payload του POST είναι ίδιο από κάθε βήμα</b> — δηλαδή ότι το σπάσιμο σε βήματα δεν άλλαξε τι φτάνει στη βάση.</div>
+</section>
+
+<section class="sec" id="b2">
+<div class="sec-h"><h2>B2</h2><span class="t">Νέα αίτηση — Βήμα 2 · Έγγραφα &amp; AI</span><span class="tag t-done">έγινε</span></div>
+<p class="d">Το ανέβασμα και η εξαγωγή στοιχείων (<code>/extract</code>) λειτουργούν. Η οθόνη δείχνει το βήμα όπως το έφερε η (66).</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#" class="on">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Έγγραφα &amp; AI</h1><span class="sub">Βήμα 2 από 4</span></div>
+<div class="steps"><div class="step done"><strong>Βήμα &#10003;</strong>Πάροχος</div><div class="step on"><strong>Βήμα 2</strong>Έγγραφα</div><div class="step"><strong>Βήμα 3</strong>Στοιχεία</div><div class="step"><strong>Βήμα 4</strong>Υπογραφή</div></div>
+<div class="content">
+<div class="g2">
+<div>
+<div class="card"><h3>Σάρωση ταυτότητας</h3>
+<div style="border:1px dashed var(--line-mid);border-radius:10px;padding:22px;text-align:center;color:var(--muted);font-size:var(--fs-12-5);background:var(--surface)">
+&#128196; Σύρε το αρχείο εδώ ή <b style="color:var(--accent-ink)">επίλεξε</b><br>
+<span style="font-size:var(--fs-11)">JPG, PNG ή PDF &middot; έως 8MB</span></div>
+<div style="margin-top:9px;display:flex;align-items:center;gap:7px">
+<span class="badge b-resolved">Αναγνωρίστηκε</span><span class="mu">taftotita-maria.jpg</span></div>
+</div>
+<div class="card"><h3>Λογαριασμός ρεύματος</h3>
+<div style="border:1px dashed var(--line-mid);border-radius:10px;padding:22px;text-align:center;color:var(--muted);font-size:var(--fs-12-5);background:var(--surface)">
+&#128196; Σύρε το αρχείο εδώ ή <b style="color:var(--accent-ink)">επίλεξε</b></div>
+</div>
+</div>
+<div>
+<div class="card acc"><h3>Τι διάβασε το AI</h3>
+<div class="kv"><b>Όνομα</b><span>Μαρία Παπαδοπούλου</span></div>
+<div class="kv"><b>ΑΦΜ</b><span>123456789</span></div>
+<div class="kv"><b>ΑΔΤ</b><span>ΑΒ 123456</span></div>
+<div class="kv"><b>Διεύθυνση</b><span>Ερμού 24, Αθήνα</span></div>
+<p class="mu" style="margin-top:9px">Ελέγχεται στο επόμενο βήμα &mdash; τίποτα δεν αποθηκεύεται χωρίς έγκρισή σου.</p>
+</div>
+</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:14px">
+<button class="btn btn-g">&larr; Πίσω</button><span style="flex:1"></span>
+<button class="btn btn-p btn-lg">Επόμενο &rarr;</button></div>
+</div></div></div></div>
+</section>
+
+<section class="sec" id="b3">
+<div class="sec-h"><h2>B3</h2><span class="t">Νέα αίτηση — Βήμα 3 · Στοιχεία &amp; πρόγραμμα</span><span class="tag t-done">έγινε</span></div>
+<p class="d">Τα πεδία με πράσινο περίγραμμα και το «&#10003; από τη σάρωση» δείχνουν <b>ποια τιμή ήρθε από το AI και ποια γράφτηκε με το χέρι</b> &mdash; η διάκριση που κάνει την επαλήθευση δυνατή.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#" class="on">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Στοιχεία &amp; πρόγραμμα</h1><span class="sub">Βήμα 3 από 4</span></div>
+<div class="steps"><div class="step done"><strong>Βήμα &#10003;</strong>Πάροχος</div><div class="step done"><strong>Βήμα &#10003;</strong>Έγγραφα</div><div class="step on"><strong>Βήμα 3</strong>Στοιχεία</div><div class="step"><strong>Βήμα 4</strong>Υπογραφή</div></div>
+<div class="content">
+<div class="g2e">
+<div>
+<div class="field"><label>Ονοματεπώνυμο</label><input class="ai" value="Μαρία Παπαδοπούλου"><div class="src">&#10003; από τη σάρωση ταυτότητας</div></div>
+<div class="field"><label>ΑΦΜ</label><input class="ai" value="123456789"><div class="src">&#10003; από τη σάρωση ταυτότητας</div></div>
+<div class="field"><label>Κινητό</label><input value="697 123 4567"></div>
+</div>
+<div>
+<div class="field"><label>Αριθμός παροχής</label><input value="4 1234567 89"></div>
+<div class="field"><label>Διεύθυνση</label><input class="ai" value="Ερμού 24, Αθήνα"><div class="src">&#10003; από τη σάρωση</div></div>
+<div class="field"><label>Email</label><input value="maria@example.gr"></div>
+</div>
+</div>
+<h3 style="font-size:var(--fs-11);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:12px 0 8px;font-weight:700">Πρόγραμμα</h3>
+<div class="g2e">
+<div class="choice on"><strong style="font-size:var(--fs-13-5)">Σταθερό 12μηνο</strong><div class="mu">0,0842 &euro;/kWh &middot; προμήθεια &euro;20</div></div>
+<div class="choice"><strong style="font-size:var(--fs-13-5)">Κυμαινόμενο</strong><div class="mu">δείκτης + 0,012 &middot; προμήθεια &euro;15</div></div>
+</div>
+<div style="display:flex;gap:8px;margin-top:14px">
+<button class="btn btn-g">&larr; Πίσω</button><span style="flex:1"></span>
+<button class="btn btn-p btn-lg">Επόμενο &rarr;</button></div>
+</div></div></div></div>
+</section>
+
+<section class="sec" id="b4">
+<div class="sec-h"><h2>B4</h2><span class="t">Βήμα 4 · Έλεγχος &amp; υπογραφή</span><span class="tag t-todo">μένει — μεγαλύτερο απ' ό,τι λέγαμε</span></div>
+<p class="d">Η οθόνη δείχνει <b>και τα δύο</b> που λείπουν: το PDF <b>δίπλα</b> στην επιλογή (όχι σε νέα καρτέλα) και <b>την ίδια την επιλογή καναλιού</b>.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#" class="on">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Έλεγχος &amp; υπογραφή</h1><span class="sub">Βήμα 4 από 4</span></div>
+<div class="steps"><div class="step done"><strong>Βήμα &#10003;</strong>Πάροχος</div><div class="step done"><strong>Βήμα &#10003;</strong>Έγγραφα</div><div class="step done"><strong>Βήμα &#10003;</strong>Στοιχεία</div><div class="step on"><strong>Βήμα 4</strong>Υπογραφή</div></div>
+<div class="content">
+<div class="g2">
+<div>
+<div class="card" style="padding:0;overflow:hidden">
+<div style="padding:11px"><h3 style="margin:0;font-size:var(--fs-10);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700">Προεπισκόπηση εντύπου</h3></div>
+<div style="background:var(--surface-sunk);border-top:1px solid var(--line);padding:18px;display:grid;place-items:center;min-height:260px">
+<div style="width:190px;height:250px;background:#ffffff;border:1px solid #dedcd7;border-radius:4px;padding:14px;font-size:8px;color:#2a2926;line-height:1.5;box-shadow:0 3px 12px rgba(0,0,0,.14)">
+<div style="font-weight:800;font-size:9px;margin-bottom:7px">ΑΙΤΗΣΗ ΠΡΟΜΗΘΕΙΑΣ &mdash; PROTERGIA</div>
+<div style="border-bottom:1px solid #dedcd7;padding:2px 0">Επώνυμο: ΠΑΠΑΔΟΠΟΥΛΟΥ</div>
+<div style="border-bottom:1px solid #dedcd7;padding:2px 0">Όνομα: ΜΑΡΙΑ</div>
+<div style="border-bottom:1px solid #dedcd7;padding:2px 0">ΑΦΜ: 123456789</div>
+<div style="border-bottom:1px solid #dedcd7;padding:2px 0">Παροχή: 4 1234567 89</div>
+<div style="border-bottom:1px solid #dedcd7;padding:2px 0">Διεύθυνση: ΕΡΜΟΥ 24</div>
+<div style="margin-top:12px;font-size:7px;color:#6e6c66">Υπογραφή πελάτη</div>
+<div style="border-bottom:1px solid #2a2926;height:16px"></div>
+</div>
+</div>
+</div>
+</div>
+<div>
+<h3 style="font-size:var(--fs-10);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;font-weight:700">Κανάλι</h3>
+<div class="choice on"><strong style="font-size:var(--fs-13-5)">&#9993;&#65039; Email</strong><div class="mu">maria@example.gr</div></div>
+<div class="choice"><strong style="font-size:var(--fs-13-5)">&#128241; SMS</strong><div class="mu">697 123 4567</div></div>
+<div class="choice"><strong style="font-size:var(--fs-13-5)">&#128279; Αντιγραφή συνδέσμου</strong><div class="mu">το στέλνεις εσύ όπως θες</div></div>
+<div class="card" style="margin-top:10px"><h3>Έλεγχος πριν το στάλσιμο</h3>
+<div class="kv"><b>Πεδία εντύπου</b><span style="color:var(--accent-ink)">&#10003; 24/24</span></div>
+<div class="kv"><b>Ταυτότητα</b><span style="color:var(--accent-ink)">&#10003;</span></div>
+<div class="kv"><b>Λογαριασμός</b><span style="color:var(--accent-ink)">&#10003;</span></div>
+</div>
+<button class="btn btn-p btn-b btn-lg" style="margin-top:8px">Αποστολή για υπογραφή</button>
+</div>
+</div>
+</div></div></div></div>
+<div class="note warn"><b>Διόρθωση στον χάρτη, μετρημένη 21/08.</b> Ο πίνακας «τι μένει σήμερα» έγραφε <b>επίπεδο 2</b> και «λείπει το <i>δίπλα</i>, όχι το έγγραφο» &mdash; που υπονοεί ότι η επιλογή καναλιού υπάρχει και θέλει μόνο τοποθέτηση. <b>Δεν υπάρχει.</b> Το <code>ecrm-view-detail.js:313</code> στέλνει πάντα <code>{ email: true }</code> στο <code>/sign-link</code>· δεν υπάρχει κανένα UI επιλογής πουθενά. Το <code>prompt()</code> στη <code>:321</code> δείχνει το <b>αποτέλεσμα</b> (τον σύνδεσμο προς αντιγραφή) &mdash; δεν είναι επιλογή. Ανέβηκε σε <b>επίπεδο 3</b>: τρία κανάλια σημαίνουν απόφαση για SMS πάροχο, κόστος ανά μήνυμα, και τι γίνεται όταν ο πελάτης δεν έχει κινητό.</div>
+</section>
+
+<section class="sec" id="b5">
+<div class="sec-h"><h2>B5</h2><span class="t">Δημόσια σελίδα υπογραφής (token)</span><span class="tag t-done">έγινε</span></div>
+<p class="d">Έκλεισε με τις (67)/(68): <b>25 μετρικές</b>, επτά literal χρώματα σε tokens, breakpoint 560px. Ζει στο <code>class-ecrm-tracking.php</code> με stateless token <code>{id}-{hmac}</code> — <b>υπάρχει ήδη backend</b>, ο χάρτης το είχε γράψει λάθος ως «νέα διαδρομή, επίπεδο 3».</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell ns"><div class="main" style="max-width:520px;margin:0 auto;background:var(--bg)">
+<div class="content" style="padding:20px">
+<div style="text-align:center;margin-bottom:16px">
+<div style="width:34px;height:34px;border-radius:9px;background:var(--p400);display:inline-grid;place-items:center;color:var(--on-accent);font-weight:800;font-size:var(--fs-14);margin-bottom:8px">E</div>
+<h1 style="font-size:var(--fs-16);font-weight:800;color:var(--navy)">Υπογραφή αίτησης</h1>
+<p class="mu">Protergia &middot; Ρεύμα &middot; Μαρία Παπαδοπούλου</p>
+</div>
+<div class="card"><h3>Έλεγξε τα στοιχεία σου</h3>
+<div class="kv"><b>Ονοματεπώνυμο</b><span>Μαρία Παπαδοπούλου</span></div>
+<div class="kv"><b>ΑΦΜ</b><span>123456789</span></div>
+<div class="kv"><b>Παροχή</b><span>4 1234567 89</span></div>
+<div class="kv"><b>Πρόγραμμα</b><span>Σταθερό 12μηνο</span></div>
+</div>
+<div class="card"><h3>Υπογραφή</h3>
+<div style="background:#ffffff;border:1px solid var(--line-mid);border-radius:9px;height:110px;display:grid;place-items:center;position:relative">
+<span style="font-family:Georgia,serif;font-size:26px;color:#1a1a18;transform:rotate(-4deg)">M. Παπαδοπούλου</span>
+<span style="position:absolute;bottom:7px;right:10px;font-size:var(--fs-10);color:#83817a">Καθαρισμός</span>
+</div>
+<p class="mu" style="margin-top:8px">Υπόγραψε με το δάχτυλο ή το ποντίκι.</p>
+</div>
+<button class="btn btn-p btn-b btn-lg">Υπογραφή &amp; αποστολή</button>
+<p class="mu" style="text-align:center;margin-top:10px;font-size:var(--fs-11)">Ο σύνδεσμος είναι προσωπικός. Μην τον προωθήσεις.</p>
+</div>
+</div></div></div>
+<div class="note acc"><b>Το ένα από τα επτά χρώματα άξιζε ολόκληρη τη δουλειά.</b> Ήταν το <b>μελάνι της υπογραφής</b> &mdash; ένα literal χρώμα που δεν έμενε στην οθόνη: <b>ταξίδευε μέσα στο PDF</b> και κατέληγε στο έντυπο που πάει στον πάροχο. Ένα σκληροκωδικοποιημένο χρώμα σε φύλλο στυλ που γίνεται μόνιμο σε νομικό έγγραφο. Γι' αυτό η μαύρη υπογραφή εδώ πάνω δεν αλλάζει με το θέμα: <b>δεν είναι στοιχείο διεπαφής, είναι περιεχόμενο</b>.</div>
+</section>
+
+<section class="sec" id="b6">
+<div class="sec-h"><h2>B6</h2><span class="t">Success — πελάτης (μετά την υπογραφή)</span><span class="tag t-done">έγινε</span></div>
+<p class="d">Ίδιο αρχείο με το B5, κατάσταση <code>signed-ok</code>. Πέρασε μαζί του στην (68).</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell ns"><div class="main" style="max-width:440px;margin:0 auto;background:var(--bg)"><div class="content" style="padding:26px 20px">
+<div style="text-align:center">
+<div style="width:52px;height:52px;border-radius:50%;background:var(--accent-wash);border:2px solid var(--p400);display:inline-grid;place-items:center;color:var(--accent-ink);font-size:24px;margin-bottom:12px">&#10003;</div>
+<h1 style="font-size:var(--fs-18);font-weight:800;margin-bottom:4px;color:var(--navy)">Υπογράφηκε</h1>
+<p class="mu" style="margin-bottom:16px">Η αίτησή σου στάλθηκε στην Protergia.</p>
+</div>
+<div class="card"><h3>Τι γίνεται τώρα</h3>
+<ul class="tl" style="padding-left:16px;margin-top:4px">
+<li class="on">Λάβαμε την υπογραφή σου<span>μόλις τώρα</span></li>
+<li>Ο πάροχος ελέγχει την αίτηση<span>συνήθως 2-5 εργάσιμες</span></li>
+<li>Ενεργοποίηση παροχής<span>θα ειδοποιηθείς με SMS</span></li>
+</ul></div>
+<p class="mu" style="text-align:center;font-size:var(--fs-11)">Αντίγραφο στάλθηκε στο maria@example.gr</p>
+</div></div></div></div>
+</section>
+
+<section class="sec" id="b7">
+<div class="sec-h"><h2>B7</h2><span class="t">Success — συνεργάτης (εντός CRM)</span><span class="tag t-done">έγινε 21/08 — ως rail</span></div>
+<p class="d">Το περιεχόμενο υλοποιήθηκε <b>μέσα στη λεπτομέρεια (A3)</b>, όχι ως ξεχωριστή οθόνη. Εδώ φαίνεται η εκδοχή που <b>δεν</b> επιλέχθηκε, για να είναι ορατή η διαφορά.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell ns"><div class="main" style="max-width:440px;margin:0 auto;background:var(--bg)"><div class="content" style="padding:26px 20px">
+<div style="text-align:center">
+<div style="width:52px;height:52px;border-radius:50%;background:var(--accent-wash);border:2px solid var(--p400);display:inline-grid;place-items:center;color:var(--accent-ink);font-size:24px;margin-bottom:12px">&#10003;</div>
+<h1 style="font-size:var(--fs-18);font-weight:800;margin-bottom:4px;color:var(--navy)">Η σύμβαση υπογράφηκε</h1>
+<p class="mu" style="margin-bottom:16px">Μαρία Παπαδοπούλου &middot; Protergia</p>
+</div>
+<div class="card"><h3>Audit υπογραφής</h3>
+<div class="kv"><b>Ημερομηνία</b><span>21/08/2026</span></div>
+<div class="kv"><b>Ώρα</b><span>14:32</span></div>
+<div class="kv"><b>IP πελάτη</b><span>85.72.&bull;&bull;&bull;.&bull;&bull;&bull;</span></div>
+<div style="display:flex;align-items:center;gap:8px;padding:9px 0 1px;font-size:var(--fs-11-5);color:var(--muted)">
+Κατάσταση <span class="badge b-signed">Υπογεγραμμένη</span></div>
+</div>
+<button class="btn btn-p btn-b btn-lg" style="margin-bottom:6px">Στάλσιμο σε πάροχο</button>
+<button class="btn btn-g btn-b">Επιστροφή στη λεπτομέρεια</button>
+</div></div></div></div>
+<div class="note"><b>Γιατί το rail και όχι αυτή η οθόνη.</b> Το ερώτημα που λύνει ένα audit είναι <b>αναδρομικό</b>: κανείς δεν ρωτά «από ποιο IP υπέγραψε» τη στιγμή της υπογραφής &mdash; ρωτά εβδομάδες μετά, όταν αμφισβητήσει πάροχος ή πελάτης. Αυτή η οθόνη θα το έδειχνε ακριβώς τη <b>μία</b> στιγμή που δεν χρειάζεται, και μετά θα το έκρυβε για πάντα. Το τέταρτο πλακίδιο που είχε το kit εδώ («Κανάλι: Link κινητού») <b>αφαιρέθηκε</b>: δεν υπάρχει στήλη <code>channel</code> ούτε στο <code>WritableColumns</code> ούτε στο schema, οπότε θα ήταν κουτί με σταθερό κείμενο &mdash; το ίδιο ακριβώς λάθος με την «κάρτα ΑΙ βοήθεια».</div>
+</section>
+
+<section class="sec" id="b8">
+<div class="sec-h"><h2>B8</h2><span class="t">Link ληγμένο / χρησιμοποιημένο</span><span class="tag t-dec">απόφαση — §6γ (7)</span></div>
+<p class="d">Το kit λέει «<b>ίδιο μήνυμα</b> για ληγμένο και χρησιμοποιημένο». Σήμερα το tracking έχει <code>fail(msg, code)</code> με <b>κωδικό</b>.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell ns"><div class="main" style="max-width:440px;margin:0 auto;background:var(--bg)"><div class="content" style="padding:26px 20px">
+<div style="text-align:center">
+<div style="width:52px;height:52px;border-radius:50%;background:var(--st-draft-bg);border:2px solid var(--st-draft);display:inline-grid;place-items:center;color:var(--st-draft);font-size:24px;margin-bottom:12px">&#8709;</div>
+<h1 style="font-size:var(--fs-17);font-weight:800;margin-bottom:6px;color:var(--navy)">Ο σύνδεσμος δεν είναι ενεργός</h1>
+<p class="mu" style="margin-bottom:16px">Επικοινώνησε με τον συνεργάτη που σου τον έστειλε για νέο σύνδεσμο.</p>
+</div>
+<div class="card"><p style="font-size:var(--fs-12-5);color:var(--muted)">Ο σύνδεσμος μπορεί να έχει λήξει ή να έχει ήδη χρησιμοποιηθεί. Για την ασφάλειά σου δεν λέμε ποιο από τα δύο.</p></div>
+</div></div></div></div>
+<div class="note warn"><b>Είναι ερώτημα ασφαλείας, όχι εμφάνισης &mdash; και είναι δύο ερωτήματα, όχι ένα.</b><br>
+<b>(α)</b> Αν ο κωδικός ξεχωρίζει «άκυρο token» από «ήδη υπογεγραμμένο», αυτό λέει σε τρίτον ότι <i>υπάρχει</i> σύμβαση πίσω από το token. Πρέπει να διαβαστεί ο κώδικας πριν αλλάξει το κείμενο.<br>
+<b>(β) Η λήξη 48 ωρών δεν είναι μονόδρομη.</b> Ο σύνδεσμος υπογραφής <b>είναι</b> ο σύνδεσμος παρακολούθησης &mdash; λήξη του <code>verify()</code> σκοτώνει και το tracking, και σπάει SMS που έχουν ήδη σταλεί. Χρειάζεται μεταβατικό: <i>από πότε</i> μετράνε οι 48 ώρες για συμβάσεις με ζωντανό σύνδεσμο. Το kit απαντά «48 ώρες» δύο φορές, οπότε η απόφαση <i>μοιάζει</i> δοσμένη — δεν είναι.</div>
+</section>
+
+<section class="sec" id="c1">
+<div class="sec-h"><h2>C1</h2><span class="t">Δίκτυο συνεργατών</span><span class="tag t-css">μόνο CSS</span></div>
+<p class="d">Λειτουργεί (<code>ecrm-view-network.js</code>, <code>/network</code>). Το χρυσό/ασημί/χάλκινο είναι <b>δικά τους tokens</b> (<code>--medal-*</code>) και όχι καταστάσεις &mdash; μια θέση κατάταξης δεν είναι status, και δεν πρέπει να δανείζεται το χρώμα καμιάς.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#" class="on">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Δίκτυο</h1><span class="sub">14 συνεργάτες</span></div><div class="content">
+<div class="stats" style="grid-template-columns:repeat(3,1fr)">
+<div class="stat"><span>Ενεργοί συνεργάτες</span><strong>14</strong></div>
+<div class="stat"><span>Συμβάσεις μήνα</span><strong>73</strong></div>
+<div class="stat"><span>Προμήθεια δικτύου</span><strong>&euro;1.460</strong></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+<table class="tbl">
+<thead><tr><th>Συνεργάτης</th><th>Επίπεδο</th><th>Συμβάσεις</th><th>Προμήθεια</th><th style="text-align:right">Κατάταξη</th></tr></thead>
+<tbody>
+<tr><td class="person"><strong>Κώστας Ν.</strong><span>Αθήνα</span></td><td class="mu">Άμεσος</td><td>21</td><td>&euro;420</td>
+<td style="text-align:right"><span style="color:var(--medal-gold);font-weight:800">&#9679; 1ος</span></td></tr>
+<tr><td class="person"><strong>Γιάννης Δ.</strong><span>Θεσσαλονίκη</span></td><td class="mu">Άμεσος</td><td>18</td><td>&euro;360</td>
+<td style="text-align:right"><span style="color:var(--medal-silver);font-weight:800">&#9679; 2ος</span></td></tr>
+<tr><td class="person"><strong>Σοφία Λ.</strong><span>Πάτρα</span></td><td class="mu">Άμεσος</td><td>15</td><td>&euro;300</td>
+<td style="text-align:right"><span style="color:var(--medal-bronze);font-weight:800">&#9679; 3ος</span></td></tr>
+<tr><td class="person"><strong>Πέτρος Μ.</strong><span>υπό Κώστα Ν.</span></td><td class="mu">Β&#39; επίπεδο</td><td>11</td><td>&euro;165</td>
+<td style="text-align:right" class="mu">4ος</td></tr>
+</tbody></table></div>
+</div></div></div></div>
+</section>
+
+<section class="sec" id="c2">
+<div class="sec-h"><h2>C2</h2><span class="t">Καρτέλα συνεργάτη</span><span class="tag t-done">ΕΓΙΝΕ 21/08 — ήταν επίπεδο 3</span></div>
+<p class="d"><b>Χτίστηκε ολόκληρο.</b> Δεν υπήρχε τίποτα από τα τρία &mdash; ούτε οθόνη, ούτε διαδρομή, ούτε endpoint. Τώρα υπάρχουν και τα τρία: <code>GET /team/{id}</code>, <code>PartnerCardRepository</code>, <code>ecrm-view-partner.js</code>, με οκτώ tests. <b>Οι τρεις από τους τέσσερις δείκτες όμως άλλαξαν ορισμό</b> &mdash; οι αριθμοί παρακάτω είναι οι πραγματικοί.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#" class="on">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Κώστας Ν.</h1><span class="sub">Άμεσος συνεργάτης &middot; Αθήνα</span><span class="sp"></span><span class="badge b-active">Ενεργός</span></div><div class="content">
+<div class="stats">
+<div class="stat"><span>Συμβάσεις μήνα</span><strong>21</strong><em>&uarr; 5</em><div class="mu" style="margin-top:4px;font-size:var(--fs-11)">έναντι 16 τον προηγούμενο μήνα</div></div>
+<div class="stat"><span>Επιτυχία</span><strong>78%</strong><div class="mu" style="margin-top:4px;font-size:var(--fs-11)">21 από 27 <b>που έκλεισαν</b></div></div>
+<div class="stat"><span>Μέσος χρόνος ως υπογραφή</span><strong>3,2 μέρες</strong><div class="mu" style="margin-top:4px;font-size:var(--fs-11)">από 19 υπογραφές</div></div>
+<div class="stat"><span>Προμήθεια</span><strong>&euro;1.420,50</strong><div class="mu" style="margin-top:4px;font-size:var(--fs-11)">&euro;380,00 δεν έχει πληρωθεί ακόμη</div></div>
+</div>
+<div class="g2">
+<div>
+<div class="card"><h3>Τελευταίες συμβάσεις</h3>
+<table class="tbl">
+<tr><td class="person"><strong>Μαρία Π.</strong><span>Protergia</span></td><td><span class="badge b-signed">Υπογεγραμμένη</span></td><td class="mu">σήμερα</td></tr>
+<tr><td class="person"><strong>Νίκος Π.</strong><span>Protergia</span></td><td><span class="badge b-active">Ενεργή</span></td><td class="mu">19/08</td></tr>
+<tr><td class="person"><strong>Άννα Μ.</strong><span>Elpedison</span></td><td><span class="badge b-routed">Δρομολογήθηκε</span></td><td class="mu">18/08</td></tr>
+</table></div>
+</div>
+<div>
+<div class="card"><h3>Στοιχεία</h3>
+<div class="kv"><b>Κινητό</b><span>697 555 1234</span></div>
+<div class="kv"><b>Email</b><span>kostas@example.gr</span></div>
+<div class="kv"><b>Ένταξη</b><span>Μάρτιος 2025</span></div>
+</div>
+<div class="card"><h3>Κάτω δίκτυο</h3>
+<div class="kv"><b>Πέτρος Μ.</b><span>11 συμβάσεις</span></div>
+<div class="kv"><b>Ρία Κ.</b><span>6 συμβάσεις</span></div>
+</div>
+</div>
+</div>
+</div></div></div></div>
+<div class="note acc"><b>Και μετά χτίστηκε &mdash; απόφαση ιδιοκτήτη «ό,τι δεν υπάρχει το φτιάχνουμε, ό,τι κόστος και να έχει».</b> Η διαδρομή <code>/team/{id}</code> έγινε multi-method με <b>διαφορετικό φύλακα ανά μέθοδο</b>: το POST κρατά <code>MANAGE_TEAM</code>, το GET φοράει <code>crmUser()</code> &mdash; αλλιώς ένας πωλητής δεν θα έβλεπε ούτε τη δική του καρτέλα. Ποιον επιτρέπεται να δει το κρίνει το <code>$scope-&gt;includes()</code>, και εκτός εμβέλειας επιστρέφεται <b>404 και όχι 403</b>: ένα 403 θα επιβεβαίωνε ότι το μέλος υπάρχει.<br><b>Οι τρεις δείκτες που δεν υπολογίζονταν, ξαναορίστηκαν πάνω σε ό,τι αποδεικνύει η βάση:</b> η <b>επιτυχία</b> είναι πληρωτέες ÷ <b>όσες έκλεισαν</b> (μια σύμβαση στον αέρα δεν είναι αποτυχία &mdash; αλλιώς τιμωρείς όποιον μόλις κατέθεσε δέκα)· ο <b>μέσος χρόνος</b> βγαίνει από το <code>signed_at</code> <b>με το δείγμα δίπλα του</b>, γιατί η στήλη μπήκε 18/08 και τα παλιά είναι NULL· η <b>προμήθεια</b> περνά από το ίδιο ερώτημα και τον ίδιο υπολογισμό με την οθόνη «Προμήθειες». <b>Κάτω από πέντε κλεισίματα δεν εμφανίζεται ποσοστό</b> &mdash; μπαίνει ο ωμός λόγος «1/2», γιατί ένα «50%» δίπλα σε πρόσωπο διαβάζεται ως κρίση.</div>
+<div class="note warn"><b>Ιστορικό: Η ΑΝΑΚΛΗΣΗ ΠΟΥ ΠΡΟΗΓΗΘΗΚΕ. Είχα γράψει «καθαρά οθόνη, τα δεδομένα έρχονται ήδη από το <code>/team/{id}</code>». Λάθος, σε τρία σημεία &mdash; μετρημένα 21/08:</b><br><b>1. Δεν υπάρχει <code>GET /team/{id}</code>.</b> Ο <code>TeamController</code> δηλώνει τη διαδρομή <code>/team/(?P&lt;id&gt;\d+)</code> <b>μόνο ως POST</b>, με <code>op</code> περιορισμένο σε <code>toggle|remove</code>. Δεν υπάρχει καμία GET ανά μέλος.<br><b>2. Δεν υπάρχει η οθόνη.</b> Καμία πλοήγηση δεν οδηγεί σε καρτέλα μέλους. Το C2 θέλει <b>νέα οθόνη + νέα διαδρομή + νέο endpoint</b>.<br><b>3. Οι τρεις από τους τέσσερις δείκτες δεν υπολογίζονται πουθενά.</b> «Ποσοστό επιτυχίας», «Μέσος χρόνος» και «Προμήθεια μήνα» δεν υπάρχουν σε καμία απάντηση. Μόνο το «Συμβάσεις μήνα» υπάρχει.<br><b>Άρα επίπεδο 3, όχι 2.</b> Και το χειρότερο: τον ισχυρισμό τον αντέγραψα από τη στήλη «endpoint» αυτού του ίδιου του χάρτη, χωρίς να τον επαληθεύσω &mdash; <b>μέσα στο αρχείο που προειδοποιεί να μην εμπιστεύεσαι τα docs</b>.</div>
+<div class="note acc"><b>Το καλό εύρημα, από την ίδια μέτρηση: η ουσία του C2 ΥΠΑΡΧΕΙ ΗΔΗ, με άλλο όνομα.</b> Το <code>GET /team/live</code> (<code>TeamActivityController</code>) επιστρέφει <b>ανά μέλος</b>: <code>today</code>, <code>month</code>, <code>pending</code>, <code>routed</code>, <code>active</code>, <code>open_tasks</code>, <code>last</code>, <code>online</code> &mdash; και τα σερβίρει η οθόνη <b>«Ομάδα Live»</b> (<code>ecrm-view-team-live.js</code>), με έξι συγκεντρωτικά πλακίδια και πίνακα ανά μέλος. Είναι <b>πλήρως ντυμένη</b>: 25 κανόνες CSS στο <code>ecrm-app.css</code> για τις επτά κλάσεις της. Η «σύνοψη απόδοσης συνεργάτη» που ζητά το kit <b>δουλεύει σήμερα</b> &mdash; για όλη την ομάδα μαζί αντί για μία καρτέλα ανά άτομο. Κανείς δεν το πρόσεξε επειδή το kit δεν τη σχεδίασε ποτέ, οπότε ζει στο «τι δεν έχει σχέδιο πουθενά».</div>
+<div class="note warn"><b>Και ένα πραγματικό ελάττωμα στη διαδρομή.</b> Το <code>ecrm-view-team.js:29</code> τυπώνει στήλη <b>«Τηλέφωνο» με σκληροκωδικοποιημένη παύλα</b> &mdash; στήλη που δεν μπορεί ποτέ να δείξει τίποτα. Δίπλα της, το <code>m.contracts</code> που <b>στέλνει ήδη</b> το <code>/team</code> πετιέται· το <code>ecrm-view-network.js:26</code> το χρησιμοποιεί κανονικά. Δηλαδή: μια στήλη που λέει πάντα «—» πλάι σε δεδομένο που υπάρχει και αγνοείται. Ίδια οικογένεια με την «κάρτα ΑΙ βοήθεια» (§6β): <b>διακοσμητικό ψέμα</b>.</div>
+</section>
+
+<section class="sec" id="c3">
+<div class="sec-h"><h2>C3</h2><span class="t">Προμήθειες</span><span class="tag t-css">μόνο CSS</span></div>
+<p class="d">Λειτουργεί (<code>ecrm-view-commissions.js</code>). Το σκούρο hero είναι από τα λίγα σημεία με <b>σκούρο πάνελ μέσα σε ανοιχτή σελίδα</b> &mdash; γι' αυτό υπάρχουν τα τέσσερα <code>--surface-inverse-*</code>: στο σκούρο θέμα δεν αντιστρέφονται, <b>ανοίγουν</b>. Δοκίμασε τον διακόπτη πάνω και κοίτα αυτό το κουτί.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#" class="on">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Προμήθειες</h1><span class="sub">Αύγουστος 2026</span></div><div class="content">
+<div class="card" style="background:var(--surface-inverse);border-color:var(--line-inverse);margin-bottom:10px">
+<div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+<div><div style="font-size:var(--fs-11);color:var(--faint-2);margin-bottom:2px">Προμήθεια Αυγούστου</div>
+<div style="font-size:var(--fs-28);font-weight:800;color:var(--on-dark);letter-spacing:-.02em">&euro;1.840</div></div>
+<div style="color:var(--p300);font-size:var(--fs-12-5);font-weight:700;padding-bottom:6px">&uarr; 18% από Ιούλιο</div>
+<span style="flex:1"></span>
+<div style="padding-bottom:6px"><span class="badge b-pending">Εκκρεμεί εκκαθάριση</span></div>
+</div>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+<table class="tbl">
+<thead><tr><th>Σύμβαση</th><th>Πάροχος</th><th>Κατάσταση</th><th style="text-align:right">Ποσό</th></tr></thead>
+<tbody>
+<tr><td class="person"><strong>Μαρία Π.</strong><span>#4821</span></td><td class="mu">Protergia</td><td><span class="badge b-active">Ενεργή</span></td><td style="text-align:right;font-weight:700">&euro;20</td></tr>
+<tr><td class="person"><strong>Νίκος Π.</strong><span>#4818</span></td><td class="mu">Protergia</td><td><span class="badge b-active">Ενεργή</span></td><td style="text-align:right;font-weight:700">&euro;20</td></tr>
+<tr><td class="person"><strong>Άννα Μ.</strong><span>#4809</span></td><td class="mu">Elpedison</td><td><span class="badge b-routed">Δρομολογήθηκε</span></td><td style="text-align:right" class="mu">&euro;25 <span style="font-size:var(--fs-10)">σε αναμονή</span></td></tr>
+</tbody></table></div>
+</div></div></div></div>
+</section>
+
+<section class="sec" id="c4">
+<div class="sec-h"><h2>C4</h2><span class="t">Εκκαθάριση προμηθειών</span><span class="tag t-dec">μπλοκαρισμένο — §6γ (3)-(6)</span></div>
+<p class="d">Ζει σήμερα σε <b>wp-admin</b> (<code>admin/class-ecrm-payouts.php</code>) και λειτουργεί. Το kit το θέλει <i>μέσα</i> στο CRM &mdash; έτσι το δείχνει και η εικόνα.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#" class="on">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Νέα εκκαθάριση</h1><span class="sub">Ιούλιος 2026</span></div><div class="content">
+<div class="card acc" style="margin-bottom:10px">
+<h3 style="color:var(--accent-ink)">Επιλεγμένα &middot; 14 συμβάσεις &middot; σύνολο &euro;280</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-p">Δημιουργία εκκαθάρισης</button>
+<button class="btn btn-g">Εξαγωγή σε Excel</button></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+<table class="tbl">
+<thead><tr><th style="width:26px"><input type="checkbox" checked></th><th>Συνεργάτης</th><th>Συμβάσεις</th><th>Περίοδος</th><th style="text-align:right">Ποσό</th></tr></thead>
+<tbody>
+<tr><td><input type="checkbox" checked></td><td class="person"><strong>Κώστας Ν.</strong></td><td>7</td><td class="mu">Ιούλιος 2026</td><td style="text-align:right;font-weight:700">&euro;140</td></tr>
+<tr><td><input type="checkbox" checked></td><td class="person"><strong>Γιάννης Δ.</strong></td><td>4</td><td class="mu">Ιούλιος 2026</td><td style="text-align:right;font-weight:700">&euro;80</td></tr>
+<tr><td><input type="checkbox" checked></td><td class="person"><strong>Σοφία Λ.</strong></td><td>3</td><td class="mu">Ιούλιος 2026</td><td style="text-align:right;font-weight:700">&euro;60</td></tr>
+</tbody></table></div>
+</div></div></div></div>
+<div class="note warn"><b>Δεν είναι δουλειά οθόνης &mdash; είναι μετακίνηση ροής χρημάτων.</b> Πριν μετακινηθεί οτιδήποτε, τέσσερις ανοιχτές αποφάσεις (§6γ 3-6) πρέπει να κλείσουν: πότε «ωριμάζει» μια προμήθεια, ποιος εγκρίνει, τι γίνεται με ακύρωση <b>μετά</b> την πληρωμή, και ποιος βλέπει τι. Καμία από αυτές δεν είναι σχεδιαστική. Ένα κουμπί «Δημιουργία εκκαθάρισης» μέσα στο CRM χωρίς αυτές τις απαντήσεις απλώς μετακινεί το πρόβλημα σε πιο ορατό σημείο.</div>
+</section>
+
+<section class="sec" id="c5">
+<div class="sec-h"><h2>C5</h2><span class="t">Αναφορές</span><span class="tag t-css">μόνο CSS</span></div>
+<p class="d">Λειτουργεί (<code>ecrm-view-analytics.js</code>). Οι μπάρες «ανά κατάσταση» χρησιμοποιούν τα <b>ίδια</b> <code>--st-*</code> με τα badge &mdash; ο ίδιος αριθμός με το ίδιο χρώμα σε δύο διαφορετικές οθόνες.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#" class="on">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Αναφορές</h1><span class="sub">Τελευταίες 30 μέρες</span></div><div class="content">
+<div class="chips" style="margin-bottom:12px">
+<button class="chip">7 μέρες</button><button class="chip on">30 μέρες</button>
+<button class="chip">Τρίμηνο</button><button class="chip">Έτος</button>
+</div>
+<div class="g2e">
+<div class="card"><h3>Ανά πάροχο</h3>
+<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:var(--fs-12);margin-bottom:3px"><span>Protergia</span><b>52</b></div><div class="bar"><i style="width:100%"></i></div></div>
+<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:var(--fs-12);margin-bottom:3px"><span>NRG</span><b>31</b></div><div class="bar"><i style="width:60%"></i></div></div>
+<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:var(--fs-12);margin-bottom:3px"><span>Elpedison</span><b>24</b></div><div class="bar"><i style="width:46%"></i></div></div>
+<div><div style="display:flex;justify-content:space-between;font-size:var(--fs-12);margin-bottom:3px"><span>Orizon</span><b>21</b></div><div class="bar"><i style="width:40%"></i></div></div>
+</div>
+<div class="card"><h3>Ανά κατάσταση</h3>
+<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:var(--fs-12);margin-bottom:3px"><span>Ενεργή</span><b>62</b></div><div class="bar"><i style="width:100%;background:var(--st-active)"></i></div></div>
+<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:var(--fs-12);margin-bottom:3px"><span>Δρομολογήθηκε</span><b>21</b></div><div class="bar"><i style="width:34%;background:var(--st-routed)"></i></div></div>
+<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:var(--fs-12);margin-bottom:3px"><span>Υπογεγραμμένη</span><b>14</b></div><div class="bar"><i style="width:23%;background:var(--st-signed)"></i></div></div>
+<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:var(--fs-12);margin-bottom:3px"><span>Εκκρεμότητα</span><b>7</b></div><div class="bar"><i style="width:11%;background:var(--st-pending)"></i></div></div>
+<div><div style="display:flex;justify-content:space-between;font-size:var(--fs-12);margin-bottom:3px"><span>Ακυρώθηκε</span><b>3</b></div><div class="bar"><i style="width:5%;background:var(--st-cancel)"></i></div></div>
+</div>
+</div>
+</div></div></div></div>
+<div class="note"><b>Οι σειρές γραφήματος έχουν δικά τους χρώματα, όχι δανεικά.</b> Όταν η μπάρα δείχνει <i>κατηγορία</i> και όχι κατάσταση, τα <code>--cat-teal</code>/<code>--cat-violet</code> υπάρχουν ακριβώς γι' αυτό: μετρημένα με την ίδια μέθοδο (CIE LCh, L* 46), σε απόσταση ΔE00 21,6 και 20,1 από την πλησιέστερη κατάσταση &mdash; δηλαδή <b>δεν διαβάζονται ως status</b>. Ένα ραβδόγραμμα δεν έχει κατάσταση· έχει σειρές.</div>
+</section>
+
+<section class="sec" id="d1">
+<div class="sec-h"><h2>D1</h2><span class="t">Υγεία συστήματος</span><span class="tag t-css">μόνο εμφάνιση</span></div>
+<p class="d"><b>Ζει σε wp-admin, όχι εδώ μέσα</b> &mdash; όπως και τα D2/D3. Ό,τι δείχνει είναι <b>μετρημένη κατάσταση</b>, όχι κουτί που λέει πάντα «OK»: η ίδια ακριβώς διαφορά που κράτησε την «κάρτα ΑΙ βοήθεια» έξω από τη λεπτομέρεια.</p>
+<div class="note warn" style="margin:0 0 12px"><b>Προσοχή στο τι δείχνουν οι τρεις επόμενες εικόνες.</b> Τα D1, D2 και D3 είναι σήμερα <b>οθόνες wp-admin</b> — γκρίζο περιβάλλον WordPress, όχι το κέλυφος του CRM. Ζωγραφίζονται εδώ με το κέλυφος του CRM επειδή <b>έτσι τις προτείνει το kit</b>, όχι επειδή έτσι είναι. Αν κάποια μετακομίσει πραγματικά μέσα στο CRM, είναι δουλειά με δικό της κόστος (νέα διαδρομή, δικαιώματα, μενού) — δες τι λέει το C4 για ακριβώς αυτή τη μετακόμιση.</div>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Υγεία</h1><span class="sub">Energy CRM 2.4</span></div><div class="content">
+<div class="card"><h3>Έλεγχοι</h3>
+<div class="kv"><b>Βάση δεδομένων</b><span><span class="badge b-resolved">OK</span></span></div>
+<div class="kv"><b>Προστασία εγγράφων</b><span><span class="badge b-resolved">OK &middot; 0 εκκρεμή</span></span></div>
+<div class="kv"><b>Κρυπτογράφηση PII</b><span><span class="badge b-pending">312 σε καθαρό κείμενο</span></span></div>
+<div class="kv"><b>Cron</b><span><span class="badge b-resolved">Τρέχει &middot; πριν 12&#39;</span></span></div>
+<div class="kv"><b>Αποστολή email</b><span><span class="badge b-resolved">OK</span></span></div>
+</div>
+<div class="card"><h3>Τελευταία συμβάντα</h3>
+<ul class="tl">
+<li class="on">Μετατροπή 500 εγγραφών σε κρυπτογραφημένες<span>σήμερα 09:00 &middot; αυτόματα</span></li>
+<li>Μεταφορά 82 εγγράφων σε προστατευμένη αποθήκευση<span>χθες 22:00</span></li>
+</ul></div>
+</div></div></div></div>
+</section>
+
+<section class="sec" id="d2">
+<div class="sec-h"><h2>D2</h2><span class="t">Ρυθμίσεις</span><span class="tag t-dec">δύο αποφάσεις μέσα</span></div>
+<p class="d">Οθόνη wp-admin. Δύο από τις ανοιχτές αποφάσεις έχουν <b>φυσική θέση εδώ</b>, και γι' αυτό ζωγραφίζονται &mdash; ο διακόπτης θέματος και η λήξη συνδέσμου.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Ρυθμίσεις</h1></div><div class="content">
+<div class="g2e">
+<div>
+<div class="card"><h3>Εμφάνιση</h3>
+<div class="field"><label>Θέμα</label>
+<div class="chips"><button class="chip on">Ανοιχτό</button><button class="chip">Σκούρο</button><button class="chip">Ακολούθησε το σύστημα</button></div>
+</div>
+<p class="mu" style="margin-top:8px">Προεπιλογή: ανοιχτό. Η επιλογή αποθηκεύεται ανά χρήστη.</p>
+</div>
+<div class="card"><h3>Υπογραφή</h3>
+<div class="field"><label>Λήξη συνδέσμου</label>
+<div class="chips"><button class="chip on">Χωρίς λήξη</button><button class="chip">48 ώρες</button><button class="chip">7 μέρες</button></div>
+</div>
+<p class="mu" style="margin-top:8px">Ανοιχτή απόφαση &mdash; §6γ (7). Τα τρία chip δείχνουν τι θα σήμαινε ως ρύθμιση.</p>
+</div>
+</div>
+<div>
+<div class="card"><h3>Ειδοποιήσεις</h3>
+<div class="kv"><b>Email στον πελάτη</b><span style="color:var(--accent-ink)">Ενεργό</span></div>
+<div class="kv"><b>Email στον συνεργάτη</b><span style="color:var(--accent-ink)">Ενεργό</span></div>
+<div class="kv"><b>SMS</b><span class="mu">Ανενεργό</span></div>
+</div>
+<div class="card"><h3>Δεδομένα</h3>
+<div class="kv"><b>Κρυπτογράφηση ΑΦΜ/ΑΔΤ</b><span style="color:var(--accent-ink)">Ενεργή</span></div>
+<div class="kv"><b>Διατήρηση εγγράφων</b><span>5 έτη</span></div>
+</div>
+</div>
+</div>
+</div></div></div></div>
+<div class="note"><b>Ο διακόπτης θέματος υπάρχει ήδη και δουλεύει.</b> Είναι ο ίδιος που δοκιμάζεις πάνω δεξιά σε αυτή τη σελίδα: <code>ThemePreference</code>, με προεπιλογή <code>LIGHT</code>, γραμμένος στο <code>data-theme</code> του ίδιου του <code>.ecrm</code> από το <code>public/class-ecrm-app.php</code> &mdash; χωρίς εξάρτηση από το θέμα του WordPress και χωρίς τρεμόπαιγμα στη φόρτωση. <b>Δεν χρειάζεται να χτιστεί, μόνο να εκτεθεί ως ρύθμιση εδώ.</b></div>
+</section>
+
+<section class="sec" id="d3">
+<div class="sec-h"><h2>D3</h2><span class="t">GDPR — δεδομένα πελάτη</span><span class="tag t-done">έγινε σήμερα</span></div>
+<p class="d"><b>Ζει σε wp-admin, όχι εδώ μέσα</b> &mdash; η εικόνα δείχνει την εκδοχή του kit. Η <b>λειτουργία</b> όμως είναι η πραγματική: το πεδίο δίπλα στο κόκκινο κουμπί <b>δουλεύει σε αυτή τη σελίδα</b>, με την ίδια ακριβώς λογική με τον ζωντανό κώδικα. Δοκίμασέ το &mdash; γράψε το ΑΦΜ και το κουμπί ξεκλειδώνει· γράψε οτιδήποτε άλλο και μένει σβηστό.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>GDPR — Δεδομένα Πελάτη</h1></div><div class="content">
+<div class="card ok" style="margin-bottom:8px"><p style="font-size:var(--fs-12-5);color:var(--ink)"><b style="color:var(--accent-ink)">Ασφάλεια αρχείων.</b> Όλα τα έγγραφα βρίσκονται σε προστατευμένη αποθήκευση.</p></div>
+<div class="card warn" style="margin-bottom:10px"><p style="font-size:var(--fs-12-5);color:var(--ink)"><b style="color:var(--st-pending)">Κρυπτογράφηση προσωπικών δεδομένων.</b> Απομένουν 312 πελάτες προς έλεγχο. Μετατρέπονται αυτόματα ανά ώρα, σε παρτίδες.</p></div>
+<div style="display:flex;gap:8px;margin-bottom:12px">
+<div class="search">&#128269; ΑΦΜ ή όνομα/επωνυμία</div><button class="btn btn-p">Αναζήτηση</button>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+<table class="tbl">
+<thead><tr><th>#</th><th>Όνομα/Επωνυμία</th><th>ΑΦΜ</th><th>Ενέργειες</th></tr></thead>
+<tbody>
+<tr><td class="mu">7</td><td class="person"><strong>Παπαδόπουλος Γεώργιος</strong></td><td>123456789</td>
+<td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+<button class="btn btn-g">Εξαγωγή JSON</button>
+<input class="ecrm-demo-erase" data-need="123456789" placeholder="πληκτρολόγησε: 123456789" title="πληκτρολόγησε ακριβώς: 123456789" autocomplete="off"
+ style="width:200px;background:var(--surface);border:1px solid var(--line-mid);border-radius:8px;padding:6px 9px;color:var(--ink);font-size:var(--fs-12);font-family:inherit;outline:0">
+<button class="btn btn-d" disabled>Διαγραφή δεδομένων</button>
+</div></td></tr>
+<tr><td class="mu">42</td><td class="person"><strong>Ελληνική Εταιρεία Ενέργειας ΑΕ</strong></td><td class="mu">&mdash;</td>
+<td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+<button class="btn btn-g">Εξαγωγή JSON</button>
+<input class="ecrm-demo-erase" data-need="ΠΕΛΑΤΗΣ #42" placeholder="πληκτρολόγησε: ΠΕΛΑΤΗΣ #42" title="πληκτρολόγησε ακριβώς: ΠΕΛΑΤΗΣ #42" autocomplete="off"
+ style="width:200px;background:var(--surface);border:1px solid var(--line-mid);border-radius:8px;padding:6px 9px;color:var(--ink);font-size:var(--fs-12);font-family:inherit;outline:0">
+<button class="btn btn-d" disabled>Διαγραφή δεδομένων</button>
+</div></td></tr>
+</tbody></table></div>
+</div></div></div></div>
+<div class="note acc"><b>Γιατί έφυγε το <code>confirm()</code>.</b> Το «Συνέχεια;» του browser δεν διαβάζεται &mdash; ένα ρεφλεξικό Enter το περνά. Η ανωνυμοποίηση ΑΦΜ/ΑΔΤ/διεύθυνσης είναι <b>μη αναστρέψιμη</b>: χρειάζεται κάτι που δεν περνά χωρίς να διαβαστεί. Ο έλεγχος είναι <b>ακριβής</b>, όχι επιεικής: όχι case-insensitive, όχι ανεκτικός σε κενά &mdash; μια μη αναστρέψιμη διαγραφή δεν έχει «σχεδόν σωστό». Όταν ο πελάτης δεν έχει ΑΦΜ, ζητείται το <code>ΠΕΛΑΤΗΣ #id</code>, που πάντα υπάρχει και ποτέ δεν είναι κενό.<br>
+<b>Μηδέν backend:</b> ο <code>erase()</code> handler και ο έλεγχος nonce έμειναν ανέγγιχτοι. Αυτό είναι φραγμός στο UI <i>πριν</i> το submit, <b>όχι</b> νέος έλεγχος εξουσιοδότησης &mdash; και γράφεται ρητά ώστε να μη διαβαστεί ως τέτοιος.<br>
+<b>Και μια διόρθωση που την έπιασε μόνο η απόδοση:</b> το πεδίο ήταν 150px και <b>έκοβε το ίδιο το ΑΦΜ που ζητούσε</b> («πληκτρολόγησε: 1234567»). Ένα widget φτιαγμένο ρητά για να δείξει τι να πληκτρολογήσεις, έκρυβε κομμάτι του μηνύματός του. Τώρα 200px, με <code>title</code> για δίχτυ.</div>
+</section>
+
+<section class="sec" id="d4">
+<div class="sec-h"><h2>D4</h2><span class="t">Εισαγωγή από Excel</span><span class="tag t-css">τίποτα ουσιώδες</span></div>
+<p class="d">Λειτουργεί πλήρως, και <b>είναι μέσα στο CRM</b> (<code>ecrm-view-import.js</code>). Το «preview πριν το apply» που ζητά το kit <b>υπάρχει ήδη</b> ως δύο ξεχωριστά endpoints (<code>/import/parse</code> και <code>/import/apply</code>) &mdash; δηλαδή η ασφάλεια είναι στην αρχιτεκτονική, όχι στην οθόνη.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Εισαγωγή από Excel</h1></div><div class="content">
+<div class="card"><h3>Αρχείο</h3>
+<div style="border:1px dashed var(--line-mid);border-radius:10px;padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-12-5);background:var(--surface)">
+&#128202; symvolaia-avgoustos.xlsx &middot; 128 γραμμές</div>
+</div>
+<div class="card acc"><h3>Προεπισκόπηση πριν την εισαγωγή</h3>
+<div class="kv"><b>Έγκυρες γραμμές</b><span style="color:var(--accent-ink)">121</span></div>
+<div class="kv"><b>Διπλότυπα (θα παραλειφθούν)</b><span>5</span></div>
+<div class="kv"><b>Σφάλματα</b><span style="color:var(--st-cancel)">2</span></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+<table class="tbl">
+<thead><tr><th>Γραμμή</th><th>Πελάτης</th><th>Πρόβλημα</th></tr></thead>
+<tbody>
+<tr><td class="mu">18</td><td>Καραγιάννης Ι.</td><td><span class="badge b-cancel">Άκυρο ΑΦΜ (8 ψηφία)</span></td></tr>
+<tr><td class="mu">63</td><td class="mu">&mdash;</td><td><span class="badge b-cancel">Κενό όνομα</span></td></tr>
+</tbody></table></div>
+<div style="display:flex;gap:8px;margin-top:10px">
+<button class="btn btn-g">Ακύρωση</button><span style="flex:1"></span>
+<button class="btn btn-p btn-lg">Εισαγωγή 121 γραμμών</button></div>
+</div></div></div></div>
+</section>
+
+<section class="sec" id="d5">
+<div class="sec-h"><h2>D5</h2><span class="t">Ειδοποιήσεις</span><span class="tag t-css">μόνο CSS</span></div>
+<p class="d">Το καμπανάκι στο topbar, με <code>/notifications</code>. Καμία διαφορά ουσίας από το kit.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="shell"><div class="side"><div class="logo"><i>E</i> Energy CRM</div><div class="nl">Ροή</div><a href="#">Πίνακας</a><a href="#">Συμβάσεις</a><a href="#">Εκκρεμότητες</a><a href="#">Εργασίες</a><div class="nl">Δίκτυο</div><a href="#">Δίκτυο</a><a href="#">Προμήθειες</a><a href="#">Αναφορές</a><div class="nl">Αρχεία</div><a href="#">Πελάτες</a><a href="#">Λήξεις</a><a href="#">Βάση Γνώσης</a></div><div class="main"><div class="top"><h1>Ειδοποιήσεις</h1><span class="sub">2 μη αναγνωσμένες</span></div><div class="content" style="max-width:520px">
+<div class="card" style="padding:0;overflow:hidden">
+<table class="tbl">
+<tr><td style="width:8px;padding:10px 0 10px 10px"><span style="display:block;width:7px;height:7px;border-radius:50%;background:var(--p400)"></span></td>
+<td class="person"><strong>Υπογράφηκε &mdash; Μαρία Π.</strong><span>πριν 2 ώρες</span></td></tr>
+<tr><td style="padding:10px 0 10px 10px"><span style="display:block;width:7px;height:7px;border-radius:50%;background:var(--p400)"></span></td>
+<td class="person"><strong>Ο πάροχος ζήτησε διόρθωση &mdash; Νίκος Π.</strong><span>χθες 18:40</span></td></tr>
+<tr><td style="padding:10px 0 10px 10px"></td>
+<td class="person" style="opacity:.6"><strong>Νέα εργασία ανατέθηκε</strong><span>χθες 09:15</span></td></tr>
+</table></div>
+<button class="btn btn-g btn-b" style="margin-top:8px">Σήμανση όλων ως αναγνωσμένων</button>
+</div></div></div></div>
+</section>
+
+<section class="sec" id="e1">
+<div class="sec-h"><h2>E1-E3</h2><span class="t">Κινητό — τρεις οθόνες</span><span class="tag t-todo">μένει — επίπεδο 2</span></div>
+<p class="d">Το responsive και η κάτω μπάρα (<code>.ecrm-botnav</code>) <b>υπάρχουν</b>. Αυτό που προσθέτει το kit είναι <b>κάρτες πλήρους πλάτους</b> αντί για στριμωγμένο πίνακα, και <b>ένα βήμα ανά οθόνη</b> στη νέα αίτηση.</p>
+<div class="ecrm ecrm-app" data-theme="light"><div class="phones">
+<div class="phone"><div class="notch"></div><div class="ps">
+<div class="top" style="padding:10px 12px"><h1 style="font-size:var(--fs-14)">Πίνακας</h1></div>
+<div class="content" style="padding:10px">
+<div class="card" style="margin-bottom:7px"><span class="mu" style="font-size:var(--fs-11)">Ενεργές</span>
+<div style="font-size:var(--fs-22);font-weight:800;color:var(--navy)">128</div>
+<div style="font-size:var(--fs-11);color:var(--accent-ink);font-weight:700">&uarr; 12 τον μήνα</div></div>
+<div class="card" style="margin-bottom:7px"><span class="mu" style="font-size:var(--fs-11)">Προμήθεια μήνα</span>
+<div style="font-size:var(--fs-22);font-weight:800;color:var(--navy)">&euro;1.840</div>
+<div style="font-size:var(--fs-11);color:var(--accent-ink);font-weight:700">&uarr; 18%</div></div>
+<div class="card"><h3>Χρειάζεται ενέργεια</h3>
+<div style="padding:6px 0;border-bottom:1px solid var(--line-soft)"><div style="font-size:var(--fs-12-5);font-weight:700;color:var(--navy)">Μαρία Π.</div>
+<span class="badge b-pending" style="margin-top:4px">Εκκρεμότητα</span></div>
+<div style="padding:6px 0"><div style="font-size:var(--fs-12-5);font-weight:700;color:var(--navy)">Γιώργος Α.</div>
+<span class="badge b-psig" style="margin-top:4px">Προς υπογραφή</span></div>
+</div></div>
+<div class="bnav"><span class="on">&#9632;<br>Πίνακας</span><span>&#9776;<br>Συμβάσεις</span><span>&#43;<br>Νέα</span><span>&#9679;<br>Εγώ</span></div>
+</div></div>
+<div class="phone"><div class="notch"></div><div class="ps">
+<div class="top" style="padding:10px 12px"><h1 style="font-size:var(--fs-14)">Συμβάσεις</h1></div>
+<div class="content" style="padding:10px">
+<div class="search" style="max-width:none;margin-bottom:8px;font-size:var(--fs-12)">&#128269; Αναζήτηση&hellip;</div>
+<div class="card" style="margin-bottom:7px"><div style="font-size:var(--fs-13);font-weight:800;color:var(--navy)">Μαρία Παπαδοπούλου</div>
+<div class="mu" style="margin-bottom:6px">Protergia &middot; Ρεύμα</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+<span class="badge b-pending">Εκκρεμότητα</span><button class="btn btn-p">Επίλυση</button></div></div>
+<div class="card" style="margin-bottom:7px"><div style="font-size:var(--fs-13);font-weight:800;color:var(--navy)">Γιώργος Αντωνίου</div>
+<div class="mu" style="margin-bottom:6px">NRG &middot; Ρεύμα + Αέριο</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+<span class="badge b-psig">Προς υπογραφή</span><button class="btn btn-g">Υπενθύμιση</button></div></div>
+<div class="card"><div style="font-size:var(--fs-13);font-weight:800;color:var(--navy)">Δημήτρης Λ.</div>
+<div class="mu" style="margin-bottom:6px">Orizon &middot; Ρεύμα</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+<span class="badge b-signed">Υπογεγραμμένη</span><button class="btn btn-p">Στον πάροχο</button></div></div>
+</div>
+<div class="bnav"><span>&#9632;<br>Πίνακας</span><span class="on">&#9776;<br>Συμβάσεις</span><span>&#43;<br>Νέα</span><span>&#9679;<br>Εγώ</span></div>
+</div></div>
+<div class="phone"><div class="notch"></div><div class="ps">
+<div class="steps" style="font-size:var(--fs-10)">
+<div class="step done"><strong>1</strong>Πάροχος</div><div class="step on"><strong>2</strong>Έγγραφα</div>
+<div class="step"><strong>3</strong>Στοιχεία</div><div class="step"><strong>4</strong>Υπογραφή</div></div>
+<div class="content" style="padding:10px">
+<div class="card"><h3>Σάρωση ταυτότητας</h3>
+<div style="border:1px dashed var(--line-mid);border-radius:10px;padding:20px;text-align:center;color:var(--muted);font-size:var(--fs-12);background:var(--surface)">
+&#128247; Φωτογράφισε<br><span style="font-size:var(--fs-10)">ή επίλεξε από τη συλλογή</span></div>
+<div style="margin-top:8px"><span class="badge b-resolved">Αναγνωρίστηκε</span></div></div>
+<div class="card acc"><h3>Τι διάβασε το AI</h3>
+<div class="kv"><b>Όνομα</b><span>Μαρία Π.</span></div>
+<div class="kv"><b>ΑΦΜ</b><span>123456789</span></div></div>
+<button class="btn btn-p btn-b btn-lg" style="margin-top:4px">Επόμενο &rarr;</button>
+</div>
+<div class="bnav"><span>&#9632;<br>Πίνακας</span><span>&#9776;<br>Συμβάσεις</span><span class="on">&#43;<br>Νέα</span><span>&#9679;<br>Εγώ</span></div>
+</div></div>
+</div></div>
+<div class="note"><b>Το κινητό δεν είναι δεύτερη προτεραιότητα εδώ &mdash; είναι όπου γίνεται η δουλειά.</b> Ο συνεργάτης φωτογραφίζει ταυτότητα στο σπίτι του πελάτη, όχι στο γραφείο. Γι' αυτό η τρίτη οθόνη λέει «<b>Φωτογράφισε</b>» και όχι «Σύρε το αρχείο εδώ»: είναι η ίδια οθόνη με το B2, με άλλο ρήμα. Η απόφαση «desktop πρώτα» δεν σημαίνει «κινητό αργότερα με ό,τι περισσέψει».</div>
+</section>
+
+<section class="sec" id="next">
+<div class="sec-h"><h2>Σύνοψη</h2><span class="t">Πού είμαστε και τι προτείνω</span></div>
+<p class="d">Από τις 26 οθόνες: <b>δεκαεννέα δεν χρειάζονται τίποτα</b> ή μόνο εμφάνιση, <b>τρεις έκλεισαν</b> μέσα στις τελευταίες δύο μέρες (B5/B6 δημόσια υπογραφή, B7 audit, D3 GDPR), και μένουν <b>τέσσερα</b> πραγματικά κενά συν <b>τρεις αποφάσεις</b> που δεν είναι κώδικας.</p>
+
+<div class="note"><b>Τα κενά, ξαναμετρημένα &mdash; δύο ανέβηκαν επίπεδο μέσα στην ίδια μέρα:</b><br>
+<b>E1-E3</b> κάρτες πλήρους πλάτους στο κινητό &mdash; CSS και markup, χωρίς backend. <b>Το μόνο που έμεινε πραγματικά επίπεδο 2.</b><br>
+<b>A1</b> δείκτες στις τρεις κάρτες KPI &mdash; θέλει νέο ερώτημα βάσης σε διαδρομή που φορτώνει σε κάθε είσοδο.<br>
+<b>B4</b> κανάλι + preview &mdash; <b>2 &rarr; 3</b>· δεν υπάρχει καθόλου επιλογή καναλιού, και θέλει απόφαση για SMS πάροχο πριν γραφτεί γραμμή.<br>
+<b>C2</b> καρτέλα συνεργάτη &mdash; <b>2 &rarr; 3</b>· δεν υπάρχει ούτε η οθόνη ούτε το <code>GET /team/{id}</code>. Δες την ανάκληση στο C2.</div>
+
+<div class="note warn"><b>Οι τρεις αποφάσεις που περιμένουν εσένα:</b> η λήξη του συνδέσμου υπογραφής (§6γ 7 &mdash; φαίνεται στο B8 και στο D2), η εκκαθάριση προμηθειών (§6γ 3-6 &mdash; μπλοκάρει το C4), και τα σκαλιά τυπογραφίας (§6γ 13). Καμία δεν λύνεται με κώδικα.</div>
+
+<div class="note warn"><b>Είχα προτείνει το C2 και το ανακαλώ.</b> Ο λόγος είναι γραμμένος ολόκληρος στην ενότητα C2: δεν υπάρχει <code>GET /team/{id}</code>, δεν υπάρχει καρτέλα συνεργάτη, και οι τρεις από τους τέσσερις δείκτες δεν υπολογίζονται πουθενά. Τον ισχυρισμό «τα δεδομένα έρχονται ήδη» τον αντέγραψα από τη στήλη «endpoint» του χάρτη <b>χωρίς να τον επαληθεύσω</b>. Ο κανόνας που παραβίασα είναι ο ίδιος που επικαλείται αυτό το αρχείο δύο οθόνες πιο πάνω.</div>
+<div class="note acc"><b>Η νέα πρόταση: E1-E3, το κινητό.</b> Μετά τις δύο αναβαθμίσεις επιπέδου, είναι <b>το μόνο ανοιχτό που έμεινε καθαρά επίπεδο 2</b>: CSS και markup πάνω σε δεδομένα και endpoints που όλα υπάρχουν, μηδέν backend, μηδέν μπλοκαρισμένη απόφαση. Και δεν είναι διακοσμητικό &mdash; ο συνεργάτης φωτογραφίζει ταυτότητα στο σπίτι του πελάτη, όχι στο γραφείο.<br><b>Δεύτερη επιλογή, μικρότερη και πιο σίγουρη:</b> η δημιουργία εργασίας με δύο διαδοχικά <code>prompt()</code> του browser (<code>ecrm-view-detail.js:342,344</code>), όπου ο χρήστης καλείται να <b>πληκτρολογήσει ημερομηνία ως κείμενο</b>. Ίδια ακριβώς οικογένεια με το D3 που μόλις έκλεισε, μηδέν backend, και δεν είναι καν στον χάρτη.</div>
+<div class="note"><b>Ό,τι κι αν επιλεγεί, το σχήμα μένει το ίδιο:</b> πρόταση &rarr; έγκριση &rarr; υλοποίηση &rarr; <b>απόδοση της οθόνης πριν πω ότι τελείωσε</b>. Αυτό το τελευταίο βήμα έπιασε <b>πέντε πραγματικά προβλήματα</b> μέσα σε δύο μέρες: δύο στο B7 (γκρι badge από σύγκρουση ειδικότητας <code>.ecrm-kv span</code> 0,1,1 έναντι <code>.ecrm-badge--*</code> 0,1,0· δύο πράσινες κάρτες που διαβάζονταν ως μία), ένα στο D3 (κομμένο placeholder), και δύο σε <b>αυτό εδώ το αρχείο</b> (κολλημένη μπάρα 250px που έκρυβε κάθε οθόνη στην οποία πήγαινες· ανενεργό κουμπί στα 3,01:1). <b>Κανένα δεν φαινόταν σε grep, σε test ή σε ανάγνωση του κώδικα.</b></div>
+</section>
+
+<div class="foot">
+<b>Energy CRM</b> &middot; <code>docs/UI-ALL-SCREENS.html</code> &middot; πρόταση κατά §1.8, καμία αλλαγή κώδικα<br>
+Γεωμετρία από <code>docs/UI-UX-KIT.html</code> (26 οθόνες). Χρώματα και τυπογραφία <b>αντιγραμμένα</b> από
+<code>public/assets/ecrm-form.css</code> &mdash; παλέτα, δώδεκα καταστάσεις, σκούρος καμβάς, 18 σκαλιά.
+Ο διακόπτης χρησιμοποιεί τον ίδιο επιλογέα <code>.ecrm[data-theme="dark"]</code> με την παραγωγή.
+</div>
+</div>
+
+<script>
+(function () {
+	// Ο διακόπτης γράφει το data-theme σε ΚΑΘΕ .ecrm της σελίδας — ακριβώς ό,τι
+	// κάνει το public/class-ecrm-app.php σε ένα. Δηλαδή αυτό που βλέπεις εδώ
+	// περνά από το ΙΔΙΟ μονοπάτι CSS με το ζωντανό, όχι από απομίμησή του.
+	var btn = document.getElementById('tg');
+	var lbl = document.getElementById('tgl');
+	var dark = false;
+	btn.addEventListener('click', function () {
+		dark = !dark;
+		var t = dark ? 'dark' : 'light';
+		document.documentElement.setAttribute('data-kit', t);
+		var all = document.querySelectorAll('.ecrm');
+		for (var i = 0; i < all.length; i++) { all[i].setAttribute('data-theme', t); }
+		lbl.textContent = dark ? 'Ανοιχτό θέμα' : 'Σκούρο θέμα';
+		btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+	});
+
+	// Το D3 δουλεύει πραγματικά σε αυτή τη σελίδα: ίδια λογική με τον ζωντανό
+	// κώδικα — ακριβής σύγκριση, χωρίς trim, χωρίς case-insensitive.
+	var inputs = document.querySelectorAll('.ecrm-demo-erase');
+	for (var j = 0; j < inputs.length; j++) {
+		(function (input) {
+			var need = input.getAttribute('data-need') || '';
+			var kill = input.parentNode.querySelector('button.btn-d');
+			if (!kill) { return; }
+			input.addEventListener('input', function () {
+				kill.disabled = (input.value !== need);
+			});
+		})(inputs[j]);
+	}
+})();
+</script>
+</div>
+</body>
+</html>
