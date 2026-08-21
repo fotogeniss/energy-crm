@@ -17,6 +17,7 @@ import { api, can, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, svgIcon, timeAgo, tint, up } from '@energy-crm/format';
 import { openDetail, openEdit } from '@energy-crm/navigate';
 import { openExportModal } from '@energy-crm/export-modal';
+import { confirmTyped } from '@energy-crm/dialog';
 import { scope, setScope } from '@energy-crm/scope';
 
 var contractsState = { status: '', q: '', page: 1, pageSize: 12 };
@@ -365,8 +366,14 @@ function renderContracts(view, d) {
 				(t && t.members || []).forEach(function (m) { var o = document.createElement('option'); o.value = m.id; o.textContent = m.name; assignSel.appendChild(o); });
 			}).catch(function () {});
 		}
+		/* Το body.ids υπερισχύει της τρέχουσας επιλογής όταν δίνεται.
+		   Χρειάστηκε μόλις μπήκε ο διάλογος με πληκτρολόγηση: ο χρήστης
+		   πληκτρολογεί «12» επειδή διάβασε ότι είναι δώδεκα, και το πλήθος που
+		   φεύγει στον server πρέπει να είναι ΑΥΤΟ, όχι ό,τι βρεθεί επιλεγμένο
+		   δευτερόλεπτα αργότερα. Το πέπλο σήμερα δεν αφήνει την επιλογή να
+		   αλλάξει· ο κανόνας δεν πρέπει να εξαρτάται από αυτό. */
 		function runBulk(body, okMsg) {
-			var ids = selectedIds();
+			var ids = body.ids || selectedIds();
 			if (!ids.length) { toast('Δεν επιλέχθηκαν συμβάσεις.', false); return; }
 			body.ids = ids;
 			fetch(api('/contracts/bulk'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(body) })
@@ -412,8 +419,16 @@ function renderContracts(view, d) {
 		if (bd) bd.addEventListener('click', function () {
 			var ids = selectedIds();
 			if (!ids.length) { toast('Δεν επιλέχθηκαν αιτήσεις.', false); return; }
-			if (!window.confirm('Διαγραφή ' + ids.length + ' αιτήσεων;\nΗ ενέργεια είναι οριστική και θα διαγράψει και τα σχετικά έγγραφα/υπογραφές.')) return;
-			runBulk({ action: 'delete' }, 'Διαγράφηκαν');
+			// Το πλήθος, όχι λέξη-κλειδί. Όποιος πληκτρολογεί «12» έχει διαβάσει
+			// ότι είναι δώδεκα — και αυτό ακριβώς είναι που έπρεπε να κοιτάξει.
+			confirmTyped({
+				expect: String(ids.length),
+				expectLabel: 'Πληκτρολόγησε το πλήθος για επιβεβαίωση',
+				title: 'Διαγραφή ' + ids.length + (ids.length === 1 ? ' αίτησης' : ' αιτήσεων'),
+				lead: ['Η ενέργεια είναι ', { b: 'οριστική' }, ' και θα διαγράψει και τα σχετικά έγγραφα και τις ', { b: 'υπογραφές' }, '.'],
+				confirm: 'Διαγραφή ' + ids.length,
+				onConfirm: function () { runBulk({ action: 'delete', ids: ids }, 'Διαγράφηκαν'); },
+			});
 		});
 		var bc = bar.querySelector('[data-bulk-clear]');
 		if (bc) bc.addEventListener('click', function () {

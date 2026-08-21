@@ -758,6 +758,15 @@
 .ecrm-btn--primary:hover:not(:disabled) { background: var(--accent-hover); }
 .ecrm-btn--primary:disabled { background: var(--accent-soft); color: var(--on-accent); opacity: 1; }
 
+/* Το ανενεργό επικίνδυνο κουμπί ΔΕΝ είναι κόκκινο.
+   Ήταν το μόνο variant χωρίς δικό του :disabled, οπότε έπεφτε στο γενικό
+   opacity:.55 — και στην απόδοση της 21/08 το κλειδωμένο «Διαγραφή 12»
+   έμοιαζε με το ξεκλείδωτο: λίγο πιο ανοιχτό ροζ, τίποτα άλλο. Έτσι το κόκκινο
+   ΚΕΡΔΙΖΕΤΑΙ τη στιγμή που ταιριάξει η πληκτρολόγηση, αντί να είναι εκεί από
+   την αρχή και να μη σημαίνει τίποτα. Ίδια αγωγή με το --ghost:disabled. */
+.ecrm-btn--danger:disabled { background: var(--surface); border-color: var(--line-soft); color: var(--faint-2); opacity: 1; }
+.ecrm-btn--danger:disabled:hover { background: var(--surface); border-color: var(--line-soft); }
+
 /* Secondary: η μαύρη ενέργεια — το «Νέα Σύμβαση» της πάνω μπάρας. */
 .ecrm-btn--dark { background: var(--surface-inverse); color: var(--chrome-ink-hi); }
 .ecrm-btn--dark:hover:not(:disabled) { background: var(--surface-inverse-soft); }

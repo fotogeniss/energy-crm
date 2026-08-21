@@ -931,6 +931,19 @@
 .ecrm-modal__bar { display: flex; align-items: center; gap: 10px; }
 @media (max-width: 520px) { .ecrm-modal__row { grid-template-columns: 1fr; } .ecrm-modal__bar { flex-wrap: wrap; } .ecrm-modal__bar .ecrm-btn { flex: 1; } }
 
+/* Ο κοινός διάλογος (ecrm-dialog.js) — δύο μόνο προσθήκες πάνω στο υπάρχον.
+   Το eyebrow του export modal είναι amber, δηλαδή «πρόσεξε». Ένας διάλογος που
+   λέει «ΜΗ ΑΝΑΣΤΡΕΨΙΜΗ ΕΝΕΡΓΕΙΑ» με το χρώμα της αποθήκευσης ακυρώνει τη δική
+   του πρόταση. Το --st-cancel είναι ήδη μετρημένο ως κείμενο πάνω σε surface —
+   το φοράει το .ecrm-btn--danger από τον Ιούλιο· δεν αποφασίζεται χρώμα εδώ.
+   Ο spacer ήταν inline style="flex:1" στο export modal· εδώ γίνεται κλάση για
+   να μπορεί να ΦΥΓΕΙ κάτω από 520px, όπου η μπάρα τυλίγει και ένα αόρατο
+   flex:1 σπρώχνει τα κουμπιά σε δεύτερη σειρά χωρίς λόγο. */
+.ecrm-modal__spacer { flex: 1; }
+.ecrm-modal__stack { display: grid; gap: 10px; }
+.ecrm-modal__eyebrow--danger { color: var(--st-cancel); }
+@media (max-width: 520px) { .ecrm-modal__spacer { display: none; } }
+
 /* --- status tab colour dots --- */
 .ecrm-tab { display: inline-flex; align-items: center; gap: 7px; }
 .ecrm-tabdot { width: 7px; height: 7px; border-radius: 50%; background: var(--fill-mute-strong); flex: 0 0 auto; }
