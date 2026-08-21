@@ -67,17 +67,45 @@ echo   php          : %ECRM_TEST_PHP_BINARY%
 echo.
 
 rem --- Η βαση φτιαχνεται αν λειπει. Δεν αδειαζει εδω: το κανει το WordPress. --
-wp db query "CREATE DATABASE IF NOT EXISTS %ECRM_TEST_DB_NAME% DEFAULT CHARACTER SET utf8mb4" >nul 2>&1
-if errorlevel 1 (
-  echo   Δεν μπορεσα να φτιαξω τη βαση. Δοκιμασε απο το Adminer:
+rem
+rem  ΤΟ `call` ΔΕΝ ΕΙΝΑΙ ΔΙΑΚΟΣΜΗΣΗ. Τα `wp` και `composer` ειναι .bat. Ενα .bat
+rem  που καλει αλλο .bat ΧΩΡΙΣ `call` παραδινει τον ελεγχο και δεν τον ξαναπαιρνει
+rem  ποτε: η εκτελεση γυριζει στο prompt, οχι στην επομενη γραμμη. Η πρωτη γραφη
+rem  αυτου του script δεν το ειχε, και πεθαινε ακριβως εδω — αφου ειχε τυπωσει την
+rem  κεφαλιδα, ωστε να ΜΟΙΑΖΕΙ οτι δουλεψε. Τα integration δεν ετρεξαν καθολου.
+rem  Το `for /f` πιο πανω δουλευε γιατι ανοιγει δικο του `cmd /c`.
+call wp db query "CREATE DATABASE IF NOT EXISTS %ECRM_TEST_DB_NAME% DEFAULT CHARACTER SET utf8mb4" >nul 2>&1
+
+rem  Ο κωδικος εξοδου του `wp db query` ΔΕΝ ρωταται. Η δευτερη γραφη τον ρωτουσε
+rem  και τυπωνε «δεν μπορεσα να φτιαξω τη βαση» ενω η βαση υπηρχε και ολα δουλεψαν
+rem  — προειδοποιηση που κραζει λυκο ειναι προειδοποιηση που κανεις δεν ξαναδιαβαζει.
+rem  Σημασια δεν εχει αν πετυχε η εντολη· εχει αν ΥΠΑΡΧΕΙ η βαση. Αυτο ρωταμε.
+set ECRM_DB_FOUND=
+for /f "usebackq delims=" %%i in (`wp db query "SELECT 1 FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='%ECRM_TEST_DB_NAME%'" --skip-column-names 2^>nul`) do set ECRM_DB_FOUND=%%i
+
+if not defined ECRM_DB_FOUND (
+  echo.
+  echo   Η βαση "%ECRM_TEST_DB_NAME%" δεν υπαρχει και δεν μπορεσα να τη φτιαξω.
+  echo   Φτιαξ' την απο το Adminer ^(Local: Database -^> Open Adminer^):
   echo       CREATE DATABASE %ECRM_TEST_DB_NAME%;
   echo.
+  chcp %ECRM_OLD_CP% >nul 2>&1
+  exit /b 1
 )
 
 if /i "%1"=="all" (
-  composer check:all
+  call composer check:all
 ) else (
-  composer test:integration
+  call composer test:integration
+)
+
+rem --- Ρητο τελος. Ενα script που πεθαινει σιωπηλα μοιαζει με script που περασε. -
+if errorlevel 1 (
+  echo.
+  echo   ---^> ΑΠΕΤΥΧΕ. Κωδικος: !errorlevel!
+) else (
+  echo.
+  echo   ---^> ΤΕΛΟΣ, καθαρο.
 )
 
 set ECRM_EXIT=%errorlevel%
