@@ -46,13 +46,12 @@ function heroHTML(c, lvl, monthly) {
 	var prev  = prevMonth(monthly);
 	var delta = prev === null ? null : month - prev;
 
-	var chip = '';
-	if (delta !== null && delta !== 0) {
-		var up = delta > 0;
-		chip = '<span class="ecrm-delta ' + (up ? 'is-up' : 'is-down') + '">' +
-			'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 ' + (up ? '19V5M5 12l7-7 7 7' : '5v14M5 12l7 7 7-7') + '"/></svg>' +
-			(up ? '+' : '') + delta + '</span>';
-	}
+	// Το ίδιο τσιπάκι με τις κάρτες KPI, από μία γραφή. Ήταν γραμμένο και εδώ
+	// χύμα· μόλις μπήκε δεύτερος χρήστης, έγινε συνάρτηση. Το `prev === null`
+	// (Ιανουάριος: δεν υπάρχει προηγούμενος μήνας) μένει ξεχωριστό από το
+	// `delta === 0` — το πρώτο δεν έχει τι να συγκρίνει, το δεύτερο συνέκρινε
+	// και βρήκε ισοπαλία. Η deltaChip() επιστρέφει κενό και στις δύο.
+	var chip = prev === null ? '' : deltaChip(month, prev);
 
 	var sub = prev === null ? 'ο πρώτος μήνας της χρονιάς'
 		: (delta === 0 ? 'ίδιες με τον προηγούμενο μήνα' : 'έναντι ' + prev + ' τον προηγούμενο μήνα');
@@ -83,14 +82,64 @@ var KPI = [
 	{ k: 'routed',  label: 'Δρομολογήθηκαν',  cls: 'is-route', foot: 'περιμένουν τον πάροχο', status: 'routed' }
 ];
 
+/* Μεταβολή όπου υπάρχει, ηλικία όπου μετράει — απόφαση ιδιοκτήτη 21/08,
+ * docs/UI-KPI-DELTA.html.
+ *
+ * Η «Σήμερα» μετράει ΡΟΗ (πόσες άνοιξαν σήμερα), οπότε το «χθες» υπάρχει και
+ * η σύγκριση έχει νόημα. Οι άλλες δύο μετράνε ΑΠΟΘΕΜΑ — πόσες είναι ΤΩΡΑ σε
+ * αυτή την κατάσταση — και για απόθεμα δεν υπάρχει «πόσες ήταν τον προηγούμενο
+ * μήνα»: το status είναι τρέχουσα τιμή στη γραμμή, όχι ιστορικό. Ένα «↑3» εκεί
+ * θα ήταν ισχυρισμός για τον φόρτο ενός ανθρώπου, βγαλμένος από το πουθενά.
+ *
+ * Στη θέση του μπαίνει η ηλικία της παλαιότερης, που απαντά την ερώτηση που
+ * όντως έχει ο συνεργάτης: όχι «είναι περισσότερες από τον προηγούμενο μήνα;»
+ * αλλά «κάτι κάθεται πολύ;».
+ */
+function ageFoot(days, extra) {
+	// Ο αριθμός έρχεται ΕΤΟΙΜΟΣ σε μέρες από τη βάση (DATEDIFF). Δεν
+	// υπολογίζεται εδώ από timestamp: το created_at/updated_at γράφεται σε ώρα
+	// site και οι fmtDate()/timeAgo() το διαβάζουν ως UTC — η παγίδα της (72).
+	// Ένας ακέραιος αριθμός ημερών δεν έχει ζώνη ώρας.
+	if (days === null || days === undefined) { return extra || ''; }
+	var d = Number(days) || 0;
+	var txt = d === 0
+		? 'η παλαιότερη μπήκε σήμερα'
+		: 'η παλαιότερη ' + d + (d === 1 ? ' μέρα' : ' μέρες');
+	return extra ? extra + ' · ' + txt : txt;
+}
+
 function kpisHTML(c) {
+	var oldest = c.oldest || {};
+
 	return '<div class="ecrm-kpis">' + KPI.map(function (x) {
 		var tag = x.status ? 'button' : 'div';
 		var att = x.status ? ' type="button" data-go="contracts" data-status="' + esc(x.status) + '"' : '';
+
+		// Μόνο η «Σήμερα» παίρνει τσιπάκι· μόνο οι καταστάσεις παίρνουν ηλικία.
+		var chip = x.k === 'today' ? deltaChip(Number(c.today) || 0, Number(c.yesterday) || 0) : '';
+		var foot = x.status ? ageFoot(oldest[x.status], x.foot) : todayFoot(c);
+
 		return '<' + tag + ' class="ecrm-kpi' + (x.status ? ' is-clickable' : '') + '"' + att + '><div class="ecrm-kpi__k"><span class="ecrm-kpi__dot ' + esc(x.cls) + '"></span>' + esc(x.label) + '</div>' +
-			'<div class="ecrm-kpi__v">' + (Number(c[x.k]) || 0) + '</div>' +
-			(x.foot ? '<div class="ecrm-kpi__f">' + esc(x.foot) + '</div>' : '') + '</' + tag + '>';
+			'<div class="ecrm-kpi__v">' + (Number(c[x.k]) || 0) + chip + '</div>' +
+			(foot ? '<div class="ecrm-kpi__f">' + esc(foot) + '</div>' : '') + '</' + tag + '>';
 	}).join('') + '</div>';
+}
+
+/* Το τσιπάκι — ίδιο σχήμα και ίδιο SVG με του hero προμήθειας παρακάτω. */
+function deltaChip(now, prev) {
+	var d = now - prev;
+	if (!d) { return ''; }
+	var up = d > 0;
+	return '<span class="ecrm-delta ' + (up ? 'is-up' : 'is-down') + '">' +
+		'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 ' +
+		(up ? '19V5M5 12l7-7 7 7' : '5v14M5 12l7 7 7-7') + '"/></svg>' +
+		(up ? '+' : '') + d + '</span>';
+}
+
+function todayFoot(c) {
+	var y = Number(c.yesterday) || 0;
+	// «0 χθες» είναι μέτρηση, όχι έλλειψη δεδομένων — και λέγεται έτσι.
+	return y === 0 ? 'καμία χθες' : 'έναντι ' + y + ' χθες';
 }
 
 /* Γιατί κάθε γραμμή είναι εκεί, και τι κουμπί της ταιριάζει. Η φράση φτιάχνεται

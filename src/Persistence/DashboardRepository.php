@@ -39,14 +39,104 @@ final class DashboardRepository
     /**
      * @return array{today: int, pending: int, routed: int, month: int}
      */
-    public function cards(int $userId, string $todayStart, string $monthStart): array
+    public function cards(int $userId, string $todayStart, string $monthStart, string $yesterdayStart): array
     {
         return [
             'today'   => $this->countSince($userId, $todayStart),
             'pending' => $this->countWithStatus($userId, 'pending'),
             'routed'  => $this->countWithStatus($userId, 'routed'),
             'month'   => $this->countSince($userId, $monthStart),
+
+            // Χθες, για τη μεταβολή της κάρτας «Σήμερα». Είναι ΡΟΗ — γεγονότα
+            // μέσα σε περίοδο — οπότε η σύγκριση έχει νόημα και ο αριθμός
+            // υπάρχει. Οι άλλες δύο κάρτες ΔΕΝ παίρνουν μεταβολή, και ο λόγος
+            // είναι γραμμένος στην oldestPerStatus() παρακάτω.
+            'yesterday' => $this->countBetween($userId, $yesterdayStart, $todayStart),
+
+            'oldest'    => $this->oldestPerStatus($userId, ['pending', 'routed']),
         ];
+    }
+
+    /**
+     * Πόσες συμβάσεις άνοιξαν μέσα σε ένα κλειστό παράθυρο.
+     *
+     * Ξεχωριστή από την countSince() επειδή θέλει ΚΑΙ πάνω ΚΑΙ κάτω όριο: η
+     * countSince($yesterdayStart) θα μετρούσε και τις σημερινές.
+     */
+    private function countBetween(int $userId, string $from, string $to): int
+    {
+        global $wpdb;
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE partner_user_id = %d AND created_at >= %s AND created_at < %s',
+                Tables::name(Tables::CONTRACTS),
+                $userId,
+                $from,
+                $to
+            )
+        );
+    }
+
+    /**
+     * Πόσες μέρες κάθεται η παλαιότερη σύμβαση σε κάθε κατάσταση.
+     *
+     * ## Γιατί ηλικία και όχι «έναντι προηγούμενου μήνα»
+     *
+     * Οι κάρτες «Εκκρεμότητες» και «Δρομολογήθηκαν» μετρούν ΑΠΟΘΕΜΑ: πόσες
+     * είναι ΤΩΡΑ σε αυτή την κατάσταση. Το `status` είναι τρέχουσα τιμή στη
+     * γραμμή, όχι ιστορικό — η βάση δεν ξέρει πόσες ήταν σε εκκρεμότητα στις 31
+     * Ιουλίου, γιατί καμία στήλη δεν το κράτησε. Ένα «↑3» εκεί δεν θα ήταν
+     * μέτρηση αλλά ισχυρισμός για τον φόρτο ενός ανθρώπου.
+     *
+     * Ανακατασκευάζεται θεωρητικά από τα `events` (κρατούν `to_status` και
+     * `created_at`), αλλά είναι ερώτημα με παράθυρο σε διαδρομή που φορτώνει σε
+     * κάθε είσοδο — και θα ήταν σωστό μόνο από το go-live και μετά, όπως γράφει
+     * ήδη το CancellationGate για το ίδιο ιστορικό. Απόφαση ιδιοκτήτη 21/08:
+     * εκδοχή Β, docs/UI-KPI-DELTA.html.
+     *
+     * ## Δύο πράγματα που πρέπει να ξέρει ο επόμενος
+     *
+     * **Μετριέται από το `updated_at`, όχι το `created_at`.** Η ερώτηση δεν
+     * είναι «πόσο παλιά είναι η σύμβαση» αλλά «πόσο καιρό κάθεται χωρίς
+     * κίνηση». Το `updated_at` έχει `ON UPDATE CURRENT_TIMESTAMP`, οπότε
+     * οποιαδήποτε επεξεργασία το ανανεώνει — δηλαδή μετράει ακριβώς «πόσο
+     * καιρό δεν την άγγιξε κανείς», που είναι και το ζητούμενο.
+     *
+     * **Οι μέρες βγαίνουν από τη ΒΑΣΗ, όχι από τη JavaScript.** Ένα timestamp
+     * που ταξιδεύει ως συμβολοσειρά και ερμηνεύεται από τον browser είναι
+     * ακριβώς η παγίδα της (72): το `created_at`/`updated_at` γράφεται σε ώρα
+     * site, ενώ οι fmtDate()/timeAgo() διαβάζουν UTC. Ένας ακέραιος αριθμός
+     * ημερών δεν έχει ζώνη ώρας.
+     *
+     * @param list<string> $statuses
+     *
+     * @return array<string, int|null> status => μέρες, ή null αν δεν υπάρχει καμία
+     */
+    private function oldestPerStatus(int $userId, array $statuses): array
+    {
+        global $wpdb;
+
+        $out = [];
+
+        foreach ($statuses as $status) {
+            $days = $wpdb->get_var(
+                $wpdb->prepare(
+                    'SELECT DATEDIFF(NOW(), MIN(updated_at)) FROM %i
+                     WHERE partner_user_id = %d AND status = %s',
+                    Tables::name(Tables::CONTRACTS),
+                    $userId,
+                    $status
+                )
+            );
+
+            // MIN() πάνω σε κενό σύνολο δίνει NULL, και το DATEDIFF το περνά.
+            // Το null είναι η ειλικρινής τιμή: ένα 0 θα διαβαζόταν «μπήκε
+            // σήμερα» εκεί που δεν υπάρχει τίποτα.
+            $out[$status] = null === $days ? null : (int) $days;
+        }
+
+        return $out;
     }
 
     /**
