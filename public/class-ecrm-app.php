@@ -212,6 +212,10 @@ class ECRM_App {
 
 					<!-- Team -->
 					<section class="ecrm-view" data-view="team"><div class="ecrm-loading">Φόρτωση…</div></section>
+					<?php // Καρτέλα ενός μέλους. Όπως το contract-detail, δεν είναι
+					// στοιχείο του μενού: ανοίγει από τη λίστα της ομάδας και
+					// γυρίζει πίσω σε αυτήν, οπότε δεν έχει δικό του κουμπί. ?>
+					<section class="ecrm-view" data-view="partner"></section>
 
 					<!-- Import provider Excel -->
 					<section class="ecrm-view" data-view="import"></section>

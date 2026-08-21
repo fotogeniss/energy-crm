@@ -15,6 +15,7 @@ import { initImport } from '@energy-crm/view-import';
 import { loadKB } from '@energy-crm/view-kb';
 import { loadNetwork } from '@energy-crm/view-network';
 import { loadTeam } from '@energy-crm/view-team';
+import { openPartner } from '@energy-crm/view-partner';
 import { loadTeamLive } from '@energy-crm/view-team-live';
 
 /* Energy CRM — το κέλυφος, και μόνο αυτό.
@@ -265,7 +266,7 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 	// The three the views are allowed to call, handed over once. They are
 	// declared above rather than imported, so this is the only place the
 	// direction of the dependency is decided — see ecrm-navigate.js.
-	wire({ go: go, openDetail: openDetail, openEdit: openEdit });
+	wire({ go: go, openDetail: openDetail, openEdit: openEdit, openPartner: openPartner });
 
 		// ---- boot -------------------------------------------------------------
 	// Back/forward navigation via URL hash.

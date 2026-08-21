@@ -50,6 +50,7 @@ use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\LeadRepository;
 use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\NotificationRepository;
+use EnergyCRM\Persistence\PartnerCardRepository;
 use EnergyCRM\Persistence\ProviderRepository;
 use EnergyCRM\Persistence\TaskRepository;
 use EnergyCRM\Persistence\UnprotectedDocuments;
@@ -77,6 +78,8 @@ final class Services
     private static ?EventRepository $events = null;
 
     private static ?LeadRepository $leads = null;
+
+    private static ?PartnerCardRepository $partnerCard = null;
 
     private static ?TeamRepository $team = null;
 
@@ -215,6 +218,11 @@ final class Services
         return self::$providers ??= new ProviderRepository();
     }
 
+    public static function partnerCard(): PartnerCardRepository
+    {
+        return self::$partnerCard ??= new PartnerCardRepository();
+    }
+
     public static function team(): TeamRepository
     {
         return self::$team ??= new TeamRepository();
@@ -315,6 +323,7 @@ final class Services
         self::$events        = null;
         self::$leads         = null;
         self::$team          = null;
+        self::$partnerCard   = null;
         self::$providers     = null;
         self::$dashboard     = null;
         self::$commissions   = null;
