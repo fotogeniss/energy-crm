@@ -6,6 +6,15 @@
  * Pure aggregation over rows already fetched — no database, no WordPress — so
  * the rounding and the ordering can be stated in tests rather than trusted.
  *
+ * ## Το `paid` ανά μήνα, από 22/08
+ *
+ * Ο πίνακας της οθόνης είχε στήλη «Κατάσταση» που τύπωνε **«Καταχωρημένο» σε
+ * κάθε γραμμή**, σταθερά, ενώ οι γραμμές είναι ημερολογιακοί μήνες και ο
+ * πίνακας λέγεται «Οι εκκαθαρίσεις μου». Ο συνεργάτης που έβλεπε «Ιούλιος ·
+ * Καταχωρημένο» έβγαζε συμπέρασμα για την πληρωμή του Ιουλίου· η στήλη δεν
+ * έλεγε τίποτα. Τα δεδομένα υπήρχαν ήδη — ο controller υπολόγιζε `payout_status`
+ * ανά σύμβαση και το πετούσε.
+ *
  * @package EnergyCRM
  */
 
@@ -36,9 +45,9 @@ final class MonthlyTotals
     }
 
     /**
-     * @param list<array{month: string, amount: float}> $entries A month as 'YYYY-MM'.
+     * @param list<array{month: string, amount: float, paid?: bool}> $entries A month as 'YYYY-MM'.
      *
-     * @return array{months: list<array{label: string, count: int, amount: float}>, best: float, best_label: string}
+     * @return array{months: list<array{label: string, count: int, amount: float, paid: int}>, best: float, best_label: string}
      */
     public static function from(array $entries): array
     {
@@ -47,9 +56,17 @@ final class MonthlyTotals
         foreach ($entries as $entry) {
             $key = $entry['month'];
 
-            $totals[$key] ??= ['count' => 0, 'amount' => 0.0];
+            $totals[$key] ??= ['count' => 0, 'amount' => 0.0, 'paid' => 0];
             $totals[$key]['count']++;
             $totals[$key]['amount'] += $entry['amount'];
+
+            // Πλήθος, όχι σημαία. Ένας μήνας μπορεί να είναι μισοπληρωμένος, και
+            // «πληρωμένος/απλήρωτος» θα έπρεπε να διαλέξει ψέμα. Με τον αριθμό
+            // δίπλα στο σύνολο, η οθόνη λέει «2 από 5» — ο ίδιος κανόνας με την
+            // καρτέλα συνεργάτη: κάθε νούμερο κουβαλά τον παρονομαστή του.
+            if (! empty($entry['paid'])) {
+                $totals[$key]['paid']++;
+            }
         }
 
         // Newest first: the month a partner cares about is the current one.
@@ -67,6 +84,7 @@ final class MonthlyTotals
                 'label'  => $name . ' ' . substr((string) $key, 0, 4),
                 'count'  => $total['count'],
                 'amount' => round($total['amount'], 2),
+                'paid'   => $total['paid'],
             ];
 
             if ($total['amount'] > $best) {

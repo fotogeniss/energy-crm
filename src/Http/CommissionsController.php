@@ -81,6 +81,9 @@ final class CommissionsController implements Controller
             $entries[] = [
                 'month'  => substr((string) $row['updated_at'], 0, 7),
                 'amount' => $amount,
+                // Υπολογιζόταν ήδη τρεις γραμμές πιο πάνω και πεταγόταν: η
+                // οθόνη έδειχνε σταθερό badge «Καταχωρημένο» σε κάθε μήνα.
+                'paid'   => $isPaid,
             ];
         }
 

@@ -296,18 +296,17 @@ class ECRM_Payouts {
 	public static function pay(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_pay_payout' );
-		global $wpdb;
 		$id = (int) ( $_POST['id'] ?? 0 );
 		if ( ! $id ) { self::back(); }
 
-		$pt = ECRM_DB::table( 'payouts' );
-		$affected = $wpdb->query( $wpdb->prepare(
-			"UPDATE {$pt} SET status = 'paid', paid_at = %s WHERE id = %d AND status = 'pending'",
-			current_time( 'mysql', true ),
-			$id
-		) );
+		// Το ερώτημα βγήκε στη PayoutRepository ώστε να μπορεί επιτέλους να
+		// ελεγχθεί: αυτός ο χειριστής τελειώνει σε exit και η σουίτα δεν τον
+		// φτάνει (§6γ 1). Μαζί διορθώθηκε και η ώρα — γραφόταν σε UTC ενώ το
+		// created_at δίπλα της είναι ώρα διακομιστή, και τα δύο διαβάζονταν ως
+		// τοπικά. Δες PayoutRepository::markPaid().
+		$paid = ( new \EnergyCRM\Persistence\PayoutRepository() )->markPaid( $id );
 
-		self::back( $affected ? 'paid' : 'noop' );
+		self::back( $paid ? 'paid' : 'noop' );
 	}
 
 	/**
