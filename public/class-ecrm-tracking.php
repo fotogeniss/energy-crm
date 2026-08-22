@@ -729,7 +729,10 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	var INK = (getComputedStyle(document.documentElement).getPropertyValue('--ink') || '').trim() || '#2a2926';
 
 	function esc(s){ var d=document.createElement('div'); d.textContent=(s==null?'':String(s)); return d.innerHTML; }
-	function fmt(s){ if(!s) return '—'; var d=new Date(s.replace(' ','T')+'Z'); if(isNaN(d)) return s; return d.toLocaleDateString('el-GR')+' '+d.toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); }
+	// Τοπική ανάγνωση, χωρίς 'Z' — 22/08. Οι αποθηκευμένες ώρες είναι ώρα
+	// Αθήνας· το 'Z' πρόσθετε τη διαφορά δεύτερη φορά και ο πελάτης έβλεπε
+	// την τελευταία ενημέρωση τρεις ώρες μετά. Δες ecrm-format.js.
+	function fmt(s){ if(!s) return '—'; var d=new Date(s.replace(' ','T')); if(isNaN(d)) return s; return d.toLocaleDateString('el-GR')+' '+d.toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}); }
 
 	function fail(msg, code){
 		content.innerHTML = '<div class="fail"><div class="fail__i">!</div><p>' + esc(msg) + '</p>' +
