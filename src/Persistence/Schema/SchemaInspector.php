@@ -46,6 +46,28 @@ final class SchemaInspector
         ) > 0;
     }
 
+    /**
+     * Υπάρχει ήδη αυτό το ευρετήριο;
+     *
+     * Ρωτιέται με το ΟΝΟΜΑ και όχι με τις στήλες: δύο ευρετήρια πάνω στις ίδιες
+     * στήλες με άλλη σειρά είναι διαφορετικά πράγματα, και ένας έλεγχος «υπάρχει
+     * κάτι πάνω σε αυτή τη στήλη» θα προσπερνούσε σιωπηλά τη μετάπτωση αφήνοντας
+     * το σωστό ευρετήριο να μη φτιαχτεί ποτέ.
+     */
+    public function hasIndex(string $table, string $index): bool
+    {
+        global $wpdb;
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM information_schema.STATISTICS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s AND INDEX_NAME = %s',
+                $table,
+                $index
+            )
+        ) > 0;
+    }
+
     public function hasConstraint(string $table, string $constraint): bool
     {
         global $wpdb;

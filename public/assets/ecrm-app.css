@@ -986,6 +986,20 @@
    αντίθεση, και η οδηγία είναι που πρέπει να διαβαστεί. */
 .ecrm-chan-memo__hint { display: block; font-weight: 400; margin-top: 2px; }
 
+/* --- «Γιατί κάθεται» (ecrm-view-detail.js) --------------------------------
+   Πορτοκαλί και ΟΧΙ κόκκινο: η αίτηση αργεί, δεν χάθηκε. Το --st-pending είναι
+   ήδη το χρώμα της εκκρεμότητας σε όλο το προϊόν, και είναι μετρημένο ως
+   κείμενο πάνω στο ζευγάρι του. Καμία νέα απόφαση χρώματος εδώ. */
+.ecrm-stuck { border-color: var(--st-pending); }
+.ecrm-stuck__eyebrow { color: var(--st-pending); }
+.ecrm-stuck__n { font-size: var(--fs-22); font-weight: 800; color: var(--ink); line-height: 1.2; margin: 2px 0 2px; }
+.ecrm-stuck__p { font-size: var(--fs-12-5); color: var(--muted); line-height: 1.5; margin: 0 0 10px; }
+.ecrm-stuck__p b { color: var(--ink); }
+/* Το μέγεθος του δείγματος πιο αχνά: είναι η υποσημείωση που κάνει τον αριθμό
+   αξιόπιστο, όχι ο ίδιος ο ισχυρισμός. Ίδια αγωγή με την καρτέλα συνεργάτη. */
+.ecrm-stuck__s { color: var(--faint); }
+.ecrm-stuck__ask { width: 100%; }
+
 /* Ο σύνδεσμος προς το έντυπο — μία γραμμή, χωρίς viewer. Δες docs/UI-B4-CHANNEL.html. */
 .ecrm-chan-doc {
 	background: none; border: 0; padding: 0; margin: 0 0 4px; cursor: pointer;

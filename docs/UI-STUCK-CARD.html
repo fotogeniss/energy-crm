@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="el" data-kit="light"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Γιατί κάθεται — και γιατί δεν χρειάζεται ΑΙ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+.ecrm {
+	/* ουδέτερα — θερμά, όχι ψυχρά (η μία από τις τρεις συγκρούσεις με το kit) */
+	--n0:#ffffff; --n25:#fdfdfc; --n50:#f8f8f6; --n100:#f1f1ee; --n150:#e9e8e4;
+	--n200:#dedcd7; --n300:#c6c4bd; --n400:#a3a099; --n450:#83817a; --n500:#6e6c66;
+	--n600:#5c5a55; --n700:#42413d; --n800:#2a2926; --n900:#1a1a18; --n950:#111110;
+
+	/* πράσινο #16c217 — όχι το λάιμ #c2f04a του kit (δεύτερη σύγκρουση) */
+	--p50:#eafaea; --p100:#d2f5d3; --p200:#a5eba7; --p300:#6bdd6d; --p400:#16c217;
+	--p500:#12a413; --p600:#0e8610; --p700:#0b690c; --p800:#084e09;
+
+	--chrome:#171715; --chrome-2:#1f1f1c; --chrome-line:#ffffff14;
+	--chrome-ink:#a8a69f; --chrome-ink-hi:#ffffff; --chrome-ink-dim:#ffffff4d;
+	--chrome-wash-1:#ffffff0f; --chrome-wash-2:#ffffff1a; --chrome-wash-3:#ffffff26;
+	--chrome-ring:#ffffff55; --chrome-accent-wash:#16c21733;
+
+	/* οι δώδεκα καταστάσεις, ελάχιστη αντίθεση 4,56:1 μετρημένη 19/08 */
+	--st-draft:#6a6d75;   --st-draft-bg:#f0f1f3;
+	--st-term:#59595b;    --st-term-bg:#edeef0;
+	--st-new:#0072b7;     --st-new-bg:#ecf2fc;
+	--st-psig:#0062a8;    --st-psig-bg:#ebf0fb;
+	--st-asig:#005499;    --st-asig-bg:#eaeefa;
+	--st-signed:#00468a;  --st-signed-bg:#e8ebf7;
+	--st-proc:#043875;    --st-proc-bg:#e8e9f1;
+	--st-pending:#ab5506; --st-pending-bg:#fcf2ec;
+	--st-pending-on-dark:#f0b429;
+	--st-resolved:#0b7e36;--st-resolved-bg:#e9f5ea;
+	--st-routed:#006926;  --st-routed-bg:#e6f4e7;
+	--st-active:#00531e;  --st-active-bg:#e3f0e4;
+	--st-cancel:#c32b47;  --st-cancel-bg:#fdeaea;
+
+	--cat-teal:#007a79;   --cat-teal-bg:#e3f4f3;
+	--cat-violet:#9255a3; --cat-violet-bg:#f6eef8;
+	--brand-viber:#7360f2; --brand-viber-hi:#5b46e0;
+	--medal-gold:#c9971f; --medal-silver:#9aa0a6; --medal-bronze:#a4703a;
+
+	--on-accent:#0b3d0c; --on-dark:#ffffff;
+
+	/* σημασιολογικό στρώμα */
+	--surface-2:var(--n25); --surface-sunk:var(--n100); --surface-track:var(--n150);
+	--surface-inverse:var(--n900); --surface-inverse-soft:var(--n800);
+	--surface-inverse-deep:var(--n950); --surface-inverse-hover:var(--n700);
+	--line-card:var(--n150); --line-mid:var(--n300); --line-strong:var(--n400);
+	--line-inverse:var(--n700); --fill-mute:var(--n300); --fill-mute-strong:var(--n400);
+	--faint:var(--n450); --faint-2:var(--n300); --muted-strong:var(--n600);
+	--accent-hover:var(--p500); --accent-deep:var(--p600); --accent-ink:var(--p700);
+	--accent-wash:var(--p50); --accent-wash-2:var(--p100); --accent-soft:var(--p200);
+
+	--navy:var(--n900); --navy-soft:var(--n700); --amber:var(--p400); --amber-bright:var(--p300);
+	--ink:var(--n800); --muted:var(--n500); --line:var(--n200); --line-soft:var(--n100);
+	--bg:var(--n50); --surface:var(--n0); --ok:var(--st-routed); --err:var(--st-cancel);
+	--radius:12px;
+
+	/* τυπογραφία — τα 18 σκαλιά, όπως μετρήθηκαν στην (69) */
+	--fs-34:34px; --fs-28:28px; --fs-26:26px; --fs-22:22px; --fs-18:18px; --fs-17:17px;
+	--fs-16:16px; --fs-15:15px; --fs-14:14px; --fs-13-5:13.5px; --fs-13:13px;
+	--fs-12-5:12.5px; --fs-12:12px; --fs-11-5:11.5px; --fs-11:11px; --fs-10-5:10.5px;
+	--fs-10:10px; --fs-9:9px;
+
+	/* Manrope — όχι Segoe UI (τρίτη σύγκρουση· το Segoe του kit ήταν placeholder,
+	   γιατί ένα αυτόνομο mockup δεν έχει τα woff2 του plugin) */
+	--font:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+
+	font-family:var(--font); color:var(--ink);
+	-webkit-font-smoothing:antialiased;
+}
+
+/* Ο σκούρος καμβάς, ολοκληρωμένος 19/08. Σχεδιασμένος ΚΑΤΑ ΡΟΛΟ, όχι με
+   αντιστροφή ράμπας: η κάρτα επιπλέει πάνω από τον καμβά και στα δύο θέματα,
+   και οι γραμμές που στο ανοιχτό είναι πιο σκούρες από την κάρτα, στο σκούρο
+   γίνονται πιο ΑΝΟΙΧΤΕΣ. */
+.ecrm[data-theme="dark"] {
+	--bg:#111110; --surface:#1a1a18; --surface-2:#1f1f1c; --surface-sunk:#232320;
+	--surface-track:#2a2926;
+	--surface-inverse:#2a2926; --surface-inverse-soft:#33322e;
+	--surface-inverse-deep:#232320; --surface-inverse-hover:#4d4b45;
+	--line-inverse:#4d4b45;
+	--line-soft:#232320; --line-card:#2a2926; --line:#33322e; --line-mid:#3d3c37;
+	--line-strong:#4d4b45; --fill-mute:#3d3c37; --fill-mute-strong:#4d4b45;
+	--ink:#f1f1ee; --navy:#f8f8f6; --navy-soft:#dedcd7; --muted:#a3a099;
+	--muted-strong:#c6c4bd; --faint:#8a887f; --faint-2:#a3a099;
+	/* το πράσινο ΚΕΙΜΕΝΟ αντιστρέφεται· το accent ως ΓΕΜΙΣΜΑ μένει ίδιο */
+	--accent-ink:#6bdd6d; --accent-hover:#6bdd6d; --accent-deep:#a5eba7;
+	--accent-wash:#12240f; --accent-wash-2:#17351a; --accent-soft:#1e4a21;
+	--st-draft:#9fa0a3;   --st-draft-bg:#343536;
+	--st-term:#a3a6ad;    --st-term-bg:#343536;
+	--st-new:#79afec;     --st-new-bg:#2e353f;
+	--st-psig:#8db8f7;    --st-psig-bg:#2f3540;
+	--st-asig:#a2c1ff;    --st-asig-bg:#303541;
+	--st-signed:#b9cbff;  --st-signed-bg:#31343f;
+	--st-proc:#cdd5ff;    --st-proc-bg:#323440;
+	--st-pending:#ffb682; --st-pending-bg:#3f322a;
+	--st-resolved:#75b47e;--st-resolved-bg:#2c382d;
+	--st-routed:#8cc792;  --st-routed-bg:#2c382d;
+	--st-active:#a3d9a9;  --st-active-bg:#2c382d;
+	--st-cancel:#fb8a91;  --st-cancel-bg:#423030;
+	--cat-teal:#5ec0be;   --cat-teal-bg:#333535;
+	--cat-violet:#cca2d6; --cat-violet-bg:#3a323c;
+}
+
+
+.ecrm[data-theme="dark"]{--bg:#111110;--surface:#1a1a18;--surface-2:#1f1f1c;--surface-sunk:#232320;
+--surface-track:#2a2926;--line-soft:#232320;--line-card:#2a2926;--line:#33322e;--line-mid:#3d3c37;
+--line-strong:#4d4b45;--fill-mute:#3d3c37;--ink:#f1f1ee;--navy:#f8f8f6;--muted:#a3a099;--muted-strong:#c6c4bd;
+--faint:#8a887f;--faint-2:#a3a099;--accent-ink:#6bdd6d;--accent-hover:#6bdd6d;--accent-deep:#a5eba7;
+--accent-wash:#12240f;--accent-wash-2:#17351a;--accent-soft:#1e4a21;
+--st-pending:#ffb682;--st-pending-bg:#3f322a;--st-cancel:#fb8a91;--st-cancel-bg:#423030;
+--st-active:#a3d9a9;--st-active-bg:#2c382d;}
+.ecrm *{box-sizing:border-box}
+.demo{background:var(--surface);border:1px solid var(--line-card);border-radius:12px;padding:14px}
+.demo .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:0;border-radius:8px;padding:8px 12px;font:700 12.5px/1 var(--font);cursor:pointer}
+.btn-d{background:transparent;border:1px solid var(--st-cancel);color:var(--st-cancel)}
+.btn-d[disabled]{background:var(--surface-sunk);color:var(--muted);border-color:var(--line);cursor:default}
+.btn-g{background:transparent;border:1px solid var(--line-mid);color:var(--muted-strong)}
+.inp{background:var(--surface);border:1px solid var(--line-mid);border-radius:8px;padding:8px 10px;
+color:var(--ink);font:400 13px/1.2 var(--font);outline:0}
+.inp:focus{border-color:var(--p400);box-shadow:0 0 0 3px var(--accent-wash-2)}
+.lbl{display:block;font:700 11px/1.4 var(--font);color:var(--muted);margin-bottom:4px}
+.fld{margin-bottom:10px}
+.warn{background:var(--st-cancel-bg);border:1px solid var(--st-cancel);border-radius:10px;
+padding:10px 12px;font:400 12.5px/1.5 var(--font);color:var(--ink);margin-bottom:12px}
+.warn b{color:var(--st-cancel)}
+:root{--pg:#f6f6f4;--pg2:#fff;--pg-ink:#1a1a18;--pg-mu:#6e6c66;--pg-line:#dedcd7;--pg-acc:#0b690c;
+--pg-acc-bg:#eafaea;--pg-warn:#ab5506;--pg-warn-bg:#fcf2ec;--pg-bad:#c32b47;--pg-bad-bg:#fdeaea}
+html[data-kit="dark"]{--pg:#0d0d0c;--pg2:#161614;--pg-ink:#f1f1ee;--pg-mu:#a3a099;--pg-line:#33322e;
+--pg-acc:#6bdd6d;--pg-acc-bg:#12240f;--pg-warn:#ffb682;--pg-warn-bg:#3f322a;--pg-bad:#fb8a91;--pg-bad-bg:#423030}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--pg-ink);line-height:1.5;
+font-family:"Manrope",-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.bar{position:sticky;top:0;z-index:9;background:var(--pg2);border-bottom:1px solid var(--pg-line);padding:10px 16px}
+.bar-in{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.brand{font-weight:800;font-size:14px;color:var(--pg-acc)}
+.tg{margin-left:auto;border:1px solid var(--pg-line);background:var(--pg);color:var(--pg-ink);
+border-radius:999px;padding:7px 14px;font:700 12.5px/1 inherit;cursor:pointer}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px 70px}
+h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:26px 0 8px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--pg-mu);margin:34px 0 4px}
+h2+.t{font-size:17px;font-weight:800;margin:0 0 10px}
+p{margin:0 0 10px;font-size:14px}p.d{color:var(--pg-mu);font-size:13.5px;max-width:800px}
+.note{font-size:13px;color:var(--pg-mu);line-height:1.55;padding:11px 13px;border-radius:10px;
+margin:10px 0;background:var(--pg2);border:1px solid var(--pg-line)}
+.note b{color:var(--pg-ink)}
+.note.bad{background:var(--pg-bad-bg);border-color:var(--pg-bad)}.note.bad b{color:var(--pg-bad)}
+.note.ok{background:var(--pg-acc-bg);border-color:var(--pg-acc)}.note.ok b{color:var(--pg-acc)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:var(--pg);
+border:1px solid var(--pg-line);border-radius:4px;padding:1px 4px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--pg-line);vertical-align:top}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--pg-mu)}
+.tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:800;
+text-transform:uppercase;white-space:nowrap}
+.t1{background:var(--pg-bad-bg);color:var(--pg-bad)}
+.t2{background:var(--pg-warn-bg);color:var(--pg-warn)}
+.t3{background:var(--pg-acc-bg);color:var(--pg-acc)}
+.t0{background:var(--pg);color:var(--pg-mu);border:1px solid var(--pg-line)}
+.side{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.side{grid-template-columns:1fr}}
+</style><style>
+.chan{display:flex;gap:11px;align-items:flex-start;padding:11px 12px;border:1px solid var(--line-mid);
+border-radius:11px;margin-bottom:8px;cursor:pointer;background:var(--surface)}
+.chan.is-on{border-color:var(--p400);background:var(--accent-wash)}
+.chan.is-off{opacity:1;border-color:var(--line-soft);background:var(--surface-sunk);cursor:not-allowed}
+.chan__dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-mid);margin-top:2px;flex:0 0 auto}
+.chan.is-on .chan__dot{border-color:var(--p400);box-shadow:inset 0 0 0 3px var(--p400)}
+.chan.is-off .chan__dot{border-color:var(--line-soft)}
+.chan__b{flex:1;min-width:0}
+.chan__t{font:800 13.5px/1.3 var(--font);color:var(--ink)}
+.chan.is-off .chan__t{color:var(--muted)}
+.chan__s{font:400 12px/1.45 var(--font);color:var(--muted);margin-top:2px;word-break:break-word}
+.chan__s.why{color:var(--st-cancel)}
+.viber{color:var(--brand-viber);font-weight:800}
+.tl{border-left:2px solid var(--line-mid);padding-left:12px;margin:4px 0 0}
+.tl li{list-style:none;font:400 12.5px/1.5 var(--font);color:var(--muted);margin-bottom:6px;position:relative}
+.tl li::before{content:'';position:absolute;left:-17px;top:6px;width:7px;height:7px;border-radius:50%;background:var(--fill-mute-strong)}
+.tl li b{color:var(--ink)}
+.tl li.now::before{background:var(--p400)}
+.code{font:400 11.5px/1.6 ui-monospace,Consolas,monospace;background:var(--surface-sunk);
+border:1px solid var(--line);border-radius:8px;padding:9px 11px;white-space:pre-wrap;color:var(--ink);margin:8px 0}
+</style></head><body class="ecrm" data-theme="light">
+<div class="bar"><div class="bar-in"><span class="brand">Energy CRM</span>
+<span style="color:var(--pg-mu);font-size:12.5px">Κάρτα rail &middot; «γιατί κάθεται;»</span>
+<button class="tg" id="tg">Σκούρο θέμα</button></div></div>
+
+<div class="wrap">
+
+<h1>Η απάντηση βγαίνει με μέτρημα, όχι με γλωσσικό μοντέλο.</h1>
+
+<div class="warn"><b>Το εύρημα, πρώτο.</b> Το kit ζητούσε «κάρτα ΑΙ βοήθειας». Η ερώτηση που όντως έχει ο
+συνεργάτης &mdash; <i>«γιατί κάθεται αυτή;»</i> &mdash; απαντιέται <b>ολόκληρη με αριθμητική πάνω σε
+γεγονότα που ήδη γράφονται</b>. Και το μέτρημα είναι <b>ακαριαίο, δωρεάν, ντετερμινιστικό, και δεν μπορεί
+να εφεύρει νούμερο για τα λεφτά κάποιου</b>. Ένα μοντέλο μπορεί.</div>
+
+<h2>Τι υπάρχει ήδη</h2><p class="t">Δύο πράγματα, και το δεύτερο το ξεχνάμε</p>
+
+<table>
+<thead><tr><th>κομμάτι</th><th>πού</th><th>τι δίνει</th></tr></thead>
+<tbody>
+<tr><td><b>Χρόνος στην τρέχουσα κατάσταση</b></td><td>γεγονότα <code>created</code> + <code>status_change</code></td>
+<td><span class="tag t3">υπολογίσιμο</span> το <code>logCreation()</code> γράφει <code>to_status</code>, άρα <b>κάθε</b> σύμβαση έχει σημείο εισόδου</td></tr>
+<tr><td><b>Ο συνήθης χρόνος</b></td><td>ίδιος πίνακας, όλες οι συμβάσεις</td>
+<td><span class="tag t3">υπολογίσιμο</span> ίδιο σχήμα ερωτήματος με την <code>averageDaysToActivation()</code>, που τρέχει ήδη</td></tr>
+<tr><td><b>Η Λίτσα</b></td><td><code>includes/class-ecrm-assistant.php</code></td>
+<td><span class="tag t3">υπάρχει</span> πλήρης βοηθός, ξέρει τα νούμερα του χρήστη, το κλειδί μένει server-side</td></tr>
+</tbody></table>
+
+<div class="note"><b>Η Λίτσα δεν ξαναχτίζεται, ούτε αντιγράφεται.</b> Η κάρτα δεν είναι δεύτερη ΑΙ &mdash;
+είναι το <b>γεγονός</b>, με ένα κουμπί που παραδίδει το πλαίσιο σε εκείνη όταν ο συνεργάτης θέλει κρίση
+αντί για αριθμό.</div>
+
+<h2>Η κάρτα</h2><p class="t">Και ο κανόνας που την κάνει να αξίζει: <b>σιωπά όταν δεν έχει κάτι να πει</b></p>
+
+<div class="note bad"><b>Το είχα θέσει ως ένσταση, και είναι η σημαντικότερη απόφαση εδώ.</b> Μια κάρτα
+στο rail μιλάει <b>χωρίς να ρωτηθεί</b>, σε κάθε αίτηση που ανοίγεις. Αν στις οκτώ στις δέκα δεν έχει
+κάτι ουσιώδες, ο συνεργάτης μαθαίνει να μην κοιτάει εκείνο το σημείο &mdash; και τη χάνει και τις δύο
+φορές που είχε δίκιο. <b>Άρα εμφανίζεται ΜΟΝΟ όταν η αίτηση είναι εκτός του συνηθισμένου.</b>
+Στην κανονική περίπτωση δεν υπάρχει κάρτα, δεν υπάρχει κενό κουτί, δεν υπάρχει «όλα καλά».</div>
+
+<div class="side">
+  <div>
+    <div class="lbl">όταν έχει κάτι να πει</div>
+    <div class="demo"><div class="ecrm">
+      <div style="font:800 10.5px/1.4 var(--font);letter-spacing:.08em;color:var(--st-pending);text-transform:uppercase">Κάθεται</div>
+      <div style="font:800 17px/1.3 var(--font);color:var(--navy);margin:6px 0 2px">11 μέρες</div>
+      <div style="font:400 12.5px/1.5 var(--font);color:var(--muted);margin-bottom:10px">
+        σε «Εκκρεμότητα». Ο συνήθης χρόνος για <b style="color:var(--ink)">Protergia</b> είναι
+        <b style="color:var(--ink)">4 μέρες</b> <span style="color:var(--faint)">(από 37 αιτήσεις)</span>.</div>
+      <div style="font:400 12.5px/1.5 var(--font);color:var(--muted);margin-bottom:12px">
+        Οι <b style="color:var(--ink)">29 από 37</b> προχώρησαν μετά σε <b style="color:var(--ink)">Δρομολόγηση</b>.</div>
+      <button class="btn btn-g" style="width:100%">Ρώτα τη Λίτσα γι' αυτή την αίτηση</button>
+    </div></div>
+  </div>
+  <div>
+    <div class="lbl">όταν δεν έχει &mdash; οι 8 στις 10</div>
+    <div class="demo" style="display:flex;align-items:center;justify-content:center;min-height:150px">
+      <div style="font:400 12.5px/1.6 var(--font);color:var(--muted);text-align:center">
+        <b style="color:var(--ink)">Καμία κάρτα.</b><br>Ούτε κενό κουτί, ούτε «όλα καλά».<br>
+        <span style="color:var(--faint)">Η σιωπή είναι που κάνει τη φωνή να μετράει.</span></div>
+    </div>
+  </div>
+</div>
+
+<h2>Πού χρειάζεται προσοχή</h2><p class="t">Τρία, και το τρίτο είναι λάθος που βρήκα μετρώντας</p>
+
+<div class="note"><b>1. Το ερώτημα του συνόλου είναι σάρωση.</b> Ο πίνακας <code>events</code> έχει
+<b>μόνο</b> <code>KEY contract_id</code>. Ένα <code>WHERE to_status = ? GROUP BY contract_id</code> τα
+διαβάζει όλα &mdash; και ήδη συμβαίνει στην <code>averageDaysToActivation()</code>, στην οθόνη
+αναλυτικών. Εκεί το αντέχει: <b>μία οθόνη που ανοίγεις σπάνια</b>. Η λεπτομέρεια σύμβασης ανοίγει
+συνέχεια. Χρειάζεται <code>KEY to_status (to_status, created_at)</code> &mdash; μικρή μετάπτωση, ίδιο
+σχήμα με την <code>AddTrackKeyColumn</code>.</div>
+
+<div class="note"><b>2. Κάτω από δείγμα, καμία σύγκριση.</b> Ίδιος κανόνας με το C2 (<code>MIN_SAMPLE</code>):
+με τέσσερις παρόμοιες αιτήσεις, το «ο συνήθης χρόνος είναι 4 μέρες» δεν είναι μέτρηση, είναι σύμπτωση.
+Κάτω από το όριο η κάρτα δείχνει <b>μόνο</b> τον χρόνο της αίτησης, χωρίς σύγκριση &mdash; ή δεν
+εμφανίζεται καθόλου.</div>
+
+<div class="warn"><b>3. Και ένα λάθος στα λόγια, από τη χθεσινή (77).</b> Η κάρτα του πίνακα λέει
+<b>«η παλαιότερη 12 μέρες»</b> &mdash; που διαβάζεται «μπήκε πριν 12 μέρες». Μετράει όμως
+<code>updated_at</code>, που έχει <code>ON UPDATE CURRENT_TIMESTAMP</code>: <b>μετράει πόσο καιρό δεν
+την άγγιξε κανείς</b>. Το docblock το λέει ρητά και η επιλογή είναι σωστή &mdash; <b>τα λόγια είναι
+λάθος</b>. Μια αίτηση 30 μερών σε «Εκκρεμότητα» που κάποιος διόρθωσε σήμερα εμφανίζεται ως
+<i>«η παλαιότερη μπήκε σήμερα»</i>.
+<div class="code">// ecrm-view-dashboard.js:106
+'η παλαιότερη μπήκε σήμερα'          ← λέει «μπήκε»
+'SELECT DATEDIFF(NOW(), MIN(updated_at))'  ← μετράει «δεν κουνήθηκε»</div>
+<b>Και δεν μπορεί να μείνει έτσι αν μπει αυτή η κάρτα</b>, γιατί η κάρτα θα λέει τον <b>πραγματικό</b>
+χρόνο στην κατάσταση, από τα γεγονότα. Δύο οθόνες, δύο διαφορετικοί αριθμοί για το ίδιο πράγμα.</div>
+
+<h2>Τι προτείνω</h2><p class="t">Και με ποια σειρά</p>
+
+<div class="note ok"><b>Πρώτα η διόρθωση των λόγων</b> (μικρή, ανεξάρτητη): «η παλαιότερη <b>χωρίς
+κίνηση</b> 12 μέρες». Μηδέν backend, και σταματά το ψέμα σήμερα.
+<br><br>
+<b>Μετά η κάρτα</b>, με: το ευρετήριο, τον χρόνο στην κατάσταση από τα γεγονότα, τη σύγκριση με το
+σύνολο πάνω από κατώφλι δείγματος, και το κουμπί προς τη Λίτσα. <b>Χωρίς κλήση σε μοντέλο για να
+εμφανιστεί.</b></div>
+
+<div class="note"><b>Τι χρειάζομαι από σένα:</b>
+<ol>
+<li><b>Πόσο «εκτός συνηθισμένου» ξυπνάει την κάρτα;</b> Προτείνω <b>διπλάσιο από τον συνήθη χρόνο</b>
+&mdash; απλό να εξηγηθεί, και δεν χτυπάει για μία μέρα καθυστέρηση.</li>
+<li><b>Η σύγκριση να είναι ανά πάροχο ή συνολική;</b> Προτείνω <b>ανά πάροχο</b> όταν υπάρχει δείγμα,
+αλλιώς συνολική &mdash; οι πάροχοι δεν έχουν τους ίδιους ρυθμούς.</li>
+<li><b>Το κουμπί προς τη Λίτσα μπαίνει τώρα ή αργότερα;</b></li>
+</ol></div>
+
+</div>
+<script>
+(function(){var b=document.getElementById('tg'),d=false;
+b.addEventListener('click',function(){d=!d;var t=d?'dark':'light';
+document.documentElement.setAttribute('data-kit',t);
+document.querySelectorAll('.ecrm').forEach(function(e){e.setAttribute('data-theme',t)});
+b.textContent=d?'Ανοιχτό θέμα':'Σκούρο θέμα';});})();
+</script></body></html>

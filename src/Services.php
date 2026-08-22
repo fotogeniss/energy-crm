@@ -45,6 +45,7 @@ use EnergyCRM\Persistence\ContractTransitions;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\DashboardRepository;
 use EnergyCRM\Persistence\EventRepository;
+use EnergyCRM\Persistence\StatusDwellRepository;
 use EnergyCRM\Persistence\DocumentStorage;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\LeadRepository;
@@ -76,6 +77,8 @@ final class Services
     private static ?TaskRepository $tasks = null;
 
     private static ?EventRepository $events = null;
+
+    private static ?StatusDwellRepository $statusDwell = null;
 
     private static ?LeadRepository $leads = null;
 
@@ -236,6 +239,11 @@ final class Services
     public static function events(): EventRepository
     {
         return self::$events ??= new EventRepository();
+    }
+
+    public static function statusDwell(): StatusDwellRepository
+    {
+        return self::$statusDwell ??= new StatusDwellRepository();
     }
 
     public static function tasks(): TaskRepository

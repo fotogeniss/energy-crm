@@ -20,6 +20,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddCustomerAfmIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddPayoutAmountColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
+use EnergyCRM\Persistence\Schema\Migrations\AddEventStatusIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddTrackKeyColumn;
 use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
@@ -59,6 +60,7 @@ final class MigrationList
             new DropIbanFromExtras(),
             new AddPayoutAmountColumn(),
             new AddTrackKeyColumn(),
+            new AddEventStatusIndex(),
         ];
     }
 }
