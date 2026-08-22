@@ -1,0 +1,94 @@
+name: CI
+
+# Τρέχει σε κάθε push και σε κάθε pull request προς main/ui-kit. Δεν
+# αντικαθιστά τον pre-commit hook (.githooks/pre-commit) — μένουν και οι δύο.
+# Ο hook πιάνει το λάθος σε δευτερόλεπτα, πριν γραφτεί στο ιστορικό· αυτό εδώ
+# πιάνει ό,τι ξεφύγει από τον hook (λάθος λίστα επεκτάσεων, --no-verify,
+# clone χωρίς hooksPath) και τρέχει ΠΑΝΤΑ ολόκληρο το check:all, integration
+# συμπεριλαμβανομένου — κάτι που ο hook ρητά δεν κάνει (docs/TESTING.md).
+#
+# Δες docs/CI-PROPOSAL.html για το πλήρες σκεπτικό, μετρημένο πριν γραφτεί
+# αυτό το αρχείο.
+
+on:
+  push:
+    branches: [main, ui-kit]
+  pull_request:
+    branches: [main, ui-kit]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: energy_crm_tests
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      ECRM_TEST_DB_NAME: energy_crm_tests
+      ECRM_TEST_DB_USER: root
+      ECRM_TEST_DB_PASSWORD: ""
+      ECRM_TEST_DB_HOST: 127.0.0.1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # PHP 8.2 ΜΕ sodium — ρητά, όχι τυχαία. Χωρίς sodium παραλείπονται 6
+      # tests αντί για 1 και τα PII tests δεν τρέχουν καθόλου (docs/HANDOVER.md
+      # §3). Ένα CI που τρέχει χωρίς sodium θα έδειχνε πράσινο κάθε μέρα χωρίς
+      # να το μάθει ποτέ κανείς — ακριβώς η μορφή Ε του §8.
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: sodium, mysqli, gd, zip, mbstring
+          coverage: none
+
+      - name: Composer cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: composer install
+        run: composer install --no-interaction --prefer-dist
+
+      - name: composer check:all
+        run: composer check:all 2>&1 | tee ci-check-all.tmp.txt
+
+      # Ο κωδικός εξόδου του composer ήδη κοκκινίζει αν κάτι απέτυχε (το
+      # tools/check-suite.php το εγγυάται — απαιτεί γραμμή σύνοψης, όχι μόνο
+      # κωδικό 0, δες CHANGELOG (86)). Αυτό το βήμα προσθέτει τον έλεγχο που
+      # ΔΕΝ κάνει κανένα από τα δύο: ότι η κρυπτογράφηση όντως ελέγχθηκε.
+      #
+      # Με sodium παρόν, το ΣΩΣΤΟ πλήθος skipped είναι ακριβώς 1 — το
+      # FieldCipherTest που σκόπιμα παραλείπεται ΟΤΑΝ υπάρχει sodium (ελέγχει
+      # τη συμπεριφορά χωρίς). 0 ή ≥2 σημαίνει ότι κάτι άλλαξε απρόβλεπτα.
+      - name: Επιβεβαίωση ότι η κρυπτογράφηση ελέγχθηκε πραγματικά
+        run: |
+          if ! grep -qE "Skipped: 1\.$" ci-check-all.tmp.txt; then
+            echo "::error::Δεν βρέθηκε 'Skipped: 1.' στην έξοδο του unit suite."
+            echo "::error::Είτε το sodium δεν φορτώθηκε (Skipped: 6 — τα PII tests ΔΕΝ έτρεξαν)"
+            echo "::error::είτε άλλαξε ο αριθμός των σκόπιμα παραλειπόμενων tests. Δες docs/HANDOVER.md §3."
+            exit 1
+          fi
+          echo "OK: ακριβώς 1 σκόπιμα παραλειπόμενο test (sodium παρόν)."
+
+      - name: Πλήρης έξοδος (πάντα, ακόμη κι αν πέρασε)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-all-output
+          path: ci-check-all.tmp.txt
+          retention-days: 14
