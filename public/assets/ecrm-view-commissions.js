@@ -22,6 +22,30 @@ export function loadCommissions() {
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
 }
 
+/* Η στήλη «Κατάσταση» λέει την αλήθεια — 22/08.
+ *
+ * Μέχρι σήμερα τύπωνε «Καταχωρημένο» σε ΚΑΘΕ γραμμή, σταθερά, σε πίνακα που
+ * λέγεται «Οι εκκαθαρίσεις μου». Ο συνεργάτης που έβλεπε «Ιούλιος ·
+ * Καταχωρημένο» έβγαζε συμπέρασμα για την πληρωμή του Ιουλίου. Η στήλη δεν
+ * έλεγε τίποτα, και τα δεδομένα υπήρχαν ήδη στον server.
+ *
+ * Ο μισοπληρωμένος μήνας δείχνει ΑΡΙΘΜΟ, όχι λέξη: «2/5 πληρωμένα». Μια λέξη
+ * θα έπρεπε να διαλέξει ανάμεσα σε δύο ψέματα. Ίδιος κανόνας με την καρτέλα
+ * συνεργάτη — κάθε νούμερο κουβαλά τον παρονομαστή του.
+ */
+function paidBadge(m) {
+	var paid = Number(m.paid || 0);
+	var count = Number(m.count || 0);
+
+	if (count > 0 && paid === count) {
+		return '<span class="ecrm-badge ecrm-badge--active">Πληρωμένο</span>';
+	}
+	if (paid === 0) {
+		return '<span class="ecrm-badge ecrm-badge--pending">Εκκρεμεί</span>';
+	}
+	return '<span class="ecrm-badge ecrm-badge--pending">' + paid + '/' + count + ' πληρωμένα</span>';
+}
+
 function commissionsHTML(d) {
 	var months = d.months || [];
 	var range = months.length ? (months[months.length - 1].label + ' → ' + months[0].label) : '—';
@@ -31,7 +55,7 @@ function commissionsHTML(d) {
 		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Περίοδος</th><th>Συμβόλαια</th><th>Κατάσταση</th><th style="text-align:right">Σύνολο</th></tr></thead><tbody>' +
 			months.map(function (m) {
 				return '<tr><td><strong>' + esc(m.label) + '</strong></td><td>' + m.count + ' συμβόλαια</td>' +
-					'<td><span class="ecrm-badge ecrm-badge--routed">Καταχωρημένο</span></td>' +
+					'<td>' + paidBadge(m) + '</td>' +
 					'<td style="text-align:right" class="ecrm-mono">' + Number(m.amount).toFixed(0) + ' €</td></tr>';
 			}).join('') + '</tbody></table></div>'
 		: '<div class="ecrm-empty">Δεν υπάρχουν εκκαθαρίσεις ακόμα.</div>';
