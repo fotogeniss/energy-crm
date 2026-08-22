@@ -57,7 +57,11 @@ function renderLeads(view, d) {
 	var cards = (d.leads || []).map(function (l) {
 		var cb = '';
 		if (l.callback_at) {
-			var due = new Date(l.callback_at.replace(' ', 'T') + 'Z').getTime();
+			// ΧΩΡΙΣ 'Z'. Το callback_at είναι ΤΟΠΙΚΗ ώρα, όπως όλες οι
+			// αποθηκευμένες. Με το 'Z' διαβαζόταν ως UTC, άρα το «ληξιπρόθεσμο»
+			// άργουνε 3 ώρες — η κάρτα έδειχνε τη σωστή ώρα (fmtDate) και
+			// ταυτόχρονα δεν κοκκίνιζε. Παρτίδα (84), CHANGELOG.
+			var due = new Date(l.callback_at.replace(' ', 'T')).getTime();
 			var overdue = due <= now && l.stage !== 'won' && l.stage !== 'lost';
 			cb = '<span class="ecrm-leadcb' + (overdue ? ' is-over' : '') + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/></svg> ' + esc(fmtDate(l.callback_at)) + '</span>';
 		}
