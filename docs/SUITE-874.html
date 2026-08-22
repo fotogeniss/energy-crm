@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="el" data-kit="light"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Η σουίτα πεθαίνει στο 874</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--pg:#f6f6f4;--pg2:#fff;--pg-ink:#1a1a18;--pg-mu:#6e6c66;--pg-line:#dedcd7;--pg-acc:#0b690c;
+--pg-acc-bg:#eafaea;--pg-warn:#ab5506;--pg-warn-bg:#fcf2ec;--pg-bad:#c32b47;--pg-bad-bg:#fdeaea;
+--pg-sunk:#eeeeeb}
+html[data-kit="dark"]{--pg:#0d0d0c;--pg2:#161614;--pg-ink:#f1f1ee;--pg-mu:#a3a099;--pg-line:#33322e;
+--pg-acc:#6bdd6d;--pg-acc-bg:#12240f;--pg-warn:#ffb682;--pg-warn-bg:#3f322a;--pg-bad:#fb8a91;
+--pg-bad-bg:#423030;--pg-sunk:#1f1f1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--pg-ink);line-height:1.5;
+font-family:"Manrope",-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.bar{position:sticky;top:0;z-index:9;background:var(--pg2);border-bottom:1px solid var(--pg-line);padding:10px 16px}
+.bar-in{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:14px;color:var(--pg-acc)}
+.tg{margin-left:auto;border:1px solid var(--pg-line);background:var(--pg);color:var(--pg-ink);
+border-radius:999px;padding:7px 14px;font:700 12.5px/1 inherit;cursor:pointer}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px 70px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:26px 0 8px;line-height:1.25}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--pg-mu);margin:38px 0 4px}
+h2+.t{font-size:18px;font-weight:800;margin:0 0 10px;letter-spacing:-.01em}
+h3{font-size:15px;font-weight:800;margin:20px 0 6px}
+p{margin:0 0 10px;font-size:14px}p.d{color:var(--pg-mu);font-size:13.5px;max-width:820px}
+.lede{font-size:15.5px;max-width:820px}
+.note{font-size:13px;color:var(--pg-mu);line-height:1.55;padding:11px 13px;border-radius:10px;
+margin:10px 0;background:var(--pg2);border:1px solid var(--pg-line)}
+.note b{color:var(--pg-ink)}
+.note.bad{background:var(--pg-bad-bg);border-color:var(--pg-bad)}.note.bad b{color:var(--pg-bad)}
+.note.ok{background:var(--pg-acc-bg);border-color:var(--pg-acc)}.note.ok b{color:var(--pg-acc)}
+.note.warn{background:var(--pg-warn-bg);border-color:var(--pg-warn)}.note.warn b{color:var(--pg-warn)}
+.law{background:var(--pg2);border:2px solid var(--pg-bad);border-radius:14px;padding:18px 20px;margin:16px 0}
+.law p{font-size:17px;font-weight:800;margin:0;line-height:1.45;letter-spacing:-.01em}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:var(--pg-sunk);
+border:1px solid var(--pg-line);border-radius:4px;padding:1px 4px;word-break:break-word}
+.code{font:400 11.5px/1.65 ui-monospace,Consolas,monospace;background:var(--pg-sunk);
+border:1px solid var(--pg-line);border-radius:8px;padding:10px 12px;white-space:pre;
+color:var(--pg-ink);margin:8px 0;overflow-x:auto}
+.code em{font-style:normal;color:var(--pg-bad);font-weight:700}
+.code i{font-style:normal;color:var(--pg-mu)}
+.tbl{overflow-x:auto;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:520px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--pg-line);vertical-align:top}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--pg-mu);white-space:nowrap}
+td code,th code{white-space:nowrap;word-break:normal}
+td.n{color:var(--pg-mu);font-weight:800;width:34px;text-align:right}
+tr.gdpr td{background:var(--pg-bad-bg)}
+.tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:800;
+text-transform:uppercase;white-space:nowrap}
+.tA{background:var(--pg-bad-bg);color:var(--pg-bad)}
+.tB{background:var(--pg-warn-bg);color:var(--pg-warn)}
+.tC{background:var(--pg-acc-bg);color:var(--pg-acc)}
+.tD{background:var(--pg-sunk);color:var(--pg-mu);border:1px solid var(--pg-line)}
+.fix{background:var(--pg2);border:1px solid var(--pg-line);border-radius:12px;padding:15px 16px;margin:12px 0}
+.fix.rec{border-color:var(--pg-acc);border-width:2px}
+.fix .k{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--pg-mu)}
+.fix .h{font-size:15.5px;font-weight:800;margin:3px 0 8px;line-height:1.35}
+.fix p{font-size:13px;margin:0 0 7px}
+.fix p:last-child{margin:0}
+ul{margin:0 0 10px;padding-left:20px}li{font-size:13.5px;margin-bottom:5px}
+.foot{margin-top:40px;padding-top:14px;border-top:1px solid var(--pg-line);font-size:12px;color:var(--pg-mu)}
+</style></head><body>
+<div class="bar"><div class="bar-in"><span class="brand">Energy CRM</span>
+<span style="color:var(--pg-mu);font-size:12.5px">Πρόταση &sect;1.8 &middot; 22/08/2026</span>
+<button class="tg" id="tg">Σκούρο θέμα</button></div></div>
+
+<div class="wrap">
+
+<h1>Η σουίτα πεθαίνει στο 874, και ξέρουμε γιατί</h1>
+<p class="lede">Το test που τη σκοτώνει είναι ο
+<code>AfmIsNormalisedInOnePlaceTest::testDigitsKeepsOnlyDigits</code>. Δεν καταρρέει &mdash;
+<b>βγαίνει ήσυχα με κωδικό 0</b>, που είναι ακριβώς ο λόγος που καμία πύλη δεν το είπε ποτέ.
+Ονομάστηκε από δύο ανεξάρτητες μετρήσεις και επιβεβαιώθηκε απομονωμένο.</p>
+
+<div class="law"><p>Δεκαπέντε tests πίσω από αυτό δεν έχουν εκτελεστεί ποτέ &mdash;
+ανάμεσά τους <b>και οι δέκα φύλακες της κρυπτογράφησης ΑΦΜ και της κάλυψης
+προσωπικών δεδομένων</b>.</p></div>
+
+<div class="note ok"><b>ΕΚΛΕΙΣΕ &mdash; 22/08/2026, CHANGELOG (86).</b> Και οι τρεις αλλαγές
+μπήκαν. Η unit σουίτα τελείωσε για πρώτη φορά με γραμμή σύνοψης:
+<code>Tests: 891, Assertions: 2479, Skipped: 1.</code> &middot;
+<code>OK (346 tests, 2204 assertions)</code> &middot; phpcs <b>264</b> &middot; phpstan <b>147</b>
+&mdash; <b>και οι τέσσερις ακριβώς όπως προβλέφθηκαν</b>. Τα δεκαπέντε tests που δεν είχαν
+τρέξει ποτέ <b>περνούν όλα</b>. Η πύλη δοκιμάστηκε και σε αποτυχία:
+<code>--filter ThisMatchesNothing</code> &rarr; <code>EXIT=1</code>.
+Το κείμενο παρακάτω μένει όπως γράφτηκε <b>πριν</b> την έγκριση &mdash; είναι η πρόταση, όχι
+αναδρομική αφήγηση.</div>
+
+<h2>1</h2><div class="t">Η αλυσίδα των μετρήσεων</div>
+<p class="d">Κάθε γραμμή είναι ένας ισχυρισμός με την εντολή που τον αποδεικνύει δίπλα του.
+Καμία δεν είναι συμπέρασμα άλλης γραμμής.</p>
+
+<div class="tbl"><table>
+<tr><th>Ισχυρισμός</th><th>Εντολή</th><th>Έξοδος</th></tr>
+<tr><td>Η σουίτα σταματά μετά το test 873</td><td><code>tail -n 1 phpunit-run.tmp.txt | tr -d '\r\n' | wc -c</code></td><td><code>54</code> &nbsp;&rarr;&nbsp; 819+54 = <b>873</b></td></tr>
+<tr><td>Δεν υπάρχει σφάλμα στο stderr</td><td>ολόκληρο το <code>phpunit-run.tmp.txt</code> με <code>2&gt;&amp;1</code></td><td>1.298 bytes, 18 γραμμές, τελευταίο byte μια τελεία, <b>χωρίς newline</b></td></tr>
+<tr><td>Ένα test ξεκίνησε και δεν τελείωσε</td><td><code>grep -c "^Test Prepared"</code> / <code>"^Test Finished"</code></td><td><b>874</b> / <b>873</b></td></tr>
+<tr><td>Το όνομά του, από την εκτέλεση που πέθανε</td><td><code>tail -n 4 phpunit-events.tmp.txt</code></td><td>τελευταία γραμμή: <code>Test Prepared (…AfmIsNormalisedInOnePlaceTest::testDigitsKeepsOnlyDigits)</code></td></tr>
+<tr><td>Το όνομά του, χωρίς να τρέξει τίποτα</td><td><code>sed -n '877p' phpunit-list.tmp.txt</code> <i>(892 γραμμές, 3 κεφαλίδα &rarr; test N στη γραμμή N+3)</i></td><td>το <b>ίδιο</b> όνομα</td></tr>
+<tr><td>Πεθαίνει και μόνο του</td><td><code>phpunit --filter AfmIsNormalisedInOnePlace</code></td><td>μία τελεία, σιωπή, <code>EXIT=0</code>, <b>καμία σύνοψη</b></td></tr>
+</table></div>
+
+<div class="note ok"><b>Η πρόβλεψη γράφτηκε πριν την τελευταία μέτρηση</b> και βγήκε ακριβής:
+«μία τελεία, μετά σιωπή, <code>EXIT=0</code>, καμία γραμμή <code>OK (2 tests…)</code>». Είναι η ίδια
+μέτρηση των 0,2s που είχε καθαρίσει τον <code>TimeIsReadInOnePlaceTest</code> &mdash; στραμμένη
+αυτή τη φορά στον σωστό ύποπτο.</div>
+
+<h2>2</h2><div class="t">Ο μηχανισμός, σε τρεις γραμμές κώδικα</div>
+
+<p><code>tests/Unit/Persistence/AfmIsNormalisedInOnePlaceTest.php:112</code> &mdash; το
+<b>μοναδικό</b> <code>require_once</code> σε ολόκληρο το <code>tests/Unit/</code>
+(<code>grep -rn "require_once" tests/Unit/</code> &rarr; μία γραμμή):</p>
+
+<div class="code">require_once self::root() . '/includes/class-ecrm-validate.php';</div>
+
+<p><code>includes/class-ecrm-validate.php:11-12</code>:</p>
+
+<div class="code">if ( ! defined( 'ABSPATH' ) ) {
+	<em>exit;</em>
+}</div>
+
+<p>Το <code>tests/bootstrap.php</code> είναι 16 γραμμές και φορτώνει <b>μόνο</b> τον autoloader.
+Καμία <code>ABSPATH</code>. Επιβεβαιώθηκε και αρνητικά: το
+<code>define('ABSPATH'</code> υπάρχει σε <b>ένα</b> σημείο στο project, το
+<code>tests/Integration/wp-tests-config.php:61</code>, και κανένα από τα δύο
+<code>phpunit*.xml.dist</code> δεν έχει μπλοκ <code>&lt;php&gt;&lt;const&gt;</code>.</p>
+
+<div class="note bad"><b>Γιατί ο κωδικός εξόδου είναι 0.</b> Το <code>exit;</code> χωρίς όρισμα
+είναι <code>exit(0)</code>. Δεν είναι κατάρρευση, είναι <b>κανονικός τερματισμός</b> στη μέση του
+test 874: καμία σύνοψη, κανένα <code>PHP Fatal error</code>, τίποτα στο stderr &mdash; και ο
+composer προχωρά ικανοποιημένος στην επόμενη εντολή. Ένα segfault θα είχε δώσει μη μηδενικό
+κωδικό και θα είχε πιαστεί.</div>
+
+<p class="d">Εξηγεί και γιατί πεθαίνει <b>μόνο</b> η unit: η integration σηκώνει πραγματικό
+WordPress, όπου η <code>ABSPATH</code> υπάρχει και ο φρουρός δεν πυροδοτεί ποτέ.</p>
+
+<h2>3</h2><div class="t">Το τίμημα: δεκαπέντε tests στο σκοτάδι</div>
+<p class="d">Οι θέσεις 875&ndash;889 της λίστας εκτέλεσης. Κανένα από αυτά δεν έχει τρέξει
+όσο η σουίτα πεθαίνει στο 874. Με κόκκινο όσα φυλάνε προσωπικά δεδομένα.</p>
+
+<div class="tbl"><table>
+<tr><th>#</th><th>Test</th><th>Τι φυλάει</th></tr>
+<tr class="gdpr"><td class="n">875</td><td><code>CustomerFieldsBackfillTest::testTheBlindIndexIsNeverAmongTheColumnsToWrite</code></td><td>το <code>afm_hash</code> να μη γραφτεί ως στήλη</td></tr>
+<tr class="gdpr"><td class="n">876</td><td><code>CustomerFieldsBackfillTest::testPlaintextColumnsComeBackAsCiphertext</code></td><td>ΑΦΜ σε καθαρό κείμενο</td></tr>
+<tr class="gdpr"><td class="n">877</td><td><code>CustomerFieldsBackfillTest::testARowThatIsAlreadyEncryptedYieldsNothingToWrite</code></td><td>διπλή κρυπτογράφηση</td></tr>
+<tr class="gdpr"><td class="n">878</td><td><code>CustomerFieldsBackfillTest::testAHalfEncryptedRowFinishesTheColumnsThatAreLeft</code></td><td>μισοκρυπτογραφημένη γραμμή</td></tr>
+<tr class="gdpr"><td class="n">879</td><td><code>CustomerFieldsBackfillTest::testEmptyAndMissingColumnsAreLeftAlone</code></td><td>&nbsp;</td></tr>
+<tr class="gdpr"><td class="n">880</td><td><code>CustomerFieldsBackfillTest::testColumnsThatAreNotEncryptedAreNotReturned</code></td><td>&nbsp;</td></tr>
+<tr class="gdpr"><td class="n">881</td><td><code>CustomerFieldsBackfillTest::testTheEncryptedColumnListIsTheOneTheClassUses</code></td><td>&nbsp;</td></tr>
+<tr class="gdpr"><td class="n">882</td><td><code>PersonalDataCoverageTest::testTheSchemaSweepFoundTheTablesWeKnowAbout</code></td><td rowspan="3">ότι <b>κάθε</b> πίνακας με προσωπικά δεδομένα καλύπτεται από εξαγωγή και διαγραφή</td></tr>
+<tr class="gdpr"><td class="n">883</td><td><code>PersonalDataCoverageTest::testEveryEdgeIsEitherMappedOrDeclaredByHand</code></td></tr>
+<tr class="gdpr"><td class="n">884</td><td><code>PersonalDataCoverageTest::testWhatIsDeclaredInlineIsActuallyHandledByBothConsumers</code></td></tr>
+<tr><td class="n">885</td><td><code>TypographyIsDecidedInOnePlaceTest::testEveryFontSizeIsANamedStep#0</code></td><td rowspan="5">η μία κλίμακα τυπογραφίας</td></tr>
+<tr><td class="n">886</td><td><code>TypographyIsDecidedInOnePlaceTest::testEveryFontSizeIsANamedStep#1</code></td></tr>
+<tr><td class="n">887</td><td><code>TypographyIsDecidedInOnePlaceTest::testTheScaleIsDefinedInOnePlace</code></td></tr>
+<tr><td class="n">888</td><td><code>TypographyIsDecidedInOnePlaceTest::testNoStepIsDefinedAndNeverUsed</code></td></tr>
+<tr><td class="n">889</td><td><code>TypographyIsDecidedInOnePlaceTest::testTheSweepIsActuallyLookingAtSomething</code></td></tr>
+</table></div>
+
+<div class="note bad"><b>Ο <code>PersonalDataCoverageTest</code> είναι ένας από τους πέντε δομικούς
+φύλακες που γέννησε ο έλεγχος backend της 18/08</b> (HANDOVER &sect;6β). Φυλάει το σχήμα λάθους
+«η σωστή απάντηση υπάρχει, αλλά υπάρχει και δεύτερος δρόμος» &mdash; δηλαδή ακριβώς αυτό που
+καμία δοκιμή συμπεριφοράς δεν πιάνει. Ήταν σβηστός.</div>
+
+<h2>4</h2><div class="t">Τι ΔΕΝ ξέρω, και δεν θα το υποθέσω</div>
+<p>Το <code>git log</code> δείχνει <b>δύο</b> commits πάνω σε αυτά τα αρχεία:
+<code>47f8186 fix(afm): αποθηκευόταν αλλιώς από ό,τι αναζητούνταν</code> και το baseline
+<code>10cc971</code>. Άρα το test δεν έχει αγγιχτεί από τότε που γεννήθηκε.</p>
+
+<p>Μένει μια <b>αντίφαση που δεν γεφυρώνω με αφήγηση</b>: το &sect;6.0 καταγράφει
+«<code>874 unit</code>», «<code>880 unit</code>», «<code>886 unit</code>» ως επιβεβαιωμένα στις
+22/08. Αν ο μηχανισμός είναι αυτός, εκείνες οι εκτελέσεις <b>δεν θα μπορούσαν να είχαν
+τελειώσει</b>.</p>
+
+<div class="note warn"><b>Η υπόθεση που θέλει μέτρηση, όχι πίστη.</b> Ο αριθμός
+<code>874</code> εμφανίζεται και στη γραμμή προόδου (<code>126 / 874 ( 14%)</code>), όχι μόνο σε
+σύνοψη <code>OK (874 tests)</code>. Το ίδιο και το «1 skipped»: υπάρχει ακριβώς ένα ορατό
+<code>S</code> μέσα στις τελείες. <b>Αν οι αριθμοί των unit διαβάζονταν από τη γραμμή προόδου,
+όλα ταιριάζουν</b> &mdash; και τα πλήθη integration, που απαιτούν σύνοψη για τα assertions, μένουν
+έγκυρα. Είναι εύλογο. Η ευλογοφάνεια δεν είναι απόδειξη (&sect;8, υπόθεση 15).</div>
+
+<p>Η εντολή που το κρίνει, από Windows &mdash; <b>μετά</b> τη διόρθωση, όταν η σουίτα θα μπορεί
+να τελειώσει:</p>
+<div class="code">git log -1 --format="%h %ad %s" --date=iso 47f8186</div>
+<p class="d"><b>Στις 22/08 η μέτρηση αυτή εκκρεμούσε ακόμη</b>, και το &sect;6.0 πήρε μπάνερ ανάκλησης χωρίς να σβηστεί κανένας αριθμός. Αν το <code>47f8186</code> προηγείται των παρτίδων (79)&ndash;(84), τότε κάθε
+καταγεγραμμένο πλήθος unit από την (79) και μετά διαβάστηκε από λάθος γραμμή, και το &sect;6.0
+θέλει διόρθωση με σημείωση ανάκλησης &mdash; όχι σιωπηλή αντικατάσταση (&sect;1 κανόνας 11).</p>
+
+<h2>5</h2><div class="t">Η πρόταση: τρεις αλλαγές που κλειδώνουν μεταξύ τους</div>
+
+<div class="fix rec">
+<div class="k">Α &middot; προτεινόμενο &middot; το σφάλμα</div>
+<div class="h">Η <code>ABSPATH</code> ορίζεται μέσα στο test, πριν το <code>require_once</code></div>
+<p>Μία γραμμή στο <code>testDigitsKeepsOnlyDigits</code>, πριν τη γραμμή 112. Ο φρουρός του
+legacy αρχείου ικανοποιείται και η <code>ECRM_Validate</code> φορτώνει κανονικά.</p>
+<p><b>Γιατί εκεί και όχι στο <code>tests/bootstrap.php</code>:</b> το bootstrap υπόσχεται ρητά
+«no WordPress, no database» και η υπόσχεση αυτή είναι ο λόγος που η νέα αρχιτεκτονική μένει
+τίμια. Μια σταθερά στο bootstrap είναι <b>αόρατη ενέργεια από απόσταση</b> &mdash; θα επέτρεπε
+στο επόμενο test να φορτώσει σιωπηλά ένα legacy αρχείο που κάνει πολύ περισσότερα από το να
+ορίζει μια κλάση. Στο test, το κόστος πληρώνεται εκεί που φαίνεται.</p>
+<p><b>Η τιμιότητα της λύσης, γραμμένη:</b> η σταθερά <i>διαρρέει</i> στην υπόλοιπη διεργασία.
+Δεν είναι πραγματικά τοπική. Αυτό ακριβώς καλύπτει η αλλαγή Γ.</p>
+</div>
+
+<div class="fix rec">
+<div class="k">Β &middot; προτεινόμενο &middot; η πύλη</div>
+<div class="h">Το <code>composer check</code> απαιτεί τη γραμμή σύνοψης, όχι κωδικό εξόδου</div>
+<p>Το NEXT-SESSION είχε γράψει τον κανόνα απόφασης <b>πριν</b> τη μέτρηση, και η μέτρηση τον
+δικαίωσε: <code>EXIT=0</code> χωρίς σύνοψη &rarr; η πύλη δικαίως δεν διαμαρτύρεται, άρα
+διορθώνεται η πύλη.</p>
+<p>Ένα <code>tools/</code> script τρέχει το phpunit, περνά την έξοδό του στην οθόνη όπως τώρα,
+και <b>βγαίνει μη μηδενικό αν δεν εμφανιστεί γραμμή <code>OK (…)</code> ή <code>Tests: …</code></b>.
+Τα <code>scripts.test</code> και <code>test:integration</code> του <code>composer.json</code>
+δείχνουν σε αυτό.</p>
+<p><b>Αυτή είναι η μόνη αλλαγή που πιάνει και τα τρία σιωπηλά πράσινα των δύο ημερών:</b>
+το μηδενισμένο <code>vendor/bin/phpunit</code>, το <code>.bat</code> χωρίς <code>call</code>, και
+αυτό εδώ. Και οι τρεις έχουν το ίδιο σχήμα &mdash; απουσία πλήθους tests που διαβάστηκε ως
+επιτυχία.</p>
+</div>
+
+<div class="fix">
+<div class="k">Γ &middot; προτεινόμενο &middot; ο φύλακας</div>
+<div class="h">Δομικό test: κανένα unit test δεν φορτώνει αρχείο με φρουρό <code>ABSPATH</code></div>
+<p>Σαρώνει το <code>tests/Unit/</code> για <code>require</code>/<code>include</code> προς
+<code>includes|admin|public</code>, και κοκκινίζει αν το αρχείο-στόχος περιέχει
+<code>exit</code>/<code>die</code> σε φρουρό φόρτωσης. Στο μοτίβο των
+<code>*IsInOnePlaceTest</code>, με δεύτερη μέθοδο <code>testTheSweepIsActuallyLookingAtSomething</code>
+ώστε ο ίδιος ο φύλακας να μη σαρώνει το κενό.</p>
+<p><b>&sect;8 μορφή Γ &mdash; «ένας φύλακας φυλάει τη γλώσσα που ξέρει».</b> Το Α διορθώνει ένα
+test· το Γ εμποδίζει το δεύτερο. Η διαρροή της σταθεράς που παραδέχεται το Α είναι ακριβώς ο
+λόγος που το Γ δεν είναι προαιρετικό.</p>
+</div>
+
+<h2>6</h2><div class="t">Πρόβλεψη πλήθους, γραμμένη πριν τρέξει η σουίτα</div>
+
+<div class="tbl"><table>
+<tr><th>&nbsp;</th><th>είναι</th><th>πρόβλεψη</th><th>γιατί</th></tr>
+<tr><td>unit</td><td>889</td><td><b>891</b></td><td>+2, οι δύο μέθοδοι του νέου φύλακα Γ. Το Α <b>μόνο τροποποιεί</b> υπάρχον test &rarr; +0. Το Β ζει στο <code>tools/</code> &rarr; +0</td></tr>
+<tr><td>integration</td><td>346 <i>(αμέτρητο σήμερα)</i></td><td><b>346</b></td><td>καμία νέα ολοκλήρωση</td></tr>
+<tr><td>phpcs</td><td>263</td><td><b>264</b></td><td>+1, το νέο test. Το <code>tools/</code> <b>δεν</b> είναι στο scope του</td></tr>
+<tr><td>phpstan</td><td>147</td><td><b>147</b></td><td>το <code>tests/</code> και το <code>tools/</code> εκτός scope· το <code>src/</code> δεν αγγίζεται</td></tr>
+</table></div>
+
+<div class="note ok"><b>Μετρήθηκε μετά την υλοποίηση:</b> unit <b>891</b> ✔ &middot;
+integration <b>346</b> ✔ &middot; phpcs <b>264</b> ✔ &middot; phpstan <b>147</b> ✔. Τέταρτη
+συνεχόμενη παρτίδα με πρόβλεψη γραμμένη πριν και ακριβή &mdash; αλλά δες την υπόθεση <b>16</b>
+του &sect;8: ο πίνακας προβλέπει <b>εγγραφή</b>, όχι <b>εκτέλεση</b>, και επί έξι παρτίδες
+επαληθευόταν πάνω στη γραμμή προόδου. Από εδώ και πέρα ο αριθμός αντιγράφεται από τη γραμμή
+<code>Tests: N, Assertions: M</code>.</div>
+
+<div class="note bad"><b>Και μια πρόβλεψη που ΔΕΝ αφορά αριθμούς, και είναι η σημαντική:
+δεν προβλέπω ότι θα περάσουν.</b> Τα tests 875&ndash;889 δεν έχουν εκτελεστεί για άγνωστο
+διάστημα, ενώ ο κώδικας από κάτω τους άλλαξε στις παρτίδες (78)&ndash;(85). Η πρώτη πλήρης
+εκτέλεση είναι <b>μέτρηση, όχι επιβεβαίωση</b>. Αν κοκκινίσουν, δεν τα «χάλασε» η διόρθωση
+&mdash; τα ξεσκέπασε.</div>
+
+<h2>7</h2><div class="t">Τι δεν προτείνω, και γιατί</div>
+<ul>
+<li><b>Να φύγει ο φρουρός <code>ABSPATH</code> από το legacy αρχείο.</b> Είναι το πρότυπο του
+WordPress και εμποδίζει την απευθείας κλήση του αρχείου από τον browser. Σε plugin που κρατά
+ΑΦΜ και ΑΔΤ, δεν αφαιρείται για να βολέψει ένα test.</li>
+<li><b>Να μεταφερθεί το test στη σουίτα integration.</b> Θα δούλευε &mdash; εκεί υπάρχει
+<code>ABSPATH</code> &mdash; αλλά σηκώνει ολόκληρο WordPress για να ελεγχθούν τρεις assertions
+πάνω σε μια καθαρή στατική συνάρτηση.</li>
+<li><b>Να μετακομίσει η <code>digits()</code> στο <code>src/</code>.</b> Είναι η σωστή
+κατεύθυνση του strangler και λύνει το πρόβλημα στη ρίζα του &mdash; αλλά αγγίζει τη διαδρομή
+κανονικοποίησης ΑΦΜ, δηλαδή το <code>afm_hash</code> και τον έλεγχο διπλοτύπων. Δεν μπαίνει
+σε παρτίδα που διορθώνει τη σουίτα. Αξίζει δική της, με δικά της tests.</li>
+<li><b>Να ξαναψαχτεί ο <code>TimeIsReadInOnePlaceTest</code>.</b> Αποκλείστηκε με μέτρηση
+(3/3 σε 0,216s) και η σημερινή μέτρηση τον δικαιώνει: τρέχει στη θέση ~700, πολύ πριν το 874.</li>
+</ul>
+
+<div class="note warn"><b>Εκκρεμεί πριν από όλα:</b> το <code>git add -A</code> κάθεται ακόμα
+στο staging. Ο pre-commit hook τρέχει <code>composer check</code>, το phpunit βγαίνει
+<code>0</code>, και η παρτίδα (85) θα περάσει με τη σουίτα νεκρή &mdash; δεύτερο
+<code>1e45ecf</code>. Η αλλαγή Β είναι αυτή που το κλείνει οριστικά.</div>
+
+<div class="foot">Μετρήθηκε 22/08/2026 &middot; HANDOVER &sect;1 (11), &sect;3, &sect;8
+&middot; NEXT-SESSION «ΠΡΩΤΟ ΠΡΑΓΜΑ» &middot; πηγές: <code>phpunit-run.tmp.txt</code>,
+<code>phpunit-events.tmp.txt</code>, <code>phpunit-list.tmp.txt</code></div>
+
+</div>
+<script>
+(function(){var b=document.getElementById('tg'),d=false;
+b.addEventListener('click',function(){d=!d;
+document.documentElement.setAttribute('data-kit',d?'dark':'light');
+b.textContent=d?'Ανοιχτό θέμα':'Σκούρο θέμα';});})();
+</script></body></html>
