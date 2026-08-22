@@ -19,6 +19,7 @@ namespace EnergyCRM\Http;
 use ECRM_DB;
 use ECRM_Docs;
 use ECRM_Files;
+use ECRM_Messaging;
 use ECRM_Tracking;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
@@ -122,6 +123,7 @@ final class ContractsReadController implements Controller
         $row['track_url']     = ECRM_Tracking::url($id);
         $row['doc_checklist'] = ECRM_Docs::checklist($id, (string) ($row['activation_type'] ?? ''));
         $row['doc_kinds']     = ECRM_Docs::kinds();
+        $row['comms']         = self::comms($row);
 
         // What the status panel is allowed to offer, per the same graph the
         // server enforces (ContractStatus::allowedNext()) — the screen used to
@@ -142,6 +144,63 @@ final class ContractsReadController implements Controller
                 ? array_keys(ECRM_DB::statuses())
                 : array_map(static fn (ContractStatus $s): string => $s->value, $currentStatus->allowedNext()),
         ], 200);
+    }
+
+    /**
+     * Ποια κανάλια μπορούν να δουλέψουν για ΑΥΤΟΝ τον πελάτη, και γιατί όχι.
+     *
+     * ## Γιατί το λέει ο server
+     *
+     * Το αν έχει ρυθμιστεί πάροχος μηνυμάτων είναι κατάσταση του server. Ο
+     * browser δεν έχει τρόπο να τη μαντέψει, και ένας διάλογος που προσφέρει
+     * Viber χωρίς πάροχο υπόσχεται κάτι που θα αποτύχει σιωπηλά — ακριβώς το
+     * πράγμα που το B4 ήρθε να κλείσει.
+     *
+     * ## Τι ΔΕΝ φεύγει
+     *
+     * Κανένα διαπιστευτήριο, κανένα endpoint, κανένα token. Μόνο «μπορεί /
+     * δεν μπορεί, και γιατί». Ο αριθμός και το email δεν επαναλαμβάνονται
+     * εδώ: είναι ήδη στη γραμμή, και η οθόνη τα δείχνει από εκεί — δύο
+     * αντίγραφα του ίδιου προσωπικού δεδομένου είναι δύο σημεία να διαρρεύσει.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array<string, array{ok: bool, why?: string}>
+     */
+    private static function comms(array $row): array
+    {
+        $hasProvider = class_exists(ECRM_Messaging::class) && ECRM_Messaging::enabled();
+
+        // Κινητό πρώτα, σταθερό μετά — ίδια σειρά με το contract_context() του
+        // ECRM_Messaging, ώστε η οθόνη να μη λέει «μπορεί» για αριθμό που ο
+        // αποστολέας θα απέρριπτε. Η normalize_phone() γυρίζει '' όταν δεν
+        // στέλνεται.
+        $number = ECRM_Messaging::normalize_phone(
+            (string) ($row['mobile'] ?? '') ?: (string) ($row['phone'] ?? '')
+        );
+
+        $sms = ['ok' => $hasProvider && $number !== ''];
+
+        if (! $hasProvider) {
+            $sms['why'] = 'no_provider';
+        } elseif ($number === '') {
+            $sms['why'] = 'no_mobile';
+        }
+
+        $email = ['ok' => is_email((string) ($row['email'] ?? '')) !== false];
+
+        if (! $email['ok']) {
+            $email['why'] = 'no_email';
+        }
+
+        return [
+            'sms'   => $sms,
+            'email' => $email,
+            // Ο σύνδεσμος δουλεύει πάντα: ΕΙΝΑΙ το tracking URL, δεν εξαρτάται
+            // από τίποτα εξωτερικό. Μπαίνει ρητά ώστε ο διάλογος να διαβάζει
+            // έναν πίνακα και όχι έναν πίνακα συν μια εξαίρεση.
+            'link'  => ['ok' => true],
+        ];
     }
 
     /**

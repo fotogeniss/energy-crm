@@ -83,7 +83,7 @@ final class ControllerFactory
             // Signing. Ο σύνδεσμος ΕΙΝΑΙ το tracking URL — δεν υπάρχει δεύτερο
             // token να λήξει ή να διαρρεύσει, και ο SigningController που
             // εξυπηρετούσε το παλιό διαγράφηκε μαζί με τη σελίδα του.
-            new SignLinkController($scope, $details, Services::documents(), $lifecycle),
+            new SignLinkController($scope, $details, Services::documents(), $lifecycle, Services::events()),
 
             // People.
             new CustomersController($scope, Services::customers()),

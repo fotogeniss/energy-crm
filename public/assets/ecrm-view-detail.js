@@ -334,26 +334,153 @@ function renderDetail(view, d) {
 	var provBtn = view.querySelector('[data-provform]');
 	if (provBtn) provBtn.addEventListener('click', function () { downloadBinary('/contracts/' + c.id + '/provider-form', this, 'Λήψη…', '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου'); });
 
+	/* Η αποστολή για υπογραφή ρωτάει ΠΟΙΟ κανάλι — B4, 21/08.
+	 *
+	 * Μέχρι σήμερα έστελνε σκληρά `{ email: true }` και δεν ρωτούσε τίποτα, ενώ
+	 * το ECRM_Messaging έστελνε Viber-με-πτώση-σε-SMS και είχε ήδη γραμμένο
+	 * πρότυπο για αυτή ακριβώς τη στιγμή, με τον σύνδεσμο μέσα. Το πιο επείγον
+	 * μήνυμα του προϊόντος ήταν το μόνο που δεν πήγαινε εκεί που ο πελάτης
+	 * κοιτάει.
+	 *
+	 * Τι μπορεί να δουλέψει το λέει ο SERVER (`c.comms`), όχι αυτό το αρχείο: το
+	 * αν έχει ρυθμιστεί πάροχος είναι κατάσταση του server, και ένας διάλογος
+	 * που προσφέρει Viber χωρίς πάροχο υπόσχεται σιωπηλή αποτυχία.
+	 */
+
+	var CHANNELS = [
+		{ key: 'sms',   title: 'Viber / SMS', note: 'Πτώση σε SMS αν δεν έχει Viber. Ο σύνδεσμος μπαίνει μέσα στο μήνυμα.', at: function (x) { return x.mobile || x.phone || ''; } },
+		{ key: 'email', title: 'Email',       note: 'Το μήνυμα με τον σύνδεσμο υπογραφής.',                                 at: function (x) { return x.email || ''; } },
+		{ key: 'link',  title: 'Μόνο αντιγραφή συνδέσμου', note: 'Τον στέλνεις εσύ — WhatsApp, Messenger, από κοντά.',       at: function () { return ''; } }
+	];
+
+	var WHY = {
+		no_provider: 'Δεν έχει ρυθμιστεί πάροχος — Ρυθμίσεις → Μηνύματα',
+		no_mobile:   'Ο πελάτης δεν έχει κινητό καταχωρημένο',
+		no_email:    'Ο πελάτης δεν έχει email καταχωρημένο'
+	};
+
+	/* Η μνήμη του διαλόγου: τι έφυγε την προηγούμενη φορά.
+	 *
+	 * Διαβάζεται από τα ΓΕΓΟΝΟΤΑ που ήδη κατεβαίνουν με τη σύμβαση — καμία
+	 * επιπλέον κλήση. Τα `sign_*` είναι ειδικά για την υπογραφή· ένα σκέτο `sms`
+	 * μπορεί να είναι το αυτόματο μήνυμα της «ενεργοποιήθηκε» και ΔΕΝ μετράει
+	 * εδώ, αλλιώς ο διάλογος θα έλεγε ψέματα για το τι δοκιμάστηκε.
+	 */
+	function lastSend() {
+		var list = c.events || [];
+		for (var i = 0; i < list.length; i++) {
+			var m = /^sign_(sent|failed)_(sms|email|link)$/.exec(list[i].type || '');
+			if (m) { return { ok: m[1] === 'sent', channel: m[2], at: list[i].created_at }; }
+		}
+		return null;
+	}
+
 	var signBtn = view.querySelector('[data-sign]');
 	if (signBtn) signBtn.addEventListener('click', function () {
-		var b = this; b.disabled = true;
-		fetch(api('/contracts/' + c.id + '/sign-link'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ email: true }) })
-			.then(function (r) { return r.json(); })
-			.then(function (d) {
-				if (!d || !d.ok) { toast((d && d.error) || 'Αποτυχία.', false); return; }
-				copyText(d.url).then(function (copied) {
-					var lead = d.emailed
-						? (copied ? 'Στάλθηκε email στον πελάτη. Σύνδεσμος (αντιγράφηκε):' : 'Στάλθηκε email στον πελάτη. Σύνδεσμος:')
-						: (copied ? 'Σύνδεσμος υπογραφής (αντιγράφηκε) — στείλ τον στον πελάτη:' : 'Σύνδεσμος υπογραφής — αντίγραψέ τον και στείλ τον στον πελάτη:');
-					prompt(lead, d.url);
-					if (copied) { toast(d.emailed ? 'Στάλθηκε email υπογραφής στον πελάτη.' : 'Ο σύνδεσμος αντιγράφηκε.'); }
-					else { toast(d.emailed ? 'Στάλθηκε email υπογραφής στον πελάτη.' : 'Ο σύνδεσμος δημιουργήθηκε.'); }
-					openDetail(c.id);
-				});
-			})
-			.catch(function () { toast('Σφάλμα δικτύου.', false); })
-			.finally(function () { b.disabled = false; });
+		var b = this;
+		var comms = c.comms || { sms: { ok: false }, email: { ok: false }, link: { ok: true } };
+		var prev = lastSend();
+
+		/* Προεπιλογή: το καλύτερο διαθέσιμο — αλλά ΟΧΙ αυτό που μόλις δοκιμάστηκε.
+		   Αν το Viber δεν έπιασε δύο ώρες, το δεύτερο Viber δεν είναι η απάντηση. */
+		var order = ['sms', 'email', 'link'];
+		var chosen = '';
+		order.forEach(function (k) {
+			if (chosen) { return; }
+			if (!(comms[k] && comms[k].ok)) { return; }
+			if (prev && prev.channel === k && order.some(function (o) { return o !== k && comms[o] && comms[o].ok; })) { return; }
+			chosen = k;
+		});
+		if (!chosen) { chosen = 'link'; }
+
+		var rows = CHANNELS.map(function (ch) {
+			var st = comms[ch.key] || { ok: false };
+			var at = ch.at(c);
+			var sub = st.ok
+				? '<div class="ecrm-chan__s">' + (at ? esc(at) + ' · ' : '') + esc(ch.note) + '</div>'
+				: '<div class="ecrm-chan__s ecrm-chan__s--why">' + esc(WHY[st.why] || 'Δεν είναι διαθέσιμο') + '</div>';
+			return '<button type="button" class="ecrm-chan' + (st.ok ? '' : ' is-off') + (chosen === ch.key ? ' is-on' : '') + '"' +
+				(st.ok ? '' : ' disabled') + ' data-chan="' + esc(ch.key) + '">' +
+				'<span class="ecrm-chan__dot" aria-hidden="true"></span>' +
+				'<span class="ecrm-chan__b"><span class="ecrm-chan__t">' + esc(ch.title) + '</span>' + sub + '</span></button>';
+		}).join('');
+
+		var memory = prev
+			? '<div class="ecrm-chan-memo' + (prev.ok ? '' : ' is-bad') + '">' +
+				esc((prev.ok ? 'Στάλθηκε ' : 'Απέτυχε ') + ({ sms: 'με Viber/SMS', email: 'με email', link: 'ως σύνδεσμος' }[prev.channel] || '')) +
+				' · ' + esc(timeAgo(prev.at)) + '</div>'
+			: '';
+
+		// Ο σύνδεσμος μπαίνει ΜΟΝΟ αν υπάρχει το κουμπί που θα πατήσει. Σήμερα
+		// υπάρχει πάντα· αν αύριο γίνει υπό συνθήκη, η εναλλακτική είναι ένας
+		// σύνδεσμος που δεν κάνει τίποτα και δεν λέει γιατί.
+		var hasForm = !!view.querySelector('[data-printform]');
+
+		var body = memory +
+			'<div class="ecrm-chan-list">' + rows + '</div>' +
+			(hasForm ? '<button type="button" class="ecrm-chan-doc" data-see-form>Δες το έντυπο παρόχου πριν στείλεις</button>' : '');
+
+		var dlg = openDialog({
+			eyebrow: 'Αποστολή για υπογραφή',
+			title: c.code || ('#' + c.id),
+			lead: [c.company_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || 'Ο πελάτης'],
+			body: body,
+			confirm: prev ? 'Ξαναστείλε' : 'Αποστολή',
+			onConfirm: function (el, close, go2) {
+				var pick = el.querySelector('.ecrm-chan.is-on');
+				if (!pick) { return; }
+				var channel = pick.getAttribute('data-chan');
+
+				go2.disabled = true;
+				b.disabled = true;
+				fetch(api('/contracts/' + c.id + '/sign-link'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ channel: channel }) })
+					.then(function (r) { return r.json(); })
+					.then(function (d) {
+						if (!d || !d.ok) { go2.disabled = false; toast((d && d.error) || 'Αποτυχία.', false); return; }
+						close();
+						// Ο σύνδεσμος αντιγράφεται ΠΑΝΤΑ, όποιο κανάλι κι αν
+						// επιλέχθηκε: αν το Viber αποτύχει, ο συνεργάτης έχει ήδη
+						// στο πρόχειρο αυτό που χρειάζεται για να το σώσει.
+						copyText(d.url).then(function (copied) {
+							toast(deliveryNote(d, copied), d.delivered !== false);
+							openDetail(c.id);
+						});
+					})
+					.catch(function () { go2.disabled = false; toast('Σφάλμα δικτύου.', false); })
+					.finally(function () { b.disabled = false; });
+			},
+		});
+
+		dlg.el.querySelectorAll('.ecrm-chan').forEach(function (btn) {
+			btn.addEventListener('click', function () {
+				if (btn.disabled) { return; }
+				dlg.el.querySelectorAll('.ecrm-chan').forEach(function (x) { x.classList.remove('is-on'); });
+				btn.classList.add('is-on');
+			});
+		});
+
+		var see = dlg.el.querySelector('[data-see-form]');
+		if (see) see.addEventListener('click', function () {
+			var p = view.querySelector('[data-printform]');
+			if (p) { p.click(); }
+		});
 	});
+
+	/* Τι λέει το toast — και γιατί λέει και τις αποτυχίες.
+	   Η σύμβαση ΕΧΕΙ μετακινηθεί σε «αναμονή υπογραφής» ακόμη κι όταν το κανάλι
+	   απέτυχε: ο σύνδεσμος δουλεύει και ο συνεργάτης μπορεί να τον στείλει με το
+	   χέρι. Αυτό που δεν επιτρέπεται είναι να μην το ΜΑΘΕΙ. */
+	function deliveryNote(d, copied) {
+		var tail = copied ? ' Ο σύνδεσμος αντιγράφηκε.' : '';
+
+		if (d.channel === 'link') { return 'Έτοιμο για αποστολή.' + tail; }
+
+		if (d.delivered) {
+			return (d.channel === 'sms' ? 'Στάλθηκε Viber/SMS στον πελάτη.' : 'Στάλθηκε email στον πελάτη.') + tail;
+		}
+
+		return 'ΔΕΝ στάλθηκε — στείλ\' τον σύνδεσμο με το χέρι.' + tail;
+	}
 
 	var trackBtn = view.querySelector('[data-track]');
 	if (trackBtn) trackBtn.addEventListener('click', function () {

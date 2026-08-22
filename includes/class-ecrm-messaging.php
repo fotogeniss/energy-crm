@@ -68,6 +68,10 @@ class ECRM_Messaging {
 
 	/**
 	 * Hook target — called from REST change_status after the event is logged.
+	 *
+	 * Κρατά ΜΟΝΟ την πύλη «είναι αυτή η κατάσταση στη λίστα;». Η αποστολή
+	 * βγήκε στη send_for_status() ώστε να μπορεί να ζητηθεί και ρητά, από
+	 * σημείο που ξέρει ότι τη θέλει — δες εκεί.
 	 */
 	public static function on_status_change( int $contract_id, string $to ): void {
 		if ( ! self::enabled() ) {
@@ -77,20 +81,54 @@ class ECRM_Messaging {
 			return;
 		}
 
+		self::send_for_status( $contract_id, $to );
+	}
+
+	/**
+	 * Στέλνει ΤΩΡΑ το πρότυπο μιας κατάστασης, χωρίς να ρωτήσει τη λίστα.
+	 *
+	 * ## Γιατί χωρίς τη λίστα
+	 *
+	 * Η `sms_on` απαντά «ποιες αλλαγές κατάστασης στέλνουν μόνες τους μήνυμα».
+	 * Άλλο ερώτημα από «ο συνεργάτης πάτησε Αποστολή, στείλ' το». Το δεύτερο
+	 * είναι ρητή εντολή ανθρώπου· να την μπλοκάρει μια ρύθμιση αυτοματισμού θα
+	 * ήταν σαν να μην τυπώνει ο εκτυπωτής επειδή είναι κλειστός ο
+	 * προγραμματισμένος εκτυπωτής της νύχτας.
+	 *
+	 * Το `enabled()` ΟΜΩΣ τηρείται: χωρίς πάροχο δεν υπάρχει τι να σταλεί.
+	 *
+	 * Η συμπεριφορά της αυτόματης διαδρομής δεν άλλαξε ούτε στο ελάχιστο —
+	 * ίδιοι έλεγχοι, ίδια σειρά, ίδια καταγραφή.
+	 *
+	 * @return array{ok:bool, error?:string, channel?:string, to?:string}
+	 */
+	public static function send_for_status( int $contract_id, string $status ): array {
+		if ( ! self::enabled() ) {
+			return [ 'ok' => false, 'error' => 'messaging_disabled' ];
+		}
+
 		$ctx = self::contract_context( $contract_id );
-		if ( ! $ctx || empty( $ctx['mobile'] ) ) {
-			return; // no customer phone → nothing to do
+		if ( ! $ctx ) {
+			return [ 'ok' => false, 'error' => 'contract_not_found' ];
+		}
+		if ( empty( $ctx['mobile'] ) ) {
+			return [ 'ok' => false, 'error' => 'no_mobile' ];
 		}
 
 		$tpls = self::templates();
-		$tpl  = $tpls[ $to ] ?? '';
+		$tpl  = $tpls[ $status ] ?? '';
 		if ( $tpl === '' ) {
-			return;
+			return [ 'ok' => false, 'error' => 'no_template' ];
 		}
-		$text = self::render( $tpl, $ctx );
 
-		$res = self::send( $ctx['mobile'], $text );
+		$text = self::render( $tpl, $ctx );
+		$res  = self::send( $ctx['mobile'], $text );
+
 		self::log( $contract_id, $ctx['mobile'], $text, $res );
+
+		$res['to'] = $ctx['mobile'];
+
+		return $res;
 	}
 
 	/** Pull the data a template needs for a contract. */
