@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CI — τι φυλάει σήμερα, τι δεν φυλάει, τι κοστίζει να μπει</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --ink:#14181d; --muted:#5b6672; --line:#dfe3e8;
+    --code-bg:#f0f2f5; --ok:#0f7b4f; --ok-bg:#e6f4ed; --warn:#8a5a00; --warn-bg:#fdf1dc;
+    --bad:#a3232b; --bad-bg:#fbe9ea; --accent:#2a4d8f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .wrap{max-width:58rem;margin:0 auto;padding:2rem 1.1rem 5rem}
+  header{border-bottom:2px solid var(--line);padding-bottom:1.1rem;margin-bottom:1.6rem}
+  h1{font-size:1.55rem;margin:0 0 .4rem;letter-spacing:-.015em;line-height:1.25}
+  .sub{color:var(--muted);font-size:.92rem}
+  h2{font-size:1.14rem;margin:2.6rem 0 .2rem;letter-spacing:-.01em;line-height:1.3}
+  h2 .n{color:var(--muted);font-weight:600;margin-right:.45rem}
+  h3{font-size:.98rem;margin:1.4rem 0 .4rem}
+  .verdict{font-size:.93rem;color:var(--muted);margin:.15rem 0 1rem}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:1.1rem 1.2rem 1.35rem;margin-bottom:1.1rem}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:7px;
+    padding:.7rem .8rem;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:.7rem 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em}
+  p code,li code,td code{background:var(--code-bg);padding:.08em .35em;border-radius:4px}
+  .tag{display:inline-block;font-size:.71rem;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;padding:.2rem .5rem;border-radius:5px;vertical-align:.15em}
+  .t-ok{background:var(--ok-bg);color:var(--ok)}
+  .t-warn{background:var(--warn-bg);color:var(--warn)}
+  .t-bad{background:var(--bad-bg);color:var(--bad)}
+  table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.88rem}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .scroll{overflow-x:auto}
+  .note{border-left:3px solid var(--accent);padding:.55rem .85rem;margin:.9rem 0;
+    color:var(--muted);font-size:.9rem;background:var(--code-bg);border-radius:0 6px 6px 0}
+  .note strong{color:var(--ink)}
+  .note.bad{border-left-color:var(--bad)}
+  ul,ol{padding-left:1.2rem}
+  li{margin:.35rem 0}
+  .foot{color:var(--muted);font-size:.84rem;margin-top:2.5rem;border-top:1px solid var(--line);
+    padding-top:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>CI — τι φυλάει σήμερα ο hook, τι δεν μπορεί να φυλάξει, και τι ακριβώς μπαίνει</h1>
+  <div class="sub">Ανοιχτό #2. <strong>Πρόταση, δεν υλοποιήθηκε τίποτα.</strong> Κάθε ισχυρισμός
+  παρακάτω για το τι κάνει σήμερα η πύλη έχει από δίπλα την εντολή που τον βγάζει.</div>
+</header>
+
+<h2><span class="n">1.</span> Τι υπάρχει σήμερα — μετρημένο</h2>
+<section>
+<pre>$ ls -la .github
+ls: cannot access '.github': No such file or directory     ← κανένα CI, καθόλου
+
+$ grep -n hooksPath .git/config
+8:      hooksPath = .githooks                              ← ο hook ΕΙΝΑΙ ενεργός σε αυτό το clone
+
+$ composer.json → scripts
+check      = lint(phpcs) + analyse(phpstan) + test(unit)
+check:all  = check + test:integration</pre>
+
+  <p>Ο <code>pre-commit</code> τρέχει <code>composer check</code>. Δηλαδή <strong>phpcs +
+  phpstan + unit</strong>. Το <code>test:integration</code> <strong>δεν</strong> τρέχει, σκόπιμα —
+  όποιος δεν έχει στήσει βάση πρέπει να μπορεί να κάνει commit (<code>TESTING.md</code>).</p>
+
+  <p>Και έχει πραγματικά δόντια από την (86): και οι δύο εντολές περνούν από το
+  <code>tools/check-suite.php</code>, που <strong>απαιτεί γραμμή σύνοψης</strong> και βγαίνει μη
+  μηδενικός χωρίς αυτήν, ό,τι κι αν είπε ο κωδικός εξόδου του PHPUnit.</p>
+</section>
+
+<h2><span class="n">2.</span> Οι τρεις τρύπες — καθεμία με τη μέτρησή της</h2>
+<section>
+
+  <h3>Α. Η λίστα επεκτάσεων. <span class="tag t-bad">κόστισε δύο φορές</span></h3>
+<pre>staged=$(git diff --cached --name-only --diff-filter=ACMR)
+if ! printf '%s\n' "$staged" | grep -qE '\.(php|js|css|xml|dist|json|neon)$'; then
+    printf 'pre-commit: καμία αλλαγή που να αγγίζει τη σουίτα — δεν έτρεξε έλεγχος.\n'
+    exit 0
+fi</pre>
+
+  <p>Ο hook αποφασίζει <em>αν αξίζει να τρέξει</em> κοιτώντας επεκτάσεις αρχείων. Η λίστα πρέπει να
+  προβλέπει τι διαβάζουν τα tests — και <strong>έχει μείνει πίσω δύο φορές</strong>, και τις δύο
+  αφού κόστισε: το <code>css</code> μπήκε 19/08 μετά από δύο commits που πέρασαν χωρίς έλεγχο
+  (<code>710c6e1</code>, <code>fa587fe</code>), το <code>js</code> μπήκε 22/08 ενώ το ίδιο το σχόλιο
+  του hook <strong>το είχε ονομάσει</strong> ως επόμενο υποψήφιο.</p>
+
+  <div class="note bad"><strong>Και θα ξανακοστίσει, γιατί το σχήμα δεν έχει κλείσει.</strong> Ο
+  κανόνας «όταν ένα test αρχίσει να διαβάζει νέο είδος αρχείου, η επέκταση μπαίνει την ίδια στιγμή»
+  είναι <em>ανθρώπινος</em>. Δεν τον επιβάλλει τίποτα. <strong>Το CI τον καταργεί εντελώς</strong>:
+  τρέχει τα πάντα σε κάθε push, ανεξάρτητα από το τι άλλαξε, οπότε η λίστα παύει να είναι σημείο
+  αποτυχίας. Αυτό — όχι το «κάθε σοβαρό project έχει CI» — είναι ο λόγος που το CI αξίζει
+  <em>εδώ</em>.</div>
+
+  <h3>Β. Το integration δεν τρέχει πουθενά αυτόματα. <span class="tag t-bad">έχει ήδη κοστίσει</span></h3>
+  <p>Στις 2026-08-11 μια ολόκληρη μετακόμιση (<code>a6eadab</code>) έγινε commit χωρίς να την έχει
+  δει κανένα integration test, επειδή ο hook πέρασε. Η άμυνα σήμερα είναι ότι ο ιδιοκτήτης
+  <strong>θυμάται</strong> να τρέξει <code>check:all</code> — και μαζί να ορίσει τρεις μεταβλητές
+  περιβάλλοντος που χάνονται με το παράθυρο.</p>
+
+  <h3>Γ. Ο hook ζει σε ένα μηχάνημα, και παρακάμπτεται. <span class="tag t-warn">δομικό</span></h3>
+  <p>Το <code>hooksPath</code> είναι ρύθμιση <strong>ανά clone</strong>: μετρήθηκε ότι υπάρχει
+  <em>εδώ</em>, δεν υπάρχει σε κανένα άλλο clone μέχρι να τρέξει κάποιος
+  <code>git config core.hooksPath .githooks</code>. Και το <code>--no-verify</code> τον σβήνει
+  ολόκληρο. <strong>Ένας φύλακας που ο ελεγχόμενος μπορεί να απενεργοποιήσει είναι υπενθύμιση, όχι
+  πύλη.</strong></p>
+</section>
+
+<h2><span class="n">3.</span> Η μία απαίτηση που θα έκανε το CI ψεύτικο</h2>
+<div class="verdict">Και είναι ακριβώς η μορφή Ε: πράσινο που θα ήταν ίδιο κι αν δεν είχε τρέξει τίποτα.</div>
+<section>
+  <p>Το §3 το λέει ήδη για τα δύο τοπικά PHP: <strong>χωρίς την επέκταση <code>sodium</code>
+  παραλείπονται 6 tests, όλα κρυπτογράφησης.</strong> Δηλαδή τα tests που προστατεύουν τα ΑΦΜ
+  δεν εκτελούνται — και η σουίτα βγάζει <strong>πράσινο</strong>.</p>
+
+  <p>Ένα CI στημένο πρόχειρα θα έτρεχε σε PHP χωρίς sodium, θα έδειχνε πράσινο τσεκάκι κάθε μέρα,
+  και <strong>κανείς δεν θα το μάθαινε ποτέ</strong> — γιατί ένα πράσινο τσεκάκι στο GitHub δεν
+  δείχνει «6 skipped». Θα ήταν χειρότερα από το να μην υπάρχει CI: θα ήταν φύλακας που πιστεύεται.</p>
+
+  <div class="note"><strong>Άρα το CI δεν αρκεί να τρέχει τη σουίτα — πρέπει να <em>μετράει</em> τη
+  σουίτα.</strong> Δύο ισχυρισμοί που το pipeline πρέπει να επιβάλλει και να κοκκινίζει αν σπάσουν:
+  <ul>
+    <li><strong><code>Skipped: 1</code>, όχι 6.</strong> Αν γίνουν 6, το sodium χάθηκε και τα PII
+      tests δεν έτρεξαν.</li>
+    <li><strong>Το πλήθος test δεν πέφτει.</strong> Ένα test που «εξαφανίζεται» — όπως εξαφανίστηκαν
+      17 στο περιστατικό του 874 — είναι σιωπηλή απώλεια κάλυψης που κανένα κόκκινο δεν δείχνει.</li>
+  </ul>
+  Και τα δύο απαντούν στην ερώτηση της μορφής Ε: <em>«τι θα έδειχνε αυτό το pipeline αν η
+  κρυπτογράφηση δεν είχε ελεγχθεί καθόλου;»</em> Χωρίς αυτούς τους ελέγχους — <strong>το ίδιο
+  πράσινο</strong>.</div>
+</section>
+
+<h2><span class="n">4.</span> Τι ακριβώς μπαίνει</h2>
+<div class="verdict">Ένα αρχείο, <code>.github/workflows/ci.yml</code>. Δεν αγγίζει κώδικα του plugin.</div>
+<section>
+  <div class="scroll">
+  <table>
+    <tr><th>Βήμα</th><th>Τι κάνει</th><th>Γιατί έτσι</th></tr>
+    <tr><td>MySQL service</td><td>container MySQL 8, healthcheck πριν προχωρήσει</td>
+      <td>Το integration θέλει πραγματική βάση. Είναι μιας χρήσης, οπότε το «δεν πρέπει να δείξει στη
+      βάση του site» δεν υπάρχει καν ως κίνδυνος.</td></tr>
+    <tr><td>PHP 8.2 <strong>με sodium</strong></td><td><code>shivammathur/setup-php</code>,
+      <code>extensions: sodium, mysqli, gd, zip</code></td>
+      <td>8.2 γιατί αυτό τρέχει το Local (8.2.29). Το <code>sodium</code> είναι ρητό, όχι τυχαίο —
+      ενότητα 3.</td></tr>
+    <tr><td><code>composer install</code></td><td>με cache</td>
+      <td>Το <code>wp-phpunit/wp-phpunit</code> είναι ήδη στο <code>require-dev</code>, οπότε το CI
+      <strong>δεν χρειάζεται εγκατάσταση WordPress</strong> — έρχεται με το composer. Μετρήθηκε στο
+      <code>tests/Integration/bootstrap.php</code>.</td></tr>
+    <tr><td><code>composer check:all</code></td>
+      <td>με <code>ECRM_TEST_DB_NAME/USER/PASSWORD/HOST</code> ως env του βήματος</td>
+      <td>Οι ίδιες μεταβλητές που χάνονται με το παράθυρο τοπικά. Στο CI γράφονται μία φορά και δεν
+      ξεχνιούνται ποτέ.</td></tr>
+    <tr><td><strong>Έλεγχος skipped</strong></td>
+      <td>κοκκινίζει αν το <code>Skipped:</code> δεν είναι 1</td>
+      <td>Η ενότητα 3. Χωρίς αυτό το CI είναι διακοσμητικό.</td></tr>
+    <tr><td>Branch protection</td><td>στο GitHub, όχι σε αρχείο: το <code>main</code> δεν δέχεται
+      push χωρίς πράσινο CI</td>
+      <td>Αυτό είναι που κάνει το CI <strong>πύλη</strong> αντί για ειδοποίηση. Χωρίς αυτό, ένα
+      κόκκινο CI είναι ένα email.</td></tr>
+  </table>
+  </div>
+
+  <div class="note"><strong>Το <code>tools/check-suite.php</code> δουλεύει αυτούσιο στο Linux.</strong>
+  Γράφει σε αρχεία αντί για σωλήνες επειδή το <code>stream_select()</code> δεν δουλεύει σε pipes στα
+  Windows — μια επιλογή που στο Linux απλώς δεν βλάπτει. Δεν χρειάζεται δεύτερο μονοπάτι.</div>
+
+  <div class="note bad"><strong>Και μία μέτρηση που ΔΕΝ έχω κάνει και δεν θα τη μαντέψω:</strong>
+  πόση ώρα παίρνει η πλήρης σουίτα. Καθορίζει αν το CI είναι τριών λεπτών ή δεκαπέντε, δηλαδή αν
+  κάποιος θα το περιμένει ή θα το παρακάμπτει. Η εντολή, από Site Shell:
+  <code>powershell -Command "Measure-Command { composer check:all }"</code>. Επίσης άγνωστο και
+  σχετικό: το repo είναι private, οπότε τα Actions τρώνε λεπτά από το πλάνο του λογαριασμού —
+  αξίζει να το δει κανείς πριν, όχι μετά.</div>
+</section>
+
+<h2><span class="n">5.</span> Τι ΔΕΝ λύνει το CI</h2>
+<section>
+  <ul>
+    <li><strong>Δεν αντικαθιστά τον hook.</strong> Ο hook πιάνει το λάθος σε τέσσερα δευτερόλεπτα,
+      πριν γραφτεί στο ιστορικό· το CI το πιάνει μετά. Μένουν και οι δύο. Αυτό όμως που
+      <strong>αλλάζει</strong> είναι ότι η λίστα επεκτάσεων του hook παύει να είναι κρίσιμη — αν
+      ξεχαστεί, το CI καλύπτει.</li>
+    <li><strong>Δεν βλέπει οθόνη.</strong> Έξι από τα δεκαοκτώ ελαττώματα του §8 τα έπιασε η απόδοση
+      της πραγματικής οθόνης στα 390 και στα 1280. Καμία σουίτα δεν το κάνει αυτό, ούτε στο CI.</li>
+    <li><strong>Δεν πιάνει ρυθμίσεις του site.</strong> Ο κανόνας της (84) μένει: τα integration
+      στήνουν καθαρό WordPress με προεπιλογές, άρα ό,τι εξαρτάται από ρύθμιση του πραγματικού site —
+      ζώνη ώρας, σημαίες, salts — <strong>δεν το πιάνει test</strong>, ούτε στο CI. Αυτά θέλουν
+      φύλακα πηγαίου κώδικα ή <code>wp eval</code>.</li>
+    <li><strong>Το θέμα είναι ξεχωριστό repo.</strong> Αυτό το CI δεν το αγγίζει.
+      Το <code>energy-crm-theme</code> θέλει δικό του, αν ποτέ αποκτήσει tests.</li>
+  </ul>
+</section>
+
+<h2><span class="n">6.</span> Πρόβλεψη πλήθους, γραμμένη πριν</h2>
+<section>
+  <p>Η παρτίδα προσθέτει <strong>ένα</strong> αρχείο, το <code>.github/workflows/ci.yml</code>, και
+  ενδεχομένως μία γραμμή στο <code>TESTING.md</code>.</p>
+
+  <div class="scroll">
+  <table>
+    <tr><th></th><th>είναι</th><th>πρόβλεψη</th><th>γιατί</th></tr>
+    <tr><td>unit</td><td>891</td><td><strong>891</strong></td>
+      <td>το <code>.yml</code> δεν είναι σε <code>public\|includes\|admin\|src</code>, και κανένας
+      από τους τρεις providers δεν σαρώνει <code>.yml</code></td></tr>
+    <tr><td>integration</td><td>348</td><td><strong>348</strong></td><td>καμία νέα ολοκλήρωση</td></tr>
+    <tr><td>phpcs</td><td>265</td><td><strong>265</strong></td><td>κανένα νέο <code>.php</code></td></tr>
+    <tr><td>phpstan</td><td>147</td><td><strong>147</strong></td><td>το <code>src/</code> δεν άγγιξε</td></tr>
+  </table>
+  </div>
+
+  <p><strong>Το ερώτημα δεν είναι αν θα κουνηθούν οι αριθμοί — είναι αν το πρώτο πράσινο του CI θα
+  δείξει ακριβώς αυτούς τους τέσσερις.</strong> Αν δείξει άλλους, το CI τρέχει διαφορετική σουίτα
+  από τη δική μας, και αυτό πρέπει να φανεί την πρώτη μέρα και όχι την τριακοστή.</p>
+</section>
+
+<div class="foot">
+  Μετρημένο 22/08/2026 από το Linux VM, μόνο με ανάγνωση αρχείων — καμία εντολή <code>git</code>,
+  κανένα εκτελέσιμο του <code>vendor/</code>. Καμία αλλαγή δεν έγινε: αυτό είναι πρόταση.
+</div>
+
+</div>
+</body>
+</html>
