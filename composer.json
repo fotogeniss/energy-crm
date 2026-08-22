@@ -37,8 +37,8 @@
         }
     },
     "scripts": {
-        "test": "php -d max_execution_time=0 vendor/bin/phpunit",
-        "test:integration": "php -d max_execution_time=0 vendor/bin/phpunit -c phpunit-integration.xml.dist",
+        "test": "php tools/check-suite.php",
+        "test:integration": "php tools/check-suite.php -c phpunit-integration.xml.dist",
         "analyse": "phpstan analyse --memory-limit=1G",
         "lint": "phpcs",
         "lint:fix": "phpcbf",
@@ -53,7 +53,7 @@
         ]
     },
     "scripts-descriptions": {
-        "test": "Unit tests — no WordPress, no database. Runs anywhere.",
+        "test": "Unit tests — no WordPress, no database. Runs anywhere. Μέσω tools/check-suite.php, που απαιτεί γραμμή σύνοψης και όχι κωδικό εξόδου.",
         "test:integration": "Integration tests — needs a throwaway MySQL database. See docs/TESTING.md.",
         "check": "The pre-commit gate: lint, static analysis, unit tests.",
         "check:all": "Everything, including integration. Needs the database set up."
