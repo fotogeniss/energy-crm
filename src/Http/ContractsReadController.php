@@ -28,11 +28,15 @@ use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\FileRepository;
+use EnergyCRM\Services;
 use WP_REST_Request;
 use WP_REST_Response;
 
 final class ContractsReadController implements Controller
 {
+    /** Καταστάσεις που δεν περιμένουν τίποτα — δεν «κάθονται», τελείωσαν. */
+    private const SETTLED_STATUSES = ['active', 'cancelled', 'terminated'];
+
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly ContractQueries $queries,
@@ -136,6 +140,7 @@ final class ContractsReadController implements Controller
         // η διασπορά που απαγορεύει το testTheWindowIsOneNumberInOnePlace, από
         // τον ίδιο που έγραψε το test. Ένα σημείο: ECRM_Tracking.
         $row['sign_window_hours'] = ECRM_Tracking::SIGN_WINDOW_HOURS;
+        $row['stuck']         = self::stuck($row);
 
         // What the status panel is allowed to offer, per the same graph the
         // server enforces (ContractStatus::allowedNext()) — the screen used to
@@ -156,6 +161,74 @@ final class ContractsReadController implements Controller
                 ? array_keys(ECRM_DB::statuses())
                 : array_map(static fn (ContractStatus $s): string => $s->value, $currentStatus->allowedNext()),
         ], 200);
+    }
+
+    /**
+     * «Γιατί κάθεται;» — και `null` όταν δεν κάθεται.
+     *
+     * ## Ο κανόνας είναι η σιωπή
+     *
+     * Επιστρέφει κάτι **μόνο** όταν η σύμβαση είναι πραγματικά εκτός του
+     * συνηθισμένου. Μια κάρτα στο rail μιλάει χωρίς να ρωτηθεί, σε κάθε αίτηση
+     * που ανοίγει ο συνεργάτης· αν στις οκτώ στις δέκα δεν έχει κάτι ουσιώδες,
+     * μαθαίνει να μην κοιτάει εκείνο το σημείο — και τότε χάνεται και τις δύο
+     * φορές που είχε δίκιο. Δεν υπάρχει «όλα καλά», δεν υπάρχει κενό κουτί:
+     * υπάρχει κάρτα ή δεν υπάρχει.
+     *
+     * ## Κανένα γλωσσικό μοντέλο
+     *
+     * Το kit ζητούσε «κάρτα ΑΙ βοήθειας». Η ερώτηση απαντιέται ολόκληρη με
+     * αριθμητική πάνω σε γεγονότα που ήδη γράφονται — και το μέτρημα είναι
+     * ακαριαίο, δωρεάν, ντετερμινιστικό και δεν μπορεί να εφεύρει νούμερο για
+     * τα λεφτά κάποιου. Η κρίση, όταν τη θέλει ο συνεργάτης, είναι δουλειά της
+     * Λίτσας, που υπάρχει ήδη και ρωτιέται. Δες docs/UI-STUCK-CARD.html.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array{days: int, typical: int, sample: int}|null
+     */
+    private static function stuck(array $row): ?array
+    {
+        $status = (string) ($row['status'] ?? '');
+        $id     = (int) ($row['id'] ?? 0);
+
+        // Οι τερματικές δεν «κάθονται» — τελείωσαν. Το να πει η κάρτα ότι μια
+        // ενεργή σύμβαση «κάθεται 400 μέρες» θα ήταν αληθές και ανόητο.
+        if (in_array($status, self::SETTLED_STATUSES, true)) {
+            return null;
+        }
+
+        $dwell = Services::statusDwell();
+        $days  = $dwell->daysInStatus($id, $status);
+
+        if (null === $days) {
+            return null;
+        }
+
+        // Ανά πάροχο όταν υπάρχει δείγμα, αλλιώς συνολικά: οι πάροχοι δεν έχουν
+        // τους ίδιους ρυθμούς, και το να συγκρίνεις μια Protergia με τον μέσο
+        // όρο όλων είναι σύγκριση με κάτι που δεν υπάρχει.
+        $providerId = (int) ($row['provider_id'] ?? 0);
+        $typical    = $dwell->typicalDays($status, $providerId ?: null)
+            ?? $dwell->typicalDays($status, null);
+
+        if (null === $typical) {
+            return null;
+        }
+
+        // Διπλάσιο από το συνηθισμένο. Απλό να εξηγηθεί σε άνθρωπο, και δεν
+        // χτυπάει για μία μέρα καθυστέρηση. Το +1 κρατά την κάρτα σιωπηλή όταν
+        // ο συνήθης χρόνος είναι μηδέν μέρες — αλλιώς κάθε αυθημερόν κατάσταση
+        // θα ήταν «εκτός του συνηθισμένου» από το πρώτο εικοσιτετράωρο.
+        if ($days < max(2 * $typical['days'], $typical['days'] + 1)) {
+            return null;
+        }
+
+        return [
+            'days'    => $days,
+            'typical' => $typical['days'],
+            'sample'  => $typical['sample'],
+        ];
     }
 
     /**

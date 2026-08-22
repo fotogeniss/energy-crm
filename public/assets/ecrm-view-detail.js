@@ -176,6 +176,36 @@ function renderDetail(view, d) {
 		}).join('') + '</ul>'
 		: '<div class="ecrm-empty">Καμία καταγραφή.</div>';
 
+	/* «Γιατί κάθεται» — και ΤΙΠΟΤΑ όταν δεν κάθεται.
+	 *
+	 * Ο server στέλνει `c.stuck` μόνο όταν η σύμβαση είναι πραγματικά εκτός του
+	 * συνηθισμένου· εδώ δεν αποφασίζεται τίποτα, μόνο ζωγραφίζεται. Δεν υπάρχει
+	 * «όλα καλά» και δεν υπάρχει κενό κουτί: υπάρχει κάρτα ή δεν υπάρχει.
+	 *
+	 * Καμία κλήση σε μοντέλο για να εμφανιστεί. Ο αριθμός είναι μέτρημα πάνω σε
+	 * γεγονότα που ήδη γράφονται — ακαριαίο, δωρεάν, και δεν εφευρίσκει νούμερο
+	 * για τα λεφτά κανενός. Η κρίση είναι δουλειά της Λίτσας, με το κουμπί.
+	 */
+	function stuckCard(x) {
+		if (!x.stuck) { return ''; }
+
+		var d = x.stuck;
+		var label = statuses[x.status] || x.status;
+
+		return '<div class="ecrm-card ecrm-rcard ecrm-stuck">' +
+			'<div class="ecrm-step ecrm-stuck__eyebrow">Κάθεται</div>' +
+			// Αδιάσπαστο κενό: στα 320px του rail το «4 μέρες» έσπαγε σε δύο
+			// γραμμές, με το «4» να μένει μόνο του στο τέλος. Αριθμός χωρίς τη
+			// μονάδα του, για μισό δευτερόλεπτο ανάγνωσης.
+			'<div class="ecrm-stuck__n">' + esc(String(d.days)) + (d.days === 1 ? '\u00a0μέρα' : '\u00a0μέρες') + '</div>' +
+			'<p class="ecrm-stuck__p">σε «' + esc(label) + '». Ο συνήθης χρόνος είναι <b>' +
+				esc(String(d.typical)) + (d.typical === 1 ? '\u00a0μέρα' : '\u00a0μέρες') +
+				'</b> <span class="ecrm-stuck__s">(από ' + esc(String(d.sample)) + ' αιτήσεις)</span>.</p>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm ecrm-stuck__ask" data-ask-litsa>' +
+				'Ρώτα τη Λίτσα γι\' αυτή την αίτηση</button>' +
+			'</div>';
+	}
+
 	// Το checklist του rail βγαίνει από πεδία που ΗΔΗ υπάρχουν στην οθόνη — δεν
 	// εφευρίσκεται κατάσταση που το backend δεν στέλνει. Πέντε γραμμές, καθεμιά
 	// με ένα ερώτημα που ο συνεργάτης μπορεί να απαντήσει κοιτώντας δίπλα.
@@ -251,6 +281,7 @@ function renderDetail(view, d) {
 		'</div>' +
 
 		'<aside class="ecrm-drail">' +
+		stuckCard(c) +
 		auditCard +
 		'<div class="ecrm-card ecrm-rcard' + (done === checks.length ? ' is-ok' : '') + '">' +
 		'<div class="ecrm-step">Checklist &nbsp;<b>' + done + '/' + checks.length + '</b></div>' + checklistHTML + '</div>' +
@@ -315,6 +346,33 @@ function renderDetail(view, d) {
 			onConfirm: doDelete,
 		});
 	});
+	/* Η παράδοση στη Λίτσα: ανοίγει το πάνελ με την ερώτηση ΗΔΗ γραμμένη.
+	 *
+	 * Δεν στέλνεται μόνη της. Ο συνεργάτης βλέπει τι θα ρωτηθεί και μπορεί να
+	 * το αλλάξει — μια ερώτηση που φεύγει χωρίς να τη δει είναι απάντηση σε
+	 * κάτι που δεν ρώτησε.
+	 *
+	 * Το `toggle` πατιέται ΜΟΝΟ αν το πάνελ είναι κλειστό: το ίδιο κουμπί
+	 * κλείνει και ανοίγει, οπότε τυφλό κλικ σε ανοιχτό πάνελ θα το έκλεινε.
+	 */
+	var askBtn = view.querySelector('[data-ask-litsa]');
+	if (askBtn) askBtn.addEventListener('click', function () {
+		var panel = document.getElementById('ecrm-litsa');
+		if (!panel) { toast('Η Λίτσα δεν είναι διαθέσιμη εδώ.', false); return; }
+
+		var input = panel.querySelector('[data-litsa-input]');
+		var opener = panel.querySelector('[data-litsa-toggle]');
+
+		if (panel.getAttribute('data-open') !== '1' && opener) { opener.click(); }
+
+		if (input) {
+			input.value = 'Η αίτηση ' + (c.code || ('#' + c.id)) + ' κάθεται ' +
+				(c.stuck ? c.stuck.days : '') + ' μέρες σε «' + (statuses[c.status] || c.status) +
+				'». Τι μπορώ να κάνω;';
+			setTimeout(function () { input.focus(); }, 60);
+		}
+	});
+
 	var printBtn = view.querySelector('[data-printform]');
 	if (printBtn) printBtn.addEventListener('click', function () {
 		var b = this, win = window.open('', '_blank'); b.disabled = true; var t = b.textContent; b.textContent = 'Άνοιγμα…';
