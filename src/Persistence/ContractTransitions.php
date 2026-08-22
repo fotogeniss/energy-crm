@@ -51,7 +51,34 @@ final class ContractTransitions
      * Write the new status, and whatever columns come with it.
      *
      * `updated_at` is set here rather than left to the caller, because a status
-     * change that does not touch it is a change nobody can find afterwards.
+     * change that does not touch it is a change nobody can find afterwards. But
+     * it is written by a second, separate query — not inside the $wpdb->update()
+     * above it — with the database's own NOW(), not current_time('mysql').
+     *
+     * Δύο ρολόγια στην ίδια στήλη, μετρημένο 22/08: η CREATE TABLE βάζει ήδη
+     * `ON UPDATE CURRENT_TIMESTAMP` (το ρολόι ΤΗΣ MySQL) σε αυτή τη στήλη, κι
+     * αυτή η γραμμή έγραφε από πάνω το ρολόι ΤΗΣ PHP (current_time('mysql'),
+     * που ακολουθεί το timezone_string του site). Όσο οι δύο ζώνες συμπίπτουν
+     * δεν φαίνεται — ίδια ιστορία με το (83) στο PayoutRepository::markPaid().
+     * Η λύση εκεί ήταν η ίδια: να γράφει η βάση, όχι να μαντέψουμε ποια ζώνη
+     * έχει η PHP.
+     *
+     * Δεν έγινε μέσα στο ίδιο $wpdb->update() επειδή δεν γίνεται: το
+     * $wpdb->update() παραθέτει κάθε τιμή ως literal string — ένα 'NOW()' εκεί
+     * θα γραφόταν η κυριολεκτική συμβολοσειρά "NOW()", όχι η συνάρτηση. Και δεν
+     * αφέθηκε στο σιωπηλό `ON UPDATE CURRENT_TIMESTAMP` της MySQL, γιατί η
+     * ContractLifecycle::moveTo() καλεί applyTransition() και όταν η κατάσταση
+     * ΔΕΝ αλλάζει (force=true) — οπότε αν το `status` γραφόταν με την ίδια τιμή
+     * που είχε ήδη, το αν η MySQL θεωρεί αυτό «αλλαγή» και ενεργοποιεί το
+     * ON UPDATE είναι στοίχημα ανά έκδοση/ρύθμιση, όχι σιγουριά· ρητή εγγραφή
+     * με NOW() δεν έχει αυτό το ερώτημα.
+     *
+     * Δύο ερωτήματα, όχι ένα ατομικό — σκόπιμα: το εναλλακτικό (μία raw SQL με
+     * δυναμικό SET για το status + τις ~35 πιθανές extra στήλες) θα σήμαινε να
+     * ξαναγραφτεί χειροκίνητα η λογική τύπων/NULL του $wpdb->update() για ένα
+     * σύνολο στηλών που ήδη αλλάζει (WritableColumns). Το παράθυρο ανάμεσα στα
+     * δύο ερωτήματα είναι υπο-χιλιοστού-δευτερολέπτου σε μονοπάτι που δεν είναι
+     * hot (χειροκίνητη μετάβαση από admin/cron) — αποδεκτό εδώ.
      *
      * The extra columns pass through the writable filter, which the old inline
      * version did not do: they are internal today (`signed_at`, `signed_ip`),
@@ -71,9 +98,12 @@ final class ContractTransitions
 
         $wpdb->update(
             $this->table,
-            ['status' => $status, 'updated_at' => current_time('mysql')]
-                + WritableColumns::filter($extraColumns),
+            ['status' => $status] + WritableColumns::filter($extraColumns),
             ['id' => $contractId]
+        );
+
+        $wpdb->query(
+            $wpdb->prepare('UPDATE %i SET updated_at = NOW() WHERE id = %d', $this->table, $contractId)
         );
     }
 
