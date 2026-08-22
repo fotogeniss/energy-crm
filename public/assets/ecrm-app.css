@@ -944,6 +944,50 @@
 .ecrm-modal__eyebrow--danger { color: var(--st-cancel); }
 @media (max-width: 520px) { .ecrm-modal__spacer { display: none; } }
 
+/* --- Επιλογή καναλιού αποστολής (B4, ecrm-view-detail.js) ------------------
+   Κουμπιά και όχι radio inputs: το χτύπημα πρέπει να πιάνει ΟΛΗ την κάρτα στα
+   390px, και ένα `disabled` κουμπί δεν εστιάζεται με Tab — δηλαδή ο χρήστης
+   πληκτρολογίου δεν σκοντάφτει σε τρεις επιλογές από τις οποίες δύο δεν κάνουν
+   τίποτα. Το αντίτιμο είναι ότι η επιλογή δηλώνεται με κλάση, όχι με :checked. */
+.ecrm-chan-list { display: grid; gap: 8px; margin-bottom: 10px; }
+.ecrm-chan {
+	display: flex; gap: 11px; align-items: flex-start; width: 100%; text-align: left;
+	padding: 11px 12px; border: 1px solid var(--line-mid); border-radius: 11px;
+	background: var(--surface); cursor: pointer; font-family: inherit;
+}
+.ecrm-chan:hover:not(:disabled) { border-color: var(--line-strong); }
+.ecrm-chan.is-on { border-color: var(--amber); background: var(--accent-wash); }
+/* Το ανενεργό ΔΕΝ σβήνει με opacity: ο λόγος από κάτω πρέπει να διαβάζεται —
+   είναι όλη η δουλειά αυτής της οθόνης. Ίδια απόφαση με το --danger:disabled. */
+.ecrm-chan:disabled { background: var(--surface-sunk); border-color: var(--line-soft); cursor: not-allowed; opacity: 1; }
+.ecrm-chan__dot {
+	width: 16px; height: 16px; border-radius: 50%; margin-top: 2px; flex: 0 0 auto;
+	border: 2px solid var(--line-mid); background: var(--surface);
+}
+.ecrm-chan.is-on .ecrm-chan__dot { border-color: var(--amber); box-shadow: inset 0 0 0 3px var(--amber); }
+.ecrm-chan:disabled .ecrm-chan__dot { border-color: var(--line-soft); }
+.ecrm-chan__b { flex: 1; min-width: 0; }
+.ecrm-chan__t { display: block; font-size: var(--fs-13-5); font-weight: 800; color: var(--ink); }
+.ecrm-chan:disabled .ecrm-chan__t { color: var(--muted); }
+/* word-break: το email πελάτη μπορεί να είναι μακρύτερο από 390px οθόνη. */
+.ecrm-chan__s { display: block; font-size: var(--fs-12); color: var(--muted); margin-top: 2px; line-height: 1.45; word-break: break-word; }
+.ecrm-chan__s--why { color: var(--st-cancel); }
+
+/* Η μνήμη: τι έφυγε την προηγούμενη φορά. */
+.ecrm-chan-memo {
+	font-size: var(--fs-12); font-weight: 700; color: var(--st-routed);
+	background: var(--st-routed-bg); border: 1px solid var(--st-routed);
+	border-radius: 9px; padding: 7px 10px; margin-bottom: 10px;
+}
+.ecrm-chan-memo.is-bad { color: var(--st-cancel); background: var(--st-cancel-bg); border-color: var(--st-cancel); }
+
+/* Ο σύνδεσμος προς το έντυπο — μία γραμμή, χωρίς viewer. Δες docs/UI-B4-CHANNEL.html. */
+.ecrm-chan-doc {
+	background: none; border: 0; padding: 0; margin: 0 0 4px; cursor: pointer;
+	font-family: inherit; font-size: var(--fs-12-5); color: var(--muted-strong); text-decoration: underline;
+}
+.ecrm-chan-doc:hover { color: var(--ink); }
+
 /* --- status tab colour dots --- */
 .ecrm-tab { display: inline-flex; align-items: center; gap: 7px; }
 .ecrm-tabdot { width: 7px; height: 7px; border-radius: 50%; background: var(--fill-mute-strong); flex: 0 0 auto; }
