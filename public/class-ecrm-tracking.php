@@ -161,6 +161,46 @@ class ECRM_Tracking {
 		return [ 'pending_signature', 'awaiting_signature' ];
 	}
 
+	/**
+	 * Πόσο μένει ανοιχτό το παράθυρο υπογραφής, σε ώρες.
+	 *
+	 * **Απόφαση ιδιοκτήτη 22/08: 48 ώρες.** Είχα προτείνει 7 μέρες και ο λόγος
+	 * μένει γραμμένος επειδή θα ξαναϊσχύσει: πώληση Παρασκευή απόγευμα,
+	 * υπογραφή Δευτέρα πρωί, είναι **62 ώρες** — με 48ωρο ο σύνδεσμος πεθαίνει
+	 * Κυριακή βράδυ. Το μετριάζει το «Ξαναστείλε», που ξανανοίγει το παράθυρο.
+	 * Αν φανεί στην πράξη, εδώ αλλάζει, μία γραμμή.
+	 * Ανάλυση: docs/UI-SIGN-EXPIRY.html.
+	 */
+	public const SIGN_WINDOW_HOURS = 48;
+
+	/**
+	 * Τα γεγονότα που ξεκινούν το ρολόι.
+	 *
+	 * Γράφονται από τον SignLinkController σε ΚΑΘΕ αποστολή — γι' αυτό το
+	 * «Ξαναστείλε» μηδενίζει το ρολόι. Το `status_change` ΔΕΝ θα έκανε: το
+	 * ContractLifecycle::moveTo() επιστρέφει σιωπηλά true χωρίς να γράψει
+	 * τίποτα όταν η σύμβαση είναι ήδη εκεί, οπότε η δεύτερη αποστολή δεν θα
+	 * άφηνε ίχνος και το ρολόι θα έμενε κολλημένο στην πρώτη.
+	 */
+	private const SEND_EVENTS = [ 'sign_sent_sms', 'sign_sent_email', 'sign_sent_link' ];
+
+	/**
+	 * Έληξε το παράθυρο υπογραφής;
+	 *
+	 * **Καμία αποστολή καταγεγραμμένη σημαίνει καμία προθεσμία.** Οι συμβάσεις
+	 * που πήραν σύνδεσμο πριν την (79) δεν έχουν τέτοιο γεγονός· ένα SMS που
+	 * έχει ήδη φύγει δεν πεθαίνει επειδή αλλάξαμε εμείς κώδικα. Το ρολόι τους
+	 * ξεκινά την πρώτη φορά που κάποιος πατήσει «Αποστολή» ή «Ξαναστείλε» —
+	 * χωρίς backfill, και χωρίς μέρα όπου παλιοί σύνδεσμοι πεθαίνουν μαζικά.
+	 * Αυτό ακριβώς κρατούσε ανοιχτό το §6γ (7).
+	 */
+	public static function sign_expired( int $contract_id ): bool {
+		$hours = ( new \EnergyCRM\Persistence\EventRepository() )
+			->hoursSinceLastOfTypes( $contract_id, self::SEND_EVENTS );
+
+		return $hours !== null && $hours >= self::SIGN_WINDOW_HOURS;
+	}
+
 	/** Map an internal status to a stage index (0-based) or -1 if cancelled. */
 	public static function stage_index( string $status ): int {
 		$map = [
@@ -256,7 +296,11 @@ class ECRM_Tracking {
 			'updated_at'   => $row['updated_at'],
 			'created_at'   => $row['created_at'],
 			'signed'       => ! empty( $row['signed_at'] ),
-			'can_sign'     => ( in_array( $status, self::signable_statuses(), true ) && empty( $row['signed_at'] ) ),
+			// Η λήξη είναι ΤΡΙΤΟΣ όρος, όχι νέα διαδρομή: η σελίδα ζωγραφίζει
+			// το πάνελ υπογραφής μόνο όταν αυτό είναι αληθές, οπότε το
+			// tracking μένει ανέπαφο — αυτό ήταν όλο το ζητούμενο.
+			'can_sign'     => ( in_array( $status, self::signable_statuses(), true ) && empty( $row['signed_at'] ) && ! self::sign_expired( $id ) ),
+			'sign_expired' => ( in_array( $status, self::signable_statuses(), true ) && empty( $row['signed_at'] ) && self::sign_expired( $id ) ),
 			'docs'         => self::docs_payload( $id, $status, $row['activation_type'] ?? '' ),
 			'company'      => class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '',
 		], 200 );
@@ -272,6 +316,34 @@ class ECRM_Tracking {
 		if ( ! $id ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη έγκυρος σύνδεσμος.' ], 404 );
 		}
+
+		/*
+		 * ΠΡΙΝ από κάθε έλεγχο του φορτίου, και αυτό δεν είναι λεπτομέρεια.
+		 *
+		 * Πρώτη γραφή τον είχε πιο κάτω, μαζί με τον έλεγχο κατάστασης. Το
+		 * βρήκε test: με ληγμένο σύνδεσμο και κακοσχηματισμένη υπογραφή, η
+		 * απάντηση ήταν «Μη έγκυρη υπογραφή» — δηλαδή ο πελάτης μάθαινε για
+		 * το PNG του αντί για τον πραγματικό λόγο. Το ίδιο θα γινόταν και με
+		 * ξεχασμένο checkbox συναίνεσης.
+		 *
+		 * Η λήξη είναι προϋπόθεση του ΠΟΡΟΥ, όχι της εισόδου: «επιτρέπεται
+		 * ακόμη να υπογραφεί αυτό;» απαντιέται πριν από «τι μου έστειλες;».
+		 * Ολόκληρη η παρτίδα είναι για το να λέγεται ο σωστός λόγος· θα ήταν
+		 * περίεργο να τον κρύβει η ίδια.
+		 *
+		 * Ο έλεγχος γίνεται ΚΑΙ εδώ ΚΑΙ στο can_sign επίτηδες: εκείνο λέει
+		 * στη σελίδα τι να ζωγραφίσει, αυτό εδώ το επιβάλλει. Καρτέλα ανοιχτή
+		 * από προχθές δεν υπογράφει επειδή το κουμπί της είναι ακόμη εκεί.
+		 */
+		if ( self::sign_expired( $id ) ) {
+			// 410 και όχι 400: ο σύνδεσμος ΗΤΑΝ έγκυρος, απλώς όχι πια.
+			return new WP_REST_Response( [
+				'ok'      => false,
+				'expired' => true,
+				'error'   => 'Ο σύνδεσμος υπογραφής έληξε. Ζητήστε νέον από τον συνεργάτη σας.',
+			], 410 );
+		}
+
 		$p       = $req->get_json_params() ?: $req->get_params();
 		$consent = ! empty( $p['consent'] );
 		$dataurl = (string) ( $p['signature'] ?? '' );
@@ -733,6 +805,17 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 					'<div class="padbar"><small>Σχεδιάστε την υπογραφή σας παραπάνω</small><button type="button" class="btn btn--clear" id="clear">Καθαρισμός</button></div>'+
 					'<label class="consent"><input type="checkbox" id="consent"> '+esc(CONSENT_TEXT)+'</label>'+
 					'<button type="button" class="btn btn--sign" id="dosign" disabled>Υπογραφή & Αποστολή</button>'+
+				'</div>';
+		} else if (d.sign_expired) {
+			// Η ΚΑΤΑΣΤΑΣΗ ΑΠΟ ΠΑΝΩ ΜΕΝΕΙ. Χάνεται μόνο το κουμπί: εδώ ο
+			// σύνδεσμος υπογραφής ΕΙΝΑΙ ο σύνδεσμος παρακολούθησης, και ο
+			// πελάτης θα ξανανοίξει το ίδιο SMS τον Δεκέμβριο για να δει πού
+			// πάει η σύμβασή του. Δες docs/UI-SIGN-EXPIRY.html.
+			tail +=
+				'<div class="fail"><div class="fail__i">!</div>'+
+					'<p><b>Ο σύνδεσμος υπογραφής έληξε.</b><br>'+
+					'Ζητήστε νέον από τον συνεργάτη σας — η αίτησή σας δεν χάθηκε, '+
+					'και η κατάσταση από πάνω εξακολουθεί να ενημερώνεται.</p>'+
 				'</div>';
 		} else if (d.signed) {
 			tail += '<div class="signed-ok"><div class="v">✓</div><p>Η σύμβαση υπεγράφη ηλεκτρονικά</p></div>';

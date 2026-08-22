@@ -125,6 +125,12 @@ final class ContractsReadController implements Controller
         $row['doc_kinds']     = ECRM_Docs::kinds();
         $row['comms']         = self::comms($row);
 
+        // Το λέει ο SERVER, όχι ο browser. Ο διάλογος θα μπορούσε να το βγάλει
+        // μόνος του από την ηλικία του γεγονότος — αλλά θα σύγκρινε ώρα βάσης
+        // με ώρα συσκευής, και τότε η οθόνη θα έλεγε «έληξε» ενώ ο server θα
+        // δεχόταν ακόμη υπογραφή. Μία αλήθεια, ένα σημείο.
+        $row['sign_expired']  = ECRM_Tracking::sign_expired($id);
+
         // What the status panel is allowed to offer, per the same graph the
         // server enforces (ContractStatus::allowedNext()) — the screen used to
         // render all twelve statuses as clickable regardless of the contract's

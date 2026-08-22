@@ -81,6 +81,50 @@ final class EventRepository
     }
 
     /**
+     * Πόσες ώρες πέρασαν από το τελευταίο γεγονός αυτών των τύπων.
+     *
+     * `null` σημαίνει «δεν υπάρχει τέτοιο γεγονός» — και ο καλών πρέπει να το
+     * ξεχωρίζει από το 0. Για τη λήξη υπογραφής (§6γ 7) το null σημαίνει
+     * ρητά **καμία προθεσμία**: η σύμβαση πήρε σύνδεσμο πριν αρχίσουν να
+     * καταγράφονται οι αποστολές, και ένα SMS που έχει ήδη φύγει δεν πεθαίνει
+     * επειδή αλλάξαμε εμείς κώδικα.
+     *
+     * ## Γιατί η αφαίρεση γίνεται στη ΒΑΣΗ
+     *
+     * Το `created_at` το γράφει η MySQL (`CURRENT_TIMESTAMP`), άρα είναι ώρα
+     * **βάσης**. Το `current_time()` είναι ώρα **site**. Αν οι δύο ζώνες
+     * διαφέρουν, η σύγκρισή τους σε PHP βγάζει διαφορά που δεν υπάρχει — ίδια
+     * οικογένεια παγίδας με την (72) και την (77). Ώρα βάσης προς ώρα βάσης
+     * είναι το μόνο ζευγάρι που δεν χρειάζεται να ξέρει τη ζώνη κανενός.
+     *
+     * @param list<string> $types
+     */
+    public function hoursSinceLastOfTypes(int $contractId, array $types): ?int
+    {
+        global $wpdb;
+
+        if ($contractId <= 0 || $types === []) {
+            return null;
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($types), '%s'));
+
+        /** @var array<int, mixed> $arguments */
+        $arguments = array_merge([$this->table, $contractId], $types);
+
+        $hours = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT TIMESTAMPDIFF(HOUR, created_at, NOW()) FROM %i
+                 WHERE contract_id = %d AND type IN (' . $placeholders . ')
+                 ORDER BY created_at DESC LIMIT 1',
+                $arguments
+            )
+        );
+
+        return $hours === null ? null : (int) $hours;
+    }
+
+    /**
      * Whether the contract ever reached a status, according to its own history.
      *
      * The one question the transition graph cannot answer. `pending` accepts
