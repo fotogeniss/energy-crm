@@ -23,25 +23,47 @@ export function energyLabel(t) {
 }
 
 /**
- * Stored timestamps are UTC without a zone marker, so the Z is appended before
- * parsing. Without it the browser reads them as local time and every date is
- * wrong by the offset — two or three hours in Greece, which is enough to move
- * a contract to the previous day.
+ * Οι αποθηκευμένες ώρες είναι ΤΟΠΙΚΕΣ, χωρίς σήμανση ζώνης — και διαβάζονται ως
+ * τοπικές.
+ *
+ * ## Τι άλλαξε στις 22/08/2026 και γιατί
+ *
+ * Εδώ έγραφε `+ 'Z'`, με σχόλιο που δήλωνε «stored timestamps are UTC». Ήταν
+ * λάθος για τις μισές στήλες, και **μετρήθηκε**:
+ *
+ *     mysql = 13:48:33   ← ό,τι γράφει η βάση (created_at, ON UPDATE, NOW())
+ *     wp    = 10:48:33   ← ό,τι γράφει η PHP  (current_time('mysql'))
+ *
+ * Η MySQL έγραφε ώρα Αθήνας, το WordPress UTC, επειδή **το site δεν είχε ποτέ
+ * οριστεί ζώνη** (`timezone_string` κενό, `gmt_offset` 0). Το `'Z'` πρόσθετε τη
+ * διαφορά **δεύτερη φορά** σε ό,τι είχε γράψει η βάση: το `timeAgo()` έβγαζε
+ * αρνητικό και τύπωνε «μόλις τώρα» για ό,τι είχε γίνει τις τελευταίες τρεις
+ * ώρες, και το `fmtDate()` έδειχνε την **επόμενη μέρα** για ό,τι είχε γίνει
+ * μετά τις 21:00.
+ *
+ * Με τη ζώνη του site ορισμένη σε Europe/Athens, **όλα** τα αποθηκευμένα είναι
+ * πλέον ώρα Αθήνας — και ο browser του συνεργάτη είναι κι αυτός Αθήνα. Η σωστή
+ * ανάγνωση είναι η τοπική.
+ *
+ * Το `.replace(' ', 'T')` **μένει**: το «2026-08-22 13:48» με κενό δεν είναι
+ * ISO και το parse του είναι στην κρίση του browser — ο Safari έχει επιστρέψει
+ * Invalid Date γι' αυτό. Με το `T` και χωρίς ζώνη, η προδιαγραφή λέει ρητά
+ * **τοπική ώρα**.
  */
 export function fmtDate(iso) {
 	if (!iso) return '';
 
-	var d = new Date(iso.replace(' ', 'T') + 'Z');
+	var d = new Date(iso.replace(' ', 'T'));
 	var p = function (n) { return (n < 10 ? '0' : '') + n; };
 
 	return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
 }
 
-/** Same UTC caveat as fmtDate. */
+/** Ίδια ανάγνωση με τη fmtDate: τοπική, χωρίς 'Z'. */
 export function timeAgo(iso) {
 	if (!iso) return '';
 
-	var d = new Date(iso.replace(' ', 'T') + 'Z'), s = (Date.now() - d.getTime()) / 1000;
+	var d = new Date(iso.replace(' ', 'T')), s = (Date.now() - d.getTime()) / 1000;
 
 	if (s < 60) return 'μόλις τώρα';
 	if (s < 3600) return Math.floor(s / 60) + 'λ πριν';

@@ -104,6 +104,14 @@ final class NotificationRepository
      *
      * The user id is part of the WHERE clause rather than checked beforehand,
      * so marking someone else's notification read is not expressible.
+     *
+     * **Η ώρα τη γράφει η ΒΑΣΗ.** Ήταν `current_time('mysql', true)` — UTC —
+     * ενώ το `created_at` δίπλα του το βάζει η MySQL. Μετρήθηκε 22/08 ότι τα
+     * δύο ρολόγια διαφέρουν, οπότε μια ειδοποίηση μπορούσε να φαίνεται
+     * διαβασμένη **πριν** δημιουργηθεί. Ίδια απάντηση με την
+     * `PayoutRepository::markPaid()`: ό,τι στέκεται δίπλα σε στήλη που γράφει
+     * η βάση, το γράφει κι αυτό η βάση — και τότε δεν εξαρτάται από το αν
+     * συμφωνούν WordPress και MySQL.
      */
     public function markRead(int $userId, ?int $id = null): void
     {
@@ -113,15 +121,13 @@ final class NotificationRepository
             return;
         }
 
-        $now = current_time('mysql', true);
 
         if ($id !== null && $id > 0) {
             $wpdb->query(
                 $wpdb->prepare(
-                    'UPDATE %i SET read_at = %s
+                    'UPDATE %i SET read_at = NOW()
                      WHERE user_id = %d AND id = %d AND read_at IS NULL',
                     $this->table,
-                    $now,
                     $userId,
                     $id
                 )
@@ -132,9 +138,8 @@ final class NotificationRepository
 
         $wpdb->query(
             $wpdb->prepare(
-                'UPDATE %i SET read_at = %s WHERE user_id = %d AND read_at IS NULL',
+                'UPDATE %i SET read_at = NOW() WHERE user_id = %d AND read_at IS NULL',
                 $this->table,
-                $now,
                 $userId
             )
         );
