@@ -131,6 +131,12 @@ final class ContractsReadController implements Controller
         // δεχόταν ακόμη υπογραφή. Μία αλήθεια, ένα σημείο.
         $row['sign_expired']  = ECRM_Tracking::sign_expired($id);
 
+        // Ο αριθμός ταξιδεύει, δεν αντιγράφεται. Πρώτη γραφή τον είχε γραμμένο
+        // «48» μέσα σε ελληνική πρόταση στο ecrm-view-detail.js — δηλαδή ακριβώς
+        // η διασπορά που απαγορεύει το testTheWindowIsOneNumberInOnePlace, από
+        // τον ίδιο που έγραψε το test. Ένα σημείο: ECRM_Tracking.
+        $row['sign_window_hours'] = ECRM_Tracking::SIGN_WINDOW_HOURS;
+
         // What the status panel is allowed to offer, per the same graph the
         // server enforces (ContractStatus::allowedNext()) — the screen used to
         // render all twelve statuses as clickable regardless of the contract's

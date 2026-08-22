@@ -418,7 +418,7 @@ function renderDetail(view, d) {
 					? 'Ο σύνδεσμος υπογραφής έληξε'
 					: (prev.ok ? 'Στάλθηκε ' : 'Απέτυχε ') + ({ sms: 'με Viber/SMS', email: 'με email', link: 'ως σύνδεσμος' }[prev.channel] || '')) +
 				' · ' + esc(timeAgo(prev.at)) +
-				(expired ? '<br>Το «Ξαναστείλε» ανοίγει ξανά το παράθυρο των 48 ωρών.' : '') + '</div>'
+				(expired && c.sign_window_hours ? '<span class="ecrm-chan-memo__hint">Το «Ξαναστείλε» ανοίγει ξανά το παράθυρο των ' + esc(String(c.sign_window_hours)) + ' ωρών.</span>' : '') + '</div>'
 			: '';
 
 		// Ο σύνδεσμος μπαίνει ΜΟΝΟ αν υπάρχει το κουμπί που θα πατήσει. Σήμερα

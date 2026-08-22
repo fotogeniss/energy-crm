@@ -980,6 +980,11 @@
 	border-radius: 9px; padding: 7px 10px; margin-bottom: 10px;
 }
 .ecrm-chan-memo.is-bad { color: var(--st-cancel); background: var(--st-cancel-bg); border-color: var(--st-cancel); }
+/* Η εξήγηση δεν είναι συναγερμός. Στην απόδοση οι δύο γραμμές είχαν το ίδιο
+   βάρος και το «τι να κάνεις» φώναζε όσο το «τι έγινε». Μόνο το βάρος αλλάζει —
+   το χρώμα μένει, γιατί μια ξεθωριασμένη γραμμή πάνω σε έγχρωμο φόντο χάνει
+   αντίθεση, και η οδηγία είναι που πρέπει να διαβαστεί. */
+.ecrm-chan-memo__hint { display: block; font-weight: 400; margin-top: 2px; }
 
 /* Ο σύνδεσμος προς το έντυπο — μία γραμμή, χωρίς viewer. Δες docs/UI-B4-CHANNEL.html. */
 .ecrm-chan-doc {
