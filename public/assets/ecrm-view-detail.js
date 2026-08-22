@@ -405,10 +405,20 @@ function renderDetail(view, d) {
 				'<span class="ecrm-chan__b"><span class="ecrm-chan__t">' + esc(ch.title) + '</span>' + sub + '</span></button>';
 		}).join('');
 
+		/* Η λήξη τη ΛΕΕΙ Ο SERVER (`c.sign_expired`), δεν υπολογίζεται εδώ.
+		   Το `created_at` είναι ώρα βάσης και το ρολόι του browser είναι ώρα
+		   συσκευής· ένας υπολογισμός εδώ θα έλεγε «έληξε» ενώ ο server θα δεχόταν
+		   ακόμη υπογραφή. Το timeAgo() μένει για το «πριν 2 ώρες», που είναι
+		   περιγραφή και όχι ισχυρισμός. */
+		var expired = !!c.sign_expired;
+
 		var memory = prev
-			? '<div class="ecrm-chan-memo' + (prev.ok ? '' : ' is-bad') + '">' +
-				esc((prev.ok ? 'Στάλθηκε ' : 'Απέτυχε ') + ({ sms: 'με Viber/SMS', email: 'με email', link: 'ως σύνδεσμος' }[prev.channel] || '')) +
-				' · ' + esc(timeAgo(prev.at)) + '</div>'
+			? '<div class="ecrm-chan-memo' + (prev.ok && !expired ? '' : ' is-bad') + '">' +
+				esc(expired
+					? 'Ο σύνδεσμος υπογραφής έληξε'
+					: (prev.ok ? 'Στάλθηκε ' : 'Απέτυχε ') + ({ sms: 'με Viber/SMS', email: 'με email', link: 'ως σύνδεσμος' }[prev.channel] || '')) +
+				' · ' + esc(timeAgo(prev.at)) +
+				(expired ? '<br>Το «Ξαναστείλε» ανοίγει ξανά το παράθυρο των 48 ωρών.' : '') + '</div>'
 			: '';
 
 		// Ο σύνδεσμος μπαίνει ΜΟΝΟ αν υπάρχει το κουμπί που θα πατήσει. Σήμερα
