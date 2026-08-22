@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Μέτρηση 22/08 βράδυ — τρεις εκκρεμότητες, τρεις κλειστές</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --ink:#14181d; --muted:#5b6672; --line:#dfe3e8;
+    --code-bg:#f0f2f5; --ok:#0f7b4f; --ok-bg:#e6f4ed; --warn:#8a5a00; --warn-bg:#fdf1dc;
+    --bad:#a3232b; --bad-bg:#fbe9ea; --accent:#2a4d8f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .wrap{max-width:56rem;margin:0 auto;padding:2rem 1.1rem 5rem}
+  header{border-bottom:2px solid var(--line);padding-bottom:1rem;margin-bottom:2rem}
+  h1{font-size:1.5rem;margin:0 0 .3rem;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:.9rem}
+  h2{font-size:1.12rem;margin:2.4rem 0 .2rem;letter-spacing:-.01em}
+  h2 .n{color:var(--muted);font-weight:600;margin-right:.45rem}
+  .verdict{font-size:.93rem;color:var(--muted);margin:.15rem 0 1rem}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:1.1rem 1.2rem 1.3rem;margin-bottom:1.1rem}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:7px;
+    padding:.7rem .8rem;overflow-x:auto;font-size:.82rem;line-height:1.5;margin:.7rem 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em}
+  p code,li code,td code{background:var(--code-bg);padding:.08em .35em;border-radius:4px}
+  .tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;padding:.2rem .5rem;border-radius:5px;vertical-align:.15em}
+  .t-ok{background:var(--ok-bg);color:var(--ok)}
+  .t-warn{background:var(--warn-bg);color:var(--warn)}
+  .t-bad{background:var(--bad-bg);color:var(--bad)}
+  table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.9rem}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .scroll{overflow-x:auto}
+  .note{border-left:3px solid var(--accent);padding:.55rem .85rem;margin:.9rem 0;
+    color:var(--muted);font-size:.9rem;background:var(--code-bg);border-radius:0 6px 6px 0}
+  .note strong{color:var(--ink)}
+  ul{padding-left:1.15rem}
+  li{margin:.3rem 0}
+  .foot{color:var(--muted);font-size:.84rem;margin-top:2.5rem;border-top:1px solid var(--line);
+    padding-top:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Μέτρηση 22/08, βράδυ — τρεις εκκρεμότητες, τρεις κλειστές</h1>
+  <div class="sub">Πριν από οποιαδήποτε παρτίδα (89). Κάθε πρόταση παρακάτω έχει την εντολή της από δίπλα.
+  Καμία εντολή <code>git</code> δεν εκτελέστηκε — όλα διαβάστηκαν ως αρχεία (§6.0, τελευταία παράγραφος).</div>
+</header>
+
+<h2><span class="n">1.</span> Η ανάκληση του §6.0 ισχύει για <em>όλες</em> τις παρτίδες (78)-(84) <span class="tag t-bad">κλειστό</span></h2>
+<div class="verdict">Το <code>47f8186</code> προηγείται κατά τέσσερις ημέρες της πρώτης από αυτές.</div>
+<section>
+  <p>Η ερώτηση του NEXT-SESSION ήταν: προηγείται το <code>47f8186</code> — το commit που γέννησε τον
+  <code>AfmIsNormalisedInOnePlaceTest</code> — των παρτίδων (79)-(84);</p>
+
+  <p>Η προτεινόμενη εντολή ήταν <code>git log -1</code> από Windows. Δεν χρειάστηκε: το
+  <code>.git/logs/HEAD</code> είναι απλό κείμενο και το διαβάζει το VM χωρίς να αγγίξει το index.</p>
+
+<pre>$ grep -n "47f8186\|6c309bf" .git/logs/HEAD
+93: … 47f8186e90d9… 1787084121 +0300  commit: fix(afm): αποθηκευόταν αλλιώς από…
+150: … 6c309bf7e8dc… 1787385535 +0300  commit: B4: το κανάλι που δεν ρωτήθηκε…
+
+$ TZ=Europe/Athens date -d @1787084121   →  2026-08-18 23:15:21 +0300   (47f8186)
+$ TZ=Europe/Athens date -d @1787385535   →  2026-08-22 10:58:55 +0300   (6c309bf, παρτίδα 79)</pre>
+
+  <div class="scroll">
+  <table>
+    <tr><th>Παρτίδα</th><th>Commit</th><th>Πότε</th><th>Μετά το 47f8186;</th></tr>
+    <tr><td>(78)</td><td><code>—</code> (επιβεβαίωση 874)</td><td>22/08</td><td>ναι</td></tr>
+    <tr><td>(79)</td><td><code>6c309bf</code></td><td>22/08 10:58</td><td>ναι</td></tr>
+    <tr><td>(80)-(81)</td><td><code>2a85ba2</code>, <code>bfb2894</code></td><td>22/08 11:45-11:51</td><td>ναι</td></tr>
+    <tr><td>(82)</td><td><code>d13a507</code></td><td>22/08 12:35</td><td>ναι</td></tr>
+    <tr><td>(83)</td><td><code>9f4fedc</code></td><td>22/08 13:13</td><td>ναι</td></tr>
+    <tr><td>(84)</td><td><code>1e45ecf</code></td><td>22/08 16:08</td><td>ναι</td></tr>
+  </table>
+  </div>
+
+  <p><strong>Άρα η ανάκληση ισχύει για όλες τους — και για την (78), που το NEXT-SESSION δεν την είχε
+  βάλει στη λίστα.</strong> Κάθε πλήθος unit από <code>874</code> έως <code>886</code> γράφτηκε ενώ ο
+  <code>AfmIsNormalisedInOnePlaceTest</code> υπήρχε ήδη στο δέντρο, δηλαδή ενώ η σουίτα τερμάτιζε
+  σιωπηλά. Το μόνο αδιαμφισβήτητο πλήθος unit είναι το <strong>891</strong> της (88), που έχει
+  γραμμή <code>Tests:</code> από κάτω.</p>
+
+  <div class="note"><strong>Τι δεν αποδεικνύει αυτό.</strong> Ότι το <code>47f8186</code> είναι όντως
+  το commit που γέννησε αυτό το test το λέει το NEXT-SESSION, δεν το μέτρησα — το μήνυμα
+  <code>fix(afm):</code> είναι συνεπές αλλά όχι απόδειξη. Αν χρειαστεί βεβαιότητα:
+  <code>git log --oneline --diff-filter=A -- tests/Unit/**/AfmIsNormalisedInOnePlaceTest.php</code>
+  από Windows.</div>
+</section>
+
+<h2><span class="n">2.</span> Η (88) είναι δεσμευμένη και ανεβασμένη <span class="tag t-ok">κλειστό</span></h2>
+<div class="verdict">Το τοπικό κλαδί και το <code>origin</code> δείχνουν το ίδιο commit.</div>
+<section>
+<pre>$ cat .git/HEAD                        → ref: refs/heads/ui-kit
+$ cat .git/refs/heads/ui-kit           → cbb506353dbd765c1881dae687726f1e926ce185
+$ cat .git/refs/remotes/origin/ui-kit  → cbb506353dbd765c1881dae687726f1e926ce185
+$ tail -1 .git/logs/HEAD               → … cbb5063 … commit: (88) contracts.updated_at έγραφε από δύο…
+$ ls .git/index.lock                   → No such file or directory</pre>
+
+  <p>Τρέχον κλαδί <code>ui-kit</code>, όχι <code>main</code> — το <code>main</code> είναι
+  <code>88368a2</code>, εκεί όπου δείχνει και το tag <code>pre-ui-2026-08-19</code>. Κανένα
+  <code>index.lock</code> δεν έμεινε πίσω.</p>
+
+  <div class="note"><strong>Τι δεν αποδεικνύει αυτό — και είναι ακριβώς η μορφή Ε.</strong> Τα refs
+  λένε «το commit έφτασε στο origin». <em>Δεν</em> λένε «το working tree είναι καθαρό»: μια
+  ατεκμηρίωτη αλλαγή σε αρχείο θα έδινε την <strong>ίδια ακριβώς έξοδο</strong> και στις πέντε
+  εντολές. Το «καθαρό» το απαντά μόνο το <code>git status -sb</code> από Windows.</div>
+</section>
+
+<h2><span class="n">3.</span> Το <code>substr(updated_at, 0, 7)</code> ΕΙΝΑΙ σε PHP — σε δύο σημεία <span class="tag t-ok">κλειστό</span></h2>
+<div class="verdict">Η σημείωση της (88) «δεν εντοπίστηκε σε PHP — πιθανότατα JS» είναι λάθος.</div>
+<section>
+<pre>$ grep -rn "updated_at" --include=*.php src includes admin public | grep "substr"
+src/Http/CommissionsController.php:82    'month' => substr((string) $row['updated_at'], 0, 7),
+admin/class-ecrm-payouts.php:283         $month = substr( (string) ( $r['updated_at'] ?? '' ), 0, 7 );
+
+$ grep -rn "updated_at" --include=*.js public admin assets
+public/assets/ecrm-view-contracts.js:79, :202   → μόνο εμφάνιση (fmtDate/timeAgo), καμία ομαδοποίηση
+public/assets/ecrm-view-dashboard.js:100, :106  → μόνο σχόλια</pre>
+
+  <p>Δηλαδή η εικασία ήταν διπλά λάθος: <em>υπάρχει</em> σε PHP, και <em>δεν</em> υπάρχει σε JS.
+  Και τα δύο σημεία διαβάζουν τη στήλη των <strong>συμβάσεων</strong> — όχι κάποια άλλη:</p>
+
+  <div class="scroll">
+  <table>
+    <tr><th>Σημείο</th><th>Από πού έρχεται η γραμμή</th><th>Τι κάνει με τον μήνα</th></tr>
+    <tr>
+      <td><code>CommissionsController::…:82</code></td>
+      <td><code>CommissionRepository::payable()</code> → <code>SELECT c.updated_at FROM {contracts} c</code></td>
+      <td>κλειδί ομαδοποίησης στο <code>MonthlyTotals::from()</code> — οι μηνιαίες προμήθειες της οθόνης</td>
+    </tr>
+    <tr>
+      <td><code>ECRM_Payouts::period_for()</code></td>
+      <td>οι γραμμές της παρτίδας πληρωμής, ίδια στήλη</td>
+      <td>γράφει την <strong>περίοδο της εκκαθάρισης</strong> — τον μεγαλύτερο μήνα της παρτίδας</td>
+    </tr>
+  </table>
+  </div>
+
+  <p>Μετά την (88) η στήλη γράφεται από <strong>ένα</strong> ρολόι, της βάσης. Άρα το πρόβλημα των δύο
+  ρολογιών έφυγε και από εδώ. Αυτό που <em>δεν</em> έφυγε είναι το όριο του μήνα: το κόψιμο γίνεται
+  πάνω σε ώρα βάσης, ενώ ο μήνας που εννοεί ο συνεργάτης — και που τυπώνεται σε χαρτί εκκαθάρισης —
+  είναι μήνας Αθήνας.</p>
+
+  <div class="note"><strong>ΜΕΤΡΗΘΗΚΕ, 22/08 23:24, από Site Shell.</strong> Τα δύο ρολόγια
+  <strong>συμφωνούν</strong> στο ζωντανό site — δεν χρειάζεται καμία διόρθωση.</div>
+
+<pre>$ wp eval "global $wpdb; var_dump($wpdb-&gt;get_var('SELECT NOW()'),
+    $wpdb-&gt;get_var('SELECT @@session.time_zone'),
+    current_time('mysql'), get_option('timezone_string'));"
+
+string(19) "2026-08-22 23:24:29"   ← MySQL NOW()
+string(6)  "SYSTEM"                ← ζώνη συνεδρίας MySQL
+string(19) "2026-08-22 23:24:29"   ← current_time('mysql')  (WordPress)
+string(13) "Europe/Athens"         ← timezone_string</pre>
+
+  <p>Ίδιο δευτερόλεπτο. Η MySQL τρέχει σε <code>SYSTEM</code>, δηλαδή κληρονομεί το ρολόι των
+  Windows — που είναι Αθήνας· το WordPress είναι ρητά <code>Europe/Athens</code> από την (84). Άρα ο
+  μήνας που κόβει το <code>substr(…, 0, 7)</code> είναι <strong>μήνας Αθήνας</strong> και στα δύο
+  σημεία. Η εκκαθάριση της 1ης Σεπτεμβρίου 01:30 γράφει <code>2026-09</code>, όπως πρέπει.
+  <strong>Το σημείο κλείνει χωρίς αλλαγή κώδικα</strong> — δεύτερη φορά μέσα σε δύο μέρες που η
+  απάντηση ήταν ρύθμιση και όχι γραμμή (πρβλ. (84)).</p>
+
+  <div class="note"><strong>Η μία λέξη που μένει: <code>SYSTEM</code>.</strong> Δεν είναι καρφωμένη
+  ζώνη — είναι «ό,τι λέει το λειτουργικό». Σήμερα δεν έχει σημασία, γιατί δεν υπάρχει ξεχωριστό
+  παραγωγικό (CHANGELOG (87)) και το τοπικό <em>είναι</em> το μελλοντικό παραγωγικό. Αν όμως το site
+  μετακομίσει ποτέ σε φιλοξενία που τρέχει UTC — δηλαδή στην <strong>προεπιλογή</strong> κάθε
+  hosting — το <code>NOW()</code> γίνεται UTC ενώ το WordPress μένει Αθήνας, και ξαναγυρίζουν και τα
+  δύο σημεία <em>και</em> το <code>DATEDIFF(NOW(), MIN(updated_at))</code> του Dashboard. Δεν είναι
+  bug σήμερα· είναι υπόθεση που πρέπει να ξαναμετρηθεί τη μέρα που θα αλλάξει ο host, και ο φθηνός
+  φύλακας γι' αυτό είναι <strong>δύο γραμμές στην οθόνη Υγεία</strong> που δείχνουν τα δύο ρολόγια
+  δίπλα-δίπλα — όχι test, γιατί ό,τι εξαρτάται από ρύθμιση του site δεν το πιάνει σουίτα (§3).</div>
+
+  <div class="note"><strong>Και μια αντίφαση που ήρθε στην επιφάνεια, αμέτρητη ακόμη.</strong>
+  Το §3 (από την (83)) λέει «στο περιβάλλον δοκιμών οι δύο διαφέρουν κατά τρεις ώρες — η MySQL τρέχει
+  σε UTC». Η σημερινή μέτρηση δείχνει ότι <strong>η MySQL δεν τρέχει σε UTC</strong>: τρέχει σε
+  <code>SYSTEM</code>, δηλαδή Αθήνας. Αν όντως διαφέρουν τρεις ώρες στη σουίτα, αυτό που είναι UTC
+  είναι το <strong>WordPress των δοκιμών</strong> — καθαρή εγκατάσταση με κενό
+  <code>timezone_string</code> — όχι η βάση. Και το docblock του ίδιου του
+  <code>ContractUpdatedAtTest</code> λέει τρίτο πράγμα: «περνάει ακόμα κι όταν οι δύο ζώνες τυχαία
+  συμπίπτουν, <em>όπως εδώ σήμερα</em>». Τρεις προτάσεις, δύο από αυτές δεν μπορούν να ισχύουν μαζί.
+  Το <code>grep -in "timezone"</code> σε <code>tests/Integration/bootstrap.php</code> και
+  <code>wp-tests-config.php</code> δεν βρίσκει τίποτα, άρα κανείς δεν <em>ορίζει</em> ζώνη στη
+  σουίτα — αλλά αυτό δεν είναι μέτρηση της τιμής, είναι απουσία γραμμής. <strong>Δεν διαλέγω
+  πλευρά.</strong> Το απαντά ένα <code>var_dump</code> μέσα σε ένα integration test, σε τριάντα
+  δευτερόλεπτα, όποτε αγγίξει κανείς ξανά αυτή την περιοχή.</div>
+
+  <div class="note"><strong>Υποψήφια για τον κατάλογο του §8.</strong>
+  <strong>#17, μορφή Β:</strong> «η <code>substr(updated_at, 0, 7)</code> δεν εντοπίστηκε σε PHP»
+  — γράφτηκε σε CHANGELOG (88) και σε <code>HANDOVER</code> §3 σαν εύρημα· το <code>grep</code> που
+  το διαψεύδει κάνει δύο δευτερόλεπτα.
+  <strong>#18, μορφή Α:</strong> «η MySQL τρέχει σε UTC» (§3, από την (83)) — μετρήθηκε
+  <code>SYSTEM</code>. Η παρατήρηση των τριών ωρών ήταν σωστή, η <em>αιτία</em> της αποδόθηκε σε
+  λάθος πλευρά· και μια σωστή παρατήρηση με λάθος αιτία είναι χειρότερη από καμία, γιατί
+  κληρονομείται.
+  <strong>Και ένα μικρό, μορφή Β:</strong> το σχόλιο στο <code>ecrm-view-dashboard.js:100</code> λέει
+  ακόμη «το <code>created_at/updated_at</code> γράφεται σε ώρα site» — από την (88) το γράφει η βάση.
+  Ο κώδικας από κάτω είναι σωστός (παίρνει έτοιμο <code>DATEDIFF</code>)· μόνο τα λόγια σάπισαν.</div>
+
+</section>
+
+<div class="foot">
+  Μετρήθηκε 2026-08-22, από το Linux VM, μόνο με ανάγνωση αρχείων.
+  Οι δύο εντολές που μένουν στον ιδιοκτήτη, από Site Shell των Windows:
+  <code>git status -sb</code> και το <code>wp eval</code> της ενότητας 3.
+</div>
+
+</div>
+</body>
+</html>

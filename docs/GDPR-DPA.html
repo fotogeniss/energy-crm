@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GDPR / DPA — τι φεύγει, τι υπάρχει, τι θέλει δικηγόρο</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --ink:#14181d; --muted:#5b6672; --line:#dfe3e8;
+    --code-bg:#f0f2f5; --ok:#0f7b4f; --ok-bg:#e6f4ed; --warn:#8a5a00; --warn-bg:#fdf1dc;
+    --bad:#a3232b; --bad-bg:#fbe9ea; --accent:#2a4d8f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .wrap{max-width:58rem;margin:0 auto;padding:2rem 1.1rem 5rem}
+  header{border-bottom:2px solid var(--line);padding-bottom:1.1rem;margin-bottom:1.6rem}
+  h1{font-size:1.55rem;margin:0 0 .4rem;letter-spacing:-.015em;line-height:1.25}
+  .sub{color:var(--muted);font-size:.92rem}
+  h2{font-size:1.14rem;margin:2.6rem 0 .2rem;letter-spacing:-.01em;line-height:1.3}
+  h2 .n{color:var(--muted);font-weight:600;margin-right:.45rem}
+  h3{font-size:.98rem;margin:1.4rem 0 .4rem}
+  .verdict{font-size:.93rem;color:var(--muted);margin:.15rem 0 1rem}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:1.1rem 1.2rem 1.35rem;margin-bottom:1.1rem}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:7px;
+    padding:.7rem .8rem;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:.7rem 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em}
+  p code,li code,td code{background:var(--code-bg);padding:.08em .35em;border-radius:4px}
+  .tag{display:inline-block;font-size:.71rem;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;padding:.2rem .5rem;border-radius:5px;vertical-align:.15em}
+  .t-ok{background:var(--ok-bg);color:var(--ok)}
+  .t-warn{background:var(--warn-bg);color:var(--warn)}
+  .t-bad{background:var(--bad-bg);color:var(--bad)}
+  table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.88rem}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .scroll{overflow-x:auto}
+  .note{border-left:3px solid var(--accent);padding:.55rem .85rem;margin:.9rem 0;
+    color:var(--muted);font-size:.9rem;background:var(--code-bg);border-radius:0 6px 6px 0}
+  .note strong{color:var(--ink)}
+  .note.bad{border-left-color:var(--bad)}
+  ul,ol{padding-left:1.2rem}
+  li{margin:.35rem 0}
+  .ask{counter-reset:q;list-style:none;padding-left:0}
+  .ask li{counter-increment:q;position:relative;padding-left:2.1rem;margin:.9rem 0}
+  .ask li::before{content:"Ε" counter(q);position:absolute;left:0;top:.1rem;font-size:.72rem;
+    font-weight:700;color:var(--accent);background:var(--code-bg);border:1px solid var(--line);
+    border-radius:5px;padding:.1rem .35rem}
+  .foot{color:var(--muted);font-size:.84rem;margin-top:2.5rem;border-top:1px solid var(--line);
+    padding-top:1rem}
+  .foot a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>GDPR / DPA με την Anthropic — τι φεύγει πραγματικά, τι υπάρχει ήδη, τι θέλει δικηγόρο</h1>
+  <div class="sub">Το ανοιχτό #1 του NEXT-SESSION, §6α.3. Πριν γραφτεί πρόταση για το τι στέλνεται,
+  μετρήθηκε στον κώδικα· πριν γραφτεί πρόταση για το τι λέει η σύμβαση της Anthropic, διαβάστηκε η
+  σύμβαση. <strong>Δεν είμαι δικηγόρος</strong> — αυτό εδώ είναι ο φάκελος που παίρνει ο δικηγόρος
+  ώστε να πληρωθεί για κρίση, όχι για ανακάλυψη.</div>
+</header>
+
+<h2><span class="n">1.</span> Τι φεύγει από το site προς την Anthropic — τρεις διαδρομές</h2>
+<div class="verdict">Μετρημένες στον κώδικα, όχι από τεκμηρίωση.</div>
+<section>
+<pre>$ grep -rli "anthropic\|claude" --include=*.php src includes admin public tools
+src/Infrastructure/HealthChecks.php      src/Infrastructure/SecretStore.php
+includes/class-ecrm-assistant.php        includes/class-ecrm-extractor.php
+includes/class-ecrm-kb.php               admin/class-ecrm-admin.php
+
+$ grep -rn "api.anthropic" --include=*.php .
+includes/class-ecrm-extractor.php:22   const API_URL = 'https://api.anthropic.com/v1/messages'</pre>
+
+  <p>Ένα endpoint, ένα κλειδί, <strong>τρεις</strong> καλούντες. Οι δύο από τους τρεις δανείζονται
+  το `API_URL`, το κλειδί και το μοντέλο από τον `ECRM_Extractor` — άρα ό,τι αποφασιστεί για τον έναν
+  ισχύει τεχνικά και για τους άλλους.</p>
+
+  <div class="scroll">
+  <table>
+    <tr><th>Διαδρομή</th><th>Τι φεύγει</th><th>Ρίσκο</th></tr>
+    <tr>
+      <td><strong>Α. Εξαγωγή</strong><br><code>ECRM_Extractor::extract()</code><br>
+        <span class="tag t-bad">υψηλό</span></td>
+      <td><strong>Ολόκληρη η εικόνα</strong> της ταυτότητας/διαβατηρίου και του λογαριασμού παρόχου,
+        ως image/document block. Ζητούνται 20 πεδία: <code>afm</code>, <code>adt</code>,
+        <code>birth_date</code>, <code>father_name</code>, ονοματεπώνυμο, πλήρης διεύθυνση,
+        τηλέφωνα, email, ΔΟΥ, αριθμός παροχής/μετρητή.</td>
+      <td>Δεν φεύγουν <em>τα πεδία</em>, φεύγει το <strong>αρχείο</strong>. Ό,τι άλλο τυχαίνει να
+        είναι πάνω στη σαρωμένη ταυτότητα φεύγει μαζί, ακόμη κι αν κανείς δεν το ζήτησε.</td>
+    </tr>
+    <tr>
+      <td><strong>Β. Βοηθός «Λίτσα»</strong><br><code>ECRM_Assistant::chat()</code><br>
+        <span class="tag t-warn">μέτριο</span></td>
+      <td>Το <code>display_name</code> του <strong>συνεργάτη</strong>, τέσσερις μετρητές του
+        (σήμερα / εκκρεμείς / δρομολογημένες / μήνας), και <strong>ελεύθερο κείμενο</strong>: έως 20
+        γύροι × 4.000 χαρακτήρες, ό,τι πληκτρολογήσει.</td>
+      <td>Δεδομένα <strong>εργαζομένου</strong>, όχι πελάτη — εκτός αν ο συνεργάτης επικολλήσει
+        στοιχεία πελάτη στη συνομιλία. Κανένας τεχνικός έλεγχος δεν το εμποδίζει.</td>
+    </tr>
+    <tr>
+      <td><strong>Γ. Βάση Γνώσης</strong><br><code>ECRM_KB::ask()</code><br>
+        <span class="tag t-ok">χαμηλό</span></td>
+      <td>Η ερώτηση του χρήστη και επιχειρησιακό περιεχόμενο (δικαιολογητικά, εγγυήσεις, χρεώσεις
+        ανά πάροχο).</td>
+      <td>Δεν σχεδιάστηκε να μεταφέρει προσωπικά δεδομένα. Ίδιος κίνδυνος ελεύθερου κειμένου.</td>
+    </tr>
+  </table>
+  </div>
+
+  <div class="note"><strong>Το μοντέλο είναι ρυθμιζόμενο, το endpoint όχι.</strong> Προεπιλογή
+  <code>claude-sonnet-5</code>, με ρητό σχόλιο ότι επιλέχθηκε έναντι Opus για το κόστος ανά αίτηση.
+  Δεν αλλάζει τίποτα νομικά — αλλάζει το ποιο μοντέλο θα γράψει ο δικηγόρος στο Άρθρο 30, οπότε
+  γράφεται «Claude API (μοντέλο ρυθμιζόμενο)», όχι το σημερινό όνομα.</div>
+</section>
+
+<h2><span class="n">2.</span> Τι υπάρχει ήδη — και είναι πιο πολλά απ' ό,τι έλεγε το §6α.3 <span class="tag t-ok">μετρήθηκε</span></h2>
+<div class="verdict">Το «στέλνονται σαρωμένες ταυτότητες σε AI» είναι σωστό, αλλά όχι όλη η εικόνα.</div>
+<section>
+  <p>Ο κώδικας έχει ήδη χτισμένα τα περισσότερα από όσα θα ζητούσε ένας έλεγχος. Γράφονται εδώ
+  <strong>ονομαστικά</strong>, γιατί ο δικηγόρος πρέπει να ξέρει τι <em>δεν</em> χρειάζεται να
+  ζητήσει:</p>
+
+  <div class="scroll">
+  <table>
+    <tr><th>Απαίτηση</th><th>Πού ζει στον κώδικα</th></tr>
+    <tr><td><strong>Ενημέρωση για την AI, μέσα στο ίδιο το κείμενο συναίνεσης</strong></td>
+      <td><code>ECRM_Tracking::consent_text()</code> — λέει ρητά ότι τα έγγραφα «αναγνωρίζονται
+      αυτόματα από εξωτερική υπηρεσία τεχνητής νοημοσύνης». Είναι
+      <code>apply_filters()</code>-άριστο, ώστε η τελική διατύπωση να αλλάζει χωρίς αλλαγή κώδικα.</td></tr>
+    <tr><td>Απόδειξη συναίνεσης, με πότε και από πού</td>
+      <td><code>contracts.consent_at</code> + <code>consent_ip</code>, μέσω
+      <code>RequestIp::current()</code> (όχι <code>REMOTE_ADDR</code> — πίσω από proxy θα έγραφε την
+      ίδια IP για κάθε πελάτη). Δεν καθαρίζεται από παράλειψη σε επόμενη αποθήκευση.</td></tr>
+    <tr><td>Περιορισμός αποθήκευσης (Άρθρο 5.1.ε)</td>
+      <td><code>Infrastructure\Retention</code> — ημερήσιο <code>wp_schedule_event</code> που
+      καθαρίζει το <code>extracted_json</code> (το ωμό payload του μοντέλου: όνομα, πατρώνυμο, ΑΔΤ,
+      ημ. γέννησης, διεύθυνση) μετά από <strong>90 ημέρες</strong>.</td></tr>
+    <tr><td>Άρθρο 15 (πρόσβαση) και Άρθρο 17 (διαγραφή)</td>
+      <td><code>PersonalDataExporter</code>, <code>PersonalDataEraser</code>,
+      <code>Admin\PrivacyTools</code> — δεμένα στα εργαλεία απορρήτου του WordPress.</td></tr>
+    <tr><td>Κρυπτογράφηση ΑΦΜ/ΑΔΤ/διεύθυνσης στη βάση</td>
+      <td><code>ECRM_ENCRYPT_PII</code>, με backfill ολοκληρωμένο, <code>KeyFingerprint</code> που
+      σταματά την εγγραφή σε περιστροφή κλειδιού, και <code>preflight-encryption.php</code>.</td></tr>
+    <tr><td>Έγγραφα μη δημόσια προσβάσιμα</td>
+      <td><code>Infrastructure\DocumentProtection</code>· η οθόνη GDPR δείχνει μηδέν εκτεθειμένα.</td></tr>
+  </table>
+  </div>
+
+  <div class="note"><strong>Δύο γνωστά κενά μέσα σε αυτά, ήδη γραμμένα αλλού.</strong> Το ανοιχτό
+  ερώτημα του <code>BACKUP.md</code>: ο πίνακας <code>files</code> έχει 13 γραμμές, ο δίσκος 98
+  αρχεία — αν υπάρχουν υπογραφές ή ταυτότητες <strong>χωρίς γραμμή</strong>, ο
+  <code>PersonalDataEraser</code> δεν τις φτάνει και η εξαγωγή Άρθρου 15 δεν τις αναφέρει, γιατί και
+  τα δύο δουλεύουν από τις γραμμές προς τα αρχεία. <strong>Αυτό είναι το ένα σημείο όπου ένα
+  τεχνικό κενό γίνεται απευθείας παράβαση δικαιώματος</strong>, και είναι κώδικας, όχι χαρτί.</div>
+</section>
+
+<h2><span class="n">3.</span> Τι λέει η σύμβαση της Anthropic σήμερα</h2>
+<div class="verdict">Διαβασμένο 22/08/2026 από τις πηγές της ίδιας. Οι όροι αλλάζουν — η ημερομηνία μετράει.</div>
+<section>
+  <div class="scroll">
+  <table>
+    <tr><th>Ερώτηση</th><th>Τι λέει</th><th>Τι σημαίνει για μας</th></tr>
+    <tr><td>Υπάρχει DPA;</td>
+      <td>Ναι, και <strong>ενσωματώνεται με παραπομπή</strong> στους Commercial Terms —
+      «incorporated into these Terms by reference». Δεν υπογράφεται χωριστά.</td>
+      <td>Ισχύει από τη στιγμή που ο λογαριασμός είναι εμπορικός. <strong>Δεν χρειάζεται
+      διαπραγμάτευση</strong> για να υπάρχει — χρειάζεται όμως να επιβεβαιωθεί ότι ο λογαριασμός
+      είναι πράγματι σε εμπορικούς όρους και στο όνομα της <em>εταιρείας</em>.</td></tr>
+    <tr><td>Εκπαιδεύονται μοντέλα στα δεδομένα μας;</td>
+      <td>«Anthropic may not train models on Customer Content from Services.»</td>
+      <td>Ρητή απαγόρευση. Είναι το πρώτο που ρωτά κάθε έλεγχος.</td></tr>
+    <tr><td>Διεθνείς διαβιβάσεις;</td>
+      <td>Το DPA ενσωματώνει τις <strong>SCCs Module Two</strong> (controller→processor) ή/και Module
+      Three, με UK και Swiss addenda.</td>
+      <td>Ο μηχανισμός του Κεφ. V υπάρχει. Μένει η <strong>εκτίμηση διαβίβασης (TIA)</strong>, που
+      είναι δική μας υποχρέωση, όχι της Anthropic.</td></tr>
+    <tr><td>Πόσο κρατιούνται τα δεδομένα;</td>
+      <td><strong>30 ημέρες</strong> αυτόματη διαγραφή inputs/outputs. Διαπραγματεύσιμη
+      <strong>zero data retention</strong>. Αν κάτι σημανθεί για παραβίαση πολιτικής:
+      <strong>έως 2 χρόνια</strong> τα inputs/outputs και <strong>έως 7 χρόνια</strong> τα σκορ
+      ταξινόμησης.</td>
+      <td>Το «30 ημέρες» είναι ο αριθμός που μπαίνει στο Άρθρο 30. Το «2 χρόνια σε σήμανση»
+      είναι αυτό που <strong>κανείς δεν γράφει</strong> και είναι ακριβώς η περίπτωση όπου μια
+      σαρωμένη ταυτότητα μένει διετία.</td></tr>
+    <tr><td>Υπεργολάβοι;</td>
+      <td>Λίστα στο <code>trust.anthropic.com/subprocessors</code>, με εύλογη προειδοποίηση πριν
+      αποκτήσει πρόσβαση νέος, και <strong>15 ημέρες</strong> προθεσμία αντίρρησης.</td>
+      <td>Η λίστα είναι <strong>ζωντανή σελίδα, όχι παράρτημα</strong>. Το Άρθρο 30 πρέπει να
+      παραπέμπει σε αυτήν με ημερομηνία ανάγνωσης, και κάποιος πρέπει να τη βλέπει — 15 ημέρες
+      είναι λίγες για να τις πιάσει η τύχη.</td></tr>
+  </table>
+  </div>
+
+  <div class="note bad"><strong>Η μία γραμμή που αξίζει να δει ο δικηγόρος πρώτη.</strong> Η
+  προεπιλογή είναι <strong>30 ημέρες</strong>, όχι μηδέν. Δηλαδή κάθε σαρωμένη ταυτότητα που περνά
+  από τη διαδρομή Α υπάρχει σε δεύτερο αντίγραφο, εκτός ελέγχου μας, για έναν μήνα. Αν το ρίσκο
+  αυτό δεν είναι αποδεκτό στα 4.000 αιτήσεις/μήνα, η <strong>zero data retention είναι εμπορική
+  συζήτηση που πρέπει να ανοίξει τώρα</strong>, όχι μετά το rollout: η διαπραγμάτευση παίρνει χρόνο
+  και η απάντηση αλλάζει το τι γράφεται στο έντυπο συναίνεσης.</div>
+</section>
+
+<h2><span class="n">4.</span> Η ερώτηση που έκρινε όλες τις υπόλοιπες — <em>απαντήθηκε</em> <span class="tag t-ok">απόφαση ιδιοκτήτη, 22/08</span></h2>
+<div class="verdict">Τα καταστήματα είναι <strong>δικά μας</strong>. Ένας υπεύθυνος επεξεργασίας, όχι ενενήντα.</div>
+<section>
+  <p>Ρωτήθηκε ο ιδιοκτήτης στις 22/08/2026 και απάντησε: <strong>δικά μας καταστήματα</strong>.
+  Συμφωνεί με το §8 (14) του <code>HANDOVER</code>, που είχε ήδη διορθώσει το αντίθετο για την
+  Protergia — «είναι <em>δικά μας</em> καταστήματα». Δύο ανεξάρτητες πηγές, ίδια απάντηση.</p>
+
+  <h3>Τι πέφτει από το τραπέζι</h3>
+  <ul>
+    <li><strong>Καμία σύμβαση Άρθρου 28 με καταστήματα.</strong> Ήταν το ακριβότερο σκέλος: 80-90
+      συμβάσεις, μία ανά κατάστημα, πριν αγγίξει το πρώτο ΑΦΜ. Δεν χρειάζεται καμία.</li>
+    <li><strong>Η Anthropic παραμένει <em>εκτελών</em>, δεν γίνεται υπο-εκτελών.</strong> Η σχέση
+      είναι απευθείας controller→processor, που είναι ακριβώς το <strong>Module Two</strong> των SCCs
+      που ενσωματώνει ήδη το DPA της. Δηλαδή ο μηχανισμός διαβίβασης ταιριάζει χωρίς τίποτα επιπλέον.</li>
+    <li><strong>Ένα Άρθρο 30, μία ενημέρωση Άρθρου 13, μία DPIA.</strong></li>
+  </ul>
+
+  <h3>Τι μπαίνει στη θέση τους — μικρότερο, αλλά όχι μηδέν</h3>
+  <p>Ένας υπεύθυνος επεξεργασίας με 80-90 σημεία και εκατοντάδες χειριστές μετατοπίζει το ρίσκο από
+  <em>συμβάσεις</em> σε <strong>εσωτερικό έλεγχο</strong>. Αυτό που ρωτά ο ελεγκτής παύει να είναι
+  «δείξε μου τη σύμβαση με το κατάστημα Χ» και γίνεται:</p>
+  <ul>
+    <li><strong>Εντολή εμπιστευτικότητας / δέσμευση προσωπικού</strong> — άρ. 29 και 32.4: τα άτομα
+      που βλέπουν ΑΦΜ και ΑΔΤ επεξεργάζονται μόνο κατ' εντολή του υπευθύνου, και αυτό πρέπει να
+      υπάρχει γραπτό στη σχέση εργασίας/συνεργασίας.</li>
+    <li><strong>Ποιος βλέπει τι.</strong> Εδώ ο κώδικας είναι ήδη μπροστά: το <code>UserScope</code>
+      και το βήμα 2 του strangler έκλεισαν την κατηγορία IDOR. Το χαρτί απλώς πρέπει να το
+      περιγράψει, όχι να το φτιάξει.</li>
+    <li><strong>Το ίχνος.</strong> Ο <code>ECRM_Audit</code> είναι αυτός που απαντά «ποιος άγγιξε
+      αυτή την καρτέλα» όταν το ερώτημα έρθει από 90 σημεία αντί για ένα.</li>
+  </ul>
+
+  <div class="note"><strong>Και μία συνέπεια που είναι εύκολο να χαθεί.</strong> Με έναν υπεύθυνο,
+  ένα περιστατικό σε <em>ένα</em> κατάστημα είναι περιστατικό <strong>ολόκληρης της εταιρείας</strong>
+  — η προθεσμία των 72 ωρών του άρ. 33 τρέχει για εμάς, όχι για το κατάστημα. Στο σενάριο των
+  ενενήντα υπευθύνων το ρίσκο ήταν κατακερματισμένο· τώρα είναι συγκεντρωμένο. Είναι το σωστό
+  αντάλλαγμα για ενενήντα συμβάσεις που δεν γράφονται, αλλά είναι αντάλλαγμα.</div>
+</section>
+
+<h2><span class="n">5.</span> DPIA: χτυπάνε <em>δύο</em> κριτήρια, όχι ένα</h2>
+<div class="verdict">Απόφαση ΑΠΔΠΧ 65/2018 (ΦΕΚ Β΄ 1622/10-5-2019), ο ελληνικός κατάλογος του άρ. 35 παρ. 4.</div>
+<section>
+  <p>Η Εκτίμηση Αντικτύπου δεν είναι προαιρετική διακόσμηση όταν χτυπούν κριτήρια του καταλόγου.
+  Εδώ χτυπούν δύο, ανεξάρτητα:</p>
+
+  <ul>
+    <li><strong>2.2</strong> — συστηματική και σε μεγάλη κλίμακα επεξεργασία δεδομένων
+      <strong>ταυτοποίησης</strong>. Στα ~4.000 αιτήσεις/μήνα με ΑΦΜ, ΑΔΤ και σαρωμένες ταυτότητες,
+      η «μεγάλη κλίμακα» δεν χρειάζεται επιχειρηματολογία.</li>
+    <li><strong>3.1</strong> — <strong>καινοτόμος χρήση νέων τεχνολογιών</strong>. Αυτόματη ανάγνωση
+      εγγράφων ταυτοποίησης από LLM τρίτης χώρας είναι ακριβώς αυτό.</li>
+  </ul>
+
+  <p>Η καθιερωμένη ερμηνεία (WP29/EDPB) είναι ότι <strong>δύο κριτήρια σημαίνουν DPIA</strong>. Με
+  ένα θα υπήρχε συζήτηση· με δύο, η συζήτηση είναι μόνο για το πόσο εκτενής.</p>
+
+  <div class="note"><strong>Και είναι το φθηνότερο κομμάτι της δουλειάς, αν γίνει τώρα.</strong> Η
+  DPIA θέλει περιγραφή της επεξεργασίας, αναγκαιότητα/αναλογικότητα, κινδύνους και μέτρα. Τα
+  <strong>μέτρα</strong> τα έχουμε ήδη γραμμένα και υλοποιημένα — ενότητα 2 αυτής της σελίδας είναι
+  σχεδόν έτοιμη στήλη «υφιστάμενα μέτρα». Μετά το rollout, η ίδια DPIA γράφεται υπό πίεση και με
+  ζωντανά δεδομένα από πάνω.</div>
+</section>
+
+<h2><span class="n">6.</span> Τι λείπει, και είναι χαρτί — όχι κώδικας</h2>
+<section>
+  <div class="scroll">
+  <table>
+    <tr><th>#</th><th>Τι</th><th>Ποιος</th><th>Πριν από τι</th></tr>
+    <tr><td>1</td><td><s>Απόφαση ρόλων</s> — <strong>ΑΠΑΝΤΗΘΗΚΕ 22/08: ένας υπεύθυνος</strong>
+      (ενότητα 4). Στη θέση της: <strong>γραπτή δέσμευση εμπιστευτικότητας</strong> προσωπικού,
+      άρ. 29/32.4.</td>
+      <td>ιδιοκτήτης + δικηγόρος</td><td>πριν το rollout</td></tr>
+    <tr><td>2</td><td><strong>Άρθρο 30</strong> — αρχείο δραστηριοτήτων, με ξεχωριστή εγγραφή για την
+      AI επεξεργασία (σκοπός, κατηγορίες, αποδέκτης, τρίτη χώρα, εγγυήσεις, χρόνοι)</td>
+      <td>δικηγόρος, με τα δεδομένα αυτής της σελίδας</td><td>πριν το rollout</td></tr>
+    <tr><td>3</td><td><strong>DPIA</strong> (ενότητα 5)</td><td>δικηγόρος + εμείς για τα μέτρα</td>
+      <td>πριν την <em>έναρξη</em> της επεξεργασίας — τυπικά πριν το rollout</td></tr>
+    <tr><td>4</td><td><strong>Ενημέρωση Άρθρου 13</strong> — πλήρης πολιτική απορρήτου προς τον
+      πελάτη. Το <code>consent_text()</code> είναι <em>περίληψη μέσα σε checkbox</em>, δεν είναι
+      ενημέρωση Άρθρου 13.</td><td>δικηγόρος· εμείς βάζουμε τον σύνδεσμο</td>
+      <td>πριν το rollout</td></tr>
+    <tr><td>5</td><td><strong>Επιβεβαίωση εμπορικού λογαριασμού + TIA</strong> για τη διαβίβαση, και
+      απόφαση για <strong>zero data retention</strong></td><td>ιδιοκτήτης + δικηγόρος</td>
+      <td>η ZDR θέλει χρόνο διαπραγμάτευσης — <strong>τώρα</strong></td></tr>
+    <tr><td>6</td><td><strong>Παρακολούθηση υπεργολάβων</strong> — 15 ημέρες αντίρρηση</td>
+      <td>ιδιοκτήτης (ή scheduled task που ελέγχει τη σελίδα)</td><td>συνεχές</td></tr>
+  </table>
+  </div>
+</section>
+
+<h2><span class="n">7.</span> Τι από όλα αυτά είναι κώδικας</h2>
+<div class="verdict">Λίγα, και κανένα δεν μπλοκάρει τον δικηγόρο. Γράφονται ως προτάσεις, δεν υλοποιήθηκαν.</div>
+<section>
+  <ul>
+    <li><strong>Το ανοιχτό των 98 αρχείων / 13 γραμμών</strong> (ενότητα 2). Είναι το μόνο που κάνει
+      το Άρθρο 15 και το Άρθρο 17 να απαντούν <em>ελλιπώς</em>, και δεν το λύνει κανένα χαρτί. Θέλει
+      δικό του πέρασμα, με μέτρηση πρώτα: πόσα από τα 98 έχουν γραμμή και πόσα όχι.</li>
+    <li><strong>Ελεύθερο κείμενο προς τη «Λίτσα» και το KB.</strong> Σήμερα ένας συνεργάτης μπορεί να
+      επικολλήσει ΑΦΜ σε chat που φεύγει έξω. Το φθηνό μέτρο δεν είναι φίλτρο — είναι
+      <strong>μία γραμμή στο placeholder</strong> του πλαισίου: «μη γράφεις στοιχεία πελάτη εδώ».
+      Αγγίζει οθόνη, άρα HTML πρώτα (§1.8).</li>
+    <li><strong>Δεν στέλνεται <code>metadata.user_id</code></strong> στο Anthropic API. Δεν είναι
+      υποχρέωση· αξίζει όμως να ειπωθεί ρητά στο Άρθρο 30 ότι <em>δεν</em> στέλνεται αναγνωριστικό
+      χρήστη, γιατί είναι από τα λίγα σημεία όπου η απουσία είναι το θετικό εύρημα.</li>
+  </ul>
+</section>
+
+<h2><span class="n">8.</span> Οι ερωτήσεις για τον δικηγόρο, έτοιμες</h2>
+<div class="verdict">Γραμμένες ώστε να απαντιούνται με ναι/όχι ή με μία παράγραφο.</div>
+<section>
+  <ol class="ask">
+    <li><s>Τα καταστήματα είναι δικά μας ή ανεξάρτητοι;</s> <strong>Απαντήθηκε: δικά μας.</strong>
+      Η ερώτηση που την αντικαθιστά: τι ακριβώς πρέπει να υπογράφει ο χειριστής που βλέπει ΑΦΜ και
+      ΑΔΤ (δέσμευση εμπιστευτικότητας, άρ. 29/32.4), και ισχύει το ίδιο για συνεργάτη με σύμβαση
+      έργου όπως για μισθωτό;</li>
+    <li>Νομική βάση για την επεξεργασία των εγγράφων ταυτοποίησης: <strong>συναίνεση</strong>
+      (άρ. 6.1.α) ή <strong>εκτέλεση σύμβασης</strong> (άρ. 6.1.β); Ο κώδικας σήμερα καταγράφει
+      <em>συναίνεση</em> — αλλά συναίνεση που δεν μπορεί πρακτικά να ανακληθεί χωρίς να ακυρωθεί η
+      αίτηση δεν είναι ελεύθερη, και τότε η σωστή βάση είναι η 6.1.β με τη συναίνεση να μένει μόνο
+      για τα προαιρετικά (έρευνες ικανοποίησης, χρήση από τον όμιλο — υπάρχουν ήδη ως ξεχωριστά
+      πεδία).</li>
+    <li>Η αποστολή της <strong>εικόνας ολόκληρης</strong> της ταυτότητας, αντί για τα πεδία, περνά
+      τον έλεγχο ελαχιστοποίησης (άρ. 5.1.γ); Αν όχι, το τεχνικό αντίμετρο υπάρχει (περικοπή/μάσκα
+      πριν την αποστολή) αλλά είναι δουλειά που πρέπει να ζητηθεί.</li>
+    <li>Είναι αποδεκτή η <strong>30ήμερη</strong> διατήρηση στην Anthropic, ή ανοίγουμε συζήτηση
+      zero data retention; Και ξεχωριστά: η διατήρηση <strong>έως 2 ετών</strong> σε περίπτωση
+      σήμανσης παραβίασης πολιτικής;</li>
+    <li>Χρειάζεται DPIA — και αν ναι, χρειάζεται <strong>προηγούμενη διαβούλευση</strong> με την
+      ΑΠΔΠΧ (άρ. 36) ή αρκεί εσωτερική;</li>
+    <li>Χρειαζόμαστε <strong>DPO</strong>; Η επεξεργασία είναι μεγάλης κλίμακας και συστηματική· το
+      άρ. 37.1.β θέλει απάντηση γραμμένη, ακόμη κι αν είναι «όχι».</li>
+    <li>Τα <strong>90 ημέρες</strong> του <code>Retention</code> για το ωμό payload και ο χρόνος
+      διατήρησης των <strong>σαρωμένων εγγράφων</strong> στον δίσκο: ποιοι είναι οι σωστοί αριθμοί
+      και από τι προκύπτουν (φορολογικά, συμβατικά, παραγραφή);</li>
+  </ol>
+</section>
+
+<div class="foot">
+  Μετρημένο στον κώδικα 22/08/2026· οι όροι της Anthropic διαβάστηκαν την ίδια μέρα και
+  <strong>αλλάζουν</strong> — κάθε αριθμός εδώ θέλει επανάληψη πριν υπογραφεί οτιδήποτε.
+  Πηγές: <a href="https://www.anthropic.com/legal/commercial-terms">Commercial Terms</a> ·
+  <a href="https://www.anthropic.com/legal/data-processing-addendum">DPA</a> ·
+  <a href="https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data">διατήρηση δεδομένων</a> ·
+  <a href="https://trust.anthropic.com/subprocessors">υπεργολάβοι</a> ·
+  <a href="https://www.dpa.gr/sites/default/files/2019-09/65_2018anonym.pdf">ΑΠΔΠΧ 65/2018</a>.
+</div>
+
+</div>
+</body>
+</html>
