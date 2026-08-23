@@ -440,5 +440,4 @@ final class ContractRepository
     {
         return ScopeClause::forScope($scope, $alias);
     }
-
 }

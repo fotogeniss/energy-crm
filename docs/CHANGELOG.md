@@ -7,6 +7,143 @@
 
 ---
 
+## 2026-08-23 (92)
+
+### Το CI είχε δίκιο, το τοπικό ruleset ήταν χαλασμένο — δύο ξεχωριστά bugs κάτω από ένα κόκκινο push
+
+**Το πρόβλημα.** Το πρώτο πραγματικό run του CI (`ci.yml`, από την (90)) βγήκε
+κόκκινο στο push της (91). Τοπικά, στο Windows, το ίδιο `phpcs` πάνω στον ίδιο
+κώδικα έβγαινε καθαρό (265/265, καμία γραμμή σφάλματος). Ίδιος κώδικας, ίδιο
+`.phpcs.xml.dist`, δύο αντίθετα αποτελέσματα.
+
+**Επτά υποθέσεις δοκιμάστηκαν και απορρίφθηκαν, με πραγματική απόδειξη η
+καθεμία** (ANSI χρώματα, phpcs cache, uncommitted diffs, μη-committed
+`composer.lock`, δεύτερο τοπικό ruleset, `core.autocrlf`, artifact στο
+progress bar του CI log) — καμία δεν εξηγούσε τη διαφορά. Λεπτομέρειες στο
+ιστορικό της συνεδρίας, όχι εδώ· καταγράφονται μόνο το εύρημα και η διόρθωση.
+
+**Το πραγματικό αίτιο.** Στο `.phpcs.xml.dist`, οι κανόνες `PSR12` και
+τέσσερα-πέντε WordPress sniffs (`PreparedSQL`, `NonceVerification`,
+`ValidatedSanitizedInput`, `EscapeOutput`, `NoSilencedErrors`) εξαιρούν σκόπιμα
+το legacy tree με `<exclude-pattern>includes/*</exclude-pattern>`,
+`admin/*`, `public/*`. Ο κώδικας του ίδιου του PHP_CodeSniffer
+(`Files/File.php`) εφαρμόζει αυτά τα patterns σαν unanchored, case-insensitive
+regex πάνω στην **απόλυτη διαδρομή** του αρχείου — όχι σχετική στο project,
+παρόλο που υπάρχει `<arg name="basepath" value="."/>`. Η τοπική εγκατάσταση
+Local WP ζει σε `C:\Users\konst\Local Sites\crm\app\public\wp-content\...` —
+το `public\*` του ruleset ταίριαζε με το `app\public\`, έναν ανιόντα φάκελο
+τυχαίο, άσχετο με το plugin. Αποτέλεσμα: το PSR12 (και τα υπόλοιπα κανόνες
+που δηλώνουν αυτά τα exclude-pattern) ήταν σιωπηλά ανενεργά σε **ολόκληρο**
+τον κώδικα, όχι μόνο στο legacy tree. Το CI, χωρίς κανένα ανιόντα φάκελο
+`public` (`actions/checkout@v4` → `/home/runner/work/energy-crm/energy-crm/`),
+έβλεπε τα πραγματικά, ενεργά σφάλματα.
+
+**Απόδειξη πριν τη διόρθωση.** Ίδιο αρχείο (`HealthChecks.php`), αντιγραμμένο
+σε δύο διαδρομές:
+
+| Διαδρομή | Αποτέλεσμα |
+|---|---|
+| `src\Infrastructure\HealthChecks.php` (μέσα στο project) | καθαρό |
+| `C:\ecrm-pathtest\HealthChecks.php` (έξω, χωρίς `public` ανιόντα) | 15 ERRORS, 5 WARNINGS — ίδια με το CI |
+
+**Η διόρθωση.** Πρόθεμα `energy-crm/` σε όλα τα σύντομα exclude-pattern
+(`includes/*` → `energy-crm/includes/*`, ομοίως `admin/*`, `public/*`) — 24
+γραμμές σε 8 σημεία του `.phpcs.xml.dist`. Λειτουργεί και στα δύο περιβάλλοντα
+επειδή το GitHub repo λέγεται επίσης `energy-crm`
+(`fotogeniss/energy-crm` → `/home/runner/work/energy-crm/energy-crm/...`).
+Επαληθεύτηκε ίδιο τεστ, μετά τη διόρθωση: και οι δύο διαδρομές πλέον καθαρές.
+
+### Δεύτερο, ανεξάρτητο bug: ένα `phpcs:ignore` που δεν κάλυπτε ποτέ αυτό που νόμιζε
+
+Η ενεργοποίηση του PSR12/PreparedSQL σε ολόκληρο το `src/` αποκάλυψε 24 πραγματικά
+errors σε 8 αρχεία που ήταν σκεπασμένα από το πρώτο bug. Δύο από αυτά ήταν
+`WordPress.DB.PreparedSQL` σε migration/repository αρχεία που **ήδη είχαν**
+`// phpcs:ignore` comment από πάνω — και συνέχιζαν να σκάνε.
+
+Αιτία: το `phpcs:ignore` χωρίς ρητό αριθμό γραμμών καλύπτει **μόνο τη μία
+φυσική γραμμή αμέσως μετά** το comment. Σε multi-line κλήσεις
+(`$wpdb->query(` ... `"..."` ... `);`), το comment ήταν πάνω από το
+`$wpdb->query(` αλλά η πραγματική παραβίαση αναφερόταν στη γραμμή του string
+literal, δύο γραμμές πιο κάτω — έξω από την εμβέλεια του ignore. Δούλευε μόνο
+σε single-line κλήσεις (π.χ. τα υπόλοιπα `phpcs:ignore` στο
+`HealthChecks.php`), όχι σε πολυγραμμικές.
+
+**Η διόρθωση.** `phpcs:disable` / `phpcs:enable` γύρω από ολόκληρη την κλήση
+αντί για single-line `ignore` — ανθεκτικό σε αναδιάταξη γραμμών, δεν έχει το
+ίδιο off-by-one-line ρίσκο:
+
+- `src/Persistence/Schema/Migrations/AddPayoutAmountColumn.php` — DDL με
+  σταθερό identifier, δεν παραμετροποιείται.
+- `src/Persistence/EventRepository.php` (`hoursSinceLastOfTypes`) — δυναμικό
+  `IN (...)` clause· το `$placeholders` είναι πάντα μόνο `%s, %s, ...`
+  (`array_fill` + `implode`), ποτέ δεδομένα χρήστη, αλλά το phpcs δεν μπορεί
+  να το επαληθεύσει στατικά.
+
+### Τα υπόλοιπα 15 warnings, μετά τη διόρθωση του ruleset
+
+Μήκος γραμμής (Generic.Files.LineLength) σε 8 αρχεία — διορθώθηκαν με
+αναδιάταξη σε πολλαπλές γραμμές (PSR12 multi-line call style, ίδιο pattern
+με ό,τι είχε ήδη διορθώσει το `phpcbf`), εκτός από ένα PHPStan array-shape
+τύπο (`MonthlyTotals.php::from()`) όπου η αναδιάταξη θα έσπαγε την
+annotation — εκεί `phpcs:disable`/`enable` με αιτιολόγηση.
+
+Δύο ζεύγη `WordPress.DB.DirectDatabaseQuery` (DirectQuery + NoCaching) στο
+`HealthChecks.php` — queries μιας χρήσης σε οθόνη διαγνωστικών admin, όχι hot
+path· επεκτάθηκαν τα ήδη υπάρχοντα `phpcs:ignore` (που κάλυπταν άλλο sniff,
+`PreparedSQL`, όχι αυτό) να συμπεριλάβουν και το `DirectDatabaseQuery`.
+
+Δύο `WordPress.DB.SlowDBQuery` (meta_key/meta_value) στο `NetworkDepthTest.php`
+— σκόπιμη κατασκευή fixture parent-chain μέσα σε test, όχι query παραγωγής·
+`phpcs:disable`/`enable` με αιτιολόγηση.
+
+### Τρίτο bug, βρέθηκε στο τέλος: το gate μπλόκαρε σε ΚΑΘΕ warning, όχι μόνο σε errors
+
+Ακόμα και με 0 errors, το `composer check:all` σταματούσε πριν το PHPUnit.
+Το `lint` script στο `composer.json` είναι γυμνό `"phpcs"`, χωρίς flags.
+Exit code 1 του phpcs σημαίνει «μόνο warnings» (2 = errors, 0 = καθαρό) — και
+το composer αντιμετωπίζει οποιοδήποτε μη-μηδενικό exit code από script της
+αλυσίδας σαν αποτυχία, χωρίς να ξεχωρίζει warning από error. Δεν υπήρχε τρόπος
+να δούμε ποτέ το PHPUnit αποτέλεσμα όσο έμενε έστω ένα warning — ανεξάρτητα
+από το πρώτο bug. Αποφασίστηκε να καθαρίσουν όλα τα warnings (βλ. παραπάνω)
+αντί να χαλαρώσει το ίδιο το gate· η αυστηρότητα του `lint` σε warnings μένει
+όπως είναι, τεκμηριωμένη εδώ για τον επόμενο που θα αναρωτηθεί γιατί σταμάτησε
+χωρίς ούτε ένα error στην οθόνη.
+
+**ΠΡΟΒΛΕΨΗ, ΓΡΑΜΜΕΝΗ ΠΡΙΝ ΤΡΕΞΕΙ Η ΣΟΥΙΤΑ.** Καμία αλλαγή σε production
+συμπεριφορά — μόνο ruleset config, `phpcs:ignore`/`disable` σχόλια, και
+reformatting γραμμών. Αναμενόμενοι αριθμοί ίδιοι με την (91):
+
+| | ήταν (91) | πρόβλεψη (92) | γιατί |
+|---|---|---|---|
+| unit | 891 | **891** | καμία λογική άλλαξε |
+| integration | 348 | **348** | καμία λογική άλλαξε |
+| phpcs errors | άγνωστο (ποτέ δεν έτρεξε σωστά τοπικά) | **0** | ruleset fix + όλες οι διορθώσεις |
+| phpcs warnings | άγνωστο | **0** | 15/15 διορθώθηκαν |
+| phpstan | 147 | **147** | καμία λογική άλλαξε |
+
+**ΕΠΙΒΕΒΑΙΩΘΗΚΕ.** `composer check:all` πραγματικό, στο Site Shell του
+πελάτη: phpcs 265/265 καθαρό (0 errors, 0 warnings), phpstan 147/147 OK, unit
+891 tests / 2479 assertions / Skipped: 1, integration 348 tests / 2214
+assertions — **τα τέσσερα ίδια με την (91), plus phpcs επιτέλους πράσινο για
+πρώτη φορά, με νόημα (όχι επειδή σιωπούσε).**
+
+**Αρχεία:** `.phpcs.xml.dist` (24 exclude-pattern προθέματα),
+`src/Persistence/Schema/Migrations/AddPayoutAmountColumn.php`,
+`src/Persistence/EventRepository.php` (και τα δύο: `phpcs:disable`/`enable`),
+`src/Domain/Commission/MonthlyTotals.php`, `src/Infrastructure/ErrorLog.php`,
+`src/Infrastructure/HealthChecks.php`,
+`src/Persistence/Schema/Migrations/AddEventStatusIndex.php`,
+`src/Persistence/ContractRepository.php`, `src/Http/CommissionsController.php`,
+`src/Http/ContractSaveMapping.php`, `tests/Integration/ContractNotificationsTest.php`,
+`tests/Integration/ContractSaveMappingTest.php`,
+`tests/Integration/IntegrationTestCase.php`,
+`tests/Integration/MobileConnectionBoxesTest.php`,
+`tests/Integration/NetworkDepthTest.php`,
+`tests/Integration/SignLinkChannelTest.php`,
+`tests/Unit/TypographyIsDecidedInOnePlaceTest.php`.
+
+---
+
 ## 2026-08-23 (91)
 
 ### JS χωρίς test infrastructure: τρία module που έγραφαν «καθαρές συναρτήσεις» χωρίς κανένα test να το αποδεικνύει
@@ -97,6 +234,30 @@ repo). `README.md` στο ίδιο φάκελο, στο πνεύμα του `too
 Αρχεία: `tools/js-tests/package.json`, `format.test.js`, `scope.test.js`,
 `navigate.test.js`, `README.md` (όλα νέα), `docs/JS-TESTS-PROPOSAL.html`
 (νέο), `docs/CHANGELOG.md`, `docs/NEXT-SESSION.md`.
+
+**ΕΠΙΒΕΒΑΙΩΘΗΚΕ.** `composer check:all` πραγματικό: 891 unit (Skipped: 1,
+2479 assertions), 348 integration (2214 assertions), 265 phpcs, 147 phpstan
+— **και τα τέσσερα ακριβή**. Commit `443aba3`, push επιτυχές.
+
+**Και δύο λάθος υποθέσεις, βρέθηκαν στο πραγματικό Site Shell, όχι στο
+sandbox — η μόνη «μορφή Α» ολόκληρης αυτής της παρτίδας: η εντολή JS
+γράφτηκε σαν να είχε δοκιμαστεί σε Windows, αλλά είχε δοκιμαστεί μόνο σε
+bash.**
+
+1. `node --experimental-detect-module --test tools/js-tests/*.test.js`
+   δούλευε στο sandbox (bash), έσκασε στο cmd.exe:
+   `Could not find '...\tools\js-tests\*.test.js'` — το cmd δεν κάνει glob
+   expansion σε `*`. Δοκιμάστηκε το `--test tools/js-tests` (φάκελος αντί για
+   wildcard) — έσκασε ΚΙ ΑΥΤΟ, διαφορετικά (`MODULE_NOT_FOUND`, directory
+   path ως positional argument γίνεται `require()` σε αυτή την έκδοση Node).
+2. Η ρητή λίστα αρχείων μέσα στο `package.json` έγραφε
+   `tools/js-tests/format.test.js` — έσκασε με διπλασιασμένο μονοπάτι
+   (`tools\js-tests\tools\js-tests\format.test.js`), γιατί το `npm test`
+   τρέχει με cwd ήδη μέσα στο `tools/js-tests`.
+
+Και τα δύο διορθώθηκαν, και τα δύο **επιβεβαιώθηκαν στο πραγματικό Site
+Shell**: `npm test` μέσα στο `tools/js-tests` → `pass 19 / fail 0`.
+Λεπτομέρειες και στα δύο λάθη στο `tools/js-tests/README.md`.
 
 ---
 

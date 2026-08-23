@@ -117,5 +117,4 @@ final class CommissionsController implements Controller
             'pending_est'  => round($expected, 2),
         ], 200);
     }
-
 }

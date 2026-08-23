@@ -54,9 +54,9 @@
             change. The PSR-12 exclusion above does not cover it, because this
             sniff is referenced by name here and that re-includes it.
         -->
-        <exclude-pattern>includes/*</exclude-pattern>
-        <exclude-pattern>admin/*</exclude-pattern>
-        <exclude-pattern>public/*</exclude-pattern>
+        <exclude-pattern>energy-crm/includes/*</exclude-pattern>
+        <exclude-pattern>energy-crm/admin/*</exclude-pattern>
+        <exclude-pattern>energy-crm/public/*</exclude-pattern>
     </rule>
 
     <!--
@@ -89,9 +89,9 @@
         file gets held to PSR-12 the day it moves under src/, not before.
     -->
     <rule ref="PSR12">
-        <exclude-pattern>includes/*</exclude-pattern>
-        <exclude-pattern>admin/*</exclude-pattern>
-        <exclude-pattern>public/*</exclude-pattern>
+        <exclude-pattern>energy-crm/includes/*</exclude-pattern>
+        <exclude-pattern>energy-crm/admin/*</exclude-pattern>
+        <exclude-pattern>energy-crm/public/*</exclude-pattern>
     </rule>
 
     <!--
@@ -139,24 +139,24 @@
         ## few enough to handle individually.
     -->
     <rule ref="WordPress.DB.PreparedSQL">
-        <exclude-pattern>includes/*</exclude-pattern>
-        <exclude-pattern>admin/*</exclude-pattern>
-        <exclude-pattern>public/*</exclude-pattern>
+        <exclude-pattern>energy-crm/includes/*</exclude-pattern>
+        <exclude-pattern>energy-crm/admin/*</exclude-pattern>
+        <exclude-pattern>energy-crm/public/*</exclude-pattern>
     </rule>
     <rule ref="WordPress.DB.PreparedSQLPlaceholders">
-        <exclude-pattern>includes/*</exclude-pattern>
-        <exclude-pattern>admin/*</exclude-pattern>
-        <exclude-pattern>public/*</exclude-pattern>
+        <exclude-pattern>energy-crm/includes/*</exclude-pattern>
+        <exclude-pattern>energy-crm/admin/*</exclude-pattern>
+        <exclude-pattern>energy-crm/public/*</exclude-pattern>
     </rule>
     <rule ref="WordPress.Security.NonceVerification">
-        <exclude-pattern>includes/*</exclude-pattern>
-        <exclude-pattern>admin/*</exclude-pattern>
-        <exclude-pattern>public/*</exclude-pattern>
+        <exclude-pattern>energy-crm/includes/*</exclude-pattern>
+        <exclude-pattern>energy-crm/admin/*</exclude-pattern>
+        <exclude-pattern>energy-crm/public/*</exclude-pattern>
     </rule>
     <rule ref="WordPress.Security.ValidatedSanitizedInput">
-        <exclude-pattern>includes/*</exclude-pattern>
-        <exclude-pattern>admin/*</exclude-pattern>
-        <exclude-pattern>public/*</exclude-pattern>
+        <exclude-pattern>energy-crm/includes/*</exclude-pattern>
+        <exclude-pattern>energy-crm/admin/*</exclude-pattern>
+        <exclude-pattern>energy-crm/public/*</exclude-pattern>
     </rule>
 
     <!--
@@ -176,9 +176,9 @@
             nothing about safety. WordPress.DB.PreparedSQL — the one that
             actually catches injection — stays on there.
         -->
-        <exclude-pattern>includes/*</exclude-pattern>
-        <exclude-pattern>admin/*</exclude-pattern>
-        <exclude-pattern>public/*</exclude-pattern>
+        <exclude-pattern>energy-crm/includes/*</exclude-pattern>
+        <exclude-pattern>energy-crm/admin/*</exclude-pattern>
+        <exclude-pattern>energy-crm/public/*</exclude-pattern>
     </rule>
 
     <!--
@@ -212,9 +212,9 @@
     -->
     <rule ref="WordPress.DB.SlowDBQuery">
         <exclude-pattern>src/Persistence/TeamRepository.php</exclude-pattern>
-        <exclude-pattern>includes/*</exclude-pattern>
-        <exclude-pattern>admin/*</exclude-pattern>
-        <exclude-pattern>public/*</exclude-pattern>
+        <exclude-pattern>energy-crm/includes/*</exclude-pattern>
+        <exclude-pattern>energy-crm/admin/*</exclude-pattern>
+        <exclude-pattern>energy-crm/public/*</exclude-pattern>
     </rule>
     <rule ref="WordPress.WP.GlobalVariablesOverride"/>
     <rule ref="WordPress.PHP.DontExtract"/>
@@ -232,9 +232,9 @@
         Still enforced for src/, where none of these idioms appear.
     -->
     <rule ref="WordPress.PHP.NoSilencedErrors">
-        <exclude-pattern>includes/*</exclude-pattern>
-        <exclude-pattern>admin/*</exclude-pattern>
-        <exclude-pattern>public/*</exclude-pattern>
+        <exclude-pattern>energy-crm/includes/*</exclude-pattern>
+        <exclude-pattern>energy-crm/admin/*</exclude-pattern>
+        <exclude-pattern>energy-crm/public/*</exclude-pattern>
     </rule>
 
     <!-- Global constants must stay namespaced by prefix. -->

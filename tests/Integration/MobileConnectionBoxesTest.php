@@ -97,7 +97,11 @@ final class MobileConnectionBoxesTest extends IntegrationTestCase
                 $values['energopoiisi_ananeosi'],
             ]);
 
-            self::assertCount(1, $ticked, "Με activation_type '{$activationType}' τσεκαρίστηκαν " . count($ticked) . ' κουτιά.');
+            self::assertCount(
+                1,
+                $ticked,
+                "Με activation_type '{$activationType}' τσεκαρίστηκαν " . count($ticked) . ' κουτιά.'
+            );
         }
     }
 

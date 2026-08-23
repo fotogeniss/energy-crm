@@ -460,8 +460,16 @@ final class ContractSaveMappingTest extends IntegrationTestCase
         self::assertFalse($data['ok']);
         self::assertSame('Ο πελάτης δεν βρέθηκε.', $data['error']);
 
-        self::assertSame($contractsBefore, $this->rowCount('contracts'), 'Γράφτηκε σύμβαση παρότι ο πελάτης απορρίφθηκε.');
-        self::assertSame($customersBefore, $this->rowCount('customers'), 'Γράφτηκε/άλλαξε πελάτης παρότι απορρίφθηκε ως ξένος.');
+        self::assertSame(
+            $contractsBefore,
+            $this->rowCount('contracts'),
+            'Γράφτηκε σύμβαση παρότι ο πελάτης απορρίφθηκε.'
+        );
+        self::assertSame(
+            $customersBefore,
+            $this->rowCount('customers'),
+            'Γράφτηκε/άλλαξε πελάτης παρότι απορρίφθηκε ως ξένος.'
+        );
     }
 
     /**
