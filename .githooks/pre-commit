@@ -36,6 +36,14 @@
 # ΠΩΣ ΤΟ ΞΑΝΑΒΡΙΣΚΕΙΣ (μη το υποθέτεις, μέτρησέ το):
 #     grep -rln "\.js\b" tests/Unit/      → κάθε επέκταση εδώ πρέπει να είναι
 #     grep -rln "\.css\b" tests/Unit/       και στο grep -qE παρακάτω.
+#
+# Η ΠΑΝΩ ΔΥΑΔΑ ΜΟΝΗ ΤΗΣ ΥΠΟΚΑΤΑΜΕΤΡΑ (CHANGELOG (97), 23/08): πιάνει μόνο
+# literal ".js"/".css" στο κείμενο — όχι έλεγχο επέκτασης μέσω
+# getExtension()/pathinfo()/in_array() (το NoRemoteFontsTest ελέγχει έτσι και
+# η παραπάνω δυάδα το χάνει, για js ΚΑΙ για css). Πρόσθεσε και αυτές:
+#     grep -rl "getExtension\|PATHINFO_EXTENSION\|pathinfo(" -r tests/Unit/ | xargs grep -l "'js'\|\"js\""
+#     grep -rl "getExtension\|PATHINFO_EXTENSION\|pathinfo(" -r tests/Unit/ | xargs grep -l "'css'\|\"css\""
+# Ένωση των δύο λιστών ανά επέκταση, όχι μόνο η πρώτη.
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 
 if ! printf '%s\n' "$staged" | grep -qE '\.(php|js|css|xml|dist|json|neon)$'; then

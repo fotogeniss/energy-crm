@@ -2238,6 +2238,7 @@ unlink, οπότε ακόμη και ένα `git status` αφήνει `index.loc
 | 20 | «το `phpcs:ignore` πάνω από την κλήση αρκεί» | καλύπτει **μόνο τη μία φυσική γραμμή αμέσως μετά** — σε multi-line κλήσεις η παραβίαση αναφέρεται σε άλλη γραμμή και περνάει ασυγκράτητη, παρά το comment | Ε | ξανατρέξιμο `phpcs` μετά τη διόρθωση του ruleset, 23/08 |
 | 21 | «το required status check rule εμποδίζει μόνο merge κακού κώδικα» | εμπόδιζε **κάθε** direct push, ακόμα και πράσινο commit, γιατί απαιτεί περασμένο check-run πάνω στο ίδιο SHA πριν το push — αδιέξοδο by design για μοναχικό workflow χωρίς PR | Γ | το ίδιο το `git push`, δύο φορές, 23/08 |
 | 22 | «στη σουίτα οι δύο ζώνες τυχαία συμπίπτουν» (docblock `ContractUpdatedAtTest`) | διαφέρουν **πάντα** κατά τρεις ώρες — MySQL Αθήνα (`SYSTEM`), WordPress της σουίτας UTC· δεν είναι σύμπτωση | Α | `fwrite(STDERR)` μέσα σε filtered integration test, 23/08 |
+| 23 | «`grep -rln "\.js\b" tests/Unit/` βρίσκει όλα τα tests που διαβάζουν `.js`» | λείπει το `NoRemoteFontsTest` — ελέγχει επέκταση με `in_array(getExtension(), ...)`, όχι literal `.js` στο κείμενο· ίδιο κενό και για `.css` | Γ | `grep` στο πραγματικό repo, δύο εντολές, 23/08 |
 
 Η **15** αξίζει ξεχωριστά. Η υποψία ήταν συγκεκριμένη, τεχνικά εύλογη, με
 ονομαστικό ένοχο — και λάθος. Ένα φίλτρο 0,216s την έλυσε. **Η ευλογοφάνεια
@@ -2271,8 +2272,13 @@ unlink, οπότε ακόμη και ένα `git status` αφήνει `index.loc
 wp eval "global $wpdb; var_dump($wpdb->get_var('SELECT NOW()'), current_time('mysql'), get_option('timezone_string'));"
 
 :: τι διαβάζει η σουίτα — κάθε επέκταση εδώ ΠΡΕΠΕΙ να είναι και στο pre-commit
-grep -rlno "\.js\b" tests/Unit/
-grep -rlno "\.css\b" tests/Unit/
+:: ΔΥΟ εντολές ανά επέκταση, όχι μία — η πρώτη μόνη της υποκαταμετρά κατά ένα
+:: (βλ. CHANGELOG (97)): πιάνει μόνο literal ".js"/".css" στο κείμενο, όχι
+:: έλεγχο μέσω getExtension()/pathinfo()/in_array(). Ένωση των δύο λιστών.
+grep -rln "\.js\b" tests/Unit/
+grep -rl "getExtension\|PATHINFO_EXTENSION\|pathinfo(" -r tests/Unit/ | xargs grep -l "'js'\|\"js\""
+grep -rln "\.css\b" tests/Unit/
+grep -rl "getExtension\|PATHINFO_EXTENSION\|pathinfo(" -r tests/Unit/ | xargs grep -l "'css'\|\"css\""
 
 :: πλήρης έξοδος phpunit όταν το τερματικό την κόβει (το *.tmp.txt είναι gitignored)
 php -d max_execution_time=0 vendor/bin/phpunit > phpunit-run.tmp.txt 2>&1
@@ -2294,3 +2300,16 @@ php tools/check-suite.php --filter ThisMatchesNothing
 **Το `EXIT=` δεν είναι διακοσμητικό.** Στις 22/08 το commit `1e45ecf` πέρασε ενώ
 η σουίτα πέθαινε χωρίς σύνοψη· η μόνη ερώτηση που ξεχωρίζει «πέρασε» από «δεν
 έτρεξε» είναι ο κωδικός εξόδου, και το τερματικό δεν τον δείχνει μόνο του.
+
+**✅ ΕΚΛΕΙΣΕ 23/08 — CHANGELOG (97).** Η δόκιμη εντολή `grep -rln "\.js\b"
+tests/Unit/` υποκαταμετρούσε κατά ένα, μετρημένο στο πραγματικό repo (όχι
+υπόθεση): βρίσκει `FrontendEscapingTest`, `TimeIsReadInOnePlaceTest` — δύο,
+όχι τρία. Λείπει το `NoRemoteFontsTest`, γιατί ελέγχει την επέκταση με
+`in_array($file->getExtension(), ['php', 'js', 'css'], true)` — δεν γράφει
+ποτέ κυριολεκτικά `.js` πουθενά στο αρχείο. Το ίδιο ισχύει και για `.css`:
+η literal εντολή βρίσκει `ColourIsDecidedInOnePlaceTest`,
+`TypographyIsDecidedInOnePlaceTest` — πάλι λείπει το `NoRemoteFontsTest`. Η
+τριάδα του pre-commit σχολίου ήταν πάντα σωστή (βρέθηκε τότε με άλλο τρόπο,
+όχι μόνο με αυτή τη γραμμή) — το σπασμένο ήταν μόνο η **αναπαραγώγιμη**
+απόδειξη, που θα έδινε λάθος απάντηση αν κάποιος την ξανάτρεχε στο μέλλον για
+νέα επέκταση. Δεύτερη εντολή προστέθηκε δίπλα, ίδιο σχήμα με το §8.1 Γ.
