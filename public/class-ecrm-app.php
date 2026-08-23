@@ -28,7 +28,7 @@ class ECRM_App {
 
 		// Form assets (also defines window.ECRMForm) + shell assets.
 		ECRM_Shortcodes::enqueue_form_assets();
-		wp_enqueue_style( 'ecrm-app', ECRM_URL . 'public/assets/ecrm-app.css', [ 'ecrm-form' ], ECRM_VERSION );
+		wp_enqueue_style( 'ecrm-app', ECRM_URL . 'public/assets/ecrm-app.css', [ 'ecrm-form' ], ECRM_Shortcodes::asset_version( 'ecrm-app.css' ) );
 
 		// Enqueued after the form module, and module tags execute in document
 		// order, so window.ECRMForm exists before the shell asks for it. The
@@ -75,13 +75,27 @@ class ECRM_App {
 			$user->ID, current_time( 'mysql' )
 		) );
 
-		$nav = [
-			[ 'view' => 'dashboard',    'label' => 'Dashboard',      'icon' => 'dashboard' ],
-			[ 'view' => 'new-contract', 'label' => 'Νέα Σύμβαση',    'icon' => 'new' ],
+		/*
+		 * Δύο ομάδες αντί για μία επίπεδη λίστα έντεκα-έως-δεκαέξι στοιχείων.
+		 *
+		 * Η «Καθημερινά» αντιγράφει επίτηδες το ίδιο σύνολο πέντε διαδρομών
+		 * που έχει ήδη η κάτω μπάρα κινητού ($botnav πιο κάτω) — μια απόφαση
+		 * που υπάρχει ήδη, όχι νέα εικασία δική μου: αν το «με το ένα χέρι
+		 * στο κινητό» θεωρήθηκε αυτή η πεντάδα, το ίδιο σύνολο είναι λογικό
+		 * να πρωτοστατεί και στο desktop. Ό,τι δεν είναι εκεί πάει στην
+		 * «Περισσότερα» — δεν αλλάζει καμία διαδρομή, μόνο πού πέφτει το
+		 * μάτι πρώτο. Οι πίνακες μένουν επίπεδοι (`$navDaily`/`$navMore`),
+		 * το markup απλώς τους τυπώνει σε σειρά με μια ενδιάμεση ετικέτα.
+		 */
+		$navDaily = [
+			[ 'view' => 'dashboard',    'label' => 'Αρχική',         'icon' => 'dashboard' ],
+			[ 'view' => 'new-contract', 'label' => 'Νέα αίτηση',     'icon' => 'new' ],
 			[ 'view' => 'contracts',    'label' => 'Συμβάσεις',      'icon' => 'contracts' ],
-			[ 'view' => 'pending', 'label' => 'Εκκρεμότητες', 'icon' => 'pending', 'badge' => $pending_ct ],
 			[ 'view' => 'tasks', 'label' => 'Εργασίες', 'icon' => 'tasks', 'badge' => $tasks_ct ],
 			[ 'view' => 'customers',    'label' => 'Πελάτες',        'icon' => 'customers' ],
+		];
+		$navMore = [
+			[ 'view' => 'pending', 'label' => 'Εκκρεμότητες', 'icon' => 'pending', 'badge' => $pending_ct ],
 			[ 'view' => 'renewals',     'label' => 'Λήξεις',         'icon' => 'renew' ],
 			[ 'view' => 'network',      'label' => 'Το δίκτυό μου',  'icon' => 'network' ],
 			[ 'view' => 'team',         'label' => 'Η ομάδα μου',    'icon' => 'team' ],
@@ -92,21 +106,23 @@ class ECRM_App {
 		// The menu mirrors the capability matrix rather than guessing from the
 		// role, so a change in EnergyCRM\Access\Roles is reflected here for free.
 		if ( current_user_can( \EnergyCRM\Access\Capability::MANAGE_LEADS ) ) {
-			array_splice( $nav, 2, 0, [
-				[ 'view' => 'leads', 'label' => 'Leads', 'icon' => 'funnel', 'badge' => $leads_due ],
+			array_splice( $navDaily, 2, 0, [
+				// Ήταν 'Leads' — αγγλικό σε ελληνική οθόνη (κανόνας 4).
+				[ 'view' => 'leads', 'label' => 'Υποψήφιοι', 'icon' => 'funnel', 'badge' => $leads_due ],
 			] );
 		}
 		if ( current_user_can( \EnergyCRM\Access\Capability::VIEW_COMMISSIONS ) ) {
-			$nav[] = [ 'view' => 'commissions', 'label' => 'Προμήθειες', 'icon' => 'euro' ];
+			$navMore[] = [ 'view' => 'commissions', 'label' => 'Προμήθειες', 'icon' => 'euro' ];
 		}
 		if ( current_user_can( \EnergyCRM\Access\Capability::MANAGE_TEAM ) ) {
-			$nav[] = [ 'view' => 'teamlive', 'label' => 'Ομάδα Live', 'icon' => 'pulse' ];
+			// Ήταν 'Ομάδα Live' — «live» έμεινε αμετάφραστο (κανόνας 4).
+			$navMore[] = [ 'view' => 'teamlive', 'label' => 'Ομάδα τώρα', 'icon' => 'pulse' ];
 		}
 		if ( current_user_can( \EnergyCRM\Access\Capability::VIEW_ANALYTICS ) ) {
-			$nav[] = [ 'view' => 'analytics', 'label' => 'Στατιστικά', 'icon' => 'analytics' ];
+			$navMore[] = [ 'view' => 'analytics', 'label' => 'Στατιστικά', 'icon' => 'analytics' ];
 		}
 		if ( current_user_can( \EnergyCRM\Access\Capability::IMPORT_DATA ) ) {
-			$nav[] = [ 'view' => 'import', 'label' => 'Εισαγωγή Excel', 'icon' => 'import' ];
+			$navMore[] = [ 'view' => 'import', 'label' => 'Εισαγωγή Excel', 'icon' => 'import' ];
 		}
 
 		ob_start();
@@ -123,8 +139,8 @@ class ECRM_App {
 					<button type="button" class="ecrm-collapse" data-collapse aria-label="Σύμπτυξη μενού"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></button>
 				</div>
 				<nav class="ecrm-nav">
-					<div class="ecrm-nav__label">Navigation</div>
-					<?php foreach ( $nav as $item ) :
+					<div class="ecrm-nav__label">Καθημερινά</div>
+					<?php foreach ( $navDaily as $item ) :
 						$go = $item['go'] ?? $item['view'];
 						$badge = $item['badge'] ?? 0;
 						?>
@@ -133,21 +149,43 @@ class ECRM_App {
 							<span class="ecrm-nav__txt"><?php echo esc_html( $item['label'] ); ?></span>
 						</button>
 					<?php endforeach; ?>
+					<?php
+					/*
+					 * Το «Περισσότερα» ξεκινά ΔΙΠΛΩΜΕΝΟ (πρόταση #2 του χαμηλής-
+					 * εξοικείωσης πάσου, docs/UI-NAV-MORE-COLLAPSE.html, εγκρίθηκε
+					 * 23/08) — ίδιο πνεύμα με την κάτω μπάρα κινητού: 5 βασικές
+					 * διαδρομές μπροστά, τα υπόλοιπα πίσω από ένα κλικ. Ανοίγει
+					 * μόνο του στο ΠΡΩΤΟ login κάποιου (καμία διαδρομή δεν χάνεται
+					 * αναξήτητα), μετά θυμάται με localStorage — δες ecrm-app.js. */
+					$more_badges = array_sum( array_map( fn( $it ) => $it['badge'] ?? 0, $navMore ) );
+					?>
+					<button type="button" class="ecrm-nav__more-toggle" data-nav-more-toggle aria-expanded="false">
+						<span>Περισσότερα</span>
+						<?php if ( $more_badges > 0 ) : ?><span class="ecrm-nav__badge ecrm-nav__badge--more"><?php echo (int) $more_badges; ?></span><?php endif; ?>
+						<span class="ecrm-nav__more-chev" aria-hidden="true"><?php echo self::icon( 'chevron-down' ); // phpcs:ignore ?></span>
+					</button>
+					<div class="ecrm-nav__more-body" data-nav-more-body>
+						<?php foreach ( $navMore as $item ) :
+							$go = $item['go'] ?? $item['view'];
+							$badge = $item['badge'] ?? 0;
+							?>
+							<button type="button" class="ecrm-nav__item" data-go="<?php echo esc_attr( $go ); ?>" title="<?php echo esc_attr( $item['label'] ); ?>">
+								<span class="ecrm-nav__icon"><?php echo self::icon( $item['icon'] ); // phpcs:ignore ?><?php if ( $badge > 0 ) : ?><span class="ecrm-nav__badge"><?php echo (int) $badge; ?></span><?php endif; ?></span>
+								<span class="ecrm-nav__txt"><?php echo esc_html( $item['label'] ); ?></span>
+							</button>
+						<?php endforeach; ?>
+					</div>
 				</nav>
 				<div class="ecrm-sidebar__foot">
 					<?php
 					/*
-					 * Και τα δύο ζεύγη εικονιδίου/ετικέτας τυπώνονται πάντα· ποιο
-					 * φαίνεται το αποφασίζει CSS από το data-theme του .ecrm. Έτσι ο
-					 * διακόπτης δείχνει ΠΟΥ πάει το κλικ, χωρίς η JS να ξέρει από SVG.
+					 * Ο διακόπτης εμφάνισης ΕΦΥΓΕ από εδώ (23/08, ιδιοκτήτης): «αφού
+					 * πήγε πάνω, πρέπει να φύγει από το πλάι» — μετακόμισε ολόκληρος
+					 * στο topbar (`.ecrm-themesw`, πάνω στο `<header>`), ορατός και σε
+					 * desktop και σε mobile πλέον, βλ. CHANGELOG. Δεν μένει διπλό
+					 * σημείο ελέγχου.
 					 */
 					?>
-					<button type="button" class="ecrm-nav__item" data-theme-toggle title="Εναλλαγή εμφάνισης">
-						<span class="ecrm-nav__icon" data-theme-only="light"><?php echo self::icon( 'moon' ); // phpcs:ignore ?></span>
-						<span class="ecrm-nav__icon" data-theme-only="dark"><?php echo self::icon( 'sun' ); // phpcs:ignore ?></span>
-						<span class="ecrm-nav__txt" data-theme-only="light">Σκούρο</span>
-						<span class="ecrm-nav__txt" data-theme-only="dark">Ανοιχτό</span>
-					</button>
 					<?php if ( current_user_can( 'manage_options' ) ) : ?>
 					<a class="ecrm-nav__item" href="<?php echo esc_url( admin_url( 'admin.php?page=energy-crm' ) ); ?>" title="Ρυθμίσεις (WP Admin)">
 						<span class="ecrm-nav__icon"><?php echo self::icon( 'gear' ); // phpcs:ignore ?></span>
@@ -171,6 +209,21 @@ class ECRM_App {
 						<div class="ecrm-gsearch__results" data-gsearch-results hidden></div>
 					</div>
 					<div class="ecrm-topbar__right">
+						<?php
+						/*
+						 * Δεύτερο σημείο εναλλαγής εμφάνισης — ρητό αίτημα ιδιοκτήτη
+						 * (23/08): «στο πάνω desktop, σαν κουμπί on/off», γιατί το
+						 * υπάρχον στο footer του μενού μοιάζει με απλή γραμμή κειμένου
+						 * και δεν ξεχωρίζει σαν διακόπτης. Το ίδιο attribute
+						 * `data-theme-toggle` σε ΔΥΟ στοιχεία — το ecrm-app.js πλέον
+						 * τα πιάνει και τα δύο με querySelectorAll, ό,τι πατηθεί
+						 * ενημερώνει άμεσα και τα δύο (ίδιο data-theme στο .ecrm). */
+						?>
+						<button type="button" class="ecrm-themesw" data-theme-toggle role="switch" aria-checked="<?php echo 'dark' === $theme ? 'true' : 'false'; ?>" aria-label="Σκούρα εμφάνιση" title="Εναλλαγή ανοιχτής/σκούρας εμφάνισης">
+							<span class="ecrm-themesw__ico ecrm-themesw__ico--sun"><?php echo self::icon( 'sun' ); // phpcs:ignore ?></span>
+							<span class="ecrm-themesw__ico ecrm-themesw__ico--moon"><?php echo self::icon( 'moon' ); // phpcs:ignore ?></span>
+							<span class="ecrm-themesw__knob"></span>
+						</button>
 						<span class="ecrm-live"><span class="ecrm-live__dot"></span> Live</span>
 						<div class="ecrm-bellwrap">
 							<button type="button" class="ecrm-bell" data-bell aria-label="Ειδοποιήσεις">
@@ -266,7 +319,7 @@ class ECRM_App {
 			$botnav = [
 				[ 'view' => 'dashboard',    'label' => 'Αρχική',   'icon' => 'dashboard' ],
 				[ 'view' => 'contracts',    'label' => 'Συμβάσεις', 'icon' => 'contracts' ],
-				[ 'view' => 'new-contract', 'label' => 'Νέα',      'icon' => 'new' ],
+				[ 'view' => 'new-contract', 'label' => 'Νέα αίτηση', 'icon' => 'new' ],
 				[ 'view' => 'tasks',        'label' => 'Εργασίες',  'icon' => 'tasks' ],
 				[ 'view' => 'customers',    'label' => 'Πελάτες',   'icon' => 'customers' ],
 			];
@@ -288,7 +341,10 @@ class ECRM_App {
 				<div class="ecrm-litsa__panel" role="dialog" aria-label="Βοηθός Λίτσα">
 					<div class="ecrm-litsa__head">
 						<div class="ecrm-litsa__id"><span class="ecrm-litsa__avatar">Λ</span><div><strong>Λίτσα</strong><span class="ecrm-litsa__sub">βοηθός CRM</span></div></div>
-						<button type="button" class="ecrm-litsa__x" data-litsa-toggle aria-label="Κλείσιμο">✕</button>
+						<div class="ecrm-litsa__headbtns">
+							<button type="button" class="ecrm-litsa__clear" data-litsa-clear aria-label="Διαγραφή συνομιλίας" title="Διαγραφή συνομιλίας"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg></button>
+							<button type="button" class="ecrm-litsa__x" data-litsa-toggle aria-label="Κλείσιμο">✕</button>
+						</div>
 					</div>
 					<div class="ecrm-litsa__body" data-litsa-body></div>
 					<div class="ecrm-litsa__foot">
@@ -330,6 +386,7 @@ class ECRM_App {
 			'chat'      => '<path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/>',
 			'moon'      => '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
 			'sun'       => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.9 4.9l1.4 1.4"/><path d="M17.7 17.7l1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M4.9 19.1l1.4-1.4"/><path d="M17.7 6.3l1.4-1.4"/>',
+			'chevron-down' => '<path d="M6 9l6 6 6-6"/>',
 		];
 		$d = $p[ $name ] ?? '';
 		return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $d . '</svg>';

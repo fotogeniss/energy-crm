@@ -58,7 +58,22 @@ import { api, esc } from '@energy-crm/util';
 			.catch(function () { busy = false; history.push({ role: 'assistant', content: 'Σφάλμα δικτύου. Δοκίμασε ξανά.' }); render(); save(); });
 	}
 
+	// Απλό confirm(), όχι ο διάλογος με πληκτρολόγηση: η συνομιλία δεν είναι
+	// επιχειρηματικό δεδομένο — ζει μόνο τοπικά, στο localStorage αυτού του
+	// browser — άρα δεν εμπίπτει στην κατηγορία «οριστική ενέργεια που παίρνει
+	// μαζί της δεδομένα που δεν ξαναφτιάχνονται» του docs/UI-DIALOGS.html.
+	function clearHistory() {
+		if (!history.length) return;
+		if (!confirm('Διαγραφή της συνομιλίας με τη Λίτσα;')) return;
+		history = [];
+		save();
+		render();
+	}
+
+	var clearBtn = root.querySelector('[data-litsa-clear]');
+
 	root.querySelectorAll('[data-litsa-toggle]').forEach(function (b) { b.addEventListener('click', toggle); });
 	sendBtn.addEventListener('click', send);
+	if (clearBtn) { clearBtn.addEventListener('click', clearHistory); }
 	input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); send(); } });
 })();
