@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JS tests — από φύλακες που διαβάζουν κείμενο σε tests που καλούν συνάρτηση</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --ink:#14181d; --muted:#5b6672; --line:#dfe3e8;
+    --code-bg:#f0f2f5; --ok:#0f7b4f; --ok-bg:#e6f4ed; --warn:#8a5a00; --warn-bg:#fdf1dc;
+    --bad:#a3232b; --bad-bg:#fbe9ea; --accent:#2a4d8f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .wrap{max-width:58rem;margin:0 auto;padding:2rem 1.1rem 5rem}
+  header{border-bottom:2px solid var(--line);padding-bottom:1.1rem;margin-bottom:1.6rem}
+  h1{font-size:1.55rem;margin:0 0 .4rem;letter-spacing:-.015em;line-height:1.25}
+  .sub{color:var(--muted);font-size:.92rem}
+  h2{font-size:1.14rem;margin:2.6rem 0 .2rem;letter-spacing:-.01em;line-height:1.3}
+  h2 .n{color:var(--muted);font-weight:600;margin-right:.45rem}
+  h3{font-size:.98rem;margin:1.4rem 0 .4rem}
+  .verdict{font-size:.93rem;color:var(--muted);margin:.15rem 0 1rem}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:1.1rem 1.2rem 1.35rem;margin-bottom:1.1rem}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:7px;
+    padding:.7rem .8rem;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:.7rem 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em}
+  p code,li code,td code{background:var(--code-bg);padding:.08em .35em;border-radius:4px}
+  .tag{display:inline-block;font-size:.71rem;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;padding:.2rem .5rem;border-radius:5px;vertical-align:.15em}
+  .t-ok{background:var(--ok-bg);color:var(--ok)}
+  .t-warn{background:var(--warn-bg);color:var(--warn)}
+  .t-bad{background:var(--bad-bg);color:var(--bad)}
+  table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.88rem}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .scroll{overflow-x:auto}
+  .note{border-left:3px solid var(--accent);padding:.55rem .85rem;margin:.9rem 0;
+    color:var(--muted);font-size:.9rem;background:var(--code-bg);border-radius:0 6px 6px 0}
+  .note strong{color:var(--ink)}
+  .note.bad{border-left-color:var(--bad)}
+  .note.ok{border-left-color:var(--ok)}
+  ul,ol{padding-left:1.2rem}
+  li{margin:.35rem 0}
+  .foot{color:var(--muted);font-size:.84rem;margin-top:2.5rem;border-top:1px solid var(--line);
+    padding-top:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>JS tests — τι φυλάνε σήμερα τα τρία PHP guard, τι δεν μπορούν να φυλάξουν, και τι ακριβώς μπαίνει</h1>
+  <div class="sub">Ανοιχτό #3. Το approach δοκιμάστηκε και εκτελέστηκε σε sandbox αντίγραφο πριν
+  γραφτεί οτιδήποτε στο repo — 19/19 tests περνάνε, μετρημένο, όχι υποτεθειμένο.</div>
+</header>
+
+<h2><span class="n">1.</span> Τι υπάρχει σήμερα — μετρημένο</h2>
+<section>
+<pre>$ find . -name package.json
+                                                             ← τίποτα, πουθενά στο plugin
+
+$ grep -rln "\.js\b" tests/Unit/
+tests/Unit/Infrastructure/FrontendEscapingTest.php
+tests/Unit/Infrastructure/TimeIsReadInOnePlaceTest.php
+                                                             ← ΔΥΟ αποτελέσματα, όχι τρία</pre>
+
+  <p>Η δόκιμη εντολή απόδειξης του §8.4 βγάζει δύο. Στην πραγματικότητα <strong>τρία</strong> PHP
+  test σαρώνουν <code>.js</code>: το τρίτο, <code>NoRemoteFontsTest</code>, ελέγχει επέκταση με
+  <code>in_array($file->getExtension(), ['php','js','css'], true)</code> — το <code>'js'</code> είναι
+  στοιχείο array, ποτέ η κυριολεκτική συμβολοσειρά <code>.js</code>, άρα το <code>grep -rln "\.js\b"</code>
+  δεν το βρίσκει. <strong>Βρέθηκε τώρα, διερευνώντας αυτό το item</strong> — δεν είναι ακόμα στο §8,
+  σημειώνεται εδώ ρητά ώστε να μη χαθεί πριν προστεθεί.</p>
+
+  <div class="note"><strong>Και τα τρία διαβάζουν κείμενο, όχι κώδικα.</strong> Κανένα δεν
+  <code>import</code>-άρει το αρχείο, δεν καλεί μια συνάρτηση, δεν ελέγχει τι επιστρέφει. Το
+  <code>ecrm-format.js</code> λέει ρητά στο δικό του σχόλιο: «Pure functions, every one: same input,
+  same output, no DOM, no network, no state.» Καμία εντολή μέχρι σήμερα δεν το είχε επαληθεύσει.</div>
+</section>
+
+<h2><span class="n">2.</span> Το εμπόδιο, και η υπόθεση που διορθώθηκε</h2>
+<section>
+  <p>Τα <code>public/assets/*.js</code> γράφονται σκόπιμα ως ES modules
+  (<code>export function ...</code>), φορτωμένα στον browser με native
+  <code>&lt;script type="module"&gt;</code> — <strong>χωρίς bundler, χωρίς
+  <code>node_modules</code>, χωρίς build artifact</strong> (ρητή σχεδιαστική επιλογή, σχόλιο στο
+  <code>ecrm-util.js</code>). Δεν υπάρχει <code>package.json</code> πουθενά που να δηλώνει
+  <code>"type": "module"</code>. Χωρίς βοήθεια, ο Node θα τα διάβαζε ως CommonJS και θα έσκαγε στο
+  πρώτο <code>export</code>.</p>
+
+  <p>Η αρχική σκέψη ήταν να χρειάζεται ρητά η σημαία <code>--experimental-detect-module</code>. Αυτό
+  <strong>μετρήθηκε</strong> — σε sandbox αντίγραφο των τριών πραγματικών αρχείων, όχι στο repo — και
+  διορθώθηκε: σε Node v22.22.2, το <code>--help</code> δείχνει μόνο τη σημαία που ΑΠΕΝΕΡΓΟΠΟΙΕΙ το
+  detect-module, όχι αυτή που το ενεργοποιεί:</p>
+
+<pre>$ node --help | grep -A1 experimental-detect-module
+  --no-experimental-detect-module
+                              when ambiguous modules fail to evaluate</pre>
+
+  <p>Δηλαδή το detect-module είναι <strong>ήδη προεπιλογή</strong> σε αυτή την έκδοση. Δοκιμάστηκαν
+  και τα τρία, στο ίδιο sandbox, με τα ίδια 19 tests:</p>
+
+  <div class="scroll">
+  <table>
+    <tr><th>Εντολή</th><th>Αποτέλεσμα</th></tr>
+    <tr><td><code>node --test tools/js-tests/*.test.js</code> (χωρίς σημαία)</td>
+      <td><span class="tag t-ok">19/19</span> περνάνε — ήδη ενεργό ως προεπιλογή</td></tr>
+    <tr><td><code>node --experimental-detect-module --test ...</code></td>
+      <td><span class="tag t-ok">19/19</span> περνάνε — ρητά ενεργό</td></tr>
+    <tr><td><code>node --no-experimental-detect-module --test ...</code></td>
+      <td><span class="tag t-bad">σκάει</span> στο πρώτο <code>import</code></td></tr>
+  </table>
+  </div>
+
+<pre>$ node --no-experimental-detect-module --test tools/js-tests/*.test.js
+SyntaxError: Named export 'energyLabel' not found. The requested module
+'../../public/assets/ecrm-format.js' is a CommonJS module, which may not
+support all module.exports as named exports.</pre>
+
+  <p>Η τρίτη γραμμή είναι η απόδειξη ότι η σημαία κάνει πραγματικά κάτι — δεν είναι no-op σε αυτή
+  την έκδοση Node, απλώς η προεπιλογή ήδη συμφωνεί μαζί της. Η σημαία μένει <strong>ρητή</strong> στο
+  <code>npm test</code>, γιατί (α) είναι ακόμα χαρακτηρισμένη "experimental" — η προεπιλογή θα
+  μπορούσε να αλλάξει σε μελλοντικό Node — και (β) σε Node 20.19–21.x υπάρχει μόνο πίσω από ρητό
+  flag, όχι ως προεπιλογή. Δεν μετρήθηκε πραγματικά σε 20.x/21.x — μόνο στην v22.22.2 του sandbox.</p>
+
+  <div class="note"><strong>Καμία αλλαγή στο <code>public/assets/</code>.</strong> Καμία στιγμή δεν
+  χρειάστηκε <code>package.json</code> εκεί ή αλλαγή στα ίδια τα production αρχεία — μόνο ένα νέο
+  <code>package.json</code> μέσα στο <code>tools/js-tests/</code>, που δηλώνει
+  <code>"type": "module"</code> για τα ΔΙΚΑ ΤΟΥ test files (δεν αγγίζει τη γειτονιά κάτω από
+  <code>public/</code>, που δεν έχει κανέναν πρόγονο <code>package.json</code>).</div>
+</section>
+
+<h2><span class="n">3.</span> Τι ακριβώς μπαίνει, και τι δοκιμάστηκε</h2>
+<div class="verdict">Πέντε νέα αρχεία, όλα σε <code>tools/js-tests/</code>. Κανένα δεν αγγίζει PHP, κανένα δεν αγγίζει production JS.</div>
+<section>
+  <div class="scroll">
+  <table>
+    <tr><th>Αρχείο</th><th>Ελέγχει</th><th>Το πιο σημαντικό test μέσα</th></tr>
+    <tr><td><code>format.test.js</code> — 12 test</td>
+      <td><code>up()</code>, <code>energyLabel()</code>, <code>fmtDate()</code>,
+      <code>timeAgo()</code>, <code>initials()</code>, <code>tint()</code>, <code>svgIcon()</code></td>
+      <td>Regression για το ακριβώς αντίστροφο λάθος της (84)/(89): αν κάποιος ξαναπροσθέσει
+      <code>+ 'Z'</code>, ένα timestamp μορφοποιημένο ΤΩΡΑ (τοπική ώρα) θα φαινόταν στο μέλλον, το
+      <code>Date.now() - d</code> θα πήγαινε αρνητικό, και το test θα έσκαγε αντί για «μόλις τώρα».</td></tr>
+    <tr><td><code>scope.test.js</code> — 3 test</td>
+      <td><code>scope()</code> / <code>setScope()</code></td>
+      <td>Καταγράφει ρητά ότι το <code>node --test</code> τρέχει κάθε ΑΡΧΕΙΟ σε ξεχωριστή
+      διεργασία (module state δεν διαρρέει μεταξύ <code>.test.js</code> αρχείων) αλλά ΟΧΙ μεταξύ
+      πολλαπλών <code>test()</code> στο ίδιο αρχείο — κάθε test καλεί ρητά <code>setScope()</code>.</td></tr>
+    <tr><td><code>navigate.test.js</code> — 4 test</td>
+      <td><code>wire()</code> / <code>go()</code> / <code>openDetail()</code> /
+      <code>openPartner()</code> / <code>openEdit()</code></td>
+      <td><code>wire()</code> <strong>αντικαθιστά</strong> τους handlers, δεν τους συγχωνεύει — ρητά
+      τεκμηριωμένη απόφαση στο ίδιο το αρχείο («a shell booted twice on one page cannot leave half
+      the previous one wired in»). Το test καλεί <code>wire()</code> δύο φορές με μερικό δεύτερο
+      σύνολο και επιβεβαιώνει ότι ο πρώτος handler έγινε αναπάντητος ξανά — αν κάποτε γίνει
+      <code>Object.assign</code> αντί για αντικατάσταση, αυτό το test είναι που θα το πιάσει.</td></tr>
+    <tr><td><code>package.json</code></td><td>—</td>
+      <td><code>"type": "module"</code>, καμία εξάρτηση. Αντίθετα με το
+      <code>tools/wizard-smoke/</code>, που χρειάζεται <code>jsdom</code> επειδή δοκιμάζει
+      συμπεριφορά DOM/wizard-step-hiding — αυτά τα τρία module είναι DOM-free.</td></tr>
+    <tr><td><code>README.md</code></td><td>—</td>
+      <td>Τι ελέγχει, τι δεν ελέγχει, γιατί η σημαία (με τον ίδιο πίνακα παραπάνω), το singleton
+      state, στο πνεύμα του <code>tools/wizard-smoke/README.md</code>.</td></tr>
+  </table>
+  </div>
+
+<pre>$ node --experimental-detect-module --test tools/js-tests/*.test.js
+...
+# tests 19
+# pass 19
+# fail 0
+# duration_ms 329.741529</pre>
+
+  <div class="note ok"><strong>Εκτελέστηκε, όχι μόνο γράφτηκε.</strong> Sandbox αντίγραφο των τριών
+  πραγματικών αρχείων παρμένο από τη μηχανή του πελάτη (<code>device_stage_files</code>), σε
+  ξεχωριστό directory layout που αντικατοπτρίζει το πραγματικό repo — ώστε το relative import
+  <code>../../public/assets/...</code> να λειτουργεί ίδια. Node v22.22.2. Τίποτα δεν γράφτηκε στο
+  πραγματικό repo πριν περάσουν και τα 19.</div>
+</section>
+
+<h2><span class="n">4.</span> Τι ΔΕΝ λύνει</h2>
+<section>
+  <ul>
+    <li><strong>Δεν αντικαθιστά τα τρία PHP guard.</strong> Αυτά ελέγχουν πράγματα εντελώς
+      διαφορετικά (fonts, HTML-escaping, timezone-reading-σε-ένα-σημείο) — δεν είναι διπλότυπα,
+      μένουν όλα.</li>
+    <li><strong>Δεν καλύπτει views, wizard, ή DOM-συνδεδεμένο κώδικα.</strong> Μόνο τα τρία module
+      χωρίς κατάσταση/με απλή κατάσταση. Το <code>tools/wizard-smoke/</code> καλύπτει το wizard
+      ξεχωριστά και δεν αντικαθίσταται.</li>
+    <li><strong>Δεν μπαίνει στο <code>composer check:all</code>.</strong> Ίδια απόφαση με το
+      <code>tools/wizard-smoke/</code> — το <code>tools/</code> είναι ήδη εκτός scope για
+      phpcs/phpstan/unit/integration. Δεν αλλάζει κανέναν από τους τέσσερις παρακολουθούμενους
+      αριθμούς.</li>
+    <li><strong>Δεν μπαίνει (ακόμα) στο <code>.github/workflows/ci.yml</code>.</strong> GitHub
+      Actions runners έχουν Node προεγκατεστημένο, οπότε είναι εφικτό με μία ακόμα εντολή στο yml —
+      αλλά είναι ξεχωριστή απόφαση, δεν προτείνεται εδώ ως μέρος αυτής της παρτίδας.</li>
+  </ul>
+</section>
+
+<h2><span class="n">5.</span> Πρόβλεψη πλήθους, γραμμένη πριν</h2>
+<section>
+  <p>Η παρτίδα προσθέτει πέντε αρχεία, όλα σε <code>tools/js-tests/</code> — κανένα <code>.php</code>,
+  καμία αλλαγή σε <code>public/assets/</code>.</p>
+
+  <div class="scroll">
+  <table>
+    <tr><th></th><th>είναι (90)</th><th>πρόβλεψη (91)</th><th>γιατί</th></tr>
+    <tr><td>unit</td><td>891</td><td><strong>891</strong></td>
+      <td>το <code>tools/</code> δεν είναι σε <code>public\|includes\|admin\|src</code></td></tr>
+    <tr><td>integration</td><td>348</td><td><strong>348</strong></td><td>καμία νέα ολοκλήρωση</td></tr>
+    <tr><td>phpcs</td><td>265</td><td><strong>265</strong></td><td>κανένα νέο <code>.php</code></td></tr>
+    <tr><td>phpstan</td><td>147</td><td><strong>147</strong></td><td>το <code>src/</code> δεν άγγιξε</td></tr>
+  </table>
+  </div>
+
+  <p>Ξεχωριστό, νέο μέτρο — <strong>εκτός</strong> των τεσσάρων παραπάνω, ίδια λογική με το
+  <code>tools/wizard-smoke/</code>: <code>node --experimental-detect-module --test
+  tools/js-tests/*.test.js</code> → 19 tests, 19 pass, 0 fail.</p>
+</section>
+
+<div class="foot">
+  Μετρημένο και εκτελεσμένο 23/08/2026, σε sandbox αντίγραφο (Linux VM) πριν γραφτεί οτιδήποτε στο
+  repo — καμία εντολή <code>git</code> ή <code>vendor/</code> εκτελέστηκε, κανένα από τα δύο άγγιξε
+  το πραγματικό repo. Κανένα HTML mockup δεν χρειάζεται εδώ — δεν υπάρχει οθόνη, §1(8) δεν
+  εφαρμόζεται.
+</div>
+
+</div>
+</body>
+</html>
