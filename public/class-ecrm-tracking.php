@@ -153,7 +153,7 @@ class ECRM_Tracking {
 
 	/** Ordered journey shown to the customer. */
 	public static function stages(): array {
-		return [ 'Καταχώρηση', 'Προς υπογραφή', 'Σε επεξεργασία', 'Δρομολόγηση', 'Ενεργοποίηση' ];
+		return [ 'Καταχώρηση', 'Περιμένει υπογραφή', 'Σε επεξεργασία', 'Δρομολόγηση', 'Ενεργοποίηση' ];
 	}
 
 	/** Statuses where the customer is allowed to e-sign from the tracking link. */
@@ -441,8 +441,8 @@ class ECRM_Tracking {
 			if ( $u && is_email( $u->user_email ) ) {
 				wp_mail(
 					$u->user_email,
-					sprintf( '✍️ Υπεγράφη: %s', $row['code'] ),
-					sprintf( "Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση προχώρησε σε «Υπεγράφη».", $row['code'] )
+					sprintf( '✍️ Υπογράφηκε: %s', $row['code'] ),
+					sprintf( "Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση προχώρησε σε «Υπογράφηκε».", $row['code'] )
 				);
 			}
 		}
@@ -673,10 +673,14 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	.doc-item:last-child { border-bottom:0; }
 	.doc-lbl { font-size:13px; font-weight:600; color:var(--ink); }
 	.doc-ok { display:inline-flex; align-items:center; gap:6px; color:var(--ok); font-weight:700; font-size:13px; }
+	.doc-btns { display:flex; gap:6px; flex:0 0 auto; }
 	.up-btn { border:1px solid var(--line2); background:var(--surface); color:var(--ink); border-radius:8px;
 		padding:6px 11px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
 	.up-btn:hover { border-color:var(--ink3); }
 	.up-btn.is-busy { opacity:.6; pointer-events:none; }
+	/* Στόχος αφής 40x40 σαν το .up-btn κανονικό — μόνο εικονίδιο, όχι κείμενο,
+	   ώστε δύο κουμπιά να χωράνε δίπλα-δίπλα ακόμα και σε στενή οθόνη. */
+	.up-btn--cam { padding:6px 10px; font-size:15px; line-height:1; }
 	.doc-msg { font-size:12px; margin-top:8px; min-height:16px; color:var(--ink3); }
 	.doc-msg.is-ok { color:var(--ok); }
 	.doc-msg.is-err { color:var(--err); }
@@ -743,7 +747,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 		// If the link itself didn't pass the server-side signature check, it's
 		// genuinely invalid/expired — no point hitting the API.
 		if (!TOKEN_OK) {
-			fail('Ο σύνδεσμος δεν είναι έγκυρος ή έληξε. Ζητήστε νέο σύνδεσμο από τον συνεργάτη σας.', 'BAD_LINK');
+			fail('Ο σύνδεσμος δεν είναι έγκυρος ή έληξε. Ζητήστε νέο σύνδεσμο από τον συνεργάτη σας.', 'ΑΚΥΡΟΣ ΣΥΝΔΕΣΜΟΣ');
 			return;
 		}
 		fetch(REST, { headers: { 'Accept': 'application/json' } })
@@ -757,18 +761,18 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 				// The token is valid (checked above), so a non-OK here is almost
 				// always the server blocking the public endpoint, not a bad link.
 				if (http === 401 || http === 403 || (d && /^rest_/.test(d.code || ''))) {
-					fail('Δεν ήταν δυνατή η σύνδεση με τον διακομιστή. Δοκιμάστε ξανά ή επικοινωνήστε μαζί μας.', 'REST_' + http);
+					fail('Δεν ήταν δυνατή η σύνδεση με τον διακομιστή. Δοκιμάστε ξανά ή επικοινωνήστε μαζί μας.', 'ΣΥΝΔΕΣΗ');
 				} else if (http === 429 || (d && d.error === 'too_many')) {
-					fail('Πολλές προσπάθειες σε σύντομο διάστημα. Δοκιμάστε ξανά σε λίγα λεπτά.', 'RATE');
+					fail('Πολλές προσπάθειες σε σύντομο διάστημα. Δοκιμάστε ξανά σε λίγα λεπτά.', 'ΠΟΛΛΕΣ ΠΡΟΣΠΑΘΕΙΕΣ');
 				} else if (d && d.error === 'not_found') {
-					fail('Η αίτηση δεν βρέθηκε. Ενδέχεται να έχει διαγραφεί.', 'NOT_FOUND');
+					fail('Η αίτηση δεν βρέθηκε. Ενδέχεται να έχει διαγραφεί.', 'ΔΕΝ ΒΡΕΘΗΚΕ');
 				} else if (d && d.error === 'invalid_token') {
-					fail('Ο σύνδεσμος δεν είναι έγκυρος ή έληξε.', 'INVALID');
+					fail('Ο σύνδεσμος δεν είναι έγκυρος ή έληξε.', 'ΑΚΥΡΟΣ ΣΥΝΔΕΣΜΟΣ');
 				} else {
-					fail('Παρουσιάστηκε πρόβλημα κατά τη φόρτωση. Δοκιμάστε ξανά.', 'HTTP_' + (http || '0'));
+					fail('Παρουσιάστηκε πρόβλημα κατά τη φόρτωση. Δοκιμάστε ξανά.', 'ΑΓΝΩΣΤΟ ΣΦΑΛΜΑ');
 				}
 			})
-			.catch(function(){ fail('Σφάλμα δικτύου. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.', 'NET'); });
+			.catch(function(){ fail('Σφάλμα δικτύου. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.', 'ΔΙΚΤΥΟ'); });
 	}
 	load();
 
@@ -841,31 +845,42 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 			html += '<div class="doc-item"><span class="doc-lbl">'+esc(it.label)+'</span>'+
 				(it.done
 					? '<span class="doc-ok">✓ Ανέβηκε</span>'
-					: '<button type="button" class="up-btn" data-kind="'+esc(it.kind)+'">Ανέβασμα</button>')+
+					: '<span class="doc-btns"><button type="button" class="up-btn" data-kind="'+esc(it.kind)+'">Ανέβασμα</button>'+
+						'<button type="button" class="up-btn up-btn--cam" data-kind="'+esc(it.kind)+'" aria-label="Λήψη φωτογραφίας">📷</button></span>')+
 				'</div>';
 		}
 		// Always allow a free-form extra document.
 		html += '<div class="doc-item"><span class="doc-lbl">Άλλο έγγραφο</span>'+
-			'<button type="button" class="up-btn" data-kind="other">Ανέβασμα</button></div>';
+			'<span class="doc-btns"><button type="button" class="up-btn" data-kind="other">Ανέβασμα</button>'+
+			'<button type="button" class="up-btn up-btn--cam" data-kind="other" aria-label="Λήψη φωτογραφίας">📷</button></span></div>';
 		html += '<div class="doc-msg" id="docmsg"></div>'+
 			'<input type="file" id="docfile" accept="image/jpeg,image/png,image/webp,image/heic,application/pdf,.pdf,.jpg,.jpeg,.png,.webp,.heic" style="display:none">'+
+			// Ξεχωριστό input από το docfile, με `capture` — το `capture` σε ένα
+			// input που δέχεται ΚΑΙ PDF ΚΑΙ πολλαπλές μορφές εικόνας συμπεριφέρεται
+			// ασυνεπώς ανά browser/κινητό. Ο πελάτης διαλέγει ρητά κάμερα ή αρχείο.
+			// Ζητήθηκε ρητά, 23/08 — «τρομερά σημαντικό» για κινητό/tablet.
+			'<input type="file" id="docfile-camera" accept="image/jpeg,image/png" capture="environment" style="display:none">'+
 			'</div>';
 		return html;
 	}
 
 	function initDocs(){
 		var input = document.getElementById('docfile');
+		var camInput = document.getElementById('docfile-camera');
 		if (!input) return;
 		var msg = document.getElementById('docmsg');
 		var curKind = 'other', curBtn = null;
 		function say(t, ok){ if(msg){ msg.textContent=t; msg.className = 'doc-msg' + (ok===false ? ' is-err' : (ok ? ' is-ok' : '')); } }
 
 		content.querySelectorAll('.up-btn').forEach(function(b){
-			b.addEventListener('click', function(){ curKind = b.getAttribute('data-kind') || 'other'; curBtn = b; input.value=''; input.click(); });
+			b.addEventListener('click', function(){
+				curKind = b.getAttribute('data-kind') || 'other'; curBtn = b;
+				var target = b.classList.contains('up-btn--cam') && camInput ? camInput : input;
+				target.value = ''; target.click();
+			});
 		});
 
-		input.addEventListener('change', function(){
-			var f = input.files && input.files[0];
+		function handleFile(f){
 			if (!f) return;
 			if (f.size > 12*1024*1024) { say('Το αρχείο είναι πολύ μεγάλο (μέγιστο 12MB).', false); return; }
 			if (curBtn) curBtn.classList.add('is-busy');
@@ -884,7 +899,10 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 			};
 			reader.onerror = function(){ if(curBtn) curBtn.classList.remove('is-busy'); say('Δεν ήταν δυνατή η ανάγνωση του αρχείου.', false); };
 			reader.readAsDataURL(f);
-		});
+		}
+
+		input.addEventListener('change', function(){ handleFile(input.files && input.files[0]); });
+		if (camInput) { camInput.addEventListener('change', function(){ handleFile(camInput.files && camInput.files[0]); }); }
 	}
 
 	function initPad(){
