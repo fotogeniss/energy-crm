@@ -34,7 +34,7 @@ final class UnprotectedDocumentsTest extends IntegrationTestCase
 
     private int $providerId;
 
-    /** @var list<string> */
+    /** @var array<string, true> */
     private array $filesBefore = [];
 
     /** @var list<int> */
@@ -48,13 +48,13 @@ final class UnprotectedDocumentsTest extends IntegrationTestCase
         // ίδιος προστατευμένος φάκελος με κάθε πραγματικό καλούντα.
         $this->documents = Services::unprotectedDocuments();
 
-        $this->filesBefore = $this->storageContents();
+        $this->filesBefore = self::documentsOnDisk();
         $this->providerId  = $this->makeProvider();
     }
 
     protected function tearDown(): void
     {
-        foreach (array_diff($this->storageContents(), $this->filesBefore) as $path) {
+        foreach (array_keys(array_diff_key(self::documentsOnDisk(), $this->filesBefore)) as $path) {
             wp_delete_file($path);
         }
 
@@ -319,15 +319,5 @@ final class UnprotectedDocumentsTest extends IntegrationTestCase
         );
 
         return $row;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function storageContents(): array
-    {
-        $found = glob(rtrim(ECRM_Files::dir(), '/\\') . DIRECTORY_SEPARATOR . '*');
-
-        return $found === false ? [] : array_values(array_filter($found, 'is_file'));
     }
 }
