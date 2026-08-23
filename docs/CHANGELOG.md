@@ -7,6 +7,62 @@
 
 ---
 
+## 2026-08-23 (94)
+
+### Το branch protection rule μπλόκαρε ΚΑΘΕ push στο `ui-kit`, όχι μόνο τα κακά — αδιέξοδο by design
+
+**Το πρόβλημα.** Μετά το commit (93), το `git push origin ui-kit` απορρίφθηκε
+από το GitHub με `GH013: Repository rule violations` / `Required status check
+"check" is expected`. Το τοπικό `composer check:all` ήταν ήδη πράσινο
+(pre-commit hook το επιβεβαίωσε πριν καν γίνει το commit) — το πρόβλημα δεν
+ήταν ο κώδικας.
+
+**Η αιτία.** Το ruleset του repo είχε ενεργό το rule «Require status checks to
+pass» πάνω στο `ui-kit`. Αυτό το rule απαιτεί να υπάρχει ήδη ένα **περασμένο**
+check-run πάνω στο ίδιο commit SHA πριν δεχτεί το push — δεν αρκεί να περάσει
+το check *μετά*. Για direct push ενός φρέσκου, τοπικού commit αυτό είναι
+αδιέξοδο εγγενές στη σχεδίαση: το commit δεν μπορεί να αποκτήσει passing check
+πριν φτάσει στο GitHub, και δεν μπορεί να φτάσει στο GitHub πριν αποκτήσει
+passing check.
+
+**Γιατί δεν έλυνε ένα απλό δεύτερο push σε άλλο branch.** Πρώτη προσπάθεια:
+`git push origin ui-kit:ci-check-93`, με την ιδέα ότι το check θα έτρεχε εκεί
+και το SHA θα «κέρδιζε» το πράσινο. Απέτυχε σιωπηλά — όχι με σφάλμα, απλά το
+Action δεν ενεργοποιήθηκε καθόλου, γιατί το `ci.yml` έχει
+`on.push.branches: [main, ui-kit]`: τυχαία ονόματα branch δεν πυροδοτούν
+`push` trigger. Το δεύτερο push στο `ui-kit` απορρίφθηκε αμέσως, χωρίς καν να
+προλάβει να τρέξει κάτι.
+
+**Η λύση που δούλεψε.** Το ίδιο `ci.yml` έχει και
+`on.pull_request.branches: [main, ui-kit]` — αυτό το trigger ενεργοποιείται
+ανεξαρτήτως ονόματος του source branch, αρκεί το target να είναι `ui-kit`.
+Άνοιγμα PR `ci-check-93 → ui-kit` (**όχι** `→ main` — το default base ref του
+GitHub «Create pull request» link είναι πάντα το repo default branch, εδώ
+`main`, χρειάστηκε ρητή αλλαγή base στο dropdown) ενεργοποίησε το Action,
+πέρασε σε 48s, και το merge του PR πέρασε κανονικά.
+
+**Η απόφαση μετά.** Το ίδιο rule θα ξανάμπλοκε *κάθε* μελλοντικό direct push
+— όχι μόνο κακό κώδικα, ό,τι κι αν ήταν. Αυτό δεν ταιριάζει σε μοναχικό dev
+χωρίς PR-based workflow. Αποφασίστηκε να απενεργοποιηθεί εντελώς το «Require
+status checks to pass» από το ruleset. Το `ci.yml` συνεχίζει να τρέχει σε
+κάθε push σαν πριν — παραμένει ορατό στο tab Actions αν κάτι σπάσει — απλά
+δεν είναι πλέον hard gate. Ο pre-commit hook (τρέχει τοπικά, πριν καν γίνει
+το commit) μένει η πρώτη γραμμή άμυνας· το CI στο GitHub είναι δίχτυ
+ασφαλείας για ό,τι ξέφυγε (λάθος λίστα επεκτάσεων, `--no-verify`, clone χωρίς
+`hooksPath` — βλ. (92)), όχι φύλακας εισόδου.
+
+**Αν χρειαστεί ποτέ ξανά αυστηρό gate** (π.χ. PR από τρίτο συνεργάτη): το
+σωστό rule combo είναι «Require a pull request before merging» ΜΑΖΙ ΜΕ
+«Require status checks to pass», όχι το δεύτερο μόνο του — έτσι το direct
+push μπλοκάρεται από το πρώτο rule (σαφές μήνυμα, καμία σύγχυση) και το
+status check αξιολογείται μόνο στο σημείο του merge, όπου το check έχει ήδη
+προλάβει να τρέξει πάνω στο branch του PR.
+
+**Αρχεία:** GitHub ruleset (`Settings → Rules → Rulesets`), όχι αρχείο στο
+repo — καμία αλλαγή κώδικα σε αυτό το entry.
+
+---
+
 ## 2026-08-23 (93)
 
 ### Ο επίπεδος φάκελος εγγράφων έγινε κάδος `Y/m` — και το sharding αποκάλυψε ότι τρία σημεία έγραφαν διαδρομές, όχι ένα
