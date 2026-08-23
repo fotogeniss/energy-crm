@@ -130,7 +130,7 @@ function renderTasks(view, d) {
 			'<div class="ecrm-task__due">' + taskDue(t) + '</div>' +
 			'<button type="button" class="ecrm-task__rm" data-task-del="' + t.id + '" aria-label="Διαγραφή">✕</button>' +
 			'</li>';
-	}).join('') : '<div class="ecrm-empty">Καμία εργασία.</div>';
+	}).join('') : '<div class="ecrm-empty">Δεν έχεις καμία εργασία αυτή τη στιγμή. Πρόσθεσε μία παρακάτω.</div>';
 
 	view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Παρακολούθηση</div><h2 class="ecrm-title">Εργασίες</h2>' +

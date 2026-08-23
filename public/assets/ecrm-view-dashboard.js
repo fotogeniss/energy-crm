@@ -155,7 +155,7 @@ function todayFoot(c) {
 }
 
 /* Γιατί κάθε γραμμή είναι εκεί, και τι κουμπί της ταιριάζει. Η φράση φτιάχνεται
- * από την κατάσταση ΚΑΙ τις ημέρες, γιατί «Εκκρεμότητα» σκέτο δεν λέει τίποτα
+ * από την κατάσταση ΚΑΙ τις ημέρες, γιατί «Εκκρεμεί» σκέτο δεν λέει τίποτα
  * που δεν λέει ήδη το badge δίπλα. */
 function why(it) {
 	var d = Number(it.days) || 0;
@@ -169,7 +169,7 @@ function why(it) {
 	if (it.status === 'awaiting_signature') {
 		return { txt: 'Περιμένει υπογραφή πελάτη ' + ago, act: 'Υπενθύμιση', tone: 'is-pend' };
 	}
-	return { txt: 'Εκκρεμότητα ' + ago, act: 'Επίλυση', tone: d >= 7 ? 'is-late' : 'is-pend' };
+	return { txt: 'Εκκρεμεί ' + ago, act: 'Επίλυση', tone: d >= 7 ? 'is-late' : 'is-pend' };
 }
 
 function attentionHTML(list) {
@@ -250,7 +250,7 @@ function trendHTML(monthly) {
 function providersHTML(list) {
 	if (!list || !list.length) {
 		return '<div class="ecrm-card"><div class="ecrm-step">Ανά πάροχο</div>' +
-			'<div class="ecrm-empty">Δεν υπάρχουν αιτήσεις σε κανέναν πάροχο ακόμα.</div></div>';
+			'<div class="ecrm-empty">Δεν έχεις καμία αίτηση ακόμα. Πάτα «Νέα αίτηση» για να ξεκινήσεις.</div></div>';
 	}
 	var max = Math.max.apply(null, list.map(function (p) { return Number(p.c) || 0; }).concat([1]));
 

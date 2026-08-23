@@ -168,8 +168,17 @@ function renderContracts(view, d) {
 	var allRows = d.rows || [];
 
 	// status tabs — show ALL statuses with counts + colour dots (like PSS)
+	//
+	// Εξαίρεση: 'awaiting_signature'. Είναι το ίδιο βήμα με το 'pending_signature'
+	// (βλ. class-ecrm-tracking.php: "System-A sign-link status — same stage"),
+	// τίποτα στον ενεργό κώδικα δεν το γράφει πια σε καμία σύμβαση — μόνο το
+	// διαβάζει, για συμβατότητα με τυχόν παλιά εγγραφή. Δύο κουμπιά για το ίδιο
+	// βήμα μπέρδευαν τον χρήστη (βλ. ερώτημα ιδιοκτήτη 23/08). Το enum/DB/label
+	// ΔΕΝ αγγίζονται — αν ποτέ εμφανιστεί τέτοια γραμμή, συνεχίζει να δουλεύει
+	// κανονικά, απλώς χωρίς δικό της κουμπί φίλτρου.
 	var tabs = '<button type="button" class="ecrm-tab' + (contractsState.status === '' ? ' is-on' : '') + '" data-status=""><span class="ecrm-tabdot ecrm-tabdot--all"></span>ΟΛΕΣ <b>' + (counts.all || 0) + '</b></button>';
 	Object.keys(statuses).forEach(function (st) {
+		if (st === 'awaiting_signature') return;
 		tabs += '<button type="button" class="ecrm-tab' + (contractsState.status === st ? ' is-on' : '') + '" data-status="' + st + '"><span class="ecrm-tabdot ecrm-tabdot--' + esc(st) + '"></span>' + esc(up(statuses[st])) + ' <b>' + (counts[st] || 0) + '</b></button>';
 	});
 
@@ -223,7 +232,16 @@ function renderContracts(view, d) {
 			'<div class="ecrm-pager__nav"><button type="button" class="ecrm-pager__b" data-page="prev"' + (contractsState.page <= 1 ? ' disabled' : '') + '>‹ Προηγούμενη</button>' +
 			'<span class="ecrm-pager__pos">Σελίδα ' + contractsState.page + ' από ' + pages + '</span>' +
 			'<button type="button" class="ecrm-pager__b" data-page="next"' + (contractsState.page >= pages ? ' disabled' : '') + '>Επόμενη ›</button></div></div>'
-		: '<div class="ecrm-empty">Δεν υπάρχουν συμβάσεις' + (contractsState.q ? ' για «' + esc(contractsState.q) + '»' : '') + '.</div>';
+		// counts.all (όχι το filtered total) ξεχωρίζει το «καμία αίτηση ποτέ»
+		// από το «καμία αίτηση με αυτό το φίλτρο/αναζήτηση» — μόνο το πρώτο
+		// χρειάζεται CTA, το δεύτερο έχει ήδη λύση: αλλαγή φίλτρου.
+		: '<div class="ecrm-empty">' + (
+			(contractsState.q || contractsState.status)
+				? 'Δεν υπάρχουν συμβάσεις' + (contractsState.q ? ' για «' + esc(contractsState.q) + '»' : '') + '.'
+				: (counts.all
+					? 'Δεν υπάρχουν συμβάσεις.'
+					: 'Δεν έχεις καμία αίτηση ακόμα. Πάτα «Νέα αίτηση» για να ξεκινήσεις.')
+		) + '</div>';
 
 	view.innerHTML = '' +
 		'<header class="ecrm-head ecrm-head--row"><div><h2 class="ecrm-title">Οι συμβάσεις μου</h2><p class="ecrm-sub">' + total + ' συμβάσεις · κάνε click σε γραμμή για λεπτομέρειες</p></div>' +
