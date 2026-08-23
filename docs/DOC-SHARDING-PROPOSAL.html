@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Επίπεδος φάκελος εγγράφων — τι μετρήθηκε, τι κοστίζει, τι προτείνεται</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --ink:#14181d; --muted:#5b6672; --line:#dfe3e8;
+    --code-bg:#f0f2f5; --ok:#0f7b4f; --ok-bg:#e6f4ed; --warn:#8a5a00; --warn-bg:#fdf1dc;
+    --bad:#a3232b; --bad-bg:#fbe9ea; --accent:#2a4d8f;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#12151a; --panel:#191d24; --ink:#e6e9ee; --muted:#98a3b0; --line:#2a3038;
+      --code-bg:#10131a; --ok:#5fd39b; --ok-bg:#12291f; --warn:#e8b45c; --warn-bg:#2b2312;
+      --bad:#f08a90; --bad-bg:#2c1618; --accent:#8fb0ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .wrap{max-width:58rem;margin:0 auto;padding:2rem 1.1rem 5rem}
+  header{border-bottom:2px solid var(--line);padding-bottom:1.1rem;margin-bottom:1.6rem}
+  h1{font-size:1.55rem;margin:0 0 .4rem;letter-spacing:-.015em;line-height:1.25}
+  .sub{color:var(--muted);font-size:.92rem}
+  h2{font-size:1.14rem;margin:2.6rem 0 .2rem;letter-spacing:-.01em;line-height:1.3}
+  h2 .n{color:var(--muted);font-weight:600;margin-right:.45rem}
+  h3{font-size:.98rem;margin:1.4rem 0 .4rem}
+  .verdict{font-size:.93rem;color:var(--muted);margin:.15rem 0 1rem}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:1.1rem 1.2rem 1.35rem;margin-bottom:1.1rem}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:7px;
+    padding:.7rem .8rem;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:.7rem 0}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em}
+  p code,li code,td code{background:var(--code-bg);padding:.08em .35em;border-radius:4px}
+  .tag{display:inline-block;font-size:.71rem;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;padding:.2rem .5rem;border-radius:5px;vertical-align:.15em}
+  .t-ok{background:var(--ok-bg);color:var(--ok)}
+  .t-warn{background:var(--warn-bg);color:var(--warn)}
+  .t-bad{background:var(--bad-bg);color:var(--bad)}
+  table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.88rem}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .scroll{overflow-x:auto}
+  .note{border-left:3px solid var(--accent);padding:.55rem .85rem;margin:.9rem 0;
+    color:var(--muted);font-size:.9rem;background:var(--code-bg);border-radius:0 6px 6px 0}
+  .note strong{color:var(--ink)}
+  .note.bad{border-left-color:var(--bad)}
+  .note.ok{border-left-color:var(--ok)}
+  ul,ol{padding-left:1.2rem}
+  li{margin:.35rem 0}
+  .foot{color:var(--muted);font-size:.84rem;margin-top:2.5rem;border-top:1px solid var(--line);
+    padding-top:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Επίπεδος φάκελος εγγράφων</h1>
+  <div class="sub">Ανοιχτό #3 · μετρημένο στον ζωντανό κώδικα, 2026-08-23 · πρόταση προς έγκριση, τίποτα δεν έχει αλλάξει ακόμα</div>
+</header>
+
+<section>
+  <h2><span class="n">0</span>Το ερώτημα, όπως ήταν γραμμένο</h2>
+  <p>«Επίπεδος φάκελος εγγράφων (~190.000 αρχεία/έτος)». Όλα τα έγγραφα πελατών —
+  ταυτότητες, λογαριασμοί, παραγόμενα PDF, εικόνες υπογραφών — γράφονται σε
+  <strong>έναν</strong> φάκελο, τον <code>uploads/ecrm-secure/</code>, χωρίς καμία υποδιαίρεση.</p>
+
+  <div class="note bad">
+    <strong>Ο αριθμός δεν έχει μετρηθεί ποτέ.</strong> Το «~190.000/έτος» υπάρχει μόνο ως
+    εκτίμηση στο <code>NEXT-SESSION.md</code>. Δεν βρέθηκε πουθενά αλλού στο repo, δεν
+    συνοδεύεται από υπολογισμό, και κανείς δεν μέτρησε πόσα αρχεία υπάρχουν
+    <em>σήμερα</em>. Η πρόταση παρακάτω δεν εξαρτάται από το ακριβές νούμερο — αλλά
+    η <em>προτεραιότητα</em> εξαρτάται, και γι' αυτό υπάρχει το §5.
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">1</span>Το εύρημα που αλλάζει το ρίσκο <span class="tag t-ok">καλό νέο</span></h2>
+  <p class="verdict">Δεν χρειάζεται migration. Τα ~190k υπάρχοντα αρχεία μένουν ακριβώς εκεί που είναι.</p>
+
+  <p>Ο φόβος σε κάθε τέτοια αλλαγή είναι ότι θα χρειαστεί να μετακινηθούν αρχεία με
+  ευαίσθητα δεδομένα, μαζικά, σε ζωντανό σύστημα. Εδώ <strong>δεν χρειάζεται</strong>, και ο λόγος
+  είναι μετρήσιμος:</p>
+
+  <h3>α. Η διαδρομή είναι αποθηκευμένη ανά γραμμή, όχι ανακατασκευασμένη</h3>
+  <p><code>ECRM_Files::serve()</code> διαβάζει <code>$row['path']</code> από τον πίνακα
+  <code>files</code>. Δεν χτίζει ποτέ τη διαδρομή από το id ή τη σύμβαση:</p>
+<pre>if ( ! empty( $row['protected'] ) &amp;&amp; ! empty( $row['path'] ) &amp;&amp; file_exists( $row['path'] ) ) {
+    $path = $row['path'];
+}</pre>
+  <p>Το ίδιο ισχύει σε κάθε διαγραφή και ανάκτηση του <code>FileRepository</code>
+  (<code>SELECT id, path, attachment_id …</code>). Ένα παλιό αρχείο με επίπεδη διαδρομή
+  εξακολουθεί να βρίσκεται, να σερβίρεται και να σβήνεται σωστά αφού η στήλη του δεν αλλάζει.</p>
+
+  <h3>β. Ο φύλακας περιέκτη περνάει υποφακέλους</h3>
+  <p>Το κρίσιμο σημείο. Αν ο έλεγχος «είναι αυτή η διαδρομή μέσα στον φάκελό μας;» συνέκρινε
+  <em>ακριβώς</em> τον γονέα, το sharding θα έσπαγε σιωπηλά τη διαγραφή — δηλαδή έγγραφα
+  με ΑΔΤ θα έμεναν στον δίσκο μετά από αίτημα διαγραφής, χωρίς κανένα σφάλμα στην οθόνη.
+  Ακριβώς η μορφή <strong>Γ</strong> του §8.1. Μετρήθηκε — <code>DocumentStorage::contains()</code>:</p>
+<pre>$resolved = realpath($path);
+$base     = realpath($this->dir);
+…
+return str_starts_with($resolved, $base . DIRECTORY_SEPARATOR);</pre>
+  <p>Πρόθεμα πάνω στο <em>resolved</em> path. <code>…/ecrm-secure/2026/08/doc_x.pdf</code> περνάει,
+  <code>…/ecrm-secure/../etc/passwd</code> όχι. <span class="tag t-ok">ασφαλές</span></p>
+
+  <h3>γ. Κανείς δεν σαρώνει τον φάκελο</h3>
+  <div class="scroll">
+  <table>
+    <tr><th>Έλεγχος</th><th>Αποτέλεσμα</th></tr>
+    <tr><td><code>grep -rn "scandir|glob(|readdir|opendir" src includes admin public</code></td>
+        <td>Ένα μόνο εύρημα, άσχετο: <code>FormCalibrator</code> πάνω σε <code>*.json</code> των φορμών.</td></tr>
+    <tr><td><code>PurgeOrphanFiles</code> (ορφανά έγγραφα)</td>
+        <td>Δουλεύει μέσω repository/βάσης, όχι filesystem.</td></tr>
+    <tr><td><code>IntegrationTestCase</code> (ανιχνευτής διαρροών)</td>
+        <td><code>RecursiveDirectoryIterator</code> — <strong>ήδη αναδρομικός</strong>, διασχίζει υποφακέλους.</td></tr>
+    <tr><td>Tests που δηλώνουν σχήμα διαδρομής</td>
+        <td>Κανένα. Όλα τα <code>doc_</code> στα tests είναι η στήλη <code>doc_kind</code>, όχι πρόθεμα αρχείου.</td></tr>
+  </table>
+  </div>
+
+  <h3>δ. Η θωράκιση δεν εξασθενεί</h3>
+  <p><code>Require all denied</code> στο <code>.htaccess</code>, το <code>web.config</code> και ο κανόνας
+  <code>location ^~</code> του nginx ισχύουν <strong>αναδρομικά</strong> για ό,τι κρέμεται από τον φάκελο.
+  Ένας υποφάκελος <code>2026/08/</code> κληρονομεί την ίδια άρνηση χωρίς νέο αρχείο θωράκισης.</p>
+</section>
+
+<section>
+  <h2><span class="n">2</span>Το πραγματικό αρχιτεκτονικό ζήτημα <span class="tag t-warn">προσοχή</span></h2>
+  <p class="verdict">Τρία σημεία γεννούν διαδρομές εγγράφων. Τα δύο αντιγράφουν το τρίτο.</p>
+
+  <div class="scroll">
+  <table>
+    <tr><th>#</th><th>Πού</th><th>Τι κάνει</th></tr>
+    <tr><td>1</td><td><code>DocumentStorage::newPath()</code><br><span class="sub">src/Persistence/</span></td>
+        <td>Κανονικό σημείο. <code>$this->dir . DIRECTORY_SEPARATOR . 'doc_' . wp_generate_password(24,false) . '.' . $ext</code></td></tr>
+    <tr><td>2</td><td><code>ECRM_Files::store()</code><br><span class="sub">includes/</span></td>
+        <td>Ίδια λογική, γραμμένη ξανά μέσα στη μέθοδο.</td></tr>
+    <tr><td>3</td><td><code>ECRM_Files::put_bytes()</code><br><span class="sub">includes/</span></td>
+        <td>Ίδια λογική, γραμμένη ξανά τρίτη φορά.</td></tr>
+  </table>
+  </div>
+
+  <div class="note">
+    Το ίδιο το <code>DocumentStorage</code> προειδοποιεί γι' αυτό στο δικό του docblock:
+    <em>«Αντίγραφο σε καθεμιά θα ήταν δύο εκδοχές του τι σημαίνει “ασφαλής διαδρομή” — και η
+    μία θα έμενε πίσω.»</em> Η κλάση βγήκε ακριβώς για να ενοποιήσει αυτό — και οι δύο legacy
+    μέθοδοι δεν την κάλεσαν ποτέ.
+  </div>
+
+  <p>Αν το sharding μπει μόνο στο (1), τα έγγραφα που ανεβάζει ο χρήστης (2) και τα
+  παραγόμενα PDF/υπογραφές (3) <strong>θα συνεχίσουν να πέφτουν επίπεδα</strong> — και η αλλαγή
+  θα φαίνεται ότι δούλεψε επειδή το <code>UnprotectedDocuments</code> (που περνά από το 1) θα
+  γράφει σωστά. Σιωπηλή μισή διόρθωση.</p>
+
+  <p><strong>Άρα η αλλαγή είναι στην πραγματικότητα δύο πράγματα:</strong> (α) ενοποίηση των τριών
+  σημείων σε ένα, (β) sharding σε εκείνο το ένα. Το (α) έχει αξία και μόνο του.</p>
+</section>
+
+<section>
+  <h2><span class="n">3</span>Το σχήμα που προτείνεται: <code>Y/m</code></h2>
+  <p class="verdict">Ένας υποφάκελος ανά έτος, ένας ανά μήνα μέσα του. Τίποτα πιο σύνθετο.</p>
+<pre>uploads/ecrm-secure/
+├── .htaccess  index.php  web.config      ← θωράκιση, μένει στη ρίζα
+├── doc_a1b2….pdf                         ← ~190k παλιά αρχεία, ΜΕΝΟΥΝ ΕΔΩ
+├── 2026/
+│   ├── 08/  doc_x9y8….pdf  …             ← ~15.800/μήνα με τη σημερινή εκτίμηση
+│   └── 09/  …
+└── 2027/  …</pre>
+
+  <div class="scroll">
+  <table>
+    <tr><th>Εναλλακτική</th><th>Γιατί όχι</th></tr>
+    <tr><td><code>Y/m/d</code></td>
+        <td>~520 αρχεία/φάκελο — πολύ λίγα για να αξίζει, 365 φάκελοι/έτος, 3.650 σε δεκαετία.
+        Λύνει πρόβλημα που δεν υπάρχει και προσθέτει θόρυβο σε κάθε backup listing.</td></tr>
+    <tr><td>hash-prefix (2 chars → 256 φάκελοι)</td>
+        <td>Ομοιόμορφη κατανομή, αλλά <strong>χωρίς χρονική σημασία</strong>: κάθε φάκελος μεγαλώνει
+        για πάντα, και «σβήσε ό,τι είναι παλιότερο από N έτη» ξαναγίνεται σάρωση όλου του δίσκου.
+        Χάνει ακριβώς αυτό που κάνει το <code>Y/m</code> χρήσιμο.</td></tr>
+    <tr><td>ανά <code>contract_id</code></td>
+        <td>Ένας φάκελος με 2–6 αρχεία ανά σύμβαση, δεκάδες χιλιάδες φάκελοι/έτος. Ίδιο πρόβλημα,
+        μετατοπισμένο ένα επίπεδο πάνω. Επιπλέον διαρρέει δομή δεδομένων στο filesystem.</td></tr>
+  </table>
+  </div>
+
+  <div class="note ok">
+    <strong>Γιατί το <code>Y/m</code> ταιριάζει σε αυτό το project ειδικά:</strong> το ανοιχτό #1 είναι
+    GDPR/DPA με ρητή συζήτηση για <em>zero data retention</em> και πολιτική διατήρησης. Με
+    <code>Y/m</code>, το «διέγραψε ό,τι είναι παλιότερο από N έτη» γίνεται πράξη σε φακέλους αντί
+    για σάρωση 190.000 γραμμών και 190.000 <code>unlink</code>. Το sharding εδώ δεν είναι μόνο
+    επίδοση filesystem — είναι προεργασία για το #1.
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">4</span>Τι αγγίζει, τι δεν αγγίζει</h2>
+  <div class="scroll">
+  <table>
+    <tr><th></th><th>Αρχείο</th><th>Αλλαγή</th></tr>
+    <tr><td>✎</td><td><code>src/Persistence/DocumentStorage.php</code></td>
+        <td>Το <code>newPath()</code> χτίζει <code>Y/m/</code>, το δημιουργεί αν λείπει, επιστρέφει την πλήρη διαδρομή. Το <code>contains()</code> <strong>δεν αγγίζεται</strong> — ήδη σωστό.</td></tr>
+    <tr><td>✎</td><td><code>includes/class-ecrm-files.php</code></td>
+        <td><code>store()</code> και <code>put_bytes()</code> σταματούν να χτίζουν όνομα μόνες τους και καλούν το <code>DocumentStorage::newPath()</code>. Το <code>dir()</code> μένει ως έχει (ρίζα + θωράκιση + health check).</td></tr>
+    <tr><td>✔</td><td><code>serve()</code>, <code>FileRepository</code>, <code>PurgeOrphanFiles</code>, <code>UnprotectedDocuments</code></td>
+        <td>Καμία αλλαγή. Διαβάζουν διαδρομή από τη βάση.</td></tr>
+    <tr><td>✔</td><td><code>HealthChecks::documents()</code></td>
+        <td>Καμία αλλαγή. Ελέγχει τη ρίζα, εκεί μένει η θωράκιση και το probe.</td></tr>
+    <tr><td>✔</td><td>~190.000 υπάρχοντα αρχεία</td>
+        <td>Καμία μετακίνηση. Καμία εγγραφή στη βάση δεν αλλάζει.</td></tr>
+  </table>
+  </div>
+
+  <h3>Νέα tests που θα γραφτούν</h3>
+  <ul>
+    <li>Το <code>newPath()</code> επιστρέφει διαδρομή που περιέχει <code>Y/m</code> του σήμερα.</li>
+    <li>Ο φάκελος <strong>δημιουργείται πραγματικά</strong> — αλλιώς το <code>move_uploaded_file</code> αποτυγχάνει σιωπηλά την 1η κάθε μήνα, στις 00:00, στην παραγωγή.</li>
+    <li>Το <code>contains()</code> λέει <em>ναι</em> σε sharded διαδρομή και <em>όχι</em> σε <code>../</code> έξω από τη ρίζα (φύλακας που θα έπιανε το χειρότερο σενάριο του §1β).</li>
+    <li>Ένα αρχείο γραμμένο στην <strong>παλιά επίπεδη</strong> θέση εξακολουθεί να σβήνεται από τον <code>FileRepository</code> — η απόδειξη ότι δεν χρειάστηκε migration.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">5</span>Πριν γραφτεί μία γραμμή: δύο μετρήσεις</h2>
+  <p class="verdict">Ο κανόνας του §1 (11). Το «~190.000» είναι υπόθεση μέχρι να μετρηθεί.</p>
+
+  <h3>α. Πόσα αρχεία υπάρχουν σήμερα</h3>
+<pre>dir /a /s /b "C:\Users\konst\Local Sites\crm\app\public\wp-content\uploads\ecrm-secure" | find /c /v ""</pre>
+  <p>Αν βγει τριψήφιο, η προτεραιότητα του #3 πέφτει κάτω από το #4 και το #6 — δεν είναι
+  πρόβλημα ακόμα, είναι πρόβλημα του χρόνου. Αν βγει πενταψήφιο, είναι επείγον.</p>
+
+  <h3>β. Ο ρυθμός, από τη βάση</h3>
+<pre>wp db query "SELECT YEAR(created_at) y, MONTH(created_at) m, COUNT(*) c FROM wp_ecrm_files GROUP BY y, m ORDER BY y DESC, m DESC LIMIT 12;"</pre>
+  <p>Δώδεκα γραμμές που λένε τον πραγματικό ρυθμό ανά μήνα, αντί για μία εκτίμηση. Αν το
+  όνομα του πίνακα διαφέρει, το σωστό βγαίνει από το <code>ECRM_DB::table('files')</code>.</p>
+
+  <div class="note">
+    <strong>Μορφή Ε:</strong> και οι δύο εντολές θα έβγαζαν διαφορετικό αποτέλεσμα αν η υπόθεση
+    ήταν λάθος — η πρώτη μηδέν ή τριψήφιο αντί για εκατοντάδες χιλιάδες, η δεύτερη κενό
+    σύνολο αν τα έγγραφα δεν περνούν καν από αυτόν τον πίνακα. Δεν είναι διακοσμητικές.
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">6</span>Ανοιχτά ερωτήματα προς εσένα</h2>
+  <ol>
+    <li><strong>Υπάρχει backup script ή cron εκτός repo</strong> που αντιγράφει τον <code>ecrm-secure</code>;
+    Αν κάνει <code>copy *.pdf</code> χωρίς <code>/s</code>, θα σταματήσει σιωπηλά να παίρνει τα νέα
+    αρχεία. Δεν μπορώ να το μετρήσω από εδώ — ζει έξω από τον κώδικα.</li>
+    <li><strong>Ο host έχει όριο αρχείων ανά φάκελο ή inode quota;</strong> Αν ναι, αλλάζει η επείγουσα φύση.</li>
+    <li><strong>Ενοποίηση των τριών σημείων (§2) ακόμα κι αν αναβληθεί το sharding;</strong>
+    Είναι μικρότερη, ανεξάρτητη, και κλείνει μια πραγματική τρύπα διπλής αλήθειας.</li>
+  </ol>
+</section>
+
+<div class="foot">
+  Μετρημένο στον ζωντανό κώδικα πριν γραφτεί — <code>DocumentStorage.php</code>,
+  <code>class-ecrm-files.php</code>, <code>FileRepository.php</code>, <code>HealthChecks.php</code>,
+  <code>PurgeOrphanFiles.php</code>, <code>IntegrationTestCase.php</code>, σάρωση όλου του
+  <code>src/ includes/ admin/ public/ tests/</code> για σαρωτές φακέλου.
+  Καμία αλλαγή δεν έχει γίνει· αυτό το έγγραφο είναι πρόταση προς έγκριση.
+</div>
+
+</div>
+</body>
+</html>

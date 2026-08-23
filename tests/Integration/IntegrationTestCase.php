@@ -112,9 +112,15 @@ abstract class IntegrationTestCase extends TestCase
     /**
      * Every file currently in protected storage, keyed by resolved path.
      *
+     * Αναδρομικό, και αυτό είναι ουσιώδες από τις 2026-08-23: τα νέα έγγραφα
+     * γράφονται σε κάδο `Y/m` κάτω από τη ρίζα. Τρία test αρχεία είχαν δικό
+     * τους `glob()` ενός επιπέδου για τον ίδιο σκοπό — θα σταματούσαν να
+     * βλέπουν οτιδήποτε, σιωπηλά, και ο καθαρισμός τους θα γινόταν no-op.
+     * Γι' αυτό είναι `protected` και όχι `private`: μία σάρωση, όχι τέσσερις.
+     *
      * @return array<string, true>
      */
-    private static function documentsOnDisk(): array
+    protected static function documentsOnDisk(): array
     {
         if (! class_exists(ECRM_Files::class)) {
             return [];
