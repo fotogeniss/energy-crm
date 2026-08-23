@@ -56,7 +56,7 @@ final class CancellationGate
 {
     /** Το ίδιο μήνυμα από κάθε πόρτα, γιατί είναι το ίδιο γεγονός. */
     public const WAS_ACTIVE = 'Η σύμβαση υπήρξε ενεργή, οπότε δεν ακυρώνεται. '
-        . 'Αν η παροχή σταμάτησε, χρησιμοποίησε «Τερματίστηκε».';
+        . 'Αν η παροχή σταμάτησε, χρησιμοποίησε «Έκλεισε».';
 
     public function __construct(private readonly EventRepository $events)
     {

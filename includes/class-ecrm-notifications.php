@@ -141,9 +141,9 @@ class ECRM_Notifications {
 		}
 		$name    = $row ? ( $row['company_name'] ?: trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) ) ) : '';
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' );
-		$subject = '⚠ Εκκρεμότητα: ' . ( $row['code'] ?? '' ) . ' - ' . $name;
+		$subject = '⚠ Εκκρεμεί: ' . ( $row['code'] ?? '' ) . ' - ' . $name;
 		$body    = sprintf(
-			"Η σύμβαση %s (%s) μπήκε σε κατάσταση «Εκκρεμότητα» και χρειάζεται ενέργεια.\n\nΣυνδέσου στο CRM για λεπτομέρειες.\n\n%s",
+			"Η σύμβαση %s (%s) μπήκε σε κατάσταση «Εκκρεμεί» και χρειάζεται ενέργεια.\n\nΣυνδέσου στο CRM για λεπτομέρειες.\n\n%s",
 			$row['code'] ?? '', $name ?: 'πελάτης', $company
 		);
 		wp_mail( $user->user_email, $subject, $body );

@@ -255,13 +255,13 @@ class ECRM_Admin {
 					</tr>
 					<tr>
 						<th scope="row"><label for="ecrm_sla">Κλιμάκωση SLA (ημέρες)</label></th>
-						<td><input type="number" min="0" id="ecrm_sla" name="<?php echo esc_attr( ECRM_PREFIX . 'sla_escalation_days' ); ?>" value="<?php echo esc_attr( self::get( 'sla_escalation_days', 10 ) ); ?>" class="small-text"><p class="description">Σύμβαση σε μη-τελική κατάσταση (Νέα/Προς υπογραφή/Σε επεξεργασία/Εκκρεμότητα) που μένει στάσιμη τόσες ημέρες κλιμακώνεται αυτόματα στον υπεύθυνο ομάδας (εργασία υψηλής προτεραιότητας + email). 0 = απενεργοποίηση.</p></td>
+						<td><input type="number" min="0" id="ecrm_sla" name="<?php echo esc_attr( ECRM_PREFIX . 'sla_escalation_days' ); ?>" value="<?php echo esc_attr( self::get( 'sla_escalation_days', 10 ) ); ?>" class="small-text"><p class="description">Σύμβαση σε μη-τελική κατάσταση (Νέα/Περιμένει υπογραφή/Σε επεξεργασία/Εκκρεμεί) που μένει στάσιμη τόσες ημέρες κλιμακώνεται αυτόματα στον υπεύθυνο ομάδας (εργασία υψηλής προτεραιότητας + email). 0 = απενεργοποίηση.</p></td>
 					</tr>
 					<tr>
 						<th scope="row">Email ειδοποιήσεων</th>
 						<td>
 							<input type="hidden" name="<?php echo esc_attr( ECRM_PREFIX . 'notify_email' ); ?>" value="0">
-							<label><input type="checkbox" name="<?php echo esc_attr( ECRM_PREFIX . 'notify_email' ); ?>" value="1" <?php checked( (string) self::get( 'notify_email', '1' ), '1' ); ?>> Email στον συνεργάτη όταν σύμβαση μπει σε «Εκκρεμότητα»</label><br>
+							<label><input type="checkbox" name="<?php echo esc_attr( ECRM_PREFIX . 'notify_email' ); ?>" value="1" <?php checked( (string) self::get( 'notify_email', '1' ), '1' ); ?>> Email στον συνεργάτη όταν σύμβαση μπει σε «Εκκρεμεί»</label><br>
 							<input type="hidden" name="<?php echo esc_attr( ECRM_PREFIX . 'notify_digest' ); ?>" value="0">
 							<label><input type="checkbox" name="<?php echo esc_attr( ECRM_PREFIX . 'notify_digest' ); ?>" value="1" <?php checked( (string) self::get( 'notify_digest', '1' ), '1' ); ?>> Ημερήσιο email σύνοψης εκκρεμοτήτων</label>
 						</td>

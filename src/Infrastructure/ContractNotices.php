@@ -56,12 +56,13 @@ final class ContractNotices
      * πρέπει να το φτιάξει» — και η **ακύρωση** τερματίζει τη δουλειά του. Και
      * στις δύο, το να το μάθει αργά είναι το ίδιο κακό με το να μην το μάθει.
      *
-     * @var array<string, string>
+     * Μόνο ποιες καταστάσεις — το κείμενο έρχεται αποκλειστικά από
+     * `ContractStatus::label()`, ώστε να μην υπάρχει δεύτερο σημείο που
+     * μπορεί να ξεμείνει πίσω όταν αλλάξει η ελληνική ετικέτα μιας κατάστασης.
+     *
+     * @var list<ContractStatus>
      */
-    private const ANNOUNCED = [
-        'pending'   => 'Εκκρεμότητα',
-        'cancelled' => 'Ακυρώθηκε',
-    ];
+    private const ANNOUNCED = [ContractStatus::Pending, ContractStatus::Cancelled];
 
     public function __construct(
         private readonly ContractDetails $details,
@@ -105,9 +106,9 @@ final class ContractNotices
      */
     public function statusChanged(int $contractId, string $to): void
     {
-        $label = self::ANNOUNCED[$to] ?? null;
+        $status = ContractStatus::tryFromSlug($to);
 
-        if ($label === null) {
+        if ($status === null || ! in_array($status, self::ANNOUNCED, true)) {
             return;
         }
 
@@ -117,8 +118,7 @@ final class ContractNotices
             return;
         }
 
-        $status = ContractStatus::tryFromSlug($to);
-        $title  = ($status?->label() ?? $label) . ' — ' . (string) ($row['code'] ?? '');
+        $title = $status->label() . ' — ' . (string) ($row['code'] ?? '');
         $body   = $this->customerName($row) . ': η αίτηση '
             . ($to === 'cancelled' ? 'ακυρώθηκε.' : 'χρειάζεται ενέργεια.');
 
