@@ -59,10 +59,15 @@ final class AddPayoutAmountColumn implements Migration
             return;
         }
 
-        // Fixed identifier, closed list; DDL cannot be parameterised.
-        // phpcs:ignore WordPress.DB.PreparedSQL
+        // Fixed identifier, closed list; DDL cannot be parameterised. Uses
+        // disable/enable (not a single-line ignore) because the query spans
+        // multiple lines and phpcs only suppresses the one line right after
+        // an ignore comment -- a single-line ignore here silently stopped
+        // covering the actual violation once the call wrapped.
+        // phpcs:disable WordPress.DB.PreparedSQL
         $wpdb->query(
             "ALTER TABLE `{$table}` ADD COLUMN `payout_amount` DECIMAL(10,2) NULL AFTER `payout_id`"
         );
+        // phpcs:enable WordPress.DB.PreparedSQL
     }
 }

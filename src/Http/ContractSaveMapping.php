@@ -177,7 +177,8 @@ final class ContractSaveMapping
         // The three are computed together — end_date depends on start_date and
         // term_months — so they are treated as one unit: touch the trio if the
         // request sent any of the three, otherwise leave all three alone.
-        if (! $isUpdate
+        if (
+            ! $isUpdate
             || isset($params['start_date'])
             || isset($params['term_months'])
             || isset($params['end_date'])

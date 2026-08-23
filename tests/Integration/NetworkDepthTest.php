@@ -265,11 +265,15 @@ final class NetworkDepthTest extends IntegrationTestCase
             $userId = self::BASE_ID + $level + 1;
 
             if ($level > 0) {
+                // Building the parent-chain fixture the test exercises; meta_key/meta_value
+                // here are the point of the test, not a production query to optimise.
+                // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
                 $wpdb->insert($wpdb->usermeta, [
                     'user_id'    => $userId,
                     'meta_key'   => NetworkRepository::PARENT_META,
                     'meta_value' => (string) $chain[$level - 1],
                 ]);
+                // phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
             }
 
             $chain[] = $userId;

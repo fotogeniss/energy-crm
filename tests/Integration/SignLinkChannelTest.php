@@ -80,7 +80,10 @@ final class SignLinkChannelTest extends IntegrationTestCase
     /** @param array<string, mixed> $body */
     private function send(array $body, ?int $contractId = null): WP_REST_Response
     {
-        $request = new WP_REST_Request('POST', '/ecrm/v1/contracts/' . ($contractId ?? $this->contractId) . '/sign-link');
+        $request = new WP_REST_Request(
+            'POST',
+            '/ecrm/v1/contracts/' . ($contractId ?? $this->contractId) . '/sign-link'
+        );
 
         foreach ($body as $key => $value) {
             $request->set_param($key, $value);

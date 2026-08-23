@@ -84,8 +84,12 @@ final class HealthChecks
             // δικαιώματα POSIX να διαβαστούν. Φύλακας που φωνάζει σε κάθε
             // μηχάνημα ανάπτυξης παύει να διαβάζεται.
             if (PHP_OS_FAMILY === 'Windows') {
-                $out[] = self::row('Μυστικά', 'Δικαιώματα wp-config.php', null,
-                    'Δεν ελέγχεται σε Windows. Στον server της παραγωγής θέλει 0640 ή 0600.');
+                $out[] = self::row(
+                    'Μυστικά',
+                    'Δικαιώματα wp-config.php',
+                    null,
+                    'Δεν ελέγχεται σε Windows. Στον server της παραγωγής θέλει 0640 ή 0600.'
+                );
             } else {
                 $perms = fileperms($config);
                 $loose = $perms !== false && ($perms & 0o044) !== 0;
@@ -154,14 +158,19 @@ final class HealthChecks
 
         $reachable = $this->probeIsReachable($dir);
 
-        $out[] = self::row('Έγγραφα', 'Απευθείας πρόσβαση από το web', $reachable === null ? null : ! $reachable, match ($reachable) {
-            true  => 'ΑΝΟΙΧΤΟΣ. Το .htaccess ισχύει μόνο σε Apache. Σε nginx βάλε στη ρύθμιση '
-                . 'του server: location ^~ /wp-content/uploads/ecrm-secure/ { deny all; return 404; } '
-                . '— το ^~ είναι απαραίτητο, αλλιώς ο κανόνας για τις εικόνες πιάνει πρώτος '
-                . 'ένα doc_XXXX.jpg και το σερβίρει.',
-            false => 'Κλειστός. Ο server αρνείται το αρχείο δοκιμής.',
-            null  => 'Δεν απαντήθηκε — το site δεν φτάνει τον εαυτό του. Έλεγξέ το με το χέρι.',
-        });
+        $out[] = self::row(
+            'Έγγραφα',
+            'Απευθείας πρόσβαση από το web',
+            $reachable === null ? null : ! $reachable,
+            match ($reachable) {
+                true  => 'ΑΝΟΙΧΤΟΣ. Το .htaccess ισχύει μόνο σε Apache. Σε nginx βάλε στη ρύθμιση '
+                    . 'του server: location ^~ /wp-content/uploads/ecrm-secure/ { deny all; return 404; } '
+                    . '— το ^~ είναι απαραίτητο, αλλιώς ο κανόνας για τις εικόνες πιάνει πρώτος '
+                    . 'ένα doc_XXXX.jpg και το σερβίρει.',
+                false => 'Κλειστός. Ο server αρνείται το αρχείο δοκιμής.',
+                null  => 'Δεν απαντήθηκε — το site δεν φτάνει τον εαυτό του. Έλεγξέ το με το χέρι.',
+            }
+        );
 
         return $out;
     }
@@ -204,7 +213,7 @@ final class HealthChecks
         foreach (Tables::all() as $table) {
             $name = Tables::name($table);
 
-            // phpcs:ignore WordPress.DB.PreparedSQL
+            // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-off admin health-check probe, not a hot path.
             if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $name)) !== $name) {
                 $missing[] = $table;
             }
@@ -249,7 +258,7 @@ final class HealthChecks
 
         $table = Tables::name(Tables::COMMISSION_RULES);
 
-        // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-off admin health-check probe, not a hot path.
         $active = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE active = 1', $table));
 
         return [
@@ -284,9 +293,13 @@ final class HealthChecks
         }
 
         if (defined('DISABLE_WP_CRON') && constant('DISABLE_WP_CRON') === true) {
-            $out[] = self::row('Προγραμματισμένα', 'WP-Cron', null,
+            $out[] = self::row(
+                'Προγραμματισμένα',
+                'WP-Cron',
+                null,
                 'Το DISABLE_WP_CRON είναι true. Σωστό, αν ο server τρέχει το wp-cron.php '
-                . 'μόνος του. Αν όχι, τίποτα από τα παραπάνω δεν τρέχει ποτέ.');
+                . 'μόνος του. Αν όχι, τίποτα από τα παραπάνω δεν τρέχει ποτέ.'
+            );
         }
 
         return $out;
@@ -306,11 +319,15 @@ final class HealthChecks
                 ? 'Διαθέσιμο.'
                 : 'ΛΕΙΠΕΙ. Οι εξαγωγές Excel δεν δουλεύουν.'),
 
-            self::row('Περιβάλλον', 'Έμπιστοι proxy', RequestIp::trustedProxies() !== [] ? true : null,
+            self::row(
+                'Περιβάλλον',
+                'Έμπιστοι proxy',
+                RequestIp::trustedProxies() !== [] ? true : null,
                 RequestIp::trustedProxies() !== []
                     ? count(RequestIp::trustedProxies()) . ' δηλωμένοι.'
                     : 'Κανένας. Σωστό αν το site δεν είναι πίσω από Cloudflare ή load balancer. '
-                      . 'Αν είναι, τα consent_ip και signed_ip καταγράφουν τον proxy αντί του πελάτη.'),
+                . 'Αν είναι, τα consent_ip και signed_ip καταγράφουν τον proxy αντί του πελάτη.'
+            ),
 
             self::row('Περιβάλλον', 'Έκδοση PHP', version_compare(PHP_VERSION, '8.2', '>='), PHP_VERSION),
         ];

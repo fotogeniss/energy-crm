@@ -112,6 +112,13 @@ final class EventRepository
         /** @var array<int, mixed> $arguments */
         $arguments = array_merge([$this->table, $contractId], $types);
 
+        // $placeholders is always a run of literal '%s' tokens sized to
+        // count($types) -- never request data -- so concatenating it into
+        // the query text here is safe. phpcs cannot verify a runtime-built
+        // placeholder count statically, hence disable/enable around the call
+        // rather than a single-line ignore (which would only cover the one
+        // physical line right after it, not this whole multi-line call).
+        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
         $hours = $wpdb->get_var(
             $wpdb->prepare(
                 'SELECT TIMESTAMPDIFF(HOUR, created_at, NOW()) FROM %i
@@ -120,6 +127,7 @@ final class EventRepository
                 $arguments
             )
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 
         return $hours === null ? null : (int) $hours;
     }

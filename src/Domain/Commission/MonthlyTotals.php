@@ -44,11 +44,13 @@ final class MonthlyTotals
     {
     }
 
+    // phpcs:disable Generic.Files.LineLength.TooLong -- PHPStan array-shape type; wrapping it would break the annotation.
     /**
      * @param list<array{month: string, amount: float, paid?: bool}> $entries A month as 'YYYY-MM'.
      *
      * @return array{months: list<array{label: string, count: int, amount: float, paid: int}>, best: float, best_label: string}
      */
+    // phpcs:enable Generic.Files.LineLength.TooLong
     public static function from(array $entries): array
     {
         $totals = [];

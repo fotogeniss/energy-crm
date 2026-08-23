@@ -180,7 +180,11 @@ final class TypographyIsDecidedInOnePlaceTest extends TestCase
         $sheets = self::styleSheets();
 
         self::assertGreaterThanOrEqual(2, count($sheets), 'Λείπουν CSS από τη σάρωση.');
-        self::assertGreaterThanOrEqual(9, count($this->stepsDefinedIn(self::SCALE_FILE)), 'Το μπλοκ της κλίμακας δεν βρέθηκε.');
+        self::assertGreaterThanOrEqual(
+            9,
+            count($this->stepsDefinedIn(self::SCALE_FILE)),
+            'Το μπλοκ της κλίμακας δεν βρέθηκε.'
+        );
 
         $declarations = 0;
 

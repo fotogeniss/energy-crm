@@ -123,9 +123,11 @@ abstract class IntegrationTestCase extends TestCase
         $found = [];
 
         /** @var SplFileInfo $item */
-        foreach (new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator(ECRM_Files::dir(), FilesystemIterator::SKIP_DOTS)
-        ) as $item) {
+        foreach (
+            new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator(ECRM_Files::dir(), FilesystemIterator::SKIP_DOTS)
+            ) as $item
+        ) {
             if ($item->isFile()) {
                 $found[(string) $item->getRealPath()] = true;
             }

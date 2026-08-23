@@ -59,7 +59,7 @@ final class AddEventStatusIndex implements Migration
         }
 
         // Fixed identifiers, closed list; DDL cannot be parameterised.
-        // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery
+        // phpcs:ignore WordPress.DB.PreparedSQL, WordPress.DB.DirectDatabaseQuery, Generic.Files.LineLength.TooLong
         $wpdb->query("ALTER TABLE `{$table}` ADD INDEX `" . self::INDEX . '` (`to_status`, `contract_id`, `created_at`)');
     }
 }
