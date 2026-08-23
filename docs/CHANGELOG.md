@@ -127,6 +127,12 @@ reformatting γραμμών. Αναμενόμενοι αριθμοί ίδιοι 
 assertions — **τα τέσσερα ίδια με την (91), plus phpcs επιτέλους πράσινο για
 πρώτη φορά, με νόημα (όχι επειδή σιωπούσε).**
 
+**Και το ίδιο το CI το επιβεβαίωσε.** Commit `05a8645` (ruleset + διορθώσεις)
+και `b84a1ee` (JS test runner, ασύνδετο) pushed. GitHub Actions run #3,
+commit `b84a1ee`, **πράσινο ✓, 1m 5s** — το πρώτο πράσινο check από τότε που
+στήθηκε το `ci.yml` στην (90). Οι δύο προηγούμενες τρέξεις (#1 `6e7309f`,
+#2 `443aba3`) ήταν οι κόκκινες που ξεκίνησαν αυτή τη διερεύνηση.
+
 **Αρχεία:** `.phpcs.xml.dist` (24 exclude-pattern προθέματα),
 `src/Persistence/Schema/Migrations/AddPayoutAmountColumn.php`,
 `src/Persistence/EventRepository.php` (και τα δύο: `phpcs:disable`/`enable`),
