@@ -144,19 +144,34 @@ class ECRM_Shortcodes {
 	 * both entry points call this.
 	 */
 	private static function register_modules(): void {
-		$dir = ECRM_DIR . 'public/assets/';
-
 		foreach ( self::MODULES as $id => $file ) {
-			$path    = $dir . $file;
-			$version = file_exists( $path ) ? (string) filemtime( $path ) : ECRM_VERSION;
-
 			wp_register_script_module(
 				$id,
 				ECRM_URL . 'public/assets/' . $file,
 				self::MODULE_DEPS[ $id ] ?? [],
-				$version
+				self::asset_version( $file )
 			);
 		}
+	}
+
+	/**
+	 * Η έκδοση ενός asset, από το ΙΔΙΟ το αρχείο.
+	 *
+	 * Ήταν ιδιωτική λογική μέσα στην register_modules() και κάλυπτε μόνο τα JS
+	 * modules. Τα δύο CSS έβγαιναν με `ECRM_VERSION` — που αλλάζει σε release,
+	 * όχι σε επεξεργασία αρχείου. Αποτέλεσμα: κάθε διόρθωση CSS έμενε αόρατη
+	 * πίσω από την cache του browser μέχρι κάποιος να θυμηθεί hard-reload, και
+	 * μια πραγματική διόρθωση έμοιαζε με «δεν δούλεψε». Το βρήκε ο ιδιοκτήτης
+	 * στις 23/08: τρεις διαδοχικές διορθώσεις CSS για κινητό δεν φάνηκαν καμία.
+	 *
+	 * Το σκεπτικό της register_modules() ίσχυε ήδη λέξη προς λέξη — «ένα
+	 * αλλαγμένο αρχείο είναι ένα αλλαγμένο URL, χωρίς να χρειάζεται να το
+	 * θυμάται κανείς». Απλώς δεν είχε φτάσει ως το CSS.
+	 */
+	public static function asset_version( string $file ): string {
+		$path = ECRM_DIR . 'public/assets/' . $file;
+
+		return file_exists( $path ) ? (string) filemtime( $path ) : ECRM_VERSION;
 	}
 
 	/**
@@ -195,7 +210,7 @@ class ECRM_Shortcodes {
 	}
 
 	public static function enqueue_form_assets(): void {
-		wp_enqueue_style( 'ecrm-form', ECRM_URL . 'public/assets/ecrm-form.css', [], ECRM_VERSION );
+		wp_enqueue_style( 'ecrm-form', ECRM_URL . 'public/assets/ecrm-form.css', [], self::asset_version( 'ecrm-form.css' ) );
 
 		self::register_modules();
 		wp_enqueue_script_module( '@energy-crm/form' );
@@ -372,6 +387,24 @@ class ECRM_Shortcodes {
 					<div class="ecrm-drop__title">Σύρε αρχεία εδώ</div>
 					<div class="ecrm-drop__hint">ή <button type="button" class="ecrm-link" data-pick>πάτα για επιλογή</button> · PDF, JPG, PNG · έως 10 αρχεία</div>
 				</div>
+				<?php
+				/*
+				 * Δεύτερη, ξεχωριστή είσοδος για τη ΦΩΤΟΓΡΑΦΙΑ — όχι το ίδιο input
+				 * με `capture` προσθεμένο. Το `capture` σε είσοδο που δέχεται PDF
+				 * ΚΑΙ πολλαπλά αρχεία έχει ασυνεπή συμπεριφορά ανά browser (συνήθως
+				 * κλειδώνει σε μία φωτογραφία, αγνοώντας `multiple` και PDF) — θα
+				 * έσπαγε την επιλογή αρχείου. Δύο εισόδους, ένα `addFiles()` και
+				 * στις δύο (ecrm-form.js): ο χρήστης διαλέγει ρητά κάμερα ή αρχείο,
+				 * όχι το browser για λογαριασμό του. Σε desktop το κουμπί απλώς
+				 * ανοίγει τον ίδιο επιλογέα αρχείων — καμία διαφορά, καμία βλάβη.
+				 * Ζητήθηκε ρητά από τον ιδιοκτήτη, 23/08.
+				 */
+				?>
+				<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-camera-btn" data-camera-pick>
+					<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.5"/></svg>
+					Λήψη φωτογραφίας
+				</button>
+				<input type="file" data-camera accept="image/jpeg,image/png" capture="environment" hidden>
 
 				<ul class="ecrm-filelist" data-filelist></ul>
 				<button type="button" class="ecrm-btn ecrm-btn--ai" data-extract disabled><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg> Εξαγωγή με AI</button>
