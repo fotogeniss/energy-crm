@@ -42,16 +42,16 @@ enum ContractStatus: string
         return match ($this) {
             self::Draft             => 'Πρόχειρο',
             self::Submitted         => 'Νέα',
-            self::PendingSignature  => 'Προς υπογραφή',
+            self::PendingSignature  => 'Περιμένει υπογραφή',
             self::AwaitingSignature => 'Αναμονή υπογραφής πελάτη',
-            self::Signed            => 'Υπεγράφη',
+            self::Signed            => 'Υπογράφηκε',
             self::Processing        => 'Σε επεξεργασία',
-            self::Pending           => 'Εκκρεμότητα',
+            self::Pending           => 'Εκκρεμεί',
             self::Resolved          => 'Επιλύθηκε',
-            self::Routed            => 'Δρομολογήθηκε',
+            self::Routed            => 'Στάλθηκε στον πάροχο',
             self::Active            => 'Ενεργή',
             self::Cancelled         => 'Ακυρώθηκε',
-            self::Terminated        => 'Τερματίστηκε',
+            self::Terminated        => 'Έκλεισε',
         };
     }
 

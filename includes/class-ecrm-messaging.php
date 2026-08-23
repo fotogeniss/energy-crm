@@ -43,10 +43,10 @@ class ECRM_Messaging {
 	/** Default per-status message templates (Greek). */
 	public static function default_templates(): array {
 		return [
-			'pending_signature' => 'Αγαπητέ/ή {name}, η αίτησή σας {code} είναι έτοιμη προς υπογραφή. Υπογράψτε εδώ: {track} — {company}',
+			'pending_signature' => 'Αγαπητέ/ή {name}, η αίτησή σας {code} περιμένει την υπογραφή σας. Υπογράψτε εδώ: {track} — {company}',
 			'awaiting_signature' => 'Αγαπητέ/ή {name}, η αίτησή σας {code} αναμένει την υπογραφή σας. Υπογράψτε εδώ: {track} — {company}',
 			'signed'            => '{name}, λάβαμε την υπογραφή σας για την αίτηση {code}. Ευχαριστούμε! — {company}',
-			'routed'            => '{name}, η αίτησή σας {code} δρομολογήθηκε προς ενεργοποίηση. Παρακολουθήστε την εδώ: {track} — {company}',
+			'routed'            => '{name}, η αίτησή σας {code} στάλθηκε στον πάροχο για ενεργοποίηση. Παρακολουθήστε την εδώ: {track} — {company}',
 			'active'            => 'Καλώς ήρθατε! Η σύμβασή σας {code} ({provider}) ενεργοποιήθηκε. — {company}',
 			'pending'           => '{name}, η αίτησή σας {code} εκκρεμεί. Θα επικοινωνήσουμε σύντομα μαζί σας. — {company}',
 			'cancelled'         => '{name}, η αίτησή σας {code} ακυρώθηκε. Για διευκρινίσεις επικοινωνήστε μαζί μας. — {company}',
