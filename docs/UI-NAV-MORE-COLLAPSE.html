@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="el" data-kit="light"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Πλαϊνό μενού desktop — «Περισσότερα» κρυφό από προεπιλογή</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+	--fs-18: 18px; --fs-15: 15px; --fs-14: 14px; --fs-13: 13px; --fs-12-5: 12.5px;
+	--fs-11: 11px; --fs-10: 10px;
+}
+.ecrm {
+	--n0:#ffffff; --n25:#fdfdfc; --n50:#f8f8f6; --n100:#f1f1ee; --n150:#e9e8e4;
+	--n200:#dedcd7; --n300:#c6c4bd; --n400:#a3a099; --n450:#83817a; --n500:#6e6c66;
+	--n600:#5c5a55; --n700:#42413d; --n800:#2a2926; --n900:#1a1a18; --n950:#111110;
+	--p400:#16c217; --p500:#12a413;
+	--chrome:#171715; --chrome-2:#1f1f1c; --chrome-line:#ffffff14;
+	--chrome-ink:#a8a69f; --chrome-ink-hi:#ffffff; --chrome-ink-dim:#ffffff4d;
+	--chrome-wash-1:#ffffff0f; --chrome-wash-2:#ffffff1a; --chrome-wash-3:#ffffff26;
+	--chrome-accent-wash:#16c21733;
+	--ink:var(--n800); --muted:var(--n500); --line:var(--n200); --bg:var(--n50); --surface:var(--n0);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #eceae5; font-family: Manrope, system-ui, sans-serif; color: var(--ink); padding: 36px 24px 60px; }
+h1 { font-size: var(--fs-18); margin: 0 0 6px; }
+.note { color: var(--muted); font-size: var(--fs-13); max-width: 720px; line-height: 1.6; margin: 0 0 30px; }
+.note b { color: var(--ink); }
+.row { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+.col { flex: 0 0 auto; }
+.col h2 { font-size: var(--fs-13); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; font-weight: 700; }
+
+.sidebar { width: 240px; background: var(--chrome); color: var(--chrome-ink); border-radius: 14px; padding: 16px 12px; }
+.brand { display: flex; align-items: center; gap: 8px; padding: 0 9px 14px; }
+.brand__mark { width: 26px; height: 26px; border-radius: 8px; background: var(--p400); color: #0b3d0c; display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+.brand__txt { font-size: var(--fs-15); font-weight: 700; color: var(--chrome-ink-hi); }
+
+.nav__label { font-size: var(--fs-10); letter-spacing: .12em; text-transform: uppercase; color: var(--chrome-ink-dim); padding: 12px 9px 4px; }
+.nav__item { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: none; color: var(--chrome-ink); cursor: pointer; padding: 9px; border-radius: 9px; font-size: var(--fs-13); font-family: inherit; text-align: left; }
+.nav__item:hover { background: var(--chrome-wash-1); color: var(--chrome-ink-hi); }
+.nav__item.is-active { background: var(--chrome-accent-wash); color: var(--p400); font-weight: 700; }
+.nav__icon { width: 18px; height: 18px; border-radius: 5px; background: var(--chrome-wash-2); flex: 0 0 18px; }
+.nav__item.is-active .nav__icon { background: var(--p400); }
+
+.more-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; color: var(--chrome-ink-dim); cursor: pointer; padding: 12px 9px 6px; margin-top: 6px; border-top: 1px solid var(--chrome-line); font-size: var(--fs-10); letter-spacing: .12em; text-transform: uppercase; font-family: inherit; font-weight: 700; }
+.more-toggle:hover { color: var(--chrome-ink); }
+.more-toggle__chev { transition: transform .18s ease; font-size: 11px; }
+.more-toggle[aria-expanded="true"] .more-toggle__chev { transform: rotate(180deg); }
+.more-body { overflow: hidden; max-height: 0; transition: max-height .22s ease; }
+.more-body.is-open { max-height: 480px; }
+
+.badge-note { display: inline-block; margin-top: 14px; font-size: var(--fs-12-5); color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; max-width: 240px; line-height: 1.5; }
+.count { display:inline-block; background: var(--chrome-wash-2); color: var(--chrome-ink-hi); font-size: 10px; font-weight: 800; border-radius: 999px; padding: 1px 7px; margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="ecrm">
+
+<h1>Πρόταση #2 — «Περισσότερα» κρυφό από προεπιλογή στο desktop</h1>
+<p class="note">Η ιεράρχηση της (100) έβαλε ετικέτες <b>«Καθημερινά» / «Περισσότερα»</b>, αλλά και τα 11+ στοιχεία μένουν πάντα ορατά — άλλαξε μόνο πού πέφτει το μάτι, όχι το πλήθος επιλογών μπροστά στον χρήστη. Η κάτω μπάρα κινητού λύνει το ίδιο πρόβλημα διαφορετικά: δείχνει 5 και κρύβει τα υπόλοιπα πίσω από συρτάρι. Εδώ είναι το ίδιο μοτίβο για desktop — πάτημα στο «Περισσότερα» ανοίγει/κλείνει τη δεύτερη ομάδα, με μνήμη της επιλογής (localStorage) ώστε να μη χρειάζεται να το ανοίγει κάθε φορά όποιος τη θέλει ανοιχτή. <b>Δοκίμασε το κουμπί «Περισσότερα» παρακάτω.</b></p>
+
+<div class="row">
+	<div class="col">
+		<h2>Πρόταση — πάτα «Περισσότερα»</h2>
+		<nav class="sidebar">
+			<div class="brand"><span class="brand__mark">E</span><span class="brand__txt">Energy <strong>CRM</strong></span></div>
+			<div class="nav__label">Καθημερινά</div>
+			<button type="button" class="nav__item is-active"><span class="nav__icon"></span>Αρχική</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Νέα αίτηση</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Συμβάσεις</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Εκκρεμότητες <span class="count">3</span></button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Εργασίες</button>
+			<button type="button" class="more-toggle" id="moreBtn" aria-expanded="false">
+				<span>Περισσότερα</span><span class="more-toggle__chev">⌄</span>
+			</button>
+			<div class="more-body" id="moreBody">
+				<button type="button" class="nav__item"><span class="nav__icon"></span>Πελάτες</button>
+				<button type="button" class="nav__item"><span class="nav__icon"></span>Λήξεις</button>
+				<button type="button" class="nav__item"><span class="nav__icon"></span>Το δίκτυό μου</button>
+				<button type="button" class="nav__item"><span class="nav__icon"></span>Η ομάδα μου</button>
+				<button type="button" class="nav__item"><span class="nav__icon"></span>Βάση Γνώσης</button>
+			</div>
+		</nav>
+		<div class="badge-note">Αν κάτι στο κρυμμένο κομμάτι χρειάζεται προσοχή (π.χ. νέο μήνυμα ομάδας), το «Περισσότερα» παίρνει τελεία/αριθμό — δεν χάνεται ειδοποίηση επειδή είναι κλειστό.</div>
+	</div>
+
+	<div class="col">
+		<h2>Τώρα (100) — πάντα ανοιχτό</h2>
+		<nav class="sidebar">
+			<div class="brand"><span class="brand__mark">E</span><span class="brand__txt">Energy <strong>CRM</strong></span></div>
+			<div class="nav__label">Καθημερινά</div>
+			<button type="button" class="nav__item is-active"><span class="nav__icon"></span>Αρχική</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Νέα αίτηση</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Συμβάσεις</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Εκκρεμότητες <span class="count">3</span></button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Εργασίες</button>
+			<div class="nav__label" style="margin-top:8px;border-top:1px solid var(--chrome-line);padding-top:12px;">Περισσότερα</div>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Πελάτες</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Λήξεις</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Το δίκτυό μου</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Η ομάδα μου</button>
+			<button type="button" class="nav__item"><span class="nav__icon"></span>Βάση Γνώσης</button>
+		</nav>
+	</div>
+</div>
+
+<p class="note" style="margin-top:32px;"><b>Τι ΔΕΝ αλλάζει:</b> καμία διαδρομή, καμία λειτουργία, καμία ετικέτα — μόνο αν η δεύτερη ομάδα είναι ανοιχτή ή κλειστή κατά την πρώτη φόρτωση. Ο χρήστης που ξέρει τι θέλει πατά «Περισσότερα» μία φορά και η επιλογή θυμάται (localStorage, όχι server) — δεν χρειάζεται να το ξανακάνει σε κάθε σελίδα.<br><br><b>Ρίσκο:</b> κάποιος που ψάχνει «Λήξεις» χωρίς να ξέρει ότι είναι πίσω από το «Περισσότερα» χρειάζεται ένα επιπλέον κλικ την πρώτη φορά — γι' αυτό προτείνεται η ομάδα να ανοίγει από προεπιλογή μόνο <b>την πρώτη φορά</b> που βλέπει κάποιος το CRM (πρώτο login), και να κλείνει μόνη της μετά, ώστε να μη χαθεί καμία διαδρομή αναξήτητα.</p>
+
+<script>
+var btn = document.getElementById('moreBtn'), body = document.getElementById('moreBody');
+btn.addEventListener('click', function () {
+	var open = btn.getAttribute('aria-expanded') === 'true';
+	btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+	body.classList.toggle('is-open', !open);
+});
+</script>
+</div>
+</body></html>
