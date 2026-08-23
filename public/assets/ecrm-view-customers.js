@@ -22,7 +22,9 @@ export function loadCustomers() {
 			}).join('');
 			var table = (d.rows && d.rows.length)
 				? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th>ΑΦΜ</th><th>Τηλέφωνο</th><th>Email</th><th>Συμβάσεις</th><th>Τελευταία</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-				: '<div class="ecrm-empty">Δεν βρέθηκαν πελάτες' + (customersState.q ? ' για «' + esc(customersState.q) + '»' : '') + '.</div>';
+				: '<div class="ecrm-empty">' + (customersState.q
+					? 'Δεν βρέθηκαν πελάτες για «' + esc(customersState.q) + '».'
+					: 'Δεν έχεις κανέναν πελάτη ακόμα. Ο πρώτος πελάτης προστίθεται αυτόματα με τη «Νέα αίτηση».') + '</div>';
 			view.innerHTML =
 				'<header class="ecrm-head ecrm-head--row"><div class="ecrm-titlewrap"><span class="ecrm-pageicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M5 16.5a3.5 3.5 0 0 1 6 0"/><path d="M14 9h4"/><path d="M14 13h4"/></svg></span><div><h2 class="ecrm-title">Πελάτες</h2><p class="ecrm-sub">' + (d.count || 0) + ' πελάτες · μοναδικοί ανά ΑΦΜ</p></div></div>' +
 				'<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (customersState.scope==="own"?" is-on":"") + '" data-cuscope="own">Δικά μου</button><button type="button" class="ecrm-scope__b' + (customersState.scope==="team"?" is-on":"") + '" data-cuscope="team">Ομάδας</button></div></header>' +

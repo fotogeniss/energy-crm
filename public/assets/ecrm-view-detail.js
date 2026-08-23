@@ -151,8 +151,13 @@ function renderDetail(view, d) {
 	// δείχνει «πού είμαι → πού μπορώ να πάω» αντί για πλέγμα ισότιμων κουμπιών.
 	// Το allowed_next το δίνει ο server από το ContractStatus::allowedNext(),
 	// οπότε ο γράφος δεν αντιγράφεται εδώ — ερωτάται.
+	// 'awaiting_signature' μένει επιτρεπτό στο ContractStatus::allowedNext()
+	// (ο server), αλλά είναι το ίδιο βήμα με το 'pending_signature' — νεκρό
+	// status από παλιότερο σύστημα, τίποτα δεν το γράφει πια. Ένα κουμπί εδώ
+	// θα το ανασταίνε σε πραγματική σύμβαση. Ίδια εξαίρεση με τη μπάρα
+	// φίλτρων του ecrm-view-contracts.js, ίδιος λόγος.
 	var statusOpts = Object.keys(statuses).filter(function (s) {
-		return allowedSet[s] && s !== c.status;
+		return allowedSet[s] && s !== c.status && s !== 'awaiting_signature';
 	}).map(function (s) {
 		return '<button type="button" class="ecrm-statuschip ecrm-badge--' + s + '" data-status="' + s + '">' + esc(statuses[s]) + '</button>';
 	}).join('');
@@ -286,9 +291,9 @@ function renderDetail(view, d) {
 		'<div class="ecrm-card ecrm-rcard' + (done === checks.length ? ' is-ok' : '') + '">' +
 		'<div class="ecrm-step">Checklist &nbsp;<b>' + done + '/' + checks.length + '</b></div>' + checklistHTML + '</div>' +
 		'<div class="ecrm-drail__acts">' +
-		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Αποστολή για υπογραφή</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +
-		(c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-track="' + esc(c.track_url) + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg> Link παρακολούθησης</button>' : '') +
+		(c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-track="' + esc(c.track_url) + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg> Σύνδεσμος παρακολούθησης</button>' : '') +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-task-new="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέα εργασία</button>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--danger" data-detail-del="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' +
 		'</div></aside></div>';
@@ -315,7 +320,7 @@ function renderDetail(view, d) {
 		function doDelete() {
 			b.disabled = true; var t = b.textContent; b.textContent = 'Διαγραφή…';
 			fetch(api('/contracts/' + c.id), { method: 'DELETE', headers: H() })
-				.then(function (r) { return r.text().then(function (x) { try { return JSON.parse(x); } catch (e) { throw new Error('HTTP ' + r.status); } }); })
+				.then(function (r) { return r.text().then(function (x) { try { return JSON.parse(x); } catch (e) { throw new Error('Ο server δεν απάντησε σωστά.'); } }); })
 				.then(function (d2) {
 					if (d2 && d2.ok) { toast('Η αίτηση διαγράφηκε.', true); go('contracts'); }
 					else { b.disabled = false; b.textContent = t; toast((d2 && d2.error) || 'Αποτυχία διαγραφής.', false); }
@@ -408,7 +413,7 @@ function renderDetail(view, d) {
 	var CHANNELS = [
 		{ key: 'sms',   title: 'Viber / SMS', note: 'Πτώση σε SMS αν δεν έχει Viber. Ο σύνδεσμος μπαίνει μέσα στο μήνυμα.', at: function (x) { return x.mobile || x.phone || ''; } },
 		{ key: 'email', title: 'Email',       note: 'Το μήνυμα με τον σύνδεσμο υπογραφής.',                                 at: function (x) { return x.email || ''; } },
-		{ key: 'link',  title: 'Μόνο αντιγραφή συνδέσμου', note: 'Τον στέλνεις εσύ — WhatsApp, Messenger, από κοντά.',       at: function () { return ''; } }
+		{ key: 'link',  title: 'Μόνο σύνδεσμος', note: 'Τον στέλνεις εσύ — WhatsApp, Messenger, από κοντά.',       at: function () { return ''; } }
 	];
 
 	var WHY = {
@@ -476,7 +481,7 @@ function renderDetail(view, d) {
 					? 'Ο σύνδεσμος υπογραφής έληξε'
 					: (prev.ok ? 'Στάλθηκε ' : 'Απέτυχε ') + ({ sms: 'με Viber/SMS', email: 'με email', link: 'ως σύνδεσμος' }[prev.channel] || '')) +
 				' · ' + esc(timeAgo(prev.at)) +
-				(expired && c.sign_window_hours ? '<span class="ecrm-chan-memo__hint">Το «Ξαναστείλε» ανοίγει ξανά το παράθυρο των ' + esc(String(c.sign_window_hours)) + ' ωρών.</span>' : '') + '</div>'
+				(expired && c.sign_window_hours ? '<span class="ecrm-chan-memo__hint">Το «Ξαναστείλε σύνδεσμο» ανοίγει ξανά το παράθυρο των ' + esc(String(c.sign_window_hours)) + ' ωρών.</span>' : '') + '</div>'
 			: '';
 
 		// Ο σύνδεσμος μπαίνει ΜΟΝΟ αν υπάρχει το κουμπί που θα πατήσει. Σήμερα
@@ -489,11 +494,11 @@ function renderDetail(view, d) {
 			(hasForm ? '<button type="button" class="ecrm-chan-doc" data-see-form>Δες το έντυπο παρόχου πριν στείλεις</button>' : '');
 
 		var dlg = openDialog({
-			eyebrow: 'Αποστολή για υπογραφή',
+			eyebrow: 'Πώς να το στείλεις',
 			title: c.code || ('#' + c.id),
 			lead: [c.company_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || 'Ο πελάτης'],
 			body: body,
-			confirm: prev ? 'Ξαναστείλε' : 'Αποστολή',
+			confirm: prev ? 'Ξαναστείλε σύνδεσμο' : 'Στείλε',
 			onConfirm: function (el, close, go2) {
 				var pick = el.querySelector('.ecrm-chan.is-on');
 				if (!pick) { return; }
@@ -657,7 +662,7 @@ function downloadBinary(path, btn, busy, idle) {
 		.then(function (r) {
 			return r.text().then(function (txt) {
 				try { return JSON.parse(txt); }
-				catch (e) { throw new Error('HTTP ' + r.status + ': ' + txt.slice(0, 300)); }
+				catch (e) { throw new Error('Ο server δεν απάντησε σωστά.'); }
 			});
 		})
 		.then(function (d) {

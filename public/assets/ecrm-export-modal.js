@@ -11,7 +11,12 @@ import { api, esc, fetch, H, root, toast } from '@energy-crm/util';
 export function openExportModal(filters) {
 	filters = filters || {};
 	var statuses = (window.ECRM && ECRM.statuses) || {};
-	var statusOpts = '<option value="">Όλες</option>' + Object.keys(statuses).map(function (k) {
+	// 'awaiting_signature': ίδιο βήμα με το 'pending_signature', νεκρό status
+	// από παλιότερο σύστημα — ίδια εξαίρεση με τη μπάρα φίλτρων και το πάνελ
+	// αλλαγής κατάστασης.
+	var statusOpts = '<option value="">Όλες</option>' + Object.keys(statuses).filter(function (k) {
+		return k !== 'awaiting_signature';
+	}).map(function (k) {
 		return '<option value="' + esc(k) + '"' + (filters.status === k ? ' selected' : '') + '>' + esc(statuses[k]) + '</option>';
 	}).join('');
 

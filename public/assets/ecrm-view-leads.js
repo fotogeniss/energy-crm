@@ -81,7 +81,7 @@ function renderLeads(view, d) {
 				'</span></div>' +
 		'</div>';
 	}).join('');
-	if (!(d.leads || []).length) cards = '<div class="ecrm-card"><div class="ecrm-empty">Δεν υπάρχουν leads' + (leadsState.stage ? ' σε αυτό το στάδιο' : '') + '.</div></div>';
+	if (!(d.leads || []).length) cards = '<div class="ecrm-card"><div class="ecrm-empty">Δεν υπάρχουν υποψήφιοι πελάτες' + (leadsState.stage ? ' σε αυτό το στάδιο' : ' ακόμα') + '.</div></div>';
 
 	view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Πριν τη σύμβαση</div><h2 class="ecrm-title">Leads</h2>' +
