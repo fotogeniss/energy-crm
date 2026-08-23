@@ -24,6 +24,23 @@ class ECRM_Files {
 
 	const TTL = 3600; // signed-URL lifetime (seconds)
 
+	/**
+	 * Το ΕΝΑ σημείο που γεννά διαδρομές εγγράφων.
+	 *
+	 * Μέχρι τις 2026-08-23 αυτή η κλάση έχτιζε μόνη της το όνομα, σε δύο
+	 * σημεία, με τη λογική του `DocumentStorage::newPath()` αντιγραμμένη —
+	 * ακριβώς αυτό που το docblock εκείνης της κλάσης προειδοποιούσε ότι θα
+	 * αποκλίνει. Και απέκλινε: ο κάδος `Y/m` μπήκε εκεί, και τα ανεβασμένα
+	 * έγγραφα μαζί με τα παραγόμενα PDF θα έμεναν επίπεδα χωρίς να το πει
+	 * κανείς. Τώρα υπάρχει μία εκδοχή του τι σημαίνει «νέα διαδρομή».
+	 *
+	 * Καινούριο αντικείμενο σε κάθε κλήση: η κλάση δεν κρατά κατάσταση και
+	 * δεν αγγίζει βάση, οπότε δεν υπάρχει τίποτα να μοιραστεί.
+	 */
+	private static function storage(): \EnergyCRM\Persistence\DocumentStorage {
+		return new \EnergyCRM\Persistence\DocumentStorage( self::dir() );
+	}
+
 	/** Absolute path to the protected storage dir (created + hardened on demand). */
 	public static function dir(): string {
 		$up   = wp_upload_dir();
@@ -128,9 +145,8 @@ class ECRM_Files {
 
 		// Η κατάληξη από τον τύπο που επιβεβαιώθηκε — ποτέ από το όνομα.
 		$ext  = \EnergyCRM\Infrastructure\UploadCheck::extensionFor( $mime );
-		$dir  = self::dir();
-		$name = 'doc_' . wp_generate_password( 24, false ) . '.' . $ext; // όνομα που δεν μαντεύεται
-		$dest = trailingslashit( $dir ) . $name;
+		$dest = self::storage()->newPath( $ext ); // όνομα που δεν μαντεύεται, μέσα σε κάδο Y/m
+		$name = basename( $dest );
 		if ( ! @move_uploaded_file( $file['tmp_name'], $dest ) ) { // phpcs:ignore
 			$reason = 'store_failed';
 			return null;
@@ -146,9 +162,8 @@ class ECRM_Files {
 	 */
 	public static function put_bytes( string $bytes, string $ext, string $mime, string $filename = '' ): ?array {
 		if ( $bytes === '' ) { return null; }
-		$dir  = self::dir();
-		$name = 'doc_' . wp_generate_password( 24, false ) . '.' . preg_replace( '/[^a-z0-9]/i', '', $ext );
-		$dest = trailingslashit( $dir ) . $name;
+		$dest = self::storage()->newPath( $ext );
+		$name = basename( $dest );
 		if ( false === @file_put_contents( $dest, $bytes ) ) { // phpcs:ignore
 			return null;
 		}

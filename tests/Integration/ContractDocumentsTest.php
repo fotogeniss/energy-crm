@@ -71,7 +71,7 @@ final class ContractDocumentsTest extends IntegrationTestCase
 
     private int $contractId;
 
-    /** @var list<string> */
+    /** @var array<string, true> */
     private array $filesBefore = [];
 
     protected function setUp(): void
@@ -82,14 +82,14 @@ final class ContractDocumentsTest extends IntegrationTestCase
         // same object graph the cron job and the signing page reach.
         $this->documents = Services::contractDocuments();
 
-        $this->filesBefore = $this->storageContents();
+        $this->filesBefore = self::documentsOnDisk();
         $this->providerId  = $this->makeProvider();
         $this->contractId  = $this->makeContract();
     }
 
     protected function tearDown(): void
     {
-        foreach (array_diff($this->storageContents(), $this->filesBefore) as $path) {
+        foreach (array_keys(array_diff_key(self::documentsOnDisk(), $this->filesBefore)) as $path) {
             wp_delete_file($path);
         }
 
@@ -374,15 +374,5 @@ final class ContractDocumentsTest extends IntegrationTestCase
         );
 
         return $rows;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function storageContents(): array
-    {
-        $found = glob(rtrim(ECRM_Files::dir(), '/\\') . DIRECTORY_SEPARATOR . '*');
-
-        return $found === false ? [] : array_values(array_filter($found, 'is_file'));
     }
 }
