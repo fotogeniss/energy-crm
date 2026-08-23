@@ -654,6 +654,7 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 
 		// dropzone
 		var drop = q('[data-drop]'), input = q('[data-files]'), pick = q('[data-pick]'), extractBtn = q('[data-extract]');
+		var camera = q('[data-camera]'), cameraBtn = q('[data-camera-pick]');
 
 		function guessKind(name) {
 			var n = name.toLowerCase();
@@ -769,6 +770,12 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 		drop.addEventListener('click', function (e) { if (e.target === drop || e.target.classList.contains('ecrm-drop__title') || e.target.classList.contains('ecrm-drop__icon')) input.click(); });
 		drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
 		input.addEventListener('change', function () { addFiles(this.files); this.value = ''; });
+		// Ίδιο addFiles() με το κανονικό input — η φωτογραφία περνά από το ίδιο
+		// shrink() πριν ανέβει, όπως κάθε άλλο αρχείο.
+		if (camera && cameraBtn) {
+			cameraBtn.addEventListener('click', function () { camera.click(); });
+			camera.addEventListener('change', function () { addFiles(this.files); this.value = ''; });
+		}
 		['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('is-drag'); }); });
 		['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('is-drag'); }); });
 		drop.addEventListener('drop', function (e) { if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files); });

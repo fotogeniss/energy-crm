@@ -76,6 +76,22 @@
 	--icon-16: 16px;         /* 2 */
 	--icon-15: 15px;         /* 2 */
 	--icon-13: 13px;         /* 1 */
+
+	/* Ο ΚΑΜΒΑΣ ΤΗΣ ΣΕΛΙΔΑΣ — και γιατί ζει εδώ, όχι στο .ecrm.
+	 *
+	 * Το `.ecrm-app` βάφει τον εαυτό του, αλλά ό,τι αφήνει από κάτω ή γύρω
+	 * του το theme του WordPress έμενε άβαφο: σε σκούρα εμφάνιση ο ιδιοκτήτης
+	 * έβλεπε μια λευκή λωρίδα στο κάτω μέρος (screenshot, 23/08). Κανένας
+	 * κανόνας του plugin δεν άγγιζε ποτέ `html` ή `body`.
+	 *
+	 * Για να βαφτεί το `html` χρειάζεται τιμή που το `html` μπορεί να
+	 * διαβάσει, και οι custom properties κληρονομούνται μόνο ΠΡΟΣ ΤΑ ΚΑΤΩ —
+	 * το `.ecrm` είναι παιδί του `html`, άρα η παλέτα του είναι αόρατη από
+	 * πάνω. Οι δύο τιμές ανέβηκαν λοιπόν εδώ και τα πρωτογενή `--n50`/`--n950`
+	 * τις δείχνουν, αντί να τις ξαναγράψουν: μία τιμή, ένα σημείο, όπως
+	 * απαιτεί ο ColourIsDecidedInOnePlaceTest — απλώς ένα επίπεδο ψηλότερα. */
+	--page-canvas: #f8f8f6;
+	--page-canvas-dark: #111110;
 }
 
 .ecrm {
@@ -87,7 +103,7 @@
 	 * και τεκμηριωμένα. Σκεπτικό: docs/UI-PREMIUM.html */
 	--n0: #ffffff;
 	--n25: #fdfdfc;
-	--n50: #f8f8f6;
+	--n50: var(--page-canvas);
 	--n100: #f1f1ee;
 	--n150: #e9e8e4;
 	--n200: #dedcd7;
@@ -99,7 +115,7 @@
 	--n700: #42413d;
 	--n800: #2a2926;
 	--n900: #1a1a18;
-	--n950: #111110;
+	--n950: var(--page-canvas-dark);
 
 	/* Πράσινο — 2026-08-17. Αντικατέστησε το λάιμ κατόπιν εντολής του πελάτη,
 	 * που έστειλε το design system του forex dashboard. Το --p400 (#16c217)
@@ -326,7 +342,7 @@
  * ecrm-app">, οπότε καμία εξάρτηση από το θέμα και κανένα τρεμόπαιγμα. */
 .ecrm[data-theme="dark"] {
 	/* Επιφάνειες. Η κάρτα επιπλέει πάνω από τον καμβά, όπως και στο ανοιχτό. */
-	--bg: #111110;
+	--bg: var(--n950);
 	--surface: #1a1a18;
 	--surface-2: #1f1f1c;
 	--surface-sunk: #232320;
@@ -740,9 +756,28 @@
 	transition: background .15s, border-color .15s, color .15s, filter .15s;
 }
 .ecrm-btn:disabled { opacity: .55; cursor: not-allowed; }
+/* BUG (23/08, ιδιοκτήτης): «Οριστικοποίηση» και «Αποθήκευση Αλλαγών»
+ * φαίνονταν ΠΑΝΤΑ, ακόμα και σε ημιτελές wizard ή σε ολοκαίνουρια αίτηση.
+ * ΔΕΝ ήταν λάθος στη λογική του paintFoot() στο ecrm-form.js — αυτή ήδη
+ * κρύβει σωστά τα κουμπιά ανάλογα με βήμα/στάδιο. Το `display:inline-flex`
+ * εδώ πάνω, στο `.ecrm-btn`, έχει ΙΔΙΑ ειδικότητα CSS με το `[hidden]` του
+ * browser και γράφεται ΜΕΤΑ του στην κλίμακα — κερδίζει αυτόματα σε κάθε
+ * κουμπί με class `ecrm-btn`, άσχετα αν έχει το attribute `hidden`. Ο
+ * κανόνας JS ήταν σωστός, απλώς δεν είχε πια καμία επίδραση στην οθόνη.
+ * Ίδιο ΑΚΡΙΒΩΣ σχήμα με `.ecrm-bell__badge[hidden]` (ecrm-app.css),
+ * `.ecrm-wstep[hidden]` και `.ecrm-grid[hidden]` εδώ πιο κάτω — τρίτη φορά
+ * που ξαναχτυπά το ίδιο gotcha σε νέο selector. */
+.ecrm-btn[hidden] { display: none; }
 /* Το box-shadow ήταν rgba(90,81,209) — το IRIS, η παλέτα που απορρίφθηκε
    στις 2026-08-17 (9). Είχε μείνει μέσα από τότε. */
-.ecrm-btn--ai { margin-top: 14px; background: var(--amber); color: var(--on-accent); box-shadow: none; }
+/* Πλάτος 100% ώστε να πιάνει σωστό στόχο αφής κάτω από το drop zone — σε
+   desktop απλώς είναι ένα φαρδύ δευτερεύον κουμπί, καμία βλάβη. */
+.ecrm-camera-btn { width: 100%; margin-top: 10px; }
+/* Ίδιο πλάτος με το drop zone/κουμπί κάμερας από πάνω του — έμενε μικρό και
+   στοιχισμένο αριστερά, ασύμμετρο δίπλα σε δύο στοιχεία πλάτους 100%
+   (screenshot ιδιοκτήτη, 23/08). Το justify-content:center του .ecrm-btn
+   κεντράρει το κείμενο μέσα του μόλις πάρει το ίδιο πλάτος. */
+.ecrm-btn--ai { width: 100%; margin-top: 14px; background: var(--amber); color: var(--on-accent); box-shadow: none; }
 .ecrm-btn--ai:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.04); }
 .ecrm-btn--ai.is-loading { position: relative; color: transparent; }
 .ecrm-btn--ai.is-loading::after { content: ""; position: absolute; inset: 0; margin: auto; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.45); border-top-color: var(--on-accent); border-radius: 50%; animation: ecrm-spin .7s linear infinite; }
@@ -805,8 +840,15 @@
 	.ecrm-wstep__b strong { font-size: var(--fs-9); letter-spacing: .04em; }
 	.ecrm-row__label { width: 100%; flex-basis: 100%; }
 	.ecrm-foot { flex-direction: column; align-items: stretch; }
-	.ecrm-foot__actions { justify-content: stretch; }
-	.ecrm-foot__actions .ecrm-btn { flex: 1; }
+	/* BUG (24/08): 3-4 κουμπιά σε μία σειρά με flex:1 και χωρίς wrap — το
+	   «Προσωρινή Αποθήκευση» δεν χωράει στο δικό του μερίδιο, τα flex items
+	   δεν έχουν min-width:0 άρα δεν συρρικνώνονται κάτω από το φυσικό τους
+	   πλάτος, και η σειρά ξεχειλίζει έξω από το viewport — ολόκληρη η σελίδα
+	   κυλάει οριζόντια στο κινητό (screenshot ιδιοκτήτη, 23/08). Η λύση:
+	   επίτρεψε αναδίπλωση, και δώσε στα κουμπιά δικαίωμα να συρρικνωθούν
+	   πραγματικά πριν αναδιπλωθούν. */
+	.ecrm-foot__actions { justify-content: stretch; flex-wrap: wrap; }
+	.ecrm-foot__actions .ecrm-btn { flex: 1 1 auto; min-width: 0; }
 }
 @media (max-width: 460px) {
 	.ecrm-grid { grid-template-columns: 1fr; }
