@@ -3,6 +3,6 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"test": "node --experimental-detect-module --test tools/js-tests/*.test.js"
+		"test": "node --experimental-detect-module --test format.test.js scope.test.js navigate.test.js"
 	}
 }

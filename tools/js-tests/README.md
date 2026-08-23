@@ -44,7 +44,7 @@ regex — τρία πραγματικά scan-άρουν `.js`
 Από τη ρίζα του plugin:
 
 ```
-node --experimental-detect-module --test tools/js-tests/*.test.js
+node --experimental-detect-module --test tools/js-tests/format.test.js tools/js-tests/scope.test.js tools/js-tests/navigate.test.js
 ```
 
 ή, μέσα σε αυτόν τον φάκελο:
@@ -52,6 +52,28 @@ node --experimental-detect-module --test tools/js-tests/*.test.js
 ```
 npm test
 ```
+
+**Διόρθωση 23/08 (α), μετρημένη στο πραγματικό Site Shell, όχι στο sandbox.**
+Η πρώτη έκδοση αυτού του README και του `package.json` έγραφε
+`tools/js-tests/*.test.js` — δούλευε στο sandbox (bash), έσκασε στο πραγματικό
+Windows: `Could not find '...\tools\js-tests\*.test.js'`. Το `cmd.exe` δεν
+κάνει glob expansion σε `*` όπως το bash· περνά τη συμβολοσειρά αυτούσια στο
+πρόγραμμα, και ο Node δεν την ξαναϊσιάζει μόνος του. Δοκιμάστηκε ένα ενδιάμεσο
+(`--test tools/js-tests`, περνώντας τον φάκελο) που ΕΠΙΣΗΣ απέτυχε — σε αυτή
+την έκδοση Node ένα directory path σαν positional argument γίνεται
+`require()`, όχι directory scan, και σκάει με `MODULE_NOT_FOUND`.
+
+**Διόρθωση 23/08 (β).** Η ρητή λίστα αρχείων της (α) έγραφε
+`tools/js-tests/format.test.js` κ.λπ. μέσα στο ίδιο το `package.json` — και
+έσκασε ΚΙ ΑΥΤΗ, με διπλασιασμένο μονοπάτι
+(`...\tools\js-tests\tools\js-tests\format.test.js`). Αιτία: το `npm test`
+τρέχει το script με cwd **ήδη μέσα** στον φάκελο που έχει το `package.json`
+(`tools/js-tests`), οπότε ένα μονοπάτι που ξεκινά πάλι με `tools/js-tests/`
+διπλασιάζεται. Το `package.json` χρειάζεται **γυμνά ονόματα αρχείων**
+(`format.test.js`, όχι `tools/js-tests/format.test.js`) ακριβώς επειδή θα
+τρέξει πάντα από εκεί μέσα. Η εντολή που καλείται **από τη ρίζα** (χωρίς
+`npm`, βλέπε παρακάτω) χρειάζεται το πλήρες relative path, γιατί εκεί το cwd
+είναι η ρίζα — οι δύο μορφές διαφέρουν σκόπιμα, όχι από λάθος αντιγραφή.
 
 ### Γιατί `--experimental-detect-module`
 
