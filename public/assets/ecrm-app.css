@@ -2,6 +2,20 @@
  * Builds on ecrm-form.css tokens. The shell is a fixed navy rail + scrolling
  * main column, echoing the energy-reseller CRM idiom but as its own identity. */
 
+/* Ο καμβάς ΠΙΣΩ από το κέλυφος.
+ *
+ * Το `.ecrm-app` βάφει τον εαυτό του και έχει `min-height: 100vh`, αλλά ζει
+ * μέσα στο theme του WordPress: ό,τι βάζει το theme από κάτω του — footer,
+ * περιθώριο, κενό — έμενε στο λευκό του browser. Σε σκούρα εμφάνιση αυτό
+ * φαινόταν ως λευκή λωρίδα στο τέλος της σελίδας (screenshot ιδιοκτήτη,
+ * 23/08). Κανένας κανόνας του plugin δεν άγγιζε ποτέ `html`.
+ *
+ * Το `:has()` περιορίζει τον κανόνα στις σελίδες που ΟΝΤΩΣ φιλοξενούν το
+ * κέλυφος — μια σελίδα του site χωρίς CRM δεν αλλάζει χρώμα. Τα δύο tokens
+ * ζουν στο `:root` του ecrm-form.css· δες εκεί το γιατί. */
+html:has(.ecrm-app) { background: var(--page-canvas); }
+html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
+
 .ecrm-app {
 	display: block;
 	max-width: none;
@@ -19,6 +33,11 @@
 	bottom: 0;
 	width: 208px;
 	overflow-y: auto;
+	/* BUG (23/08, ιδιοκτήτης): φτάνοντας στο τέλος του scroll μέσα στο
+	   συρτάρι, ένα ακόμη scroll «περνούσε» στη σελίδα από πίσω — scroll
+	   chaining, το browser δεν ήξερε ότι το εσωτερικό scroll «τελείωσε» με
+	   πρόθεση. Το `contain` το σταματά χωρίς να αγγίξει τη δική του κύλιση. */
+	overscroll-behavior-y: contain;
 	z-index: 30;
 	background: var(--chrome);
 	color: var(--chrome-ink);
@@ -33,8 +52,39 @@
 .ecrm-brand__txt { font-size: var(--fs-15); font-weight: 700; letter-spacing: -.01em; color: var(--chrome-ink-hi); }
 .ecrm-brand__txt strong { font-weight: 800; }
 
-.ecrm-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+/* BUG (23/08, ιδιοκτήτης): με `flex: 1` το `.ecrm-nav` γέμιζε πάντα όλο το
+   ύψος ανάμεσα σε brand και footer — όσο το «Περισσότερα» έμενε διπλωμένο
+   (η ίδια η πρόταση #2), το περιεχόμενο έμενε κοντό και η άδεια περιοχή
+   φαινόταν σαν χοντρό μαύρο κενό πριν τη γραμμή του footer. Χωρίς `flex: 1`
+   το nav παίρνει μόνο όσο ύψος χρειάζεται το περιεχόμενό του, το footer
+   ακολουθεί αμέσως από κάτω· τυχόν αχρησιμοποίητο ύψος μένει αόρατο κάτω
+   από το footer, όχι σαν κενό ΠΑΝΩ από αυτό. */
+.ecrm-nav { display: flex; flex-direction: column; gap: 4px; }
 .ecrm-nav__label { font-size: var(--fs-10); letter-spacing: .12em; text-transform: uppercase; color: var(--chrome-ink-dim); padding: 12px 9px 4px; }
+/* Οπτική ιεράρχηση μενού για low-tech χρήστη, πρόταση #2 — η δεύτερη ομάδα
+   («Περισσότερα») δεν είναι πια απλή ετικέτα, είναι διπλωμένο κουμπί: η δεύτερη
+   φάση του low-tech πάσου, docs/UI-NAV-MORE-COLLAPSE.html, εγκρίθηκε 23/08.
+   Ίδιο πνεύμα με την κάτω μπάρα κινητού — 5 βασικά μπροστά, τα υπόλοιπα πίσω
+   από ένα κλικ, ανοιχτό αυτόματα μόνο στο πρώτο login (ecrm-app.js). */
+.ecrm-nav__more-toggle {
+	display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%;
+	background: none; border: none; cursor: pointer; font-family: inherit;
+	margin-top: 8px; border-top: 1px solid var(--chrome-line); padding: 12px 9px 6px;
+	font-size: var(--fs-10); letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+	color: var(--chrome-ink-dim); transition: color .14s;
+}
+.ecrm-nav__more-toggle:hover { color: var(--chrome-ink); }
+.ecrm-nav__more-chev { width: 14px; height: 14px; display: grid; place-items: center; transition: transform .18s ease; }
+.ecrm-nav__more-chev svg { width: 12px; height: 12px; }
+.ecrm-nav__more-toggle[aria-expanded="true"] .ecrm-nav__more-chev { transform: rotate(180deg); }
+.ecrm-nav__badge--more { position: static; margin-left: auto; box-shadow: none; }
+.ecrm-nav__more-body { overflow: hidden; max-height: 0; display: flex; flex-direction: column; gap: 4px; transition: max-height .22s ease; }
+.ecrm-nav__more-body.is-open { max-height: 600px; }
+/* Σε συμπτυγμένο μενού (data-collapsed) το «Περισσότερα» μένει πάντα ανοιχτό —
+   δεν έχει νόημα δεύτερο επίπεδο απόκρυψης πάνω σε ήδη σμικρυμένο μενού· το
+   ίδιο το κουμπί κρύβεται, όπως κάθε άλλη ετικέτα, μένει μόνο η λίστα. */
+.ecrm-app[data-collapsed="1"] .ecrm-nav__more-toggle { display: none; }
+.ecrm-app[data-collapsed="1"] .ecrm-nav__more-body { max-height: none; overflow: visible; }
 .ecrm-nav__item {
 	display: flex; align-items: center; gap: 10px;
 	background: none; border: none; color: var(--chrome-ink); cursor: pointer;
@@ -81,6 +131,30 @@
 .ecrm-topbar__brand strong { font-weight: 800; }
 .ecrm-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,19,26,.42); z-index: 35; }
 .ecrm-topbar__right { display: flex; align-items: center; gap: 14px; }
+/* Διακόπτης ανοιχτής/σκούρας εμφάνισης, σαν πραγματικό on/off — αίτημα
+   ιδιοκτήτη 23/08, βλ. class-ecrm-app.php. Ήλιος/φεγγάρι σταθερά στις δύο
+   άκρες, ο κύκλος (knob) γλιστράει από πάνω τους ανάλογα με data-theme.
+   ΜΟΝΑΔΙΚΟ σημείο ελέγχου πλέον — το παλιό κουμπί στο footer του πλαϊνού
+   μενού αφαιρέθηκε (ίδιο αίτημα, ίδια μέρα), οπότε αυτό μένει ορατό και σε
+   desktop ΚΑΙ σε mobile (το `.ecrm-gsearch` ήδη κρύβεται στα 760px κι
+   αφήνει χώρο). */
+.ecrm-themesw {
+	position: relative; flex: 0 0 auto; width: 52px; height: 28px; padding: 0 6px;
+	border: 1px solid var(--line); border-radius: 999px; background: var(--surface-sunk);
+	cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+}
+.ecrm-themesw__ico { width: 14px; height: 14px; color: var(--muted); display: grid; place-items: center; z-index: 1; }
+.ecrm-themesw__ico svg { width: 13px; height: 13px; }
+.ecrm-themesw__knob {
+	position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%;
+	background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,.25);
+	transition: transform .18s ease;
+}
+.ecrm[data-theme="dark"] .ecrm-themesw__knob { transform: translateX(24px); background: var(--surface-inverse); }
+.ecrm[data-theme="dark"] .ecrm-themesw { background: var(--surface-inverse-soft); border-color: var(--chrome-line); }
+.ecrm[data-theme="dark"] .ecrm-themesw__ico--moon { color: var(--amber-bright); }
+.ecrm[data-theme="light"] .ecrm-themesw__ico--sun { color: var(--amber); }
+@media (max-width: 480px) { .ecrm-themesw { width: 44px; height: 24px; } .ecrm-themesw__knob { width: 18px; height: 18px; } .ecrm[data-theme="dark"] .ecrm-themesw__knob { transform: translateX(20px); } }
 .ecrm-live { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-12); font-weight: 700; color: var(--ok); }
 .ecrm-live__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(16,185,129,.5); animation: ecrm-pulse-dot 2s infinite; }
 @keyframes ecrm-pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); } 70% { box-shadow: 0 0 0 6px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
@@ -346,10 +420,19 @@
 .ecrm-litsa__avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--amber), var(--amber-bright)); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; }
 .ecrm-litsa__id strong { display: block; font-size: var(--fs-15); }
 .ecrm-litsa__sub { font-size: var(--fs-11); color: var(--faint-2); }
+.ecrm-litsa__headbtns { display: flex; align-items: center; gap: 4px; }
 .ecrm-litsa__x { background: none; border: none; color: var(--faint-2); font-size: var(--icon-16); cursor: pointer; }
 .ecrm-litsa__x:hover { color: var(--chrome-ink-hi); }
+/* Το .ecrm-i μέσα δίνει ήδη μέγεθος/stroke — δεν ξαναγράφεται εδώ. */
+.ecrm-litsa__clear { background: none; border: none; color: var(--faint-2); cursor: pointer; padding: 6px; border-radius: 8px; display: grid; place-items: center; }
+.ecrm-litsa__clear:hover { color: var(--chrome-ink-hi); background: rgba(255,255,255,.08); }
 
-.ecrm-litsa__body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
+/* `overscroll-behavior-y: contain` για τον ΙΔΙΟ λόγο με το .ecrm-sidebar:
+   φτάνοντας στο τέλος της συνομιλίας, ένα ακόμη scroll κυλούσε τη σελίδα από
+   πίσω. Κάθε στοιχείο με δικό του `overflow-y: auto` πάνω από τη σελίδα το
+   χρειάζεται — το ένα δεν καλύπτει το άλλο. Ο ιδιοκτήτης το βρήκε στη Λίτσα
+   αμέσως μόλις διορθώθηκε το μενού, 23/08. */
+.ecrm-litsa__body { flex: 1; overflow-y: auto; overscroll-behavior-y: contain; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
 .ecrm-litsa__greet { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; font-size: var(--fs-13-5); color: var(--ink); line-height: 1.55; }
 .ecrm-msg { max-width: 82%; padding: 9px 13px; border-radius: 14px; font-size: var(--fs-13-5); line-height: 1.5; word-wrap: break-word; }
 .ecrm-msg--me { align-self: flex-end; background: var(--surface-inverse); color: var(--chrome-ink-hi); border-bottom-right-radius: 4px; }
@@ -635,7 +718,7 @@
 .ecrm-bellpanel__head b { font-size: var(--fs-14); color: var(--navy); }
 .ecrm-bellpanel__head span { font-size: var(--fs-11-5); color: var(--muted); }
 .ecrm-bellpanel__empty { padding: 22px 16px; text-align: center; color: var(--muted); font-size: var(--fs-13-5); }
-.ecrm-bellpanel__list { max-height: 360px; overflow-y: auto; }
+.ecrm-bellpanel__list { max-height: 360px; overflow-y: auto; overscroll-behavior-y: contain; }
 .ecrm-bellitem { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid var(--line); padding: 11px 16px; cursor: pointer; font-family: inherit; }
 .ecrm-bellitem:hover { background: var(--bg); }
 .ecrm-bellitem.is-stale { background: var(--st-pending-bg); }
@@ -752,6 +835,12 @@
 /* --- Bulk actions --- */
 .ecrm-checkcol { width:34px; text-align:center; }
 .ecrm-bulkbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 12px; margin-bottom:10px; background:var(--surface-inverse); border-radius:12px; color:var(--chrome-ink-hi); }
+/* 5η επανάληψη του ίδιου gotcha (βλ. .ecrm-btn[hidden] παρακάτω στο ecrm-form.css,
+ * .ecrm-bell__badge[hidden], .ecrm-wstep[hidden], .ecrm-grid[hidden]): η γραμμή
+ * bar.hidden = ids.length === 0 (ecrm-view-contracts.js) δεν είχε καμία επίδραση,
+ * γιατί το display:flex εδώ πάνω κερδίζει το [hidden] του browser σε ισοπαλία
+ * ειδικότητας. Βρέθηκε προληπτικά με σάρωση μετά το bug των κουμπιών (23/08). */
+.ecrm-bulkbar[hidden] { display: none; }
 .ecrm-bulkbar__n { font-size:var(--fs-13); margin-right:4px; } .ecrm-bulkbar__n b { font-size:var(--fs-15); }
 .ecrm-input--sm { padding:6px 8px; font-size:var(--fs-13); height:auto; max-width:200px; }
 .ecrm-bulkbar .ecrm-input--sm { color:var(--ink); }
@@ -802,7 +891,7 @@
 .ecrm-gsearch { position:relative; flex:1; max-width:520px; margin:0 18px; }
 .ecrm-gsearch > input { width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 14px; font-size:var(--fs-14); background:var(--bg); outline:none; }
 .ecrm-gsearch > input:focus { background:var(--surface); border-color:var(--line-mid); }
-.ecrm-gsearch__results { position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:0 16px 40px -16px rgba(0,0,0,.3); z-index:60; max-height:420px; overflow:auto; }
+.ecrm-gsearch__results { position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:0 16px 40px -16px rgba(0,0,0,.3); z-index:60; max-height:420px; overflow:auto; overscroll-behavior-y: contain; }
 .ecrm-gsearch__row { display:flex; flex-direction:column; gap:3px; width:100%; text-align:left; border:0; background:transparent; border-bottom:1px solid var(--line-soft); padding:10px 14px; cursor:pointer; }
 .ecrm-gsearch__row:hover { background:var(--bg); }
 .ecrm-gsearch__main { font-size:var(--fs-14); font-weight:600; color:var(--ink); }
@@ -918,7 +1007,7 @@
    στο σκούρο, ώστε το ανοιχτό να μη μετακινηθεί ούτε ένα pixel. */
 .ecrm[data-theme="dark"] .ecrm-modal { border: 1px solid var(--line-mid); }
 
-.ecrm-modal { background: var(--surface); border-radius: 18px; width: 100%; max-width: 560px; padding: 18px 18px 14px; position: relative; box-shadow: 0 40px 90px -30px rgba(0,0,0,.5); max-height: 90vh; overflow-y: auto; }
+.ecrm-modal { background: var(--surface); border-radius: 18px; width: 100%; max-width: 560px; padding: 18px 18px 14px; position: relative; box-shadow: 0 40px 90px -30px rgba(0,0,0,.5); max-height: 90vh; overflow-y: auto; overscroll-behavior-y: contain; }
 .ecrm-modal__x { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: var(--icon-20); line-height: 1; cursor: pointer; }
 .ecrm-modal__x:hover { color: var(--navy); }
 .ecrm-modal__eyebrow { font-size: var(--fs-11); font-weight: 700; letter-spacing: .08em; color: var(--amber); text-transform: uppercase; }
@@ -1103,8 +1192,16 @@
 	.ecrm-btn, .ecrm-tab, .ecrm-statuschip { min-height: 40px; }
 	.ecrm-bulkbar { position: sticky; bottom: 70px; z-index: 25; }
 
-	/* Η Λίτσα ανεβαίνει πάνω από τη μπάρα αντί να την καλύπτει. */
-	.ecrm-litsa__fab { bottom: 78px; }
+	/* Η Λίτσα ανεβαίνει πάνω από τη μπάρα αντί να την καλύπτει.
+	 *
+	 * BUG (23/08, screenshot ιδιοκτήτη): το `bottom` έμπαινε στο
+	 * `.ecrm-litsa__fab` — το ίδιο το κουμπί, που ΔΕΝ έχει positioning
+	 * (`position` default `static`). Το `bottom`/`top`/`left`/`right` δεν
+	 * κάνουν τίποτα σε static στοιχείο· ο κανόνας δεν έκανε ποτέ τίποτα, το
+	 * κουμπί έμενε στο `bottom: 22px` του γονιού `.ecrm-litsa` (fixed) και
+	 * έπεφτε πάνω στην μπάρα. Ο γονιός είναι αυτός με το `position: fixed`
+	 * (βλ. πιο πάνω), άρα αυτός χρειάζεται το ανέβασμα, όχι το παιδί. */
+	.ecrm-litsa { bottom: 78px; }
 }
 
 /* --- Κάτω μπάρα: μόνο σε κινητό --- */

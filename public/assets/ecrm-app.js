@@ -79,18 +79,24 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 	// η επιλογή ισχύει για τη συνεδρία και χάνεται στο επόμενο refresh — δεν
 	// γυρίζουμε την οθόνη πίσω, γιατί ένα φλας είναι χειρότερο από μια χαμένη
 	// προτίμηση.
-	var themeBtn = app.querySelector('[data-theme-toggle]');
-	if (themeBtn) {
+	// Ένα μόνο σημείο εναλλαγής πλέον — ο διακόπτης του topbar (23/08, το παλιό
+	// κουμπί στο footer του πλαϊνού μενού αφαιρέθηκε). querySelectorAll μένει
+	// ούτως ή άλλως ανεκτικό αν ξαναχρειαστεί δεύτερο σημείο κάποια στιγμή.
+	var themeBtns = app.querySelectorAll('[data-theme-toggle]');
+	themeBtns.forEach(function (themeBtn) {
 		themeBtn.addEventListener('click', function () {
 			var next = app.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
 			app.setAttribute('data-theme', next);
+			themeBtns.forEach(function (b) {
+				if (b.hasAttribute('aria-checked')) b.setAttribute('aria-checked', next === 'dark' ? 'true' : 'false');
+			});
 			fetch(api('/theme'), {
 				method: 'POST',
 				headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
 				body: JSON.stringify({ theme: next })
 			}).catch(function () {});
 		});
-	}
+	});
 
 	app.addEventListener('click', function (e) {
 		var btn = e.target.closest('[data-go]');
@@ -118,6 +124,31 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 		app.setAttribute('data-collapsed', on ? '0' : '1');
 		try { localStorage.setItem('ecrm_sidebar', on ? '0' : '1'); } catch (e) {}
 	});
+
+	// «Περισσότερα» στο πλαϊνό μενού — πρόταση #2 του χαμηλής-εξοικείωσης πάσου
+	// (docs/UI-NAV-MORE-COLLAPSE.html, εγκρίθηκε 23/08). Ανοιχτό από προεπιλογή
+	// ΜΟΝΟ όσο δεν υπάρχει καμία αποθηκευμένη προτίμηση — δηλαδή στο πρώτο login
+	// κάποιου, ώστε καμία διαδρομή να μη χαθεί αναξήτητα· μετά θυμάται ό,τι
+	// διάλεξε ο χρήστης, ανοιχτό ή κλειστό.
+	var moreBtn = app.querySelector('[data-nav-more-toggle]');
+	var moreBody = app.querySelector('[data-nav-more-body]');
+	if (moreBtn && moreBody) {
+		var moreOpen = true;
+		try {
+			var saved = localStorage.getItem('ecrm_nav_more');
+			if (saved !== null) moreOpen = saved === '1';
+		} catch (e) {}
+		function paintMore() {
+			moreBtn.setAttribute('aria-expanded', moreOpen ? 'true' : 'false');
+			moreBody.classList.toggle('is-open', moreOpen);
+		}
+		paintMore();
+		moreBtn.addEventListener('click', function () {
+			moreOpen = !moreOpen;
+			paintMore();
+			try { localStorage.setItem('ecrm_nav_more', moreOpen ? '1' : '0'); } catch (e) {}
+		});
+	}
 
 	// ---- mobile nav drawer (off-canvas) ----------------------------------
 	var mq = window.matchMedia('(max-width: 860px)');
