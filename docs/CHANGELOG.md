@@ -7,6 +7,99 @@
 
 ---
 
+## 2026-08-23 (91)
+
+### JS χωρίς test infrastructure: τρία module που έγραφαν «καθαρές συναρτήσεις» χωρίς κανένα test να το αποδεικνύει
+
+**Το πρόβλημα.** Τρία test του PHP suite σαρώνουν `.js` με regex
+(`FrontendEscapingTest`, `TimeIsReadInOnePlaceTest`, `NoRemoteFontsTest`) —
+φύλακες που διαβάζουν **κείμενο**, όχι κώδικα. Κανένα δεν καλεί ποτέ μια JS
+συνάρτηση και δεν ελέγχει τι επιστρέφει. Το `ecrm-format.js` δηλώνει ρητά στο
+δικό του σχόλιο «Pure functions, every one: same input, same output» — μια
+πρόταση που κανένα test δεν είχε ποτέ επαληθεύσει.
+
+**Τι μετρήθηκε πριν γραφτεί οτιδήποτε στο repo.** Το plugin δεν έχει
+`package.json` πουθενά, ούτε στη ρίζα ούτε στο `public/assets/` — τα JS εκεί
+γράφονται σκόπιμα ως ES modules (`export function ...`), φορτωμένα στον
+browser με native `<script type="module">`, **χωρίς bundler, χωρίς
+`node_modules`** (ρητή σχεδιαστική επιλογή, σχόλιο στο `ecrm-util.js`). Ο
+Node χωρίς βοήθεια θα τα διάβαζε ως CommonJS και θα έσκαγε στο πρώτο
+`export`.
+
+**Η υπόθεση που διορθώθηκε στην πράξη.** Η αρχική σκέψη ήταν να χρειάζεται
+ρητά η σημαία `--experimental-detect-module`. Δοκιμάστηκε (σε sandbox
+αντίγραφο των τριών πραγματικών αρχείων, όχι στο repo) και μετρήθηκε: σε
+Node v22.22.2 το `node --help` δείχνει **μόνο** `--no-experimental-detect-module`
+— δηλαδή τη σημαία που το ΑΠΕΝΕΡΓΟΠΟΙΕΙ, όχι αυτή που το ενεργοποιεί. Το
+detect-module είναι ήδη προεπιλογή. Δοκιμάστηκαν και τα τρία:
+
+| Εντολή | 19 tests |
+|---|---|
+| `node --test ...` (χωρίς σημαία) | περνάνε — ήδη ενεργό ως προεπιλογή |
+| `node --experimental-detect-module --test ...` | περνάνε — ρητά ενεργό |
+| `node --no-experimental-detect-module --test ...` | **σκάει** στο πρώτο `import`: `SyntaxError: Named export 'energyLabel' not found ... is a CommonJS module` |
+
+Η τρίτη γραμμή είναι η απόδειξη ότι η σημαία κάνει πραγματικά κάτι. Μένει
+ρητή στο `npm test` παρόλο που εδώ είναι ήδη προεπιλογή — είναι ακόμα
+χαρακτηρισμένη "experimental", και σε Node 20.19–21.x υπάρχει μόνο πίσω από
+ρητό flag.
+
+**Τι προστέθηκε.** `tools/js-tests/` — `package.json` (`"type": "module"`,
+καμία εξάρτηση), τρία test file με το built-in `node:test`:
+
+- `format.test.js` — 12 test για `up()`, `energyLabel()`, `fmtDate()`,
+  `timeAgo()`, `initials()`, `tint()`, `svgIcon()`. Το πιο σημαντικό είναι το
+  regression test του `timeAgo()` για το ακριβώς αντίστροφο λάθος της (84)/(89):
+  αν κάποιος ξαναπροσθέσει `+ 'Z'`, ένα timestamp μορφοποιημένο ΤΩΡΑ (τοπική
+  ώρα, χωρίς `Z`) θα φαινόταν στο μέλλον, το `Date.now() - d` θα πήγαινε
+  αρνητικό, και το test θα έσκαγε αντί να δείξει «μόλις τώρα».
+- `scope.test.js` — 3 test. Καταγράφει ρητά ότι το `node --test` τρέχει κάθε
+  ΑΡΧΕΙΟ σε ξεχωριστή διεργασία (άρα δεν διαρρέει state μεταξύ αρχείων) αλλά
+  ΟΧΙ μεταξύ πολλαπλών `test()` στο ίδιο αρχείο — γι' αυτό κάθε test καλεί
+  ρητά `setScope()` πριν υποθέσει κατάσταση.
+- `navigate.test.js` — 4 test. Το πιο σημαντικό: `wire()` **αντικαθιστά**
+  τους handlers, δεν τους συγχωνεύει — ρητά τεκμηριωμένη απόφαση στο ίδιο το
+  αρχείο («a shell booted twice on one page cannot leave half the previous
+  one wired in»). Το test καλεί `wire()` δύο φορές με μερικό δεύτερο σύνολο
+  και επιβεβαιώνει ότι ο πρώτος handler έγινε αναπάντητος ξανά.
+
+Σύνολο 19 test, όλα περνάνε (μετρημένο στο sandbox πριν σταλεί οτιδήποτε στο
+repo). `README.md` στο ίδιο φάκελο, στο πνεύμα του `tools/wizard-smoke/`:
+τι ελέγχει, τι δεν ελέγχει, γιατί η σημαία, το singleton state.
+
+**Παράπλευρο εύρημα, όχι ακόμα στο §8.** Η δόκιμη εντολή απόδειξης του §8.4
+(`grep -rln "\.js\b" tests/Unit/`) βρίσκει μόνο ΔΥΟ από τα τρία PHP test που
+όντως σαρώνουν `.js` — το `NoRemoteFontsTest` ελέγχει επέκταση με
+`in_array($file->getExtension(), ['php','js','css'], true)`, όπου το `'js'`
+ποτέ δεν εμφανίζεται ως η κυριολεκτική συμβολοσειρά `.js`. Η ίδια η δόκιμη
+εντολή του καταλόγου έχει τυφλό σημείο για φύλακες γραμμένους έτσι — δεν
+προστέθηκε ακόμα ως νέα εγγραφή, σημειώνεται εδώ για να μη χαθεί.
+
+**Δεν μπήκε στο `composer check:all`.** Ίδια απόφαση με το
+`tools/wizard-smoke/` — το `tools/` είναι ήδη εκτός scope για phpcs/phpstan,
+και ο σκοπός εδώ δεν είναι να μπει στους τέσσερις αριθμούς αλλά να υπάρχει
+οτιδήποτε πέρα από regex. Δεν μπήκε ούτε στο `.github/workflows/ci.yml`
+ακόμα — GitHub Actions runners έχουν Node προεγκατεστημένο, οπότε είναι
+εφικτό, αλλά είναι ξεχωριστή απόφαση, όχι μέρος αυτής της παρτίδας.
+
+**Πρόταση, μετρημένη πριν γραφτεί:** `docs/JS-TESTS-PROPOSAL.html`.
+
+**ΠΡΟΒΛΕΨΗ, ΓΡΑΜΜΕΝΗ ΠΡΙΝ ΤΡΕΞΕΙ Η ΣΟΥΙΤΑ.** Νέα αρχεία μόνο σε `tools/` και
+`docs/` — κανένα `.php`, καμία αλλαγή σε `public/assets/`.
+
+| | ήταν (90) | πρόβλεψη (91) | γιατί |
+|---|---|---|---|
+| unit | 891 | **891** | το `tools/` δεν είναι σε `public\|includes\|admin\|src` |
+| integration | 348 | **348** | καμία νέα ολοκλήρωση |
+| phpcs | 265 | **265** | κανένα νέο `.php` |
+| phpstan | 147 | **147** | το `src/` δεν άγγιξε |
+
+Αρχεία: `tools/js-tests/package.json`, `format.test.js`, `scope.test.js`,
+`navigate.test.js`, `README.md` (όλα νέα), `docs/JS-TESTS-PROPOSAL.html`
+(νέο), `docs/CHANGELOG.md`, `docs/NEXT-SESSION.md`.
+
+---
+
 ## 2026-08-22 (90)
 
 ### CI: το commit φτάνει στο GitHub, το πράσινο τσεκάκι όχι — μέχρι τώρα
@@ -67,6 +160,14 @@ GitHub, όχι αρχείο, και μένει ανοιχτή: `docs/CI-PROPOSAL
 | integration | 348 | **348** | καμία νέα ολοκλήρωση |
 | phpcs | 265 | **265** | κανένα νέο `.php` |
 | phpstan | 147 | **147** | το `src/` δεν άγγιξε |
+
+**ΕΠΙΒΕΒΑΙΩΘΗΚΕ.** `composer check:all` πραγματικό: 891 unit (Skipped: 1),
+348 integration (2214 assertions), 265 phpcs, 147 phpstan — **και τα
+τέσσερα ακριβή**. Commit `6e7309f`, `git push` επιτυχές
+(`cbb5063..6e7309f` σε `origin/ui-kit`), `.github/workflows/ci.yml`
+τοποθετήθηκε χειροκίνητα (το `device_commit_files` αρνήθηκε το `.github/`
+ως προστατευμένη διαδρομή) και επιβεβαιώθηκε στο ίδιο commit
+(`create mode 100644 .github/workflows/ci.yml`).
 
 ---
 
