@@ -395,9 +395,13 @@ class ECRM_Shortcodes {
 				 * κλειδώνει σε μία φωτογραφία, αγνοώντας `multiple` και PDF) — θα
 				 * έσπαγε την επιλογή αρχείου. Δύο εισόδους, ένα `addFiles()` και
 				 * στις δύο (ecrm-form.js): ο χρήστης διαλέγει ρητά κάμερα ή αρχείο,
-				 * όχι το browser για λογαριασμό του. Σε desktop το κουμπί απλώς
-				 * ανοίγει τον ίδιο επιλογέα αρχείων — καμία διαφορά, καμία βλάβη.
-				 * Ζητήθηκε ρητά από τον ιδιοκτήτη, 23/08.
+				 * όχι το browser για λογαριασμό του. Ζητήθηκε ρητά από τον
+				 * ιδιοκτήτη, 23/08.
+				 *
+				 * Το κουμπί μένει στο DOM σε κάθε συσκευή — κρύβεται σε desktop
+				 * μόνο με CSS (`@media (hover: hover) and (pointer: fine)` στο
+				 * ecrm-form.css), ρητή αντιστροφή της 23/08 από τον ιδιοκτήτη,
+				 * 2026-08-24: σε desktop δεν έχει νόημα κουμπί λήψης φωτογραφίας.
 				 */
 				?>
 				<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-camera-btn" data-camera-pick>
@@ -640,20 +644,15 @@ class ECRM_Shortcodes {
 				<div class="ecrm-step"><span class="ecrm-step__n">6β</span> Στοιχεία Κινητής</div>
 				<div class="ecrm-grid">
 					<?php
-					// Ο τύπος αίτησης καθορίζει ΠΟΣΑ έντυπα θα τυπωθούν, όχι
-					// μόνο ποιο κουτάκι θα σημειωθεί: η φορητότητα προσθέτει τη
-					// δική της αίτηση δίπλα στη σύμβαση. Δύο επιλογές εδώ, τρία
-					// κουτιά στο χαρτί — η αριθμοδότηση είναι νέα σύνδεση, και
-					// η ανανέωση δεν ξεκινά από αυτή την οθόνη.
+					// Το «Τύπος Αίτησης» έφυγε από εδώ 2026-08-24: μπέρδευε τον
+					// πράκτορα δίπλα στο ήδη υπάρχον «Ενεργοποίηση» του Βήματος
+					// 1, που για mobile δείχνει ΜΟΝΟ «ΝΕΑ ΣΥΝΔΕΣΗ»/«ΦΟΡΗΤΟΤΗΤΑ»
+					// (data-when-energy το εγγυάται — καμία άλλη τιμή
+					// activation_type δεν εμφανίζεται ποτέ για κινητή). Το
+					// request_type παράγεται πλέον αυτόματα από εκείνη την
+					// επιλογή στο backend (ContractSaveMapping::contractFrom) —
+					// μία επιλογή στην οθόνη, όχι δύο συγχρονισμένα πεδία.
 					?>
-					<label class="ecrm-field" data-for="request_type">
-						<span class="ecrm-field__label">Τύπος Αίτησης</span>
-						<select name="request_type" class="ecrm-input" data-extra="1">
-							<option value="">—</option>
-							<option value="new_number">Αριθμοδότηση</option>
-							<option value="portability">Φορητότητα</option>
-						</select>
-					</label>
 
 					<?php
 					// Μία επιλογή και όχι δύο διακόπτες: οι δύο προσφορές δίνουν
@@ -781,10 +780,26 @@ class ECRM_Shortcodes {
 					</div>
 				</div>
 
+				<?php
+				// Το «Ημ. Έναρξης» έφυγε εντελώς 2026-08-24: κανένα από τα ~20
+				// έντυπα δεν το τυπώνει ποτέ (επιβεβαιωμένο με grep σε όλα τα
+				// JSON) — ζητούσε ημερομηνία που δεν πήγαινε πουθενά, ίδιο σχήμα
+				// με το IBAN της (78). Η στήλη `start_date` ΜΕΝΕΙ στη βάση: την
+				// ξαναγράφει το backend στις ανανεώσεις (`RenewalsController`).
+				//
+				// Το «Διάρκεια Σύμβασης» κρύβεται μόνο για mobile (Orizon): το
+				// `orizon_*.json` δεν έχει `diarkeia_symvasis` σε κανένα από τα
+				// τέσσερα πρότυπά του — το «24 ΜΗΝΕΣ» στο χαρτί είναι στατικό
+				// κείμενο. Παραμένει αναγκαίο για nrg_fa/nrg_he/volton_fa/
+				// volton_he, οπότε δεν φεύγει το πεδίο, μόνο κρύβεται με
+				// data-when-energy. Το «Ημ. Λήξης» ΔΕΝ κρύβεται — το
+				// `orizon_mobile.json` το τυπώνει («imerominia_liksis»), οπότε
+				// μένει ελεύθερα επεξεργάσιμο ώστε ο πράκτορας να το γράφει με
+				// το χέρι όταν η αυτόματη πρόταση (Έναρξη+Διάρκεια) δεν τρέχει.
+				?>
 				<div class="ecrm-subhead">Διάρκεια Σύμβασης</div>
 				<div class="ecrm-grid">
-					<?php $ecrm_field( 'start_date', 'Ημ. Έναρξης', 'date' ); ?>
-					<label class="ecrm-field" data-for="term_months">
+					<label class="ecrm-field" data-for="term_months" data-when-energy="power,gas">
 						<span class="ecrm-field__label">Διάρκεια Σύμβασης</span>
 						<select name="term_months" class="ecrm-input">
 							<option value="">—</option>

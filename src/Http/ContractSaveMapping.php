@@ -170,6 +170,31 @@ final class ContractSaveMapping
                 ? wp_kses_post((string) $params['extracted_json']) : null;
         }
 
+        // Κινητή: το «Τύπος Αίτησης» (request_type) έφυγε ως ξεχωριστό πεδίο
+        // στη φόρμα 2026-08-24 — παράγεται εδώ από το activation_type, που
+        // είναι πλέον η μοναδική επιλογή στην οθόνη (Βήμα 1 «Ενεργοποίηση»,
+        // guard data-when-energy="mobile"/χωρίς guard εγγυάται ότι για
+        // energy_type mobile εμφανίζονται ΜΟΝΟ nea_syndesi/portability — βλ.
+        // class-ecrm-shortcodes.php). Γράφεται μόνο όταν πραγματικά έρχεται
+        // activation_type σε αίτημα κινητής, ώστε ένα partial update που δεν
+        // το στέλνει να μην ξαναγράψει κάτι που δεν άλλαξε. Ο κώδικας που
+        // διαβάζει request_type (MobilePaperwork, includes/class-ecrm-formfill.php)
+        // έμεινε αναλλοίωτος — διαβάζει ακόμα από το extra_json, απλώς αυτό
+        // το γράφει τώρα αντί για ένα δεύτερο dropdown.
+        // Δεν φτιάχνει `extra` από το τίποτα: ένα partial update που στέλνει
+        // activation_type αλλά όχι extra (π.χ. αλλαγή μόνο ενός πεδίου έξω
+        // από τα extra) δεν πρέπει να ενεργοποιήσει τη γραμμή extra_json από
+        // κάτω και να σβήσει ό,τι άλλο έχει ήδη η σύμβαση εκεί.
+        if (
+            isset($params['activation_type'])
+            && is_array($params['extra'] ?? null)
+            && (string) ($params['energy_type'] ?? 'power') === 'mobile'
+        ) {
+            $params['extra']['request_type'] = (string) $params['activation_type'] === 'portability'
+                ? 'portability'
+                : 'new_number';
+        }
+
         if (! $isUpdate || isset($params['extra'])) {
             $contract['extra_json'] = ExtraFields::toJson($params['extra'] ?? null);
         }
