@@ -66,11 +66,31 @@ class ECRM_Docs {
 		return apply_filters( 'ecrm_required_docs', $map );
 	}
 
-	/** Required document kinds for an activation type. */
-	public static function required_for( ?string $activation_type ): array {
+	/**
+	 * Required document kinds for an activation type.
+	 *
+	 * $energy_type strips 'e9' for mobile, 2026-08-24: the map is keyed only
+	 * by activation_type, and 'new_connection' => ['id_card', 'e9'] is real
+	 * for power/gas (Ε9 proves who may open a connection at that address) but
+	 * meaningless for a mobile line — a new Orizon number was blocked from
+	 * ever reaching 'routed'/'active' waiting for a property-tax document
+	 * that has nothing to do with a SIM card. Caught by the site owner on
+	 * ORIZON-0002. Filtered for every activation_type, not only
+	 * 'new_connection', because nothing about Ε9 becomes relevant to mobile
+	 * under any of the others either — a saved admin override
+	 * (required_map()) could add it there too, and the filter should still
+	 * hold.
+	 */
+	public static function required_for( ?string $activation_type, ?string $energy_type = null ): array {
 		$map = self::required_map();
 		$at  = (string) $activation_type;
-		return $map[ $at ] ?? [ 'id_card', 'provider_bill' ];
+		$req = $map[ $at ] ?? [ 'id_card', 'provider_bill' ];
+
+		if ( 'mobile' === (string) $energy_type ) {
+			$req = array_values( array_diff( $req, [ 'e9' ] ) );
+		}
+
+		return $req;
 	}
 
 	/** Statuses whose entry requires all documents to be present. */
@@ -93,8 +113,8 @@ class ECRM_Docs {
 	 *
 	 * @return array{items: array<array{kind:string,label:string,ok:bool}>, missing: string[], complete: bool}
 	 */
-	public static function checklist( int $contract_id, ?string $activation_type ): array {
-		$required = self::required_for( $activation_type );
+	public static function checklist( int $contract_id, ?string $activation_type, ?string $energy_type = null ): array {
+		$required = self::required_for( $activation_type, $energy_type );
 		$present  = self::present_kinds( $contract_id );
 		$items = []; $missing = [];
 		foreach ( $required as $slug ) {
@@ -106,8 +126,8 @@ class ECRM_Docs {
 	}
 
 	/** Missing-doc labels for a contract (for error messages). */
-	public static function missing_labels( int $contract_id, ?string $activation_type ): array {
-		$c = self::checklist( $contract_id, $activation_type );
+	public static function missing_labels( int $contract_id, ?string $activation_type, ?string $energy_type = null ): array {
+		$c = self::checklist( $contract_id, $activation_type, $energy_type );
 		return array_map( [ __CLASS__, 'label' ], $c['missing'] );
 	}
 }

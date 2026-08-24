@@ -102,6 +102,25 @@ final class ContractStatusController implements Controller
             ], 409);
         }
 
+        // 2026-08-24: αυτό το endpoint δεχόταν "signed" σαν οποιαδήποτε άλλη
+        // κατάσταση — ένας πράκτορας με δικαίωμα CHANGE_STATUS μπορούσε να
+        // δηλώσει «Υπογράφηκε» με μια απλή αλλαγή dropdown, χωρίς ο πελάτης
+        // να έχει υπογράψει ποτέ πραγματικά. Η μόνη νόμιμη πηγή μιας
+        // υπογραφής είναι η δημόσια σελίδα παρακολούθησης (rest_sign() στο
+        // class-ecrm-tracking.php), που γράφει signed_at/signed_ip. Αν αυτά
+        // λείπουν, η μετάβαση σε Signed αρνείται εδώ — πριν καν φτάσει στο
+        // ContractLifecycle — όσο επιτρεπτή κι αν είναι στον γράφο.
+        // Η αντίστροφη περίπτωση (already-Signed → PendingSignature για
+        // επανα-υπογραφή) δεν επηρεάζεται: αυτή περνάει από το
+        // SignLinkController, δεν φτάνει ποτέ target=Signed εδώ.
+        if ($target === ContractStatus::Signed && empty($current['signed_at'])) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Η κατάσταση «Υπογράφηκε» δεν μπαίνει χειροκίνητα — '
+                    . 'μόνο μέσω πραγματικής υπογραφής πελάτη από τον σύνδεσμο παρακολούθησης.',
+            ], 409);
+        }
+
         // Η ακύρωση σύμβασης που υπήρξε ενεργή. Ο γράφος από πάνω δεν το
         // πιάνει: απαγορεύει μόνο το απευθείας Ενεργή → Ακυρώθηκε, ενώ η
         // διαδρομή Ενεργή → Εκκρεμότητα → Ακυρώθηκε περνούσε. 409 και όχι 422,
@@ -132,7 +151,11 @@ final class ContractStatusController implements Controller
 
         // Documents gate: some statuses may not be entered with paperwork missing.
         if (in_array($target->value, ECRM_Docs::gate_statuses(), true)) {
-            $missing = ECRM_Docs::missing_labels($id, (string) ($current['activation_type'] ?? ''));
+            $missing = ECRM_Docs::missing_labels(
+                $id,
+                (string) ($current['activation_type'] ?? ''),
+                (string) ($current['energy_type'] ?? '')
+            );
 
             if ($missing) {
                 return new WP_REST_Response([

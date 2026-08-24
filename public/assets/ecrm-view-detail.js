@@ -269,8 +269,18 @@ function renderDetail(view, d) {
 		kv('Πατρώνυμο', c.father_name) + kv('Ημ. γέννησης', c.birth_date) +
 		kv('Κινητό', c.mobile) + kv('Τηλέφωνο', c.phone) + kv('Email', c.email) +
 		'</div>' +
-		'<div class="ecrm-card"><div class="ecrm-step">Παροχή / διεύθυνση</div>' +
-		kv('Αρ. παροχής', c.supply_number) + kv('Μετρητής', c.meter_number) + kv('Τιμολόγιο', c.invoice_code) +
+		// Ο τίτλος «Παροχή» δεν έχει νόημα για κινητή — δεν υπάρχει παροχή,
+		// μόνο διεύθυνση πελάτη. 2026-08-24, μαζί με την απόκρυψη των τριών
+		// πεδίων παρακάτω: ο τίτλος τους ακολουθεί, όχι μόνο τα ίδια.
+		'<div class="ecrm-card"><div class="ecrm-step">' +
+		(c.energy_type === 'mobile' ? 'Διεύθυνση' : 'Παροχή / διεύθυνση') + '</div>' +
+		// Αρ. παροχής/Μετρητής/Τιμολόγιο κρύβονται για mobile, 2026-08-24: καμία
+		// φόρμα Orizon δεν τυπώνει supply_number/meter_number/invoice_code (το
+		// COMBO έχει δικό του ξεχωριστό combo_supply_number/combo_arithmos_paroxis,
+		// άσχετο πεδίο) — τρεις γραμμές πάντα «—» σε κάθε αίτηση κινητής.
+		( c.energy_type !== 'mobile'
+			? kv('Αρ. παροχής', c.supply_number) + kv('Μετρητής', c.meter_number) + kv('Τιμολόγιο', c.invoice_code)
+			: '' ) +
 		kv('Διεύθυνση', [c.street, c.street_no].filter(Boolean).join(' ')) +
 		kv('Πόλη / ΤΚ', [c.city, c.postal_code].filter(Boolean).join(' · ')) + kv('Νομός', c.region) +
 		kv('Πάροχος', c.provider_name) + kv('Πρόγραμμα', c.program_name) + kv('Είδος', energy) +
@@ -291,7 +301,21 @@ function renderDetail(view, d) {
 		'<div class="ecrm-card ecrm-rcard' + (done === checks.length ? ' is-ok' : '') + '">' +
 		'<div class="ecrm-step">Checklist &nbsp;<b>' + done + '/' + checks.length + '</b></div>' + checklistHTML + '</div>' +
 		'<div class="ecrm-drail__acts">' +
-		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>' +
+		// Μόνο σε καταστάσεις απ' όπου το pipeline όντως επιτρέπει μετάβαση σε
+		// pending_signature (ContractStatus::allowedNext(), src/Domain/Contract/
+		// ContractStatus.php) — μέχρι το 2026-08-24 το κουμπί έμενε πάντα
+		// πράσινο/ενεργό και καλούσε τον πράκτορα σε ενέργεια που θα
+		// απορριπτόταν με 409 χωρίς προειδοποίηση.
+		//
+		// 'signed' και 'routed' ΕΙΝΑΙ μέσα, σκόπιμα: από εκεί περνά η δεύτερη
+		// υπογραφή — ο πάροχος γυρίζει πίσω την αίτηση («Στάλθηκε στον
+		// πάροχο») ζητώντας νέα, ή βρέθηκε λάθος αμέσως μετά την υπογραφή.
+		// Δεν στέλνει σιωπηλά: ο SignLinkController απαντά needs_confirm και
+		// ο χρήστης επιβεβαιώνει πρώτα ότι σβήνει την παλιά υπογραφή.
+		// ΑΦΟΡΑ ΟΛΟΥΣ ΤΟΥΣ ΠΑΡΟΧΟΥΣ — καμία σχέση με energy_type/Orizon.
+		( [ 'draft', 'new', 'pending_signature', 'awaiting_signature', 'signed', 'routed' ].indexOf( c.status ) !== -1
+			? '<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>'
+			: '' ) +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +
 		(c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-track="' + esc(c.track_url) + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg> Σύνδεσμος παρακολούθησης</button>' : '') +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-task-new="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέα εργασία</button>' +
@@ -506,21 +530,48 @@ function renderDetail(view, d) {
 
 				go2.disabled = true;
 				b.disabled = true;
-				fetch(api('/contracts/' + c.id + '/sign-link'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ channel: channel }) })
-					.then(function (r) { return r.json(); })
-					.then(function (d) {
-						if (!d || !d.ok) { go2.disabled = false; toast((d && d.error) || 'Αποτυχία.', false); return; }
-						close();
-						// Ο σύνδεσμος αντιγράφεται ΠΑΝΤΑ, όποιο κανάλι κι αν
-						// επιλέχθηκε: αν το Viber αποτύχει, ο συνεργάτης έχει ήδη
-						// στο πρόχειρο αυτό που χρειάζεται για να το σώσει.
-						copyText(d.url).then(function (copied) {
-							toast(deliveryNote(d, copied), d.delivered !== false);
-							openDetail(c.id);
-						});
+
+				// confirmResend: true ΜΟΝΟ στη δεύτερη κλήση, αφού ο χρήστης
+				// έχει ήδη πει «ναι» στο window.confirm() παρακάτω. Ο server
+				// αρνείται σκόπιμα την πρώτη κλήση για μια ήδη υπογεγραμμένη
+				// αίτηση (needs_confirm: true) — δες SignLinkController::create().
+				function send(confirmResend) {
+					var payload = { channel: channel };
+					if (confirmResend) { payload.confirm_resend = true; }
+
+					fetch(api('/contracts/' + c.id + '/sign-link'), {
+						method: 'POST',
+						headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+						body: JSON.stringify(payload),
 					})
-					.catch(function () { go2.disabled = false; toast('Σφάλμα δικτύου.', false); })
-					.finally(function () { b.disabled = false; });
+						.then(function (r) { return r.json(); })
+						.then(function (d) {
+							if (!d || !d.ok) {
+								if (d && d.needs_confirm && d.reason === 'already_signed' && !confirmResend) {
+									if (window.confirm((d.error || 'Η αίτηση έχει ήδη υπογραφεί.') + ' Θέλεις να την ξαναστείλεις για υπογραφή;')) {
+										send(true);
+										return; // Το κουμπί μένει disabled — τρέχει ήδη το δεύτερο αίτημα.
+									}
+								}
+								go2.disabled = false;
+								b.disabled = false;
+								toast((d && d.error) || 'Αποτυχία.', false);
+								return;
+							}
+							close();
+							b.disabled = false;
+							// Ο σύνδεσμος αντιγράφεται ΠΑΝΤΑ, όποιο κανάλι κι αν
+							// επιλέχθηκε: αν το Viber αποτύχει, ο συνεργάτης έχει ήδη
+							// στο πρόχειρο αυτό που χρειάζεται για να το σώσει.
+							copyText(d.url).then(function (copied) {
+								toast(deliveryNote(d, copied), d.delivered !== false);
+								openDetail(c.id);
+							});
+						})
+						.catch(function () { go2.disabled = false; b.disabled = false; toast('Σφάλμα δικτύου.', false); });
+				}
+
+				send(false);
 			},
 		});
 
