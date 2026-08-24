@@ -54,6 +54,17 @@ final class MobilePaperwork
     public const REQUEST_PORTABILITY = 'portability';
     public const REQUEST_NEW_NUMBER  = 'new_number';
 
+    /**
+     * The third box. Added 2026-08-24 — this used to be forced to '' by
+     * connectionTicks() below on the theory that "nothing produces it", which
+     * was wrong: ECRM_DB::activation_types() has had a real 'renewal' value
+     * all along, visible as its own «Ανανέωση» chip for mobile (unguarded in
+     * class-ecrm-shortcodes.php's $act_energy, same as 'new_connection') —
+     * an actual Orizon renewal ticked the wrong box (ΝΕΑ ΣΥΝΔΕΣΗ, by falling
+     * through the old two-value fallback) and never the right one.
+     */
+    public const REQUEST_RENEWAL = 'renewal';
+
     /** The discount route, at most one of them. */
     public const OFFER_FAMILY = 'family';
     public const OFFER_COMBO  = 'combo';
@@ -108,25 +119,34 @@ final class MobilePaperwork
     /**
      * The state of **all three** ΕΙΔΟΣ ΣΥΝΔΕΣΗΣ boxes on the contract.
      *
-     * The screen offers two choices where the paper has three: a new number is
-     * a new connection, and ΑΝΑΝΕΩΣΗ is never offered at all.
+     * ΑΝΑΝΕΩΣΗ stays unticked here on purpose — pre-existing limitation,
+     * left alone 2026-08-24 on the owner's explicit instruction rather than
+     * extended today. It is a real, separate gap: ECRM_DB::activation_types()
+     * has had a genuine 'renewal' value all along, visible as its own
+     * unguarded «Ανανέωση» chip for mobile (class-ecrm-shortcodes.php's
+     * $act_energy never scoped it away, same as 'new_connection') — but
+     * nothing has ever ticked the box that corresponds to it.
      *
-     * ## Why it answers for the box it never ticks
+     * What DID need fixing today: REQUEST_RENEWAL exists as its own value
+     * precisely so a renewal doesn't fall into the REQUEST_NEW_NUMBER bucket
+     * by default and tick ΝΕΑ ΣΥΝΔΕΣΗ instead — signing a renewal as a new
+     * connection is worse than ticking nothing. See ContractSaveMapping::
+     * contractFrom(), which derives $requestType from activation_type.
      *
-     * This used to return only the one key it wanted set, and the docblock said
-     * ΑΝΑΝΕΩΣΗ was safe because "nothing in the CRM produces it". That was
-     * wrong, and it printed a contradictory application: the electricity fill
-     * map in ECRM_FormFill::values() writes `energopoiisi_ananeosi` from
-     * `activation_type`, which a mobile contract can perfectly well be carrying
-     * — a renewal, for instance. The two maps are merged with `+`, so the left
-     * side wins **only for keys it contains**. A key omitted here is a key that
-     * map still owns.
+     * ## Why it answers for all three, not just the one it wants set
      *
-     * The first real print showed ΦΟΡΗΤΟΤΗΤΑ and ΑΝΑΝΕΩΣΗ ticked together: an
-     * application telling the provider two contradictory things, signed.
+     * This used to return only one key, and a docblock claimed the omitted
+     * one was safe because "nothing in the CRM produces it" — wrong: the
+     * electricity fill map in ECRM_FormFill::values() writes
+     * `energopoiisi_ananeosi` from `activation_type` independently, and the
+     * two maps merge with `+`, where the left side (this one) wins **only for
+     * keys it contains**. A key omitted here is a key that other map still
+     * owns, and it printed ΦΟΡΗΤΟΤΗΤΑ and ΑΝΑΝΕΩΣΗ ticked together — a signed
+     * application telling the provider two contradictory things. So the
+     * answer is always the whole group of three, one 'X' and two '' (or all
+     * three '' for a renewal, today), never left for another map to fill.
      *
-     * So the answer is the whole group, empty values included. Saying "not
-     * this one" is the only thing that actually stops the other map.
+     * @param string $requestType MobilePaperwork::REQUEST_*
      *
      * @return array<string, string> fill key => 'X' or ''
      */
