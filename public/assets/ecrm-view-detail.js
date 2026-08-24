@@ -217,11 +217,19 @@ function renderDetail(view, d) {
 	var SIGNED_ON = ['signed', 'processing', 'pending', 'resolved', 'routed', 'active'];
 	var checks = [
 		{ ok: !!(c.afm && c.adt),               txt: 'Στοιχεία ταυτότητας' },
-		{ ok: !!c.supply_number,                txt: 'Αριθμός παροχής' },
 		{ ok: !!c.program_name,                 txt: 'Πρόγραμμα' },
 		{ ok: SIGNED_ON.indexOf(c.status) >= 0, txt: 'Υπογραφή πελάτη' },
 		{ ok: !!c.consent_at,                   txt: 'Συναίνεση GDPR' }
 	];
+	// «Αριθμός παροχής» μπαίνει μόνο για ρεύμα/αέριο — 2026-08-24: καμία
+	// φόρμα Orizon δεν συλλέγει/τυπώνει supply_number (ίδιος λόγος με την
+	// απόκρυψη του πεδίου στην κάρτα «Διεύθυνση» παραπάνω, (112)). Χωρίς
+	// αυτό, ΚΑΘΕ αίτηση κινητής κολλούσε μόνιμα σε "λιγότερο από πλήρες"
+	// checklist — ένα κουτί που δεν μπορεί ποτέ να μπει, όχι κάτι που
+	// ξεχάστηκε.
+	if (c.energy_type !== 'mobile') {
+		checks.splice(1, 0, { ok: !!c.supply_number, txt: 'Αριθμός παροχής' });
+	}
 	var done = checks.filter(function (x) { return x.ok; }).length;
 	var checklistHTML = '<ul class="ecrm-rcheck">' + checks.map(function (x) {
 		return '<li class="' + (x.ok ? 'is-ok' : '') + '"><span class="ecrm-rcheck__m">' + (x.ok ? '✓' : '○') + '</span>' + esc(x.txt) + '</li>';
