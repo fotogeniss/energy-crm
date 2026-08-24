@@ -75,7 +75,16 @@ function expandPanel(c, view) {
 	var cards =
 		'<div class="ecrm-expcards">' +
 		'<div class="ecrm-card"><div class="ecrm-step">Στοιχεία πελάτη</div>' + dl('Ονοματεπώνυμο', name) + dl('ΑΦΜ', c.afm) + dl('Κινητό', mobile) + '</div>' +
-		'<div class="ecrm-card"><div class="ecrm-step">Παροχή</div>' + dl('ΗΚΑΣΠ/Παροχή', c.supply_number) + dl('Τιμολόγιο', c.invoice_code) + dl('Πάροχος', c.provider_name) + '</div>' +
+		// Ίδιο θέμα με το (112) στο ecrm-view-detail.js, εδώ στο πλαϊνό
+		// «άνοιγμα» της λίστας: καμία φόρμα Orizon δεν συλλέγει ΗΚΑΣΠ/Παροχή
+		// ή Τιμολόγιο — δύο γραμμές πάντα «—» σε κάθε αίτηση κινητής, με
+		// τίτλο «Παροχή» που δεν έχει καν νόημα όταν δεν μένει τίποτα άλλο.
+		'<div class="ecrm-card"><div class="ecrm-step">' +
+		(c.energy_type === 'mobile' ? 'Πάροχος' : 'Παροχή') + '</div>' +
+		(c.energy_type !== 'mobile'
+			? dl('ΗΚΑΣΠ/Παροχή', c.supply_number) + dl('Τιμολόγιο', c.invoice_code)
+			: '') +
+		dl('Πάροχος', c.provider_name) + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Tracking</div>' + dl('Ημ. δημιουργίας', fmtDate(c.created_at)) + dl('Ημ. Thalis', '') + dl('Ημ. Εκπροσώπησης', '') + dl('Ημ. Τερματισμού', '') + dl('Τελ. ενημέρωση', fmtDate(c.updated_at)) + '</div>' +
 		'</div>';
 
