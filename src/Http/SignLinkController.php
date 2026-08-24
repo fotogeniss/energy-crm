@@ -35,6 +35,7 @@ use ECRM_Tracking;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use ECRM_Messaging;
 use EnergyCRM\Persistence\ContractDetails;
@@ -68,8 +69,8 @@ final class SignLinkController implements Controller
             'callback'            => [$this, 'create'],
             'permission_callback' => Guards::crmUser(),
             'args'                => [
-                'id'      => ['type' => 'integer', 'required' => true],
-                'channel' => [
+                'id'             => ['type' => 'integer', 'required' => true],
+                'channel'        => [
                     'type'    => 'string',
                     'enum'    => [self::CHANNEL_LINK, self::CHANNEL_EMAIL, self::CHANNEL_SMS],
                     'default' => self::CHANNEL_LINK,
@@ -77,7 +78,12 @@ final class SignLinkController implements Controller
                 // Παλιά μορφή, από πριν υπάρξει επιλογή. Κρατιέται ώστε ένας
                 // καλών που δεν ξέρει για κανάλια να μη σπάσει σιωπηλά — δες
                 // resolveChannel(). Ο σύνδεσμος φτιάχνεται έτσι κι αλλιώς.
-                'email'   => ['type' => 'boolean', 'default' => false],
+                'email'          => ['type' => 'boolean', 'default' => false],
+                // 24/08: ρητή δεύτερη κλήση, όχι σιωπηλή επανάληψη. Η οθόνη
+                // δείχνει «έχει ήδη υπογραφεί, να το ξαναστείλω;» και ΜΟΝΟ αν
+                // ο χρήστης πει ναι ξαναφτάνει το αίτημα με αυτό true — δες
+                // create() και ContractStatus::allowedNext() για το Signed.
+                'confirm_resend' => ['type' => 'boolean', 'default' => false],
             ],
         ]);
     }
@@ -97,18 +103,59 @@ final class SignLinkController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
         }
 
-        $moved = $this->lifecycle->moveTo($id, self::TARGET_STATUS, [
+        $alreadySigned = ! empty($contract['signed_at']);
+        $confirmResend = (bool) $request['confirm_resend'];
+
+        // A signed contract IS a legitimate resend case — the owner agreed a
+        // second signature can genuinely be needed (a mistake caught right
+        // after signing, a customer who wants to redo it). Refusing outright
+        // hid exactly that case: it's what read as "two applications mixed
+        // up" on 24/08, when really it was just this block, silent. So: ask
+        // once, here, before the pipeline even runs. ContractStatus now
+        // allows Signed -> PendingSignature (24/08) — this check is the
+        // ONLY thing stopping a stray "στείλε" click from wiping a real
+        // signature; nothing below it will ask again.
+        if ($alreadySigned && ! $confirmResend) {
+            return new WP_REST_Response([
+                'ok'            => false,
+                'error'         => $this->refusalReason($contract),
+                'needs_confirm' => true,
+                'reason'        => 'already_signed',
+            ], 409);
+        }
+
+        $moveOptions = [
             'user_id' => $scope->actorId(),
             'message' => 'Αποστολή για υπογραφή — αναμονή υπογραφής πελάτη',
-        ]);
+        ];
+
+        if ($alreadySigned && $confirmResend) {
+            // Καθαρίζει την παλιά υπογραφή: αλλιώς ο πελάτης θα έφτανε στη
+            // σελίδα παρακολούθησης και θα έβλεπε τη ΔΙΚΗ ΤΟΥ προηγούμενη
+            // υπογραφή ήδη σχεδιασμένη εκεί, από πριν καν υπογράψει ξανά.
+            // Και τα δύο είναι ήδη εγγράψιμα — δες WritableColumns.
+            $moveOptions['extra']   = ['signed_at' => null, 'signed_ip' => null];
+            $moveOptions['message'] = 'Αποστολή για νέα υπογραφή — η προηγούμενη υπογραφή καταργήθηκε';
+        }
+
+        $moved = $this->lifecycle->moveTo($id, self::TARGET_STATUS, $moveOptions);
 
         // The old handler ignored this and handed back a working signing link
         // for a contract the pipeline had refused to move — a cancelled one,
         // most obviously. A customer could then sign something already dead.
+        //
+        // The error used to be one generic sentence regardless of why —
+        // 2026-08-24: the owner mistook a refused resend on an already-signed,
+        // already-processing contract for the app confusing two DIFFERENT
+        // applications that happened to share a customer's ΑΦΜ. It wasn't —
+        // signed_at is keyed by contract id everywhere, verified end to end —
+        // but a message that names the real reason is what would have made
+        // that obvious in the moment, instead of needing a code investigation
+        // to rule out data corruption.
         if (! $moved) {
             return new WP_REST_Response([
                 'ok'    => false,
-                'error' => 'Η σύμβαση δεν μπορεί να σταλεί για υπογραφή από την τρέχουσα κατάστασή της.',
+                'error' => $this->refusalReason($contract),
             ], 409);
         }
 
@@ -151,6 +198,44 @@ final class SignLinkController implements Controller
      * Το `email:true` σήμαινε ακριβώς «στείλ' το με email». Δεν αγνοείται και
      * δεν σβήνει επιλογή: μετράει μόνο όταν δεν δόθηκε ρητό κανάλι.
      */
+    /**
+     * Says WHY the pipeline refused, instead of one sentence for every reason.
+     *
+     * Checked in the order a person would ask: is it already signed (the
+     * common real case — an agent re-clicking "στείλε" out of habit or
+     * uncertainty), is it dead (cancelled/terminated), otherwise name the
+     * status it is actually stuck in.
+     *
+     * @param array<string, mixed> $contract
+     */
+    private function refusalReason(array $contract): string
+    {
+        $status = ContractStatus::tryFromSlug((string) ($contract['status'] ?? ''));
+
+        // Το κείμενο αυτό γίνεται ΚΑΙ το ερώτημα επιβεβαίωσης στην οθόνη
+        // («… Θέλεις να την ξαναστείλεις για υπογραφή;»), οπότε δεν λέει
+        // «δεν χρειάζεται» — θα αντιφάσκε με την ερώτηση από δίπλα. Λέει τι
+        // ισχύει, και για την πιο συχνή περίπτωση επιστροφής από πάροχο
+        // («Στάλθηκε στον πάροχο») το λέει ρητά, γιατί εκεί ο συνεργάτης
+        // θέλει να ξέρει ότι η αίτηση ΕΧΕΙ ήδη φύγει.
+        if (! empty($contract['signed_at'])) {
+            if ($status === ContractStatus::Routed) {
+                return 'Η αίτηση έχει ήδη υπογραφεί και έχει σταλεί στον πάροχο. '
+                    . 'Νέα αποστολή θα ακυρώσει την υπάρχουσα υπογραφή.';
+            }
+
+            return 'Η αίτηση έχει ήδη υπογραφεί. Νέα αποστολή θα ακυρώσει την υπάρχουσα υπογραφή.';
+        }
+
+        if ($status !== null && $status->isTerminal()) {
+            return 'Η αίτηση είναι «' . $status->label() . '» — δεν στέλνεται πια για υπογραφή.';
+        }
+
+        $label = $status?->label() ?? (string) ($contract['status'] ?? '');
+
+        return 'Η αίτηση είναι σε κατάσταση «' . $label . '» και δεν μπορεί να σταλεί για υπογραφή από εκεί.';
+    }
+
     private function resolveChannel(WP_REST_Request $request): string
     {
         $channel = (string) ($request['channel'] ?? self::CHANNEL_LINK);

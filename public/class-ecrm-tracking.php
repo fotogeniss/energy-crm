@@ -238,12 +238,12 @@ class ECRM_Tracking {
 	 *
 	 * @return array{items:array,complete:bool,can_upload:bool}
 	 */
-	public static function docs_payload( int $id, string $status, ?string $activation_type ): array {
+	public static function docs_payload( int $id, string $status, ?string $activation_type, ?string $energy_type = null ): array {
 		$can = ! in_array( $status, [ 'cancelled', 'terminated', 'active' ], true );
 		if ( ! class_exists( 'ECRM_Docs' ) ) {
 			return [ 'items' => [], 'complete' => true, 'can_upload' => $can ];
 		}
-		$cl = ECRM_Docs::checklist( $id, (string) $activation_type );
+		$cl = ECRM_Docs::checklist( $id, (string) $activation_type, $energy_type );
 		$items = [];
 		foreach ( $cl['items'] as $it ) {
 			$items[] = [ 'kind' => $it['kind'], 'label' => $it['label'], 'done' => ! empty( $it['ok'] ) ];
@@ -301,7 +301,7 @@ class ECRM_Tracking {
 			// tracking μένει ανέπαφο — αυτό ήταν όλο το ζητούμενο.
 			'can_sign'     => ( in_array( $status, self::signable_statuses(), true ) && empty( $row['signed_at'] ) && ! self::sign_expired( $id ) ),
 			'sign_expired' => ( in_array( $status, self::signable_statuses(), true ) && empty( $row['signed_at'] ) && self::sign_expired( $id ) ),
-			'docs'         => self::docs_payload( $id, $status, $row['activation_type'] ?? '' ),
+			'docs'         => self::docs_payload( $id, $status, $row['activation_type'] ?? '', $row['energy_type'] ?? '' ),
 			'company'      => class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '',
 		], 200 );
 	}
@@ -544,7 +544,7 @@ class ECRM_Tracking {
 		return new WP_REST_Response( [
 			'ok'      => true,
 			'message' => 'Το έγγραφο ανέβηκε. Ευχαριστούμε!',
-			'docs'    => self::docs_payload( $id, (string) $row['status'], $row['activation_type'] ?? '' ),
+			'docs'    => self::docs_payload( $id, (string) $row['status'], $row['activation_type'] ?? '', $row['energy_type'] ?? '' ),
 		], 200 );
 	}
 

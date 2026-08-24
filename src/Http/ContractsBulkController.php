@@ -133,6 +133,19 @@ final class ContractsBulkController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Μη έγκυρη κατάσταση.'], 400);
         }
 
+        // Ίδια πύλη με το ContractStatusController::change(), 2026-08-24: η
+        // μοναδική νόμιμη πηγή μιας υπογραφής είναι ο πελάτης, στη σελίδα
+        // παρακολούθησης. Μια μαζική ενέργεια που δηλώνει δεκάδες συμβάσεις
+        // «Υπογράφηκαν» με ένα κλικ θα ήταν ακριβώς αυτό που πρέπει να μην
+        // υπάρχει — αρνείται ολόκληρη, δεν παραλείπει σιωπηλά ανά γραμμή.
+        if ($target === ContractStatus::Signed) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Η κατάσταση «Υπογράφηκε» δεν μπαίνει χειροκίνητα, ούτε μαζικά — '
+                    . 'μόνο μέσω πραγματικής υπογραφής πελάτη.',
+            ], 409);
+        }
+
         $gated    = in_array($target->value, ECRM_Docs::gate_statuses(), true);
         $updated  = 0;
         $skipped  = 0;
@@ -146,9 +159,17 @@ final class ContractsBulkController implements Controller
                 continue;
             }
 
-            if ($gated && ECRM_Docs::missing_labels($id, (string) ($row['activation_type'] ?? ''))) {
-                $skipped++;
-                continue;
+            if ($gated) {
+                $missingDocs = ECRM_Docs::missing_labels(
+                    $id,
+                    (string) ($row['activation_type'] ?? ''),
+                    (string) ($row['energy_type'] ?? '')
+                );
+
+                if ($missingDocs) {
+                    $skipped++;
+                    continue;
+                }
             }
 
             $source = ContractStatus::tryFromSlug($from);

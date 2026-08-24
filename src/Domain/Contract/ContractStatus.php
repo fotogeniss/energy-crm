@@ -86,8 +86,16 @@ enum ContractStatus: string
             self::AwaitingSignature => [
                 self::PendingSignature, self::Signed, self::Cancelled,
             ],
+            // PendingSignature προστέθηκε 24/08: μια υπογεγραμμένη αίτηση
+            // μπορεί γνήσια να χρειαστεί δεύτερη υπογραφή (λάθος που φάνηκε
+            // μετά, πελάτης που θέλει να την ξανακάνει) — δεν είναι ρύθμιση
+            // πίσω στον χρόνο, είναι νέος γύρος. Η μόνη πύλη που εμποδίζει
+            // κάθε τυχαίο κλικ να σβήσει μια υπογραφή είναι στο
+            // SignLinkController::create() (confirm_resend), όχι εδώ — αυτός
+            // ο γράφος λέει μόνο ποια μετάβαση είναι νόμιμη, όχι πότε.
             self::Signed => [
-                self::Processing, self::Pending, self::Resolved, self::Routed, self::Cancelled,
+                self::Processing, self::Pending, self::Resolved, self::Routed,
+                self::PendingSignature, self::Cancelled,
             ],
             self::Processing => [
                 self::Pending, self::Resolved, self::Routed, self::Active, self::Cancelled,
@@ -98,8 +106,20 @@ enum ContractStatus: string
             self::Resolved => [
                 self::Processing, self::Pending, self::Routed, self::Active, self::Cancelled,
             ],
+            // PendingSignature και εδώ, 24/08, και είναι η ΠΙΟ συχνή από τις
+            // δύο στην πράξη: ο πάροχος παίρνει την αίτηση και τη γυρίζει
+            // πίσω ζητώντας νέα υπογραφή (λάθος πεδίο, λάθος κουτί, κακή
+            // ποιότητα σάρωσης). Η αίτηση εκείνη τη στιγμή είναι εδώ,
+            // «Στάλθηκε στον πάροχο» — όχι στο Signed, το έχει ήδη περάσει.
+            // Χωρίς αυτή τη γραμμή ο συνεργάτης δεν είχε ΚΑΜΙΑ διαδρομή:
+            // έπρεπε να ακυρώσει και να ξαναφτιάξει ολόκληρη την αίτηση.
+            //
+            // Το isPayable() περιλαμβάνει το Routed — μια αίτηση που γυρίζει
+            // από εδώ σε νέα υπογραφή σταματά προσωρινά να μετρά για προμήθεια
+            // μέχρι να ξαναφτάσει, που είναι το σωστό: δεν ολοκληρώθηκε ακόμη.
             self::Routed => [
-                self::Processing, self::Pending, self::Active, self::Cancelled, self::Terminated,
+                self::Processing, self::Pending, self::Active,
+                self::PendingSignature, self::Cancelled, self::Terminated,
             ],
             self::Active => [
                 self::Pending, self::Terminated,

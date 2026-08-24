@@ -125,7 +125,11 @@ final class ContractsReadController implements Controller
             : (array) json_decode((string) $row['extra_json'], true);
 
         $row['track_url']     = ECRM_Tracking::url($id);
-        $row['doc_checklist'] = ECRM_Docs::checklist($id, (string) ($row['activation_type'] ?? ''));
+        $row['doc_checklist'] = ECRM_Docs::checklist(
+            $id,
+            (string) ($row['activation_type'] ?? ''),
+            (string) ($row['energy_type'] ?? '')
+        );
         $row['doc_kinds']     = ECRM_Docs::kinds();
         $row['comms']         = self::comms($row);
 

@@ -65,8 +65,27 @@ final class ContractStatusTest extends TestCase
 
         self::assertFalse($signed->canMoveTo(ContractStatus::Draft));
         self::assertFalse($signed->canMoveTo(ContractStatus::Submitted));
-        self::assertFalse($signed->canMoveTo(ContractStatus::PendingSignature));
         self::assertFalse($signed->canMoveTo(ContractStatus::AwaitingSignature));
+    }
+
+    /**
+     * 2026-08-24: όχι πια απαγορευμένο, σκόπιμα — η δεύτερη υπογραφή είναι
+     * γνήσια ανάγκη (λάθος που φάνηκε μετά, ή ο πάροχος γύρισε πίσω την
+     * αίτηση). Ο ίδιος ο πίνακας πλέον επιτρέπει Signed -> PendingSignature
+     * (και Routed -> PendingSignature, δες testRoutedCanReturnForANewSignature
+     * παρακάτω) — η μόνη προστασία από ένα τυχαίο κλικ είναι στο
+     * SignLinkController::create() (confirm_resend), όχι εδώ. Ο γράφος λέει
+     * μόνο ποια μετάβαση είναι δομικά νόμιμη, όχι πότε επιτρέπεται να συμβεί.
+     */
+    public function testASignedContractCanReturnForANewSignature(): void
+    {
+        self::assertTrue(ContractStatus::Signed->canMoveTo(ContractStatus::PendingSignature));
+    }
+
+    /** @see testASignedContractCanReturnForANewSignature */
+    public function testRoutedCanReturnForANewSignature(): void
+    {
+        self::assertTrue(ContractStatus::Routed->canMoveTo(ContractStatus::PendingSignature));
     }
 
     public function testNoStatusEverReturnsToDraft(): void
