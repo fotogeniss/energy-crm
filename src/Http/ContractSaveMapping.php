@@ -172,15 +172,23 @@ final class ContractSaveMapping
 
         // Κινητή: το «Τύπος Αίτησης» (request_type) έφυγε ως ξεχωριστό πεδίο
         // στη φόρμα 2026-08-24 — παράγεται εδώ από το activation_type, που
-        // είναι πλέον η μοναδική επιλογή στην οθόνη (Βήμα 1 «Ενεργοποίηση»,
-        // guard data-when-energy="mobile"/χωρίς guard εγγυάται ότι για
-        // energy_type mobile εμφανίζονται ΜΟΝΟ nea_syndesi/portability — βλ.
-        // class-ecrm-shortcodes.php). Γράφεται μόνο όταν πραγματικά έρχεται
-        // activation_type σε αίτημα κινητής, ώστε ένα partial update που δεν
-        // το στέλνει να μην ξαναγράψει κάτι που δεν άλλαξε. Ο κώδικας που
-        // διαβάζει request_type (MobilePaperwork, includes/class-ecrm-formfill.php)
-        // έμεινε αναλλοίωτος — διαβάζει ακόμα από το extra_json, απλώς αυτό
-        // το γράφει τώρα αντί για ένα δεύτερο dropdown.
+        // είναι πλέον η μοναδική επιλογή στην οθόνη (Βήμα 1 «Ενεργοποίηση»).
+        // ΤΡΕΙΣ πραγματικές τιμές, όχι δύο — λάθος πρώτης γραφής αυτού του
+        // σημείου, εντόπισε το ο ιδιοκτήτης: το 'new_connection' και το
+        // 'renewal' είναι ΚΑΙ ΤΑ ΔΥΟ αφύλακτα στο $act_energy του
+        // class-ecrm-shortcodes.php (καμία σχέση με «μόνο 2 τιμές για
+        // mobile» — αυτό δεν ίσχυε ποτέ), άρα φαίνονται και τα δύο μαζί με
+        // το 'portability' όταν είναι επιλεγμένη η κινητή. Μία ανανέωση που
+        // θα έπεφτε στο ίδιο fallback με μια νέα σύνδεση θα υπέγραφε λάθος
+        // κουτί στο χαρτί — ρητά αντιστοιχίζονται και οι τρεις τιμές εδώ.
+        //
+        // Γράφεται μόνο όταν πραγματικά έρχεται activation_type σε αίτημα
+        // κινητής, ώστε ένα partial update που δεν το στέλνει να μην
+        // ξαναγράψει κάτι που δεν άλλαξε. Ο κώδικας που διαβάζει request_type
+        // (MobilePaperwork, includes/class-ecrm-formfill.php) έμεινε
+        // αναλλοίωτος — διαβάζει ακόμα από το extra_json, απλώς αυτό το
+        // γράφει τώρα αντί για ένα δεύτερο dropdown.
+        //
         // Δεν φτιάχνει `extra` από το τίποτα: ένα partial update που στέλνει
         // activation_type αλλά όχι extra (π.χ. αλλαγή μόνο ενός πεδίου έξω
         // από τα extra) δεν πρέπει να ενεργοποιήσει τη γραμμή extra_json από
@@ -190,9 +198,11 @@ final class ContractSaveMapping
             && is_array($params['extra'] ?? null)
             && (string) ($params['energy_type'] ?? 'power') === 'mobile'
         ) {
-            $params['extra']['request_type'] = (string) $params['activation_type'] === 'portability'
-                ? 'portability'
-                : 'new_number';
+            $params['extra']['request_type'] = match ((string) $params['activation_type']) {
+                'portability' => 'portability',
+                'renewal'     => 'renewal',
+                default       => 'new_number',
+            };
         }
 
         if (! $isUpdate || isset($params['extra'])) {

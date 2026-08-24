@@ -397,8 +397,15 @@ class ECRM_Tracking {
 		// renderer, so with ECRM_ENCRYPT_PII on this document — the signed one —
 		// printed ciphertext where the ΑΦΜ belongs.
 		if ( class_exists( 'ECRM_PDF' ) ) {
-			$full = \EnergyCRM\Services::contracts()->detailedForDocument( $id );
+			// Το fetch του $full μπήκε ΜΕΣΑ στο try 2026-08-24: ήταν έξω, οπότε
+			// το σχόλιο «PDF optional — signing still succeeds» ήταν ψέμα ακριβώς
+			// για το πιο σοβαρό είδος αποτυχίας — ένα undefined-method fatal σε
+			// αυτή τη γραμμή (ECRM-9422, ORIZON-0003) σκότωνε ολόκληρο το
+			// rest_sign() πριν προλάβει να προχωρήσει η κατάσταση σε "signed",
+			// αν και η ίδια η υπογραφή είχε ήδη αποθηκευτεί από πάνω.
+			$full = null;
 			try {
+				$full = \EnergyCRM\Services::contractDetails()->forDocument( $id );
 				$pdf = ECRM_PDF::build( $full ?: $row, $sig_path ?: null, [ 'date' => gmdate( 'd/m/Y H:i' ), 'ip' => $ip ] );
 				if ( $pdf && class_exists( 'ECRM_Files' ) ) {
 					$sp = ECRM_Files::put_bytes( $pdf, 'pdf', 'application/pdf', 'symvasi-ypografi.pdf' );
