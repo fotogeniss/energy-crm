@@ -204,6 +204,14 @@ class ECRM_FormFill {
 			'email_pelati'            => (string) ( $c['email'] ?? '' ),
 			'odos_arithmos_katoikias' => $street,
 			'dieuthynsi_katoikias'    => $addr_full,
+			// Μόνο η οδός, χωρίς αριθμό/ΤΚ/πόλη — για έντυπα (orizon_mobile,
+			// orizon_portability) που έχουν ΞΕΧΩΡΙΣΤΑ κουτιά ΑΡΙΘΜΟΣ/ΤΚ δίπλα
+			// στο ΟΔΟΣ. Πριν το 2026-08-24 εκείνα γέμιζαν το ΟΔΟΣ με το
+			// `dieuthynsi_katoikias` πλήρες (οδός+αριθμός+ΤΚ+πόλη σε ένα κουτί),
+			// διπλασιάζοντας ό,τι έδειχναν ήδη τα δικά τους κουτιά — ίδιο σχήμα
+			// με τα `odos_paroxis`/`odos_apostolis` παρακάτω, που ήδη το κάνουν
+			// σωστά για τις άλλες δύο διευθύνσεις.
+			'odos_katoikias'          => (string) ( $c['street'] ?? '' ),
 			'arithmos_odou_katoikias' => (string) ( $c['street_no'] ?? '' ),
 			'poli_katoikias'          => (string) ( $c['city'] ?? '' ),
 			'tk_katoikias'            => (string) ( $c['postal_code'] ?? '' ),

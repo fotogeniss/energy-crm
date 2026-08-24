@@ -560,7 +560,7 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 		var ADDR_PARTS = ['supply', 'billing'];
 		var ADDR_FIELDS = ['street', 'street_no', 'postal_code', 'city', 'region'];
 
-		var CUST_FIELDS = ['afm','doy','postal_code','first_name','last_name','father_name','company_name','adt','birth_date','region','city','street','street_no','phone','mobile','email','supply_number','meter_number','start_date','term_months','end_date'];
+		var CUST_FIELDS = ['afm','doy','postal_code','first_name','last_name','father_name','company_name','adt','birth_date','region','city','street','street_no','phone','mobile','email','supply_number','meter_number','term_months','end_date'];
 
 		function applyEdit(c) {
 			if (!c) return;
@@ -1088,19 +1088,10 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 			toggleAddr(cb);
 		});
 
-		// auto-compute Ημ. Λήξης from Έναρξη + Διάρκεια (μήνες)
-		function recalcEnd() {
-			var sEl = root.querySelector('[name="start_date"]'), tEl = root.querySelector('[name="term_months"]'), eEl = root.querySelector('[name="end_date"]');
-			if (!sEl || !tEl || !eEl) return;
-			var s = sEl.value, t = parseInt(tEl.value, 10);
-			if (s && t > 0) {
-				var d = new Date(s); d.setMonth(d.getMonth() + t);
-				if (!isNaN(d.getTime())) eEl.value = d.toISOString().slice(0, 10);
-			} else if (tEl.value === '0') {
-				eEl.value = '';
-			}
-		}
-		['start_date','term_months'].forEach(function (n) { var el = root.querySelector('[name="' + n + '"]'); if (el) el.addEventListener('change', recalcEnd); });
+		// Το «Ημ. Έναρξης» έφυγε 2026-08-24 (κανένα έντυπο δεν το τυπώνει) —
+		// το auto-compute της Ημ. Λήξης από Έναρξη+Διάρκεια δεν έχει πια από πού
+		// να ξεκινήσει, οπότε έφυγε μαζί του. Η Ημ. Λήξης γράφεται πλέον πάντα
+		// με το χέρι.
 
 		// ΑΦΜ lookup via EU VIES (auto-fills επωνυμία + διεύθυνση).
 		var afmBtn = root.querySelector('[data-afm-search]');
