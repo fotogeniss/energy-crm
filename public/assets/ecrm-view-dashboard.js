@@ -1,11 +1,15 @@
 /* Energy CRM — dashboard: η πρώτη οθόνη, και τι χρειάζεται εσένα σήμερα.
  *
- * Ξαναγράφτηκε 2026-08-18. Το προηγούμενο έδειχνε τέσσερις ισότιμους μετρητές,
- * δώδεκα κοντόχοντρες στήλες και μια λίστα παρόχων — αριθμούς χωρίς σύγκριση
- * και χωρίς ενέργεια. Δες CHANGELOG (17) και docs/UI-DASHBOARD.html.
+ * Ξαναγράφτηκε 2026-08-18 σε ΕΝΑ ηρωικό νούμερο + level· ξαναγράφτηκε ΠΑΛΙ
+ * 2026-08-25, τα τέσσερα πλακίδια ήρθαν πίσω — απόφαση ιδιοκτήτη, ευθυγράμμιση
+ * με το `docs/UI-UX-KIT.html` A1, μετά από σύγκριση δίπλα-δίπλα
+ * (`docs/UI-DASHBOARD-VS-KIT.html`). Η τάση (γράφημα 12 μηνών) και το
+ * ανά-πάροχο ραβδόγραμμα ΔΕΝ έφυγαν — ρητή απόφαση να μείνουν κάτω από τα
+ * πλακίδια, το kit δεν τα έχει καθόλου. Το level (Bronze/Silver) επίσης
+ * ΔΕΝ έφυγε — ο κάρτα-ήρωας που το κουβαλούσε έφυγε, οπότε πήρε δική του
+ * μικρή κάρτα αμέσως μετά τα πλακίδια, αντί να χαθεί σιωπηλά.
  *
  * Οι μορφές δεν διαλέχτηκαν στο μάτι:
- *   · ΕΝΑ ηρωικό νούμερο (ο μήνας) — τα υπόλοιπα είναι πλαίσιο.
  *   · Γραμμή και όχι στήλες για τους 12 μήνες: μία σειρά είναι τάση.
  *   · ΕΝΑ χρώμα για όλες τις ράβδους παρόχων — είναι μέγεθος, όχι ταυτότητα,
  *     και χρώμα ανά πάροχο θα ξόδευε το μοναδικό ελεύθερο κανάλι για
@@ -28,165 +32,136 @@ export function loadDashboard() {
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης dashboard.</div></div>'; });
 }
 
-/* Ο μήνας που πέρασε, από τα δεδομένα που ήδη έρχονται. Το API δεν στέλνει
- * σύγκριση — αλλά στέλνει και τους δώδεκα μήνες, οπότε η διαφορά βγαίνει δωρεάν
- * εδώ και δεν χρειάστηκε τίποτα από το backend. */
-function prevMonth(monthly) {
-	var i = new Date().getMonth();                 // 0-11, ο τρέχων
-	return i > 0 && monthly && monthly.length > i ? Number(monthly[i - 1]) || 0 : null;
-}
-
 function greeting() {
 	var h = new Date().getHours();
 	return h < 5 ? 'Καλό ξημέρωμα' : h < 12 ? 'Καλημέρα' : h < 18 ? 'Καλησπέρα' : 'Καλό βράδυ';
 }
 
-function heroHTML(c, lvl, monthly) {
-	var month = Number(c.month) || 0;
-	var prev  = prevMonth(monthly);
-	var delta = prev === null ? null : month - prev;
-
-	// Το ίδιο τσιπάκι με τις κάρτες KPI, από μία γραφή. Ήταν γραμμένο και εδώ
-	// χύμα· μόλις μπήκε δεύτερος χρήστης, έγινε συνάρτηση. Το `prev === null`
-	// (Ιανουάριος: δεν υπάρχει προηγούμενος μήνας) μένει ξεχωριστό από το
-	// `delta === 0` — το πρώτο δεν έχει τι να συγκρίνει, το δεύτερο συνέκρινε
-	// και βρήκε ισοπαλία. Η deltaChip() επιστρέφει κενό και στις δύο.
-	var chip = prev === null ? '' : deltaChip(month, prev);
-
-	var sub = prev === null ? 'ο πρώτος μήνας της χρονιάς'
-		: (delta === 0 ? 'ίδιες με τον προηγούμενο μήνα' : 'έναντι ' + prev + ' τον προηγούμενο μήνα');
-
-	// Ο μετρητής: γεμάτο σκαλί πάνω σε ΑΝΟΙΧΤΟΤΕΡΟ σκαλί της ίδιας ράμπας, όχι
-	// γκρι, ώστε η κατάσταση να διαβάζεται σε όλο το μήκος.
-	var at   = Number(lvl.next_at) || 0;
-	var from = Math.max(0, at - (Number(lvl.remaining) || 0) - month + month);
-	var pct  = at ? Math.min(100, Math.round((month / at) * 100)) : 0;
-
-	return '<div class="ecrm-card"><div class="ecrm-hero">' +
-		'<div><div class="ecrm-eyebrow">Αιτήσεις αυτόν τον μήνα</div>' +
-		'<div class="ecrm-hero__n">' + month + chip + '</div>' +
-		'<div class="ecrm-hero__lbl">' + sub + '</div></div>' +
-		'<div><div class="ecrm-tier"><span class="ecrm-tier__now">' + esc(lvl.current || 'Χωρίς level') + '</span>' +
-		(lvl.next ? '<span class="ecrm-tier__next">' + (Number(lvl.remaining) || 0) + ' ακόμα για ' + esc(lvl.next) + '</span>' : '') +
-		'</div><div class="ecrm-meter"><div class="ecrm-meter__f" style="width:' + pct + '%"></div></div>' +
-		(at ? '<div class="ecrm-tier__scale"><span>0</span><span>' + esc(lvl.next || '') + ' ' + at + '</span></div>' : '') +
-		'</div></div></div>';
-}
-
-/* Το `status` δίνεται μόνο όπου το KPI ΕΙΝΑΙ κατάσταση σύμβασης. Το «Σήμερα»
- * είναι φίλτρο ημερομηνίας και η λίστα δεν φιλτράρει έτσι — οπότε μένει
- * ανενεργό αντί να στέλνει κάπου που δεν δείχνει το ίδιο πράγμα. */
-var KPI = [
-	{ k: 'today',   label: 'Σήμερα',          cls: 'is-ok'   },
-	{ k: 'pending', label: 'Εκκρεμότητες',    cls: 'is-pend', status: 'pending' },
-	{ k: 'routed',  label: 'Δρομολογήθηκαν',  cls: 'is-route', foot: 'περιμένουν τον πάροχο', status: 'routed' }
-];
-
-/* Μεταβολή όπου υπάρχει, ηλικία όπου μετράει — απόφαση ιδιοκτήτη 21/08,
- * docs/UI-KPI-DELTA.html.
+/* Τα τέσσερα πλακίδια, ίδιο βάρος — δομή του kit A1, δεδομένα από
+ * `DashboardRepository::tiles()`. Κάθε πλακίδιο μετράει διαφορετικό ΕΙΔΟΣ
+ * πράγματος (απόθεμα / απόθεμα-με-προθεσμία / ροή ενός μήνα / εργασίες),
+ * οπότε κάθε ένα έχει και δικό του υποκείμενο κείμενο αντί για μια γενική
+ * σύγκριση που δεν θα σήμαινε το ίδιο και στα τέσσερα.
  *
- * Η «Σήμερα» μετράει ΡΟΗ (πόσες άνοιξαν σήμερα), οπότε το «χθες» υπάρχει και
- * η σύγκριση έχει νόημα. Οι άλλες δύο μετράνε ΑΠΟΘΕΜΑ — πόσες είναι ΤΩΡΑ σε
- * αυτή την κατάσταση — και για απόθεμα δεν υπάρχει «πόσες ήταν τον προηγούμενο
- * μήνα»: το status είναι τρέχουσα τιμή στη γραμμή, όχι ιστορικό. Ένα «↑3» εκεί
- * θα ήταν ισχυρισμός για τον φόρτο ενός ανθρώπου, βγαλμένος από το πουθενά.
- *
- * Στη θέση του μπαίνει η ηλικία της παλαιότερης, που απαντά την ερώτηση που
- * όντως έχει ο συνεργάτης: όχι «είναι περισσότερες από τον προηγούμενο μήνα;»
- * αλλά «κάτι κάθεται πολύ;».
- */
-function ageFoot(days, extra) {
-	// Ο αριθμός έρχεται ΕΤΟΙΜΟΣ σε μέρες από τη βάση (DATEDIFF). Δεν
-	// υπολογίζεται εδώ από timestamp: το created_at/updated_at γράφεται σε ώρα
-	// site και οι fmtDate()/timeAgo() το διαβάζουν ως UTC — η παγίδα της (72).
-	// Ένας ακέραιος αριθμός ημερών δεν έχει ζώνη ώρας.
-	//
-	// ΚΑΙ ΤΑ ΛΟΓΙΑ ΛΕΝΕ ΑΥΤΟ ΠΟΥ ΜΕΤΡΙΕΤΑΙ. Μέχρι τις 22/08 έγραφε «η παλαιότερη
-	// μπήκε σήμερα», που διαβάζεται «μπήκε σε αυτή την κατάσταση». Ο αριθμός
-	// όμως βγαίνει από `MIN(updated_at)`, και το updated_at έχει
-	// ON UPDATE CURRENT_TIMESTAMP: μετράει πόσο καιρό δεν την άγγιξε ΚΑΝΕΙΣ.
-	// Μια αίτηση 30 μερών σε εκκρεμότητα που κάποιος διόρθωσε σήμερα εμφανιζόταν
-	// ως «μπήκε σήμερα» — δηλαδή η κάρτα που υπάρχει για να δείχνει τι σαπίζει
-	// έκρυβε ακριβώς αυτό. Η ΜΕΤΡΗΣΗ είναι σωστή και σκόπιμη (δες
-	// DashboardRepository::oldestPerStatus)· τα λόγια ήταν λάθος.
-	//
-	// «Στάσιμη» και όχι κάτι άλλο: το ίδιο λεξιλόγιο με τη λίστα «Χρειάζεται
-	// ενέργεια» ακριβώς από κάτω, που ήδη λέει «οι πιο στάσιμες».
-	if (days === null || days === undefined) { return extra || ''; }
-	var d = Number(days) || 0;
-	var txt = d === 0
-		? 'όλες κουνήθηκαν σήμερα'
-		: 'η πιο στάσιμη ' + d + (d === 1 ? ' μέρα' : ' μέρες') + ' χωρίς κίνηση';
-	return extra ? extra + ' · ' + txt : txt;
-}
+ * Κλικαριστά μόνο όσα δείχνουν ΜΙΑ κατάσταση: «Ανοιχτές» και «Αναμονή
+ * υπογραφής» καλύπτουν παραπάνω από μία (η δεύτερη δύο: pending_signature +
+ * awaiting_signature) και η λίστα συμβάσεων φιλτράρει μόνο σε μία κατάσταση
+ * τη φορά — ένα κλικ που δείχνει μισή αλήθεια είναι χειρότερο από κανένα
+ * κλικ. «Κλεισμένες» είναι ΜΙΑ κατάσταση (active) και πάει κατευθείαν εκεί.
+ * «Εργασίες μου» πάει στην ίδια την οθόνη εργασιών. */
+function tilesHTML(t) {
+	var closed = Number(t.closed_month) || 0;
+	var commission = Number(t.closed_month_commission) || 0;
+	var expiring = Number(t.expiring_today) || 0;
+	var overdue = Number(t.tasks_overdue) || 0;
 
-function kpisHTML(c) {
-	var oldest = c.oldest || {};
+	var tiles = [
+		{
+			label: 'Ανοιχτές αιτήσεις',
+			v: Number(t.open) || 0,
+			foot: ''
+		},
+		{
+			label: 'Αναμονή υπογραφής',
+			v: Number(t.awaiting_signature) || 0,
+			foot: expiring > 0 ? expiring + (expiring === 1 ? ' λήγει σήμερα' : ' λήγουν σήμερα') : '',
+			warn: expiring > 0
+		},
+		{
+			label: 'Κλεισμένες (μήνας)',
+			v: closed,
+			foot: commission > 0 ? '→ ' + Number(commission).toFixed(0) + ' € προμήθεια' : (closed === 0 ? 'καμία ακόμα' : ''),
+			go: 'contracts', status: 'active'
+		},
+		{
+			label: 'Εργασίες μου',
+			v: Number(t.tasks_open) || 0,
+			foot: overdue > 0 ? overdue + (overdue === 1 ? ' εκπρόθεσμη' : ' εκπρόθεσμες') : '',
+			warn: overdue > 0,
+			go: 'tasks'
+		}
+	];
 
-	return '<div class="ecrm-kpis">' + KPI.map(function (x) {
-		var tag = x.status ? 'button' : 'div';
-		var att = x.status ? ' type="button" data-go="contracts" data-status="' + esc(x.status) + '"' : '';
+	return '<div class="ecrm-kpis ecrm-kpis--4">' + tiles.map(function (x) {
+		var clickable = !!x.go;
+		var tag = clickable ? 'button' : 'div';
+		var att = clickable
+			? ' type="button" data-go="' + esc(x.go) + '"' + (x.status ? ' data-status="' + esc(x.status) + '"' : '')
+			: '';
 
-		// Μόνο η «Σήμερα» παίρνει τσιπάκι· μόνο οι καταστάσεις παίρνουν ηλικία.
-		var chip = x.k === 'today' ? deltaChip(Number(c.today) || 0, Number(c.yesterday) || 0) : '';
-		var foot = x.status ? ageFoot(oldest[x.status], x.foot) : todayFoot(c);
-
-		return '<' + tag + ' class="ecrm-kpi' + (x.status ? ' is-clickable' : '') + '"' + att + '><div class="ecrm-kpi__k"><span class="ecrm-kpi__dot ' + esc(x.cls) + '"></span>' + esc(x.label) + '</div>' +
-			'<div class="ecrm-kpi__v">' + (Number(c[x.k]) || 0) + chip + '</div>' +
-			(foot ? '<div class="ecrm-kpi__f">' + esc(foot) + '</div>' : '') + '</' + tag + '>';
+		return '<' + tag + ' class="ecrm-kpi' + (clickable ? ' is-clickable' : '') + '"' + att + '>' +
+			'<div class="ecrm-kpi__k">' + esc(x.label) + '</div>' +
+			'<div class="ecrm-kpi__v">' + x.v + '</div>' +
+			(x.foot ? '<div class="ecrm-kpi__f' + (x.warn ? ' is-warn' : '') + '">' + esc(x.foot) + '</div>' : '') +
+			'</' + tag + '>';
 	}).join('') + '</div>';
 }
 
-/* Το τσιπάκι — ίδιο σχήμα και ίδιο SVG με του hero προμήθειας παρακάτω. */
-function deltaChip(now, prev) {
-	var d = now - prev;
-	if (!d) { return ''; }
-	var up = d > 0;
-	return '<span class="ecrm-delta ' + (up ? 'is-up' : 'is-down') + '">' +
-		'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 ' +
-		(up ? '19V5M5 12l7-7 7 7' : '5v14M5 12l7 7 7-7') + '"/></svg>' +
-		(up ? '+' : '') + d + '</span>';
-}
+/* Η κάρτα level, ξεχωριστή από τα πλακίδια: δεν μετράει «πόσα», μετράει «πόσο
+ * κοντά». Έζησε μέσα στο παλιό hero· το hero έφυγε, αυτή έμεινε — απλώς μικρή
+ * και μόνη της, αντί να χαθεί σιωπηλά μαζί με το ηρωικό νούμερο. */
+function levelHTML(lvl) {
+	if (!lvl || !lvl.current) { return ''; }
 
-function todayFoot(c) {
-	var y = Number(c.yesterday) || 0;
-	// «0 χθες» είναι μέτρηση, όχι έλλειψη δεδομένων — και λέγεται έτσι.
-	return y === 0 ? 'καμία χθες' : 'έναντι ' + y + ' χθες';
+	var at  = Number(lvl.next_at) || 0;
+	var month = at - (Number(lvl.remaining) || 0);
+	var pct = at ? Math.min(100, Math.max(0, Math.round((month / at) * 100))) : 0;
+
+	return '<div class="ecrm-card"><div class="ecrm-tier">' +
+		'<span class="ecrm-tier__now">' + esc(lvl.current) + '</span>' +
+		(lvl.next ? '<span class="ecrm-tier__next">' + (Number(lvl.remaining) || 0) + ' ακόμα για ' + esc(lvl.next) + '</span>' : '') +
+		'</div><div class="ecrm-meter"><div class="ecrm-meter__f" style="width:' + pct + '%"></div></div>' +
+		(at ? '<div class="ecrm-tier__scale"><span>0</span><span>' + esc(lvl.next || '') + ' ' + at + '</span></div>' : '') +
+		'</div>';
 }
 
 /* Γιατί κάθε γραμμή είναι εκεί, και τι κουμπί της ταιριάζει. Η φράση φτιάχνεται
  * από την κατάσταση ΚΑΙ τις ημέρες, γιατί «Εκκρεμεί» σκέτο δεν λέει τίποτα
- * που δεν λέει ήδη το badge δίπλα. */
+ * που δεν λέει ήδη το badge δίπλα.
+ *
+ * Το `late` (7+ μέρες) ΔΕΝ κωδικοποιείται πια σε ξεχωριστό χρώμα μπάρας —
+ * αφαιρέθηκε 25/08 μαζί με το `ecrm-attn__b`, όταν το badge πήρε τη θέση της
+ * μπάρας (ευθυγράμμιση με το kit A1, CHANGELOG (119)). Το σήμα δεν χάθηκε: το
+ * κείμενο της ηλικίας υπογραμμίζεται όταν είναι στάσιμο πάνω από μια βδομάδα. */
 function why(it) {
 	var d = Number(it.days) || 0;
 	var ago = d === 0 ? 'σήμερα' : d === 1 ? 'από χθες' : 'εδώ και ' + d + ' ημέρες';
+	var late = d >= 7;
 
 	if (it.status === 'draft') {
 		return it.blocked_no_afm
-			? { txt: 'Πρόχειρο ' + ago + ' — λείπει ΑΦΜ, δεν οριστικοποιείται', act: 'Συνέχεια', tone: 'is-mute' }
-			: { txt: 'Πρόχειρο ' + ago + ', δεν οριστικοποιήθηκε', act: 'Συνέχεια', tone: 'is-mute' };
+			? { txt: 'λείπει ΑΦΜ, δεν οριστικοποιείται — ' + ago, act: 'Συνέχεια', late: late }
+			: { txt: 'δεν οριστικοποιήθηκε — ' + ago, act: 'Συνέχεια', late: late };
 	}
 	if (it.status === 'awaiting_signature') {
-		return { txt: 'Περιμένει υπογραφή πελάτη ' + ago, act: 'Υπενθύμιση', tone: 'is-pend' };
+		return { txt: 'περιμένει υπογραφή πελάτη — ' + ago, act: 'Υπενθύμιση', late: late };
 	}
-	return { txt: 'Εκκρεμεί ' + ago, act: 'Επίλυση', tone: d >= 7 ? 'is-late' : 'is-pend' };
+	return { txt: 'εκκρεμεί — ' + ago, act: 'Επίλυση', late: late };
 }
 
+/* Πινακίδα-γραμμή αντί για μπάρα χρώματος: όνομα/κωδικός αριστερά, badge
+ * ΚΑΤΑΣΤΑΣΗΣ στη μέση — ίδιες κλάσεις `.ecrm-badge--{status}` με τη λίστα
+ * συμβάσεων και τη λεπτομέρεια, ώστε το ίδιο χρώμα να σημαίνει το ίδιο πράγμα
+ * παντού στην εφαρμογή — και κουμπί δεξιά. Δομή του kit A1, όχι δικές του
+ * τιμές χρώματος: τα `--st-*` του δωδεκάδικου παλέτα είναι ήδη εκεί. */
 function attentionHTML(list) {
 	if (!list || !list.length) {
 		return '<div class="ecrm-card"><div class="ecrm-step">Τι χρειάζεται εσένα</div>' +
 			'<div class="ecrm-empty">Τίποτα δεν περιμένει εσένα αυτή τη στιγμή.</div></div>';
 	}
 
+	var statuses = (window.ECRM && ECRM.statuses) || {};
+
 	return '<div class="ecrm-card"><div class="ecrm-head--row ecrm-attnhead">' +
 		'<span class="ecrm-step">Τι χρειάζεται εσένα</span>' +
 		'<span class="ecrm-attnhead__n">οι πιο στάσιμες</span></div>' +
 		'<ul class="ecrm-attn">' + list.map(function (it) {
 			var w = why(it);
-			return '<li data-attn="' + esc(it.id) + '"><span class="ecrm-attn__b ' + esc(w.tone) + '"></span>' +
+			return '<li data-attn="' + esc(it.id) + '">' +
 				'<span class="ecrm-attn__m"><b>' + esc(it.customer || '—') + '</b>' +
 				(it.provider ? ' · ' + esc(it.provider) : '') +
-				'<small>' + esc(it.code || '') + (it.code ? ' — ' : '') + esc(w.txt) + '</small></span>' +
+				'<small' + (w.late ? ' class="is-late"' : '') + '>' + esc(it.code || '') + (it.code ? ' — ' : '') + esc(w.txt) + '</small></span>' +
+				'<span class="ecrm-badge ecrm-badge--' + esc(it.status) + '">' + esc(statuses[it.status] || it.status) + '</span>' +
 				'<button type="button" class="ecrm-attn__a" data-attn-go="' + esc(it.id) + '">' + esc(w.act) + '</button></li>';
 		}).join('') + '</ul></div>';
 }
@@ -277,14 +252,14 @@ function feedHTML(feed) {
 }
 
 function dashboardHTML(d) {
-	var c = d.cards || {}, lvl = d.level || {};
+	var lvl = d.level || {}, tiles = d.tiles || {};
 
 	return '' +
 		'<header class="ecrm-head"><div class="ecrm-eyebrow">' +
 		new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div>' +
 		'<h2 class="ecrm-title">' + greeting() + ', ' + esc(d.user || '') + '</h2></header>' +
-		heroHTML(c, lvl, d.monthly) +
-		kpisHTML(c) +
+		tilesHTML(tiles) +
+		levelHTML(lvl) +
 		attentionHTML(d.attention) +
 		'<div class="ecrm-cols">' + trendHTML(d.monthly) + providersHTML(d.by_provider) + '</div>' +
 		feedHTML(d.feed);

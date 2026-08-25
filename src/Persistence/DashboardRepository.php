@@ -29,6 +29,18 @@ final class DashboardRepository
      */
     private const NEEDS_ME = ['pending', 'awaiting_signature', 'draft'];
 
+    /**
+     * Οι στατικές καταστάσεις που ΔΕΝ μετρούν ως «ανοιχτή» αίτηση: η
+     * `active` ολοκλήρωσε την πορεία της (πάει στο «Κλεισμένες»), οι δύο
+     * τερματικές δεν μετρούν πουθενά. Ίδια λίστα με το
+     * `ContractStatus::isTerminal()` συν την `active`, αλλά εδώ γραμμένη ως
+     * τιμές SQL — το enum ζει στο Domain, εδώ ζει η Persistence, και δεν
+     * χρειάζεται τρίτο επίπεδο για τέσσερις λέξεις.
+     *
+     * @var list<string>
+     */
+    private const NOT_OPEN = ['active', 'cancelled', 'terminated'];
+
     private CustomerFields $fields;
 
     public function __construct(?CustomerFields $fields = null)
@@ -373,6 +385,216 @@ final class DashboardRepository
                 Tables::name(Tables::CONTRACTS),
                 $userId,
                 $status
+            )
+        );
+    }
+
+    /**
+     * Τα τέσσερα πλακίδια της πρώτης οθόνης — απόφαση ιδιοκτήτη 25/08/2026,
+     * ευθυγράμμιση με το `docs/UI-UX-KIT.html` A1 (δες
+     * `docs/UI-DASHBOARD-VS-KIT.html`). Ένα ερώτημα ανά πλακίδιο, όχι ένα
+     * μεγάλο join — το καθένα μετράει διαφορετικό πράγμα (απόθεμα, απόθεμα με
+     * προθεσμία, ροή ενός μήνα, εργασίες) και η ένωσή τους σε ένα ερώτημα θα
+     * έκρυβε ποιο μετράει τι.
+     *
+     * @return array{
+     *     open: int,
+     *     awaiting_signature: int,
+     *     expiring_today: int,
+     *     closed_month: int,
+     *     closed_month_commission: float,
+     *     tasks_open: int,
+     *     tasks_overdue: int
+     * }
+     */
+    public function tiles(int $userId, string $monthStart): array
+    {
+        [$closedCount, $closedCommission] = $this->closedThisMonth($userId, $monthStart);
+
+        return [
+            'open'                    => $this->countOpen($userId),
+            'awaiting_signature'      => $this->countWithStatuses(
+                $userId,
+                ['pending_signature', 'awaiting_signature']
+            ),
+            'expiring_today'          => $this->countExpiringToday($userId),
+            'closed_month'            => $closedCount,
+            'closed_month_commission' => $closedCommission,
+            'tasks_open'              => $this->countOpenTasks($userId),
+            'tasks_overdue'           => $this->countOverdueTasks($userId),
+        ];
+    }
+
+    /** «Ανοιχτές αιτήσεις» — ό,τι δεν έκλεισε ακόμα, με τη μία ή την άλλη έννοια. */
+    private function countOpen(int $userId): int
+    {
+        global $wpdb;
+
+        $placeholders = implode(',', array_fill(0, count(self::NOT_OPEN), '%s'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM %i WHERE partner_user_id = %d AND status NOT IN ({$placeholders})",
+                [Tables::name(Tables::CONTRACTS), $userId, ...self::NOT_OPEN]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+    }
+
+    /**
+     * @param list<string> $statuses
+     */
+    private function countWithStatuses(int $userId, array $statuses): int
+    {
+        global $wpdb;
+
+        if ($statuses === []) {
+            return 0;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM %i WHERE partner_user_id = %d AND status IN ({$placeholders})",
+                [Tables::name(Tables::CONTRACTS), $userId, ...$statuses]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+    }
+
+    /**
+     * Πόσες αιτήσεις σε αναμονή υπογραφής λήγουν ΣΗΜΕΡΑ.
+     *
+     * Δεν υπάρχει στήλη λήξης — το ρολόι είναι υπολογισμένο, ξεκινά από το
+     * τελευταίο `sign_sent_*` γεγονός κάθε σύμβασης και κλείνει
+     * `ECRM_Tracking::SIGN_WINDOW_HOURS` (48) ώρες μετά, ίδια λογική με το
+     * `ECRM_Tracking::sign_expired()` που ήδη ελέγχει ΜΙΑ σύμβαση. Εδώ
+     * χρειάζεται μέτρημα σε πολλές, οπότε ξαναγράφεται σε SQL αντί να καλείται
+     * σε βρόχο PHP ανά αίτηση.
+     *
+     * «Σήμερα» σημαίνει: η λήξη πέφτει μέσα στη σημερινή ημερολογιακή μέρα ΚΑΙ
+     * δεν έχει περάσει ακόμα — μια ήδη ληγμένη αίτηση δεν «λήγει σήμερα», έχει
+     * ήδη λήξει, και δεν έχει νόημα να μπει στην ίδια μέτρηση.
+     */
+    private function countExpiringToday(int $userId): int
+    {
+        global $wpdb;
+
+        $sendEvents = ['sign_sent_sms', 'sign_sent_email', 'sign_sent_link'];
+        $statuses   = ['pending_signature', 'awaiting_signature'];
+
+        $eventPh  = implode(',', array_fill(0, count($sendEvents), '%s'));
+        $statusPh = implode(',', array_fill(0, count($statuses), '%s'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM (
+                     SELECT MAX(e.created_at) last_sent
+                     FROM %i c
+                     JOIN %i e ON e.contract_id = c.id AND e.type IN ({$eventPh})
+                     WHERE c.partner_user_id = %d AND c.status IN ({$statusPh})
+                     GROUP BY c.id
+                 ) sent
+                 WHERE DATE(DATE_ADD(last_sent, INTERVAL 48 HOUR)) = CURDATE()
+                   AND DATE_ADD(last_sent, INTERVAL 48 HOUR) >= NOW()",
+                [
+                    Tables::name(Tables::CONTRACTS),
+                    Tables::name(Tables::EVENTS),
+                    ...$sendEvents,
+                    $userId,
+                    ...$statuses,
+                ]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+    }
+
+    /**
+     * Πόσες συμβάσεις έγιναν `active` μέσα στον μήνα, και η προμήθειά τους.
+     *
+     * «Έγιναν active», όχι «είναι active»: ψάχνει το γεγονός `to_status =
+     * active` μέσα στο παράθυρο, όχι μόνο τη σημερινή στήλη `status` — αλλιώς
+     * μια σύμβαση που έγινε ενεργή τον προηγούμενο μήνα θα μετρούσε κάθε μήνα
+     * μετά, για πάντα. Φιλτράρεται ΚΑΙ σε `status = 'active' ΤΩΡΑ`, ώστε μια
+     * σύμβαση που έγινε ενεργή και μετά ακυρώθηκε να μη μείνει στο «κλεισμένες
+     * με προμήθεια» — η προμήθεια διαβάζεται από τη ΣΗΜΕΡΙΝΗ στήλη
+     * `payout_amount`, όχι από ιστορικό.
+     *
+     * Το άθροισμα γίνεται σε PHP και όχι με SQL SUM(): μια σύμβαση μπορεί να
+     * έχει περισσότερα από ένα γεγονός `to_status=active` μέσα στο ίδιο
+     * παράθυρο (π.χ. active → pending → active ξανά), και ένα JOIN θα την
+     * μέτραγε τόσες φορές όσα τα γεγονότα — το ίδιο λάθος διπλομέτρησης που
+     * προειδοποιεί το σχόλιο του `CommissionRepository::payable()`.
+     *
+     * @return array{0: int, 1: float}
+     */
+    private function closedThisMonth(int $userId, string $monthStart): array
+    {
+        global $wpdb;
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT DISTINCT c.id, c.payout_amount
+                 FROM %i c
+                 WHERE c.partner_user_id = %d AND c.status = %s
+                   AND c.id IN (
+                       SELECT e.contract_id FROM %i e
+                       WHERE e.to_status = %s AND e.created_at >= %s
+                   )',
+                [
+                    Tables::name(Tables::CONTRACTS),
+                    $userId,
+                    'active',
+                    Tables::name(Tables::EVENTS),
+                    'active',
+                    $monthStart,
+                ]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        $commission = 0.0;
+
+        foreach ($rows as $row) {
+            $commission += (float) ($row['payout_amount'] ?? 0);
+        }
+
+        return [count($rows), $commission];
+    }
+
+    /** «Εργασίες μου» — προσωπικές, όπως όλη η υπόλοιπη οθόνη. */
+    private function countOpenTasks(int $userId): int
+    {
+        global $wpdb;
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM %i WHERE assigned_to = %d AND status = 'open'",
+                Tables::name(Tables::TASKS),
+                $userId
+            )
+        );
+    }
+
+    /** Ίδιο ορισμός εκπρόθεσμου με το `TaskRepository::search()` — μη ζόρι πριν την ώρα. */
+    private function countOverdueTasks(int $userId): int
+    {
+        global $wpdb;
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM %i
+                 WHERE assigned_to = %d AND status = 'open' AND due_at IS NOT NULL AND due_at < %s",
+                Tables::name(Tables::TASKS),
+                $userId,
+                current_time('mysql')
             )
         );
     }

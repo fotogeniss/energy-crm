@@ -1,0 +1,279 @@
+<?php
+
+/**
+ * Τα τέσσερα πλακίδια του Πίνακα — CHANGELOG (119), ευθυγράμμιση με
+ * `docs/UI-UX-KIT.html` A1.
+ *
+ * Κάθε πλακίδιο μετράει διαφορετικό ΕΙΔΟΣ πράγματος, και το κάθε ένα έχει
+ * ένα σημείο όπου ένα αφελές ερώτημα θα έδινε λάθος αριθμό — αυτά είναι τα
+ * σημεία που ελέγχονται εδώ, όχι η προφανής περίπτωση:
+ *
+ * 1. **«Ανοιχτές» δεν είναι απλώς «όχι active»** — οι τερματικές (ακυρωμένη,
+ *    κλεισμένη) επίσης δεν μετράνε, αλλιώς μια ακυρωμένη αίτηση θα φαινόταν
+ *    για πάντα «ανοιχτή».
+ * 2. **«Λήγουν σήμερα» δεν είναι «ήδη έληξαν».** Μια αίτηση που το παράθυρο
+ *    υπογραφής της πέρασε χθες δεν χρειάζεται υπενθύμιση σήμερα — χρειάζεται
+ *    άλλη ενέργεια. Το πλακίδιο μετράει μόνο όσες η προθεσμία πέφτει ΜΕΣΑ
+ *    στη σημερινή μέρα.
+ * 3. **«Κλεισμένες (μήνας)» μετράει το ΓΕΓΟΝΟΣ, όχι τη ΣΤΗΛΗ.** Μια σύμβαση
+ *    που έγινε active τον προηγούμενο μήνα δεν πρέπει να μετράει ξανά αυτόν
+ *    τον μήνα μόνο επειδή η στήλη status λέει ακόμα «active» — αλλιώς θα
+ *    μετρούσε για πάντα, κάθε μήνα.
+ * 4. **Η προμήθεια δεν διπλομετριέται** όταν μια σύμβαση πέρασε από active
+ *    πάνω από μία φορά μέσα στο ίδιο παράθυρο.
+ *
+ * @package EnergyCRM
+ */
+
+declare(strict_types=1);
+
+namespace EnergyCRM\Tests\Integration;
+
+use EnergyCRM\Access\UserScope;
+use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\DashboardRepository;
+use EnergyCRM\Persistence\EventRepository;
+use EnergyCRM\Persistence\Tables;
+use WP_REST_Request;
+
+final class DashboardTilesTest extends IntegrationTestCase
+{
+    private DashboardRepository $dashboard;
+
+    private ContractRepository $contracts;
+
+    private int $partner;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->dashboard = new DashboardRepository();
+        $this->contracts = new ContractRepository();
+        // makeCrmUser(), όχι makePartner(): το πλακίδιο «Εργασίες μου»
+        // περνάει από το POST /tasks για να φτιάξει τα δεδομένα του (δες
+        // addTask() παρακάτω), και η διαδρομή θέλει Guards::crmUser().
+        $this->partner   = $this->makeCrmUser();
+
+        wp_set_current_user($this->partner);
+    }
+
+    protected function tearDown(): void
+    {
+        wp_set_current_user(0);
+
+        parent::tearDown();
+    }
+
+    private function contractFor(string $status): int
+    {
+        $id = $this->contracts->create(
+            ['status' => $status, 'supply_number' => '12345678901', 'energy_type' => 'power'],
+            UserScope::forSelf($this->partner)
+        );
+
+        self::assertGreaterThan(0, $id);
+
+        return $id;
+    }
+
+    /** @param array<string, mixed> $columns */
+    private function stamp(int $contractId, array $columns): void
+    {
+        global $wpdb;
+
+        $wpdb->update(Tables::name(Tables::CONTRACTS), $columns, ['id' => $contractId]);
+    }
+
+    /**
+     * Καταγράφει `sign_sent_sms` N ώρες πριν, ΣΧΕΤΙΚΑ με το τώρα της βάσης —
+     * ίδιο μοτίβο με το `SignExpiryTest::sentHoursAgo()`.
+     */
+    private function sentHoursAgo(int $contractId, int $hours): void
+    {
+        global $wpdb;
+
+        (new EventRepository())->record($contractId, 0, 'sign_sent_sms', ['message' => 'δοκιμή']);
+
+        $wpdb->query(
+            $wpdb->prepare(
+                'UPDATE %i SET created_at = NOW() - INTERVAL %d HOUR WHERE contract_id = %d ORDER BY id DESC LIMIT 1',
+                Tables::name(Tables::EVENTS),
+                $hours,
+                $contractId
+            )
+        );
+    }
+
+    /**
+     * Καταγράφει `to_status = active` N ημέρες πριν, ΣΧΕΤΙΚΑ με το τώρα της
+     * βάσης — ίδιο μοτίβο με το `DashboardCardsTest::ageByDays()`.
+     */
+    private function becameActiveDaysAgo(int $contractId, int $days): void
+    {
+        global $wpdb;
+
+        (new EventRepository())->record($contractId, 0, 'status_change', ['to_status' => 'active']);
+
+        $wpdb->query(
+            $wpdb->prepare(
+                'UPDATE %i SET created_at = NOW() - INTERVAL %d DAY WHERE contract_id = %d ORDER BY id DESC LIMIT 1',
+                Tables::name(Tables::EVENTS),
+                $days,
+                $contractId
+            )
+        );
+    }
+
+    private function monthStart(): string
+    {
+        global $wpdb;
+
+        // Η αρχή του τρέχοντος μήνα, ΣΧΕΤΙΚΑ με το τώρα της βάσης — για τον
+        // ίδιο λόγο που τα άλλα βοηθητικά της κλάσης δουλεύουν σχετικά.
+        return (string) $wpdb->get_var('SELECT DATE_FORMAT(NOW(), "%Y-%m-01 00:00:00")');
+    }
+
+    // ── 1. «Ανοιχτές»: ούτε active, ούτε τερματική ────────────────────
+
+    public function testOpenExcludesActiveAndTerminalStatuses(): void
+    {
+        $this->contractFor('new');
+        $this->contractFor('pending');
+        $this->contractFor('active');
+        $this->contractFor('cancelled');
+        $this->contractFor('terminated');
+
+        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+        self::assertSame(2, $tiles['open'], 'Μόνο οι δύο μη-τερματικές, μη-active μετράνε ανοιχτές.');
+    }
+
+    // ── 2. «Αναμονή υπογραφής»: δύο καταστάσεις μαζί ──────────────────
+
+    public function testAwaitingSignatureCountsBothQualifyingStatuses(): void
+    {
+        $this->contractFor('pending_signature');
+        $this->contractFor('awaiting_signature');
+        $this->contractFor('signed');
+
+        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+        self::assertSame(2, $tiles['awaiting_signature']);
+    }
+
+    // ── 3. «Λήγουν σήμερα»: μέσα στο 48ωρο, όχι ήδη ληγμένο ───────────
+
+    public function testExpiringTodayCountsOnlyWhatIsAboutToExpireWithinToday(): void
+    {
+        // 42 ώρες πριν: λήγει σε 6 ώρες — σήμερα, με περιθώριο από τα
+        // μεσάνυχτα. Ο έλεγχος συγκρίνει με CURDATE() της βάσης, οπότε ένα
+        // τρέξιμο μέσα στις τελευταίες ~6 ώρες πριν τα μεσάνυχτα θα έβλεπε
+        // τη λήξη να πέφτει «αύριο» αντί για «σήμερα» — γνωστό, αποδεκτό
+        // περιθώριο, ίδιο μοτίβο σχετικού χρόνου με το SignExpiryTest.
+        $expiringSoon = $this->contractFor('awaiting_signature');
+        $this->sentHoursAgo($expiringSoon, 42);
+
+        // 10 ώρες πριν: λήγει σε 38 ώρες — όχι σήμερα.
+        $notYet = $this->contractFor('awaiting_signature');
+        $this->sentHoursAgo($notYet, 10);
+
+        // 60 ώρες πριν: το παράθυρο πέρασε ήδη — δεν «λήγει», έχει λήξει.
+        $alreadyExpired = $this->contractFor('pending_signature');
+        $this->sentHoursAgo($alreadyExpired, 60);
+
+        // Καμία αποστολή καταγεγραμμένη — καμία προθεσμία, δεν μετράει.
+        $this->contractFor('awaiting_signature');
+
+        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+        self::assertSame(1, $tiles['expiring_today']);
+    }
+
+    // ── 4. «Κλεισμένες (μήνας)»: το γεγονός, όχι η στήλη ──────────────
+
+    public function testClosedMonthCountsTheEventNotJustTheColumn(): void
+    {
+        $thisMonth = $this->contractFor('active');
+        $this->becameActiveDaysAgo($thisMonth, 2);
+        $this->stamp($thisMonth, ['payout_amount' => 120]);
+
+        // Έγινε active ΠΕΡΣΙ (ας πούμε 90 μέρες πριν) — η στήλη λέει ακόμα
+        // «active» σήμερα, αλλά το γεγονός είναι έξω από το παράθυρο.
+        $longAgo = $this->contractFor('active');
+        $this->becameActiveDaysAgo($longAgo, 90);
+        $this->stamp($longAgo, ['payout_amount' => 80]);
+
+        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+        self::assertSame(1, $tiles['closed_month']);
+        self::assertEqualsWithDelta(120.0, $tiles['closed_month_commission'], 0.01);
+    }
+
+    public function testClosedMonthExcludesAContractThatWasCancelledAfter(): void
+    {
+        $wonThenCancelled = $this->contractFor('cancelled');
+        $this->becameActiveDaysAgo($wonThenCancelled, 1);
+        $this->stamp($wonThenCancelled, ['payout_amount' => 200]);
+
+        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+        self::assertSame(
+            0,
+            $tiles['closed_month'],
+            'Η σημερινή στήλη status δεν είναι active πια — δεν πρέπει να μετράει σαν κλεισμένη με προμήθεια.'
+        );
+        self::assertSame(0.0, $tiles['closed_month_commission']);
+    }
+
+    public function testClosedMonthCommissionIsNotDoubleCountedOnReactivation(): void
+    {
+        $wentActiveTwice = $this->contractFor('active');
+        $this->becameActiveDaysAgo($wentActiveTwice, 10);
+        $this->becameActiveDaysAgo($wentActiveTwice, 3);
+        $this->stamp($wentActiveTwice, ['payout_amount' => 150]);
+
+        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+        self::assertSame(1, $tiles['closed_month'], 'Μία σύμβαση, όχι δύο γραμμές.');
+        self::assertEqualsWithDelta(150.0, $tiles['closed_month_commission'], 0.01);
+    }
+
+    // ── 5. «Εργασίες μου» ──────────────────────────────────────────────
+
+    public function testTasksCountsOpenAndOverdueSeparately(): void
+    {
+        $this->addTask('Ανοιχτή, όχι εκπρόθεσμη', gmdate('Y-m-d H:i:s', time() + DAY_IN_SECONDS));
+        $this->addTask('Εκπρόθεσμη', gmdate('Y-m-d H:i:s', time() - DAY_IN_SECONDS));
+        $doneId = $this->addTask('Ολοκληρωμένη — δεν μετράει καθόλου', gmdate('Y-m-d H:i:s', time() - DAY_IN_SECONDS));
+
+        $mark = new WP_REST_Request('POST', '/ecrm/v1/tasks/' . $doneId);
+        $mark->set_param('status', 'done');
+        self::assertSame(200, rest_do_request($mark)->get_status());
+
+        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+        self::assertSame(2, $tiles['tasks_open'], 'Οι δύο ανοιχτές — η ολοκληρωμένη δεν μετράει.');
+        self::assertSame(1, $tiles['tasks_overdue']);
+    }
+
+    /**
+     * Ίδιο μοτίβο με `TaskListPayloadTest::addTask()` — περνάει από το ίδιο
+     * το POST /tasks, ώστε το `assigned_to` να γεμίσει όπως θα γέμιζε στην
+     * πράξη (ο controller αναθέτει στον εαυτό του όταν δεν δοθεί άλλος).
+     */
+    private function addTask(string $title, string $dueAt = ''): int
+    {
+        $request = new WP_REST_Request('POST', '/ecrm/v1/tasks');
+        $request->set_param('title', $title);
+
+        if ($dueAt !== '') {
+            $request->set_param('due_at', $dueAt);
+        }
+
+        $response = rest_do_request($request);
+        self::assertSame(200, $response->get_status(), 'Το POST /tasks απέτυχε.');
+
+        return (int) $response->get_data()['id'];
+    }
+}
