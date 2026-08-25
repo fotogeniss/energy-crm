@@ -215,7 +215,8 @@ class ECRM_Import {
 			}
 
 			$row = $wpdb->get_row( $wpdb->prepare(
-				"SELECT id, status, partner_user_id FROM {$ct} WHERE supply_number = %s AND partner_user_id IN ($ph) LIMIT 1",
+				"SELECT id, status, signed_at, partner_user_id FROM {$ct}"
+					. " WHERE supply_number = %s AND partner_user_id IN ($ph) LIMIT 1",
 				array_merge( [ $supply ], $ids )
 			), ARRAY_A );
 
@@ -237,6 +238,23 @@ class ECRM_Import {
 			$target = \EnergyCRM\Domain\Contract\ContractStatus::tryFromSlug( $status );
 
 			if ( null === $target || ( null !== $from && ! $from->canMoveTo( $target ) ) ) {
+				$rejected[] = $supply;
+				continue;
+			}
+
+			// 2026-08-24: τέταρτη πόρτα που γράφει status βρέθηκε σε γενικό
+			// έλεγχο μετά τις (114)/(115) — αυτή περνούσε από ContractLifecycle
+			// (σωστά, σέβεται τον γράφο) αλλά καμία από τις τρεις πύλες που
+			// εμποδίζουν ψεύτικο χειροκίνητο «Υπογράφηκε» δεν καλύπτει αυτό
+			// το αρχείο. Ένα Excel παρόχου με μια γραμμή status=signed θα
+			// δήλωνε δεκάδες αιτήσεις υπογεγραμμένες χωρίς καμία πραγματική
+			// υπογραφή πελάτη. Ίδιος έλεγχος, ίδιος λόγος με τον
+			// ContractStatusController/ContractsBulkController/
+			// ContractSaveController.
+			if (
+				\EnergyCRM\Domain\Contract\ContractStatus::Signed === $target
+				&& empty( $row['signed_at'] )
+			) {
 				$rejected[] = $supply;
 				continue;
 			}

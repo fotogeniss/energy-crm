@@ -18,6 +18,7 @@ namespace EnergyCRM\Http;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ContractTerm;
+use EnergyCRM\Domain\Contract\ExtraFields;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\EventRepository;
@@ -128,6 +129,22 @@ final class RenewalsController implements Controller
         $draft['term_months']     = $months > 0 ? $months : null;
         $draft['end_date']        = ContractTerm::endDate($start, $months);
         $draft['notes']           = 'Ανανέωση από ' . (string) ($source['code'] ?? '');
+
+        // 2026-08-24: carriedForward() αντιγράφει το extra_json ατόφιο από τη
+        // ληγμένη σύμβαση — άρα μια ανανέωση κληρονομούσε ό,τι request_type
+        // είχε η ΑΡΧΙΚΗ αίτηση (σχεδόν ποτέ 'renewal' το ίδιο). Το
+        // MobilePaperwork::connectionTicks() διαβάζει ακριβώς αυτή την τιμή
+        // για να αποφασίσει ποιο κουτί ΕΙΔΟΣ ΣΥΝΔΕΣΗΣ θα τσεκάρει στο
+        // τυπωμένο έντυπο Orizon — ένα ανέγγιχτο αντίγραφο θα τσέκαρε
+        // «Νέα Σύνδεση» (ή ό,τι ήταν το αρχικό) σε ένα έγγραφο που στην
+        // πραγματικότητα είναι ανανέωση. Ίδια οικογένεια σφάλματος με το
+        // (110) — άλλη διαδρομή κώδικα, δεν περνά ποτέ από το
+        // ContractSaveMapping::contractFrom() που έχει εκείνη τη διόρθωση.
+        if ((string) ($draft['energy_type'] ?? '') === 'mobile') {
+            $extra                  = (array) json_decode((string) ($source['extra_json'] ?? ''), true);
+            $extra['request_type']  = 'renewal';
+            $draft['extra_json']    = ExtraFields::toJson($extra);
+        }
 
         // create() assigns ownership from the scope: whoever renews owns the
         // new term, which is what pays them the renewal commission.
