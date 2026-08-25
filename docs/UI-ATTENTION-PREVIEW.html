@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Πίνακας, ευθυγράμμιση με το kit A1</title>
+
+<!-- Τα ΠΡΑΓΜΑΤΙΚΑ αρχεία του plugin, όχι αντίγραφα: ό,τι βλέπεις εδώ είναι
+     ακριβώς ό,τι θα δεις και στην εφαρμογή όταν υπάρχουν δεδομένα. -->
+<link rel="stylesheet" href="../public/assets/ecrm-form.css">
+<link rel="stylesheet" href="../public/assets/ecrm-app.css">
+
+<style>
+	html, body { margin: 0; }
+	body { background: var(--page-canvas-dark); }
+	.wrap { max-width: 760px; margin: 0 auto; padding: 26px 20px 60px; display: grid; gap: 14px; }
+	.note { font-size: 13px; line-height: 1.6; color: var(--muted); margin: 0; }
+	.note b { color: var(--ink); }
+	h1 { font-size: 17px; font-weight: 800; color: var(--navy); margin: 0; letter-spacing: -.01em; }
+</style>
+</head>
+<body>
+<div class="ecrm" data-theme="dark">
+<div class="wrap">
+
+	<h1>Πίνακας — με δεδομένα, όπως το kit A1</h1>
+	<p class="note">
+		Στην εφαρμογή σου οι ενότητες αυτές είναι <b>άδειες</b> (μία σύμβαση,
+		καμία σε <b>Πρόχειρο</b>, <b>Εκκρεμότητα</b> ή <b>Αναμονή υπογραφής</b>),
+		γι' αυτό δεν φαίνεται η αλλαγή. Εδώ με ψεύτικες γραμμές.
+	</p>
+
+	<div class="ecrm-kpis ecrm-kpis--4">
+		<div class="ecrm-kpi">
+			<div class="ecrm-kpi__k">Ανοιχτές αιτήσεις</div>
+			<div class="ecrm-kpi__v">128</div>
+			<div class="ecrm-kpi__f">↑ 12 αυτή την εβδομάδα</div>
+		</div>
+		<div class="ecrm-kpi">
+			<div class="ecrm-kpi__k">Αναμονή υπογραφής</div>
+			<div class="ecrm-kpi__v">34</div>
+			<div class="ecrm-kpi__f is-warn">8 λήγουν σήμερα</div>
+		</div>
+		<button type="button" class="ecrm-kpi is-clickable">
+			<div class="ecrm-kpi__k">Κλεισμένες (μήνας)</div>
+			<div class="ecrm-kpi__v">91</div>
+			<div class="ecrm-kpi__f">→ €1.820 προμήθεια</div>
+		</button>
+		<button type="button" class="ecrm-kpi is-clickable">
+			<div class="ecrm-kpi__k">Εργασίες μου</div>
+			<div class="ecrm-kpi__v">7</div>
+			<div class="ecrm-kpi__f is-warn">3 εκπρόθεσμες</div>
+		</button>
+	</div>
+
+	<div class="ecrm-card">
+		<div class="ecrm-step">Χρειάζεται ενέργεια</div>
+		<ul class="ecrm-attn">
+			<li title="Περιμένει υπογραφή πελάτη — εδώ και 11 ημέρες">
+				<span class="ecrm-attn__m"><b>Μ. Παπαδοπούλου</b><small>#CR-10482 · Protergia</small></span>
+				<span class="ecrm-attn__s"><span class="ecrm-badge ecrm-badge--awaiting_signature">Αναμονή υπογραφής</span></span>
+				<button type="button" class="ecrm-attn__a">Υπενθύμιση</button>
+			</li>
+			<li title="Λείπει ΑΦΜ, δεν οριστικοποιείται — εδώ και 4 ημέρες">
+				<span class="ecrm-attn__m"><b>Ε. Κωνσταντίνου</b><small>#CR-10455 · Orizon</small></span>
+				<span class="ecrm-attn__s"><span class="ecrm-badge ecrm-badge--draft">Πρόχειρο</span></span>
+				<button type="button" class="ecrm-attn__a">Συνέχεια</button>
+			</li>
+			<li title="Εκκρεμεί — από χθες">
+				<span class="ecrm-attn__m"><b>Σ. Βασιλείου</b><small>#CR-10412 · NRG</small></span>
+				<span class="ecrm-attn__s"><span class="ecrm-badge ecrm-badge--pending">Εκκρεμότητα</span></span>
+				<button type="button" class="ecrm-attn__a">Επίλυση</button>
+			</li>
+			<li title="Δεν οριστικοποιήθηκε — από σήμερα">
+				<span class="ecrm-attn__m"><b>Α. Δημητρίου</b><small>#CR-10440 · Protergia</small></span>
+				<span class="ecrm-attn__s"><span class="ecrm-badge ecrm-badge--draft">Πρόχειρο</span></span>
+				<button type="button" class="ecrm-attn__a">Συνέχεια</button>
+			</li>
+		</ul>
+	</div>
+
+	<div class="ecrm-card">
+		<div class="ecrm-step">Τελευταία δραστηριότητα</div>
+		<ul class="ecrm-feed">
+			<li><span class="ecrm-feed__t">Υπογραφή · Γ. Νικολάου</span><span class="ecrm-feed__s">πριν 12 λεπτά · #CR-10488</span></li>
+			<li><span class="ecrm-feed__t">Import Excel Protergia</span><span class="ecrm-feed__s">χθες · 14 αλλαγές status</span></li>
+			<li><span class="ecrm-feed__t">Εκκαθάριση #12 κλειστή</span><span class="ecrm-feed__s">χθες · €280</span></li>
+		</ul>
+	</div>
+
+	<p class="note">
+		Δύο σκόπιμες διαφορές από την εικόνα σου, και οι δύο υπέρ της
+		συνέπειας μέσα στην εφαρμογή: οι <b>ετικέτες</b> των πινακίδων είναι οι
+		κανονικές της εφαρμογής («Αναμονή υπογραφής», όχι «Υπογραφή»), ώστε η
+		ίδια κατάσταση να λέγεται το ίδιο εδώ και στη λίστα συμβάσεων· και τα
+		<b>χρώματα</b> είναι της δωδεκάδας που ήδη έχεις, ελεγμένα για
+		αντίθεση. Πες μου αν προτιμάς τις σύντομες του kit.
+	</p>
+
+</div>
+</div>
+</body>
+</html>
