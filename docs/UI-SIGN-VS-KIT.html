@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — δημόσια σελίδα υπογραφής: σημερινό vs kit A B5</title>
+<style>
+@font-face{font-family:"Manrope";font-style:normal;font-weight:200 800;font-display:swap;
+ src:local("Manrope")}
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1180px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:27px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14.5px;margin:0 0 24px;max-width:760px}
+.lead b{color:#1a1a18}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media (max-width:900px){.pair{grid-template-columns:1fr}}
+.col h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#83817a;margin:0 0 10px;font-weight:800}
+.col h2 small{display:block;text-transform:none;letter-spacing:0;font-weight:500;color:#a3a099;margin-top:2px;font-size:11.5px}
+.stage{border-radius:14px;padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.stage--live{background:#141412}
+.stage--kit{background:#0f1218}
+
+/* ================= ΣΗΜΕΡΙΝΟ (πραγματικές τιμές από class-ecrm-tracking.php) ================= */
+.live-card{ --accent:#0e8610; --page:#141412; --chrome:#1a1a18; --surface:#fff;
+	--ink:#2a2926; --ink2:#5c5a55; --ink3:#a3a099; --line:#e9e8e4; --line2:#dedcd7; --fill:#f8f8f6;
+	--ok:#0f5f29; --ok-bg:#e1f0e6; --err:#c42a47; --err-bg:#fceaee;
+	background:var(--surface);border-radius:12px;box-shadow:0 24px 60px -24px rgba(0,0,0,.55);
+	width:100%;max-width:300px;overflow:hidden;font-size:13px;color:var(--ink);}
+.live-head{background:var(--chrome);color:#fff;padding:14px 16px}
+.live-head h3{margin:0;font-size:14px;font-weight:700;letter-spacing:-.02em}
+.live-head p{margin:4px 0 0;color:var(--ink3);font-size:11.5px}
+.live-body{padding:14px 16px}
+.live-row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px}
+.live-row:last-of-type{border-bottom:0}
+.live-row span{color:var(--ink2)}.live-row b{color:var(--ink);font-weight:600;text-align:right}
+.live-badge{display:inline-block;margin-top:10px;padding:3px 10px;border-radius:999px;font-size:11px;
+	font-weight:700;background:var(--fill);color:var(--ink);border:1px solid var(--line2)}
+.live-sign{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.live-sign h4{font-size:12.5px;margin:0 0 4px;color:var(--ink);font-weight:700}
+.live-sign .lead2{margin:0 0 10px;font-size:11.5px;color:var(--ink2)}
+.live-pad{border:2px dashed var(--line2);border-radius:8px;background:var(--fill);width:100%;height:90px;
+	display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:11px}
+.live-consent{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:10.5px;color:var(--ink2)}
+.live-consent input{margin-top:1px}
+.live-btn{border:0;border-radius:8px;padding:11px;font-size:12.5px;font-weight:700;cursor:default;
+	background:var(--accent);color:#fff;width:100%;margin-top:12px;text-align:center}
+.live-foot{text-align:center;font-size:10.5px;color:var(--ink3);padding:10px;border-top:1px solid var(--line)}
+
+/* ================= KIT A — B5 (αντίγραφο δομής από UI-UX-KIT.html) ================= */
+.kit-phone{ --accent:#c2f04a; --accent-dim:rgba(194,240,74,.14); --accent-text:#1a2208;
+	--bg:#0f1218; --surface:#171b24; --border:#2a3140; --text:#eef1f6; --muted:#8b95a8;
+	background:var(--surface);border:1px solid var(--border);border-radius:20px;
+	width:100%;max-width:280px;overflow:hidden;color:var(--text);font-size:12px;}
+.kit-top{padding:13px 14px;border-bottom:1px solid var(--border)}
+.kit-top .row1{display:flex;gap:7px;align-items:center;margin-bottom:7px}
+.kit-ico{width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#8fd41a);
+	display:grid;place-items:center;color:var(--accent-text);font-weight:800;font-size:10px}
+.kit-top .mu{color:var(--muted);font-size:11px}
+.kit-top h3{font-size:14.5px;margin:0 0 2px;font-weight:800;color:var(--text)}
+.kit-body{padding:11px 13px;display:flex;flex-direction:column;gap:9px}
+.kit-card{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:9px 10px}
+.kit-card .kr{font-size:11px;display:flex;justify-content:space-between;margin-bottom:3px;color:var(--muted)}
+.kit-card .kr:last-child{margin-bottom:0}
+.kit-card .kr strong{color:var(--text);font-weight:700}
+.kit-pdf{display:flex;gap:8px;align-items:center}
+.kit-pdf .ic{width:32px;height:32px;border-radius:7px;background:var(--accent-dim);color:var(--accent);
+	display:grid;place-items:center;font-weight:800;font-size:9px}
+.kit-signlbl{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.kit-pad{background:#fff;border:2px dashed #4a5568;border-radius:9px;height:80px;
+	display:grid;place-items:center;color:#666;font-size:11px}
+.kit-consent{font-size:10px;color:var(--muted)}
+.kit-btn{background:var(--accent);color:var(--accent-text);border:0;border-radius:9px;padding:11px;
+	font-size:12px;font-weight:800;text-align:center}
+.kit-lock{text-align:center;font-size:9.5px;color:var(--muted)}
+
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin-bottom:10px}
+table.data{border-collapse:collapse;width:100%;font-size:12.5px;margin:22px 0 0}
+table.data th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#83817a;padding:0 12px 8px 0;border-bottom:1px solid #dedcd7}
+table.data td{padding:8px 12px 8px 0;border-bottom:1px solid #e9e8e4;vertical-align:top}
+table.data tr:last-child td{border-bottom:0}
+.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:6px;border:1px solid rgba(0,0,0,.15)}
+footer{font-size:12.5px;color:#5c5a55;margin-top:30px;padding-top:18px;border-top:1px solid #dedcd7}
+footer p{margin:0 0 8px}
+</style>
+</head>
+<body>
+<main>
+	<h1>Δημόσια σελίδα υπογραφής — σημερινό vs kit A (B5)</h1>
+	<p class="lead">
+		§1.8: καμία αλλαγή εμφάνισης χωρίς σύγκριση δίπλα-δίπλα πρώτα. Η σελίδα
+		υπογραφής είναι η μόνη οθόνη που βλέπει ο <b>πελάτης</b>, όχι ο συνεργάτης —
+		και είναι, σκόπιμα, <b>τρίτο ανεξάρτητο σύστημα σχεδίασης</b>: ούτε το σκούρο
+		κέλυφος `.ecrm` του CRM, ούτε το kit. Η ταυτότητά της (λευκή κάρτα σε σκούρο
+		φόντο, πράσινο accent, Manrope) εγκρίθηκε ρητά στις 18-20/08 (CHANGELOG 63,
+		68) — <b>δεν είναι παλιό ή ξεχασμένο σχέδιο</b>, είναι η τρέχουσα απόφαση.
+		Το kit A έχει τη δική του εκδοχή της ίδιας οθόνης (screen B5), σε λάιμ accent
+		πάνω σε σκούρο σύνολο. Και τα δύο panels παρακάτω είναι πιστά αντίγραφα
+		πραγματικών τιμών CSS — του live `class-ecrm-tracking.php` αριστερά, του
+		`docs/UI-UX-KIT.html` δεξιά.
+	</p>
+
+	<div class="pair">
+		<div class="col">
+			<h2>Σημερινό — ζωντανό<small>class-ecrm-tracking.php, ταυτότητα 18-20/08</small></h2>
+			<div class="stage stage--live">
+				<div class="live-card">
+					<div class="live-head">
+						<h3>Παρακολούθηση Αίτησης</h3>
+						<p>Protergia</p>
+					</div>
+					<div class="live-body">
+						<div class="live-row"><span>Κωδικός</span><b>#CR-10482</b></div>
+						<div class="live-row"><span>Πάροχος</span><b>Protergia</b></div>
+						<div class="live-row"><span>Πελάτης</span><b>Μ. Παπαδοπούλου</b></div>
+						<div class="live-row"><span>Ενημέρωση</span><b>25/08 14:32</b></div>
+						<div style="text-align:center"><span class="live-badge">Αναμονή υπογραφής</span></div>
+						<div class="live-sign">
+							<h4>Υπογραφή σύμβασης</h4>
+							<p class="lead2">Υπογράψτε στο πλαίσιο με το δάχτυλο ή το ποντίκι.</p>
+							<div class="live-pad">Σχεδιάστε την υπογραφή σας</div>
+							<label class="live-consent"><input type="checkbox" disabled> Διάβασα το έντυπο και συμφωνώ</label>
+							<div class="live-btn">Υπογραφή &amp; Αποστολή</div>
+						</div>
+					</div>
+					<div class="live-foot">Ασφαλής σύνδεσμος παρακολούθησης</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col">
+			<h2>Kit A · UI-UX-KIT.html<small>#p-public — screen B5</small></h2>
+			<div class="stage stage--kit">
+				<div class="kit-phone">
+					<div class="kit-top">
+						<div class="row1">
+							<div class="kit-ico">Ε</div>
+							<span class="mu">Ασφαλής υπογραφή</span>
+						</div>
+						<h3>Υπογραφή αίτησης</h3>
+						<p class="mu">Protergia · Value 24μηνο · #CR-10482</p>
+					</div>
+					<div class="kit-body">
+						<div class="kit-card">
+							<p class="kr"><span>Πελάτης</span><strong>Μ. Παπαδοπούλου</strong></p>
+							<p class="kr"><span>ΑΦΜ</span><strong>123456789</strong></p>
+							<p class="kr"><span>Λήξη link</span><strong>48 ώρες</strong></p>
+						</div>
+						<div class="kit-card kit-pdf">
+							<div class="ic">PDF</div>
+							<div><strong style="font-size:11.5px">Δες το έντυπο</strong><br><span class="mu" style="font-size:10.5px">3 σελίδες</span></div>
+						</div>
+						<div>
+							<p class="kit-signlbl">Η υπογραφή σου</p>
+							<div class="kit-pad">Υπόγραψε με το δάχτυλο</div>
+						</div>
+						<p class="kit-consent">☐ Διάβασα το έντυπο και συμφωνώ</p>
+						<div class="kit-btn">Ολοκλήρωση υπογραφής</div>
+						<p class="kit-lock">🔒 Μία χρήση · κρυπτογραφημένη σύνδεση</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<table class="data">
+		<thead><tr><th>Στοιχείο</th><th>Σημερινό</th><th>Kit A (B5)</th></tr></thead>
+		<tbody>
+			<tr><td>Καμβάς</td><td><span class="swatch" style="background:#141412"></span>#141412, σκούρο</td><td><span class="swatch" style="background:#0f1218"></span>#0f1218, σκούρο</td></tr>
+			<tr><td>Κάρτα</td><td><span class="swatch" style="background:#fff;border-color:#ccc"></span>λευκή #fff</td><td><span class="swatch" style="background:#171b24"></span>#171b24, σκούρα — η κάρτα ΔΕΝ αλλάζει χρώμα από τον καμβά</td></tr>
+			<tr><td>Accent</td><td><span class="swatch" style="background:#0e8610"></span>#0e8610 πράσινο (ρύθμιση διαχειριστή)</td><td><span class="swatch" style="background:#c2f04a"></span>#c2f04a λάιμ, σταθερό token</td></tr>
+			<tr><td>Γραμματοσειρά</td><td>Manrope, τοπικά (GDPR — CHANGELOG 15)</td><td>Segoe UI / system-ui στο ίδιο το kit αρχείο</td></tr>
+			<tr><td>Κείμενο σε accent</td><td>λευκό `#fff` σταθερό στο `.btn--sign`</td><td>`--accent-text:#1a2208` σκούρο — το λάιμ είναι πολύ ανοιχτό για λευκό κείμενο</td></tr>
+			<tr><td>Πλαίσιο πελάτη</td><td>γραμμές `.row` (ετικέτα/τιμή) πάνω σε λευκή κάρτα</td><td>ίδιο σχήμα ετικέτα/τιμή, μέσα σε σκουρότερη «εσωτερική» κάρτα (`--bg`, όχι `--surface`)</td></tr>
+			<tr><td>Έντυπο σύμβασης</td><td>δεν εμφανίζεται ως ξεχωριστό στοιχείο σήμερα</td><td>κάρτα «PDF» με προεπισκόπηση πριν το πλαίσιο υπογραφής</td></tr>
+		</tbody>
+	</table>
+
+	<footer>
+		<p><b>Τι ΔΕΝ αλλάζει σε καμία περίπτωση, όποια κι αν διαλέξεις:</b> το μελάνι
+		της υπογραφής διαβάζεται από `--ink`/αντίστοιχο token τη στιγμή της
+		υπογραφής και αποθηκεύεται μέσα στο PDF — καμία ήδη-υπογεγραμμένη σύμβαση
+		δεν ξαναγράφεται, ό,τι κι αν αλλάξει το CSS. Το ουδέτερο (όχι πράσινο) badge
+		κατάστασης και το ξεχωριστό κόκκινο μόνο για ακύρωση (CHANGELOG 68) μένουν
+		σε κάθε περίπτωση — είναι απόφαση περιεχομένου, όχι χρώματος ταυτότητας.</p>
+		<p>Η επιλογή εδώ είναι: (α) μένει όπως είναι — τρίτη, σκόπιμα διαφορετική
+		ταυτότητα, ήδη εγκεκριμένη· ή (β) ευθυγραμμίζεται με το λάιμ accent /
+		σκούρα εσωτερική κάρτα του kit A. Δεν υπάρχει σωστή απάντηση εκ των
+		προτέρων — και οι δύο δουλεύουν, η ερώτηση είναι ποια ταυτότητα θέλεις να
+		βλέπει ο πελάτης τη στιγμή που υπογράφει.</p>
+	</footer>
+</main>
+</body>
+</html>
