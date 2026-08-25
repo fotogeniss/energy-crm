@@ -7,6 +7,96 @@
 
 ---
 
+## 2026-08-25 (135)
+
+### Βεβαίωση εκκαθάρισης PDF για συνεργάτη — build queue 11 (frontend)
+
+§1.8 mockup (`docs/UI-PAYOUT-STATEMENT.html`) εγκρίθηκε: νέα κάρτα, όχι
+αλλαγή στο υπάρχον «Ιστορικό εκκαθαρίσεων». Ίδιος εναλλάκτης «Δικά
+μου/Ομάδας» με την υπόλοιπη οθόνη (ρωτήθηκε ρητά στο mockup — όχι
+δεύτερος, ξεχωριστός εναλλάκτης μόνο για την κάρτα).
+
+**`public/assets/ecrm-view-commissions.js`:** το `loadCommissions()`
+τώρα φέρνει `/commissions` ΚΑΙ `/payouts` παράλληλα (`Promise.all`), ίδιο
+`commScope`. Νέα κάρτα «Βεβαιώσεις εκκαθάρισης» κάτω από το ιστορικό:
+Περίοδος/Συμβάσεις (`ecrm-col-sec`, κρύβεται σε κινητό)/Κατάσταση/Ποσό/
+κουμπί PDF ανά γραμμή. Σε scope «Ομάδας» κάθε γραμμή δείχνει και το
+όνομα του συνεργάτη κάτω από την περίοδο.
+
+Το κουμπί λήψης (`downloadStatement()`) είναι το ίδιο μοτίβο b64→Blob
+με το `downloadBinary()` του `ecrm-view-detail.js` — ξεχωριστή μικρή
+συνάρτηση εδώ γιατί χρειάζεται ανά-γραμμή κουμπί, όχι ένα μόνο κουμπί
+οθόνης, οπότε η υπογραφή διαφέρει ελαφρώς. Καμία στήλη κατάστασης δεν
+μπλοκάρει το κουμπί — μια εκκρεμής παρτίδα κατεβάζει κανονικά, η ίδια
+συμπεριφορά με το wp-admin (δες (134)).
+
+Καμία αλλαγή backend σε αυτό το πέρασμα — μόνο κατανάλωση του `/payouts`
+που ήδη υπήρχε από την (134).
+
+`composer check:all`: phpcs 269/269, phpstan 0 σφάλματα (149/149), unit
+901/901 (1 skipped), integration 363/363 -- ίδιο τρέξιμο με την (134),
+μετά τη διόρθωση του CloseBraceAfterBody.
+
+---
+
+## 2026-08-25 (134)
+
+### Βεβαίωση εκκαθάρισης PDF για συνεργάτη — build queue 11 (backend)
+
+Μόνο το backend σε αυτό το πέρασμα. Καμία οθόνη ακόμα δεν καλεί τη νέα
+διαδρομή — εκκρεμεί mockup §1.8 πριν μπει οποιοδήποτε κουμπί/λίστα στο
+frontend (`docs/UI-PAYOUT-STATEMENT.html`, στάλθηκε στον ιδιοκτήτη).
+
+**Το ρίσκο που έγραφε το build queue:** το wp-admin `ECRM_Payouts::pdf()`
+(`admin/class-ecrm-payouts.php`) είναι `admin_post` χειριστής, ελέγχει μόνο
+`current_user_can('manage_options')`, και παίρνει το `id` από `$_GET` χωρίς
+κανένα φιλτράρισμα ανά συνεργάτη — σωστό για διαχειριστή (βλέπει όλα ούτως
+ή άλλως), αλλά αν απλώς χαλάρωνε σε `VIEW_COMMISSIONS` κάθε συνεργάτης θα
+μπορούσε να κατεβάσει τη βεβαίωση ΟΠΟΙΟΥΔΗΠΟΤΕ άλλου αλλάζοντας το `id` στο
+URL. Γι' αυτό νέα, ξεχωριστή REST διαδρομή, όχι χαλάρωση της παλιάς.
+
+**`src/Persistence/PayoutRepository.php`:** τρεις νέες μέθοδοι —
+`find()` (μία παρτίδα), `forScope()` (λίστα παρτίδων ορατών σε ένα
+`UserScope`, μέσω του ήδη υπάρχοντος `ScopeClause::forScope()`), και
+`statementLines()` (το join contracts/customers/providers + τα
+στιγμιότυπα ποσού μέσω `CommissionAmount::of()` — ίδια απόφαση με την
+οθόνη Προμηθειών και την ακύρωση παρτίδας, δες το docblock της
+`CommissionAmount`). Το `statementLines()` ήταν πριν γραμμένο ΜΟΝΟ μέσα
+στο wp-admin handler· τώρα είναι η μία κοινή θέση και για τα δύο.
+
+**`src/Http/PayoutsController.php` (νέο):** `GET /payouts` (λίστα
+παρτίδων του scope, `own`/`team` όπως το `/commissions`) και
+`GET /payouts/{id}/statement` (η ίδια PDF βεβαίωση σε base64, ίδιο μοτίβο
+με το `ContractDocumentsController::contractPdf()`). Και τα δύο πίσω από
+`Guards::needs(VIEW_COMMISSIONS)`. Ο έλεγχος εμβέλειας είναι ρητός πριν
+χτιστεί οποιοδήποτε byte PDF: `$scope->includes($payout['partner_user_id'])`
+— μια παρτίδα εκτός scope απαντά 404 «Δεν βρέθηκε», όχι 403, ώστε να μη
+λέει σε κανέναν ότι το id υπάρχει.
+
+**`src/Infrastructure/PdfRender.php` (νέο):** ο μηχανισμός
+output-buffering + κόψιμο στο `%PDF-` που προϋπήρχε ως ιδιωτική μέθοδος
+μόνο στο `ContractDocumentsController` βγήκε σε κοινή κλάση, τη στιγμή
+που χρειάστηκε ΚΑΙ εδώ — δεύτερος καλών είναι ο ορισμός του «βγες από τον
+controller» (`ContractDocumentsController` ενημερώθηκε να τον καλεί,
+καμία αλλαγή συμπεριφοράς).
+
+**`admin/class-ecrm-payouts.php::pdf()`:** αντικαταστάθηκε το inline join
+με `PayoutRepository::find()`/`statementLines()` — καμία αλλαγή
+συμπεριφοράς, μόνο μία λιγότερη γραφή του ίδιου ερωτήματος. Η νεκρή
+`settled_amount()` (χρησιμοποιούνταν μόνο εκεί) αφαιρέθηκε.
+
+**`src/Services.php`/`src/Http/ControllerFactory.php`:** καλωδίωση
+`Services::payouts()` και καταχώρηση του νέου controller, ίδιο μοτίβο με
+κάθε άλλον.
+
+`composer check:all` (έτρεξε ο ιδιοκτήτης): phpcs καθαρό (269/269 --
+μία πρώτη αστοχία PSR2.Classes.ClassDeclaration.CloseBraceAfterBody στο
+`ContractDocumentsController.php`, κενή γραμμή πριν το `}` που έμεινε από
+την αφαίρεση της `render()`, διορθώθηκε), phpstan 0 σφάλματα (149/149),
+unit 901/901 (1 skipped), integration 363/363.
+
+---
+
 ## 2026-08-25 (133)
 
 ### Δευτερεύουσες στήλες σε 9 οθόνες, κινητό — build queue 12

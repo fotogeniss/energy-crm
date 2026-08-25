@@ -52,6 +52,7 @@ use EnergyCRM\Persistence\LeadRepository;
 use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\NotificationRepository;
 use EnergyCRM\Persistence\PartnerCardRepository;
+use EnergyCRM\Persistence\PayoutRepository;
 use EnergyCRM\Persistence\ProviderRepository;
 use EnergyCRM\Persistence\TaskRepository;
 use EnergyCRM\Persistence\UnprotectedDocuments;
@@ -91,6 +92,8 @@ final class Services
     private static ?DashboardRepository $dashboard = null;
 
     private static ?CommissionRepository $commissions = null;
+
+    private static ?PayoutRepository $payouts = null;
 
     private static ?AnalyticsRepository $analytics = null;
 
@@ -209,6 +212,11 @@ final class Services
     public static function commissions(): CommissionRepository
     {
         return self::$commissions ??= new CommissionRepository();
+    }
+
+    public static function payouts(): PayoutRepository
+    {
+        return self::$payouts ??= new PayoutRepository();
     }
 
     public static function dashboard(): DashboardRepository

@@ -55,22 +55,6 @@ class ECRM_Payouts {
 		return class_exists( 'ECRM_Commissions' ) ? ECRM_Commissions::amount_for( $r ) : 0.0;
 	}
 
-	/**
-	 * Το ποσό με το οποίο μπήκε η σύμβαση στην παρτίδα της.
-	 *
-	 * Ο κανόνας ζει στην `Domain\Commission\CommissionAmount`, που τον ρωτούν
-	 * και οι τέσσερις που μετρούν λεφτά. Εδώ μένει μόνο το ποιος κάνει τον
-	 * ζωντανό υπολογισμό όταν δεν υπάρχει στιγμιότυπο.
-	 *
-	 * @param array<string, mixed> $r
-	 */
-	private static function settled_amount( array $r ): float {
-		return \EnergyCRM\Domain\Commission\CommissionAmount::of(
-			$r,
-			static fn( array $row ): float => self::amount( $row )
-		);
-	}
-
 	// ---------------------------------------------------------------------
 	public static function render(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { return; }
@@ -350,40 +334,20 @@ class ECRM_Payouts {
 	public static function pdf(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_payout_pdf' );
-		global $wpdb;
 		$id = (int) ( $_GET['id'] ?? 0 );
-		$pt = ECRM_DB::table( 'payouts' );
-		$b  = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$pt} WHERE id = %d", $id ), ARRAY_A );
-		if ( ! $b ) { wp_die( 'Δεν βρέθηκε.' ); }
 
-		$ct = ECRM_DB::table( 'contracts' );
-		$cu = ECRM_DB::table( 'customers' );
-		$pr = ECRM_DB::table( 'providers' );
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.code, c.provider_id, c.program_id, c.energy_type, c.category, c.status,
-			        c.payout_amount,
-			        p.name AS provider_name, cu.first_name, cu.last_name, cu.company_name
-			 FROM {$ct} c
-			 LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			 LEFT JOIN {$pr} p  ON p.id  = c.provider_id
-			 WHERE c.payout_id = %d ORDER BY c.code", $id
-		), ARRAY_A );
+		// find()/statementLines(): ίδια κλάση με τη REST βεβαίωση του συνεργάτη
+		// (build queue 11) — ένα join, όχι δύο αντίγραφα που ξεσυγχρονίζονται.
+		$repo = new \EnergyCRM\Persistence\PayoutRepository();
+		$b    = $repo->find( $id );
+		if ( ! $b ) { wp_die( 'Δεν βρέθηκε.' ); }
 
 		// Το στιγμιότυπο, όχι ο σημερινός υπολογισμός. Αυτό εδώ είναι το χαρτί
 		// που κρατάει ο συνεργάτης: αν οι γραμμές του ξαναϋπολογίζονταν με
 		// κανόνες που άλλαξαν μετά, δεν θα έβγαζαν το σύνολο που τυπώνεται
 		// στην ίδια σελίδα.
-		$lines = [];
-		foreach ( $rows as $r ) {
-			$name = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
-			$lines[] = [
-				'code'     => $r['code'] ?: '—',
-				'customer' => $name ?: '—',
-				'provider' => $r['provider_name'] ?: '—',
-				'amount'   => self::settled_amount( $r ),
-			];
-		}
-		$u = get_userdata( (int) $b['partner_user_id'] );
+		$lines = $repo->statementLines( $id );
+		$u     = get_userdata( (int) $b['partner_user_id'] );
 
 		try {
 			$bytes = ECRM_PDF::build_statement( [

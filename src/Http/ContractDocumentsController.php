@@ -21,10 +21,9 @@ use ECRM_PDF;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Infrastructure\ContractDocuments;
-use EnergyCRM\Infrastructure\TimeLimit;
+use EnergyCRM\Infrastructure\PdfRender;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\FileRepository;
-use Throwable;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -116,7 +115,7 @@ final class ContractDocumentsController implements Controller
             );
         }
 
-        $bytes = self::render(static fn (): string => ECRM_PDF::build($row));
+        $bytes = PdfRender::bytes(static fn (): string => ECRM_PDF::build($row));
 
         if ($bytes === null) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Σφάλμα δημιουργίας PDF.'], 500);
@@ -189,43 +188,5 @@ final class ContractDocumentsController implements Controller
             'count'    => count($data['rows']),
             'b64'      => base64_encode(ECRM_Export::build_xlsx($data['headers'], $data['rows'])),
         ], 200);
-    }
-
-    /**
-     * Run a PDF builder with output buffered and notices silenced.
-     *
-     * The libraries here write to stdout as they go, and a single stray notice
-     * lands in front of the PDF header and corrupts the file. Anything before
-     * "%PDF-" is therefore discarded rather than trusted.
-     *
-     * @param callable(): string $build
-     */
-    private static function render(callable $build): ?string
-    {
-        TimeLimit::atLeast(60);
-        $reporting = error_reporting(0);
-
-        // Buffering opens outside the try and closes in finally, so it is
-        // balanced on every path. Guarding with ob_get_level() would only be
-        // papering over a start and an end that could get out of step.
-        ob_start();
-
-        try {
-            $bytes = $build();
-        } catch (Throwable) {
-            return null;
-        } finally {
-            ob_end_clean();
-            error_reporting($reporting);
-        }
-
-        $start = strpos($bytes, '%PDF-');
-
-        if ($start === false) {
-            return null;
-        }
-
-        // substr from zero returns the string unchanged, so no branch is needed.
-        return substr($bytes, $start);
     }
 }

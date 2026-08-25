@@ -100,6 +100,7 @@ final class ControllerFactory
             // Reporting.
             new DashboardController($scope, Services::dashboard()),
             new CommissionsController($scope, Services::commissions()),
+            new PayoutsController($scope, Services::payouts()),
             new AnalyticsController($scope, Services::analytics()),
 
             // Work management.
