@@ -46,11 +46,13 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
 use WP_REST_Request;
 use WP_REST_Response;
+use WP_User;
 
 final class BulkRequestPayloadTest extends IntegrationTestCase
 {
@@ -66,9 +68,12 @@ final class BulkRequestPayloadTest extends IntegrationTestCase
 
         $this->contracts = new ContractRepository();
 
-        // Συνεργάτης: οι τέσσερις μαζικές ενέργειες θέλουν capabilities
-        // (ASSIGN_CONTRACT, DELETE_CONTRACT, EXPORT_DATA) που το matrix()
-        // δίνει μόνο σε αυτόν τον ρόλο.
+        // Συνεργάτης: τρεις από τις τέσσερις μαζικές ενέργειες θέλουν
+        // capabilities (ASSIGN_CONTRACT, EXPORT_DATA) που το matrix() δίνει
+        // σε αυτόν τον ρόλο. Η «Διαγραφή» ΔΕΝ είναι πια μία απ' αυτές — ο
+        // Συνεργάτης έχασε το DELETE_CONTRACT (v3, 25/08, Roles::matrix()) —
+        // γι' αυτό το test της διαγραφής δίνει το capability απευθείας στον
+        // χρήστη παρακάτω, αντί να το περιμένει από τον ρόλο.
         $this->partner = $this->makeCrmUser(Roles::PARTNER);
 
         wp_set_current_user($this->partner);
@@ -131,6 +136,14 @@ final class BulkRequestPayloadTest extends IntegrationTestCase
     public function testTheDeleteBodyOmitsValueEntirelyAndIsStillAccepted(): void
     {
         $contractId = $this->aContract();
+
+        // Το ερώτημα εδώ είναι το σχήμα του body, όχι ποιος επιτρέπεται να
+        // σβήσει — το capability δίνεται απευθείας ώστε το test να μην
+        // μπλοκάρει στο permission_callback πριν καν φτάσει στον validator
+        // που δοκιμάζεται.
+        $user = get_user_by('id', $this->partner);
+        self::assertInstanceOf(WP_User::class, $user);
+        $user->add_cap(Capability::DELETE_CONTRACT);
 
         $response = $this->bulk(['ids' => [$contractId], 'action' => 'delete']);
 

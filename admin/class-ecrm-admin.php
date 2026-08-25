@@ -31,6 +31,14 @@ class ECRM_Admin {
 	 */
 	const DEFAULT_ACCENT = '#c2f04a';
 
+	/**
+	 * Το hook suffix της ίδιας της σελίδας Ρυθμίσεων, από την add_menu_page().
+	 * Χρειάζεται στο enqueue_skin() για να φορτώσει το σκούρο skin ΜΟΝΟ εδώ —
+	 * ένα strpos('energy-crm') θα έπιανε και τις Προμήθειες/GDPR/Βάση Γνώσης/
+	 * Εκκαθαρίσεις, σελίδες που δεν αλλάζουν σε αυτή την παρτίδα.
+	 */
+	private static string $hook = '';
+
 	public static function init(): void {
 		// Priority 9: the parent menu must exist in $menu before any submenu is
 		// attached to it. WordPress only creates the implicit "back to parent"
@@ -39,10 +47,11 @@ class ECRM_Admin {
 		add_action( 'admin_menu', [ __CLASS__, 'menu' ], 9 );
 		add_action( 'admin_init', [ __CLASS__, 'settings' ] );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'media_enqueue' ] );
+		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_skin' ] );
 	}
 
 	public static function menu(): void {
-		add_menu_page(
+		$hook = add_menu_page(
 			'Energy CRM',
 			'Energy CRM',
 			'manage_options',
@@ -51,6 +60,8 @@ class ECRM_Admin {
 			'dashicons-buddicons-buddypress-logo',
 			56
 		);
+
+		self::$hook = $hook !== false ? $hook : '';
 
 		// Declared explicitly rather than relying on the implicit first entry
 		// WordPress adds: that one is conditional on registration order, and it
@@ -64,6 +75,25 @@ class ECRM_Admin {
 			'energy-crm',
 			[ __CLASS__, 'render_settings' ]
 		);
+	}
+
+	/**
+	 * Ευθυγράμμιση με το κέλυφος `.ecrm`, 2026-08-25 — HANDOVER §6γ, κενό (2).
+	 * Σύγκριση δίπλα-δίπλα κατά §1.8 πρώτα (`docs/UI-HEALTH-SETTINGS-VS-
+	 * KIT.html`). Τα ίδια δύο αρχεία CSS του frontend κελύφους + ένα τρίτο
+	 * (`ecrm-admin-skin.css`) που ξαναχρωματίζει τα στάνταρ στοιχεία του
+	 * wp-admin (`form-table`, `input`, `.notice`, `.button`) με τα ΙΔΙΑ tokens
+	 * — δες το σχόλιο στην κορυφή εκείνου του αρχείου για το γιατί η markup
+	 * αυτής της φόρμας ΔΕΝ ξαναγράφτηκε.
+	 */
+	public static function enqueue_skin( string $hook ): void {
+		if ( self::$hook === '' || $hook !== self::$hook ) {
+			return;
+		}
+
+		wp_enqueue_style( 'ecrm-form', ECRM_URL . 'public/assets/ecrm-form.css', [], ECRM_Shortcodes::asset_version( 'ecrm-form.css' ) );
+		wp_enqueue_style( 'ecrm-app', ECRM_URL . 'public/assets/ecrm-app.css', [ 'ecrm-form' ], ECRM_Shortcodes::asset_version( 'ecrm-app.css' ) );
+		wp_enqueue_style( 'ecrm-admin-skin', ECRM_URL . 'public/assets/ecrm-admin-skin.css', [ 'ecrm-app' ], ECRM_Shortcodes::asset_version( 'ecrm-admin-skin.css' ) );
 	}
 
 	/**
@@ -181,8 +211,9 @@ class ECRM_Admin {
 		$model   = ECRM_Extractor::model();
 		$masked  = $secrets->mask( 'claude_api_key' );
 		$pinned  = $secrets->isPinned( 'claude_api_key' );
+		$theme   = \EnergyCRM\Infrastructure\ThemePreference::forUser( get_current_user_id() );
 		?>
-		<div class="wrap">
+		<div class="wrap ecrm ecrm-adminwrap" data-theme="<?php echo esc_attr( $theme ); ?>">
 			<h1>Energy CRM — Ρυθμίσεις</h1>
 			<p>Η AI εξαγωγή στοιχείων από έγγραφα χρησιμοποιεί το Claude API.</p>
 			<?php if ( ! $pinned ) : ?>

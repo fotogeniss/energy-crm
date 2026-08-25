@@ -222,8 +222,14 @@ final class ContractRestAccessTest extends IntegrationTestCase
         );
     }
 
-    /** A seller may sell, not delete: the capability gate answers first. */
-    public function testASellerCannotDeleteEvenTheirOwnContract(): void
+    /**
+     * (v5, 25/08) Ρητή απόφαση ιδιοκτήτη: «ο καθένας σβήνει τα δικά του».
+     * Ο Πωλητής πλέον ΕΧΕΙ DELETE_CONTRACT εξ ορισμού (Roles::matrix()) — το
+     * capability πέρασε από «μόνο ο διαχειριστής» σε «ο καθένας εντός του
+     * scope του». Το τεστ που υπήρχε εδώ πριν έλεγχε το αντίστροφο, ήταν
+     * σωστό τότε και λάθος τώρα.
+     */
+    public function testASellerCanDeleteTheirOwnContract(): void
     {
         wp_set_current_user($this->alice);
 
@@ -231,21 +237,55 @@ final class ContractRestAccessTest extends IntegrationTestCase
             new WP_REST_Request('DELETE', '/ecrm/v1/contracts/' . $this->contractId)
         );
 
-        self::assertSame(403, $response->get_status());
-        self::assertTrue($this->contractStillExists());
+        self::assertSame(200, $response->get_status());
+        self::assertFalse($this->contractStillExists());
+    }
+
+    /**
+     * Το capability από μόνο του δεν είναι το σύνορο — το scope είναι. Η
+     * Alice έχει πλέον ecrm_delete_contract σαν Πωλητής, αλλά η σύμβαση εδώ
+     * είναι του Bob, εκτός downline της· πρέπει να σταματήσει εκεί, με 404
+     * (όχι 403) για τον ίδιο λόγο όπως και στο ανάγνωσμα: ένα 403 θα
+     * επιβεβαίωνε ότι η σύμβαση υπάρχει.
+     */
+    public function testASellerCannotDeleteAnotherSellersContract(): void
+    {
+        $bobsContract = $this->contracts->create(
+            ['status' => 'new', 'supply_number' => '10987654321', 'energy_type' => 'power'],
+            UserScope::forSelf($this->bob)
+        );
+
+        wp_set_current_user($this->alice);
+
+        self::assertTrue(
+            current_user_can('ecrm_delete_contract'),
+            'This test is meaningless unless the capability gate is passed.'
+        );
+
+        $response = rest_do_request(
+            new WP_REST_Request('DELETE', '/ecrm/v1/contracts/' . $bobsContract)
+        );
+
+        self::assertSame(404, $response->get_status());
     }
 
     /**
      * The capability and the scope are two different gates, and this is the one
      * that only the second can stop.
      *
-     * A Συνεργάτης genuinely holds ecrm_delete_contract, so the permission
-     * callback lets them through. What must refuse them is the scope inside the
-     * handler — and a 404, not a 403, for the same reason as above.
+     * (v5, 25/08) A Συνεργάτης holds ecrm_delete_contract by default again
+     * (Roles::matrix()) — no add_cap() needed to prove the point anymore. What
+     * this test asks is more fundamental: EVEN WITH the capability, the scope
+     * check inside the handler stops them outside their own downline. That is
+     * the real boundary; the capability was never it on its own — see also
+     * testASellerCannotDeleteAnotherSellersContract for the same shape one
+     * role down.
      */
     public function testAPartnerWithTheCapabilityStillCannotDeleteOutsideTheirScope(): void
     {
-        wp_set_current_user($this->makeCrmUser(Roles::PARTNER));
+        $userId = $this->makeCrmUser(Roles::PARTNER);
+
+        wp_set_current_user($userId);
 
         self::assertTrue(
             current_user_can('ecrm_delete_contract'),

@@ -1,0 +1,150 @@
+/* Energy CRM — «δέρμα» του κελύφους `.ecrm` πάνω σε δύο σελίδες wp-admin:
+ * Υγεία (src/Admin/HealthPage.php) και Ρυθμίσεις (admin/class-ecrm-admin.php).
+ *
+ * HANDOVER §6γ, κενό (2): οι δύο αυτές σελίδες ήταν καθαρό wp-admin, χωρίς
+ * καμία σχέση με το κέλυφος `.ecrm`. Σύγκριση δίπλα-δίπλα κατά §1.8 πρώτα
+ * (`docs/UI-HEALTH-SETTINGS-VS-KIT.html`) — ο ιδιοκτήτης προτίμησε το
+ * κέλυφος.
+ *
+ * ## Γιατί ΔΕΝ ξαναγράφτηκε όλη η markup των Ρυθμίσεων
+ *
+ * Η Υγεία (185 γραμμές, μία loop) ξαναγράφτηκε πλήρως σε `.ecrm-card`/
+ * `.ecrm-kpis`/`.ecrm-badge--*` — χαμηλό ρίσκο. Οι Ρυθμίσεις (439 γραμμές, 6
+ * ενότητες, 25+ πεδία, βρόχος SMS-templates ανά κατάσταση, matrix
+ * δικαιολογητικών, media picker JS, δοκιμαστική αποστολή AJAX) ΔΕΝ
+ * ξαναγράφτηκαν σε νέα markup: το ρίσκο να σπάσει ένα `name=` attribute μέσα
+ * σε 25+ πεδία, ή η λούπα `foreach ($statuses...)`, ή το `foreach ($kinds...)`
+ * matrix, είναι πολύ μεγαλύτερο από το όφελος μιας πιο «καθαρής» markup.
+ *
+ * Αντ' αυτού: η markup ΔΕΝ άλλαξε ούτε μία γραμμή — μόνο δύο κλάσεις +
+ * `data-theme` στο ίδιο το `<div class="wrap">` (`class="wrap ecrm
+ * ecrm-adminwrap" data-theme="...">`). Αυτό το φύλλο ξαναχρωματίζει τα
+ * ΣΤΑΝΤΑΡ στοιχεία του wp-admin (`form-table`, `input`, `select`, `textarea`,
+ * `.notice`, `table.widefat`, `.button`) με τα ΙΔΙΑ tokens του `.ecrm[data-
+ * theme="dark"]` — όχι νέο σύστημα χρωμάτων, απλώς εφαρμοσμένο σε στοιχεία
+ * που δεν έχουν δικές τους `.ecrm-*` κλάσεις. Επιλέκτες scoped ΑΠΟΚΛΕΙΣΤΙΚΑ
+ * κάτω από `.ecrm-adminwrap`, ώστε καμία άλλη σελίδα wp-admin (Προμήθειες,
+ * GDPR, Βάση Γνώσης, Εκκαθαρίσεις) να μην επηρεαστεί σιωπηλά.
+ *
+ * Class selectors εδώ (π.χ. `.ecrm-adminwrap input[type=text]`) νικούν πάντα
+ * τους type selectors του πυρήνα WordPress (`input[type=text]` σκέτο) στην
+ * ειδικότητα — ανεξάρτητα από τη σειρά φόρτωσης, οπότε δεν χρειάζεται
+ * `!important` πουθενά σε αυτό το αρχείο.
+ *
+ * ## Προσθήκη 2026-08-25, μετά το πρώτο screenshot: «γύρω-γύρω είναι άσπρο»
+ *
+ * Η πρώτη εκδοχή έβαφε σκούρο ΜΟΝΟ το `.ecrm-adminwrap` — ένα κουτί μέσα στη
+ * σελίδα. Το `#wpbody-content` γύρω του (και το core notice της ενημέρωσης
+ * WordPress, πάνω-πάνω) έμεναν στο ανοιχτόχρωμο φόντο του wp-admin
+ * (`#f0f0f1`), οπότε φαινόταν σαν σκούρα κάρτα πάνω σε λευκό, όχι σκούρος
+ * καμβάς όπως στο κιτ. Διόρθωση: βάφεται ολόκληρο το φόντο πίσω από το
+ * περιεχόμενο, όχι μόνο το κουτί — ασφαλές να γίνει με απλούς selectors
+ * (`#wpbody-content` κ.λπ., χωρίς `.ecrm-adminwrap` μπροστά) ΓΙΑΤΙ αυτό το
+ * φύλλο έτσι κι αλλιώς φορτώνει μόνο σε αυτές τις δύο σελίδες (βλ. το
+ * hook-suffix scoping στο `HealthPage::enqueueSkin()` / `ECRM_Admin::
+ * enqueue_skin()`) — καμία άλλη σελίδα wp-admin δεν το βλέπει ποτέ.
+ */
+
+html.wp-toolbar, #wpcontent, #wpbody, #wpbody-content { background: var(--bg); }
+
+/* Το core notice ενημέρωσης (π.χ. «WordPress 7.1 is available») ζει ΕΞΩ από
+ * το `.ecrm-adminwrap` — πάνω απ' αυτό, μέσα στο `#wpbody-content`. Το
+ * `.ecrm-adminwrap .notice` παρακάτω δεν το πιάνει· χωρίς αυτό εδώ θα έμενε
+ * η μοναδική λευκή πινελιά στη σελίδα. */
+#wpbody-content > .notice,
+#wpbody-content > #update-nag {
+	background: var(--surface); border-color: var(--line); color: var(--ink); box-shadow: none;
+}
+#wpbody-content > .notice a,
+#wpbody-content > #update-nag a { color: var(--accent); }
+
+.ecrm-adminwrap {
+	background: var(--bg);
+	border-radius: 16px;
+	padding: 20px 24px 26px;
+	color: var(--ink);
+	max-width: 1040px;
+}
+
+.ecrm-adminwrap h1 { color: var(--navy); font-size: var(--fs-22); margin-bottom: 4px; }
+.ecrm-adminwrap > p { color: var(--muted); font-size: var(--fs-13); }
+
+/* Οι ενότητες `<h2>` γίνονται διαχωριστικά καρτών: γραμμή από πάνω, όχι
+ * γκρι φόντο — ίδια λογική με το `.ecrm-step` (μικρά, κεφαλαία) αλλά χωρίς να
+ * αλλάξει η markup σε πραγματικά `.ecrm-card` blocks. */
+.ecrm-adminwrap h2 {
+	color: var(--navy); font-size: var(--fs-15); font-weight: 700;
+	border-top: 1px solid var(--line); margin: 26px 0 12px; padding-top: 20px;
+}
+.ecrm-adminwrap h2:first-of-type { border-top: 0; margin-top: 4px; padding-top: 0; }
+.ecrm-adminwrap h3 {
+	color: var(--muted-strong); font-size: var(--fs-13); font-weight: 700;
+	text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 6px;
+}
+
+.ecrm-adminwrap table.form-table th {
+	color: var(--muted); font-weight: 600; font-size: var(--fs-13-5);
+}
+.ecrm-adminwrap table.form-table td { color: var(--ink); }
+.ecrm-adminwrap .description { color: var(--muted); }
+.ecrm-adminwrap code {
+	background: var(--surface-2); color: var(--navy-soft); border-radius: 4px; padding: 1px 5px;
+}
+
+.ecrm-adminwrap input[type="text"],
+.ecrm-adminwrap input[type="password"],
+.ecrm-adminwrap input[type="url"],
+.ecrm-adminwrap input[type="number"],
+.ecrm-adminwrap select,
+.ecrm-adminwrap textarea {
+	background: var(--surface-2); border: 1px solid var(--line); color: var(--ink);
+	border-radius: 8px; padding: 6px 9px;
+}
+.ecrm-adminwrap input[type="text"]:focus,
+.ecrm-adminwrap input[type="password"]:focus,
+.ecrm-adminwrap input[type="url"]:focus,
+.ecrm-adminwrap input[type="number"]:focus,
+.ecrm-adminwrap select:focus,
+.ecrm-adminwrap textarea:focus {
+	border-color: var(--amber); box-shadow: none; outline: none;
+}
+/* Το checkbox matrix δικαιολογητικών (`required_docs_map`) και τα
+ * checkboxes ειδοποιήσεων/SMS-per-status ΔΕΝ παίρνουν το παραπάνω φόντο —
+ * είναι `type=checkbox`, εκτός των παραπάνω selectors ρητά, ώστε να μείνουν
+ * το φυσικό native στοιχείο (ελέγχθηκε ήδη η αντίθεση από το ίδιο το OS/
+ * browser, δεν χρειάζεται νέο skin). */
+.ecrm-adminwrap input[type="checkbox"] { accent-color: var(--accent); }
+
+.ecrm-adminwrap .notice {
+	background: var(--surface); border-left-color: var(--st-active); box-shadow: none;
+}
+.ecrm-adminwrap .notice-error { border-left-color: var(--st-cancel); }
+.ecrm-adminwrap .notice-info { border-left-color: var(--st-routed); }
+.ecrm-adminwrap .notice p { color: var(--ink); }
+
+.ecrm-adminwrap table.widefat {
+	background: var(--surface); border-color: var(--line-card); color: var(--ink);
+}
+.ecrm-adminwrap table.widefat th { background: var(--bg); color: var(--muted); border-color: var(--line-card); }
+.ecrm-adminwrap table.widefat td { border-color: var(--line-soft); color: var(--ink); }
+.ecrm-adminwrap table.widefat.striped > tbody > tr:nth-child(odd) { background: var(--surface-2); }
+
+.ecrm-adminwrap hr { border-color: var(--line); }
+
+/* Το κουμπί «Αποθήκευση» (submit_button()) και το «Επιλογή» του logo παίρνουν
+ * το πράσινο accent του CRM — απόφαση ιδιοκτήτη 25/08, ίδιο μοτίβο ευθυγράμ-
+ * μισης με τα υπόλοιπα batches της ημέρας. Το «Αποστολή δοκιμής» μένει
+ * δευτερεύον (`.button` απλό, χωρίς `-primary`) — ήδη οπτικά δευτερεύον στο
+ * σημερινό, μένει έτσι. */
+.ecrm-adminwrap .button-primary {
+	background: var(--accent); border-color: var(--accent); color: var(--on-accent);
+	box-shadow: none; text-shadow: none;
+}
+.ecrm-adminwrap .button-primary:hover,
+.ecrm-adminwrap .button-primary:focus {
+	background: var(--accent-hover); border-color: var(--accent-hover); color: var(--on-accent);
+}
+.ecrm-adminwrap .button {
+	background: var(--surface); border-color: var(--line); color: var(--ink); box-shadow: none; text-shadow: none;
+}
+.ecrm-adminwrap .button:hover { border-color: var(--line-strong); color: var(--navy); }

@@ -134,6 +134,16 @@ final class ContractSaveController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.'], 404);
         }
 
+        // No customer named in the request (fresh application, or the screen
+        // did not send one) but a ΑΦΜ was typed: reuse the reachable customer
+        // row that ΑΦΜ already belongs to, rather than let create() below
+        // raise a duplicate — build queue 03, 25/08 audit. findIdByAfm() is
+        // scoped the same as every other lookup here, so this only ever
+        // resolves into a row the actor could already reach.
+        if ($customerId === 0 && isset($customer['afm']) && $customer['afm'] !== '') {
+            $customerId = $this->customers->findIdByAfm($scope, $customer['afm']);
+        }
+
         // Before anything is written, including the customer row: a refused
         // save must leave the whole request without effect. Putting this after
         // the customer update would answer 409 having already changed the

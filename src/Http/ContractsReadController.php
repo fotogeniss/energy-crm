@@ -106,7 +106,7 @@ final class ContractsReadController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
         }
 
-        $row['events'] = $this->events->forContract($id);
+        $row['events'] = $this->withActorNames($this->events->forContract($id));
         $row['files']  = array_map(
             static function (array $file): array {
                 $file['url']      = ECRM_Files::url((int) $file['id']);
@@ -317,6 +317,36 @@ final class ContractsReadController implements Controller
         }
 
         return $rows;
+    }
+
+    /**
+     * The event timeline's "who" — build queue 05, 25/08. Same shape as
+     * withOwnerNames() above, resolved separately because these ids come
+     * from `events.user_id`, not `contracts.partner_user_id`: 0 means the
+     * system did it (e.g. an automated status move), not "unknown".
+     *
+     * @param list<array<string, mixed>> $events
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function withActorNames(array $events): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map(static fn (array $e): int => (int) ($e['user_id'] ?? 0), $events)
+        )));
+
+        $names = [];
+
+        foreach ($ids === [] ? [] : get_users(['include' => $ids, 'fields' => ['ID', 'display_name']]) as $user) {
+            $names[(int) $user->ID] = $user->display_name;
+        }
+
+        foreach ($events as $index => $event) {
+            $uid = (int) ($event['user_id'] ?? 0);
+            $events[$index]['actor'] = $uid > 0 ? ($names[$uid] ?? '—') : 'Σύστημα';
+        }
+
+        return $events;
     }
 
     /**

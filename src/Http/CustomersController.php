@@ -67,6 +67,30 @@ final class CustomersController implements Controller
                 ],
             ],
         ]);
+
+        // Build queue 08, 25/08: το "Χρησιμοποίησε τα στοιχεία του" της φόρμας
+        // χρειάζεται τα πλήρη στοιχεία ενός ήδη γνωστού πελάτη, όχι μόνο τα 6
+        // πεδία του /customers (φτιαγμένο για τη λίστα). find() τα δίνει ήδη
+        // όλα, scoped — αυτό το route απλώς τα εκθέτει.
+        register_rest_route(Router::NAMESPACE, '/customers/(?P<id>\d+)', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'show'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => ['id' => ['type' => 'integer', 'required' => true]],
+        ]);
+    }
+
+    public function show(WP_REST_Request $request): WP_REST_Response
+    {
+        $customer = $this->customers->find((int) $request['id'], $this->scopes->forCurrentUser());
+
+        if ($customer === null) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.'], 404);
+        }
+
+        unset($customer['id']);
+
+        return new WP_REST_Response(['ok' => true, 'customer' => $customer], 200);
     }
 
     public function index(WP_REST_Request $request): WP_REST_Response

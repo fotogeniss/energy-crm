@@ -37,10 +37,13 @@ final class EventRepository
             return [];
         }
 
+        // user_id προστέθηκε 25/08 (build queue 05) — γραφόταν ήδη από την
+        // record() παρακάτω, απλώς δεν επιστρεφόταν ποτέ. Το «ποιος» υπήρχε
+        // στη βάση εξαρχής· η οθόνη απλώς δεν το ζητούσε.
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT type, from_status, to_status, message, created_at
+                'SELECT type, from_status, to_status, message, user_id, created_at
                  FROM %i WHERE contract_id = %d ORDER BY created_at DESC',
                 $this->table,
                 $contractId

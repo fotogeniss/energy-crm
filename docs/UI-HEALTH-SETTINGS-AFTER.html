@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Υγεία &amp; Ρυθμίσεις, μετά (25/08)</title>
+<link rel="stylesheet" href="../public/assets/ecrm-form.css">
+<link rel="stylesheet" href="../public/assets/ecrm-app.css">
+<link rel="stylesheet" href="../public/assets/ecrm-admin-skin.css">
+<style>
+	html,body{margin:0}
+	body{background:#e9e8e4;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:26px}
+	.note{max-width:1040px;margin:0 auto 20px;font-size:13px;color:#5c5a55;line-height:1.6}
+	.note b{color:#1a1a18}
+	h2.pt{max-width:1040px;margin:32px auto 0;font-size:15px;color:#5c5a55;font-weight:700}
+	.wpadminbar{max-width:1040px;margin:0 auto;background:#1d2327;color:#eee;font-size:12px;padding:6px 12px;border-radius:6px 6px 0 0}
+</style>
+</head>
+<body>
+<p class="note">
+	Αυτό φορτώνει τα ΠΡΑΓΜΑΤΙΚΑ τρία αρχεία CSS που μπήκαν στο plugin —
+	<code>ecrm-form.css</code>, <code>ecrm-app.css</code>, <code>ecrm-admin-skin.css</code> —
+	ίδια με ό,τι θα φορτώσει η σελίδα Υγεία/Ρυθμίσεις στο wp-admin. Η markup
+	των Ρυθμίσεων παρακάτω είναι <b>ακριβώς</b> η markup του πραγματικού
+	αρχείου (αντιγραμμένη, όχι ξαναγραμμένη) — το CSS κάνει όλη τη δουλειά.
+</p>
+
+<h2 class="pt">Υγεία</h2>
+<div class="wpadminbar">wp-admin · admin.php?page=energy-crm-health</div>
+<div class="wrap ecrm ecrm-adminwrap" data-theme="dark" style="border-radius:0 0 12px 12px">
+	<h1>Υγεία</h1>
+	<div class="notice notice-error"><p><strong>2</strong> έλεγχοι απέτυχαν. Δες τα κόκκινα παρακάτω.</p></div>
+	<div class="ecrm-kpis ecrm-kpis--4">
+		<div class="ecrm-kpi"><div class="ecrm-kpi__k">Απέτυχαν</div><div class="ecrm-kpi__v">2</div></div>
+		<div class="ecrm-kpi"><div class="ecrm-kpi__k">Προειδοποιήσεις</div><div class="ecrm-kpi__v">1</div></div>
+		<div class="ecrm-kpi"><div class="ecrm-kpi__k">Πέρασαν</div><div class="ecrm-kpi__v">12</div></div>
+		<div class="ecrm-kpi"><div class="ecrm-kpi__k">Σφάλματα</div><div class="ecrm-kpi__v">3</div></div>
+	</div>
+	<div class="ecrm-card"><div class="ecrm-step">Έλεγχοι</div>
+		<div class="ecrm-healthgrp">Μυστικά</div>
+		<div class="ecrm-healthrow"><span class="ecrm-healthrow__lbl">Κλειδί Claude</span><span class="ecrm-healthrow__d">ορισμένο, καρφιτσωμένο</span><span class="ecrm-badge ecrm-badge--active">OK</span></div>
+		<div class="ecrm-healthrow"><span class="ecrm-healthrow__lbl">Δικαιώματα wp-config.php</span><span class="ecrm-healthrow__d">644, πολύ χαλαρό</span><span class="ecrm-badge ecrm-badge--cancelled">Αποτυχία</span></div>
+		<div class="ecrm-healthgrp">Κρυπτογράφηση</div>
+		<div class="ecrm-healthrow"><span class="ecrm-healthrow__lbl">Κρυπτογράφηση PII</span><span class="ecrm-healthrow__d">ενεργή</span><span class="ecrm-badge ecrm-badge--active">OK</span></div>
+		<div class="ecrm-healthrow"><span class="ecrm-healthrow__lbl">Αποτύπωμα κλειδιού</span><span class="ecrm-healthrow__d">δεν ταιριάζει</span><span class="ecrm-badge ecrm-badge--pending">Έλεγξε</span></div>
+		<div class="ecrm-healthgrp">Βάση</div>
+		<div class="ecrm-healthrow"><span class="ecrm-healthrow__lbl">Migrations</span><span class="ecrm-healthrow__d">2 εκκρεμούν</span><span class="ecrm-badge ecrm-badge--cancelled">Αποτυχία</span></div>
+	</div>
+	<div class="ecrm-card" style="margin-top:16px"><div class="ecrm-step">Τελευταία τεχνικά σφάλματα</div>
+		<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Κωδικός</th><th>Πότε</th><th>Τι</th><th>Φορές</th></tr></thead>
+		<tbody><tr><td><span class="ecrm-code">ECRM-0512</span></td><td>25/08 09:14</td><td>PDF timeout</td><td>3</td></tr></tbody></table></div>
+	</div>
+	<div class="ecrm-card" style="margin-top:16px"><div class="ecrm-step">Για αποστολή</div>
+		<textarea readonly rows="4" class="ecrm-textarea" style="width:100%;font-family:ui-monospace,Menlo,monospace;font-size:12px">Energy CRM 1.11.0 — 2026-08-25
+OK    Μυστικά / Κλειδί Claude: ορισμένο
+ΛΑΘΟΣ Μυστικά / Δικαιώματα wp-config.php: 644</textarea>
+	</div>
+</div>
+
+<h2 class="pt">Ρυθμίσεις — ίδια markup με το πραγματικό αρχείο</h2>
+<div class="wpadminbar">wp-admin · admin.php?page=energy-crm</div>
+<div class="wrap ecrm ecrm-adminwrap" data-theme="dark" style="border-radius:0 0 12px 12px">
+	<h1>Energy CRM — Ρυθμίσεις</h1>
+	<p>Η AI εξαγωγή στοιχείων από έγγραφα χρησιμοποιεί το Claude API.</p>
+	<div class="notice notice-info inline"><p><strong>Προτεινόμενο:</strong> όρισε το κλειδί στο <code>wp-config.php</code> ώστε να μη βρίσκεται καθόλου στη βάση.</p></div>
+	<table class="form-table" role="presentation">
+		<tr><th scope="row"><label>Claude API key</label></th>
+			<td><input type="password" value="" class="regular-text" placeholder="sk-ant-..."></td></tr>
+		<tr><th scope="row"><label>Μοντέλο</label></th>
+			<td><input type="text" value="claude-sonnet-5" class="regular-text"></td></tr>
+	</table>
+	<h2>Εταιρεία &amp; Εμφάνιση</h2>
+	<table class="form-table" role="presentation">
+		<tr><th scope="row"><label>Επωνυμία</label></th><td><input type="text" value="Energy Solutions" class="regular-text"></td></tr>
+		<tr><th scope="row"><label>Χρώμα τόνου</label></th><td><input type="text" value="#c2f04a" class="regular-text"><p class="description">Hex χρώμα για τονισμό στις σελίδες που βλέπει ο πελάτης.</p></td></tr>
+	</table>
+	<h2>Ειδοποιήσεις &amp; Follow-up</h2>
+	<table class="form-table" role="presentation">
+		<tr><th scope="row"><label>Όριο εκκρεμότητας (ημέρες)</label></th><td><input type="number" value="5" class="small-text"></td></tr>
+		<tr><th scope="row">Email ειδοποιήσεων</th><td><label><input type="checkbox" checked> Email στον συνεργάτη όταν σύμβαση μπει σε «Εκκρεμεί»</label></td></tr>
+	</table>
+	<h2>Μηνύματα πελάτη (SMS / Viber)</h2>
+	<table class="form-table" role="presentation">
+		<tr><th scope="row"><label>Πάροχος</label></th><td><select><option>Apifon (native)</option></select></td></tr>
+		<tr><th scope="row"><label>Sender ID</label></th><td><input type="text" value="ENERGYCRM" class="regular-text"></td></tr>
+	</table>
+	<p><input type="submit" class="button button-primary" value="Αποθήκευση"></p>
+	<hr>
+	<h2>Χρήση</h2>
+	<p>Πρόσθεσε τη φόρμα Νέας Σύμβασης σε οποιαδήποτε σελίδα με το shortcode: <code>[energy_crm_app]</code></p>
+</div>
+</body>
+</html>

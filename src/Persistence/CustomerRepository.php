@@ -193,11 +193,14 @@ final class CustomerRepository
 
         $where = $scopeClause . ' (' . implode(' OR ', $match) . ')';
 
+        // cu.id προστέθηκε 25/08 (build queue 08): η οθόνη «Επαναχρησιμοποίηση
+        // πελάτη» χρειάζεται το id για να καλέσει CustomersController::show(),
+        // όχι μόνο το προειδοποιητικό κείμενο που ζητούσε ο πρώτος καλών.
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT c.code, c.status, c.supply_number, cu.afm,
+                "SELECT cu.id, c.code, c.status, c.supply_number, cu.afm,
                         cu.first_name, cu.last_name, cu.company_name
                  FROM %i cu
                  JOIN %i c ON c.customer_id = cu.id
@@ -211,6 +214,62 @@ final class CustomerRepository
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         return $this->fields->fromStorageAll($rows);
+    }
+
+    /**
+     * The reachable customer id for a given ΑΦΜ, or 0 when none matches.
+     *
+     * Used before create(), so a second application for the same ΑΦΜ updates
+     * the existing customer row instead of raising a duplicate one — found
+     * during the 25/08 audit (build queue 03): every repeat application
+     * silently created a new customer row, even though the ΑΦΜ index already
+     * existed (duplicatesOf() used it only for the free-text warning banner,
+     * never to actually resolve an id).
+     *
+     * Scoped exactly like find()/isReachable(): a ΑΦΜ already on file under a
+     * DIFFERENT partner's contracts is not returned here. Returning it would
+     * silently merge the new application into a customer row the caller
+     * cannot otherwise see or edit, handing them a read on ΑΔΤ/address they
+     * never had — the same shape of leak step 2 closed. That case is left to
+     * create() a fresh row, and to duplicatesOf() to warn about on screen.
+     */
+    public function findIdByAfm(UserScope $scope, string $afm): int
+    {
+        global $wpdb;
+
+        if ($afm === '') {
+            return 0;
+        }
+
+        $index = $this->fields->index($afm);
+
+        if ($scope->isAdministrator()) {
+            // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+            $id = $wpdb->get_var(
+                $wpdb->prepare(
+                    'SELECT id FROM %i WHERE ' . CustomerFields::INDEX_COLUMN . ' = %s LIMIT 1',
+                    [$this->table, $index]
+                )
+            );
+            // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+            return (int) $id;
+        }
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $id = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT cu.id FROM %i cu
+                 INNER JOIN %i c ON c.customer_id = cu.id
+                 WHERE cu.' . CustomerFields::INDEX_COLUMN . ' = %s
+                   AND c.partner_user_id IN (' . $scope->placeholders() . ')
+                 LIMIT 1',
+                [$this->table, $this->contractsTable, $index, ...$scope->userIds()]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return (int) $id;
     }
 
     /**

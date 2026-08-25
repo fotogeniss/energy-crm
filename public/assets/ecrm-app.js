@@ -297,7 +297,13 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 	// The three the views are allowed to call, handed over once. They are
 	// declared above rather than imported, so this is the only place the
 	// direction of the dependency is decided — see ecrm-navigate.js.
-	wire({ go: go, openDetail: openDetail, openEdit: openEdit, openPartner: openPartner });
+	wire({
+		go: go, openDetail: openDetail, openEdit: openEdit, openPartner: openPartner,
+		// Build queue 08, 25/08 — δες το docblock του openCustomerContracts()
+		// στο navigate.js: καμία ξεχωριστή οθόνη φακέλου πελάτη δεν υπάρχει,
+		// οπότε «άνοιξέ τον» σημαίνει η λίστα συμβάσεων φιλτραρισμένη στο ΑΦΜ.
+		openCustomerContracts: function (q) { setContractsFilter('', q); go('contracts'); },
+	});
 
 		// ---- boot -------------------------------------------------------------
 	// Back/forward navigation via URL hash.

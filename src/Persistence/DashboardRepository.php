@@ -16,6 +16,9 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Persistence;
 
+use ECRM_Commissions;
+use EnergyCRM\Domain\Commission\CommissionAmount;
+
 final class DashboardRepository
 {
     /**
@@ -579,7 +582,8 @@ final class DashboardRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT DISTINCT c.id, c.payout_amount
+                'SELECT DISTINCT c.id, c.payout_amount, c.provider_id, c.program_id,
+                        c.energy_type, c.category, c.status
                  FROM %i c
                  WHERE c.partner_user_id = %d AND c.status = %s
                    AND c.id IN (
@@ -599,10 +603,17 @@ final class DashboardRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
+        // Πριν 25/08 (build queue 04): διάβαζε κατευθείαν το payout_amount, που
+        // είναι NULL για κάθε σύμβαση που δεν έχει μπει ακόμα σε εκκαθάριση —
+        // δηλαδή η πλειοψηφία των «κλεισμένων τον μήνα». Το πλακίδιο έδειχνε
+        // λιγότερα χρήματα απ' όσα η ίδια η οθόνη Προμηθειών, για τις ίδιες
+        // ακριβώς συμβάσεις. Ο CommissionAmount::of() είναι το ένα σημείο που
+        // αποφασίζει «στιγμιότυπο ή ζωντανός υπολογισμός» — το ίδιο που ήδη
+        // χρησιμοποιούν CommissionsController/TeamController/AnalyticsController.
         $commission = 0.0;
 
         foreach ($rows as $row) {
-            $commission += (float) ($row['payout_amount'] ?? 0);
+            $commission += CommissionAmount::of($row, [ECRM_Commissions::class, 'amount_for']);
         }
 
         return [count($rows), $commission];

@@ -220,6 +220,19 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-mono { font-family: ui-monospace, Menlo, monospace; font-size: var(--fs-12-5); }
 .ecrm-muted { color: var(--muted); font-size: var(--fs-12); }
 
+/* ── Υγεία: γραμμές ελέγχου, ομαδοποιημένες ──
+ * Ήταν colspan-γραμμή τίτλου μέσα σε table.widefat· εδώ ετικέτα ομάδας σε
+ * σταθερή στήλη, ώστε να φαίνεται σε κάθε γραμμή όταν κάποιος σαρώνει μόνο
+ * τις κόκκινες, όχι μόνο στην πρώτη γραμμή της ομάδας της. */
+.ecrm-healthgrp { font-size: var(--fs-10); font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+	color: var(--muted); margin: 14px 0 4px; }
+.ecrm-healthgrp:first-child { margin-top: 0; }
+.ecrm-healthrow { display: flex; align-items: center; gap: 12px; padding: 7px 0;
+	border-top: 1px solid var(--line-soft); font-size: var(--fs-12-5); }
+.ecrm-healthgrp + .ecrm-healthrow { border-top: 0; }
+.ecrm-healthrow__lbl { flex: 0 0 220px; font-weight: 600; color: var(--ink); }
+.ecrm-healthrow__d { flex: 1; min-width: 0; color: var(--muted); }
+
 /* Η primary ενέργεια της γραμμής — μία λέξη που λέει ποιος έχει τη μπάλα.
    Το `is-quiet` είναι για τις καταστάσεις που ΔΕΝ περιμένουν τον συνεργάτη:
    γράφονται χωρίς περίγραμμα και σε --muted, ώστε το μάτι να πέφτει στις
@@ -1176,8 +1189,18 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	   Κατάσταση. Σήμανση με κλάση και όχι με nth-child, γιατί η στήλη
 	   «Συνεργάτης» είναι υπό συνθήκη και μετακινεί τους αριθμούς. */
 	.ecrm-table .ecrm-col-sec { display: none; }
-	.ecrm-tablewrap .ecrm-table { min-width: 0; }
-	.ecrm-tablewrap { overflow-x: visible; }
+	/* ΗΤΑΝ: min-width: 0 / overflow-x: visible, με την υπόθεση ότι κάθε
+	   πίνακας κρύβει τις δευτερεύουσες στήλες του με .ecrm-col-sec — το
+	   κάνουν μόνο 2 από τους 11 πίνακες του προϊόντος (23/08, screenshot
+	   ιδιοκτήτη: 7 στήλες σε 360px, καμία κρυμμένη, καμία κύλιση). Μέχρι να
+	   περάσει η σωστή διόρθωση (§1.8, ανά οθόνη) από τους υπόλοιπους εννέα,
+	   ο πίνακας κυλά πλάγια, όπως έκανε πάντα πριν από αυτόν τον κανόνα. */
+	.ecrm-tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+	.ecrm-tablewrap .ecrm-table { min-width: 560px; }
+	/* Πίνακας που ήδη έχασε τις δευτερεύουσες στήλες του (Συμβάσεις,
+	   Συνεργάτης) δεν χρειάζεται πλάτος που δεν έχει πια — αλλιώς κερδίζει
+	   κύλιση που δεν είχε χθες, για 3-4 στήλες που χωρούσαν άνετα. */
+	.ecrm-tablewrap:has(.ecrm-col-sec) .ecrm-table { min-width: 0; }
 	.ecrm-table th, .ecrm-table td { padding: 11px 8px; }
 	.ecrm-table th { font-size: var(--fs-10); }
 	/* Στο κινητό ο πάροχος μένει ΜΟΝΟ ως σήμα: το όνομα και το πρόγραμμα
