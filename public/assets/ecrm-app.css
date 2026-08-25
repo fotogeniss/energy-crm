@@ -1300,6 +1300,10 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-kpi__dot.is-route { background: var(--st-routed); }
 .ecrm-kpi__v { font-size: var(--fs-22); font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--navy); }
 .ecrm-kpi__f { font-size: var(--fs-12); color: var(--muted); margin-top: 8px; }
+/* Πλακίδιο με προθεσμία («N λήγουν σήμερα», «N εκπρόθεσμες») — ίδιο χρώμα με
+   το --st-pending, που ήδη σημαίνει «χρειάζεται προσοχή» παντού αλλού στην
+   εφαρμογή (κουκκίδα κατάστασης, ταινία εκκρεμότητας). */
+.ecrm-kpi__f.is-warn { color: var(--st-pending); font-weight: 600; }
 
 /* ── τι χρειάζεται εσένα ── */
 .ecrm-attnhead { display: flex; align-items: baseline; gap: 12px; }
@@ -1308,13 +1312,14 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-attn { list-style: none; margin: 6px 0 0; padding: 0; }
 .ecrm-attn li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line-soft); }
 .ecrm-attn li:first-child { border-top: none; }
-.ecrm-attn__b { width: 3px; align-self: stretch; border-radius: 2px; flex: 0 0 3px; }
-.ecrm-attn__b.is-late { background: var(--st-cancel); }
-.ecrm-attn__b.is-pend { background: var(--st-pending); }
-.ecrm-attn__b.is-mute { background: var(--fill-mute); }
 .ecrm-attn__m { flex: 1; min-width: 0; font-size: var(--fs-13-5); color: var(--ink); }
 .ecrm-attn__m b { font-weight: 600; }
 .ecrm-attn__m small { display: block; color: var(--muted); font-size: var(--fs-12); margin-top: 2px; }
+/* Στάσιμο 7+ μέρες — ίδιο σήμα με πριν (ήταν μπάρα `.ecrm-attn__b.is-late`),
+   τώρα στο ίδιο το κείμενο της ηλικίας, αφού το χρώμα της μπάρας το πήρε το
+   badge κατάστασης δίπλα. */
+.ecrm-attn__m small.is-late { color: var(--st-cancel); font-weight: 600; }
+.ecrm-attn li .ecrm-badge { flex: 0 0 auto; }
 .ecrm-attn__a { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 13px;
 	font-family: inherit; font-size: var(--fs-12-5); font-weight: 600; color: var(--navy-soft); cursor: pointer; white-space: nowrap; }
 .ecrm-attn__a:hover { border-color: var(--line-strong); color: var(--navy); }

@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<title>Dashboard: σημερινό vs kit — σύγκριση</title>
+<style>
+:root{
+	--n50:#111110; --n100:#1a1a18; --n150:#1f1f1c; --n200:#232320; --n300:#2a2926; --n400:#33322e;
+	--n500:#4d4b45; --n600:#8a887f; --n700:#a3a099; --n800:#c6c4bd; --n900:#dedcd7; --n950:#f1f1ee;
+	--p300:#6bdd6d; --p400:#16c217; --p500:#12a413; --p600:#0e8610;
+	--warn:#ffb682; --bad:#fb8a91; --info:#79afec; --ok:#8cc792;
+	--font:"Manrope","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,sans-serif;
+	--chrome:#171715;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#0b0b0a;color:var(--n900);font-family:var(--font);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto;padding:36px 24px 80px}
+.doc{max-width:920px;margin:0 auto 34px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--p400);margin-bottom:8px}
+h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
+h2{font-size:15px;margin:0 0 8px;color:var(--n950)}
+p{font-size:14px;line-height:1.65;color:var(--n800);margin:0 0 14px}
+code{background:var(--n200);border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+b{color:var(--n950)}
+.note{background:var(--n150);border:1px solid var(--n300);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--n800);margin:0 0 14px}
+.warn{background:#231a14;border:1px solid #4a3520;border-radius:10px;padding:14px 16px;font-size:13px;color:var(--warn);margin:0 0 14px}
+
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+@media (max-width:1100px){.cols2{grid-template-columns:1fr}}
+.panel{background:var(--n100);border:1px solid var(--n300);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.panel__tag{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:999px;display:inline-block;width:fit-content}
+.tag--now{background:var(--p400);color:#0b3d0c}
+.tag--kit{background:var(--n300);color:var(--n900)}
+.panel__h{font-size:15px;font-weight:700;color:var(--n950);margin:2px 0 0}
+.panel__s{font-size:12.5px;color:var(--n700);margin:-8px 0 0}
+
+/* --- κάρτες, κοινό --- */
+.card{background:var(--n150);border:1px solid var(--n300);border-radius:12px;padding:16px}
+.card__h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card__t{font-size:12px;font-weight:700;color:var(--n800);text-transform:uppercase;letter-spacing:.04em}
+.card__s{font-size:11.5px;color:var(--n700)}
+
+/* --- σημερινό: hero --- */
+.hero{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.hero__n{font-size:34px;font-weight:800;color:var(--n950);display:flex;align-items:baseline;gap:8px;letter-spacing:-.01em}
+.hero__lbl{font-size:12.5px;color:var(--n700);margin-top:2px}
+.delta{font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:2px;border-radius:6px;padding:2px 6px}
+.delta svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.4}
+.delta--up{color:var(--ok);background:#1a2a1c}
+.tier__row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;min-width:200px}
+.tier__now{font-weight:700;color:var(--n950)}
+.tier__next{color:var(--n700)}
+.meter{height:6px;background:var(--n300);border-radius:99px;overflow:hidden}
+.meter__f{height:100%;background:var(--p400);border-radius:99px}
+.tier__scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--n600);margin-top:4px}
+
+/* --- σημερινό: kpis --- */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpi{background:var(--n150);border:1px solid var(--n300);border-radius:12px;padding:14px}
+.kpi__k{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--n700);margin-bottom:6px}
+.kpi__dot{width:7px;height:7px;border-radius:99px;display:inline-block}
+.kpi__v{font-size:22px;font-weight:800;color:var(--n950)}
+.kpi__f{font-size:11px;color:var(--n700);margin-top:3px}
+
+/* --- σημερινό: todo/attention --- */
+.todo{list-style:none;margin:0;padding:0}
+.todo li{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--n300)}
+.todo li:first-child{border-top:none}
+.todo__b{width:3px;align-self:stretch;border-radius:2px;flex:0 0 3px}
+.todo__m{flex:1;min-width:0;font-size:13px;color:var(--n900)}
+.todo__m small{display:block;color:var(--n700);font-size:11.5px;margin-top:2px}
+.todo__a{border:1px solid var(--n400);background:transparent;border-radius:7px;padding:6px 12px;font-family:inherit;font-size:12px;font-weight:700;color:var(--n900);cursor:default;white-space:nowrap}
+
+/* --- σημερινό: mini chart placeholder --- */
+.minichart{height:96px;display:flex;align-items:flex-end;gap:4px;padding-top:8px}
+.minichart b{flex:1;background:linear-gradient(180deg,var(--p500),var(--p600));border-radius:3px 3px 0 0;display:block}
+.pbars{display:flex;flex-direction:column;gap:10px}
+.pbar{display:grid;grid-template-columns:78px 1fr 26px;align-items:center;gap:8px;font-size:12px}
+.pbar__t{height:8px;background:var(--n300);border-radius:99px;overflow:hidden}
+.pbar__f{height:100%;background:var(--p500);border-radius:99px}
+.pbar__v{text-align:right;color:var(--n700)}
+
+/* --- kit: stats 4-up --- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:var(--n150);border:1px solid var(--n300);border-radius:12px;padding:14px}
+.stat span{display:block;font-size:11.5px;color:var(--n700);margin-bottom:6px}
+.stat strong{display:block;font-size:24px;font-weight:800;color:var(--n950)}
+.stat em{display:block;font-style:normal;font-size:11px;color:var(--n700);margin-top:4px}
+
+/* --- kit: table --- */
+table{width:100%;border-collapse:collapse}
+td{padding:9px 0;border-top:1px solid var(--n300);font-size:12.5px}
+tr:first-child td{border-top:none}
+.person strong{display:block;color:var(--n950);font-weight:700;font-size:13px}
+.person span{display:block;color:var(--n700);font-size:11px;margin-top:1px}
+.badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;display:inline-block}
+.b-warn{background:#3f322a;color:var(--warn)}
+.b-mute{background:var(--n300);color:var(--n800)}
+.b-bad{background:#423030;color:var(--bad)}
+.b-info{background:#2e353f;color:var(--info)}
+.kitbtn{border:1px solid var(--n400);background:transparent;border-radius:7px;padding:5px 11px;font-family:inherit;font-size:11.5px;font-weight:600;color:var(--n900)}
+
+.verdict{max-width:920px;margin:44px auto 0}
+.verdict table{margin-top:8px}
+.verdict th,.verdict td{text-align:left;padding:10px 12px;font-size:13px;border:1px solid var(--n300);vertical-align:top}
+.verdict th{background:var(--n150);color:var(--n800);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+</style>
+</head>
+<body><div class="wrap">
+
+<div class="doc">
+<div class="eyebrow">energy-crm · dashboard · σύγκριση κατά §1.8 — δεν εφαρμόζεται τίποτα ακόμα</div>
+<h1>Το σημερινό dashboard δίπλα στο A1 του kit</h1>
+<p>Ζητήθηκε ευθυγράμμιση του Πίνακα με τα «τέσσερα πλακίδια» του
+<code>docs/UI-UX-KIT.html</code>. Πριν προχωρήσει οτιδήποτε: το σημερινό dashboard
+<b>δεν είναι κάτι που ξεχάστηκε</b> — είναι σκόπιμο redesign της 18/08, με δική του
+εγκεκριμένη πρόταση §1.8 (<code>docs/UI-DASHBOARD.html</code>) που ρητά απορρίπτει
+ακριβώς αυτό το σχήμα: «τέσσερα ισότιμα πλακίδια» → «αριθμούς χωρίς σύγκριση και
+χωρίς ενέργεια». Το kit ήρθε νωρίτερα (19/08 23:06 το αρχείο) και δεν ξαναείδε ποτέ
+αυτή τη διόρθωση. Και τα δύο δείχνονται εδώ <b>στα ίδια, σημερινά χρώματα</b> (σκούρο
+θέμα, πράσινο <code>#16c217</code>) ώστε η σύγκριση να είναι δομή εναντίον δομής, όχι
+παλιά παλέτα εναντίον καινούριας.</p>
+</div>
+
+<div class="cols2">
+
+  <!-- ============ ΣΗΜΕΡΙΝΟ ============ -->
+  <div class="panel">
+    <span class="panel__tag tag--now">Σημερινό — ζωντανό</span>
+    <div><div class="panel__h">Ένα ηρωικό νούμερο, με σύγκριση και ενέργεια</div>
+      <div class="panel__s">ecrm-view-dashboard.js, redesign 18/08</div></div>
+
+    <div class="card">
+      <div class="hero">
+        <div><div class="card__t" style="margin-bottom:6px">Αιτήσεις αυτόν τον μήνα</div>
+          <div class="hero__n">14<span class="delta delta--up"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>+3</span></div>
+          <div class="hero__lbl">έναντι 11 τον προηγούμενο μήνα</div></div>
+        <div>
+          <div class="tier__row"><span class="tier__now">Bronze</span><span class="tier__next">26 ακόμα για Silver</span></div>
+          <div class="meter"><div class="meter__f" style="width:35%"></div></div>
+          <div class="tier__scale"><span>0</span><span>Silver 40</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="kpi__k"><span class="kpi__dot" style="background:var(--ok)"></span>Σήμερα</div>
+        <div class="kpi__v">2</div><div class="kpi__f">έναντι 1 χθες</div></div>
+      <div class="kpi"><div class="kpi__k"><span class="kpi__dot" style="background:var(--warn)"></span>Εκκρεμότητες</div>
+        <div class="kpi__v">7</div><div class="kpi__f">η πιο στάσιμη 9 μέρες χωρίς κίνηση</div></div>
+      <div class="kpi"><div class="kpi__k"><span class="kpi__dot" style="background:var(--info)"></span>Δρομολογήθηκαν</div>
+        <div class="kpi__v">5</div><div class="kpi__f">περιμένουν τον πάροχο</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card__h"><span class="card__t">Τι χρειάζεται εσένα</span><span class="card__s">οι πιο στάσιμες</span></div>
+      <ul class="todo">
+        <li><span class="todo__b" style="background:var(--bad)"></span>
+          <span class="todo__m">Α. Οικονόμου · NRG<small>Εκκρεμότητα εδώ και 9 ημέρες — λείπει ΑΔΤ</small></span>
+          <button class="todo__a">Επίλυση</button></li>
+        <li><span class="todo__b" style="background:var(--warn)"></span>
+          <span class="todo__m">Π. Ζαχαρίου · Enerwave<small>Περιμένει υπογραφή 4 ημέρες</small></span>
+          <button class="todo__a">Υπενθύμιση</button></li>
+        <li><span class="todo__b" style="background:var(--n500)"></span>
+          <span class="todo__m">Α. Μήτσου · Orizon<small>Πρόχειρο — λείπει ΑΦΜ, δεν οριστικοποιείται</small></span>
+          <button class="todo__a">Συνέχεια</button></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card__h"><span class="card__t">Αιτήσεις ανά μήνα</span><button class="kitbtn">Πίνακας</button></div>
+      <div class="minichart"><b style="height:35%"></b><b style="height:55%"></b><b style="height:40%"></b>
+        <b style="height:70%"></b><b style="height:60%"></b><b style="height:85%"></b><b style="height:75%"></b><b style="height:100%"></b></div>
+    </div>
+
+    <div class="card">
+      <div class="card__h"><span class="card__t">Ανά πάροχο</span><span class="card__s">αυτόν τον μήνα</span></div>
+      <div class="pbars">
+        <div class="pbar"><span>Protergia</span><span class="pbar__t"><span class="pbar__f" style="width:100%"></span></span><span class="pbar__v">9</span></div>
+        <div class="pbar"><span>NRG</span><span class="pbar__t"><span class="pbar__f" style="width:66%"></span></span><span class="pbar__v">6</span></div>
+        <div class="pbar"><span>Orizon</span><span class="pbar__t"><span class="pbar__f" style="width:33%"></span></span><span class="pbar__v">3</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ KIT A1 ============ -->
+  <div class="panel">
+    <span class="panel__tag tag--kit">Kit A1 · UI-UX-KIT.html</span>
+    <div><div class="panel__h">Τέσσερα πλακίδια, ίδιο βάρος</div>
+      <div class="panel__s">δομή/γεωμετρία του kit, χρώματα σημερινά — 19/08 23:06</div></div>
+
+    <div class="stats">
+      <div class="stat"><span>Ανοιχτές αιτήσεις</span><strong>128</strong><em>↑ 12 αυτή την εβδομάδα</em></div>
+      <div class="stat"><span>Αναμονή υπογραφής</span><strong>34</strong><em style="color:var(--warn)">8 λήγουν σήμερα</em></div>
+      <div class="stat"><span>Κλεισμένες (μήνας)</span><strong>91</strong><em>→ €1.820 προμήθεια</em></div>
+      <div class="stat"><span>Εργασίες μου</span><strong>7</strong><em>3 εκπρόθεσμες</em></div>
+    </div>
+
+    <div class="card">
+      <div class="card__h"><span class="card__t">Χρειάζεται ενέργεια</span></div>
+      <table>
+        <tr><td><div class="person"><strong>Μ. Παπαδοπούλου</strong><span>#CR-10482 · Protergia</span></div></td>
+          <td><span class="badge b-warn">Υπογραφή</span></td><td><button class="kitbtn">Υπενθύμιση</button></td></tr>
+        <tr><td><div class="person"><strong>Ε. Κωνσταντίνου</strong><span>#CR-10455 · Orizon</span></div></td>
+          <td><span class="badge b-mute">Πρόχειρο</span></td><td><button class="kitbtn">Συνέχεια</button></td></tr>
+        <tr><td><div class="person"><strong>Σ. Βασιλείου</strong><span>#CR-10412 · NRG</span></div></td>
+          <td><span class="badge b-bad">Απόρριψη</span></td><td><button class="kitbtn">Επίλυση</button></td></tr>
+        <tr><td><div class="person"><strong>Α. Δημητρίου</strong><span>#CR-10440 · Protergia</span></div></td>
+          <td><span class="badge b-info">Στον πάροχο</span></td><td><button class="kitbtn">Παρακολούθηση</button></td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card__h"><span class="card__t">Τελευταία δραστηριότητα</span></div>
+      <p style="font-size:12.5px;margin-bottom:10px"><strong style="color:var(--n950)">Υπογραφή · Γ. Νικολάου</strong><br><span style="color:var(--n700)">πριν 12 λεπτά · Protergia</span></p>
+      <p style="font-size:12.5px;margin-bottom:10px"><strong style="color:var(--n950)">Import Excel Protergia</strong><br><span style="color:var(--n700)">χθες · 14 αλλαγές status</span></p>
+      <p style="font-size:12.5px;margin-bottom:0"><strong style="color:var(--n950)">Εκκαθάριση #12 κλειστή</strong><br><span style="color:var(--n700)">χθες · €280</span></p>
+    </div>
+
+    <div class="note">Στο kit δεν υπάρχει μηνιαία τάση ούτε ανά-πάροχο ραβδόγραμμα — η
+    οθόνη σταματά εδώ. Ο πίνακας «χρειάζεται ενέργεια» έχει τις ίδιες 3-4 γραμμές
+    με το σημερινό «Τι χρειάζεται εσένα», απλά χωρίς την ηλικία/λόγο σε δεύτερη γραμμή.</div>
+  </div>
+
+</div>
+
+<div class="verdict">
+<h1 style="font-size:19px">Τι διαφέρει πραγματικά, χωρίς να προτείνω αποτέλεσμα</h1>
+<table>
+<tr><th>Σημείο</th><th>Σημερινό</th><th>Kit A1</th></tr>
+<tr><td>Πρώτος αριθμός</td><td>Ένα ηρωικό νούμερο (μήνας) με σύγκριση προηγούμενου μήνα, υπολογισμένη δωρεάν από <code>monthly[]</code></td><td>Τέσσερις ισότιμοι μετρητές (ανοιχτές/υπογραφή/κλεισμένες/εργασίες), χωρίς μεταξύ τους ιεραρχία</td></tr>
+<tr><td>«Χρειάζεται ενέργεια»</td><td>Ταξινομημένο κατά ηλικία (η πιο στάσιμη πρώτη), με λόγο σε δεύτερη γραμμή («λείπει ΑΔΤ», «δεν άνοιξε το email»)</td><td>Ίδιο σχήμα γραμμής+badge+κουμπί, χωρίς ηλικία ή λόγο — μόνο κατάσταση</td></tr>
+<tr><td>Τάση/πάροχοι</td><td>Γράφημα 12 μηνών + ραβδόγραμμα ανά πάροχο, και τα δύο με πίνακα εναλλακτικά</td><td>Δεν υπάρχουν — η κάρτα δραστηριότητας τα αντικαθιστά με ροή γεγονότων</td></tr>
+<tr><td>Level/προμήθεια</td><td>Μετρητής επιπέδου (Bronze→Silver) πάνω στο hero</td><td>Απουσιάζει από τον Πίνακα· εμφανίζεται αλλού στο kit</td></tr>
+<tr><td>Backend</td><td>Ό,τι δείχνεται υπάρχει ήδη σήμερα, μηδέν αλλαγή API</td><td>Ίδιο — τα ίδια δεδομένα, άλλη διάταξη</td></tr>
+</table>
+<div class="warn" style="margin-top:16px"><b>Το ερώτημα δεν είναι «ποιο μοιάζει στο kit».</b> Είναι αν η αιτιολογία της
+18/08 (ένας αριθμός με σύγκριση, ταξινόμηση κατά ηλικία, γράφημα τάσης) εξακολουθεί
+να ισχύει σήμερα, ή αν προτιμάται η απλότητα των τεσσάρων ισότιμων μετρητών του kit
+— π.χ. επειδή είναι πιο γρήγορο να διαβαστεί με μια ματιά, ή πιο κοντά σε αυτό που
+συνήθισε η ομάδα από αλλού. Και οι δύο απαντήσεις είναι θεμιτές· απλά δεν αποφασίζεται
+εδώ.</div>
+</div>
+
+</div></body></html>

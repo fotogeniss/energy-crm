@@ -83,6 +83,9 @@ final class DashboardController implements Controller
             // Ο αριθμός «7 εκκρεμότητες» δεν οδηγεί πουθενά· η λίστα ναι.
             // Πέντε, οι πιο στάσιμες πρώτα — δες DashboardRepository::needsAttention().
             'attention'   => $this->dashboard->needsAttention($actor),
+
+            // Τα τέσσερα πλακίδια, 25/08/2026 — δες DashboardRepository::tiles().
+            'tiles'       => $this->dashboard->tiles($actor, $monthStart),
         ], 200);
     }
 }
