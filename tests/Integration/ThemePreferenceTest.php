@@ -34,14 +34,21 @@ final class ThemePreferenceTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function testTheDefaultIsLightForSomeoneWhoNeverChose(): void
+    /**
+     * 2026-08-25: η προεπιλογή έγινε σκούρο (HANDOVER §6γ, item 8,
+     * `docs/UI-DARK-DEFAULT.html`) — το `assertSame` εδώ ρωτά τη σταθερά
+     * `ThemePreference::FALLBACK`, όχι το literal `DARK`, ώστε μια
+     * μελλοντική αλλαγή προεπιλογής να ξαναγράψει μόνο ΕΝΑ σημείο (την
+     * ίδια τη σταθερά) και όχι και αυτό το test.
+     */
+    public function testTheDefaultIsTheFallbackForSomeoneWhoNeverChose(): void
     {
         $user = $this->makeCrmUser();
 
         self::assertSame(
-            ThemePreference::LIGHT,
+            ThemePreference::FALLBACK,
             ThemePreference::forUser($user),
-            'Όποιος δεν διάλεξε πρέπει να βλέπει ό,τι έβλεπε χθες.'
+            'Όποιος δεν διάλεξε πρέπει να βλέπει την τρέχουσα προεπιλογή.'
         );
     }
 
@@ -93,19 +100,26 @@ final class ThemePreferenceTest extends IntegrationTestCase
         $user = $this->makeCrmUser();
         wp_set_current_user($user);
 
+        // Η προεπιλογή είναι όποια είναι σήμερα η ThemePreference::FALLBACK
+        // (σκούρο, 2026-08-25) — το «άλλο» υπολογίζεται, δεν κοπιάζεται, ώστε
+        // το test να παραμείνει σωστό αν η προεπιλογή ξαναλλάξει.
+        $other = ThemePreference::FALLBACK === ThemePreference::LIGHT
+            ? ThemePreference::DARK
+            : ThemePreference::LIGHT;
+
         self::assertStringContainsString(
-            'data-theme="' . ThemePreference::LIGHT . '"',
+            'data-theme="' . ThemePreference::FALLBACK . '"',
             ECRM_App::render(),
             'Το κέλυφος δεν τύπωσε καθόλου data-theme.'
         );
 
-        ThemePreference::save($user, ThemePreference::DARK);
-        $dark = ECRM_App::render();
+        ThemePreference::save($user, $other);
+        $rendered = ECRM_App::render();
 
-        self::assertStringContainsString('data-theme="' . ThemePreference::DARK . '"', $dark);
+        self::assertStringContainsString('data-theme="' . $other . '"', $rendered);
         self::assertStringNotContainsString(
-            'data-theme="' . ThemePreference::LIGHT . '"',
-            $dark,
+            'data-theme="' . ThemePreference::FALLBACK . '"',
+            $rendered,
             'Δύο data-theme στο ίδιο markup σημαίνει ότι κάποιος γράφει σταθερή τιμή.'
         );
     }
@@ -116,10 +130,18 @@ final class ThemePreferenceTest extends IntegrationTestCase
         $alice = $this->makeCrmUser();
         $bob   = $this->makeCrmUser();
 
-        ThemePreference::save($alice, ThemePreference::DARK);
+        // Η Άλις διαλέγει ρητά το ΑΝΤΙΘΕΤΟ της προεπιλογής — αλλιώς, αν η
+        // προεπιλογή είναι πια σκούρο και η Άλις «διάλεγε» σκούρο, το test
+        // δεν θα απεδείκνυε τίποτα: ο Μπομπ θα έβγαινε σκούρο είτε
+        // απομονώνονταν σωστά οι προτιμήσεις είτε όχι.
+        $chosen = ThemePreference::FALLBACK === ThemePreference::LIGHT
+            ? ThemePreference::DARK
+            : ThemePreference::LIGHT;
 
-        self::assertSame(ThemePreference::DARK, ThemePreference::forUser($alice));
-        self::assertSame(ThemePreference::LIGHT, ThemePreference::forUser($bob));
+        ThemePreference::save($alice, $chosen);
+
+        self::assertSame($chosen, ThemePreference::forUser($alice));
+        self::assertSame(ThemePreference::FALLBACK, ThemePreference::forUser($bob));
     }
 
     /** @param array<string, string> $params */
