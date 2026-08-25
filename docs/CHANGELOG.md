@@ -7,6 +7,56 @@
 
 ---
 
+## 2026-08-25 (136)
+
+### DeletionGate — build queue 15, το ρίσκο διαγραφής σύμβασης
+
+Το πραγματικό ανοιχτό ρίσκο από τις (123)/(126)/(127): `DELETE_CONTRACT` το
+έχουν πλέον και οι δύο ρόλοι, σωστά scoped (κάθε ένας σβήνει μόνο τα δικά
+του), αλλά «scoped σωστά» δεν σημαίνει «ασφαλές να σβηστεί». Το
+`ContractRepository::deleteMany()`/`delete()` σβήνουν χωρίς κανέναν έλεγχο
+κατάστασης, και το foreign key παρασέρνει μαζί τον φάκελο υπογραφής
+(ταυτότητα, λογαριασμό, το σαρωμένο έντυπο). Ίδιο μοτίβο με το ήδη υπάρχον
+`CancellationGate`.
+
+**`src/Domain/Contract/DeletionGate.php` (νέο):** `refusalOnDelete(int
+$contractId): ?string` — ρωτάει το `EventRepository::hasReached($id,
+'signed')`, ΟΧΙ το τρέχον status. Λόγος: το `ContractStatus::allowedNext()`
+επιτρέπει `Submitted → Processing` απευθείας (προσπερνώντας το `Signed`
+εντελώς) ΚΑΙ `Signed → Cancelled` (άρα μια σύμβαση «Ακυρώθηκε» μπορεί
+κάλλιστα να είχε υπογραφεί πρώτα) — το τρέχον status δεν λέει τίποτα
+αξιόπιστο εδώ, ίδιο μάθημα με το `CancellationGate` που το έγραψε πρώτο.
+
+**`src/Http/ContractStatusController.php::destroy()`:** ρωτάει την πύλη
+πριν αγγίξει bytes/γραμμή· άρνηση → 409, ίδιο σχήμα με τις άλλες πύλες του
+ίδιου controller (`CancellationGate`/`DraftExitGate`).
+
+**`src/Http/ContractsBulkController.php::delete()`:** η ίδια πύλη, ανά
+σύμβαση της επιλογής. Μεικτή επιλογή → όσες δεν μπλοκάρονται σβήνονται
+κανονικά, `rejected`/`notice` στην απάντηση (ίδιο μοτίβο με το `rejected`
+της `changeStatus()` παραπάνω στο ίδιο αρχείο) — το frontend ήδη ξέρει να
+δείχνει `notice`/`rejected`, καμία αλλαγή JS δεν χρειάστηκε. Όλες
+μπλοκαρισμένες → 409, τίποτα δεν αγγίζεται.
+
+**`src/Services.php`/`src/Http/ControllerFactory.php`:** καλωδίωση
+`Services::deletionGate()`, ίδιο μοτίβο με `cancellationGate()`.
+
+**`tests/Integration/ContractDeletionGateTest.php` (νέο):** 5 tests —
+άρνηση μεμονωμένης/μαζικής διαγραφής υπογεγραμμένης σύμβασης, το ρητό
+σενάριο «τώρα Ακυρώθηκε αλλά υπογράφηκε πρώτα» παραμένει μπλοκαρισμένο,
+μεικτή μαζική επιλογή σβήνει τη μία και κρατά την άλλη, και ότι σε κάθε
+άρνηση τα bytes μένουν στον δίσκο (ίδιο σύνορο με το `ContractDeleteBytesTest`).
+
+Καμία αλλαγή frontend/§1.8 — η άρνηση περνάει από το ήδη υπάρχον
+`toast(d.error)` γενικό μονοπάτι σφάλματος, τόσο στη μεμονωμένη όσο και
+στη μαζική διαγραφή. Καμία νέα οπτική στοιχείο δεν προστέθηκε.
+
+`composer check:all`: phpcs 271/271, phpstan 0 σφάλματα (150/150),
+unit 904/904 (1 skipped), integration 368/368 (+5 από το νέο
+ContractDeletionGateTest).
+
+---
+
 ## 2026-08-25 (135)
 
 ### Βεβαίωση εκκαθάρισης PDF για συνεργάτη — build queue 11 (frontend)

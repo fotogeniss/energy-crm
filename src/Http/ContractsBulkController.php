@@ -26,6 +26,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\FileRepository;
 use WP_REST_Request;
@@ -46,6 +47,7 @@ final class ContractsBulkController implements Controller
         private readonly ContractRepository $contracts,
         private readonly FileRepository $files,
         private readonly ContractLifecycle $lifecycle,
+        private readonly DeletionGate $deletion,
     ) {
     }
 
@@ -215,7 +217,30 @@ final class ContractsBulkController implements Controller
      */
     private function delete(array $rows, UserScope $scope): WP_REST_Response
     {
-        $ids = array_map(static fn (array $r): int => (int) $r['id'], $rows);
+        // build queue 15: μια υπογεγραμμένη σύμβαση δεν διαγράφεται ποτέ σε
+        // καμία διαδρομή — bulk ή μεμονωμένη (δες ContractStatusController::
+        // destroy() για το ίδιο). Ό,τι πέρασε το scope φιλτράρεται εδώ ξανά,
+        // ένα-ένα· ίδιο μοτίβο με το `rejected` της changeStatus() παραπάνω.
+        $ids     = [];
+        $blocked = 0;
+
+        foreach ($rows as $row) {
+            $id = (int) $row['id'];
+
+            if ($this->deletion->refusalOnDelete($id) !== null) {
+                $blocked++;
+                continue;
+            }
+
+            $ids[] = $id;
+        }
+
+        if ($ids === []) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Καμία σύμβαση δεν διαγράφηκε: ' . DeletionGate::WAS_SIGNED,
+            ], 409);
+        }
 
         /*
          * Η σειρά είχε τα αρχεία πρώτα, και ο λόγος ήταν σωστός: το CASCADE
@@ -244,7 +269,17 @@ final class ContractsBulkController implements Controller
         $this->files->purgeForContracts($ids);
         $this->files->forgetBytes($doomed);
 
-        return new WP_REST_Response(['ok' => true, 'updated' => $removed], 200);
+        $response = ['ok' => true, 'updated' => $removed];
+
+        if ($blocked > 0) {
+            $response['rejected'] = $blocked;
+            $response['notice']   = sprintf(
+                '%d σύμβαση/εις δεν διαγράφηκαν: υπήρξαν υπογεγραμμένες.',
+                $blocked
+            );
+        }
+
+        return new WP_REST_Response($response, 200);
     }
 
     /**
