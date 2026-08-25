@@ -186,12 +186,15 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-bar__lbl { font-size: var(--fs-11); color: var(--muted); }
 
 
-.ecrm-feed { list-style: none; margin: 0; padding: 0; }
-.ecrm-feed li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--fs-13); }
-.ecrm-feed li:last-child { border-bottom: none; }
-.ecrm-feed__code { font-family: ui-monospace, Menlo, monospace; font-size: var(--fs-12); color: var(--st-pending); font-weight: 700; }
-.ecrm-feed__msg { flex: 1; color: var(--ink); }
-.ecrm-feed__time { color: var(--muted); font-size: var(--fs-12); }
+/* Δύο γραμμές ανά γεγονός, χωρίς διαχωριστικές γραμμές — δομή του kit A1.
+   Ήταν μία σειρά τριών στηλών (μονόχωρος κωδικός | μήνυμα | χρόνος): το μήνυμα
+   έχει μεταβλητό μήκος, οπότε ο χρόνος δεξιά δεν στοιχιζόταν ποτέ, και ο
+   κωδικός αριστερά — το λιγότερο ενδιαφέρον στοιχείο — τραβούσε το μάτι πρώτος
+   επειδή ήταν το μόνο έγχρωμο και μονόχωρο. */
+.ecrm-feed { list-style: none; margin: 6px 0 0; padding: 0; }
+.ecrm-feed li { padding: 8px 0; }
+.ecrm-feed__t { display: block; font-size: var(--fs-13-5); font-weight: 600; color: var(--ink); }
+.ecrm-feed__s { display: block; font-size: var(--fs-12); color: var(--muted); margin-top: 2px; }
 
 /* --- contracts: search / tabs / table --- */
 .ecrm-search { margin-bottom: 14px; }
@@ -1305,7 +1308,7 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
    εφαρμογή (κουκκίδα κατάστασης, ταινία εκκρεμότητας). */
 .ecrm-kpi__f.is-warn { color: var(--st-pending); font-weight: 600; }
 
-/* ── τι χρειάζεται εσένα ── */
+/* ── χρειάζεται ενέργεια ── */
 .ecrm-attnhead { display: flex; align-items: baseline; gap: 12px; }
 .ecrm-attnhead .ecrm-step { margin: 0; }
 .ecrm-attnhead__n { font-size: var(--fs-12-5); color: var(--muted); margin-left: auto; }
@@ -1313,13 +1316,15 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-attn li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line-soft); }
 .ecrm-attn li:first-child { border-top: none; }
 .ecrm-attn__m { flex: 1; min-width: 0; font-size: var(--fs-13-5); color: var(--ink); }
-.ecrm-attn__m b { font-weight: 600; }
+.ecrm-attn__m b { display: block; font-weight: 600; }
 .ecrm-attn__m small { display: block; color: var(--muted); font-size: var(--fs-12); margin-top: 2px; }
-/* Στάσιμο 7+ μέρες — ίδιο σήμα με πριν (ήταν μπάρα `.ecrm-attn__b.is-late`),
-   τώρα στο ίδιο το κείμενο της ηλικίας, αφού το χρώμα της μπάρας το πήρε το
-   badge κατάστασης δίπλα. */
-.ecrm-attn__m small.is-late { color: var(--st-cancel); font-weight: 600; }
-.ecrm-attn li .ecrm-badge { flex: 0 0 auto; }
+
+/* Η μεσαία στήλη είναι ΣΤΗΛΗ, όχι «ό,τι περισσέψει»: σταθερό πλάτος ώστε όλες
+   οι πινακίδες να αρχίζουν στο ίδιο x. Με `flex: 0 0 auto` (πρώτη γραφή 25/08)
+   κάθε πινακίδα ξεκινούσε όπου τελείωνε το κείμενο από πάνω της, οπότε
+   τέσσερις σειρές έδιναν τέσσερα διαφορετικά σημεία εκκίνησης — το μάτι τις
+   διάβαζε ως άσχετα στοιχεία αντί για μία κατακόρυφη στήλη κατάστασης. */
+.ecrm-attn__s { flex: 0 0 132px; display: flex; }
 .ecrm-attn__a { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 13px;
 	font-family: inherit; font-size: var(--fs-12-5); font-weight: 600; color: var(--navy-soft); cursor: pointer; white-space: nowrap; }
 .ecrm-attn__a:hover { border-color: var(--line-strong); color: var(--navy); }
@@ -1383,5 +1388,9 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	.ecrm-hero { grid-template-columns: 1fr; gap: 20px; }
 	.ecrm-kpis { grid-template-columns: 1fr; }
 	.ecrm-attn li { flex-wrap: wrap; }
-	.ecrm-attn__a { margin-left: 15px; }
+	/* Σε στενή οθόνη η πινακίδα δεν είναι πια στήλη — δεν υπάρχει τίποτα να
+	   στοιχιστεί όταν κάθε γραμμή σπάει στα δύο. Τα σταθερά 132px θα άφηναν
+	   κενό μισής οθόνης δίπλα σε μια ετικέτα δύο λέξεων. */
+	.ecrm-attn__s { flex: 0 0 auto; }
+	.ecrm-attn__a { margin-left: auto; }
 }

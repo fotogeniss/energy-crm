@@ -37,6 +37,16 @@ function greeting() {
 	return h < 5 ? 'Καλό ξημέρωμα' : h < 12 ? 'Καλημέρα' : h < 18 ? 'Καλησπέρα' : 'Καλό βράδυ';
 }
 
+/* €1.820 — σύμβολο ΜΠΡΟΣΤΑ και τελεία στις χιλιάδες, όπως το kit A1.
+ *
+ * Χωρίς λεπτά: το πλακίδιο δείχνει άθροισμα μήνα, όπου τα δύο δεκαδικά είναι
+ * θόρυβος — και χωρίς `toLocaleString`, που αλλάζει μορφή ανάλογα με τη γλώσσα
+ * του browser και θα έδινε «1,820» σε αγγλικό μηχάνημα. Ίδιος χειρισμός με το
+ * `ecrm-view-commissions.js`, που έλυσε το ίδιο πρόβλημα με το ίδιο regex. */
+function euro(n) {
+	return '€' + Math.round(Number(n) || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
 /* Τα τέσσερα πλακίδια, ίδιο βάρος — δομή του kit A1, δεδομένα από
  * `DashboardRepository::tiles()`. Κάθε πλακίδιο μετράει διαφορετικό ΕΙΔΟΣ
  * πράγματος (απόθεμα / απόθεμα-με-προθεσμία / ροή ενός μήνα / εργασίες),
@@ -55,11 +65,13 @@ function tilesHTML(t) {
 	var expiring = Number(t.expiring_today) || 0;
 	var overdue = Number(t.tasks_overdue) || 0;
 
+	var week = Number(t.open_this_week) || 0;
+
 	var tiles = [
 		{
 			label: 'Ανοιχτές αιτήσεις',
 			v: Number(t.open) || 0,
-			foot: ''
+			foot: week > 0 ? '↑ ' + week + ' αυτή την εβδομάδα' : ''
 		},
 		{
 			label: 'Αναμονή υπογραφής',
@@ -70,7 +82,7 @@ function tilesHTML(t) {
 		{
 			label: 'Κλεισμένες (μήνας)',
 			v: closed,
-			foot: commission > 0 ? '→ ' + Number(commission).toFixed(0) + ' € προμήθεια' : (closed === 0 ? 'καμία ακόμα' : ''),
+			foot: commission > 0 ? '→ ' + euro(commission) + ' προμήθεια' : (closed === 0 ? 'καμία ακόμα' : ''),
 			go: 'contracts', status: 'active'
 		},
 		{
@@ -115,53 +127,72 @@ function levelHTML(lvl) {
 		'</div>';
 }
 
-/* Γιατί κάθε γραμμή είναι εκεί, και τι κουμπί της ταιριάζει. Η φράση φτιάχνεται
- * από την κατάσταση ΚΑΙ τις ημέρες, γιατί «Εκκρεμεί» σκέτο δεν λέει τίποτα
- * που δεν λέει ήδη το badge δίπλα.
+/* Ποιο κουμπί ταιριάζει σε κάθε κατάσταση, και τι λέει ο τίτλος στο hover.
  *
- * Το `late` (7+ μέρες) ΔΕΝ κωδικοποιείται πια σε ξεχωριστό χρώμα μπάρας —
- * αφαιρέθηκε 25/08 μαζί με το `ecrm-attn__b`, όταν το badge πήρε τη θέση της
- * μπάρας (ευθυγράμμιση με το kit A1, CHANGELOG (119)). Το σήμα δεν χάθηκε: το
- * κείμενο της ηλικίας υπογραμμίζεται όταν είναι στάσιμο πάνω από μια βδομάδα. */
+ * ΠΡΟΣΟΧΗ στο τι ΔΕΝ επιστρέφει πια: μέχρι 25/08 έφτιαχνε ολόκληρη φράση
+ * («περιμένει υπογραφή πελάτη — εδώ και 4 ημέρες») που γραφόταν στη δεύτερη
+ * γραμμή. Έφυγε: η κατάσταση λέγεται ήδη από το badge δίπλα, και η φράση
+ * απλώς την ξαναέλεγε με άλλα λόγια, σπρώχνοντας κάτω τον κωδικό και τον
+ * πάροχο — τα ΜΟΝΑ δύο στοιχεία που δεν φαίνονται αλλού στη γραμμή.
+ *
+ * Η ηλικία δεν χάθηκε, μετακόμισε στο `title` της γραμμής: η σειρά της λίστας
+ * ΕΙΝΑΙ η ηλικία (πιο στάσιμες πρώτες, `ORDER BY updated_at ASC`), οπότε το
+ * νούμερο ήταν επανάληψη της θέσης — χρήσιμο στο hover, θόρυβος σε κάθε
+ * γραμμή. */
 function why(it) {
 	var d = Number(it.days) || 0;
-	var ago = d === 0 ? 'σήμερα' : d === 1 ? 'από χθες' : 'εδώ και ' + d + ' ημέρες';
-	var late = d >= 7;
+	var ago = d === 0 ? 'από σήμερα' : d === 1 ? 'από χθες' : 'εδώ και ' + d + ' ημέρες';
 
 	if (it.status === 'draft') {
-		return it.blocked_no_afm
-			? { txt: 'λείπει ΑΦΜ, δεν οριστικοποιείται — ' + ago, act: 'Συνέχεια', late: late }
-			: { txt: 'δεν οριστικοποιήθηκε — ' + ago, act: 'Συνέχεια', late: late };
+		return {
+			act: 'Συνέχεια',
+			tip: (it.blocked_no_afm ? 'Λείπει ΑΦΜ, δεν οριστικοποιείται' : 'Δεν οριστικοποιήθηκε') + ' — ' + ago
+		};
 	}
 	if (it.status === 'awaiting_signature') {
-		return { txt: 'περιμένει υπογραφή πελάτη — ' + ago, act: 'Υπενθύμιση', late: late };
+		return { act: 'Υπενθύμιση', tip: 'Περιμένει υπογραφή πελάτη — ' + ago };
 	}
-	return { txt: 'εκκρεμεί — ' + ago, act: 'Επίλυση', late: late };
+	return { act: 'Επίλυση', tip: 'Εκκρεμεί — ' + ago };
 }
 
-/* Πινακίδα-γραμμή αντί για μπάρα χρώματος: όνομα/κωδικός αριστερά, badge
- * ΚΑΤΑΣΤΑΣΗΣ στη μέση — ίδιες κλάσεις `.ecrm-badge--{status}` με τη λίστα
- * συμβάσεων και τη λεπτομέρεια, ώστε το ίδιο χρώμα να σημαίνει το ίδιο πράγμα
- * παντού στην εφαρμογή — και κουμπί δεξιά. Δομή του kit A1, όχι δικές του
- * τιμές χρώματος: τα `--st-*` του δωδεκάδικου παλέτα είναι ήδη εκεί. */
+/* Η γραμμή του kit A1, τρεις στήλες: ταυτότητα αριστερά, πινακίδα κατάστασης
+ * στη μέση, ενέργεια δεξιά.
+ *
+ * Η ταυτότητα είναι ΔΥΟ γραμμές — όνομα πελάτη από πάνω, `#κωδικός · πάροχος`
+ * από κάτω σε σβηστό — και όχι μία με τελείες, επειδή το όνομα είναι αυτό που
+ * σαρώνει το μάτι· ο κωδικός είναι για μετά, όταν έχει ήδη βρει τη σωστή
+ * γραμμή.
+ *
+ * Η μεσαία στήλη έχει ΣΤΑΘΕΡΟ πλάτος (`.ecrm-attn__s`) ώστε όλες οι πινακίδες
+ * να αρχίζουν στο ίδιο x. Με `flex: 0 0 auto` κάθε μία ξεκινούσε όπου τελείωνε
+ * το από πάνω της κείμενο — τέσσερις πινακίδες σε τέσσερα διαφορετικά σημεία
+ * διαβάζονται ως τέσσερα άσχετα πράγματα, ενώ είναι μία στήλη.
+ *
+ * Τα χρώματα είναι του κώδικα, όχι του kit: ίδιες κλάσεις `.ecrm-badge--{status}`
+ * με τη λίστα συμβάσεων και τη λεπτομέρεια, ώστε το ίδιο χρώμα να σημαίνει το
+ * ίδιο πράγμα παντού. Το ίδιο και οι ετικέτες, από το `window.ECRM.statuses`:
+ * το kit γράφει «Υπογραφή», η εφαρμογή «Αναμονή υπογραφής» — δύο ονόματα για
+ * την ίδια κατάσταση στην ίδια οθόνη είναι χειρότερο από μια μακριά ετικέτα. */
 function attentionHTML(list) {
 	if (!list || !list.length) {
-		return '<div class="ecrm-card"><div class="ecrm-step">Τι χρειάζεται εσένα</div>' +
+		return '<div class="ecrm-card"><div class="ecrm-step">Χρειάζεται ενέργεια</div>' +
 			'<div class="ecrm-empty">Τίποτα δεν περιμένει εσένα αυτή τη στιγμή.</div></div>';
 	}
 
 	var statuses = (window.ECRM && ECRM.statuses) || {};
 
-	return '<div class="ecrm-card"><div class="ecrm-head--row ecrm-attnhead">' +
-		'<span class="ecrm-step">Τι χρειάζεται εσένα</span>' +
-		'<span class="ecrm-attnhead__n">οι πιο στάσιμες</span></div>' +
+	return '<div class="ecrm-card"><div class="ecrm-step">Χρειάζεται ενέργεια</div>' +
 		'<ul class="ecrm-attn">' + list.map(function (it) {
 			var w = why(it);
-			return '<li data-attn="' + esc(it.id) + '">' +
+			var meta = (it.code ? '#' + esc(it.code) : '') +
+				(it.code && it.provider ? ' · ' : '') +
+				(it.provider ? esc(it.provider) : '');
+
+			return '<li data-attn="' + esc(it.id) + '" title="' + esc(w.tip) + '">' +
 				'<span class="ecrm-attn__m"><b>' + esc(it.customer || '—') + '</b>' +
-				(it.provider ? ' · ' + esc(it.provider) : '') +
-				'<small' + (w.late ? ' class="is-late"' : '') + '>' + esc(it.code || '') + (it.code ? ' — ' : '') + esc(w.txt) + '</small></span>' +
-				'<span class="ecrm-badge ecrm-badge--' + esc(it.status) + '">' + esc(statuses[it.status] || it.status) + '</span>' +
+				'<small>' + (meta || '—') + '</small></span>' +
+				'<span class="ecrm-attn__s"><span class="ecrm-badge ecrm-badge--' + esc(it.status) + '">' +
+				esc(statuses[it.status] || it.status) + '</span></span>' +
 				'<button type="button" class="ecrm-attn__a" data-attn-go="' + esc(it.id) + '">' + esc(w.act) + '</button></li>';
 		}).join('') + '</ul></div>';
 }
@@ -238,16 +269,23 @@ function providersHTML(list) {
 		}).join('') + '</div></div>';
 }
 
+/* Δύο γραμμές ανά γεγονός, όπως το kit A1: τι έγινε από πάνω, πότε και σε ποια
+ * σύμβαση από κάτω σε σβηστό.
+ *
+ * Ήταν μία γραμμή τριών στηλών (κωδικός | μήνυμα | χρόνος) και έσπαγε άσχημα:
+ * το μήνυμα είναι ελεύθερο κείμενο μεταβλητού μήκους, οπότε ο χρόνος δεξιά
+ * χόρευε πάνω-κάτω και ο μονόχωρος κωδικός αριστερά τραβούσε το μάτι πρώτος —
+ * ενώ είναι το λιγότερο ενδιαφέρον στοιχείο της γραμμής. */
 function feedHTML(feed) {
 	if (!feed || !feed.length) {
-		return '<div class="ecrm-card"><div class="ecrm-step">Ζωντανή ροή</div>' +
+		return '<div class="ecrm-card"><div class="ecrm-step">Τελευταία δραστηριότητα</div>' +
 			'<div class="ecrm-empty">Καμία πρόσφατη δραστηριότητα.</div></div>';
 	}
-	return '<div class="ecrm-card"><div class="ecrm-step">Ζωντανή ροή</div><ul class="ecrm-feed">' +
+	return '<div class="ecrm-card"><div class="ecrm-step">Τελευταία δραστηριότητα</div><ul class="ecrm-feed">' +
 		feed.map(function (f) {
-			return '<li><span class="ecrm-feed__code">' + esc(f.code || '—') + '</span>' +
-				'<span class="ecrm-feed__msg">' + esc(f.message || f.type) + '</span>' +
-				'<span class="ecrm-feed__time">' + timeAgo(f.created_at) + '</span></li>';
+			return '<li><span class="ecrm-feed__t">' + esc(f.message || f.type) + '</span>' +
+				'<span class="ecrm-feed__s">' + esc(timeAgo(f.created_at)) +
+				(f.code ? ' · #' + esc(f.code) : '') + '</span></li>';
 		}).join('') + '</ul></div>';
 }
 

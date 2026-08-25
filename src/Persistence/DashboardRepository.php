@@ -399,6 +399,7 @@ final class DashboardRepository
      *
      * @return array{
      *     open: int,
+     *     open_this_week: int,
      *     awaiting_signature: int,
      *     expiring_today: int,
      *     closed_month: int,
@@ -413,6 +414,7 @@ final class DashboardRepository
 
         return [
             'open'                    => $this->countOpen($userId),
+            'open_this_week'          => $this->countOpenedThisWeek($userId),
             'awaiting_signature'      => $this->countWithStatuses(
                 $userId,
                 ['pending_signature', 'awaiting_signature']
@@ -436,6 +438,43 @@ final class DashboardRepository
         return (int) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT COUNT(*) FROM %i WHERE partner_user_id = %d AND status NOT IN ({$placeholders})",
+                [Tables::name(Tables::CONTRACTS), $userId, ...self::NOT_OPEN]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+    }
+
+    /**
+     * Πόσες από τις ανοιχτές μπήκαν τις τελευταίες επτά ημέρες — ο υπότιτλος
+     * «↑ N αυτή την εβδομάδα» του πρώτου πλακιδίου (kit A1).
+     *
+     * Επτά ημέρες ΚΥΛΙΟΜΕΝΕΣ και όχι «από τη Δευτέρα»: το νούμερο από πάνω
+     * είναι απόθεμα χωρίς αρχή και τέλος, οπότε ένας υπότιτλος που μηδενίζεται
+     * κάθε Δευτέρα πρωί θα έδειχνε βουτιά εκεί που δεν συνέβη τίποτα.
+     *
+     * Ίδιο φίλτρο `NOT_OPEN` με το countOpen(), σκόπιμα: ο υπότιτλος πρέπει να
+     * είναι ΥΠΟΣΥΝΟΛΟ του νούμερου που επιγράφει. Μια αίτηση που μπήκε και
+     * ακυρώθηκε μέσα στην ίδια εβδομάδα δεν μετράει σε κανένα από τα δύο —
+     * αλλιώς το «↑ 12» θα μπορούσε να βγει μεγαλύτερο από το ίδιο το σύνολο.
+     *
+     * `NOW()` και όχι `UTC_TIMESTAMP()`: η στήλη `created_at` γεμίζει από
+     * `DEFAULT CURRENT_TIMESTAMP` (δες `class-ecrm-db.php`), δηλαδή από το
+     * ρολόι του ίδιου του server — σύγκριση με UTC θα μετατόπιζε το παράθυρο
+     * κατά τη ζώνη της βάσης.
+     */
+    private function countOpenedThisWeek(int $userId): int
+    {
+        global $wpdb;
+
+        $placeholders = implode(',', array_fill(0, count(self::NOT_OPEN), '%s'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM %i
+                 WHERE partner_user_id = %d
+                   AND status NOT IN ({$placeholders})
+                   AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)",
                 [Tables::name(Tables::CONTRACTS), $userId, ...self::NOT_OPEN]
             )
         );

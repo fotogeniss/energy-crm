@@ -86,6 +86,24 @@ final class DashboardTilesTest extends IntegrationTestCase
     }
 
     /**
+     * Γερνάει τη ΣΥΜΒΑΣΗ (όχι γεγονός) N ημέρες πίσω, σχετικά με το τώρα της
+     * βάσης — για το κυλιόμενο παράθυρο επτά ημερών του `open_this_week`.
+     */
+    private function createdDaysAgo(int $contractId, int $days): void
+    {
+        global $wpdb;
+
+        $wpdb->query(
+            $wpdb->prepare(
+                'UPDATE %i SET created_at = NOW() - INTERVAL %d DAY WHERE id = %d',
+                Tables::name(Tables::CONTRACTS),
+                $days,
+                $contractId
+            )
+        );
+    }
+
+    /**
      * Καταγράφει `sign_sent_sms` N ώρες πριν, ΣΧΕΤΙΚΑ με το τώρα της βάσης —
      * ίδιο μοτίβο με το `SignExpiryTest::sentHoursAgo()`.
      */
@@ -147,6 +165,40 @@ final class DashboardTilesTest extends IntegrationTestCase
         $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
 
         self::assertSame(2, $tiles['open'], 'Μόνο οι δύο μη-τερματικές, μη-active μετράνε ανοιχτές.');
+    }
+
+    /**
+     * Ο υπότιτλος «↑ N αυτή την εβδομάδα» πρέπει να είναι ΥΠΟΣΥΝΟΛΟ του
+     * νούμερου που επιγράφει — αλλιώς το πλακίδιο αυτοαναιρείται στην οθόνη.
+     *
+     * Δύο ξεχωριστά πράγματα ελέγχονται μαζί, γιατί μαζί μπορούν να σπάσουν:
+     * ότι το παράθυρο των επτά ημερών όντως κόβει (η παλιά δεν μετράει), και
+     * ότι το φίλτρο κατάστασης ισχύει ΚΑΙ εδώ (η φρέσκια ακυρωμένη δεν
+     * μετράει πουθενά, ούτε στο σύνολο ούτε στην εβδομάδα).
+     */
+    public function testOpenThisWeekIsASubsetOfOpen(): void
+    {
+        $this->contractFor('new');
+
+        $old = $this->contractFor('pending');
+        $this->createdDaysAgo($old, 10);
+
+        // Φρέσκια αλλά ακυρωμένη: εκτός και από τα δύο νούμερα.
+        $this->contractFor('cancelled');
+
+        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+        self::assertSame(2, $tiles['open'], 'Η ακυρωμένη δεν είναι ανοιχτή, όσο φρέσκια κι αν είναι.');
+        self::assertSame(
+            1,
+            $tiles['open_this_week'],
+            'Μόνο η φρέσκια ΚΑΙ ανοιχτή μετράει στην εβδομάδα.'
+        );
+        self::assertLessThanOrEqual(
+            $tiles['open'],
+            $tiles['open_this_week'],
+            'Ο υπότιτλος δεν επιτρέπεται ποτέ να ξεπερνά το νούμερο από πάνω του.'
+        );
     }
 
     // ── 2. «Αναμονή υπογραφής»: δύο καταστάσεις μαζί ──────────────────
