@@ -19,12 +19,17 @@ class ECRM_Admin {
 	 * είναι το χρώμα της μάρκας στις 2026-08-17 και κανένα από τα τέσσερα δεν
 	 * το έμαθε.
 	 *
-	 * Είναι το ΣΚΟΥΡΟ πράσινο, όχι το `#16c217` της εφαρμογής, και ο λόγος
-	 * μετρήθηκε: λευκό πάνω στο #16c217 δίνει 2,40:1 — κάτω από το 4,5 που
-	 * θέλει κανονικό κείμενο. Το κουμπί «Υπογράφω» το πατά πελάτης, συχνά σε
-	 * κινητό και στον ήλιο. Το #0e8610 δίνει 4,61:1.
+	 * Ήταν το ΣΚΟΥΡΟ πράσινο #0e8610, όχι το `#16c217` της εφαρμογής, επειδή το
+	 * κουμπί «Υπογράφω» έγραφε ΛΕΥΚΟ κείμενο πάνω του — και λευκό πάνω στο
+	 * #16c217 δίνει 2,40:1, κάτω από το 4,5 που θέλει κανονικό κείμενο.
+	 *
+	 * Άλλαξε 25/08 σε #c2f04a (λάιμ), ευθυγράμμιση με το kit A (`docs/UI-SIGN-VS-
+	 * KIT.html`, απόφαση ιδιοκτήτη) — ΜΑΖΙ με το κείμενο πάνω του, που έγινε
+	 * σκούρο αντί για λευκό (`--accent-text:#1a2208` στο `class-ecrm-tracking.php`).
+	 * Ο παλιός λόγος αντίθεσης δεν ισχύει πια γιατί άλλαξε η ίδια η μεταβλητή που
+	 * μέτραγε: σκούρο κείμενο πάνω στο #c2f04a δίνει 12,4:1.
 	 */
-	const DEFAULT_ACCENT = '#0e8610';
+	const DEFAULT_ACCENT = '#c2f04a';
 
 	public static function init(): void {
 		// Priority 9: the parent menu must exist in $menu before any submenu is
@@ -236,7 +241,7 @@ class ECRM_Admin {
 					</tr>
 					<tr>
 						<th scope="row"><label for="ecrm_accent">Χρώμα τόνου</label></th>
-						<td><input type="text" id="ecrm_accent" name="<?php echo esc_attr( ECRM_PREFIX . 'accent_color' ); ?>" value="<?php echo esc_attr( self::get( 'accent_color' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( self::DEFAULT_ACCENT ); ?>"><p class="description">Hex χρώμα για τονισμό στις σελίδες που βλέπει ο πελάτης. Κενό = προεπιλογή (πράσινο μάρκας).</p></td>
+						<td><input type="text" id="ecrm_accent" name="<?php echo esc_attr( ECRM_PREFIX . 'accent_color' ); ?>" value="<?php echo esc_attr( self::get( 'accent_color' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( self::DEFAULT_ACCENT ); ?>"><p class="description">Hex χρώμα για τονισμό στις σελίδες που βλέπει ο πελάτης. Κενό = προεπιλογή (λάιμ του kit).</p></td>
 					</tr>
 					<tr>
 						<th scope="row"><label for="ecrm_pfooter">Υποσέλιδο PDF</label></th>

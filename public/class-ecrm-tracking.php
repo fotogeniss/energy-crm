@@ -607,18 +607,46 @@ class ECRM_Tracking {
 echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- σταθερό CSS με URL που φτιάχνει η ίδια η κλάση.
 ?>
 <style>
-	/* ---- Ταυτότητα 2026-08-18 -----------------------------------------
+	/* ---- Ταυτότητα 2026-08-18, ευθυγραμμίστηκε με το kit A 2026-08-25 --------
 	 * Ήταν navy #0a1f3d με amber gradient: η παλέτα ΠΡΙΝ από το restyle των
 	 * πέντε βημάτων, που δεν άγγιξε ποτέ τις σελίδες του πελάτη. Ο πελάτης που
 	 * υπέγραφε έβλεπε άλλο προϊόν από τον συνεργάτη που του πούλησε.
 	 *
-	 * Το --accent έρχεται από τις ρυθμίσεις, με προεπιλογή ECRM_Admin::DEFAULT_ACCENT. */
+	 * Ήταν σκόπιμα τρίτο σύστημα (λευκή κάρτα σε σκούρο φόντο, πράσινο accent,
+	 * CHANGELOG 63/68) — ΔΕΝ ήταν ξεχασμένο. Απόφαση ιδιοκτήτη 25/08, μετά από
+	 * σύγκριση δίπλα-δίπλα κατά §1.8 (`docs/UI-SIGN-VS-KIT.html`): η κάρτα
+	 * ακολουθεί πια το λάιμ accent και τα σκούρα επίπεδα του kit A (`#p-public`,
+	 * screen B5) αντί για τη δική της παλέτα. Οι τιμές είναι κυριολεκτικά ίδιες
+	 * με το `docs/UI-UX-KIT.html` `:root` — ΟΧΙ tokens του `.ecrm[data-theme]`:
+	 * αυτό το αρχείο δεν φορτώνει κοινό φύλλο εσκεμμένα (CHANGELOG 68 — «καμία
+	 * οθόνη του CRM δεν μπορεί να παλινδρομήσει από αυτή την παρτίδα»), οπότε
+	 * μένει με δικά του literal χρώματα, τώρα απλώς ίδια με του kit.
+	 *
+	 * Το --accent-text είναι ΝΕΟ: το λάιμ #c2f04a είναι πολύ ανοιχτό για λευκό
+	 * κείμενο πάνω του (το kit το λέει ρητά, `--accent-text:#1a2208`) — το παλιό
+	 * πράσινο #0e8610 δούλευε με λευκό επειδή ήταν αρκετά σκούρο, το λάιμ όχι.
+	 *
+	 * Το --accent έρχεται από τις ρυθμίσεις, με προεπιλογή ECRM_Admin::DEFAULT_ACCENT
+	 * — που έγινε κι αυτή #c2f04a, ίδια μέρα, ίδιος λόγος. */
 	:root {
-		--accent: <?php echo esc_html( $accent ?: '#0e8610' ); ?>;
-		--page:#141412; --chrome:#1a1a18; --surface:#fff;
-		--ink:#2a2926; --ink2:#5c5a55; --ink3:#a3a099;
-		--line:#e9e8e4; --line2:#dedcd7; --fill:#f8f8f6;
-		--ok:#0f5f29; --ok-bg:#e1f0e6; --err:#c42a47; --err-bg:#fceaee;
+		--accent: <?php echo esc_html( $accent ?: '#c2f04a' ); ?>;
+		--accent-text:#1a2208;
+		--page:#0f1218; --chrome:#12161f; --surface:#171b24;
+		--ink:#eef1f6; --ink2:#aab3c5; --ink3:#8b95a8;
+		--line:#2a3140; --line2:#3a455c; --fill:#1e2430;
+		--ok:#3dd68c; --ok-bg:rgba(61,214,140,.15);
+		/* Το kit δεν ορίζει κόκκινο (καμία οθόνη του δεν το χρειάζεται) — εδώ
+		   χρειάζεται, για την ακυρωμένη αίτηση. Ίδια μέθοδος με το δικό του
+		   --ok-dim/--warn-dim: rgba πάνω στο ίδιο απόχρωμα, όχι νέο σύστημα. */
+		--err:#ff6b7a; --err-bg:rgba(255,107,122,.15);
+		/* Η υπογραφή ΜΕΝΕΙ σε λευκό πλαίσιο ακόμα κι εδώ — το kit το δείχνει
+		   ρητά (`background:#fff` στο δικό του B5), γιατί το μελάνι πρέπει να
+		   φαίνεται καθαρά μέσα στο PDF. Πριν, το --ink ήταν ήδη σκούρο (μελάνι σε
+		   χαρτί) οπότε το `.strokeStyle` της JS διάβαζε κατευθείαν από αυτό· τώρα
+		   που το --ink έγινε ανοιχτό (κείμενο σε σκούρο φόντο) θα ζωγράφιζε
+		   ΑΟΡΑΤΗ υπογραφή σε λευκό πλαίσιο. Το --pad-ink είναι ξεχωριστό ΕΠΙΤΗΔΕΣ:
+		   δεν ακολουθεί το θέμα, γιατί ο καμβάς της υπογραφής δεν το ακολουθεί. */
+		--pad-ink:#1a1a18; --pad-border:#4a5568;
 	}
 	* { box-sizing: border-box; }
 	body { margin:0; font-family:<?php echo \EnergyCRM\Infrastructure\LocalFonts::STACK; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- σταθερά κλάσης, όχι είσοδος. Το esc_html() θα μετέτρεπε τα εισαγωγικά του «"Manrope"» σε &quot; και θα ΕΣΠΑΓΕ το CSS. ?>;
@@ -640,8 +668,9 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	.steps li.done:not(:last-child)::before { background:var(--accent); }
 	.dot { flex:0 0 24px; width:24px; height:24px; border-radius:50%; background:var(--line); color:var(--ink3);
 		display:grid; place-items:center; font-weight:700; font-size:12.5px; z-index:1; }
-	.steps li.done .dot { background:var(--accent); color:#fff; }
-	.steps li.current .dot { background:var(--chrome); color:#fff; box-shadow:0 0 0 4px rgba(26,26,24,.12); }
+	/* Κείμενο πάνω στο accent: --accent-text, όχι λευκό — δες σχόλιο στο :root. */
+	.steps li.done .dot { background:var(--accent); color:var(--accent-text); }
+	.steps li.current .dot { background:var(--chrome); color:var(--ink); box-shadow:0 0 0 4px rgba(0,0,0,.35); }
 	.steps .lbl { padding-top:3px; font-size:13px; font-weight:600; color:var(--ink3); }
 	.steps li.done .lbl, .steps li.current .lbl { color:var(--ink); }
 	/* ΟΥΔΕΤΕΡΟ, όχι πράσινο: το badge δείχνει όποια κατάσταση κι αν είναι, και
@@ -657,14 +686,17 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	.sign { margin-top:16px; border-top:1px solid var(--line); padding-top:14px; }
 	.sign h2 { font-size:13px; margin:0 0 4px; color:var(--ink); font-weight:700; }
 	.sign p.lead { margin:0 0 12px; font-size:12.5px; color:var(--ink2); }
-	.pad { border:2px dashed var(--line2); border-radius:8px; background:var(--fill); touch-action:none;
+	/* Λευκό πλαίσιο ΕΠΙΤΗΔΕΣ, όχι var(--fill): το kit το δείχνει ρητά έτσι στο
+	   δικό του B5, και το μελάνι της υπογραφής πρέπει να φαίνεται καθαρά μέσα
+	   στο PDF — δες --pad-ink στο :root. */
+	.pad { border:2px dashed var(--pad-border); border-radius:8px; background:#fff; touch-action:none;
 		width:100%; height:150px; display:block; }
 	.padbar { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
 	.padbar small { color:var(--ink3); font-size:12px; }
 	.btn { border:0; border-radius:8px; padding:11px 18px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; }
 	.btn--clear { background:var(--fill); color:var(--ink2); padding:6px 11px; font-size:11.5px; border:1px solid var(--line2); }
 	.btn--clear:hover { border-color:var(--ink3); }
-	.btn--sign { background:var(--accent); color:#fff; width:100%; margin-top:14px; height:46px; font-size:14px; font-weight:700; transition:filter .15s; }
+	.btn--sign { background:var(--accent); color:var(--accent-text); width:100%; margin-top:14px; height:46px; font-size:14px; font-weight:700; transition:filter .15s; }
 	.btn--sign:hover:not(:disabled) { filter:brightness(1.08); }
 	.btn--sign:disabled { opacity:.5; cursor:not-allowed; }
 	.consent { display:flex; gap:10px; align-items:flex-start; margin-top:14px; font-size:12px; color:var(--ink2); line-height:1.5; }
@@ -733,11 +765,20 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	var CONSENT_TEXT = <?php echo wp_json_encode( $consent_text ); ?>;
 	var SIGN = REST + '/sign';
 	var content = document.getElementById('content');
-	// Το μελάνι της υπογραφής, από το ίδιο --ink του :root. ΔΕΝ ξαναγράφεται εδώ:
-	// ο καμβάς γίνεται PNG που μπαίνει στο υπογεγραμμένο PDF, άρα αυτή η τιμή
-	// ΑΠΟΘΗΚΕΥΕΤΑΙ μέσα στο έγγραφο. Μέχρι τις 20/08 ήταν σκληροκωδικοποιημένο το
-	// navy #0a1f3d — η ταυτότητα που ξηλώθηκε από όλο το plugin στις 17-19/8.
-	var INK = (getComputedStyle(document.documentElement).getPropertyValue('--ink') || '').trim() || '#2a2926';
+	// Το μελάνι της υπογραφής, από το --pad-ink του :root — ΟΧΙ το --ink. ΔΕΝ
+	// ξαναγράφεται εδώ: ο καμβάς γίνεται PNG που μπαίνει στο υπογεγραμμένο PDF,
+	// άρα αυτή η τιμή ΑΠΟΘΗΚΕΥΕΤΑΙ μέσα στο έγγραφο. Μέχρι τις 20/08 ήταν
+	// σκληροκωδικοποιημένο το navy #0a1f3d.
+	//
+	// Ξεχωριστό token από 25/08, ΕΠΙΤΗΔΕΣ: μέχρι τότε το --ink ήταν ήδη σκούρο
+	// (κείμενο σε λευκή κάρτα) και δούλευε σαν μελάνι σε χαρτί — σύμπτωση, όχι
+	// σχέδιο. Η ευθυγράμμιση με το kit A έκανε το --ink ΑΝΟΙΧΤΟ (κείμενο σε
+	// σκούρο φόντο), αλλά το πλαίσιο υπογραφής ΕΞΑΚΟΛΟΥΘΕΙ να είναι λευκό — αν
+	// αυτή η γραμμή έμενε στο --ink, η υπογραφή θα ζωγραφιζόταν ΑΟΡΑΤΗ (σχεδόν-
+	// λευκό μελάνι σε λευκό φόντο) και θα το ανακάλυπτε πρώτος ο πελάτης που θα
+	// έστελνε κενό PNG. Το --pad-ink δεν ακολουθεί το θέμα, γιατί ο καμβάς δεν
+	// το ακολουθεί.
+	var INK = (getComputedStyle(document.documentElement).getPropertyValue('--pad-ink') || '').trim() || '#1a1a18';
 
 	function esc(s){ var d=document.createElement('div'); d.textContent=(s==null?'':String(s)); return d.innerHTML; }
 	// Τοπική ανάγνωση, χωρίς 'Z' — 22/08. Οι αποθηκευμένες ώρες είναι ώρα
