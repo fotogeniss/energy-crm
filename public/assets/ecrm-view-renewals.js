@@ -50,15 +50,15 @@ function renderRenewals(view, d) {
 		if (left <= 30) soon++;
 		return '<tr>' +
 			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(customer) + '">' + esc(initials(customer)) + '</span><span>' + esc(customer) + '</span></span></td>' +
-			'<td><span class="ecrm-code">' + esc(r.code || '') + '</span></td>' +
-			'<td>' + esc(r.provider_name || '—') + '</td>' +
-			'<td>' + (r.end_date ? fmtDate(r.end_date) : '—') + '</td>' +
+			'<td class="ecrm-col-sec"><span class="ecrm-code">' + esc(r.code || '') + '</span></td>' +
+			'<td class="ecrm-col-sec">' + esc(r.provider_name || '—') + '</td>' +
+			'<td class="ecrm-col-sec">' + (r.end_date ? fmtDate(r.end_date) : '—') + '</td>' +
 			'<td><span class="ecrm-agepill ' + cls + '">' + pill + '</span></td>' +
 			'<td><button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-renew="' + r.id + '">' + svgIcon('edit') + ' Ανανέωση</button></td>' +
 			'</tr>';
 	}).join('');
 	var table = rows.length
-		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th>Κωδικός</th><th>Πάροχος</th><th>Λήξη</th><th>Κατάσταση</th><th></th></tr></thead><tbody>' + body + '</tbody></table></div>'
+		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th class="ecrm-col-sec">Κωδικός</th><th class="ecrm-col-sec">Πάροχος</th><th class="ecrm-col-sec">Λήξη</th><th>Κατάσταση</th><th></th></tr></thead><tbody>' + body + '</tbody></table></div>'
 		: '<div class="ecrm-emptybox ecrm-emptybox--big"><span class="ecrm-emptybox__ico">✓</span><div class="ecrm-emptybox__txt">Καμία σύμβαση δεν λήγει σύντομα.</div></div>';
 	view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div class="ecrm-titlewrap"><span class="ecrm-pageicon">' +

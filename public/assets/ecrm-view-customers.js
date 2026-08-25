@@ -13,15 +13,15 @@ export function loadCustomers() {
 			var rows = (d.rows || []).map(function (c) {
 				return '<tr>' +
 					'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(c.name) + '">' + esc(initials(c.name)) + '</span><span>' + esc(c.name) + '</span></span></td>' +
-					'<td class="ecrm-mono">' + esc(c.afm || '—') + '</td>' +
+					'<td class="ecrm-mono ecrm-col-sec">' + esc(c.afm || '—') + '</td>' +
 					'<td>' + esc(c.phone || '—') + '</td>' +
-					'<td>' + esc(c.email || '—') + '</td>' +
+					'<td class="ecrm-col-sec">' + esc(c.email || '—') + '</td>' +
 					'<td><span class="ecrm-tariff">' + c.contracts + '</span></td>' +
-					'<td class="ecrm-muted">' + (c.last_at ? fmtDate(c.last_at) : '—') + '</td>' +
+					'<td class="ecrm-muted ecrm-col-sec">' + (c.last_at ? fmtDate(c.last_at) : '—') + '</td>' +
 					'</tr>';
 			}).join('');
 			var table = (d.rows && d.rows.length)
-				? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th>ΑΦΜ</th><th>Τηλέφωνο</th><th>Email</th><th>Συμβάσεις</th><th>Τελευταία</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+				? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th class="ecrm-col-sec">ΑΦΜ</th><th>Τηλέφωνο</th><th class="ecrm-col-sec">Email</th><th>Συμβάσεις</th><th class="ecrm-col-sec">Τελευταία</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
 				: '<div class="ecrm-empty">' + (customersState.q
 					? 'Δεν βρέθηκαν πελάτες για «' + esc(customersState.q) + '».'
 					: 'Δεν έχεις κανέναν πελάτη ακόμα. Ο πρώτος πελάτης προστίθεται αυτόματα με τη «Νέα αίτηση».') + '</div>';

@@ -36,7 +36,7 @@ function renderTeam(view, d) {
 
 		return '<tr class="ecrm-rowlink" data-member="' + m.id + '">' +
 			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(m.name) + '">' + esc(initials(m.name)) + '</span><span>' + esc(m.name) + '</span></span></td>' +
-			'<td>' + esc(m.email) + '</td>' +
+			'<td class="ecrm-col-sec">' + esc(m.email) + '</td>' +
 			'<td class="ecrm-tlnum">' + (m.contracts || 0) + '</td>' +
 			'<td>' + (m.active ? '<span class="ecrm-badge ecrm-badge--active">Ενεργός</span>' : '<span class="ecrm-badge ecrm-badge--cancelled">Ανενεργός</span>') + '</td>' +
 			'<td>' + promoteBtn +
@@ -46,7 +46,7 @@ function renderTeam(view, d) {
 	}).join('');
 
 	var table = members.length
-		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Ονοματεπώνυμο</th><th>Email</th><th>Συμβάσεις</th><th>Κατάσταση</th><th>Ενέργειες</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Ονοματεπώνυμο</th><th class="ecrm-col-sec">Email</th><th>Συμβάσεις</th><th>Κατάσταση</th><th>Ενέργειες</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
 		: '<div class="ecrm-emptybox"><div class="ecrm-emptybox__txt">Κανένα μέλος στην ομάδα ακόμα.</div></div>';
 
 	var canManage = d.can_manage;

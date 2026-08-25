@@ -22,13 +22,13 @@ function renderPending(view, d) {
 	var body = rows.map(function (r) {
 		return '<tr class="ecrm-rowlink" data-id="' + r.id + '">' +
 			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span><span>' + esc(r.customer) + '</span></span></td>' +
-			'<td><span class="ecrm-code">' + esc(r.code || '') + '</span></td>' +
+			'<td class="ecrm-col-sec"><span class="ecrm-code">' + esc(r.code || '') + '</span></td>' +
 			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || statuses[r.status] || r.status) + '</span></td>' +
 			'<td><span class="ecrm-agepill' + (r.stale ? ' is-stale' : '') + '">' + r.age_days + ' ημέρες</span></td>' +
 			'</tr>';
 	}).join('');
 	var table = rows.length
-		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th>Κωδικός</th><th>Κατάσταση</th><th>Ανοιχτή για</th></tr></thead><tbody>' + body + '</tbody></table></div>'
+		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th class="ecrm-col-sec">Κωδικός</th><th>Κατάσταση</th><th>Ανοιχτή για</th></tr></thead><tbody>' + body + '</tbody></table></div>'
 		: '<div class="ecrm-emptybox ecrm-emptybox--big"><span class="ecrm-emptybox__ico">✓</span><div class="ecrm-emptybox__txt">Καμία εκκρεμότητα — όλα εντάξει!</div></div>';
 
 	view.innerHTML =
