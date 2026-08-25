@@ -7,17 +7,23 @@
  * has to clear too.
  */
 
-import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 
 var commScope = 'own';
 export function loadCommissions() {
 	var view = viewEl('commissions');
-	fetch(api('/commissions') + '?scope=' + encodeURIComponent(commScope), { headers: H() })
-		.then(function (r) { return r.json(); })
-		.then(function (d) {
+	Promise.all([
+		fetch(api('/commissions') + '?scope=' + encodeURIComponent(commScope), { headers: H() }).then(function (r) { return r.json(); }),
+		fetch(api('/payouts') + '?scope=' + encodeURIComponent(commScope), { headers: H() }).then(function (r) { return r.json(); })
+	])
+		.then(function (results) {
+			var d = results[0], p = results[1];
 			if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
-			view.innerHTML = commissionsHTML(d);
+			view.innerHTML = commissionsHTML(d, (p && p.ok) ? p.rows : []);
 			view.querySelectorAll('[data-cscope]').forEach(function (b) { b.addEventListener('click', function () { commScope = this.getAttribute('data-cscope'); loadCommissions(); }); });
+			view.querySelectorAll('[data-payout-pdf]').forEach(function (b) {
+				b.addEventListener('click', function () { downloadStatement(this.getAttribute('data-payout-pdf'), this); });
+			});
 		})
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
 }
@@ -46,7 +52,65 @@ function paidBadge(m) {
 	return '<span class="ecrm-badge ecrm-badge--pending">' + paid + '/' + count + ' πληρωμένα</span>';
 }
 
-function commissionsHTML(d) {
+/* Βεβαιώσεις εκκαθάρισης — build queue 11.
+ *
+ * Ξεχωριστή κάρτα από το «Ιστορικό εκκαθαρίσεων» πιο πάνω επίτηδες: εκείνο
+ * είναι μηνιαία σύνολα υπολογισμένα ζωντανά από συμβάσεις, αυτό εδώ είναι οι
+ * πραγματικές παρτίδες πληρωμής (wp_ecrm_payouts) — τις φτιάχνει χειροκίνητα
+ * ο διαχειριστής και δεν ευθυγραμμίζονται πάντα με ημερολογιακό μήνα. Ίδιο
+ * scope-toggle («Δικά μου»/«Ομάδας») με την υπόλοιπη οθόνη — το mockup
+ * (docs/UI-PAYOUT-STATEMENT.html) ρώτησε ρητά και εγκρίθηκε: όχι δεύτερος
+ * εναλλάκτης, ο ίδιος του header.
+ */
+function payoutsHTML(rows) {
+	if (!rows || !rows.length) {
+		return '<div class="ecrm-card" style="margin-top:16px"><div class="ecrm-step">Βεβαιώσεις εκκαθάρισης</div><div class="ecrm-empty">Καμία παρτίδα εκκαθάρισης ακόμα.</div></div>';
+	}
+
+	var body = rows.map(function (b) {
+		var paid = b.status === 'paid';
+		return '<tr>' +
+			'<td><strong>' + esc(b.period) + '</strong>' + (commScope === 'team' ? '<div class="ecrm-muted">' + esc(b.partner) + '</div>' : '') + '</td>' +
+			'<td class="ecrm-col-sec">' + b.count + '</td>' +
+			'<td>' + (paid ? '<span class="ecrm-badge ecrm-badge--active">Πληρωμένη</span>' : '<span class="ecrm-badge ecrm-badge--pending">Εκκρεμεί</span>') + '</td>' +
+			'<td style="text-align:right" class="ecrm-mono">' + Number(b.amount).toFixed(0) + ' €</td>' +
+			'<td class="ecrm-rowactcol"><button type="button" class="ecrm-btn ecrm-btn--sm" data-payout-pdf="' + b.id + '">' +
+			'<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v13m0 0l-4-4m4 4l4-4"/><path d="M5 20h14"/></svg> PDF</button></td>' +
+			'</tr>';
+	}).join('');
+
+	return '<div class="ecrm-card" style="margin-top:16px"><div class="ecrm-step">Βεβαιώσεις εκκαθάρισης <span class="ecrm-step__hint">το επίσημο PDF κάθε παρτίδας πληρωμής</span></div>' +
+		'<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Περίοδος</th><th class="ecrm-col-sec">Συμβάσεις</th><th>Κατάσταση</th><th style="text-align:right">Ποσό</th><th></th></tr></thead><tbody>' +
+		body + '</tbody></table></div></div>';
+}
+
+/**
+ * Λήψη βεβαίωσης — ίδιο μοτίβο b64 → Blob με το downloadBinary() του
+ * ecrm-view-detail.js, αλλά με δικό του κουμπί ανά γραμμή αντί για ένα μόνο
+ * κουμπί οθόνης, γι' αυτό ξεχωριστή, μικρή συνάρτηση εδώ.
+ */
+function downloadStatement(id, btn) {
+	btn.disabled = true;
+	var idle = btn.innerHTML;
+	btn.textContent = 'Λήψη…';
+
+	fetch(api('/payouts/' + id + '/statement'), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) { toast((d && d.error) || 'Αποτυχία.', false); return; }
+			var bin = atob(d.b64), len = bin.length, arr = new Uint8Array(len);
+			for (var i = 0; i < len; i++) { arr[i] = bin.charCodeAt(i); }
+			var a = document.createElement('a');
+			a.href = URL.createObjectURL(new Blob([arr], { type: d.mime || 'application/pdf' }));
+			a.download = d.filename;
+			document.body.appendChild(a); a.click();
+			setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+		})
+		.catch(function () { toast('Σφάλμα δικτύου.', false); })
+		.finally(function () { btn.disabled = false; btn.innerHTML = idle; });
+}
+
+function commissionsHTML(d, payoutRows) {
 	var months = d.months || [];
 	var range = months.length ? (months[months.length - 1].label + ' → ' + months[0].label) : '—';
 	var avg = d.count ? (d.total / d.count) : 0;
@@ -90,5 +154,8 @@ function commissionsHTML(d) {
 		'<div class="ecrm-stat is-pending"><div class="ecrm-stat__k"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21z"/><path d="M9 8h6M9 12h6"/></svg> Προς πληρωμή</div><div class="ecrm-stat__v">' + Number(d.unpaid_total || 0).toFixed(0) + ' €</div></div></div>' +
 
 		// history
-		'<div class="ecrm-card"><div class="ecrm-step">Ιστορικό εκκαθαρίσεων <span class="ecrm-step__hint">μέσος όρος ' + avg.toFixed(0) + ' € / σύμβαση</span></div>' + hist + '</div>';
+		'<div class="ecrm-card"><div class="ecrm-step">Ιστορικό εκκαθαρίσεων <span class="ecrm-step__hint">μέσος όρος ' + avg.toFixed(0) + ' € / σύμβαση</span></div>' + hist + '</div>' +
+
+		// payout statements
+		payoutsHTML(payoutRows);
 }

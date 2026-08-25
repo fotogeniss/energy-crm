@@ -14,12 +14,20 @@
  * απόφαση (ποιος επιτρέπεται να πληρώνει). Βγήκε **μόνο το ερώτημα**, ώστε να
  * μπορεί να ελεγχθεί ο κανόνας που δεν ελεγχόταν ποτέ.
  *
+ * `find()`/`statementLines()`/`forScope()` (build queue 11) ήρθαν αργότερα, για
+ * τον ίδιο λόγο: η βεβαίωση PDF ενός συνεργάτη (νέα REST διαδρομή, scoped) και
+ * το wp-admin PDF (ECRM_Payouts::pdf(), admins) έπρεπε να διαβάζουν ΤΗΝ ΙΔΙΑ
+ * γραμμή κώδικα, όχι δύο αντίγραφα του ίδιου join που θα ξεσυγχρόνιζαν αργά.
+ *
  * @package EnergyCRM
  */
 
 declare(strict_types=1);
 
 namespace EnergyCRM\Persistence;
+
+use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Commission\CommissionAmount;
 
 final class PayoutRepository
 {
@@ -72,5 +80,112 @@ final class PayoutRepository
         );
 
         return (int) $affected > 0;
+    }
+
+    /**
+     * Μία παρτίδα εκκαθάρισης, ή `null`. Δεν ελέγχει scope — αυτό είναι δουλειά
+     * του καλούντος, ΠΡΙΝ αποφασίσει τι θα δείξει (δες `UserScope::includes()`).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function find(int $payoutId): ?array
+    {
+        global $wpdb;
+
+        if ($payoutId <= 0) {
+            return null;
+        }
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT * FROM %i WHERE id = %d',
+                Tables::name(Tables::PAYOUTS),
+                $payoutId
+            ),
+            ARRAY_A
+        );
+
+        return $row ?: null;
+    }
+
+    /**
+     * Οι παρτίδες που επιτρέπεται να δει ένα scope — δικές του, ή ολόκληρη η
+     * εγκατάσταση για διαχειριστή.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function forScope(UserScope $scope, int $limit = 200): array
+    {
+        global $wpdb;
+
+        [$clause, $scopeParams] = ScopeClause::forScope($scope);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM %i WHERE 1 = 1{$clause} ORDER BY id DESC LIMIT " . max(1, $limit),
+                [Tables::name(Tables::PAYOUTS), ...$scopeParams]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
+     * Οι γραμμές μιας βεβαίωσης εκκαθάρισης — το στιγμιότυπο ποσού ανά σύμβαση
+     * με το οποίο σφραγίστηκε η παρτίδα, όχι ο σημερινός υπολογισμός (δες
+     * `CommissionAmount::of()` — η ίδια απόφαση, ένα από τα σημεία της).
+     *
+     * Κοινή θέση για wp-admin (`ECRM_Payouts::pdf()`) και τη REST βεβαίωση του
+     * συνεργάτη· πριν το build queue 11 αυτό το join ζούσε μόνο μέσα στο
+     * wp-admin handler.
+     *
+     * @return list<array{code:string,customer:string,provider:string,amount:float}>
+     */
+    public function statementLines(int $payoutId): array
+    {
+        global $wpdb;
+
+        if ($payoutId <= 0) {
+            return [];
+        }
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT c.code, c.provider_id, c.program_id, c.energy_type, c.category, c.status,
+                        c.payout_amount,
+                        p.name AS provider_name, cu.first_name, cu.last_name, cu.company_name
+                 FROM %i c
+                 LEFT JOIN %i cu ON cu.id = c.customer_id
+                 LEFT JOIN %i p  ON p.id  = c.provider_id
+                 WHERE c.payout_id = %d ORDER BY c.code',
+                Tables::name(Tables::CONTRACTS),
+                Tables::name(Tables::CUSTOMERS),
+                Tables::name(Tables::PROVIDERS),
+                $payoutId
+            ),
+            ARRAY_A
+        );
+
+        $lines = [];
+
+        foreach ((array) $rows as $r) {
+            $name = $r['company_name'] ?: trim(($r['first_name'] ?? '') . ' ' . ($r['last_name'] ?? ''));
+
+            $lines[] = [
+                'code'     => $r['code'] ?: '—',
+                'customer' => $name !== '' ? $name : '—',
+                'provider' => $r['provider_name'] ?: '—',
+                'amount'   => CommissionAmount::of(
+                    $r,
+                    static fn (array $row): float =>
+                        class_exists('ECRM_Commissions') ? \ECRM_Commissions::amount_for($row) : 0.0
+                ),
+            ];
+        }
+
+        return $lines;
     }
 }

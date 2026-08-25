@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Βεβαίωση εκκαθάρισης PDF για συνεργάτη</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14px;margin:0 0 10px;max-width:880px}
+.lead b{color:#1a1a18}
+.src{color:#83817a;font-size:12px;margin:0 0 28px}
+.src code{background:#dcdad4;padding:1px 5px;border-radius:4px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin:34px 0 12px}
+.tag:first-of-type{margin-top:0}
+
+/* ---- κοινό κέλυφος, dark tokens του πραγματικού ecrm-app.css ---- */
+.appwrap{--bg:#141412;--surface:#1a1a18;--line:#33322e;--line-soft:#232320;
+	--ink:#f1f1ee;--muted:#a3a099;--navy:#f8f8f6;--amber:#16c217;
+	--st-active:#6bdd6d;--st-active-bg:#12240f;--st-pending:#e0b23d;--st-pending-bg:#2a220e;
+	background:var(--bg);border-radius:14px;padding:16px 18px 20px;color:var(--ink);max-width:640px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.twrap{overflow-x:auto}
+table{min-width:420px}
+.step{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
+.step__hint{text-transform:none;font-weight:500;color:var(--muted);letter-spacing:0;font-size:11px;float:right}
+.step__sub{font-size:11.5px;color:var(--muted);margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 8px;border-bottom:1px solid var(--line)}
+td{padding:10px 8px;border-bottom:1px solid var(--line-soft);color:#e4e3df;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.mono{font-variant-numeric:tabular-nums;text-align:right}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:700}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge.paid{background:var(--st-active-bg);color:var(--st-active)}
+.badge.unpaid{background:var(--st-pending-bg);color:var(--st-pending)}
+.dlbtn{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--ink);font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer}
+.dlbtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.dlbtn:hover{border-color:var(--amber);color:var(--amber)}
+
+.callout{margin-top:12px;padding:11px 13px;border-radius:10px;font-size:12.5px;line-height:1.55}
+.callout.good{background:#16241a;border:1px solid #22432b;color:#a7d9ae}
+.callout b{color:inherit}
+
+.notes{margin-top:40px;background:#fff;border:1px solid #dcdad4;border-radius:12px;padding:20px 24px}
+.notes h2{font-size:14px;margin:0 0 12px;color:#1a1a18}
+.notes ul{margin:0;padding-left:20px;font-size:13px;color:#3c3a36}
+.notes li{margin-bottom:9px}
+.notes li b{color:#1a1a18}
+.notes .q{background:#f3f1ea;border-left:3px solid #b8860b;padding:9px 12px;margin-top:14px;font-size:12.5px;border-radius:0 8px 8px 0}
+.notes .q b{color:#7a5c00}
+.notes .q + .q{margin-top:8px}
+</style></head>
+<body><main>
+
+<h1>Βεβαίωση εκκαθάρισης PDF για συνεργάτη</h1>
+<p class="lead">Build queue <b>11</b>. Το backend είναι ήδη έτοιμο (CHANGELOG 134): νέα διαδρομή
+<code>GET /payouts</code> (λίστα των δικών σου παρτίδων εκκαθάρισης) και <code>GET /payouts/{id}/statement</code>
+(η ίδια βεβαίωση PDF που φτιάχνει ήδη το wp-admin, scoped ώστε να βλέπεις μόνο τις δικές σου). Αυτό το mockup
+είναι το ΜΟΝΟ κομμάτι που λείπει: πού και πώς εμφανίζεται στον συνεργάτη ένα κουμπί λήψης.</p>
+<p class="src">Πρόταση τοποθέτησης: μέσα στην ήδη υπάρχουσα οθόνη «Προμήθειες» (<code>ecrm-view-commissions.js</code>),
+ΚΑΤΩ από το ήδη υπάρχον «Ιστορικό εκκαθαρίσεων» (που δείχνει μηνιαία σύνολα από συμβάσεις — διαφορετική έννοια από
+τις πραγματικές παρτίδες πληρωμής, που τις δημιουργεί ο διαχειριστής χειροκίνητα και δεν ευθυγραμμίζονται πάντα
+με ημερολογιακό μήνα). Νέα, ξεχωριστή κάρτα.</p>
+
+<div class="tag">Πρόταση — νέα κάρτα κάτω από το ιστορικό</div>
+<div class="appwrap">
+<div class="card">
+<div class="step">Βεβαιώσεις εκκαθάρισης <span class="step__hint">PDF ανά παρτίδα πληρωμής</span></div>
+<div class="step__sub">Το επίσημο χαρτί κάθε παρτίδας που έχεις μπει — ίδιο PDF με αυτό που βλέπει ο διαχειριστής.</div>
+<div class="twrap"><table><thead><tr><th>Περίοδος</th><th>Συμβάσεις</th><th>Κατάσταση</th><th></th></tr></thead><tbody>
+<tr><td><strong>Ιούλιος 2026</strong></td><td>5</td><td><span class="badge paid">Πληρωμένη</span></td>
+<td><button type="button" class="dlbtn"><svg viewBox="0 0 24 24"><path d="M12 3v13m0 0l-4-4m4 4l4-4"/><path d="M5 20h14"/></svg> PDF</button></td></tr>
+<tr><td><strong>Αύγουστος 2026</strong></td><td>3</td><td><span class="badge unpaid">Εκκρεμεί</span></td>
+<td><button type="button" class="dlbtn"><svg viewBox="0 0 24 24"><path d="M12 3v13m0 0l-4-4m4 4l4-4"/><path d="M5 20h14"/></svg> PDF</button></td></tr>
+</tbody></table></div>
+</div>
+</div>
+<div class="callout good"><b>Λήψη πριν την πληρωμή επιτρέπεται.</b> Το wp-admin το επιτρέπει ήδη σήμερα (το κουμπί
+«PDF» εκεί δεν ελέγχει κατάσταση) — η βεβαίωση δείχνει τι έχει ενταχθεί στην παρτίδα, με σαφή ένδειξη
+«Εκκρεμεί»/«Πληρωμένη» πάνω στο ίδιο το PDF. Ίδια συμπεριφορά, όχι νέος κανόνας.</div>
+
+<div class="notes">
+<h2>Σημειώσεις για έγκριση</h2>
+<ul>
+<li><b>Νέα κάρτα, όχι αλλαγή στο υπάρχον «Ιστορικό εκκαθαρίσεων».</b> Εκείνο μένει όπως είναι (μηνιαία σύνολα
+από συμβάσεις) — οι πραγματικές παρτίδες πληρωμής είναι διαφορετική λίστα, γι' αυτό ξεχωριστή κάρτα αντί για
+νέα στήλη στον ήδη υπάρχοντα πίνακα.</li>
+<li><b>Κουμπί σε ΚΑΘΕ γραμμή, ανεξαρτήτως κατάστασης.</b> Ίδιο με το wp-admin σήμερα — η βεβαίωση μιας
+εκκρεμούς παρτίδας είναι έγκυρη, απλώς λέει «Εκκρεμεί» πάνω της.</li>
+<li><b>«Δικά μου» vs «Ομάδας».</b> Το backend υποστηρίζει ήδη <code>?scope=team</code> (ίδιο με τις
+«Προμήθειες» και τις «Συμβάσεις») — το mockup δείχνει μόνο «Δικά μου». Θέλεις τον ίδιο εναλλάκτη
+«Δικά μου/Ομάδας» εδώ, ώστε ένας manager να κατεβάζει και βεβαιώσεις της ομάδας του, ή μένει αυστηρά
+προσωπικό;</li>
+<li><b>Άνοιγμα PDF.</b> Ίδιο μοτίβο με το <code>contractPdf</code> σήμερα — η απάντηση έρχεται base64,
+το JS το ανοίγει σε νέα καρτέλα (<code>Blob</code> + <code>window.open</code>), όχι απευθείας link.</li>
+</ul>
+<div class="q"><b>Ερώτηση 1:</b> εγκρίνεις την τοποθέτηση (νέα κάρτα, μέσα στην οθόνη «Προμήθειες», κάτω από το
+ιστορικό) ή προτιμάς αλλού;</div>
+<div class="q"><b>Ερώτηση 2:</b> «Δικά μου» μόνο, ή και εναλλάκτης «Ομάδας» για managers;</div>
+</div>
+
+</main></body></html>
