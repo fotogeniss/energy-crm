@@ -20,6 +20,7 @@ use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
+use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Persistence\ContractRepository;
@@ -36,6 +37,7 @@ final class ContractStatusController implements Controller
         private readonly ContractLifecycle $lifecycle,
         private readonly DraftExitGate $draftExit,
         private readonly CancellationGate $cancellation,
+        private readonly DeletionGate $deletion,
     ) {
     }
 
@@ -182,6 +184,15 @@ final class ContractStatusController implements Controller
 
         if (! $this->contracts->exists($id, $scope)) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
+        }
+
+        // build queue 15: μια υπογεγραμμένη σύμβαση δεν διαγράφεται ποτέ — θα
+        // παρέσερνε και τον φάκελο υπογραφής μέσω του foreign key. Δες
+        // DeletionGate.
+        $refusal = $this->deletion->refusalOnDelete($id);
+
+        if ($refusal !== null) {
+            return new WP_REST_Response(['ok' => false, 'error' => $refusal], 409);
         }
 
         // Bytes before rows: the foreign key would drop the file records and

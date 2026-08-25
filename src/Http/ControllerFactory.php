@@ -54,6 +54,7 @@ final class ControllerFactory
         $details   = Services::contractDetails();
         $draftExit = Services::draftExitGate();
         $cancel    = Services::cancellationGate();
+        $deletion  = Services::deletionGate();
 
         return [
             // Contracts — read, write, status, bulk, documents.
@@ -72,9 +73,10 @@ final class ControllerFactory
                 Services::files(),
                 $lifecycle,
                 $draftExit,
-                $cancel
+                $cancel,
+                $deletion
             ),
-            new ContractsBulkController($scope, Services::contracts(), Services::files(), $lifecycle),
+            new ContractsBulkController($scope, Services::contracts(), Services::files(), $lifecycle, $deletion),
             new ContractDocumentsController($scope, $details, Services::files(), Services::contractDocuments()),
             new DocumentsController($scope, Services::contracts(), Services::files()),
             new DuplicateCheckController($scope, $queries),

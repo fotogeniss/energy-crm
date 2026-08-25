@@ -28,6 +28,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\WordPressScopeResolver;
 use EnergyCRM\Domain\Contract\AutoProcess;
 use EnergyCRM\Domain\Contract\CancellationGate;
+use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Infrastructure\ContractNotices;
@@ -119,6 +120,8 @@ final class Services
 
     private static ?CancellationGate $cancellationGate = null;
 
+    private static ?DeletionGate $deletionGate = null;
+
     private static ?ContractLifecycle $lifecycle = null;
 
     private static ?AutoProcess $autoProcess = null;
@@ -169,6 +172,11 @@ final class Services
     public static function cancellationGate(): CancellationGate
     {
         return self::$cancellationGate ??= new CancellationGate(self::events());
+    }
+
+    public static function deletionGate(): DeletionGate
+    {
+        return self::$deletionGate ??= new DeletionGate(self::events());
     }
 
     public static function documents(): DocumentQueue
@@ -355,5 +363,6 @@ final class Services
         // δείχνουν σε παλιά.
         self::$draftExitGate     = null;
         self::$cancellationGate  = null;
+        self::$deletionGate      = null;
     }
 }
