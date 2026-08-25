@@ -380,6 +380,15 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-timeline__dot { width: 12px; height: 12px; flex: 0 0 12px; border-radius: 50%; background: var(--amber); margin-top: 2px; z-index: 1; box-shadow: 0 0 0 3px var(--accent-wash); }
 .ecrm-timeline__txt { font-size: var(--fs-14); color: var(--ink); font-weight: 500; }
 .ecrm-timeline__time { font-size: var(--fs-12); color: var(--muted); margin-top: 2px; }
+/* «Ποιος» -- build queue 09/10, docs/UI-TIMELINE-ACTOR.html (§1.8, εγκρίθηκε
+   25/08). Δική του γραμμή κάτω από την ώρα, όχι δίπλα της: σε στενή οθόνη
+   «πριν 2 ώρες · Όνομα Επώνυμο» θα έσπαγε άσχημα. */
+.ecrm-timeline__who { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; }
+/* Ειδικότητα (0,2,0) επίτηδες: το .ecrm-cell-mark (0,1,0) ορίζεται ΠΙΟ ΚΑΤΩ
+   στο ίδιο αρχείο και θα νικούσε ένα απλό .ecrm-timeline__mark στο ίδιο (0,1,0). */
+.ecrm-timeline__who .ecrm-cell-mark { width: 16px; height: 16px; flex: 0 0 16px; font-size: var(--fs-9); border-radius: 50%; }
+.ecrm-timeline__whoname { font-size: var(--fs-11); color: var(--muted); font-weight: 600; }
+.ecrm-timeline__whoname.is-sys { font-style: italic; font-weight: 500; }
 
 @media (max-width: 860px) {
 	.ecrm-dlgrid { grid-template-columns: 1fr 1fr; }
@@ -1305,6 +1314,10 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
    όταν αποδόθηκε η οθόνη: οι δύο στήλες έβγαιναν η μία κάτω από την άλλη. */
 .ecrm-pgrid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 14px; align-items: start; }
 @media (max-width: 1000px) { .ecrm-pgrid { grid-template-columns: 1fr; } }
+/* build queue 07: η βασική στήλη πήρε δεύτερη κάρτα (Προμήθεια · ανά
+   σύμβαση, docs/UI-COMMISSIONS-ROWS.html) -- χωρίς αυτόν τον wrapper το
+   .ecrm-pgrid θα την έστελνε στη στενή στήλη δίπλα, όχι από κάτω. */
+.ecrm-pgrid__main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .ecrm-pgrid__side { display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 1100px) { .ecrm-kpis--4 { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px)  { .ecrm-kpis--4 { grid-template-columns: 1fr; } }

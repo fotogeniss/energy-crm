@@ -100,7 +100,7 @@ final class TeamController implements Controller
                 'permission_callback' => $manager,
                 'args'                => [
                     'id' => ['type' => 'integer', 'required' => true],
-                    'op' => ['type' => 'string', 'required' => true, 'enum' => ['toggle', 'remove']],
+                    'op' => ['type' => 'string', 'required' => true, 'enum' => ['toggle', 'remove', 'promote']],
                 ],
             ],
         ]);
@@ -236,9 +236,10 @@ final class TeamController implements Controller
                 'sign'       => $sign,
                 'commission' => $this->commissionTotals($scope, $member),
             ],
-            'recent'   => $this->recent($scope, $member),
-            'downline' => $this->downline($member),
-            'statuses' => ContractStatus::labels(),
+            'recent'          => $this->recent($scope, $member),
+            'commission_rows' => $this->commissionRows($scope, $member),
+            'downline'        => $this->downline($member),
+            'statuses'        => ContractStatus::labels(),
         ], 200);
     }
 
@@ -274,6 +275,41 @@ final class TeamController implements Controller
             'unpaid' => round($unpaid, 2),
             'count'  => $count,
         ];
+    }
+
+    /**
+     * Οι πιο πρόσφατες γραμμές πίσω από το `commissionTotals()` παραπάνω —
+     * build queue 07, `docs/UI-COMMISSIONS-ROWS.html` (§1.8, εγκρίθηκε 25/08).
+     *
+     * Ίδιο σχήμα γραμμής με το `CommissionsController::index()`
+     * (`code`/`customer`/`provider`/`amount`/`paid`) επίτηδες — δεύτερη
+     * εκδοχή του ίδιου «πόσο βγάζει μια σύμβαση» θα αποκλίνει αργά ή γρήγορα.
+     *
+     * Όριο 10 εδώ, ΟΧΙ στο `commissionTotals()`: το σύνολο πρέπει να μένει
+     * σωστό πάνω στο πλήρες σύνολο (όριο 2000, όπως ήδη κάνει το
+     * `commissionTotals()`) — μόνο η ΛΙΣΤΑ που φαίνεται περιορίζεται.
+     *
+     * @return list<array{code: string, customer: string, provider: string, amount: float, paid: bool}>
+     */
+    private function commissionRows(UserScope $scope, int $member): array
+    {
+        $out = [];
+
+        foreach ($this->commissions->payable($scope, ECRM_DB::payable_statuses(), 10, $member) as $row) {
+            $amount   = CommissionAmount::of($row, [ECRM_Commissions::class, 'amount_for']);
+            $customer = $row['company_name']
+                ?: trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+
+            $out[] = [
+                'code'     => (string) $row['code'],
+                'customer' => $customer !== '' ? $customer : '—',
+                'provider' => $row['provider_name'] ?: '—',
+                'amount'   => round($amount, 2),
+                'paid'     => ($row['payout_status'] ?? '') === 'paid',
+            ];
+        }
+
+        return $out;
     }
 
     /**
@@ -406,6 +442,10 @@ final class TeamController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν ανήκει στην ομάδα σου.'], 403);
         }
 
+        if ($request['op'] === 'promote') {
+            return $this->promote($member);
+        }
+
         if ($request['op'] === 'remove') {
             // Πρώτα φεύγει η δουλειά του, μετά ο ίδιος. Ανάποδη σειρά και το
             // `detach()` θα τον είχε ήδη βγάλει από το scope, οπότε η μεταφορά
@@ -433,6 +473,44 @@ final class TeamController implements Controller
         $this->team->setDisabled($member, ! $wasDisabled);
 
         return new WP_REST_Response(['ok' => true, 'active' => $wasDisabled], 200);
+    }
+
+    /**
+     * Πωλητής -> Συνεργάτης. Ό,τι μπορούσε να κάνει πριν, το μπορεί ακόμα — ο
+     * Συνεργάτης έχει υπερσύνολο δικαιωμάτων του Πωλητή σε όλο το
+     * `Roles::matrix()` — και επιπλέον αποκτά `MANAGE_TEAM`, δηλαδή τη δική
+     * του downline (`docs/UI-TEAM-MERGE-PROMOTE.html`, §1.8, εγκρίθηκε
+     * 25/08).
+     *
+     * ## Η θέση στο δέντρο δεν κουνιέται
+     *
+     * `set_role()` αλλάζει μόνο `wp_user.roles` — δεν αγγίζει καθόλου το
+     * `NetworkRepository` (ξεχωριστό, materialized path). Το μέλος παραμένει
+     * ακριβώς εκεί που ήταν στο δίκτυο, στη downline του manager που το
+     * προήγαγε, ό,τι κι αν χτίσει από κάτω του μετά. Αυτό ήταν ρητό ερώτημα
+     * του ιδιοκτήτη πριν το mockup, όχι υπόθεση εργασίας.
+     *
+     * Μετά την προαγωγή το μέλος εξαφανίζεται από αυτή τη λίστα και
+     * εμφανίζεται στο `/network` — όχι με νέα λογική εδώ, απλώς επειδή το
+     * `index()` ήδη φιλτράρει έξω όποιον έχει `Roles::PARTNER` («Sub-partners
+     * run teams of their own and belong under /network»), και το `network()`
+     * ήδη φιλτράρει μέσα ακριβώς αυτό.
+     */
+    private function promote(int $member): WP_REST_Response
+    {
+        $user = get_userdata($member);
+
+        if (! $user) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε.'], 404);
+        }
+
+        if ($this->crmRoleOf($user) === Roles::PARTNER) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Είναι ήδη Συνεργάτης.'], 409);
+        }
+
+        $user->set_role(Roles::PARTNER);
+
+        return new WP_REST_Response(['ok' => true, 'promoted' => true], 200);
     }
 
     public function network(): WP_REST_Response

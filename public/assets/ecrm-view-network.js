@@ -2,6 +2,7 @@
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
+import { openPartner } from '@energy-crm/navigate';
 
 export function loadNetwork() {
 	var view = viewEl('network');
@@ -21,8 +22,13 @@ function renderNetwork(view, partners) {
 
 	var bodyCard;
 	if (partners.length) {
+		// Ο υπότιτλος λέει ρητά «Πάτα σε έναν για να δεις τα στατιστικά του»,
+		// αλλά καμία γραμμή δεν είχε ποτέ click handler -- η υπόσχεση της
+		// οθόνης της ίδιας δεν εκτελούνταν. Ίδιο μοτίβο με το
+		// ecrm-view-team.js: data-member + openPartner(), προϋπάρχουσα
+		// συμπεριφορά που έλειπε από εδώ, όχι νέα σχεδιαστική απόφαση.
 		var rows = partners.map(function (p) {
-			return '<tr><td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(p.name) + '">' + esc(initials(p.name)) + '</span><span>' + esc(p.name) + '</span></span></td>' +
+			return '<tr class="ecrm-rowlink" data-member="' + p.id + '"><td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(p.name) + '">' + esc(initials(p.name)) + '</span><span>' + esc(p.name) + '</span></span></td>' +
 				'<td>' + esc(p.email) + '</td><td>' + (p.team_size || 0) + '</td><td>' + (p.contracts || 0) + '</td></tr>';
 		}).join('');
 		bodyCard = '<div class="ecrm-card"><div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Συνεργάτης</th><th>Email</th><th>Ομάδα</th><th>Αιτήσεις</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
@@ -44,6 +50,12 @@ function renderNetwork(view, partners) {
 
 	view.innerHTML = head + bodyCard + inviteForm;
 
+	view.querySelectorAll('[data-member]').forEach(function (row) {
+		row.addEventListener('click', function (ev) {
+			if (ev.target.closest('button')) { return; }
+			openPartner(this.getAttribute('data-member'));
+		});
+	});
 	view.querySelectorAll('[data-show-invite]').forEach(function (b) {
 		b.addEventListener('click', function () { var w = view.querySelector('[data-invitewrap]'); if (w) { w.hidden = !w.hidden; if (!w.hidden) w.scrollIntoView({ behavior: 'smooth' }); } });
 	});

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Χρονολόγιο σύμβασης: εμφάνιση του «ποιος»</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14px;margin:0 0 10px;max-width:860px}
+.lead b{color:#1a1a18}
+.src{color:#83817a;font-size:12px;margin:0 0 28px}
+.src code{background:#dcdad4;padding:1px 5px;border-radius:4px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin:34px 0 12px}
+.tag:first-of-type{margin-top:0}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:980px){.pair{grid-template-columns:1fr}}
+.col h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#83817a;margin:0 0 10px;font-weight:800}
+.col h2 small{display:block;text-transform:none;letter-spacing:0;font-weight:500;color:#a3a099;margin-top:2px;font-size:11.5px}
+
+/* ---- κοινό κέλυφος, dark tokens του πραγματικού ecrm-app.css ---- */
+.appwrap{--bg:#141412;--surface:#1a1a18;--line:#33322e;
+	--ink:#f1f1ee;--muted:#a3a099;--navy:#f8f8f6;--amber:#16c217;--accent-wash:#12240f;
+	background:var(--bg);border-radius:14px;padding:16px 18px 20px;color:var(--ink)}
+.step{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:flex;gap:12px;padding:0 0 18px;position:relative}
+.tl li:not(:last-child)::after{content:"";position:absolute;left:5px;top:14px;bottom:0;width:2px;background:var(--line)}
+.dot{width:12px;height:12px;flex:0 0 12px;border-radius:50%;background:var(--amber);margin-top:2px;z-index:1;box-shadow:0 0 0 3px var(--accent-wash)}
+.txt{font-size:14px;color:var(--ink);font-weight:500}
+.time{font-size:12px;color:var(--muted);margin-top:2px}
+.who{display:inline-flex;align-items:center;gap:5px;margin-top:5px}
+.mark{width:16px;height:16px;flex:0 0 16px;border-radius:50%;display:grid;place-items:center;font-size:8px;font-weight:800;color:#0c0c0b}
+.whoname{font-size:12px;color:var(--muted);font-weight:600}
+.whoname.sys{font-style:italic;font-weight:500}
+
+.callout{margin-top:12px;padding:11px 13px;border-radius:10px;font-size:12.5px;line-height:1.55}
+.callout.bad{background:#3a2323;border:1px solid #5c3232;color:#f3b8bb}
+.callout.good{background:#16241a;border:1px solid #22432b;color:#a7d9ae}
+.callout b{color:inherit}
+
+.notes{margin-top:40px;background:#fff;border:1px solid #dcdad4;border-radius:12px;padding:20px 24px}
+.notes h2{font-size:14px;margin:0 0 12px;color:#1a1a18}
+.notes ul{margin:0;padding-left:20px;font-size:13px;color:#3c3a36}
+.notes li{margin-bottom:9px}
+.notes li b{color:#1a1a18}
+.notes .q{background:#f3f1ea;border-left:3px solid #b8860b;padding:9px 12px;margin-top:14px;font-size:12.5px;border-radius:0 8px 8px 0}
+.notes .q b{color:#7a5c00}
+</style></head>
+<body><main>
+
+<h1>Χρονολόγιο σύμβασης — εμφάνιση του «ποιος»</h1>
+<p class="lead">Build queue <b>09/10</b>. Το backend καταγράφει ήδη ποιος έκανε κάθε ενέργεια (<code>EventRepository</code>,
+task 05/126) και το <code>GET /contracts/{id}</code> το στέλνει ήδη έτοιμο ως <code>events[].actor</code> — απλώς η οθόνη
+δεν το διαβάζει. Καμία αλλαγή backend εδώ, μόνο η προσθήκη μιας γραμμής στο χρονολόγιο.</p>
+<p class="src">Σημερινός κώδικας: <code>public/assets/ecrm-view-detail.js</code>, το <code>.map()</code> του timeline δεν
+διαβάζει καθόλου το <code>e.actor</code>. Ετικέτα «ποιος»: ίδιο μοτίβο με <code>initials()</code>/<code>tint()</code>/
+<code>.ecrm-cell-mark</code> που ήδη χρησιμοποιεί η οθόνη Ομάδας, σε μικρότερο μέγεθος (16px).</p>
+
+<div class="tag">Σύγκριση</div>
+<div class="pair">
+<div class="col">
+<h2>Πριν <small>μόνο τι έγινε και πότε — όχι ποιος</small></h2>
+<div class="appwrap">
+<p class="step">Ιστορικό</p>
+<ul class="tl">
+<li><span class="dot"></span><div><div class="txt">Νέα → Σε επεξεργασία</div><div class="time">πριν 2 ώρες</div></div></li>
+<li><span class="dot"></span><div><div class="txt">Δημιουργήθηκε η σύμβαση</div><div class="time">πριν 3 μέρες</div></div></li>
+</ul>
+</div>
+<div class="callout bad"><b>Πρόβλημα:</b> σε γραφείο με πολλούς πωλητές δεν φαίνεται ποιος άλλαξε τι — το
+<code>events[].actor</code> υπάρχει ήδη στο ίδιο response και δεν χρησιμοποιείται.</div>
+</div>
+
+<div class="col">
+<h2>Μετά <small>μικρό badge με το όνομα, κάτω από την ώρα</small></h2>
+<div class="appwrap">
+<p class="step">Ιστορικό</p>
+<ul class="tl">
+<li><span class="dot"></span><div><div class="txt">Νέα → Σε επεξεργασία</div><div class="time">πριν 2 ώρες</div>
+<div class="who"><span class="mark" style="background:hsl(140 50% 55%)">ΓΚ</span><span class="whoname">Γιώργος Κωνσταντίνου</span></div></div></li>
+<li><span class="dot"></span><div><div class="txt">Δημιουργήθηκε η σύμβαση</div><div class="time">πριν 3 μέρες</div>
+<div class="who"><span class="whoname sys">Σύστημα</span></div></div></li>
+</ul>
+</div>
+<div class="callout good"><b>Χωρίς badge για «Σύστημα».</b> Ένα κύκλο-πλάσμα με αρχικά για ενέργειες χωρίς
+συγκεκριμένο άνθρωπο (π.χ. αυτόματη εισαγωγή Excel) θα υπόσχονταν πρόσωπο που δεν υπάρχει — το backend ήδη
+ξεχωρίζει «Σύστημα» από άγνωστο, η οθόνη απλώς το σέβεται.</div>
+</div>
+</div>
+
+<div class="notes">
+<h2>Σημειώσεις για έγκριση</h2>
+<ul>
+<li><b>Θέση.</b> Το όνομα μπαίνει σε δική του γραμμή κάτω από την ώρα, όχι δίπλα της στην ίδια γραμμή — σε
+κινητό μια μακριά γραμμή «πριν 2 ώρες · Γιώργος Κωνσταντίνου» θα έσπαγε άσχημα.</li>
+<li><b>Χρώμα badge.</b> Ίδιο <code>tint(name)</code> με παντού αλλού στο προϊόν — το ίδιο πρόσωπο παίρνει πάντα
+την ίδια απόχρωση σε κάθε οθόνη (Ομάδα, Δίκτυο, τώρα και Ιστορικό).</li>
+<li><b>«Σύστημα».</b> Χωρίς badge, με πλάγια γραφή — οπτικά ξεχωριστό από πραγματικό άνθρωπο, όχι απλώς άλλο
+όνομα στη λίστα.</li>
+<li><b>Backend.</b> Καμία αλλαγή. Το <code>actor</code> έρχεται ήδη έτοιμο σε κάθε event.</li>
+</ul>
+<div class="q"><b>Ερώτηση:</b> Συμφωνείς με τη θέση/μέγεθος του badge όπως δείχνει το «Μετά», ή προτιμάς κάτι πιο
+διακριτικό (π.χ. μόνο το όνομα, χωρίς έγχρωμο κύκλο);</div>
+</div>
+
+</main></body></html>
