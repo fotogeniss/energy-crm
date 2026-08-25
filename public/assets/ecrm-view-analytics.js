@@ -74,10 +74,10 @@ function analyticsHTML(d) {
 	// leaderboard
 	var lb = (d.leaderboard || []);
 	var lbHTML = lb.length
-		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>#</th><th>Συνεργάτης</th><th>Συμβάσεις</th><th style="text-align:right">Προμήθεια €</th></tr></thead><tbody>' +
+		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>#</th><th>Συνεργάτης</th><th class="ecrm-col-sec">Συμβάσεις</th><th style="text-align:right">Προμήθεια €</th></tr></thead><tbody>' +
 			lb.map(function (r, i) {
 				var medal = i < 3 ? '<span class="ecrm-medal ecrm-medal--' + (i + 1) + '">' + (i + 1) + '</span>' : (i + 1);
-				return '<tr><td>' + medal + '</td><td><strong>' + esc(r.name) + '</strong></td><td>' + r.count + '</td>' +
+				return '<tr><td>' + medal + '</td><td><strong>' + esc(r.name) + '</strong></td><td class="ecrm-col-sec">' + r.count + '</td>' +
 					'<td style="text-align:right" class="ecrm-mono">' + Number(r.amount).toFixed(0) + ' €</td></tr>';
 			}).join('') + '</tbody></table></div>'
 		: '<div class="ecrm-empty">Διαθέσιμο σε προβολή «Ομάδας».</div>';

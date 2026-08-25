@@ -52,9 +52,9 @@ function commissionsHTML(d) {
 	var avg = d.count ? (d.total / d.count) : 0;
 
 	var hist = months.length
-		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Περίοδος</th><th>Συμβόλαια</th><th>Κατάσταση</th><th style="text-align:right">Σύνολο</th></tr></thead><tbody>' +
+		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Περίοδος</th><th class="ecrm-col-sec">Συμβόλαια</th><th>Κατάσταση</th><th style="text-align:right">Σύνολο</th></tr></thead><tbody>' +
 			months.map(function (m) {
-				return '<tr><td><strong>' + esc(m.label) + '</strong></td><td>' + m.count + ' συμβόλαια</td>' +
+				return '<tr><td><strong>' + esc(m.label) + '</strong></td><td class="ecrm-col-sec">' + m.count + ' συμβόλαια</td>' +
 					'<td>' + paidBadge(m) + '</td>' +
 					'<td style="text-align:right" class="ecrm-mono">' + Number(m.amount).toFixed(0) + ' €</td></tr>';
 			}).join('') + '</tbody></table></div>'
