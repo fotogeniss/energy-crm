@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Οθόνη Ομάδας: αφαίρεση Καταχωρητή + προαγωγή σε Συνεργάτη</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14px;margin:0 0 10px;max-width:860px}
+.lead b{color:#1a1a18}
+.src{color:#83817a;font-size:12px;margin:0 0 28px}
+.src code{background:#dcdad4;padding:1px 5px;border-radius:4px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin:34px 0 12px}
+.tag:first-of-type{margin-top:0}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:980px){.pair{grid-template-columns:1fr}}
+.col h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#83817a;margin:0 0 10px;font-weight:800}
+.col h2 small{display:block;text-transform:none;letter-spacing:0;font-weight:500;color:#a3a099;margin-top:2px;font-size:11.5px}
+
+/* ---- κοινό κέλυφος οθόνης, dark tokens του πραγματικού ecrm-app.css ---- */
+.appwrap{--bg:#141412;--surface:#1a1a18;--surface2:#1f1f1c;--line:#33322e;--line-soft:#232320;
+	--ink:#f1f1ee;--muted:#a3a099;--navy:#f8f8f6;--amber:#16c217;--on-accent:#0b3d0c;
+	--accent-wash:#12240f;--accent-soft:#1e4a21;--accent-ink:#6bdd6d;--st-active:#6bdd6d;--st-active-bg:#12240f;
+	background:var(--bg);border-radius:14px;padding:16px 18px 20px;color:var(--ink)}
+.ttl{font-size:16px;font-weight:800;color:var(--navy);margin:0 0 2px}
+.sub{font-size:12px;color:var(--muted);margin:0 0 14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tab{font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface2);color:var(--muted);display:flex;align-items:center;gap:6px}
+.tab.on{background:var(--navy);color:#141412;border-color:var(--navy)}
+.tab span{font-size:10.5px;opacity:.75}
+.listhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.count{font-size:12px;color:var(--muted);font-weight:600}
+.addbtn{font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:8px;background:var(--amber);color:var(--on-accent);border:none}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:7px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line-soft);color:#e4e3df;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.cust{display:flex;align-items:center;gap:7px}
+.mark{width:24px;height:24px;border-radius:50%;background:#3a3630;color:var(--navy);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:700;background:var(--st-active-bg);color:var(--st-active)}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.rowbtn{font-size:10.5px;font-weight:700;padding:5px 9px;border-radius:7px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);margin-right:5px;white-space:nowrap}
+.rowbtn.promote{border-color:var(--accent-soft);background:var(--accent-wash);color:var(--accent-ink)}
+.acts{display:flex;flex-wrap:wrap;gap:5px}
+
+/* ---- confirm dialog μίμηση για το AFTER ---- */
+.confirmbox{margin-top:14px;background:var(--surface2);border:1px solid var(--accent-soft);border-radius:10px;padding:12px 14px}
+.confirmbox .hd{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:5px}
+.confirmbox .bd{font-size:11.5px;color:var(--muted);line-height:1.55}
+.confirmbox .bd b{color:var(--ink)}
+.confirmbox .btns{display:flex;gap:8px;margin-top:10px}
+.confirmbox button{font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:7px;border:1px solid transparent;font-family:inherit}
+.confirmbox button.primary{background:var(--amber);color:var(--on-accent)}
+.confirmbox button.ghost{background:var(--surface2);border-color:var(--line);color:var(--ink)}
+
+.callout{margin-top:12px;padding:11px 13px;border-radius:10px;font-size:12.5px;line-height:1.55}
+.callout.bad{background:#3a2323;border:1px solid #5c3232;color:#f3b8bb}
+.callout.good{background:#16241a;border:1px solid #22432b;color:#a7d9ae}
+.callout b{color:inherit}
+
+.notes{margin-top:40px;background:#fff;border:1px solid #dcdad4;border-radius:12px;padding:20px 24px}
+.notes h2{font-size:14px;margin:0 0 12px;color:#1a1a18}
+.notes ul{margin:0;padding-left:20px;font-size:13px;color:#3c3a36}
+.notes li{margin-bottom:9px}
+.notes li b{color:#1a1a18}
+.notes .q{background:#f3f1ea;border-left:3px solid #b8860b;padding:9px 12px;margin-top:14px;font-size:12.5px;border-radius:0 8px 8px 0}
+.notes .q b{color:#7a5c00}
+</style></head>
+<body><main>
+
+<h1>Οθόνη «Η ομάδα μου» — δύο αλλαγές μαζί</h1>
+<p class="lead">Ο Καταχωρητής συγχωνεύτηκε στον Πωλητή στο backend (<code>Roles::matrix()</code> v6, ήδη σε παραγωγή) —
+το tab «Καταχωρητές» δείχνει πλέον πάντα άδειο και πρέπει να φύγει. Παράλληλα προστίθεται η ενέργεια
+<b>«Προαγωγή σε Συνεργάτη»</b> σε κάθε ενεργό μέλος, ώστε ένας Πωλητής να μπορεί να χτίσει τη δική του ομάδα από κάτω
+του (η πυραμίδα δουλεύει ήδη στο backend μέσω του δέντρου δικτύου· έλειπε μόνο το κουμπί).</p>
+<p class="src">Σημερινός κώδικας: <code>public/assets/ecrm-view-team.js</code> (tabs <code>ecrm_seller</code>/<code>ecrm_registrar</code>,
+ετικέτα <code>ΚΑΤΑΧΩΡΗΤΗΣ</code> και σε <code>class-ecrm-app.php:49</code>) · η προαγωγή θέλει νέα ενέργεια στο
+<code>POST /team/{id}</code> (σήμερα δέχεται μόνο <code>toggle</code>/<code>remove</code>).</p>
+
+<div class="tag">Σημερινό</div>
+<div class="pair">
+<div class="col">
+<h2>Πριν <small>δύο tabs, ένα από τα δύο πάντα άδειο μετά τη migration</small></h2>
+<div class="appwrap">
+<p class="ttl">Η ομάδα μου</p>
+<p class="sub">Διαχείριση πωλητών και καταχωρητών του γραφείου σου.</p>
+<div class="card">
+<div class="tabs">
+<div class="tab on">Πωλητές <span>4</span></div>
+<div class="tab">Καταχωρητές <span>0</span></div>
+</div>
+<div class="listhead"><span class="count">4 πωλητές</span><button class="addbtn">+ Νέος Πωλητής</button></div>
+<table>
+<thead><tr><th>Ονοματεπώνυμο</th><th>Email</th><th>Συμβάσεις</th><th>Κατάσταση</th><th>Ενέργειες</th></tr></thead>
+<tbody>
+<tr><td><span class="cust"><span class="mark">ΜΠ</span>Μαρία Παπαδοπούλου</span></td><td>maria@mail.gr</td><td>12</td><td><span class="badge">Ενεργός</span></td>
+<td class="acts"><button class="rowbtn">Απενεργοποίηση</button><button class="rowbtn">Αφαίρεση</button></td></tr>
+<tr><td><span class="cust"><span class="mark">ΓΚ</span>Γιώργος Κωνσταντίνου</span></td><td>giorgos@mail.gr</td><td>7</td><td><span class="badge">Ενεργός</span></td>
+<td class="acts"><button class="rowbtn">Απενεργοποίηση</button><button class="rowbtn">Αφαίρεση</button></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="callout bad"><b>Πρόβλημα:</b> το tab «Καταχωρητές» δείχνει πάντα 0 — ο ρόλος δεν υπάρχει πια, κανείς δεν
+μπορεί να μπει ποτέ εκεί. Νεκρό στοιχείο στην οθόνη.</div>
+</div>
+
+<div class="col">
+<h2>Μετά <small>ένας πίνακας, χωρίς tabs — δεν χρειάζονται πια</small></h2>
+<div class="appwrap">
+<p class="ttl">Η ομάδα μου</p>
+<p class="sub">Διαχείριση πωλητών του γραφείου σου.</p>
+<div class="card">
+<div class="listhead"><span class="count">4 πωλητές</span><button class="addbtn">+ Νέος Πωλητής</button></div>
+<table>
+<thead><tr><th>Ονοματεπώνυμο</th><th>Email</th><th>Συμβάσεις</th><th>Κατάσταση</th><th>Ενέργειες</th></tr></thead>
+<tbody>
+<tr><td><span class="cust"><span class="mark">ΜΠ</span>Μαρία Παπαδοπούλου</span></td><td>maria@mail.gr</td><td>12</td><td><span class="badge">Ενεργός</span></td>
+<td class="acts"><button class="rowbtn promote">Προαγωγή σε Συνεργάτη</button><button class="rowbtn">Απενεργοποίηση</button><button class="rowbtn">Αφαίρεση</button></td></tr>
+<tr><td><span class="cust"><span class="mark">ΓΚ</span>Γιώργος Κωνσταντίνου</span></td><td>giorgos@mail.gr</td><td>7</td><td><span class="badge">Ενεργός</span></td>
+<td class="acts"><button class="rowbtn promote">Προαγωγή σε Συνεργάτη</button><button class="rowbtn">Απενεργοποίηση</button><button class="rowbtn">Αφαίρεση</button></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="callout good"><b>Ένα tab λιγότερο, μία νέα ενέργεια.</b> Ο τίτλος και ο υπότιτλος της οθόνης
+ενημερώθηκαν («πωλητών» αντί «πωλητών και καταχωρητών»). Το κουμπί «Προαγωγή σε Συνεργάτη» εμφανίζεται μόνο σε
+ενεργά μέλη, δίπλα στις ήδη υπάρχουσες ενέργειες.</div>
+</div>
+</div>
+
+<div class="tag">Τι συμβαίνει όταν πατηθεί «Προαγωγή»</div>
+<div class="pair">
+<div class="col">
+<h2>Επιβεβαίωση <small>μη αναστρέψιμο με ένα κλικ — θέλει ρητή συγκατάθεση</small></h2>
+<div class="appwrap">
+<p class="ttl">Η ομάδα μου</p>
+<div class="confirmbox">
+<div class="hd">Προαγωγή σε Συνεργάτη</div>
+<div class="bd">Η <b>Μαρία Παπαδοπούλου</b> θα αποκτήσει δικαίωμα να προσκαλεί δικά της μέλη και θα βλέπει τη δική
+της ομάδα από κάτω της. Παραμένει στη <b>δική σου</b> ομάδα ακριβώς όπως και τώρα — δεν φεύγει πουθενά.</div>
+<div class="btns"><button class="primary">Προαγωγή</button><button class="ghost">Άκυρο</button></div>
+</div>
+</div>
+<div class="callout good">Μετά την προαγωγή η Μαρία εμφανίζεται πλέον <b>και</b> στο <code>/network</code>
+(«sub-partners, who run teams of their own» — ήδη υπάρχει η οθόνη), <b>και</b> εδώ στη λίστα σου, όπως σήμερα κάθε
+Συνεργάτης της δικής σου downline.</div>
+</div>
+
+<div class="col">
+<h2>Ποιος μπορεί να προάγει <small>ρητά επιβεβαιωμένο μαζί σου</small></h2>
+<div class="appwrap">
+<p class="sub" style="margin-bottom:10px">Ισχύς κανόνα:</p>
+<ul style="margin:0;padding-left:18px;font-size:12.5px;color:#d8d7d2;line-height:1.7">
+<li>Κάθε manager (όποιος έχει <code>MANAGE_TEAM</code>) μπορεί να προάγει <b>μόνο</b> μέλη της δικής του ομάδας —
+ίδιο σύνορο εμβέλειας με «Απενεργοποίηση»/«Αφαίρεση» σήμερα.</li>
+<li>Δεν είναι αποκλειστικά ενέργεια διαχειριστή WordPress.</li>
+<li>Μια προαγωγή δεν επιστρέφει αυτόματα — το backend θα υποστηρίξει και «υποβιβασμό» αν χρειαστεί, ξεχωριστό
+ερώτημα.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="notes">
+<h2>Σημειώσεις για έγκριση</h2>
+<ul>
+<li><b>Δύο tabs → ένα.</b> Μετά τη συγχώνευση Πωλητή/Καταχωρητή, όλα τα μέλη του <code>/team</code> είναι Πωλητές — τα
+tabs δεν χωρίζουν πια τίποτα. Ο πίνακας μένει ίδιος, απλώς χωρίς την μπάρα tabs από πάνω.</li>
+<li><b>Το κουμπί εμφανίζεται μόνο σε ενεργά μέλη.</b> Δεν έχει νόημα να προάγεις κάποιον που έχεις ήδη απενεργοποιήσει.</li>
+<li><b>Θέση στο δέντρο δεν αλλάζει.</b> Η προαγωγή είναι μόνο αλλαγή ρόλου/δικαιωμάτων — το μέλος παραμένει στη
+downline σου ό,τι κι αν χτίσει από κάτω του, ακριβώς όπως συζητήσαμε.</li>
+<li><b>Ονομασία κουμπιού.</b> «Προαγωγή σε Συνεργάτη» — αν προτιμάς άλλη διατύπωση (π.χ. «Κάνε τον διαχειριστή
+ομάδας»), πες το.</li>
+</ul>
+<div class="q"><b>Ερώτηση:</b> μετά την προαγωγή, θες το προαχθέν μέλος να εξαφανίζεται από αυτή τη λίστα (αφού
+πλέον είναι Συνεργάτης, όχι απλό μέλος ομάδας), ή να παραμένει ορατό και εδώ όπως δείχνει το mockup πάνω;</div>
+</div>
+
+</main></body></html>

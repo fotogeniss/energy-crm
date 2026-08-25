@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Δευτερεύουσες στήλες σε 9 οθόνες (κινητό)</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14px;margin:0 0 10px;max-width:880px}
+.lead b{color:#1a1a18}
+.src{color:#83817a;font-size:12px;margin:0 0 28px}
+.src code{background:#dcdad4;padding:1px 5px;border-radius:4px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin:34px 0 12px}
+.tag:first-of-type{margin-top:0}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:980px){.pair{grid-template-columns:1fr}}
+.col h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#83817a;margin:0 0 10px;font-weight:800}
+.col h2 small{display:block;text-transform:none;letter-spacing:0;font-weight:500;color:#a3a099;margin-top:2px;font-size:11.5px}
+
+/* ---- τηλέφωνο-πλαίσιο, 390px, dark tokens του πραγματικού ecrm-app.css ---- */
+.phone{--bg:#141412;--surface:#1a1a18;--line:#33322e;--line-soft:#232320;
+	--ink:#f1f1ee;--muted:#a3a099;--navy:#f8f8f6;--amber:#16c217;
+	width:390px;max-width:100%;margin:0 auto;background:var(--bg);border-radius:20px;
+	padding:14px;color:var(--ink);border:6px solid #0a0a09;overflow-x:auto}
+.ttl{font-size:14px;font-weight:800;color:var(--navy);margin:0 0 8px}
+table{border-collapse:collapse;font-size:11px}
+th{text-align:left;font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:6px 7px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 7px;border-bottom:1px solid var(--line-soft);color:#e4e3df;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+.scroll-wide table{min-width:620px}
+.fit table{width:100%;min-width:0}
+.mono{font-variant-numeric:tabular-nums}
+.medal{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:9px;font-weight:800;color:#141412}
+.medal.g{background:#e0c04a}.medal.s{background:#c7ccd1}.medal.b{background:#c98a4b}
+.scrollhint{font-size:10px;color:var(--muted);text-align:center;margin-top:6px}
+
+.callout{margin-top:12px;padding:11px 13px;border-radius:10px;font-size:12.5px;line-height:1.55}
+.callout.bad{background:#3a2323;border:1px solid #5c3232;color:#f3b8bb}
+.callout.good{background:#16241a;border:1px solid #22432b;color:#a7d9ae}
+.callout b{color:inherit}
+
+.notes{margin-top:40px;background:#fff;border:1px solid #dcdad4;border-radius:12px;padding:20px 24px}
+.notes h2{font-size:14px;margin:0 0 12px;color:#1a1a18}
+.notes p{font-size:13px;color:#3c3a36;margin:0 0 12px}
+.reftable{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.reftable th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:#83817a;padding:7px 8px;border-bottom:2px solid #dcdad4}
+.reftable td{padding:8px 8px;border-bottom:1px solid #eae8e2;color:#3c3a36;vertical-align:top}
+.reftable td b{color:#1a1a18}
+.reftable code{background:#f3f1ea;padding:1px 5px;border-radius:4px;font-size:11.5px}
+.notes .q{background:#f3f1ea;border-left:3px solid #b8860b;padding:9px 12px;margin-top:14px;font-size:12.5px;border-radius:0 8px 8px 0}
+.notes .q b{color:#7a5c00}
+</style></head>
+<body><main>
+
+<h1>Δευτερεύουσες στήλες σε 9 οθόνες — κινητό στα 390px</h1>
+<p class="lead">Build queue <b>12</b>. Ο μηχανισμός υπάρχει ήδη και δουλεύει σωστά σε 2 από τις 11 οθόνες με πίνακα
+(`.ecrm-col-sec` κρύβει στήλη κάτω από 767px· το `.ecrm-tablewrap` κρατά την οριζόντια κύλιση σαν δίχτυ ασφαλείας
+πάντα). Οι άλλες 9 δείχνουν σήμερα ΟΛΕΣ τις στήλες τους σε κινητό — αναγκάζοντας οριζόντια κύλιση για κάθε πίνακα,
+ακόμα κι όταν οι 2-3 πρώτες στήλες θα αρκούσαν. Αρχή: <b>στα 390px πλάτος πρέπει να χωράνε 3 στήλες χωρίς κύλιση</b>.</p>
+<p class="src">Καμία αλλαγή μηχανισμού — μόνο <code>class="ecrm-col-sec"</code> σε συγκεκριμένα <code>&lt;th&gt;</code>/
+<code>&lt;td&gt;</code> σε 8 αρχεία <code>public/assets/ecrm-view-*.js</code> (9 οθόνες, Ομάδα+Δίκτυο μοιράζονται τον
+ίδιο κανόνα). Η οριζόντια κύλιση παραμένει πάντα διαθέσιμη — καμία στήλη δεν εξαφανίζεται, απλώς δεν επιβάλλεται.</p>
+
+<div class="tag">Παράδειγμα 1 — Πελάτες</div>
+<div class="pair">
+<div class="col">
+<h2>Πριν <small>6 στήλες στριμωγμένες, μόνο κύλιση</small></h2>
+<div class="phone scroll-wide">
+<p class="ttl">Πελάτες</p>
+<table><thead><tr><th>Πελάτης</th><th>ΑΦΜ</th><th>Τηλέφωνο</th><th>Email</th><th>Συμβ.</th><th>Τελευταία</th></tr></thead>
+<tbody><tr><td>Μαρία Ιωάννου</td><td>123456789</td><td>6971234567</td><td>maria@mail.gr</td><td>3</td><td>2 μέρες</td></tr>
+<tr><td>Νίκος Παππάς</td><td>987654321</td><td>6981112223</td><td>nikos@mail.gr</td><td>1</td><td>χθες</td></tr></tbody></table>
+</div>
+<div class="scrollhint">← κύλιση για να δεις τα υπόλοιπα →</div>
+<div class="callout bad"><b>Πρόβλημα:</b> το βασικό —ποιος πελάτης, πόσες συμβάσεις— δεν χωράει καν στην πρώτη
+ματιά χωρίς κύλιση.</div>
+</div>
+
+<div class="col">
+<h2>Μετά <small>3 στήλες χωράνε, τα υπόλοιπα σε κύλιση</small></h2>
+<div class="phone fit">
+<p class="ttl">Πελάτες</p>
+<table><thead><tr><th>Πελάτης</th><th>Τηλέφωνο</th><th>Συμβ.</th></tr></thead>
+<tbody><tr><td>Μαρία Ιωάννου</td><td>6971234567</td><td>3</td></tr>
+<tr><td>Νίκος Παππάς</td><td>6981112223</td><td>1</td></tr></tbody></table>
+</div>
+<div class="callout good"><b>ΑΦΜ, Email, Τελευταία</b> κρύβονται — παραμένουν προσβάσιμα με κύλιση, δεν
+εξαφανίζονται, απλώς δεν επιβάλλονται στην πρώτη ματιά.</div>
+</div>
+</div>
+
+<div class="tag">Παράδειγμα 2 — Leaderboard (η εξαίρεση)</div>
+<div class="pair">
+<div class="col">
+<h2>Πριν <small>4 στήλες, ο βαθμός # στριμωγμένος με τα υπόλοιπα</small></h2>
+<div class="phone scroll-wide">
+<p class="ttl">Κατάταξη</p>
+<table><thead><tr><th>#</th><th>Συνεργάτης</th><th>Συμβάσεις</th><th>Προμήθεια €</th></tr></thead>
+<tbody><tr><td><span class="medal g">1</span></td><td>Μαρία Ιωάννου</td><td>14</td><td class="mono">2.310 €</td></tr>
+<tr><td><span class="medal s">2</span></td><td>Νίκος Παππάς</td><td>11</td><td class="mono">1.870 €</td></tr></tbody></table>
+</div>
+</div>
+
+<div class="col">
+<h2>Μετά <small>το # ΜΕΝΕΙ — κουβαλά τα μετάλλια, δεν είναι απλή στήλη</small></h2>
+<div class="phone fit">
+<p class="ttl">Κατάταξη</p>
+<table><thead><tr><th>#</th><th>Συνεργάτης</th><th>Προμήθεια €</th></tr></thead>
+<tbody><tr><td><span class="medal g">1</span></td><td>Μαρία Ιωάννου</td><td class="mono">2.310 €</td></tr>
+<tr><td><span class="medal s">2</span></td><td>Νίκος Παππάς</td><td class="mono">1.870 €</td></tr></tbody></table>
+</div>
+<div class="callout good"><b>Μόνο η στήλη «Συμβάσεις» κρύβεται.</b> Το «#» δεν είναι νούμερο σειράς — είναι το
+μετάλλιο των τριών πρώτων, γι' αυτό εξαιρείται ρητά από κάθε άλλη οθόνη λίστας.</div>
+</div>
+</div>
+
+<div class="notes">
+<h2>Πλήρης λίστα — και οι 9 οθόνες</h2>
+<p>Ίδιος μηχανισμός παντού, μία γραμμή ανά οθόνη. Καμία επιλογή εδώ δεν είναι δική μου — έρχονται από το ήδη
+εγκεκριμένο πλάνο· η δουλειά είναι να εφαρμοστούν σωστά στο ακριβές αρχείο.</p>
+<table class="reftable">
+<thead><tr><th>Οθόνη</th><th>Αρχείο</th><th>Κρύβονται (.ecrm-col-sec)</th><th>Μένουν ορατές</th></tr></thead>
+<tbody>
+<tr><td><b>Πελάτες</b></td><td><code>ecrm-view-customers.js</code></td><td>ΑΦΜ, Email, Τελευταία</td><td>Πελάτης, Τηλέφωνο, Συμβάσεις</td></tr>
+<tr><td><b>Ανανεώσεις</b></td><td><code>ecrm-view-renewals.js</code></td><td>Κωδικός, Πάροχος, Λήξη</td><td>Πελάτης, Κατάσταση, (κουμπί)</td></tr>
+<tr><td><b>Ζωντανή ομάδα</b></td><td><code>ecrm-view-team-live.js</code></td><td>Μήνας, Δρομ/καν, Τελ. δραστηριότητα</td><td>Μέλος, Σήμερα, Εκκρεμ., Εργασίες</td></tr>
+<tr><td><b>Ομάδα</b></td><td><code>ecrm-view-team.js</code></td><td>Email</td><td>Ονοματεπώνυμο, Συμβάσεις, Κατάσταση, Ενέργειες</td></tr>
+<tr><td><b>Δίκτυο</b></td><td><code>ecrm-view-network.js</code></td><td>Email</td><td>Συνεργάτης, Ομάδα, Αιτήσεις</td></tr>
+<tr><td><b>Εκκρεμότητες</b></td><td><code>ecrm-view-pending.js</code></td><td>Κωδικός</td><td>Πελάτης, Κατάσταση, Ανοιχτή για</td></tr>
+<tr><td><b>Προμήθειες</b></td><td><code>ecrm-view-commissions.js</code></td><td>Συμβόλαια</td><td>Περίοδος, Κατάσταση, Σύνολο</td></tr>
+<tr><td><b>Leaderboard</b></td><td><code>ecrm-view-analytics.js</code></td><td>Συμβάσεις</td><td><b>#</b> (μετάλλια), Συνεργάτης, Προμήθεια €</td></tr>
+</tbody>
+</table>
+<div class="q"><b>Σημείωση:</b> καμία στήλη δεν αφαιρείται από τα δεδομένα — η οριζόντια κύλιση (`.ecrm-tablewrap`)
+παραμένει ενεργή παντού, ίδιο δίχτυ ασφαλείας με το task 01. Απλώς οι 3 πιο σημαντικές στήλες κάθε πίνακα δεν
+χρειάζονται πια κύλιση για να φανούν.</div>
+</div>
+
+</main></body></html>

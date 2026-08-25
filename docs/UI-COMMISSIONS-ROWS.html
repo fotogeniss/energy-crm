@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Γραμμές προμήθειας στην καρτέλα συνεργάτη</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14px;margin:0 0 10px;max-width:880px}
+.lead b{color:#1a1a18}
+.src{color:#83817a;font-size:12px;margin:0 0 28px}
+.src code{background:#dcdad4;padding:1px 5px;border-radius:4px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin:34px 0 12px}
+.tag:first-of-type{margin-top:0}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:980px){.pair{grid-template-columns:1fr}}
+.col h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#83817a;margin:0 0 10px;font-weight:800}
+.col h2 small{display:block;text-transform:none;letter-spacing:0;font-weight:500;color:#a3a099;margin-top:2px;font-size:11.5px}
+
+/* ---- κοινό κέλυφος, dark tokens του πραγματικού ecrm-app.css ---- */
+.appwrap{--bg:#141412;--surface:#1a1a18;--line:#33322e;--line-soft:#232320;
+	--ink:#f1f1ee;--muted:#a3a099;--navy:#f8f8f6;--amber:#16c217;--on-accent:#0b3d0c;
+	--st-active:#6bdd6d;--st-active-bg:#12240f;--st-pending:#e0b23d;--st-pending-bg:#2a220e;
+	background:var(--bg);border-radius:14px;padding:16px 18px 20px;color:var(--ink)}
+.kpirow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi .k{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-size:18px;font-weight:800;color:var(--navy);margin-top:3px}
+.kpi .f{font-size:10px;color:var(--muted);margin-top:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.step{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:7px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line-soft);color:#e4e3df;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.mono{font-variant-numeric:tabular-nums;text-align:right}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:700}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge.paid{background:var(--st-active-bg);color:var(--st-active)}
+.badge.unpaid{background:var(--st-pending-bg);color:var(--st-pending)}
+.more{text-align:center;padding:9px;font-size:11.5px;color:var(--muted)}
+
+.callout{margin-top:12px;padding:11px 13px;border-radius:10px;font-size:12.5px;line-height:1.55}
+.callout.bad{background:#3a2323;border:1px solid #5c3232;color:#f3b8bb}
+.callout.good{background:#16241a;border:1px solid #22432b;color:#a7d9ae}
+.callout b{color:inherit}
+
+.notes{margin-top:40px;background:#fff;border:1px solid #dcdad4;border-radius:12px;padding:20px 24px}
+.notes h2{font-size:14px;margin:0 0 12px;color:#1a1a18}
+.notes ul{margin:0;padding-left:20px;font-size:13px;color:#3c3a36}
+.notes li{margin-bottom:9px}
+.notes li b{color:#1a1a18}
+.notes .q{background:#f3f1ea;border-left:3px solid #b8860b;padding:9px 12px;margin-top:14px;font-size:12.5px;border-radius:0 8px 8px 0}
+.notes .q b{color:#7a5c00}
+</style></head>
+<body><main>
+
+<h1>Καρτέλα συνεργάτη — γραμμές προμήθειας</h1>
+<p class="lead">Build queue <b>07</b>. Ο συνεργάτης βλέπει σήμερα μόνο το σύνολο της προμήθειάς του
+(«€1.240 · €310 δεν έχει πληρωθεί») χωρίς να ξέρει ΑΠΟ ΤΙ βγήκε αυτό το ποσό. Το backend υπολογίζει ήδη
+ανά-σύμβαση ποσά (<code>CommissionRepository::payable(..., memberId: $id)</code>) για να φτιάξει το σύνολο — απλώς
+τα πετά μετά. Η πρόταση εκθέτει τις ίδιες γραμμές που ήδη υπολογίζονται, όχι νέο ερώτημα.</p>
+<p class="src">Σημερινός κώδικας: <code>TeamController::commissionTotals()</code> αθροίζει και πετά κάθε γραμμή·
+<code>CommissionsController::index()</code> έχει ήδη το ΙΔΙΟ σχήμα γραμμής (<code>code/customer/provider/amount/paid</code>)
+για τη δική του οθόνη «Προμήθειες» — η κάρτα εδώ το ξαναχρησιμοποιεί αυτούσιο, ώστε να μη γράφεται δεύτερη
+εκδοχή του ίδιου πράγματος.</p>
+
+<div class="tag">Σύγκριση</div>
+<div class="pair">
+<div class="col">
+<h2>Πριν <small>μόνο το σύνολο — καμία εξήγηση από τι αποτελείται</small></h2>
+<div class="appwrap">
+<div class="kpirow">
+<div class="kpi"><div class="k">Συμβάσεις μήνα</div><div class="v">4</div><div class="f">έναντι 3 τον προηγούμενο μήνα</div></div>
+<div class="kpi"><div class="k">Επιτυχία</div><div class="v">80%</div><div class="f">8 από 10 που έκλεισαν</div></div>
+<div class="kpi"><div class="k">Μέσος χρόνος</div><div class="v">3 μέρες</div><div class="f">από 6 υπογραφές</div></div>
+<div class="kpi"><div class="k">Προμήθεια</div><div class="v">€1.240</div><div class="f">€310 δεν έχει πληρωθεί ακόμη</div></div>
+</div>
+<div class="card"><div class="step">Τελευταίες συμβάσεις</div>
+<table><thead><tr><th>Πελάτης</th><th>Κατάσταση</th></tr></thead><tbody>
+<tr><td>Μαρία Ιωάννου</td><td><span class="badge paid">Υπογράφηκε</span></td></tr>
+<tr><td>Νίκος Παππάς</td><td><span class="badge paid">Υπογράφηκε</span></td></tr>
+</tbody></table></div>
+</div>
+<div class="callout bad"><b>Πρόβλημα:</b> «€1.240» δεν λέει ποιες συμβάσεις, ποιος πάροχος, τι έχει πληρωθεί
+γραμμή-γραμμή. Ο συνεργάτης δεν μπορεί να το ελέγξει μόνος του — πρέπει να ρωτήσει.</div>
+</div>
+
+<div class="col">
+<h2>Μετά <small>ίδιο σύνολο, νέα κάρτα με τις γραμμές από πίσω του</small></h2>
+<div class="appwrap">
+<div class="kpirow">
+<div class="kpi"><div class="k">Συμβάσεις μήνα</div><div class="v">4</div><div class="f">έναντι 3 τον προηγούμενο μήνα</div></div>
+<div class="kpi"><div class="k">Επιτυχία</div><div class="v">80%</div><div class="f">8 από 10 που έκλεισαν</div></div>
+<div class="kpi"><div class="k">Μέσος χρόνος</div><div class="v">3 μέρες</div><div class="f">από 6 υπογραφές</div></div>
+<div class="kpi"><div class="k">Προμήθεια</div><div class="v">€1.240</div><div class="f">€310 δεν έχει πληρωθεί ακόμη</div></div>
+</div>
+<div class="card"><div class="step">Προμήθεια · ανά σύμβαση</div>
+<table><thead><tr><th>Σύμβαση</th><th>Πάροχος</th><th style="text-align:right">Ποσό</th><th>Κατάσταση</th></tr></thead><tbody>
+<tr><td>Μαρία Ιωάννου</td><td>Orizon</td><td class="mono">€310,00</td><td><span class="badge unpaid">Εκκρεμεί</span></td></tr>
+<tr><td>Νίκος Παππάς</td><td>Protergia</td><td class="mono">€280,00</td><td><span class="badge paid">Πληρώθηκε</span></td></tr>
+<tr><td>Ελένη Ρίζου</td><td>Orizon</td><td class="mono">€330,00</td><td><span class="badge paid">Πληρώθηκε</span></td></tr>
+<tr><td>Γιώργος Νάτσης</td><td>ΗΡΩΝ</td><td class="mono">€320,00</td><td><span class="badge paid">Πληρώθηκε</span></td></tr>
+</tbody></table>
+<div class="more">+ 6 ακόμη — δες όλες στις «Προμήθειες»</div>
+</div>
+</div>
+<div class="callout good"><b>Ίδιο σύνολο, εξηγήσιμο τώρα.</b> Η κάρτα δείχνει τις πιο πρόσφατες 10 γραμμές
+(ίδιο όριο-λογική με τις «Τελευταίες συμβάσεις»)· για το πλήρες ιστορικό ο συνεργάτης πάει ήδη στην οθόνη
+«Προμήθειες», που τον αφορά ούτως ή άλλως.</div>
+</div>
+</div>
+
+<div class="notes">
+<h2>Σημειώσεις για έγκριση</h2>
+<ul>
+<li><b>Ίδιο σχήμα γραμμής με την οθόνη «Προμήθειες».</b> <code>code/customer/provider/amount/paid</code> —
+όχι νέο query, όχι δεύτερη εκδοχή του «πόσο βγάζει μια σύμβαση».</li>
+<li><b>Όριο 10 γραμμών.</b> Ο υπολογισμός του συνόλου παραμένει πάνω στο πλήρες σύνολο (όριο 2000, όπως
+σήμερα) — μόνο η ΛΙΣΤΑ που φαίνεται περιορίζεται, το ΣΥΝΟΛΟ δεν αλλάζει ποτέ ανάλογα με το πόσες γραμμές
+δείχνει η κάρτα.</li>
+<li><b>Πληρωμένο/Εκκρεμεί.</b> Ίδιο λεξιλόγιο με την οθόνη «Προμήθειες» (<code>paidBadge</code>) — όχι νέο
+ζευγάρι λέξεων για την ίδια έννοια.</li>
+<li><b>Πλακίδιο ↔ Προμήθειες ήδη συμφωνούν</b> (task 04, μπήκε νωρίτερα σήμερα) — αυτό το mockup δεν το
+ξανα-αγγίζει, απλώς το προϋποθέτει.</li>
+</ul>
+<div class="q"><b>Ερώτηση:</b> η κάρτα μπαίνει δίπλα στις «Τελευταίες συμβάσεις» (όπως δείχνει το mockup) ή
+προτιμάς να αντικαταστήσει εκείνη την κάρτα εντελώς, ώστε να μη φαίνεται δύο φορές παρόμοια πληροφορία;</div>
+</div>
+
+</main></body></html>

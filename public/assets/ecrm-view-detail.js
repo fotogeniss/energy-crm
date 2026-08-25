@@ -9,7 +9,7 @@
  * user is not shared — it is misplaced. */
 
 import { api, esc, fetch, H, rejectedNote, toast, viewEl } from '@energy-crm/util';
-import { energyLabel, fmtDate, svgIcon, timeAgo } from '@energy-crm/format';
+import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint } from '@energy-crm/format';
 import { go, openEdit } from '@energy-crm/navigate';
 import { confirmTyped, openDialog } from '@energy-crm/dialog';
 
@@ -172,12 +172,23 @@ function renderDetail(view, d) {
 			: '<span class="ecrm-statusflow__end">Τερματική κατάσταση — καμία επιτρεπτή μετάβαση.</span>') +
 		'</div>';
 
+	// «Ποιος» -- build queue 09/10, docs/UI-TIMELINE-ACTOR.html (§1.8,
+	// εγκρίθηκε 25/08). Το backend στέλνει ήδη e.actor έτοιμο (task 05/126,
+	// EventRepository + ContractsReadController::withActorNames()) -- 'Σύστημα'
+	// για ενέργειες χωρίς συγκεκριμένο άνθρωπο (π.χ. αυτόματη εισαγωγή Excel),
+	// αλλιώς το display_name. Χωρίς badge για «Σύστημα»: ένας έγχρωμος κύκλος
+	// με αρχικά θα υποσχόταν πρόσωπο που δεν υπάρχει.
 	var timeline = (c.events && c.events.length)
 		? '<ul class="ecrm-timeline">' + c.events.map(function (e) {
 			var label = e.type === 'status_change'
 				? (statuses[e.from_status] || e.from_status || '—') + ' → ' + (statuses[e.to_status] || e.to_status || '—')
 				: (e.message || e.type);
-			return '<li><span class="ecrm-timeline__dot"></span><div><div class="ecrm-timeline__txt">' + esc(label) + '</div><div class="ecrm-timeline__time">' + timeAgo(e.created_at) + '</div></div></li>';
+			var who = e.actor
+				? (e.actor === 'Σύστημα'
+					? '<div class="ecrm-timeline__who"><span class="ecrm-timeline__whoname is-sys">' + esc(e.actor) + '</span></div>'
+					: '<div class="ecrm-timeline__who"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(e.actor) + '">' + esc(initials(e.actor)) + '</span><span class="ecrm-timeline__whoname">' + esc(e.actor) + '</span></div>')
+				: '';
+			return '<li><span class="ecrm-timeline__dot"></span><div><div class="ecrm-timeline__txt">' + esc(label) + '</div><div class="ecrm-timeline__time">' + timeAgo(e.created_at) + '</div>' + who + '</div></li>';
 		}).join('') + '</ul>'
 		: '<div class="ecrm-empty">Καμία καταγραφή.</div>';
 

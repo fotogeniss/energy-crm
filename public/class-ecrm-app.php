@@ -44,9 +44,10 @@ class ECRM_App {
 
 		// Topbar org + avatar initials.
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '';
+		// Ο Καταχωρητής συγχωνεύτηκε στον Πωλητή (Roles::matrix() v6, 25/08) --
+		// δεν υπάρχει πια σαν ρόλος, οπότε δεν χρειάζεται πια κλάδος εδώ.
 		$role_label = 'ΣΥΝΕΡΓΑΤΗΣ';
 		if ( in_array( 'ecrm_seller', (array) $user->roles, true ) ) { $role_label = 'ΠΩΛΗΤΗΣ'; }
-		elseif ( in_array( 'ecrm_registrar', (array) $user->roles, true ) ) { $role_label = 'ΚΑΤΑΧΩΡΗΤΗΣ'; }
 		elseif ( user_can( $user, 'manage_options' ) ) { $role_label = 'ADMIN'; }
 
 		$parts = preg_split( '/\s+/', trim( (string) $user->display_name ) );

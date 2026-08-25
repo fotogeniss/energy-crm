@@ -138,10 +138,38 @@ function recentRows(list, statuses) {
 	}).join('');
 }
 
+/* Χρησιμοποιεί το ήδη υπάρχον euro() παραπάνω για τη μορφή του ποσού --
+   ίδιο νόμισμα, ίδια λογική, όχι δεύτερη εκδοχή. */
+function commissionRows(rows) {
+	if (!rows.length) {
+		return '<div class="ecrm-empty">Καμία προμήθεια ακόμη.</div>';
+	}
+	var body = rows.map(function (r) {
+		return '<tr><td><strong>' + esc(r.customer) + '</strong>' +
+			(r.code ? '<div class="ecrm-muted ecrm-tlrole">' + esc(r.code) + '</div>' : '') + '</td>' +
+			'<td class="ecrm-muted ecrm-col-sec">' + esc(r.provider) + '</td>' +
+			'<td class="ecrm-mono" style="text-align:right">' + euro(r.amount) + '</td>' +
+			'<td>' + (r.paid
+				? '<span class="ecrm-badge ecrm-badge--active">Πληρώθηκε</span>'
+				: '<span class="ecrm-badge ecrm-badge--pending">Εκκρεμεί</span>') + '</td></tr>';
+	}).join('');
+	// Δέκα γραμμές είναι το όριο του ίδιου του backend (TeamController::
+	// commissionRows()) -- όχι δικός της υπολογισμός εδώ, άρα δεν ξέρει αν
+	// υπάρχουν κι άλλες. Δείχνει τη σημείωση όποτε φτάσει ακριβώς στο όριο,
+	// που είναι η μόνη στιγμή που «μπορεί να υπάρχουν κι άλλες» είναι αλήθεια.
+	var more = rows.length >= 10
+		? '<div class="ecrm-muted" style="text-align:center;padding:9px;font-size:11.5px">+ δες όλες στις «Προμήθειες»</div>'
+		: '';
+	return '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr>' +
+		'<th>Πελάτης</th><th class="ecrm-col-sec">Πάροχος</th><th style="text-align:right">Ποσό</th><th>Κατάσταση</th>' +
+		'</tr></thead><tbody>' + body + '</tbody></table></div>' + more;
+}
+
 function renderPartner(view, d) {
 	var m = d.member || {};
 	var statuses = d.statuses || {};
 	var down = d.downline || [];
+	var commRows = d.commission_rows || [];
 
 	// .ecrm-kv και όχι .ecrm-dl: εκεί το <dt> είναι μικρό κεφαλαίο ΕΤΙΚΕΤΑ και
 	// το <dd> η τιμή — δηλαδή το όνομα του ανθρώπου θα γινόταν ψιλό γκρι label
@@ -182,6 +210,12 @@ function renderPartner(view, d) {
 		kpiCards(d.kpi || {}) +
 
 		'<div class="ecrm-pgrid">' +
+		// .ecrm-pgrid__main: η βασική στήλη (1.6fr) έχει πλέον ΔΥΟ κάρτες
+		// αντί για μία, άρα χρειάζεται δικό της wrapper -- χωρίς αυτόν το
+		// grid θα έβαζε τη δεύτερη κάρτα στη ΣΤΕΝΗ στήλη (1fr, δίπλα) αντί
+		// από κάτω στην ίδια, γιατί το .ecrm-pgrid βάζει τα άμεσα παιδιά του
+		// ένα ανά στήλη με τη σειρά.
+		'<div class="ecrm-pgrid__main">' +
 		'<div class="ecrm-card"><div class="ecrm-step">Τελευταίες συμβάσεις</div>' +
 		'<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr>' +
 		// .ecrm-col-sec: η σύμβαση που ήδη έχει ο κώδικας για «φύγε στο κινητό»
@@ -191,6 +225,16 @@ function renderPartner(view, d) {
 		'<th>Πελάτης</th><th class="ecrm-col-sec">Πάροχος</th><th>Κατάσταση</th>' +
 		'<th class="ecrm-col-sec">Ενημερώθηκε</th>' +
 		'</tr></thead><tbody>' + recentRows(d.recent || [], statuses) + '</tbody></table></div></div>' +
+
+		// Build queue 07, docs/UI-COMMISSIONS-ROWS.html (§1.8, εγκρίθηκε
+		// 25/08) -- δίπλα στις «Τελευταίες συμβάσεις», όχι αντί για αυτές: η
+		// μία δείχνει ΤΙ έγινε (κατάσταση), η άλλη ΠΟΣΟ βγάζει (προμήθεια).
+		// Ίδιο σχήμα γραμμής με CommissionsController::index(), όχι νέο
+		// υπολογισμό -- το πλακίδιο πάνω και αυτή η κάρτα πάντα συμφωνούν
+		// γιατί περνούν από το ίδιο CommissionAmount::of() (task 04).
+		'<div class="ecrm-card"><div class="ecrm-step">Προμήθεια · ανά σύμβαση</div>' +
+		commissionRows(commRows) + '</div>' +
+		'</div>' +
 
 		'<div class="ecrm-pgrid__side">' +
 		'<div class="ecrm-card"><div class="ecrm-step">Στοιχεία</div>' +
