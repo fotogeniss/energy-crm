@@ -60,6 +60,21 @@ export function openPartner(memberId) {
 }
 
 /**
+ * Open the contracts list, filtered down to one ΑΦΜ.
+ *
+ * Build queue 08, 25/08. There is no dedicated customer detail screen, so
+ * "open the existing record" for the new-contract form's match card means:
+ * the contracts list, searched to exactly the rows for this ΑΦΜ. Takes the
+ * query rather than a customer id because /contracts search already knows
+ * how to match ΑΦΜ text — no new endpoint needed for this button.
+ */
+export function openCustomerContracts(query) {
+	if (typeof handlers.openCustomerContracts === 'function') {
+		handlers.openCustomerContracts(query);
+	}
+}
+
+/**
  * Open the new-contract form prefilled from an existing contract.
  *
  * Takes the whole row rather than an id, because that is what the form's

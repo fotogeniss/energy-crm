@@ -1,4 +1,5 @@
 import { api, esc, rejectedNote, toast } from '@energy-crm/util';
+import { openCustomerContracts } from '@energy-crm/navigate';
 
 /* Energy CRM — New Contract form behaviour.
  * Exposes window.ECRMForm.init(rootEl) so it can run standalone OR inside the
@@ -1142,10 +1143,80 @@ import { api, esc, rejectedNote, toast } from '@energy-crm/util';
 			el.classList.toggle('is-invalid', kind === 'err');
 			el.classList.toggle('is-warn', kind === 'warn');
 		}
+		// --- Επαναχρησιμοποίηση πελάτη (build queue 08, 25/08) ---
+		// Πριν, το ίδιο ΑΦΜ σε νέα αίτηση δεν έλεγε τίποτα μέχρι το τέλος της
+		// φόρμας (native confirm() στο save()) — ο συνεργάτης είχε ήδη
+		// ξαναγράψει όνομα/διεύθυνση/τηλέφωνο μέχρι τότε. Εδώ ο έλεγχος
+		// μετακομίζει στο blur του ΑΦΜ, με κάρτα μέσα στη φόρμα αντί για
+		// browser dialog. Scoped όπως κάθε άλλο lookup πελάτη (CustomerRepository)
+		// — ΑΦΜ άλλου συνεργάτη δεν εμφανίζεται εδώ καθόλου.
+		var custMatchT;
+		function checkCustomerMatch() {
+			var box = q('[data-custmatch]');
+			if (!box) return;
+			var v = readField('afm');
+			if (!v || !validAfm(v)) { box.hidden = true; box.innerHTML = ''; return; }
+			clearTimeout(custMatchT);
+			custMatchT = setTimeout(function () {
+				fetch(api('/customers/check') + '?afm=' + encodeURIComponent(v), { headers: headers(false) })
+					.then(function (r) { return r.json(); })
+					.then(function (d) {
+						var m = (d && d.matches) || [];
+						// Ήδη συνδεδεμένος με ΑΥΤΗ την αίτηση: καμία πρόταση
+						// «χρησιμοποίησε τα στοιχεία του» για τον εαυτό του.
+						var already = state.customer_id && m.length && parseInt(m[0].id, 10) === parseInt(state.customer_id, 10);
+						if (!m.length || !m[0].id || already) { box.hidden = true; box.innerHTML = ''; return; }
+						var name = m[0].company_name || (((m[0].first_name || '') + ' ' + (m[0].last_name || '')).trim()) || 'πελάτη';
+						var n = m.length;
+						box.innerHTML =
+							'<div class="ecrm-custmatch__hd">Αυτό το ΑΦΜ υπάρχει ήδη στο CRM</div>' +
+							'<div class="ecrm-custmatch__meta"><strong>' + esc(name) + '</strong> — ' + n + (n === 1 ? ' σύμβαση' : ' συμβάσεις') + ' στο όνομά του</div>' +
+							'<div class="ecrm-custmatch__btns">' +
+							'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-usecust="' + parseInt(m[0].id, 10) + '">Χρησιμοποίησε τα στοιχεία του</button>' +
+							'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-opencust>Άνοιξε τον υπάρχοντα φάκελο</button>' +
+							'</div>';
+						box.hidden = false;
+						var useBtn = box.querySelector('[data-usecust]');
+						if (useBtn) useBtn.addEventListener('click', function () { fillFromCustomer(parseInt(this.getAttribute('data-usecust'), 10), this); });
+						var openBtn = box.querySelector('[data-opencust]');
+						if (openBtn) openBtn.addEventListener('click', function () { openCustomerContracts(v); });
+					})
+					.catch(function () {});
+			}, 300);
+		}
+
+		// Γεμίζει τα πεδία από πλήρη φάκελο πελάτη (GET /customers/{id}, scoped).
+		// Επεξεργάσιμα, όχι κλειδωμένα — απόφαση ιδιοκτήτη 25/08 (docs/UI-CUSTOMER-REUSE.html):
+		// πιο γρήγορο, ο συνεργάτης διορθώνει ό,τι χρειάζεται με το χέρι.
+		// keepExisting=false στο setField(): ρητό αίτημα υπερισχύει ό,τι
+		// τυχόν είχε ήδη γραφτεί, ίδια σημασιολογία με το κουμπί "AI".
+		function fillFromCustomer(id, btn) {
+			if (!id) return;
+			if (btn) btn.disabled = true;
+			fetch(api('/customers/' + id), { headers: headers(false) })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (!d || !d.ok || !d.customer) { toast('Δεν βρέθηκαν στοιχεία πελάτη.', false); return; }
+					var c = d.customer;
+					if (c.company_name) {
+						var chip = root.querySelector('.ecrm-chips[data-field="customer_type"] .ecrm-chip[data-val="company"]');
+						if (chip) chip.click();
+					}
+					[
+						'first_name', 'last_name', 'father_name', 'company_name', 'doy', 'adt', 'birth_date',
+						'region', 'city', 'street', 'street_no', 'postal_code', 'phone', 'mobile', 'email',
+					].forEach(function (k) { setField(k, c[k], false); });
+					toast('Συμπληρώθηκαν τα στοιχεία του πελάτη.');
+				})
+				.catch(function () { toast('Σφάλμα δικτύου.', false); })
+				.finally(function () { if (btn) btn.disabled = false; });
+		}
+
 		var afmEl = root.querySelector('[name="afm"]');
 		if (afmEl) afmEl.addEventListener('blur', function () {
 			var v = this.value.trim();
 			fieldNote(this, v && !validAfm(v) ? 'Μη έγκυρο ΑΦΜ (έλεγχος ψηφίου).' : '', 'err');
+			checkCustomerMatch();
 		});
 		var supEl = root.querySelector('[name="supply_number"]');
 		if (supEl) supEl.addEventListener('blur', function () {

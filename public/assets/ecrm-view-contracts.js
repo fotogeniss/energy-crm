@@ -28,8 +28,12 @@ var contractsState = { status: '', q: '', page: 1, pageSize: 12 };
  * κατάσταση δείχνει. Δεν φορτώνει μόνο του επίτηδες: το go('contracts') που
  * ακολουθεί είναι που φορτώνει, και δύο fetch για ένα κλικ είναι σπατάλη σε
  * σύστημα με 20-40 ταυτόχρονες αιτήσεις. */
-export function setContractsFilter(status) {
+export function setContractsFilter(status, q) {
 	contractsState.status = typeof status === 'string' ? status : '';
+	// q προαιρετικό — προστέθηκε 25/08 (build queue 08) για το
+	// openCustomerContracts(): οι προϋπάρχουσες κλήσεις με ένα όρισμα (τα KPI
+	// του dashboard) συνεχίζουν να αφήνουν την αναζήτηση όπως ήταν.
+	if (typeof q === 'string') contractsState.q = q;
 	contractsState.page = 1;
 }
 

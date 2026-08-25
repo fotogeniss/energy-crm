@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Επαναχρησιμοποίηση πελάτη: σημερινό vs προτεινόμενο</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14px;margin:0 0 10px;max-width:860px}
+.lead b{color:#1a1a18}
+.src{color:#83817a;font-size:12px;margin:0 0 28px}
+.src code{background:#dcdad4;padding:1px 5px;border-radius:4px}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin:34px 0 12px}
+.tag:first-of-type{margin-top:0}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:980px){.pair{grid-template-columns:1fr}}
+.col h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#83817a;margin:0 0 10px;font-weight:800}
+.col h2 small{display:block;text-transform:none;letter-spacing:0;font-weight:500;color:#a3a099;margin-top:2px;font-size:11.5px}
+
+/* ---- κοινό κέλυφος φόρμας, dark tokens του πραγματικού .ecrm-form.css ---- */
+.formwrap{--bg:#141412;--surface:#1a1a18;--surface2:#1f1f1c;--line:#33322e;--line-soft:#232320;
+	--ink:#f1f1ee;--muted:#a3a099;--navy:#f8f8f6;--amber:#16c217;--on-accent:#0b3d0c;
+	--accent-wash:#12240f;--accent-soft:#1e4a21;--accent-ink:#6bdd6d;--err:#fb8a91;--err-bg:#423030;
+	background:var(--bg);border-radius:14px;padding:18px 20px 22px;color:var(--ink)}
+.fld{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.fld label{font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+.fld input{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);font-size:13.5px;font-family:inherit}
+.fld input.filled{color:var(--navy)}
+.fld input[readonly]{background:var(--bg);color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.step{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+.step:first-of-type{margin-top:2px}
+
+/* ---- ΣΗΜΕΡΙΝΟ: native confirm() dialog μίμηση ---- */
+.osdialog{background:#ececec;border:1px solid #b8b8b8;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.35);
+	font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1a1a1a;margin-top:16px;overflow:hidden}
+.osdialog .bar{background:#dcdcdc;padding:7px 12px;font-size:12px;font-weight:600;border-bottom:1px solid #b8b8b8}
+.osdialog .body{padding:16px;font-size:13px;line-height:1.5;white-space:pre-wrap}
+.osdialog .btns{display:flex;justify-content:flex-end;gap:8px;padding:0 16px 14px}
+.osdialog button{font-size:12.5px;padding:6px 16px;border-radius:4px;border:1px solid #b8b8b8;background:#fff;font-family:inherit}
+.osdialog button.ok{background:#0d6efd;border-color:#0d6efd;color:#fff;font-weight:600}
+.callout{margin-top:14px;padding:11px 13px;border-radius:10px;font-size:12.5px;line-height:1.55}
+.callout.bad{background:#3a2323;border:1px solid #5c3232;color:#f3b8bb}
+.callout.good{background:#16241a;border:1px solid #22432b;color:#a7d9ae}
+.callout b{color:inherit}
+.count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;
+	border-radius:999px;background:#423030;color:#fb8a91;font-size:11px;font-weight:800;margin-right:6px}
+
+/* ---- ΠΡΟΤΕΙΝΟΜΕΝΟ: inline banner εύρεσης πελάτη ---- */
+.matchcard{background:var(--accent-wash);border:1px solid var(--accent-soft);border-radius:12px;padding:13px 14px;margin:2px 0 16px}
+.matchcard .hd{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.matchcard .hd .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-ink);flex:0 0 auto}
+.matchcard .meta{font-size:12px;color:var(--muted);margin-bottom:11px}
+.matchcard .meta b{color:var(--ink)}
+.mbtns{display:flex;gap:8px;flex-wrap:wrap}
+.mbtn{font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:8px;border:1px solid transparent;cursor:default;font-family:inherit}
+.mbtn.primary{background:var(--amber);color:var(--on-accent)}
+.mbtn.ghost{background:var(--surface2);border-color:var(--line);color:var(--ink)}
+.filledtag{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+	color:var(--accent-ink);background:var(--accent-soft);padding:1px 7px;border-radius:999px;margin-left:7px;vertical-align:1px}
+
+.notes{margin-top:40px;background:#fff;border:1px solid #dcdad4;border-radius:12px;padding:20px 24px}
+.notes h2{font-size:14px;margin:0 0 12px;color:#1a1a18}
+.notes ul{margin:0;padding-left:20px;font-size:13px;color:#3c3a36}
+.notes li{margin-bottom:9px}
+.notes li b{color:#1a1a18}
+.notes .q{background:#f3f1ea;border-left:3px solid #b8860b;padding:9px 12px;margin-top:14px;font-size:12.5px;border-radius:0 8px 8px 0}
+.notes .q b{color:#7a5c00}
+</style></head>
+<body><main>
+
+<h1>Επαναχρησιμοποίηση πελάτη στη φόρμα αίτησης</h1>
+<p class="lead">Build queue <b>08</b>. Σήμερα το ίδιο ΑΦΜ σε δεύτερη αίτηση σημαίνει ξαναγράψιμο ονόματος, διεύθυνσης,
+τηλεφώνου — ό,τι ήδη ξέρει το CRM — και μια προειδοποίηση που έρχεται μόνο στο τέλος, αφού έχουν ξαναγραφτεί όλα.
+Η πρόταση μετακινεί την ειδοποίηση στην αρχή και προσφέρει να γεμίσει τα ήδη γνωστά στοιχεία.</p>
+<p class="src">Σημερινός κώδικας: <code>ecrm-form.js</code> (έλεγχος μόνο στο <code>save('new')</code>, native <code>confirm()</code>) ·
+<code>GET /customers/check</code> υπάρχει ήδη — απλώς καλείται πολύ αργά. Backend εύρεσης ίδιου ΑΦΜ (build queue 03,
+<code>CommissionRepository::findIdByAfm()</code>) ήδη μπήκε 25/08 — αυτό εδώ είναι μόνο η οθόνη.</p>
+
+<div class="pair">
+
+  <div class="col">
+    <h2>ΣΗΜΕΡΙΝΟ<small>ο συνεργάτης ξαναγράφει ό,τι ήδη ξέρει το CRM</small></h2>
+    <div class="formwrap">
+      <div class="step">Στοιχεία πελάτη</div>
+      <div class="fld"><label>ΑΦΜ</label><input class="filled" value="123456789" readonly></div>
+      <div class="row2">
+        <div class="fld"><label>Όνομα</label><input placeholder="—"></div>
+        <div class="fld"><label>Επίθετο</label><input placeholder="—"></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>Κινητό</label><input placeholder="—"></div>
+        <div class="fld"><label>Email</label><input placeholder="—"></div>
+      </div>
+      <div class="fld"><label>Οδός &amp; αριθμός</label><input placeholder="—"></div>
+      <div class="row2">
+        <div class="fld"><label>Πόλη</label><input placeholder="—"></div>
+        <div class="fld"><label>Τ.Κ</label><input placeholder="—"></div>
+      </div>
+      <div class="callout bad"><b>Τίποτα δεν προειδοποιεί εδώ.</b> Το ΑΦΜ έχει ήδη 2 συμβάσεις στο CRM — ο
+      συνεργάτης δεν έχει τρόπο να το ξέρει μέχρι να πατήσει «Οριστικοποίηση» στο τέλος της φόρμας.</div>
+
+      <div class="step">Οριστικοποίηση — μετά από ~7 πεδία</div>
+      <div class="osdialog">
+        <div class="bar">energycrm.local λέει</div>
+        <div class="body"><span class="count">!</span>Υπάρχει ήδη σύμβαση (EN-2201) για Παπαδόπουλος Νίκος με ίδιο ΑΦΜ.
+
+Θες να συνεχίσεις την καταχώρηση;</div>
+        <div class="btns"><button>Άκυρο</button><button class="ok">OK</button></div>
+      </div>
+      <div class="callout bad">Πατώντας «OK» εδώ, μέχρι σήμερα δημιουργούνταν <b>δεύτερη γραμμή πελάτη</b> με τα ίδια
+      στοιχεία — το build queue 03 (25/08) το σταμάτησε στο backend. Η οθόνη όμως δεν έχει αλλάξει: ο συνεργάτης
+      ξανάγραψε 7 πεδία για τίποτα, και το βλέπει μόνο <i>αφού</i> τα ξαναέγραψε.</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <h2>ΠΡΟΤΕΙΝΟΜΕΝΟ<small>η ειδοποίηση έρχεται πρώτη, όχι τελευταία</small></h2>
+    <div class="formwrap">
+      <div class="step">Στοιχεία πελάτη</div>
+      <div class="fld"><label>ΑΦΜ</label><input class="filled" value="123456789" readonly></div>
+
+      <div class="matchcard">
+        <div class="hd"><span class="dot"></span>Αυτό το ΑΦΜ υπάρχει ήδη στο CRM</div>
+        <div class="meta"><b>Παπαδόπουλος Νίκος</b> — 2 συμβάσεις, τελευταία στις 12/08/2026</div>
+        <div class="mbtns">
+          <button class="mbtn primary">Χρησιμοποίησε τα στοιχεία του</button>
+          <button class="mbtn ghost">Άνοιξε τον υπάρχοντα φάκελο</button>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="fld"><label>Όνομα<span class="filledtag">από φάκελο</span></label><input class="filled" value="Νίκος" readonly></div>
+        <div class="fld"><label>Επίθετο<span class="filledtag">από φάκελο</span></label><input class="filled" value="Παπαδόπουλος" readonly></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>Κινητό<span class="filledtag">από φάκελο</span></label><input class="filled" value="69X XXX XXXX" readonly></div>
+        <div class="fld"><label>Email<span class="filledtag">από φάκελο</span></label><input class="filled" value="n.papa••••@•••.gr" readonly></div>
+      </div>
+      <div class="fld"><label>Οδός &amp; αριθμός<span class="filledtag">από φάκελο</span></label><input class="filled" value="Πατησίων 44" readonly></div>
+      <div class="row2">
+        <div class="fld"><label>Πόλη<span class="filledtag">από φάκελο</span></label><input class="filled" value="Αθήνα" readonly></div>
+        <div class="fld"><label>Τ.Κ<span class="filledtag">από φάκελο</span></label><input class="filled" value="104 34" readonly></div>
+      </div>
+      <div class="callout good">Ο συνεργάτης προχωρά κατευθείαν στα ΝΕΑ στοιχεία της αίτησης — πάροχος, πρόγραμμα,
+      αριθμός παροχής. Καμία επανάληψη 7 πεδίων. Τα readonly πεδία παραμένουν επεξεργάσιμα αν κάτι άλλαξε (νέο κινητό
+      κ.λπ.) — δεν είναι κλειδωμένα, μόνο προσυμπληρωμένα.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h2>Τι αλλάζει, τεχνικά</h2>
+  <ul>
+    <li><b>Μόνο frontend.</b> Το <code>GET /customers/check</code> υπάρχει ήδη και επιστρέφει ήδη το πρώτο ταίριασμα
+    (<code>duplicatesOf()</code>). Αλλάζει το <i>πότε</i> καλείται (στο <code>blur</code> του πεδίου ΑΦΜ, όχι στο
+    <code>save('new')</code>) και το <i>πώς εμφανίζεται</i> (κάρτα μέσα στη φόρμα, όχι <code>confirm()</code>).</li>
+    <li><b>«Χρησιμοποίησε τα στοιχεία του» χρειάζεται ένα νέο endpoint.</b> Το <code>GET /customers</code> γυρίζει
+    μόνο 6 από τα 17 πεδία πελάτη (για τη λίστα) — το κουμπί χρειάζεται τα υπόλοιπα (διεύθυνση, ΑΔΤ κ.λπ.), άρα νέο
+    <code>GET /customers/{id}</code>, scoped όπως το <code>find()</code> ήδη κάνει.</li>
+    <li><b>Δεν είναι το ίδιο με «άνοιξε επεξεργασία».</b> Το κουμπί γεμίζει πεδία σε μια ΝΕΑ αίτηση· δεν πρέπει να
+    αγγίξει το <code>state.contract_id</code> (αυτό μετατρέπει τη φόρμα σε επεξεργασία της παλιάς σύμβασης). Χρειάζεται
+    δική του συνάρτηση, όχι επαναχρησιμοποίηση του <code>applyEdit()</code>.</li>
+    <li><b>«Άνοιξε τον υπάρχοντα φάκελο»</b> εμφανίζεται μόνο όταν ο συνεργάτης έχει πρόσβαση σε αυτόν τον πελάτη
+    (<code>x.in_scope &amp; x.id</code>) — αλλιώς θα έδειχνε κουμπί που οδηγεί σε 404.</li>
+  </ul>
+  <div class="q"><b>Ερώτηση:</b> όταν πατηθεί «Χρησιμοποίησε τα στοιχεία του», τα πεδία μένουν <i>επεξεργάσιμα</i>
+  (όπως δείχνει το mockup — μόνο προσυμπληρωμένα) ή <i>κλειδωμένα</i> μέχρι ο συνεργάτης να πατήσει ρητά «Άλλαξε»;
+  Το πρώτο είναι πιο γρήγορο, το δεύτερο πιο δύσκολο να αλλάξει κατά λάθος στοιχεία υπάρχοντος πελάτη.</div>
+</div>
+
+</main></body></html>

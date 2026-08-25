@@ -38,12 +38,14 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Integration;
 
 use ECRM_Files;
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\FileRepository;
 use WP_REST_Request;
 use WP_REST_Response;
+use WP_User;
 
 final class ContractDeleteBytesTest extends IntegrationTestCase
 {
@@ -65,7 +67,24 @@ final class ContractDeleteBytesTest extends IntegrationTestCase
         $this->contracts = new ContractRepository();
         $this->actor     = $this->makeCrmUser(Roles::PARTNER);
 
+        // Ο Συνεργάτης δεν έχει πια DELETE_CONTRACT εξ ορισμού (v3, 25/08 —
+        // δες Roles::matrix()). Αυτό το αρχείο δοκιμάζει τη ΜΗΧΑΝΙΚΗ της
+        // διαγραφής (φεύγουν τα bytes μαζί με τη γραμμή, με σωστή σειρά) —
+        // όχι ποιος επιτρέπεται να τη ζητήσει, αυτό το απαντά το
+        // ContractRestAccessTest/ContractsBulkController. Το capability
+        // δίνεται εδώ απευθείας στον χρήστη, ίδια λογική με το
+        // ContractRestAccessTest::testAPartnerWithTheCapabilityStillCannotDeleteOutsideTheirScope().
+        $this->grantDelete($this->actor);
+
         wp_set_current_user($this->actor);
+    }
+
+    private function grantDelete(int $userId): void
+    {
+        $user = get_user_by('id', $userId);
+
+        self::assertInstanceOf(WP_User::class, $user);
+        $user->add_cap(Capability::DELETE_CONTRACT);
     }
 
     protected function tearDown(): void
@@ -126,7 +145,14 @@ final class ContractDeleteBytesTest extends IntegrationTestCase
     {
         [$contractId, $path] = $this->contractWithDocument();
 
-        wp_set_current_user($this->makeCrmUser(Roles::PARTNER));
+        // Χρειάζεται ΚΑΙ αυτός το capability, αλλιώς η άρνηση θα ερχόταν από
+        // το permission_callback (403, «δεν έχεις καν το δικαίωμα») αντί από
+        // τον scope-έλεγχο του controller (404, «δεν υπάρχει για σένα») —
+        // δύο διαφορετικές αρνήσεις, και αυτό το test δοκιμάζει ρητά τη
+        // δεύτερη: ότι μια άρνηση scope δεν αγγίζει bytes πριν απαντήσει.
+        $foreignPartner = $this->makeCrmUser(Roles::PARTNER);
+        $this->grantDelete($foreignPartner);
+        wp_set_current_user($foreignPartner);
 
         $response = rest_do_request(new WP_REST_Request('DELETE', '/ecrm/v1/contracts/' . $contractId));
 

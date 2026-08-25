@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Υγεία &amp; Ρυθμίσεις: σημερινό vs kit</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14px;margin:0 0 22px;max-width:820px}
+.lead b{color:#1a1a18}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin:34px 0 12px}
+.tag:first-of-type{margin-top:0}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:980px){.pair{grid-template-columns:1fr}}
+.col h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#83817a;margin:0 0 10px;font-weight:800}
+.col h2 small{display:block;text-transform:none;letter-spacing:0;font-weight:500;color:#a3a099;margin-top:2px;font-size:11.5px}
+
+/* ===================== ΣΗΜΕΡΙΝΟ — wp-admin defaults, κατά προσέγγιση ===================== */
+.wpwrap{background:#f0f0f1;border-radius:8px;padding:16px 18px;border:1px solid #dcdcde}
+.wpwrap h3.pt{font-size:18px;font-weight:400;margin:0 0 12px;color:#1d2327;font-family:Georgia,serif}
+.wp-notice{border-left:4px solid #00a32a;background:#fff;padding:8px 12px;margin:0 0 14px;font-size:13px;box-shadow:0 1px 1px rgba(0,0,0,.04)}
+.wp-notice.bad{border-left-color:#d63638}
+.wp-h2{font-size:15px;font-weight:600;margin:18px 0 8px;color:#1d2327}
+table.wpt{border-collapse:collapse;width:100%;background:#fff;font-size:12.5px;box-shadow:0 1px 1px rgba(0,0,0,.04)}
+table.wpt td,table.wpt th{padding:7px 10px;border-bottom:1px solid #f0f0f1;text-align:left}
+table.wpt tr.grp th{background:#f6f7f7;font-size:11px;font-weight:600;color:#50575e;text-transform:none}
+table.wpt tr:nth-child(even){background:#f9f9f9}
+.wp-ok{color:#1a7f37;font-weight:700}
+.wp-bad{color:#b32d2e;font-weight:700}
+.wp-warn{color:#b45309;font-weight:700}
+.wp-ta{width:100%;font-family:ui-monospace,Menlo,monospace;font-size:11px;background:#fff;border:1px solid #dcdcde;padding:8px;color:#3c434a}
+.wp-form th{text-align:left;font-weight:600;font-size:13px;color:#1d2327;padding:8px 10px 8px 0;vertical-align:top;width:180px}
+.wp-form td{padding:8px 0;vertical-align:top}
+.wp-form input[type=text],.wp-form select{border:1px solid #8c8f94;border-radius:3px;padding:5px 7px;font-size:13px;width:100%;max-width:280px}
+.wp-form .d{color:#646970;font-size:12px;margin:4px 0 0}
+.wp-btn{background:#2271b1;color:#fff;border:0;border-radius:3px;padding:6px 14px;font-size:13px;font-weight:600}
+.swatch-wp{display:inline-block;width:20px;height:20px;border-radius:4px;vertical-align:-5px;margin-right:6px;border:1px solid #8c8f94}
+
+/* ===================== KIT-ALIGNED — reuse actual .ecrm dark tokens ===================== */
+.ecrmwrap{--bg:#141412;--surface:#1a1a18;--surface2:#232320;--line:#33322e;--line-soft:#232320;
+	--ink:#f1f1ee;--muted:#a3a099;--accent-ink:#6bdd6d;
+	--ok:#a3d9a9;--ok-bg:#2c382d;--bad:#fb8a91;--bad-bg:#423030;--warn:#ffb682;--warn-bg:#3f322a;
+	background:var(--bg);border-radius:12px;padding:16px 18px;color:var(--ink)}
+.ecrmwrap .eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:10px}
+.ecard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:12px}
+.estep{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.etiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media (max-width:520px){.etiles{grid-template-columns:1fr 1fr}}
+.etile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.etile .k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.etile .v{font-size:19px;font-weight:800;margin-top:3px}
+.etile.is-bad .v{color:var(--bad)}
+.echeck{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line-soft);font-size:12.5px}
+.echeck:first-child{border-top:0}
+.echeck .grpname{flex:0 0 108px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.echeck .lbl{flex:1;font-weight:600}
+.ebadge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.ebadge.ok{background:var(--ok-bg);color:var(--ok)}
+.ebadge.bad{background:var(--bad-bg);color:var(--bad)}
+.ebadge.warn{background:var(--warn-bg);color:var(--warn)}
+.ekv{font-size:12px;color:var(--muted)}
+.efields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.efields label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.efields input{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:7px;padding:7px 9px;color:var(--ink);font-size:12.5px;font-family:inherit}
+.efields .full{grid-column:1/-1}
+.egrid4{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media (max-width:760px){.egrid4{grid-template-columns:1fr}}
+
+table.data{border-collapse:collapse;width:100%;font-size:12.5px;margin:16px 0 0}
+table.data th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#83817a;padding:0 12px 8px 0;border-bottom:1px solid #dedcd7}
+table.data td{padding:8px 12px 8px 0;border-bottom:1px solid #e9e8e4;vertical-align:top}
+table.data tr:last-child td{border-bottom:0}
+footer{font-size:12.5px;color:#5c5a55;margin-top:34px;padding-top:18px;border-top:1px solid #dedcd7}
+footer p{margin:0 0 8px}
+footer b{color:#1a1a18}
+</style>
+</head>
+<body>
+<main>
+	<h1>Υγεία &amp; Ρυθμίσεις — σημερινό vs κέλυφος `.ecrm`</h1>
+	<p class="lead">
+		§1.8: σύγκριση πρώτα. HANDOVER §6γ, κενό (2): οι δύο σελίδες ζουν σήμερα σε
+		<b>wp-admin</b> (`admin.php?page=energy-crm-health` / `=energy-crm`), τυπικά
+		WordPress `.wrap`/`form-table`, χωρίς καμία σχέση με το σκούρο κέλυφος `.ecrm`
+		που βλέπει ο συνεργάτης στο frontend. Η βασική ερώτηση δεν είναι μόνο «τι
+		χρώμα» — είναι <b>αρχιτεκτονική</b>: το κέλυφος `.ecrm` ζει στο frontend μέσα
+		από shortcode (`[energy_crm_app]`, `class-ecrm-app.php`), όχι σε full-page
+		takeover· οι σελίδες αυτές ζουν στο wp-admin, με το δικό του μενού/toolbar
+		γύρω τους. Δεν μπορούν να γίνουν κυριολεκτικά «η ίδια σελίδα» χωρίς μεγάλη
+		αλλαγή (νέο frontend routing, νέο έλεγχο δικαιωμάτων) — αυτό <b>δεν</b>
+		προτείνεται εδώ. Ό,τι δείχνεται δεξιά είναι η ρεαλιστική εκδοχή: το wp-admin
+		μενού/toolbar μένουν γύρω, αλλάζει μόνο το <b>περιεχόμενο</b> μέσα στο `.wrap`
+		— ίδια κάρτα/badge/σκούρα tokens με το `.ecrm` (`--st-active`, `--st-cancel`,
+		`--st-pending`, `.ecrm-card`), όχι νέο σύστημα.
+	</p>
+
+	<div class="tag">Οθόνη 1 · Υγεία (`src/Admin/HealthPage.php`)</div>
+	<div class="pair">
+		<div class="col">
+			<h2>Σημερινό<small>wp-admin `.wrap` / `table.widefat striped`</small></h2>
+			<div class="wpwrap">
+				<h3 class="pt">Υγεία</h3>
+				<div class="wp-notice bad"><strong>2</strong> έλεγχοι απέτυχαν. Δες τα κόκκινα παρακάτω.</div>
+				<div class="wp-h2">Έλεγχοι</div>
+				<table class="wpt">
+					<tr class="grp"><th colspan="3">Μυστικά</th></tr>
+					<tr><td class="wp-ok">✔</td><td><strong>Κλειδί Claude</strong></td><td>ορισμένο, καρφιτσωμένο</td></tr>
+					<tr><td class="wp-bad">✘</td><td><strong>Δικαιώματα wp-config.php</strong></td><td>644, πολύ χαλαρό</td></tr>
+					<tr class="grp"><th colspan="3">Κρυπτογράφηση</th></tr>
+					<tr><td class="wp-ok">✔</td><td><strong>Κρυπτογράφηση PII</strong></td><td>ενεργή</td></tr>
+					<tr><td class="wp-warn">!</td><td><strong>Αποτύπωμα κλειδιού</strong></td><td>δεν ταιριάζει με το ιστορικό</td></tr>
+					<tr class="grp"><th colspan="3">Βάση</th></tr>
+					<tr><td class="wp-bad">✘</td><td><strong>Migrations</strong></td><td>2 εκκρεμούν</td></tr>
+					<tr class="grp"><th colspan="3">Προγραμματισμένα</th></tr>
+					<tr><td class="wp-ok">✔</td><td><strong>Follow-up cron</strong></td><td>επόμενο σε 4 ώρες</td></tr>
+				</table>
+				<div class="wp-h2">Τελευταία τεχνικά σφάλματα</div>
+				<table class="wpt">
+					<tr><th>Κωδικός</th><th>Πότε</th><th>Τι</th><th>Φορές</th></tr>
+					<tr><td><code>ECRM-0512</code></td><td>25/08 09:14</td><td>PDF timeout</td><td>3</td></tr>
+				</table>
+				<div class="wp-h2">Για αποστολή</div>
+				<textarea class="wp-ta" readonly rows="3">Energy CRM 1.11.0 — 2026-08-25 09:20 UTC
+OK    Μυστικά / Κλειδί Claude: ορισμένο
+ΛΑΘΟΣ Μυστικά / Δικαιώματα wp-config.php: 644</textarea>
+			</div>
+		</div>
+
+		<div class="col">
+			<h2>Κέλυφος `.ecrm`, σκούρο<small>ίδια δεδομένα, ίδια tokens με το CRM</small></h2>
+			<div class="ecrmwrap">
+				<div class="eyebrow">Τρίτη 25 Αυγούστου</div>
+				<div class="etiles">
+					<div class="etile is-bad"><div class="k">Απέτυχαν</div><div class="v">2</div></div>
+					<div class="etile"><div class="k">Προειδοποιήσεις</div><div class="v">1</div></div>
+					<div class="etile"><div class="k">Πέρασαν</div><div class="v">12</div></div>
+					<div class="etile"><div class="k">Σφάλματα 24ω</div><div class="v">3</div></div>
+				</div>
+				<div class="ecard">
+					<div class="estep">Έλεγχοι</div>
+					<div class="echeck"><span class="grpname">Μυστικά</span><span class="lbl">Κλειδί Claude</span><span class="ekv">ορισμένο, καρφιτσωμένο</span><span class="ebadge ok">OK</span></div>
+					<div class="echeck"><span class="grpname">Μυστικά</span><span class="lbl">Δικαιώματα wp-config.php</span><span class="ekv">644, πολύ χαλαρό</span><span class="ebadge bad">Αποτυχία</span></div>
+					<div class="echeck"><span class="grpname">Κρυπτογράφηση</span><span class="lbl">Κρυπτογράφηση PII</span><span class="ekv">ενεργή</span><span class="ebadge ok">OK</span></div>
+					<div class="echeck"><span class="grpname">Κρυπτογράφηση</span><span class="lbl">Αποτύπωμα κλειδιού</span><span class="ekv">δεν ταιριάζει</span><span class="ebadge warn">Έλεγξε</span></div>
+					<div class="echeck"><span class="grpname">Βάση</span><span class="lbl">Migrations</span><span class="ekv">2 εκκρεμούν</span><span class="ebadge bad">Αποτυχία</span></div>
+					<div class="echeck"><span class="grpname">Προγραμματισμένα</span><span class="lbl">Follow-up cron</span><span class="ekv">επόμενο σε 4 ώρες</span><span class="ebadge ok">OK</span></div>
+				</div>
+				<div class="ecard">
+					<div class="estep">Τελευταία τεχνικά σφάλματα</div>
+					<div class="echeck"><span class="lbl"><code>ECRM-0512</code> PDF timeout</span><span class="ekv">25/08 09:14 · x3</span></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<table class="data">
+		<thead><tr><th>Στοιχείο</th><th>Σημερινό</th><th>Κέλυφος `.ecrm`</th></tr></thead>
+		<tbody>
+			<tr><td>Ομάδα ελέγχων</td><td>γκρι γραμμή τίτλου μέσα στον πίνακα (<code>colspan</code>)</td><td>ετικέτα σε δική της στήλη, σταθερού πλάτους — φαίνεται σε κάθε γραμμή, όχι μόνο στην πρώτη της ομάδας</td></tr>
+			<tr><td>Κατάσταση ελέγχου</td><td>✔/✘/! με inline <code>color:</code> στο PHP</td><td>πινακίδα <code>.ebadge</code> — ίδιες κλάσεις/tokens με τα badge κατάστασης συμβάσεων (<code>--st-active</code>/<code>--st-cancel</code>/<code>--st-pending</code>), όχι νέο χρώμα</td></tr>
+			<tr><td>Σύνοψη</td><td>μόνο το notice πάνω-πάνω («2 απέτυχαν»)</td><td>τέσσερα πλακίδια σύνοψης — απέτυχαν/προειδοποιήσεις/πέρασαν/σφάλματα 24ω, ίδιο σχήμα με τα πλακίδια του Πίνακα</td></tr>
+			<tr><td>Textarea «Για αποστολή»</td><td>μένει ως έχει</td><td>μένει ως έχει — καθαρό εργαλείο, όχι σχεδιαστικό στοιχείο</td></tr>
+		</tbody>
+	</table>
+
+	<div class="tag">Οθόνη 2 · Ρυθμίσεις (`admin/class-ecrm-admin.php`, 6 ενότητες, 25+ πεδία)</div>
+	<div class="pair">
+		<div class="col">
+			<h2>Σημερινό<small>wp-admin `form-table`, standard</small></h2>
+			<div class="wpwrap">
+				<h3 class="pt">Energy CRM — Ρυθμίσεις</h3>
+				<div class="wp-h2" style="margin-top:0">Εταιρεία &amp; Εμφάνιση</div>
+				<table class="wp-form">
+					<tr><th>Επωνυμία</th><td><input type="text" value="Energy Solutions"></td></tr>
+					<tr><th>Χρώμα τόνου</th><td><span class="swatch-wp" style="background:#c2f04a"></span><input type="text" value="#c2f04a" style="max-width:110px"></td></tr>
+					<tr><th>Υποσέλιδο PDF</th><td><input type="text" value="Energy Solutions ΑΕ · ΑΦΜ 123456789"></td></tr>
+				</table>
+				<div class="wp-h2">Ειδοποιήσεις &amp; Follow-up</div>
+				<table class="wp-form">
+					<tr><th>Όριο εκκρεμότητας (ημέρες)</th><td><input type="text" value="5" style="max-width:80px"></td></tr>
+					<tr><th>Κλιμάκωση SLA (ημέρες)</th><td><input type="text" value="10" style="max-width:80px"></td></tr>
+				</table>
+				<div class="wp-h2">Μηνύματα πελάτη (SMS / Viber)</div>
+				<table class="wp-form">
+					<tr><th>Πάροχος</th><td><select><option>Apifon</option></select></td></tr>
+					<tr><th>Sender ID</th><td><input type="text" value="ENERGYCRM"></td></tr>
+				</table>
+				<p><button class="wp-btn">Αποθήκευση αλλαγών</button></p>
+			</div>
+		</div>
+
+		<div class="col">
+			<h2>Κέλυφος `.ecrm`, σκούρο<small>ίδια πεδία, καμία λειτουργία δεν αφαιρέθηκε</small></h2>
+			<div class="ecrmwrap">
+				<div class="eyebrow">Ρυθμίσεις</div>
+				<div class="egrid4">
+					<div class="ecard">
+						<div class="estep">Εταιρεία &amp; Εμφάνιση</div>
+						<div class="efields">
+							<div class="full"><label>Επωνυμία</label><input value="Energy Solutions"></div>
+							<div><label>Χρώμα τόνου</label><input value="#c2f04a"></div>
+							<div><label>Logo</label><input value="(αρχείο)"></div>
+							<div class="full"><label>Υποσέλιδο PDF</label><input value="Energy Solutions ΑΕ · ΑΦΜ 123456789"></div>
+						</div>
+					</div>
+					<div class="ecard">
+						<div class="estep">Ειδοποιήσεις &amp; Follow-up</div>
+						<div class="efields">
+							<div><label>Όριο εκκρεμότητας</label><input value="5 ημέρες"></div>
+							<div><label>Κλιμάκωση SLA</label><input value="10 ημέρες"></div>
+						</div>
+					</div>
+					<div class="ecard">
+						<div class="estep">Μηνύματα πελάτη</div>
+						<div class="efields">
+							<div><label>Πάροχος</label><input value="Apifon"></div>
+							<div><label>Sender ID</label><input value="ENERGYCRM"></div>
+						</div>
+					</div>
+					<div class="ecard">
+						<div class="estep">Anthropic / AI</div>
+						<div class="efields">
+							<div class="full"><label>Claude API key</label><input value="••••••••••••"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<table class="data">
+		<thead><tr><th>Στοιχείο</th><th>Σημερινό</th><th>Κέλυφος `.ecrm`</th></tr></thead>
+		<tbody>
+			<tr><td>Πεδία</td><td>25+, σε 6 ενότητες <code>&lt;h2&gt;</code>/<code>form-table</code>, ενιαία στήλη</td><td>ΤΑ ΙΔΙΑ 25+ πεδία — καμία αφαίρεση — απλώς σε κάρτες <code>.ecrm-card</code>, grid 2 στηλών</td></tr>
+			<tr><td>Το kit δείχνει</td><td colspan="2"><code>docs/UI-UX-KIT.html</code> screen <b>D2</b> έχει 4 κάρτες (Anthropic/AI, Ειδοποιήσεις, Προεπιλογές αίτησης, Εμφάνιση) — <b>πιο σύντομο</b> από το σημερινό 6-ενοτήτων/25+-πεδίων φόρμα. Η δεξιά στήλη εδώ κρατά ΟΛΑ τα σημερινά πεδία (καμία λειτουργία δεν χάνεται σιωπηλά) και απλώς τα ομαδοποιεί σε κάρτες — ΔΕΝ αντιγράφει την απλοποιημένη δομή του kit 1:1. Αν προτιμάς τη eρώτηση «τι θα έφευγε αν κόβαμε στα 4» χρειάζεται ξεχωριστή συζήτηση, όχι σιωπηλή αφαίρεση.</td></tr>
+			<tr><td>Κουμπί αποθήκευσης</td><td>στάνταρ WP μπλε</td><td>`.ecrm-btn` πράσινο accent, ίδιο με τα υπόλοιπα κουμπιά αποθήκευσης της εφαρμογής</td></tr>
+		</tbody>
+	</table>
+
+	<footer>
+		<p><b>Τι ΔΕΝ αλλάζει σε καμία περίπτωση:</b> το wp-admin μενού/sidebar/toolbar
+		γύρω από τη σελίδα μένει — αυτές παραμένουν σελίδες <code>manage_options</code>,
+		με τον δικό τους έλεγχο δικαιωμάτων. Καμία φόρμα δεδομένων/πεδίο δεν χάνεται.
+		Το textarea «Για αποστολή» της Υγείας μένει ως λειτουργικό εργαλείο.</p>
+		<p><b>Δύο αποφάσεις χρειάζονται πριν φύγει κώδικας:</b> (α) αν προχωράμε με
+		την πλήρη λίστα πεδίων σε κάρτες (η στήλη δεξιά εδώ), ή αν παράλληλα θέλεις να
+		δούμε ξεχωριστά ποια πεδία θα μπορούσαν να φύγουν/συμπτυχθούν όπως το
+		απλοποιημένο D2 του kit· (β) αν το κουμπί αποθήκευσης παίρνει πράσινο accent
+		του CRM ή μένει το στάνταρ μπλε του WordPress (κάποιοι διαχειριστές το
+		αναγνωρίζουν ως «κανονικό κουμπί WP» και το εμπιστεύονται περισσότερο εκεί
+		ακριβώς επειδή δεν μοιάζει με το υπόλοιπο CRM).</p>
+	</footer>
+</main>
+</body>
+</html>

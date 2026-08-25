@@ -72,7 +72,7 @@ final class TeamController implements Controller
                     'role' => [
                         'type'    => 'string',
                         'default' => Roles::SELLER,
-                        'enum'    => [Roles::SELLER, Roles::REGISTRAR, Roles::PARTNER],
+                        'enum'    => [Roles::SELLER, Roles::PARTNER],
                     ],
                     'password' => ['type' => 'string', 'default' => ''],
                 ],
