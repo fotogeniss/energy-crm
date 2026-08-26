@@ -599,6 +599,16 @@
 .ecrm[data-theme="dark"] .ecrm-input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 /* AI-filled pulse */
 .ecrm-field.is-ai .ecrm-input { background: var(--accent-wash); border-color: var(--amber); animation: ecrm-pulse 1.6s ease; }
+
+/* Μόνιμη ετικέτα «AI» -- ξεχωριστή από το is-ai (στιγμιαία αναλαμπή, πάνω).
+   Μπαίνει στο ίδιο σημείο του setField() που βάζει το is-ai, φεύγει όταν ο
+   συνεργάτης αγγίξει το ΙΔΙΟ πεδίο (ecrm-form.js, listener στο 'input'). */
+.ecrm-field.ai-mark .ecrm-field__label { display: flex; align-items: center; gap: 6px; }
+.ecrm-field.ai-mark .ecrm-field__label::after {
+	content: "AI"; font-size: var(--fs-10); font-weight: 800; letter-spacing: .04em;
+	color: var(--p600); background: var(--p100); padding: 1px 5px; border-radius: 5px; line-height: 1.5;
+}
+.ecrm-field.ai-mark .ecrm-input { border-color: var(--p200); }
 /* Ίδιο υπόλειμμα iris, στον παλμό του πεδίου που γέμισε το AI. */
 @keyframes ecrm-pulse { 0% { box-shadow: 0 0 0 0 rgba(22,194,23,.45); } 100% { box-shadow: 0 0 0 8px rgba(22,194,23,0); } }
 
