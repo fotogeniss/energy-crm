@@ -23,15 +23,17 @@ fs.writeFileSync(path.join(__dirname, 'form.html'), html);
 
 let js = fs.readFileSync(path.join(ROOT, 'public/assets/ecrm-form.js'), 'utf8');
 const before = js;
-js = js.replace(/^import .*?;\n/, `
+js = js.replace(/^(?:import .*?;\n)+/, `
 var __toasts = [];
 function api(p){ return 'http://x/wp-json/ecrm/v1' + p; }
 function esc(s){ return String(s == null ? '' : s); }
 function rejectedNote(){ return ''; }
 function toast(msg, ok){ __toasts.push({ msg: msg, ok: ok !== false }); }
 window.__toasts = __toasts;
+function openCustomerContracts(){ /* no-op: το smoke test δεν κάνει ποτέ click σε αυτό το κουμπί */ }
 `);
-if (js === before) { console.error('Δεν βρέθηκε το import στο ecrm-form.js — άλλαξε η κεφαλή του αρχείου.'); process.exit(2); }
+if (js === before) { console.error('Δεν βρέθηκε import στο ecrm-form.js — άλλαξε η κεφαλή του αρχείου.'); process.exit(2); }
+if (/^import /m.test(js)) { console.error('Έμεινε import χωρίς stub στο ecrm-form.js — δες την κεφαλή.'); process.exit(2); }
 fs.writeFileSync(path.join(__dirname, 'form.js'), js);
 
 const steps = (html.match(/data-wstep="\d"/g) || []).length;
