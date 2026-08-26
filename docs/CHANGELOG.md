@@ -7,6 +7,84 @@
 
 ---
 
+## 2026-08-26 (141)
+
+### Race condition: διπλή πληρωμή σε ταυτόχρονη «Πληρώθηκε»/«Διαγραφή» — εύρημα #3
+
+Το `admin/class-ecrm-payouts.php` (χειριστής `remove()`) διάβαζε το status
+της παρτίδας με ξεχωριστό `SELECT`, μετά αποσύνδεε ΧΩΡΙΣ ΚΑΝΕΝΑΝ όρο τις
+συμβάσεις της (`payout_id`/`payout_amount = NULL`), και μόνο στο τέλος
+έκανε το guarded `DELETE ... WHERE status='pending'`. Ανάμεσα στο πρώτο
+`SELECT` και το τελικό `DELETE` δεν υπήρχε καμία ατομικότητα: αν ένα
+ταυτόχρονο «Πληρώθηκε» (`markPaid()`) πρόλαβε να σημαδέψει την παρτίδα ως
+`paid` ΜΕΤΑ το `SELECT` αλλά πριν το `DELETE`, το `DELETE` απλά δεν έβρισκε
+γραμμή να σβήσει -- όμως η ενδιάμεση, χωρίς όρο, `UPDATE` στις συμβάσεις
+είχε ήδη τρέξει, αποσυνδέοντάς τες από μια παρτίδα που μόλις πληρώθηκε.
+Αποτέλεσμα: παρτίδα `paid` με μηδέν συμβάσεις πάνω της, και οι ίδιες
+συμβάσεις ξαναγύριζαν στο `unsettled_rows()` σαν να μην είχαν πληρωθεί
+ποτέ -- μπορούσαν να μπουν σε νέα παρτίδα και να πληρωθούν ΞΑΝΑ.
+
+**`src/Persistence/PayoutRepository.php`:** νέα `deletePending(int
+$payoutId): bool` -- αντιστρέφει τη σειρά: πρώτα ένα ΑΤΟΜΙΚΟ, guarded
+`DELETE FROM payouts WHERE id=%d AND status='pending'` (ίδιο μοτίβο με το
+`markPaid()`), και μόνο ΑΝ αυτό πέτυχε (δηλαδή η γραμμή όντως σβήστηκε ενώ
+ήταν ακόμα pending) ακολουθεί η `UPDATE` στις συμβάσεις. Αν ένα ταυτόχρονο
+`markPaid()` έχει προλάβει, το `DELETE` δεν βρίσκει καμία γραμμή
+(`status='paid'` πια), επιστρέφει `false`, και καμία σύμβαση δεν αγγίζεται
+-- η παρτίδα μένει άθικτη, πληρωμένη, με όλες τις συμβάσεις της πάνω της.
+
+**`admin/class-ecrm-payouts.php`:** ο χειριστής `remove()` έγινε λεπτό
+wrapper γύρω από `PayoutRepository::deletePending()` -- ίδιος λόγος με τον
+ήδη υπάρχοντα `pay()` που καλεί `markPaid()`: αυτοί οι χειριστές τελειώνουν
+σε `exit` και η σουίτα δεν τους φτάνει (§6γ 1), οπότε η κρίσιμη
+ατομικότητα έπρεπε να ζει κάπου ελέγξιμο.
+
+**`tests/Integration/PayoutDeletePendingRaceTest.php` (νέο):** εκτός από
+τα προφανή (επιτυχής διαγραφή pending παρτίδας + αποσύνδεση συμβάσεων,
+απούσα παρτίδα → `false`), το `testMarkPaidWinningTheRaceLeavesTheBatchIntact()`
+προσομοιώνει ρητά τον ανταγωνισμό: καλεί `markPaid()` ΠΡΙΝ το
+`deletePending()` (ίδια τεχνική με το ήδη υπάρχον
+`PayoutPaidAtTest::testASecondClickChangesNothing()`) και επιβεβαιώνει ότι
+η παρτίδα μένει `paid` με τις συμβάσεις της ανέπαφες -- ακριβώς το
+σενάριο που έσπαγε πριν.
+
+Καθαρό bug-fix σε υπάρχουσα διαδρομή διαγραφής -- καμία οπτική αλλαγή στη
+φόρμα, δεν χρειάστηκε mockup §1.8. Εύρημα #1 (139) και #2 (140) ήδη
+διορθωμένα. Τα υπόλοιπα ευρήματα του ελέγχου (LeadsController race,
+gmdate/current_time σε Analytics/Renewals, reassign χωρίς event log,
+session-binding στο ECRM_Files, UI/UX) παραμένουν σε εκκρεμότητα.
+
+Πρώτο `composer check:all` (phpcs 278/278, phpstan 153/153 πράσινα, unit
+πράσινο) εντόπισε στο integration run δευτερεύον bug στη διόρθωση: το
+`contracts.payout_id` έχει ήδη FK `ON DELETE SET NULL` προς το `payouts.id`
+(`AddForeignKeys::relations()`), οπότε το `DELETE` της παρτίδας μηδένιζε το
+`payout_id` της σύμβασης ΜΕΣΩ ΤΗΣ ΙΔΙΑΣ ΤΗΣ ΒΑΣΗΣ πριν καν προλάβει να τρέξει
+το δικό μας `UPDATE ... WHERE payout_id = %d` -- που τότε δεν έβρισκε πια
+καμία γραμμή και άφηνε το `payout_amount` στο παλιό ποσό
+(`testAPendingBatchIsDeletedAndItsContractsReleased` απέτυχε ακριβώς εκεί). Η
+`deletePending()` διορθώθηκε ώστε να πιάνει τα ids των συμβάσεων ΠΡΙΝ το
+DELETE (μόνο ως συλλογή δεδομένων -- η ατομική απόφαση παραμένει αποκλειστικά
+το guarded DELETE) και μετά καθαρίζει το `payout_amount` τους με βάση αυτά τα
+ids.
+
+Δεύτερο `composer check:all` έπιασε ένα ακόμα σημείο πριν καν φτάσει σε
+integration: το phpcs σήκωσε `WordPress.DB.PreparedSQL.InterpolatedNotPrepared`
+στο `IN ({$placeholders})` του παραπάνω καθαρισμού -- η μεταβλητή μήκους
+`IN (%d,%d,…)` δεν επαληθεύεται στατικά από το phpcs, ακριβώς το ίδιο σημείο
+που ήδη εξηγεί το docblock του `ContractRepository` (§ "phpcs exemptions")
+για την ήδη υπάρχουσα `reachableAmong()`. Προστέθηκε το ίδιο ζεύγος
+`phpcs:disable`/`phpcs:enable` WordPress.DB.PreparedSQL,
+WordPress.DB.PreparedSQLPlaceholders γύρω από αυτό το ένα query, με σχόλιο
+που εξηγεί γιατί: το `$placeholders` δεν περιέχει τίποτα άλλο από τη
+σταθερή συμβολοσειρά `"%d"` επαναλαμβανόμενη -- καμία είσοδος χρήστη δεν το
+αγγίζει.
+
+Composer check:all: phpcs 278/278, phpstan 153/153 χωρίς σφάλματα, unit 913
+tests / 2530 assertions (1 skipped), integration 391 tests / 2498 assertions
+(τα 4 νέα PayoutDeletePendingRaceTest περιλαμβάνονται). Όλα πράσινα.
+
+---
+
 ## 2026-08-26 (140)
 
 ### Δεν χάνεται πια ίχνος πληρωμένης προμήθειας σε ακύρωση — εύρημα #2

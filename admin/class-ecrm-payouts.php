@@ -307,26 +307,24 @@ class ECRM_Payouts {
 	public static function remove(): void {
 		if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Δεν επιτρέπεται.' ); }
 		check_admin_referer( 'ecrm_delete_payout' );
-		global $wpdb;
 		$id = (int) ( $_POST['id'] ?? 0 );
 		if ( ! $id ) { self::back(); }
 
-		$pt     = ECRM_DB::table( 'payouts' );
-		$status = $wpdb->get_var( $wpdb->prepare( "SELECT status FROM {$pt} WHERE id = %d", $id ) );
+		// Το ερώτημα βγήκε στη PayoutRepository, ίδιος λόγος με το pay()
+		// παραπάνω: αυτός ο χειριστής τελειώνει σε exit και η σουίτα δεν τον
+		// φτάνει (§6γ 1), οπότε η ίδια η κρίσιμη ατομικότητα («σβήσε μόνο αν
+		// ακόμα εκκρεμεί, μετά αποσύνδεσε τις συμβάσεις») έπρεπε να ζει κάπου
+		// ελέγξιμο. Εύρημα ελέγχου ασφαλείας/λογικής #3 (26/08/2026): ο παλιός
+		// κώδικας διάβαζε το status με ξεχωριστό SELECT και μετά αποσύνδεε τις
+		// συμβάσεις χωρίς ΚΑΝΕΝΑΝ όρο -- ένα ταυτόχρονο «Πληρώθηκε» ανάμεσα
+		// στις δύο εντολές άφηνε πίσω μια παρτίδα «paid» χωρίς καμία σύμβαση
+		// επάνω της, κι εκείνες ξαναγύριζαν στις ανεξόφλητες και μπορούσαν να
+		// πληρωθούν ΞΑΝΑ. Δες PayoutRepository::deletePending().
+		$repo = new \EnergyCRM\Persistence\PayoutRepository();
 
-		if ( $status === null ) { self::back( 'noop' ); }
-		if ( $status === 'paid' ) { self::back( 'locked' ); }
-
-		$ct = ECRM_DB::table( 'contracts' );
-		// Μαζί με το payout_id φεύγει και το στιγμιότυπο: σύμβαση εκτός
-		// παρτίδας δεν έχει «ποσό με το οποίο μπήκε», και ένα ξεχασμένο ποσό θα
-		// εμφανιζόταν παγωμένο στην οθόνη ενώ η σύμβαση ξαναϋπολογίζεται.
-		$wpdb->query( $wpdb->prepare(
-			"UPDATE {$ct} SET payout_id = NULL, payout_amount = NULL WHERE payout_id = %d",
-			$id
-		) );
-		// Η ίδια συνθήκη στη διαγραφή: αν κάποιος την πλήρωσε ενδιάμεσα, μένει.
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$pt} WHERE id = %d AND status = 'pending'", $id ) );
+		if ( ! $repo->deletePending( $id ) ) {
+			self::back( $repo->find( $id ) ? 'locked' : 'noop' );
+		}
 
 		self::back( 'deleted' );
 	}
