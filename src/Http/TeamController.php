@@ -22,6 +22,7 @@ use ECRM_Commissions;
 use ECRM_DB;
 use EnergyCRM\Domain\Commission\CommissionAmount;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Persistence\CommissionRepository;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\PartnerCardRepository;
@@ -39,6 +40,7 @@ final class TeamController implements Controller
         private readonly ContractRepository $contracts,
         private readonly PartnerCardRepository $card,
         private readonly CommissionRepository $commissions,
+        private readonly TeamInvite $invite,
     ) {
     }
 
@@ -74,7 +76,6 @@ final class TeamController implements Controller
                         'default' => Roles::SELLER,
                         'enum'    => [Roles::SELLER, Roles::PARTNER],
                     ],
-                    'password' => ['type' => 'string', 'default' => ''],
                 ],
             ],
         ]);
@@ -384,6 +385,18 @@ final class TeamController implements Controller
         return $out;
     }
 
+    /**
+     * Ο κωδικός δεν φεύγει ποτέ πια σε καθαρό κείμενο — ούτε στην απάντηση
+     * του API, ούτε σε email. Παράγεται τυχαίος, αγνώστος και στον ίδιο τον
+     * manager, και το νέο μέλος παίρνει σύνδεσμο ορισμού κωδικού μέσω
+     * TeamInvite (ίδιο μονοπάτι με το «ξέχασα τον κωδικό» του ίδιου του
+     * WordPress — 24ωρη λήξη από τον πυρήνα, καμία δική μας σελίδα).
+     *
+     * Το `invited` στην απάντηση λέει αν στάλθηκε το email — ΟΧΙ αν
+     * παραλήφθηκε. Αν είναι false (π.χ. δεν έχει ρυθμιστεί ακόμα SMTP στην
+     * παραγωγή), ο λογαριασμός υπάρχει κανονικά, απλά ο manager πρέπει να
+     * δώσει το σύνδεσμο με άλλο τρόπο μέχρι να λυθεί το SMTP.
+     */
     public function create(WP_REST_Request $request): WP_REST_Response
     {
         $email = (string) $request['email'];
@@ -395,13 +408,7 @@ final class TeamController implements Controller
             );
         }
 
-        $password = (string) $request['password'];
-
-        // A password the manager typed and forgot is worse than one we generate
-        // and show once, so anything too short is replaced outright.
-        if (strlen($password) < 6) {
-            $password = wp_generate_password(12, true);
-        }
+        $password = wp_generate_password(20, true);
 
         $username = sanitize_user(
             current(explode('@', $email)) . '_' . wp_rand(100, 999),
@@ -422,12 +429,13 @@ final class TeamController implements Controller
 
         $this->team->attach($userId, $this->scopes->forCurrentUser()->actorId());
 
+        $invited = $this->invite->send($userId, (string) $request['name']);
+
         return new WP_REST_Response([
             'ok'       => true,
             'id'       => $userId,
             'username' => $username,
-            // Shown once, so the manager can hand it over.
-            'password' => $password,
+            'invited'  => $invited,
         ], 200);
     }
 
