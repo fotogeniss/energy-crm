@@ -299,7 +299,9 @@ function renderContracts(view, d) {
 		sfBox.querySelectorAll('[data-sfdel]').forEach(function (b) {
 			b.addEventListener('click', function () {
 				fetch(api('/filters/' + this.getAttribute('data-sfdel')), { method: 'DELETE', headers: H() })
-					.then(function (r) { return r.json(); }).then(function (d) { if (d && d.ok) renderSavedFilters(d.filters || []); });
+					.then(function (r) { return r.json(); })
+					.then(function (d) { if (d && d.ok) renderSavedFilters(d.filters || []); else toast((d && d.error) || 'Αποτυχία διαγραφής.', false); })
+					.catch(function () { toast('Σφάλμα δικτύου.', false); });
 			});
 		});
 	}

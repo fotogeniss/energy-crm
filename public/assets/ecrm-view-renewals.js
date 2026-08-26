@@ -80,7 +80,8 @@ function renderRenewals(view, d) {
 						// load the new draft into the form
 						fetch(api('/contracts/' + d.contract_id), { headers: H() })
 							.then(function (r) { return r.json(); })
-							.then(function (dd) { var c = dd.contract || dd; openEdit(c); });
+							.then(function (dd) { var c = dd.contract || dd; openEdit(c); })
+							.catch(function () { toast('Η ανανέωση δημιουργήθηκε, αλλά απέτυχε το άνοιγμα για επεξεργασία — βρες τη στη λίστα.', false); });
 					} else { toast((d && d.error) || 'Αποτυχία.', false); }
 				})
 				.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });

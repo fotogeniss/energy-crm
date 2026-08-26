@@ -77,7 +77,7 @@ function renderLeads(view, d) {
 			'<div class="ecrm-leadcard__bar">' + cb +
 				'<span class="ecrm-leadcard__actions">' + conv +
 					'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-ledit="' + l.id + '">Επεξεργασία</button>' +
-					'<button type="button" class="ecrm-iconbtn" data-ldel="' + l.id + '" title="Διαγραφή"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg></button>' +
+					'<button type="button" class="ecrm-iconbtn" data-ldel="' + l.id + '" title="Διαγραφή" aria-label="Διαγραφή"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg></button>' +
 				'</span></div>' +
 		'</div>';
 	}).join('');
@@ -124,7 +124,9 @@ function renderLeads(view, d) {
 		b.addEventListener('click', function () {
 			if (!confirm('Διαγραφή lead;')) return;
 			fetch(api('/leads/' + this.getAttribute('data-ldel')), { method: 'DELETE', headers: H() })
-				.then(function (r) { return r.json(); }).then(function (res) { if (res && res.ok) loadLeads(); });
+				.then(function (r) { return r.json(); })
+				.then(function (res) { if (res && res.ok) loadLeads(); else toast((res && res.error) || 'Αποτυχία διαγραφής.', false); })
+				.catch(function () { toast('Σφάλμα δικτύου.', false); });
 		});
 	});
 	view.querySelectorAll('[data-lconv]').forEach(function (b) {
