@@ -218,28 +218,46 @@ final class DashboardTilesTest extends IntegrationTestCase
 
     public function testExpiringTodayCountsOnlyWhatIsAboutToExpireWithinToday(): void
     {
-        // 42 ώρες πριν: λήγει σε 6 ώρες — σήμερα, με περιθώριο από τα
-        // μεσάνυχτα. Ο έλεγχος συγκρίνει με CURDATE() της βάσης, οπότε ένα
-        // τρέξιμο μέσα στις τελευταίες ~6 ώρες πριν τα μεσάνυχτα θα έβλεπε
-        // τη λήξη να πέφτει «αύριο» αντί για «σήμερα» — γνωστό, αποδεκτό
-        // περιθώριο, ίδιο μοτίβο σχετικού χρόνου με το SignExpiryTest.
-        $expiringSoon = $this->contractFor('awaiting_signature');
-        $this->sentHoursAgo($expiringSoon, 42);
+        // Το πλακίδιο συγκρίνει με CURDATE()/NOW() της ΙΔΙΑΣ σύνδεσης βάσης
+        // (DashboardRepository::countExpiringToday()), όχι της PHP. Ένα
+        // σταθερό «42 ώρες πριν» παράγει προθεσμία «τώρα + 6 ώρες», που
+        // μπορεί να διασχίσει τα μεσάνυχτα ανάλογα με το πότε τρέχει το
+        // τεστ — αυτό ήταν το παλιότερο, αποδεκτό (αλλά περιττό) περιθώριο.
+        //
+        // Εδώ «παγώνουμε» το ρολόι ΑΥΤΗΣ ΤΗΣ ΣΥΝΔΕΣΗΣ σε μεσημέρι σήμερα με
+        // `SET timestamp` — session variable της MySQL/MariaDB που αλλάζει
+        // τι επιστρέφουν NOW()/CURDATE()/CURRENT_TIMESTAMP() γι' αυτή τη
+        // σύνδεση και μόνο, χωρίς clock mocking στη PHP και χωρίς να
+        // αγγίζει το πραγματικό ρολόι του server. Έτσι «τώρα + 6 ώρες» =
+        // 18:00 σήμερα πάντα, ανεξάρτητα από το πότε πραγματικά τρέχει το
+        // check:all. Μηδενίζεται στο finally, ώστε να μην «διαρρεύσει» στο
+        // επόμενο τεστ ακόμα κι αν αυτό αποτύχει.
+        global $wpdb;
 
-        // 10 ώρες πριν: λήγει σε 38 ώρες — όχι σήμερα.
-        $notYet = $this->contractFor('awaiting_signature');
-        $this->sentHoursAgo($notYet, 10);
+        $wpdb->query("SET @@session.timestamp = UNIX_TIMESTAMP(CONCAT(CURDATE(), ' 12:00:00'))");
 
-        // 60 ώρες πριν: το παράθυρο πέρασε ήδη — δεν «λήγει», έχει λήξει.
-        $alreadyExpired = $this->contractFor('pending_signature');
-        $this->sentHoursAgo($alreadyExpired, 60);
+        try {
+            // 42 ώρες πριν το παγωμένο «τώρα»: λήγει σε 6 ώρες — 18:00 σήμερα.
+            $expiringSoon = $this->contractFor('awaiting_signature');
+            $this->sentHoursAgo($expiringSoon, 42);
 
-        // Καμία αποστολή καταγεγραμμένη — καμία προθεσμία, δεν μετράει.
-        $this->contractFor('awaiting_signature');
+            // 10 ώρες πριν: λήγει σε 38 ώρες — όχι σήμερα.
+            $notYet = $this->contractFor('awaiting_signature');
+            $this->sentHoursAgo($notYet, 10);
 
-        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+            // 60 ώρες πριν: το παράθυρο πέρασε ήδη — δεν «λήγει», έχει λήξει.
+            $alreadyExpired = $this->contractFor('pending_signature');
+            $this->sentHoursAgo($alreadyExpired, 60);
 
-        self::assertSame(1, $tiles['expiring_today']);
+            // Καμία αποστολή καταγεγραμμένη — καμία προθεσμία, δεν μετράει.
+            $this->contractFor('awaiting_signature');
+
+            $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+            self::assertSame(1, $tiles['expiring_today']);
+        } finally {
+            $wpdb->query('SET @@session.timestamp = DEFAULT');
+        }
     }
 
     // ── 4. «Κλεισμένες (μήνας)»: το γεγονός, όχι η στήλη ──────────────
