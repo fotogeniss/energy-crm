@@ -82,7 +82,10 @@ final class AnalyticsController implements Controller
             'by_provider' => $this->labelled($this->analytics->topProviders($scope)),
             'by_energy'   => $byEnergy,
             'by_region'   => $this->labelled($this->analytics->topRegions($scope)),
-            'monthly'     => array_values($this->analytics->monthlyTotals($scope, (int) gmdate('Y'))),
+            // gmdate() εδώ έδινε λάθος έτος για 2-3 ώρες μετά τα μεσάνυχτα
+            // (ώρα Ελλάδας) την 1η Ιανουαρίου -- ίδια κλάση σφάλματος με τα ήδη
+            // διορθωμένα σημεία, εύρημα ελέγχου ασφαλείας/λογικής (26/08/2026).
+            'monthly'     => array_values($this->analytics->monthlyTotals($scope, (int) current_time('Y'))),
             'leaderboard' => $asTeam ? $this->leaderboard($scope) : [],
         ], 200);
     }

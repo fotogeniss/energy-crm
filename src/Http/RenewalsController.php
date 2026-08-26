@@ -179,7 +179,10 @@ final class RenewalsController implements Controller
      */
     private function nextTermStart(string $currentEnd): string
     {
-        $today = gmdate('Y-m-d');
+        // gmdate() εδώ μπορούσε να χρονολογήσει την ανανέωση μία μέρα νωρίτερα
+        // κοντά στα μεσάνυχτα ώρας Ελλάδας -- ίδια κλάση σφάλματος με το
+        // AnalyticsController, εύρημα ελέγχου ασφαλείας/λογικής (26/08/2026).
+        $today = current_time('Y-m-d');
 
         if ($currentEnd === '') {
             return $today;
