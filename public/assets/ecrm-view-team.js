@@ -55,7 +55,6 @@ function renderTeam(view, d) {
 		'<div class="ecrm-grid">' +
 		'<label class="ecrm-field"><span class="ecrm-field__label">Ονοματεπώνυμο</span><input class="ecrm-input" data-f="name"></label>' +
 		'<label class="ecrm-field"><span class="ecrm-field__label">Email</span><input class="ecrm-input" type="email" data-f="email"></label>' +
-		'<label class="ecrm-field"><span class="ecrm-field__label">Κωδικός (προαιρετικό)</span><input class="ecrm-input" data-f="password" placeholder="αυτόματος αν κενό"></label>' +
 		'</div><button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-add-member>+ Προσθήκη</button>' +
 		'<div class="ecrm-ai-status" data-member-msg></div></div>'
 	) : '';
@@ -110,7 +109,7 @@ function teamOp(id, op) {
 }
 function addMember(view, btn) {
 	var get = function (f) { var el = view.querySelector('[data-f="' + f + '"]'); return el ? el.value : ''; };
-	var payload = { name: get('name'), email: get('email'), role: 'ecrm_seller', password: get('password') };
+	var payload = { name: get('name'), email: get('email'), role: 'ecrm_seller' };
 	if (!payload.name || !payload.email) { toast('Συμπλήρωσε όνομα και email.', false); return; }
 	btn.disabled = true;
 	fetch(api('/team'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(payload) })
@@ -118,7 +117,13 @@ function addMember(view, btn) {
 		.then(function (d) {
 			if (!d || !d.ok) { toast((d && d.error) || 'Αποτυχία.', false); return; }
 			var msg = view.querySelector('[data-member-msg]');
-			if (msg) msg.textContent = 'Δημιουργήθηκε. Username: ' + d.username + ' · Κωδικός: ' + d.password + ' (κράτησέ τον τώρα)';
+			// invited:false δεν σημαίνει αποτυχία -- ο λογαριασμός υπάρχει κανονικά,
+			// απλά δεν έφυγε το email (π.χ. SMTP δεν έχει ρυθμιστεί ακόμα στην
+			// παραγωγή). Ο manager πρέπει να το μάθει ρητά, όχι να υποθέσει ότι
+			// στάλθηκε -- βλ. docs/UI-TEAM-INVITE.html (§1.8, εγκρίθηκε).
+			if (msg) msg.textContent = d.invited
+				? 'Δημιουργήθηκε. Username: ' + d.username + '. Στάλθηκε email πρόσκλησης με σύνδεσμο ορισμού κωδικού (ισχύει 24 ώρες).'
+				: 'Δημιουργήθηκε ο λογαριασμός ' + d.username + ', αλλά το email πρόσκλησης ΔΕΝ στάλθηκε. Δώσε του το username και πες του να πατήσει «Ξέχασα τον κωδικό» στην οθόνη σύνδεσης.';
 			loadTeam();
 		})
 		.catch(function () { toast('Σφάλμα δικτύου.', false); })

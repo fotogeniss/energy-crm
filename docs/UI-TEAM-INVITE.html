@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Πρόσκληση νέου μέλους αντί για κωδικό σε καθαρό κείμενο</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14px;margin:0 0 10px;max-width:880px}
+.lead b{color:#1a1a18}
+.src{color:#83817a;font-size:12px;margin:0 0 28px}
+.src code{background:#dcdad4;padding:1px 5px;border-radius:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin:0 0 12px}
+.tag.before{color:#a34a3a}
+.tag.after{color:#1f7a3d}
+
+.appwrap{--bg:#141412;--surface:#1a1a18;--line:#33322e;--line-soft:#232320;
+	--ink:#f1f1ee;--muted:#a3a099;--amber:#16c217;--danger:#e0603d;
+	background:var(--bg);border-radius:14px;padding:16px 18px 20px;color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.step{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px}
+label:first-of-type{margin-top:0}
+input,select{width:100%;background:#141412;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px}
+.btn{margin-top:14px;background:var(--amber);color:#0c1a0c;border:none;font-weight:700;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer}
+.strike{opacity:.4;position:relative}
+.strike::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--danger)}
+
+.msg{margin-top:14px;padding:10px 12px;border-radius:9px;font-size:12.5px;line-height:1.5}
+.msg.old{background:#2a1614;border:1px solid #4a231e;color:#e7a89c}
+.msg.old code{background:#3a1e19;padding:1px 4px;border-radius:4px}
+.msg.good{background:#16241a;border:1px solid #22432b;color:#a7d9ae}
+.msg.warn{background:#2a220e;border:1px solid #4a3c16;color:#e0c27a;margin-top:8px}
+
+.notes{margin-top:34px;background:#fff;border:1px solid #dcdad4;border-radius:12px;padding:20px 24px}
+.notes h2{font-size:14px;margin:0 0 12px;color:#1a1a18}
+.notes ul{margin:0;padding-left:20px;font-size:13px;color:#3c3a36}
+.notes li{margin-bottom:9px}
+.notes li b{color:#1a1a18}
+.notes .q{background:#f3f1ea;border-left:3px solid #b8860b;padding:9px 12px;margin-top:14px;font-size:12.5px;border-radius:0 8px 8px 0}
+.notes .q b{color:#7a5c00}
+.notes .q + .q{margin-top:8px}
+</style></head>
+<body><main>
+
+<h1>Πρόσκληση νέου μέλους — σύνδεσμος ορισμού κωδικού</h1>
+<p class="lead">Build queue <b>13</b>. Backend έτοιμο (CHANGELOG 137, εκκρεμεί έλεγχος): το <code>POST /team</code>
+πλέον δεν δέχεται καν <code>password</code> — φτιάχνει μόνο του τυχαίο κωδικό που δεν βλέπει ποτέ κανείς, και
+στέλνει email με σύνδεσμο ορισμού κωδικού (ίδιο μηχανισμό με το «Ξέχασα τον κωδικό» του ίδιου του WordPress,
+24ωρη λήξη). Το επιλέξατε ρητά αντί για αποστολή του κωδικού απευθείας. Αυτό το mockup είναι η αλλαγή που
+απομένει στη φόρμα «Νέο μέλος» της οθόνης Ομάδα (<code>ecrm-view-team.js</code>).</p>
+
+<div class="grid">
+<div>
+<div class="tag before">Πριν — σήμερα</div>
+<div class="appwrap">
+<div class="card">
+<div class="step">Νέο μέλος</div>
+<label>Όνομα</label><input value="Γιώργος Παπαδόπουλος" disabled>
+<label>Email</label><input value="giorgos@example.gr" disabled>
+<label>Ρόλος</label><select disabled><option>Πωλητής</option></select>
+<label class="strike">Κωδικός (προαιρετικό)</label><input class="strike" placeholder="κενό = αυτόματος" disabled>
+<button class="btn" disabled>Προσθήκη</button>
+<div class="msg old">Δημιουργήθηκε. Username: <code>giorgos_482</code> · Κωδικός: <code>Xk9#mQ2p</code>
+(κράτησέ τον τώρα)</div>
+</div>
+</div>
+</div>
+
+<div>
+<div class="tag after">Μετά — πρόταση</div>
+<div class="appwrap">
+<div class="card">
+<div class="step">Νέο μέλος</div>
+<label>Όνομα</label><input value="Γιώργος Παπαδόπουλος" disabled>
+<label>Email</label><input value="giorgos@example.gr" disabled>
+<label>Ρόλος</label><select disabled><option>Πωλητής</option></select>
+<button class="btn" disabled>Προσθήκη</button>
+<div class="msg good"><b>Δημιουργήθηκε.</b> Username: <code>giorgos_482</code>. Στάλθηκε email πρόσκλησης στο
+giorgos@example.gr με σύνδεσμο ορισμού κωδικού (ισχύει 24 ώρες).</div>
+</div>
+</div>
+<div class="msg warn"><b>Αν δεν σταλεί το email</b> (π.χ. <code>invited:false</code> — δεν έχει ρυθμιστεί ακόμα
+SMTP): «Δημιουργήθηκε ο λογαριασμός <code>giorgos_482</code>, αλλά το email πρόσκλησης ΔΕΝ στάλθηκε. Δώσε στον
+Γιώργο το username και πες του να πατήσει «Ξέχασα τον κωδικό» στην οθόνη σύνδεσης.»</div>
+</div>
+</div>
+
+<div class="notes">
+<h2>Σημειώσεις για έγκριση</h2>
+<ul>
+<li><b>Το πεδίο «Κωδικός (προαιρετικό)» φεύγει εντελώς.</b> Δεν υπάρχει πια περίπτωση χειροκίνητου κωδικού —
+ο manager δεν τον βλέπει, δεν τον στέλνει, δεν τον θυμάται.</li>
+<li><b>Το μήνυμα επιτυχίας δεν δείχνει ποτέ ξανά κωδικό.</b> Λέει ότι στάλθηκε πρόσκληση, όχι «κράτησέ τον
+τώρα» — δεν υπάρχει πια τίποτα να κρατηθεί.</li>
+<li><b>Ρητό μήνυμα όταν <code>invited:false</code>.</b> Ποτέ σιωπηλή «επιτυχία» που θα άφηνε τον manager να
+νομίζει ότι έφυγε email ενώ δεν έφυγε — του λέει ακριβώς τι να κάνει αντ' αυτού (username + «Ξέχασα τον
+κωδικό»), ώστε το νέο μέλος να μπορεί να μπει έστω κι έτσι μέχρι να ρυθμιστεί το SMTP στην παραγωγή.</li>
+<li><b>Καμία αλλαγή στα υπόλοιπα πεδία/ροή.</b> Όνομα, email, ρόλος, το ίδιο κουμπί «Προσθήκη» — αλλάζει μόνο
+ό,τι αφορά τον κωδικό.</li>
+</ul>
+<div class="q"><b>Ερώτηση:</b> εγκρίνεις αυτή την αλλαγή στη φόρμα «Νέο μέλος» όπως φαίνεται στο «Μετά»;</div>
+</div>
+
+</main></body></html>

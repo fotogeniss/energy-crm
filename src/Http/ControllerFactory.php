@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Services;
 
 final class ControllerFactory
@@ -96,6 +97,7 @@ final class ControllerFactory
                 Services::contracts(),
                 Services::partnerCard(),
                 Services::commissions(),
+                new TeamInvite(),
             ),
             new TeamActivityController($scope, Services::teamActivity()),
 
