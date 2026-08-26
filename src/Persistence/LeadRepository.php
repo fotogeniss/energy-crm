@@ -175,6 +175,47 @@ final class LeadRepository
     }
 
     /**
+     * Το ΜΟΝΟ σημείο ατομικής απόφασης στη μετατροπή lead → πελάτης/σύμβαση.
+     *
+     * Εύρημα ελέγχου ασφαλείας/λογικής #4 (26/08/2026): το παλιό
+     * `LeadsController::convert()` διάβαζε το lead, έβλεπε `contract_id`
+     * κενό, έφτιαχνε πελάτη+σύμβαση, και μόνο στο τέλος ενημέρωνε το lead --
+     * χωρίς κανένα σημείο ατομικής απόφασης ανάμεσα στο διάβασμα και τη
+     * γραφή, παρά το docblock που υποσχόταν idempotency. Δύο σχεδόν
+     * ταυτόχρονες μετατροπές περνούσαν και οι δύο τον έλεγχο και έφτιαχναν
+     * δύο ξεχωριστούς πελάτες/συμβάσεις.
+     *
+     * Πρώτη υλοποίηση δοκίμασε ένα sentinel `0` πριν καν φτιαχτεί η
+     * σύμβαση, ώστε να «κλειδώσει» το lead νωρίς -- έσπαγε, γιατί το
+     * `leads.contract_id` έχει ΚΙ ΑΥΤΟ foreign key προς `contracts.id`
+     * (βλ. `AddForeignKeys::relations()`), και το `0` δεν αντιστοιχεί σε
+     * καμία πραγματική σύμβαση. Η σωστή σειρά είναι η αντίστροφη: ο
+     * πελάτης/σύμβαση φτιάχνεται πρώτα (ικανοποιεί το FK ούτως ή άλλως),
+     * και ΜΟΝΟ το τελευταίο βήμα -- αυτό εδώ -- είναι το ατομικό σημείο
+     * απόφασης, με guarded `UPDATE ... WHERE contract_id IS NULL`. Ο
+     * χαμένος (`affected === 0`) διαγράφει το πρόχειρο που μόλις έφτιαξε
+     * (βλ. `LeadsController::convert()`) -- κανείς δεν πρόλαβε να το δει.
+     */
+    public function finishConversion(int $leadId, UserScope $scope, int $contractId): bool
+    {
+        global $wpdb;
+
+        [$clause, $params] = $this->scopeClause($scope);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $affected = $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE %i SET contract_id = %d, stage = 'won', updated_at = %s
+                 WHERE id = %d AND contract_id IS NULL{$clause}",
+                [$this->table, $contractId, current_time('mysql'), $leadId, ...$params]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return (int) $affected > 0;
+    }
+
+    /**
      * Δίνει όλα τα leads ενός συνεργάτη σε άλλον.
      *
      * Ζωντανή δουλειά, όχι αρχείο: ένα lead είναι άνθρωπος που περιμένει

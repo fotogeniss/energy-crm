@@ -206,11 +206,31 @@ final class LeadsController implements Controller
 
         $this->contracts->assignCode($contractId, $scope);
 
-        $this->leads->update($id, $scope, [
-            'stage'       => 'won',
-            'contract_id' => $contractId,
-            'updated_at'  => current_time('mysql'),
-        ]);
+        // Εύρημα ελέγχου ασφαλείας/λογικής #4 (26/08/2026): το `!empty()`
+        // παραπάνω ΔΕΝ είναι το σημείο ατομικότητας -- είναι απλώς γρήγορο
+        // μονοπάτι για το κοινό, μη-ταυτόχρονο, περίπτωση, και ό,τι
+        // φτιάχτηκε ως εδώ (πελάτης/πρόχειρη σύμβαση) δεν έχει ακόμα
+        // δεσμεύσει το lead. Το πραγματικό κλείδωμα είναι αυτό το guarded
+        // UPDATE μέσα στη finishConversion() -- βλ. εκεί για γιατί η σειρά
+        // είναι "φτιάξε πρώτα, διεκδίκησε μετά" και όχι το αντίστροφο.
+        if (! $this->leads->finishConversion($id, $scope, $contractId)) {
+            // Χάσαμε τη διεκδίκηση -- κάποιο άλλο αίτημα ολοκλήρωσε πρώτο (ή
+            // το lead δεν είναι πια στο scope). Ο μόλις φτιαγμένος πρόχειρος
+            // δεν έχει ξαναδεί από κανέναν -- διαγράφεται, όχι ορφανός.
+            $this->contracts->delete($contractId, $scope);
+
+            $fresh = $this->leads->find($id, $scope);
+
+            if ($fresh !== null && ! empty($fresh['contract_id'])) {
+                return new WP_REST_Response([
+                    'ok'          => true,
+                    'contract_id' => (int) $fresh['contract_id'],
+                    'existing'    => true,
+                ], 200);
+            }
+
+            return new WP_REST_Response(['ok' => false, 'error' => 'Η μετατροπή εκτελείται ήδη.'], 409);
+        }
 
         return new WP_REST_Response(['ok' => true, 'contract_id' => $contractId], 200);
     }
