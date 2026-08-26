@@ -159,7 +159,15 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			if (keepExisting && input.value.trim() !== '') return;
 			input.value = val;
 			var field = input.closest('.ecrm-field');
-			if (field) { field.classList.add('is-ai'); setTimeout(function () { field.classList.remove('is-ai'); }, 1800); }
+			if (field) {
+				field.classList.add('is-ai');
+				setTimeout(function () { field.classList.remove('is-ai'); }, 1800);
+				// Το is-ai είναι η στιγμιαία αναλαμπή· αυτή μένει ώσπου ο
+				// συνεργάτης αγγίξει το ίδιο πεδίο (βλ. τον 'input' listener
+				// πιο κάτω) — ώστε στο Βήμα 4 να ξεχωρίζει τι γέμισε το AI
+				// από ό,τι έγραψε ο ίδιος, ακόμα κι αν έχει περάσει ώρα.
+				field.classList.add('ai-mark');
+			}
 
 			// Το φίλτρο του εντύπου έτρεξε όταν διαλέχτηκε ο πάροχος, δηλαδή
 			// ΠΡΙΝ γεμίσει το AI. Ένα πεδίο που μόλις απέκτησε τιμή δεν
@@ -1071,8 +1079,28 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 					setVal('contact_email', getVal('rep_email') || getVal('email'));
 					setVal('contact_phone', getVal('rep_phone') || getVal('phone'));
 					setVal('contact_afm', getVal('rep_afm') || getVal('afm'));
+				} else if (what === 'rep') {
+					// Ατομική επιχείρηση: ο εκπρόσωπος είναι ο ίδιος ο πελάτης.
+					setVal('rep_first_name', getVal('first_name'));
+					setVal('rep_last_name', getVal('last_name'));
+					setVal('rep_father_name', getVal('father_name'));
+					setVal('rep_id', getVal('adt'));
+					setVal('rep_afm', getVal('afm'));
+					setVal('rep_birth_date', getVal('birth_date'));
+					setVal('rep_phone', getVal('phone'));
+					setVal('rep_mobile', getVal('mobile'));
+					setVal('rep_email', getVal('email'));
 				}
 			});
+		});
+
+		// Η ετικέτα AI (ai-mark) μένει μέχρι ο συνεργάτης αγγίξει το ΙΔΙΟ πεδίο —
+		// τη στιγμή που το επεξεργάζεται με το χέρι έχει ήδη το ξαναδεί, οπότε η
+		// ετικέτα δεν προσθέτει τίποτα πια. Ένας delegated listener στη ρίζα,
+		// όχι ένας ανά πεδίο, γιατί τα πεδία που γεμίζει το AI αλλάζουν κάθε φορά.
+		root.addEventListener('input', function (e) {
+			var field = e.target.closest && e.target.closest('.ecrm-field.ai-mark');
+			if (field) field.classList.remove('ai-mark');
 		});
 
 		// Supply / billing address: ticked means "same as the customer's", and

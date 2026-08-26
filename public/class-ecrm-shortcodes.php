@@ -558,6 +558,10 @@ class ECRM_Shortcodes {
 			<!-- Νόμιμος Εκπρόσωπος (εταιρείες) -->
 			<section class="ecrm-card" data-when="company,sole_prop">
 				<div class="ecrm-step"><span class="ecrm-step__n">4</span> Νόμιμος Εκπρόσωπος</div>
+				<!-- Ίδιο μοτίβο με το data-sync="contact" της επόμενης κάρτας: για
+				     ατομική επιχείρηση ο εκπρόσωπος ΕΙΝΑΙ ο πελάτης, το ίδιο φυσικό
+				     πρόσωπο — 9 πεδία που έχουν ήδη γραφτεί στα Στοιχεία Πελάτη. -->
+				<label class="ecrm-syncbar"><input type="checkbox" data-sync="rep"> Ίδια στοιχεία με τον πελάτη — αυτόματος συγχρονισμός</label>
 				<div class="ecrm-grid">
 					<?php $ecrm_field( 'rep_first_name', 'Όνομα', 'text', true, '', '', 'section-rep given-name' ); ?>
 					<?php $ecrm_field( 'rep_last_name', 'Επώνυμο', 'text', true, '', '', 'section-rep family-name' ); ?>
