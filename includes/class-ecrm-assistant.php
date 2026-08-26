@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use EnergyCRM\Http\Guards;
+use EnergyCRM\Persistence\AssistantHistoryRepository;
 
 class ECRM_Assistant {
 
@@ -59,6 +60,15 @@ class ECRM_Assistant {
 		if ( ! $clean ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Κενό μήνυμα.' ], 400 );
 		}
+
+		// Η νεότερη γραμμή του χρήστη -- πάντα η τελευταία, γιατί το send() του
+		// ecrm-litsa.js την προσθέτει πριν καλέσει αυτό εδώ. Μόνο αυτή είναι
+		// πραγματικά καινούρια· ό,τι προηγείται είτε ήρθε ήδη αποθηκευμένο από
+		// το /assistant/history είτε γράφτηκε σε προηγούμενη κλήση (build queue
+		// 14 -- βλ. AssistantHistoryRepository, θέση του παλιού localStorage).
+		$history = new AssistantHistoryRepository();
+		$latest  = end( $clean );
+		$history->append( get_current_user_id(), 'user', $latest['content'] );
 
 		// Pull relevant Knowledge Base content for the latest user question so the
 		// bubble can answer provider / documents / guarantee questions from it.
@@ -113,7 +123,13 @@ class ECRM_Assistant {
 			}
 		}
 
-		return new WP_REST_Response( [ 'ok' => true, 'reply' => trim( $reply ) ], 200 );
+		$reply = trim( $reply );
+
+		if ( $reply !== '' ) {
+			$history->append( get_current_user_id(), 'assistant', $reply );
+		}
+
+		return new WP_REST_Response( [ 'ok' => true, 'reply' => $reply ], 200 );
 	}
 
 	/** CRM-aware persona + live user numbers. */

@@ -38,6 +38,7 @@ use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Infrastructure\ProviderFormRenderer;
 use EnergyCRM\Infrastructure\SecretStore;
 use EnergyCRM\Persistence\AnalyticsRepository;
+use EnergyCRM\Persistence\AssistantHistoryRepository;
 use EnergyCRM\Persistence\CommissionRepository;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\ContractQueries;
@@ -95,6 +96,7 @@ final class Services
     private static ?CommissionRepository $commissions = null;
 
     private static ?PayoutRepository $payouts = null;
+    private static ?AssistantHistoryRepository $assistantHistory = null;
 
     private static ?AnalyticsRepository $analytics = null;
 
@@ -225,6 +227,11 @@ final class Services
     public static function payouts(): PayoutRepository
     {
         return self::$payouts ??= new PayoutRepository();
+    }
+
+    public static function assistantHistory(): AssistantHistoryRepository
+    {
+        return self::$assistantHistory ??= new AssistantHistoryRepository();
     }
 
     public static function dashboard(): DashboardRepository
@@ -364,5 +371,7 @@ final class Services
         self::$draftExitGate     = null;
         self::$cancellationGate  = null;
         self::$deletionGate      = null;
+        self::$payouts           = null;
+        self::$assistantHistory  = null;
     }
 }

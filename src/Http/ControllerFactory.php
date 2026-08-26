@@ -110,6 +110,7 @@ final class ControllerFactory
             // Work management.
             new TasksController($scope, Services::tasks(), Services::contracts()),
             new NotificationsController($scope),
+            new AssistantHistoryController($scope, Services::assistantHistory()),
             new SavedFiltersController($scope),
             new ThemeController($scope),
 
