@@ -63,6 +63,98 @@ final class PayoutRepository
      * Είναι που κάνει το διπλό κλικ ακίνδυνο: το δεύτερο `UPDATE` δεν βρίσκει
      * γραμμή, άρα δεν ξαναγράφει το `paid_at` με νεότερη ώρα.
      */
+    /**
+     * Ακυρώνει μια ΕΚΚΡΕΜΗ παρτίδα -- ατομικά, χωρίς το παράθυρο ανάμεσα σε
+     * ανάγνωση και γραφή που είχε ο παλιός `ECRM_Payouts::remove()` (εύρημα
+     * ελέγχου ασφαλείας/λογικής #3, 26/08/2026).
+     *
+     * ## Η σειρά είναι το προϊόν, όχι λεπτομέρεια
+     *
+     * Πρώτα σβήνεται η ΙΔΙΑ η γραμμή της παρτίδας -- με τον όρο `status =
+     * 'pending'` μέσα στην ίδια, ατομική πρόταση DELETE, ίδιο σχήμα με το
+     * `markPaid()` παραπάνω. Μόνο αν αυτό πέτυχε αποσυνδέονται οι συμβάσεις.
+     *
+     * Ο παλιός κώδικας έκανε το αντίστροφο: διάβαζε το status με ξεχωριστό
+     * SELECT, μετά αποσύνδεε τις συμβάσεις ΧΩΡΙΣ όρο, και μόνο στο τέλος
+     * δοκίμαζε το guarded DELETE. Ένα ταυτόχρονο `markPaid()` ανάμεσα στο
+     * SELECT και το UPDATE των συμβάσεων άφηνε πίσω μια παρτίδα «paid» χωρίς
+     * καμία σύμβαση επάνω της -- και οι ίδιες συμβάσεις, πλέον χωρίς
+     * `payout_id`, ξαναγύριζαν στις ανεξόφλητες και μπορούσαν να πληρωθούν
+     * ΞΑΝΑ σε νέα παρτίδα.
+     *
+     * Με τη διαγραφή πρώτη, το ερώτημα «πρόλαβε να πληρωθεί;» έχει ΜΙΑ
+     * απάντηση, από ΜΙΑ ατομική πρόταση: αν η DELETE δεν βρει πλέον γραμμή σε
+     * εκκρεμότητα, καμία σύμβαση δεν αγγίζεται, και μια παρτίδα που μόλις
+     * πληρώθηκε δεν μπορεί πια να χάσει τις συμβάσεις της -- η ίδια της η
+     * γραμμή έχει πάψει να υπάρχει τη στιγμή που κάτι άλλο τη σημειώνει
+     * πληρωμένη.
+     *
+     * `false` σημαίνει «δεν διαγράφηκε»: είτε δεν υπήρχε ποτέ, είτε είναι ήδη
+     * πληρωμένη. Ο καλών ξεχωρίζει τις δύο περιπτώσεις με `find()`.
+     */
+    public function deletePending(int $payoutId): bool
+    {
+        global $wpdb;
+
+        if ($payoutId <= 0) {
+            return false;
+        }
+
+        // Πιάνουμε ΠΟΙΕΣ συμβάσεις δείχνουν σε αυτή την παρτίδα πριν τη
+        // διαγραφή -- όχι ως σημείο απόφασης (αυτό παραμένει αποκλειστικά το
+        // guarded DELETE παρακάτω), αλλά επειδή το FK contracts.payout_id →
+        // payouts.id έχει ήδη ON DELETE SET NULL (βλ. AddForeignKeys::relations()):
+        // μόλις η γραμμή της παρτίδας διαγραφεί, η ίδια η βάση μηδενίζει το
+        // payout_id αυτόματα, οπότε ένα δικό μας μετέπειτα `WHERE payout_id =
+        // %d` δεν θα έβρισκε πια καμία γραμμή. Το FK δεν αγγίζει το
+        // payout_amount -- αυτό μένει δική μας δουλειά.
+        $contractIds = $wpdb->get_col(
+            $wpdb->prepare(
+                'SELECT id FROM %i WHERE payout_id = %d',
+                Tables::name(Tables::CONTRACTS),
+                $payoutId
+            )
+        );
+
+        $deleted = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM %i WHERE id = %d AND status = 'pending'",
+                Tables::name(Tables::PAYOUTS),
+                $payoutId
+            )
+        );
+
+        if (! $deleted) {
+            return false;
+        }
+
+        // Η παρτίδα όντως διαγράφηκε ενώ ήταν ακόμα pending -- το FK μόλις
+        // μηδένισε το payout_id των παραπάνω συμβάσεων· απομένει μόνο να
+        // καθαρίσουμε το στιγμιότυπο ποσού τους. Αν μια από αυτές έχει ήδη
+        // αποσυνδεθεί εν τω μεταξύ (π.χ. ταυτόχρονη ακύρωση), το WHERE απλά
+        // δεν βρίσκει τίποτα -- αβλαβές.
+        if ($contractIds) {
+            $placeholders = implode(',', array_fill(0, count($contractIds), '%d'));
+
+            // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+            // Table name bound with %i, every value a bound parameter -- what
+            // phpcs cannot verify is the `IN (%d,%d,…)` fragment itself, whose
+            // length varies with how many contracts were in the batch. That
+            // fragment is built two lines up from nothing but the literal
+            // string "%d" -- no request data reaches it. Same exemption already
+            // used by ContractRepository::reachableAmong() for the same reason.
+            $wpdb->query(
+                $wpdb->prepare(
+                    "UPDATE %i SET payout_amount = NULL WHERE id IN ({$placeholders})",
+                    [Tables::name(Tables::CONTRACTS), ...$contractIds]
+                )
+            );
+            // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        }
+
+        return true;
+    }
+
     public function markPaid(int $payoutId): bool
     {
         global $wpdb;
