@@ -250,7 +250,7 @@ function trendHTML(monthly) {
 		'<svg class="ecrm-plot" viewBox="0 0 ' + W + ' ' + HH + '" preserveAspectRatio="none" role="img" aria-label="Αιτήσεις ανά μήνα">' + s + '</svg>' +
 		endval + '<div class="ecrm-charttip" data-charttip></div></div>' +
 		'<div class="ecrm-xaxis">' + xaxis + '</div></div>' +
-		'<table class="ecrm-charttbl" data-charttbl hidden><thead><tr><th>Μήνας</th><th class="ecrm-num">Αιτήσεις</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+		'<div class="ecrm-tablewrap"><table class="ecrm-charttbl" data-charttbl hidden><thead><tr><th>Μήνας</th><th class="ecrm-num">Αιτήσεις</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 }
 
 function providersHTML(list) {
