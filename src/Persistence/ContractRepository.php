@@ -57,10 +57,24 @@ final class ContractRepository
      */
     private ContractFields $extras;
 
-    public function __construct(?string $table = null, ?ContractFields $extras = null)
+    /**
+     * Εύρημα ελέγχου ασφαλείας/λογικής (26/08/2026): η `reassign()`/`handOver()`
+     * άλλαζαν `partner_user_id` με ωμό `UPDATE`, χωρίς ΚΑΝΕΝΑ αντίγραφο στο
+     * `events` -- σε αντίθεση με κάθε αλλαγή κατάστασης, που περνάει πάντα από
+     * το `ContractLifecycle::moveTo()` και καταγράφεται. Ποιος είχε τη σύμβαση
+     * πριν από μια ανάθεση δεν ήταν ανιχνεύσιμο πουθενά.
+     *
+     * Προαιρετικό, με προεπιλογή δικού του instance -- ίδιο μοτίβο με το
+     * `$extras` παραπάνω -- ώστε τα ήδη υπάρχοντα `new ContractRepository()`
+     * (δεκάδες, σε production και tests) να συνεχίσουν να δουλεύουν αμετάβλητα.
+     */
+    private EventRepository $events;
+
+    public function __construct(?string $table = null, ?ContractFields $extras = null, ?EventRepository $events = null)
     {
         $this->table  = $table ?? Tables::name(Tables::CONTRACTS);
         $this->extras = $extras ?? ContractFields::default();
+        $this->events = $events ?? new EventRepository();
     }
 
     /** @return array<string, mixed>|null */
@@ -337,6 +351,8 @@ final class ContractRepository
             return false;
         }
 
+        $previousOwnerId = $this->ownerId($contractId, $scope);
+
         [$clause, $params] = $this->scopeClause($scope);
 
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
@@ -348,7 +364,34 @@ final class ContractRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $result !== false;
+        $moved = $result !== false;
+
+        if ($moved) {
+            $this->events->record($contractId, $scope->actorId(), 'reassigned', [
+                'message' => 'Ανάθεση' . $this->fromToNames($previousOwnerId, $newOwnerId),
+            ]);
+        }
+
+        return $moved;
+    }
+
+    /** ' από X' / ' σε Y' -- ό,τι από τα δύο υπάρχει ακόμα ως λογαριασμός WordPress. */
+    private function fromToNames(?int $fromUserId, int $toUserId): string
+    {
+        $from = $fromUserId !== null ? get_userdata($fromUserId) : false;
+        $to   = get_userdata($toUserId);
+
+        $bits = [];
+
+        if ($from) {
+            $bits[] = 'από ' . $from->display_name;
+        }
+
+        if ($to) {
+            $bits[] = 'σε ' . $to->display_name;
+        }
+
+        return $bits === [] ? '' : ' ' . implode(' ', $bits) . '.';
     }
 
     /**
@@ -381,7 +424,17 @@ final class ContractRepository
 
         [$clause, $params] = $this->scopeClause($scope);
 
+        // Ποιες συμβάσεις μετακινούνται -- μόνο για να καταγραφεί το γεγονός σε
+        // καθεμιά τους μετά· η ίδια η μετακίνηση αποφασίζεται αποκλειστικά από
+        // το παρακάτω UPDATE, όχι από αυτή τη λίστα.
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $movingIds = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT id FROM %i WHERE partner_user_id = %d{$clause}",
+                [$this->table, $fromUserId, ...$params]
+            )
+        );
+
         $moved = $wpdb->query(
             $wpdb->prepare(
                 "UPDATE %i SET partner_user_id = %d WHERE partner_user_id = %d{$clause}",
@@ -390,7 +443,17 @@ final class ContractRepository
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
-        return $moved === false ? 0 : (int) $moved;
+        if ($moved === false) {
+            return 0;
+        }
+
+        $message = 'Μεταφορά χαρτοφυλακίου' . $this->fromToNames($fromUserId, $toUserId);
+
+        foreach ($movingIds as $contractId) {
+            $this->events->record((int) $contractId, $scope->actorId(), 'reassigned', ['message' => $message]);
+        }
+
+        return (int) $moved;
     }
 
     /**

@@ -39,11 +39,14 @@ namespace EnergyCRM\Tests\Integration;
 
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\Tables;
 
 final class ContractWritesTest extends IntegrationTestCase
 {
     private ContractRepository $contracts;
+
+    private EventRepository $events;
 
     private int $alice;
 
@@ -53,7 +56,8 @@ final class ContractWritesTest extends IntegrationTestCase
     {
         parent::setUp();
 
-        $this->contracts = new ContractRepository();
+        $this->events    = new EventRepository();
+        $this->contracts = new ContractRepository(null, null, $this->events);
         $this->alice     = $this->makePartner();
         $this->bob       = $this->makePartner();
     }
@@ -118,6 +122,58 @@ final class ContractWritesTest extends IntegrationTestCase
 
         self::assertTrue($this->contracts->reassign($contractId, $this->alice, $admin));
         self::assertSame($this->alice, $this->ownerOnDisk($contractId));
+    }
+
+    // --- audit trail (εύρημα ελέγχου ασφαλείας/λογικής, 26/08/2026) --------
+
+    /**
+     * Η reassign() άλλαζε partner_user_id χωρίς κανένα αντίγραφο στο events --
+     * σε αντίθεση με κάθε αλλαγή κατάστασης, που καταγράφεται πάντα. Ποιος
+     * είχε τη σύμβαση πριν δεν ήταν ανιχνεύσιμο πουθενά.
+     */
+    public function testReassigningRecordsAnEventOnTheContract(): void
+    {
+        $contractId = $this->contractOf($this->alice);
+        $team       = UserScope::forTeam($this->alice, [$this->alice, $this->bob]);
+
+        self::assertTrue($this->contracts->reassign($contractId, $this->bob, $team));
+
+        $events = $this->events->forContract($contractId);
+
+        self::assertNotSame([], $events, 'Η ανάθεση δεν άφησε κανένα ίχνος.');
+        self::assertSame('reassigned', $events[0]['type']);
+        self::assertStringContainsString('από', $events[0]['message']);
+        self::assertStringContainsString('σε', $events[0]['message']);
+    }
+
+    /** Μια αρνημένη ανάθεση δεν πρέπει να αφήνει ίχνος -- τίποτα δεν κινήθηκε. */
+    public function testARefusedReassignRecordsNoEvent(): void
+    {
+        $contractId = $this->contractOf($this->alice);
+        $outsider   = $this->makePartner();
+
+        self::assertFalse(
+            $this->contracts->reassign($contractId, $outsider, UserScope::forSelf($this->alice))
+        );
+        self::assertSame([], $this->events->forContract($contractId));
+    }
+
+    /** handOver() μετακινεί πολλές συμβάσεις μαζί -- καθεμιά παίρνει το δικό της γεγονός. */
+    public function testHandOverRecordsAnEventOnEveryMovedContract(): void
+    {
+        $manager = $this->makePartner();
+        $team    = UserScope::forTeam($manager, [$this->alice, $this->bob]);
+
+        $first  = $this->contractOf($this->alice);
+        $second = $this->contractOf($this->alice);
+
+        self::assertSame(2, $this->contracts->handOver($this->alice, $this->bob, $team));
+
+        foreach ([$first, $second] as $contractId) {
+            $events = $this->events->forContract($contractId);
+            self::assertNotSame([], $events, 'Η μεταφορά χαρτοφυλακίου δεν άφησε ίχνος στη σύμβαση ' . $contractId);
+            self::assertSame('reassigned', $events[0]['type']);
+        }
     }
 
     // --- assignCode --------------------------------------------------------
