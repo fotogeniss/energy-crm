@@ -185,7 +185,7 @@ class ECRM_Export {
 			$c = 0;
 			foreach ( $row as $val ) {
 				$ref  = self::col_letter( $c ) . $r;
-				$text = self::xml_escape( (string) ( $val ?? '' ) );
+				$text = self::xml_escape( self::guard_formula( (string) ( $val ?? '' ) ) );
 				$xml .= '<c r="' . $ref . '" t="inlineStr"><is><t xml:space="preserve">' . $text . '</t></is></c>';
 				$c++;
 			}
@@ -212,5 +212,23 @@ class ECRM_Export {
 		// Strip control chars Excel rejects, then escape XML.
 		$s = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $s );
 		return htmlspecialchars( $s, ENT_QUOTES | ENT_XML1, 'UTF-8' );
+	}
+
+	/**
+	 * Άμυνα κατά της «έγχυσης τύπου» (formula/CSV injection, OWASP).
+	 *
+	 * Ένα κελί που ξεκινά με =, +, -, @ (ή tab/CR) μπορεί να ερμηνευτεί ως
+	 * ζωντανός τύπος όταν το αρχείο ανοίγει, ξαναγράφεται ως CSV, ή περνά από
+	 * κάποιο ενδιάμεσο εργαλείο — ακόμα και μέσα σε γνήσιο .xlsx inline
+	 * string. Η τιμή αυτού του κελιού είναι πάντα δεδομένα πελάτη (όνομα,
+	 * επωνυμία, κινητό) που ο ίδιος ο πελάτης ή ο συνεργάτης εισάγει, άρα δεν
+	 * είναι έμπιστη. Ένα αρχικό `'` το ουδετεροποιεί χωρίς να αλλάξει τι
+	 * βλέπει ο χρήστης στο κελί.
+	 */
+	private static function guard_formula( string $s ): string {
+		if ( $s !== '' && strpbrk( $s[0], "=+-@\t\r" ) !== false ) {
+			return "'" . $s;
+		}
+		return $s;
 	}
 }
