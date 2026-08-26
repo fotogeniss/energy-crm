@@ -173,6 +173,35 @@ class ECRM_Files {
 
 	// --- Serving ------------------------------------------------------------
 
+	/**
+	 * Η απόφαση εξουσιοδότησης, χωρισμένη από το `serve()` που την εφαρμόζει.
+	 *
+	 * Εύρημα ελέγχου ασφαλείας (26/08/2026): μέχρι εδώ ο έλεγχος ήταν ΜΟΝΟ το
+	 * signed token — όποιος το είχε, μέσα στη 1ωρη ισχύ του, έπαιρνε το
+	 * αρχείο, ασύνδετος ή όχι, ίδιος χρήστης με αυτόν που πήρε το link ή όχι.
+	 * Το permission_callback του route είναι σκόπιμα `__return_true` (βλ.
+	 * `DocumentsController::routes()`) — αυτό δεν αλλάζει, γιατί ο έλεγχος
+	 * ζει εδώ, όχι εκεί. Ο ιδιοκτήτης επιβεβαίωσε (AskUserQuestion, 26/08)
+	 * ότι δεν υπάρχει σήμερα κανένα σενάριο εμαιλ/SMS σε μη-συνδεδεμένο
+	 * παραλήπτη — η `url()` καλείται μόνο μέσα από ήδη-συνδεδεμένες οθόνες
+	 * του CRM. Οπότε: ο τρέχων αιτών πρέπει ΤΩΡΑ να είναι συνδεδεμένος ΚΑΙ
+	 * μέσα στο ορατό scope της σύμβασης — το token μόνο του δεν αρκεί πια.
+	 *
+	 * Ξεχωριστή static μέθοδος (όχι inline μέσα στο `serve()`) γιατί το
+	 * `serve()` τελειώνει σε `exit`/`readfile()` και η σουίτα δεν το φτάνει
+	 * — ίδιος λόγος, ίδιο μοτίβο με το `PayoutRepository::deletePending()`
+	 * (§6γ 1): η κρίσιμη λογική έπρεπε να ζει κάπου ελέγξιμο.
+	 */
+	public static function requesterMayView( int $bound_uid, int $requesting_uid, int $partner_user_id ): bool {
+		if ( $requesting_uid <= 0 ) {
+			return false;
+		}
+		if ( ! in_array( $partner_user_id, ECRM_DB::visible_user_ids( $bound_uid ), true ) ) {
+			return false;
+		}
+		return in_array( $partner_user_id, ECRM_DB::visible_user_ids( $requesting_uid ), true );
+	}
+
 	public static function serve( WP_REST_Request $req ): void {
 		$fid   = (int) $req['id'];
 		$token = (string) $req->get_param( 't' );
@@ -181,7 +210,8 @@ class ECRM_Files {
 			status_header( 403 );
 			exit;
 		}
-		$bound_uid = $v[0];
+		$bound_uid      = $v[0];
+		$requesting_uid = get_current_user_id();
 
 		global $wpdb;
 		$fl  = ECRM_DB::table( 'files' );
@@ -191,9 +221,10 @@ class ECRM_Files {
 		), ARRAY_A );
 		if ( ! $row ) { status_header( 404 ); exit; }
 
-		// The user the token was issued to must still be allowed to see the contract.
-		$allowed = in_array( (int) $row['partner_user_id'], ECRM_DB::visible_user_ids( $bound_uid ), true );
-		if ( ! $allowed ) { status_header( 403 ); exit; }
+		if ( ! self::requesterMayView( $bound_uid, $requesting_uid, (int) $row['partner_user_id'] ) ) {
+			status_header( 403 );
+			exit;
+		}
 
 		// Resolve the physical file (protected path, or legacy attachment).
 		$path = '';

@@ -61,9 +61,14 @@ final class RotatedKeyRefusalTest extends IntegrationTestCase
     /**
      * 2. A row that touches nothing protected still saves.
      *
-     * The line between a safeguard and an outage. A phone number cannot be
+     * The line between a safeguard and an outage. A mobile number cannot be
      * lost by a key that never encrypted it, and refusing this save would stop
      * the CRM for a reason that does not apply to it.
+     *
+     * `phone` moved into CustomerFields::ENCRYPTED on 2026-08-26 (LOW finding
+     * of the security audit), so `mobile` is what this fixture needs now to
+     * still mean "touches nothing protected" -- using `phone` here would test
+     * the OTHER branch (test 1's territory) by accident.
      */
     public function testARowWithNoProtectedColumnsIsUntouchedByTheGuard(): void
     {
@@ -72,10 +77,10 @@ final class RotatedKeyRefusalTest extends IntegrationTestCase
         $row = CustomerFields::default()->forStorage([
             'first_name' => 'Χωρίς',
             'last_name'  => 'Προστατευμένα',
-            'phone'      => '2310000000',
+            'mobile'     => '2310000000',
         ]);
 
-        self::assertSame('2310000000', $row['phone'], 'Η γραμμή έπρεπε να περάσει ανέπαφη.');
+        self::assertSame('2310000000', $row['mobile'], 'Η γραμμή έπρεπε να περάσει ανέπαφη.');
     }
 
     /** 3. The extras bag is the other half of what encryption covers. */

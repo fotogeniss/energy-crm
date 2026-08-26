@@ -74,9 +74,11 @@ final class DocumentsController implements Controller
         register_rest_route(Router::NAMESPACE, '/file/(?P<id>\d+)', [
             'methods'  => 'GET',
             'callback' => [ECRM_Files::class, 'serve'],
-            // Deliberately open: serve() verifies a short-lived signed token and
-            // that the user it was issued to may still see the contract. A login
-            // check here would add nothing and break the emailed links.
+            // Deliberately open: serve() verifies a short-lived signed token,
+            // AND (26/08/2026 — no plain bearer-token window any more) that the
+            // requester is actually logged in and can still see the contract,
+            // same as the user the token was issued to. A permission_callback
+            // here would just duplicate that second check one layer up.
             'permission_callback' => '__return_true',
             'args'                => ['id' => ['type' => 'integer', 'required' => true]],
         ]);
