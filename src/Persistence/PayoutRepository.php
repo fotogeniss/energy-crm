@@ -188,4 +188,68 @@ final class PayoutRepository
 
         return $lines;
     }
+
+    /**
+     * Αν αυτή η σύμβαση ανήκει σε παρτίδα που έχει ΗΔΗ πληρωθεί.
+     *
+     * Το `CancellationGate` το ρωτάει πριν αφήσει μια σύμβαση να ακυρωθεί: μια
+     * σύμβαση που μπήκε σε πληρωμένη παρτίδα έχει ήδη δώσει χρήμα σε
+     * συνεργάτη -- η ακύρωσή της τώρα θα άφηνε αυτό το χρήμα χωρίς αντίκρισμα,
+     * σιωπηλά, χωρίς κανένα ίχνος ότι κάτι χρειάζεται διευθέτηση. Ο ιδιοκτήτης
+     * το επιβεβαίωσε ρητά (26/08, εύρημα ελέγχου ασφαλείας/λογικής #2): ίδια
+     * αντιμετώπιση με το «η σύμβαση υπήρξε Ενεργή».
+     *
+     * Το `isPayable()` περιλαμβάνει `Routed`/`Resolved`, όχι μόνο `Active` --
+     * γι' αυτό αυτός ο έλεγχος δεν κοιτάζει καθόλου κατάσταση, μόνο αν η
+     * σύμβαση κουβαλά ήδη `payout_id` προς παρτίδα `paid`.
+     */
+    public function isPartOfPaidBatch(int $contractId): bool
+    {
+        global $wpdb;
+
+        if ($contractId <= 0) {
+            return false;
+        }
+
+        $status = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT p.status FROM %i c INNER JOIN %i p ON p.id = c.payout_id WHERE c.id = %d',
+                Tables::name(Tables::CONTRACTS),
+                Tables::name(Tables::PAYOUTS),
+                $contractId
+            )
+        );
+
+        return $status === 'paid';
+    }
+
+    /**
+     * Βγάζει τη σύμβαση από την ΕΚΚΡΕΜΗ παρτίδα της, αν έχει μία.
+     *
+     * Καλείται από το `ContractLifecycle` αμέσως μετά από κάθε επιτυχή
+     * ακύρωση: το σύνολο μιας παρτίδας που δεν έχει πληρωθεί ακόμα δεν πρέπει
+     * να συνεχίζει να περιλαμβάνει μια σύμβαση που μόλις ακυρώθηκε. Ο
+     * ιδιοκτήτης το επιβεβαίωσε ρητά (26/08). Παρτίδα ήδη πληρωμένη δεν
+     * αγγίζεται εδώ καθόλου -- εκείνη τη διαδρομή την έχει ήδη κόψει το
+     * `CancellationGate` πριν φτάσουμε ποτέ ως εδώ.
+     */
+    public function releaseFromPendingBatch(int $contractId): void
+    {
+        global $wpdb;
+
+        if ($contractId <= 0) {
+            return;
+        }
+
+        $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE %i c INNER JOIN %i p ON p.id = c.payout_id
+                 SET c.payout_id = NULL, c.payout_amount = NULL
+                 WHERE c.id = %d AND p.status = 'pending'",
+                Tables::name(Tables::CONTRACTS),
+                Tables::name(Tables::PAYOUTS),
+                $contractId
+            )
+        );
+    }
 }

@@ -33,6 +33,7 @@ use ECRM_Messaging;
 use ECRM_Notifications;
 use EnergyCRM\Persistence\ContractTransitions;
 use EnergyCRM\Persistence\EventRepository;
+use EnergyCRM\Persistence\PayoutRepository;
 
 final class ContractLifecycle
 {
@@ -50,6 +51,7 @@ final class ContractLifecycle
         private readonly ContractTransitions $transitions,
         private readonly EventRepository $events,
         private readonly CancellationGate $cancellation,
+        private readonly PayoutRepository $payouts,
     ) {
     }
 
@@ -107,6 +109,16 @@ final class ContractLifecycle
         }
 
         $this->transitions->applyTransition($contractId, $to, (array) ($options['extra'] ?? []));
+
+        // Μια σύμβαση που μόλις ακυρώθηκε δεν πρέπει να συνεχίσει να μετράει
+        // στο σύνολο μιας παρτίδας που δεν έχει πληρωθεί ακόμα -- ίδιο σημείο
+        // με το CancellationGate παραπάνω, εύρημα ελέγχου #2 (26/08),
+        // επιβεβαιωμένο ρητά από τον ιδιοκτήτη. Παρτίδα ήδη πληρωμένη δεν
+        // αγγίζεται: αυτή τη διαδρομή την έχει ήδη κόψει η πύλη λίγες γραμμές
+        // πιο πάνω, πριν φτάσουμε ποτέ σε αυτό το σημείο.
+        if ($target === ContractStatus::Cancelled) {
+            $this->payouts->releaseFromPendingBatch($contractId);
+        }
 
         $this->events->record($contractId, (int) ($options['user_id'] ?? 0), 'status_change', [
             'from_status' => $from,
