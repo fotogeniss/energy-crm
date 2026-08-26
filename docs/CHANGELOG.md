@@ -7,6 +7,56 @@
 
 ---
 
+## 2026-08-26 (138)
+
+### Ιστορικό Λίτσα server-side, όχι πια localStorage — build queue 14
+
+Ως τώρα η συνομιλία με τη Λίτσα (`ecrm-litsa.js`) ζούσε ΜΟΝΟ σε localStorage
+του browser, σε καθαρό κείμενο, χωρίς λήξη -- έξω από κάθε δικαίωμα
+πρόσβασης της εφαρμογής και έξω από την κάλυψη του `PersonalDataCoverageTest`.
+Ένας χρήστης που ρωτούσε τη Λίτσα κάτι για συγκεκριμένο πελάτη άφηνε το
+όνομά του αποθηκευμένο επ' αόριστον στη συσκευή. Ο ιδιοκτήτης επιβεβαίωσε
+(μέσω AskUserQuestion) την κατεύθυνση server-side, με το ίδιο όριο
+διατήρησης 40 μηνυμάτων ανά χρήστη που είχε ήδη το localStorage.
+
+**`includes/class-ecrm-db.php` (DB_VERSION 16 → 17):** νέος πίνακας
+`assistant_messages` (`id`, `user_id`, `role`, `content`, `created_at`,
+`KEY user_id`) -- ίδιο μοτίβο με τον ήδη υπάρχοντα `notifications`.
+
+**`src/Persistence/Tables.php` / `AssistantHistoryRepository.php` (νέο):**
+`recentFor()` (τελευταίες 40, παλαιότερη πρώτη), `append()` (γράφει και
+αμέσως κλαδεύει στο ίδιο όριο -- `prune()` με `OFFSET`, όχι ένθετο
+υποερώτημα, ώστε να μείνει απλό prepared SQL), `clear()`. Scoped αυστηρά
+ανά `user_id`, καμία έννοια ομάδας.
+
+**`src/Http/AssistantHistoryController.php` (νέο):** `GET /assistant/history`,
+`POST /assistant/history/clear`, καλωδιωμένος μέσω `Services::assistantHistory()`
+/ `ControllerFactory.php`. Παράπλευρα, το `Services::reset()` δεν μηδένιζε
+ποτέ το `$payouts` -- μικρό, προϋπάρχον κενό στο ίδιο block που άγγιζα
+τώρα, διορθώθηκε μαζί.
+
+**`includes/class-ecrm-assistant.php`:** το `POST /assistant` (η κλήση
+προς το Claude, μένει legacy) γράφει πλέον μέσω του ίδιου repository τη
+νεότερη ερώτηση του χρήστη πριν καλέσει το API, και την απάντηση μετά --
+όχι το πλήρες παράθυρο συνομιλίας που ήδη στέλνει ο πελάτης (θα ξαναέγραφε
+ό,τι είχε ήδη αποθηκευτεί σε προηγούμενη κλήση ή φορτωθεί από το
+`/assistant/history`).
+
+**`public/assets/ecrm-litsa.js`:** το ιστορικό φορτώνεται από
+`GET /assistant/history` στο πρώτο άνοιγμα του chat (ίδιο timing με πριν —
+το `render()` δεν καλούνταν ούτως ή άλλως πριν το πρώτο toggle, οπότε δεν
+προστέθηκε νέα οπτική κατάσταση· γι' αυτό δεν χρειάστηκε mockup §1.8). Η
+«Διαγραφή συνομιλίας» καλεί το `POST /assistant/history/clear` αντί να
+αδειάζει το localStorage.
+
+**`tests/Integration/AssistantHistoryTest.php` (νέο):** round-trip σειράς,
+scoping ανά χρήστη, το όριο 40 (η 45η γραμμή σπρώχνει έξω τις 5 παλιότερες),
+`clear()` δεν αγγίζει άλλον χρήστη, κενό περιεχόμενο δεν γράφεται.
+
+Composer check:all: phpcs 275/275, phpstan 153/153 χωρίς σφάλματα, unit 913 tests / 2530 assertions (1 skipped), integration 373 tests / 2396 assertions (τα 5 νέα AssistantHistoryTest περιλαμβάνονται). Όλα πράσινα.
+
+---
+
 ## 2026-08-26 (137)
 
 ### Πρόσκληση νέου μέλους με σύνδεσμο ορισμού κωδικού — build queue 13

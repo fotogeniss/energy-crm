@@ -9,6 +9,7 @@
  *   contracts      — applications / contracts (the core record)
  *   files          — uploaded documents linked to a contract
  *   events         — audit/status-history log per contract
+ *   assistant_messages — Λίτσα assistant conversation, per user (build queue 14)
  *
  * Designed so future sessions can bolt on: network/team, commissions, mail.
  *
@@ -22,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '16';
+	const DB_VERSION = '17';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -322,6 +323,21 @@ class ECRM_DB {
 			created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			KEY contract_id (contract_id)
+		) {$charset};" );
+
+		// --- assistant_messages -----------------------------------------------
+		// role: user|assistant. Η ιστορία της Λίτσα, ένας χρήστης τη φορά --
+		// ζούσε ως τώρα μόνο σε localStorage του browser, σε καθαρό κείμενο
+		// (build queue 14, docs/CHANGELOG.md). Ίδιο όριο διατήρησης με πριν:
+		// οι τελευταίες 40 γραμμές ανά χρήστη -- βλ. AssistantHistoryRepository.
+		dbDelta( "CREATE TABLE {$p}assistant_messages (
+			id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			user_id    BIGINT UNSIGNED NOT NULL,
+			role       VARCHAR(16) NOT NULL,
+			content    TEXT NOT NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY user_id (user_id)
 		) {$charset};" );
 
 		// --- notifications ---------------------------------------------------
