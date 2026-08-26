@@ -173,7 +173,7 @@ final class Services
 
     public static function cancellationGate(): CancellationGate
     {
-        return self::$cancellationGate ??= new CancellationGate(self::events());
+        return self::$cancellationGate ??= new CancellationGate(self::events(), self::payouts());
     }
 
     public static function deletionGate(): DeletionGate
@@ -313,6 +313,7 @@ final class Services
             self::contractTransitions(),
             self::events(),
             self::cancellationGate(),
+            self::payouts(),
         );
     }
 

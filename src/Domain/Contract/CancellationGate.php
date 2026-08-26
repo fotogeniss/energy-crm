@@ -51,6 +51,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Domain\Contract;
 
 use EnergyCRM\Persistence\EventRepository;
+use EnergyCRM\Persistence\PayoutRepository;
 
 final class CancellationGate
 {
@@ -58,8 +59,20 @@ final class CancellationGate
     public const WAS_ACTIVE = 'Η σύμβαση υπήρξε ενεργή, οπότε δεν ακυρώνεται. '
         . 'Αν η παροχή σταμάτησε, χρησιμοποίησε «Έκλεισε».';
 
-    public function __construct(private readonly EventRepository $events)
-    {
+    /**
+     * Εύρημα ελέγχου ασφαλείας/λογικής #2 (26/08/2026): το `isPayable()`
+     * περιλαμβάνει `Routed`/`Resolved`, όχι μόνο `Active` -- μια σύμβαση
+     * μπορεί να μπει σε παρτίδα και να πληρωθεί ΠΡΙΝ γίνει ποτέ Ενεργή. Ο
+     * ιδιοκτήτης επέλεξε ρητά το ίδιο μπλοκάρισμα με το `WAS_ACTIVE` παρακάτω
+     * αντί για σιωπηλή αποδοχή.
+     */
+    public const WAS_PAID = 'Η σύμβαση έχει ήδη μπει σε πληρωμένη παρτίδα εκκαθάρισης, οπότε δεν ακυρώνεται. '
+        . 'Διευθέτησε πρώτα την προμήθεια, μετά χρησιμοποίησε «Έκλεισε».';
+
+    public function __construct(
+        private readonly EventRepository $events,
+        private readonly PayoutRepository $payouts,
+    ) {
     }
 
     /**
@@ -84,8 +97,10 @@ final class CancellationGate
             return self::WAS_ACTIVE;
         }
 
-        return $this->events->hasReached($contractId, ContractStatus::Active->value)
-            ? self::WAS_ACTIVE
-            : null;
+        if ($this->events->hasReached($contractId, ContractStatus::Active->value)) {
+            return self::WAS_ACTIVE;
+        }
+
+        return $this->payouts->isPartOfPaidBatch($contractId) ? self::WAS_PAID : null;
     }
 }
