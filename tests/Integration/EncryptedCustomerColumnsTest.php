@@ -8,6 +8,15 @@
  * agent base64 where a tax number should be — and it shows it in front of a
  * customer, not in a build.
  *
+ * `phone` joined CustomerFields::ENCRYPTED on 2026-08-26 (LOW finding of the
+ * security audit). The search-by-phone tests below exist because encrypting
+ * it broke CustomerRepository::search()'s `LIKE` in exactly the way this
+ * class's own docblock warns about; `phone_hash` is the fix, and the
+ * messaging test exists because ECRM_Messaging::contract_context() turned
+ * out to be a *sixteenth* read path that had skipped fromStorage() —
+ * without the fix it would silently try to SMS a customer's ciphertext
+ * instead of their phone number.
+ *
  * @package EnergyCRM
  */
 
@@ -15,6 +24,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use ECRM_Messaging;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Infrastructure\FieldCipher;
 use EnergyCRM\Persistence\CustomerFields;
@@ -125,6 +135,87 @@ final class EncryptedCustomerColumnsTest extends IntegrationTestCase
 
         self::assertNotNull($read);
         self::assertArrayNotHasKey(CustomerFields::INDEX_COLUMN, $read);
+    }
+
+    public function testThePhoneNumberIsUnreadableOnDiskAndReadableThroughTheRepository(): void
+    {
+        $this->encryptionOn();
+
+        $id = $this->customers->create($this->customerData());
+        self::assertGreaterThan(0, $id);
+
+        $stored = $this->storedRow(Tables::CUSTOMERS, $id);
+
+        self::assertTrue(FieldCipher::isEncrypted((string) $stored['phone']));
+        self::assertStringNotContainsString('2310123456', (string) $stored['phone']);
+
+        $read = $this->customers->find($id, UserScope::forAdministrator($this->makePartner()));
+
+        self::assertNotNull($read);
+        self::assertSame('2310123456', $read['phone']);
+    }
+
+    /**
+     * The blind index earning its place for phone the same way it already
+     * does for ΑΦΜ: without `phone_hash`, `CustomerRepository::search()`'s
+     * `LIKE` stops matching the moment the column is encrypted, and a member
+     * of staff searching by phone would just see "no results" for a customer
+     * who is right there.
+     */
+    public function testSearchByFullPhoneNumberStillFindsAnEncryptedCustomer(): void
+    {
+        $this->encryptionOn();
+
+        $partner    = $this->makePartner();
+        $scope      = UserScope::forAdministrator($partner);
+        $customerId = $this->customers->create($this->customerData());
+
+        $this->giveCustomerAContract($customerId, $partner);
+
+        $found = $this->customers->search($scope, '2310123456');
+
+        self::assertCount(1, $found);
+        self::assertSame($customerId, (int) $found[0]['id']);
+        self::assertSame('2310123456', $found[0]['phone']);
+    }
+
+    public function testThePhoneHashNeverLeavesThePersistenceLayer(): void
+    {
+        $id   = $this->customers->create($this->customerData());
+        $read = $this->customers->find($id, UserScope::forAdministrator($this->makePartner()));
+
+        self::assertNotNull($read);
+        self::assertArrayNotHasKey(CustomerFields::PHONE_INDEX_COLUMN, $read);
+    }
+
+    /**
+     * The read path this class's own docblock did not know about yet:
+     * `ECRM_Messaging::contract_context()` selected `cu.phone` with raw SQL
+     * and never called `fromStorage()`. `send_for_status()` is the public
+     * entry point -- with no gateway credentials configured it stops right
+     * after resolving `$ctx['mobile']`, before any network call, which is
+     * exactly the seam this test needs: the returned `to` proves what the
+     * gateway *would* have been asked to send to.
+     */
+    public function testMessagingResolvesTheRealPhoneNumberNotCiphertext(): void
+    {
+        $this->encryptionOn();
+
+        update_option(ECRM_PREFIX . 'sms_enabled', '1');
+        update_option(ECRM_PREFIX . 'sms_provider', 'apifon');
+        update_option(ECRM_PREFIX . 'sms_apifon_token', '');
+        update_option(ECRM_PREFIX . 'sms_apifon_secret', '');
+
+        $partner    = $this->makePartner();
+        $customer   = $this->customerData();
+        $customer['phone'] = '6912345678';
+        $customerId = $this->customers->create($customer);
+        $contractId = $this->giveCustomerAContract($customerId, $partner);
+
+        $result = ECRM_Messaging::send_for_status($contractId, 'active');
+
+        self::assertSame('missing_apifon_credentials', $result['error'] ?? null);
+        self::assertSame('306912345678', $result['to'] ?? null);
     }
 
     private function giveCustomerAContract(int $customerId, int $partnerId): int

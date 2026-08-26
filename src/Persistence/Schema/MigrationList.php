@@ -17,6 +17,7 @@ namespace EnergyCRM\Persistence\Schema;
 use EnergyCRM\Persistence\Schema\Migrations\AddContractAddresses;
 use EnergyCRM\Persistence\Schema\Migrations\AddContractListIndexes;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerAfmIndex;
+use EnergyCRM\Persistence\Schema\Migrations\AddCustomerPhoneIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddPayoutAmountColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
@@ -32,6 +33,7 @@ use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaHomePlans;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
 use EnergyCRM\Persistence\Schema\Migrations\WidenEncryptedColumns;
+use EnergyCRM\Persistence\Schema\Migrations\WidenCustomerPhoneColumn;
 
 final class MigrationList
 {
@@ -61,6 +63,8 @@ final class MigrationList
             new AddPayoutAmountColumn(),
             new AddTrackKeyColumn(),
             new AddEventStatusIndex(),
+            new WidenCustomerPhoneColumn(),
+            new AddCustomerPhoneIndex(),
         ];
     }
 }

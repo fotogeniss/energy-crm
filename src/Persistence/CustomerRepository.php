@@ -118,13 +118,24 @@ final class CustomerRepository
         if ($term !== '') {
             $like = '%' . $wpdb->esc_like($term) . '%';
 
-            // The ΑΦΜ is matched two ways because it may be stored two ways.
-            // LIKE still finds a plaintext column; once encrypted it matches
-            // nothing, and only a full ΑΦΜ can be found — through its hash.
+            // The ΑΦΜ and the phone are each matched two ways because each
+            // may be stored two ways. LIKE still finds a plaintext column;
+            // once encrypted it matches nothing, so only a full ΑΦΜ or a full
+            // phone number can still be found — through its own hash. A term
+            // that is neither just hashes to something no row has, which is
+            // harmless.
             $conditions[] = "( CONCAT_WS(' ', cu.first_name, cu.last_name, cu.company_name) LIKE %s"
                 . ' OR cu.afm LIKE %s OR cu.phone LIKE %s OR cu.'
-                . CustomerFields::INDEX_COLUMN . ' = %s )';
-            $params       = [...$params, $like, $like, $like, $this->fields->index($term)];
+                . CustomerFields::INDEX_COLUMN . ' = %s OR cu.'
+                . CustomerFields::PHONE_INDEX_COLUMN . ' = %s )';
+            $params       = [
+                ...$params,
+                $like,
+                $like,
+                $like,
+                $this->fields->index($term),
+                $this->fields->index($term),
+            ];
         }
 
         $where = implode(' AND ', $conditions);

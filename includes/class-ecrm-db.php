@@ -102,15 +102,23 @@ class ECRM_DB {
 		// afm ΑΦΜ · doy ΔΟΥ · father_name πατρώνυμο · adt ΑΔΤ ή διαβατήριο
 		// region Νομός · city Πόλη · street Οδός · street_no Αριθμός · postal_code ΤΚ
 		//
-		// afm, adt, street, street_no and postal_code are wider than their
-		// contents need because CustomerFields may store them encrypted, and
-		// ciphertext is several times longer than the value. A column too
-		// narrow for it truncates instead of failing on a non-strict server,
-		// which loses the value permanently. See WidenEncryptedColumns.
+		// afm, adt, street, street_no, postal_code and phone are wider than
+		// their contents need because CustomerFields may store them
+		// encrypted, and ciphertext is several times longer than the value.
+		// A column too narrow for it truncates instead of failing on a
+		// non-strict server, which loses the value permanently. See
+		// WidenEncryptedColumns and WidenCustomerPhoneColumn.
+		//
+		// afm_hash / phone_hash: blind indexes (see CustomerFields), kept
+		// here too -- SchemaInspector's own contract is that a fresh install
+		// gets every column dbDelta can give it, so the matching migrations
+		// (0010, 0020) have nothing left to do on a new site and only matter
+		// for upgrading one that already existed before they shipped.
 		dbDelta( "CREATE TABLE {$p}customers (
 			id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			customer_type VARCHAR(16) NOT NULL DEFAULT 'individual',
 			afm           VARCHAR(255) NULL,
+			afm_hash      CHAR(64)     NULL,
 			doy           VARCHAR(80)  NULL,
 			first_name    VARCHAR(120) NULL,
 			last_name     VARCHAR(120) NULL,
@@ -123,13 +131,16 @@ class ECRM_DB {
 			street        VARCHAR(512) NULL,
 			street_no     VARCHAR(255) NULL,
 			postal_code   VARCHAR(255) NULL,
-			phone         VARCHAR(40)  NULL,
+			phone         VARCHAR(255) NULL,
+			phone_hash    CHAR(64)     NULL,
 			mobile        VARCHAR(40)  NULL,
 			email         VARCHAR(160) NULL,
 			created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			KEY afm (afm),
+			KEY afm_hash (afm_hash),
+			KEY phone_hash (phone_hash),
 			KEY last_name (last_name)
 		) {$charset};" );
 

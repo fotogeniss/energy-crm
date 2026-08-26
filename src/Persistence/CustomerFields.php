@@ -50,19 +50,37 @@ final class CustomerFields
      * column — storing ciphertext there needs a type change, so it is a
      * separate step rather than a silent truncation.
      *
+     * `phone` joined this list on 2026-08-26 (LOW finding of the security
+     * audit) -- see CustomerRepository::search() for the one place that
+     * touching this list was not enough on its own: an exact-match `LIKE`
+     * against ciphertext never matches, the same failure the ΑΦΜ already
+     * solved with a blind index. `phone_hash` is that same fix, reused.
+     *
      * Adding one here means widening it in the schema too: ciphertext is
      * several times longer than the value, and a column too narrow for it
      * truncates rather than fails on a non-strict server. See
-     * Schema\Migrations\WidenEncryptedColumns.
+     * Schema\Migrations\WidenEncryptedColumns and
+     * Schema\Migrations\WidenCustomerPhoneColumn.
      *
      * @var list<string>
      */
-    private const ENCRYPTED = ['afm', 'adt', 'street', 'street_no', 'postal_code'];
+    private const ENCRYPTED = ['afm', 'adt', 'street', 'street_no', 'postal_code', 'phone'];
 
     /** The column whose blind index makes exact lookup possible. */
     public const INDEXED = 'afm';
 
     public const INDEX_COLUMN = 'afm_hash';
+
+    /**
+     * Same problem as `INDEXED`/`INDEX_COLUMN`, one column later.
+     *
+     * A second dedicated pair rather than a generic map of many: there are
+     * exactly two columns that need exact-match lookup once encrypted, and a
+     * map would buy flexibility nothing here asks for.
+     */
+    public const PHONE_INDEXED = 'phone';
+
+    public const PHONE_INDEX_COLUMN = 'phone_hash';
 
     public function __construct(private readonly FieldCipher $cipher)
     {
@@ -126,6 +144,10 @@ final class CustomerFields
 
         if (array_key_exists(self::INDEXED, $customer)) {
             $customer[self::INDEX_COLUMN] = $this->cipher->blindIndex((string) $customer[self::INDEXED]);
+        }
+
+        if (array_key_exists(self::PHONE_INDEXED, $customer)) {
+            $customer[self::PHONE_INDEX_COLUMN] = $this->cipher->blindIndex((string) $customer[self::PHONE_INDEXED]);
         }
 
         if (! self::isEnabled()) {
@@ -227,8 +249,10 @@ final class CustomerFields
 
         // The hash is how we find the row, not part of it. A `SELECT *` would
         // otherwise carry it into an API response, where it is a stable
-        // identifier for a tax number and has no reason to exist.
+        // identifier for a tax number -- or a phone number -- and has no
+        // reason to exist there.
         unset($row[self::INDEX_COLUMN]);
+        unset($row[self::PHONE_INDEX_COLUMN]);
 
         return $row;
     }

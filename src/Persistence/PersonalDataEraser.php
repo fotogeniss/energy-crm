@@ -300,6 +300,7 @@ final class PersonalDataEraser
                 // cleared too: anyone holding a ΑΦΜ could hash it and confirm
                 // the person was once a customer here.
                 CustomerFields::INDEX_COLUMN => null,
+                CustomerFields::PHONE_INDEX_COLUMN => null,
                 'doy'          => null,
                 'adt'          => null,
                 'birth_date'   => null,

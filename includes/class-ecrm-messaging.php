@@ -148,6 +148,14 @@ class ECRM_Messaging {
 		if ( ! $row ) {
 			return null;
 		}
+
+		// Εύρημα ελέγχου ασφαλείας (26/08/2026): το `phone` μπήκε στη λίστα
+		// CustomerFields::ENCRYPTED, αλλά αυτό το raw SELECT δεν περνούσε ποτέ
+		// από το fromStorage() -- ίδια οικογένεια σφάλματος με τα τρία leaks
+		// που έκλεισαν στις 2026-08-10 (βλ. ContractDetails). Χωρίς αυτή τη
+		// γραμμή θα στέλναμε SMS/Viber σε ciphertext αντί για αριθμό, σιωπηλά.
+		$row = \EnergyCRM\Persistence\CustomerFields::default()->fromStorage( $row );
+
 		$name   = $row['company_name'] ?: trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) );
 		$labels = ECRM_DB::statuses();
 		return [

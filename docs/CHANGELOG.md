@@ -7,6 +7,187 @@
 
 ---
 
+## 2026-08-26 (146)
+
+### Το τηλέφωνο πελάτη δεν ήταν κρυπτογραφημένο — LOW εύρημα ελέγχου
+
+Το `birth_date` (στήλη DATE, χρειάζεται αλλαγή τύπου) παραμένει τεκμηριωμένο
+τεχνικό χρέος -- δεν αγγίχτηκε. Το `phone` δεν είχε αντίστοιχη δικαιολογία,
+οπότε μπήκε στη λίστα `CustomerFields::ENCRYPTED`, ίδιο μοτίβο με το ΑΦΜ.
+
+Ο έλεγχος πριν την αλλαγή βρήκε δύο πράγματα που δεν φαίνονταν από το
+`CustomerFields.php` μόνο του:
+
+1. Το `CustomerRepository::search()` ψάχνει το τηλέφωνο με `LIKE '%...%'`.
+   Η κρυπτογράφηση είναι τυχαιοποιημένη -- το `LIKE` πάνω σε ciphertext δεν
+   βρίσκει ποτέ τίποτα, σιωπηλά. Ίδια λύση με το ΑΦΜ: νέο ζεύγος
+   `PHONE_INDEXED`/`PHONE_INDEX_COLUMN` (`phone_hash`), blind index που σώζει
+   την αναζήτηση με ΟΛΟΚΛΗΡΟ αριθμό (όχι το partial match -- ίδιος
+   περιορισμός με το ΑΦΜ, τεκμηριωμένος, όχι διορθώσιμος).
+2. Το `ECRM_Messaging::contract_context()` διάβαζε `cu.phone` με ωμό SQL,
+   ΧΩΡΙΣ να περνάει ποτέ από `CustomerFields::fromStorage()` -- μια έκτη
+   περίπτωση της ίδιας οικογένειας σφάλματος με τα τρία leaks που έκλεισαν
+   στις 2026-08-10 (βλ. `ContractDetails`), αλλά αυτή δεν διάβαζε λάθος
+   τιμή σε μια οθόνη -- θα έστελνε SMS/Viber σε ciphertext αντί για
+   πραγματικό αριθμό, σιωπηλά, χωρίς κανένα σφάλμα να φανεί πουθενά. Όλα τα
+   υπόλοιπα σημεία που διαβάζουν `phone` (ContractDetails, ContractQueries,
+   CustomerRepository, class-ecrm-formfill.php, class-ecrm-pdf.php) περνούν
+   ήδη από `fromStorage()` -- ελέγχθηκαν ένα-ένα.
+
+**`src/Persistence/CustomerFields.php`:** `phone` προστέθηκε στο `ENCRYPTED`.
+Νέο ζεύγος σταθερών `PHONE_INDEXED`/`PHONE_INDEX_COLUMN`. Το `forStorage()`
+παράγει και το `phone_hash` όπως ήδη κάνει για το `afm_hash`. Το
+`fromStorage()` αφαιρεί και τα δύο hash από ό,τι φεύγει προς τα έξω.
+
+**`src/Persistence/CustomerRepository.php`:** το `search()` προστίθει
+`OR cu.phone_hash = %s` δίπλα στο υπάρχον `LIKE`, ίδιο μοτίβο με το ΑΦΜ.
+
+**`src/Persistence/PersonalDataEraser.php`:** η διαγραφή προσωπικών
+δεδομένων μηδενίζει τώρα και το `phone_hash` -- αλλιώς ο hash επιζεί της
+τιμής που δείχνει.
+
+**`includes/class-ecrm-messaging.php`:** το `contract_context()` περνάει
+τώρα τη γραμμή από `CustomerFields::default()->fromStorage()` πριν διαβάσει
+`phone`/`mobile`.
+
+**Δύο νέα migrations** (append-only λίστα -- δεν πειράχτηκε το ήδη
+τρεγμένο 0011 `WidenEncryptedColumns`):
+`0019_widen_customer_phone_column` (VARCHAR(40) → VARCHAR(255), ίδιος λόγος
+με το 0011: το ciphertext δεν χωράει στο παλιό πλάτος, χωρίς strict SQL mode
+θα έκοβε σιωπηλά) και `0020_add_customer_phone_index` (στήλη `phone_hash` +
+index + backfill από το υπάρχον plaintext, ίδιο μοτίβο με το 0010
+`AddCustomerAfmIndex`).
+
+**`tests/Integration/EncryptedCustomerColumnsTest.php`:** τέσσερα νέα tests
+-- το τηλέφωνο μη αναγνώσιμο στο δίσκο/αναγνώσιμο μέσω repository, η
+αναζήτηση με ολόκληρο αριθμό βρίσκει κρυπτογραφημένο πελάτη, το
+`phone_hash` δεν φεύγει ποτέ από το persistence layer, και το πιο σημαντικό:
+το `ECRM_Messaging::send_for_status()` (μέσω `contract_context()`) φτάνει
+στον ΠΡΑΓΜΑΤΙΚΟ αριθμό, όχι σε ciphertext -- καλείται χωρίς διαπιστευτήρια
+gateway ώστε να μην πέσει ποτέ πραγματικό δίκτυο, και ελέγχεται το `to` της
+απάντησης.
+
+**Πρώτο πραγματικό τρέξιμο composer check:all αποκάλυψε τρία ακόμα πράγματα,
+κανένα από τα οποία δεν ήταν ορατό από στατική ανάγνωση κώδικα:**
+
+1. **`includes/class-ecrm-db.php` δεν είχε ΠΟΤΕ `afm_hash`.** Το
+   `SchemaInspector.php` δηλώνει ρητά τον κανόνα: «a fresh install gets its
+   tables from dbDelta with every column already present» -- δηλαδή η φρέσκια
+   εγκατάσταση πρέπει να ΗΔΗ έχει ό,τι φέρνουν τα migrations, αλλιώς αυτά
+   γίνονται no-op σιωπηλά πάνω σε πίνακα που μόλις χτίστηκε (βλ. `Installer::
+   activate()`: dbDelta πρώτα, μετά `markAllApplied()` ΧΩΡΙΣ να τρέξει τίποτα
+   πραγματικά). Ένα φρέσκο test install λοιπόν ΔΕΝ είχε ποτέ `afm_hash` --
+   λανθάνον μέχρι τώρα, γιατί το test dataset αυτής της συνεδρίας έτρεχε πάνω
+   σε ήδη-αναβαθμισμένη βάση. Η προσθήκη του `phone` άλλαξε τη σειρά με την
+   οποία έτρεξαν τα migrations αρκετά ώστε να το εκθέσει: 21 αποτυχίες/1
+   σφάλμα σε ΕΝΤΕΛΩΣ άσχετα tests (ContractDocumentsTest, ExportSearchTest,
+   DashboardTilesTest, PiiBackfillTest...), όλα με το ίδιο σχήμα -- «η
+   δημιουργία πελάτη/σύμβασης απέτυχε σιωπηλά» -- γιατί κάθε `forStorage()`
+   που αγγίζει `afm` ΠΑΝΤΑ γράφει και `afm_hash`, άσχετα αν είναι
+   ενεργοποιημένη η κρυπτογράφηση. Fix: `afm_hash` και το νέο `phone_hash`
+   μπήκαν κατευθείαν στο dbDelta CREATE TABLE -- συμπληρώνοντας μια
+   προϋπάρχουσα παράλειψη, όχι κάτι που έφερε το `phone`. Ασφαλές για
+   υπάρχοντα sites: το dbDelta είναι ιδιοκτήτης-ασφαλές πάνω σε πίνακα που
+   ήδη έχει τις στήλες (τις έφεραν εκεί τα πραγματικά migrations 0010/0020
+   μέσω `maybeUpgrade()`).
+2. **`RotatedKeyRefusalTest::testARowWithNoProtectedColumnsIsUntouchedByTheGuard`**
+   χρησιμοποιούσε `phone` ως παράδειγμα στήλης «χωρίς τίποτα προστατευμένο» --
+   ακριβώς ό,τι έπαψε να είναι αλήθεια. Fix: το fixture πέρασε σε `mobile`.
+3. **`FileServeSessionBindingTest::testATokenWhoseOriginalHolderLostVisibilityMayNoLongerBeUsed`**
+   (εύρημα #8, πρώτο πραγματικό τρέξιμό του) απέτυχε για δικό του λόγο,
+   άσχετο με το phone: το `Services::scopeResolver()` είναι process-lifetime
+   singleton με memo ανά user id -- σωστό μέσα σε ΕΝΑ πραγματικό HTTP
+   request (που είναι πάντα φρέσκο), αλλά το test καλούσε
+   `visibleUserIds($manager)` δύο φορές ΜΕΣΑ στο ίδιο PHPUnit process, πριν
+   και μετά την αλλαγή σχέσης -- η δεύτερη κλήση έβλεπε την παλιά, cached
+   απάντηση. Fix: `Services::reset()` ανάμεσα στις δύο φάσεις, ώστε το test
+   να προσομοιώνει ό,τι είναι πάντα αλήθεια στην πραγματικότητα (δύο
+   ξεχωριστά requests), όχι μια κατάσταση που δεν συμβαίνει ποτέ σε
+   παραγωγή.
+
+**Δεύτερο τρέξιμο:** 21 αποτυχίες/1 σφάλμα έπεσαν σε 2. Η μία ήταν δικό μου
+λάθος στο test -- η `search()` γυρίζει `id` ως numeric string (ωμή γραμμή
+από τη βάση, το `fromStorageAll()` δεν την ακουμπάει), το test έκανε
+`assertSame` με int χωρίς cast. Fixed (`(int) $found[0]['id']`).
+
+Η άλλη -- `DashboardTilesTest::testExpiringTodayCountsOnlyWhatIsAboutToExpireWithinToday`
+-- ΔΕΝ αγγίζει καν πελάτη/τηλέφωνο (το `contractFor()` του δημιουργεί μόνο
+σύμβαση). Το ίδιο το test το προειδοποιεί στο δικό του σχόλιο: συγκρίνει με
+`CURDATE()` της βάσης, και ένα τρέξιμο μέσα στις τελευταίες ~6 ώρες πριν τα
+μεσάνυχτα βλέπει τη λήξη να πέφτει «αύριο» αντί για «σήμερα» -- «γνωστό,
+αποδεκτό περιθώριο» με τα ίδια του τα λόγια. Προϋπάρχουσα, τεκμηριωμένη
+ατέλεια άσχετη με το phone -- δεν το άγγιξα. Ξανατρέξε το check:all εκτός
+αυτού του παραθύρου ώρας για να το επιβεβαιώσεις πράσινο.
+
+Bug-fix ασφάλειας δεδομένων -- καμία οπτική αλλαγή, δεν χρειάστηκε mockup
+§1.8. Ευρήματα #1-8 ήδη διορθωμένα (139-145, το 145 εκκρεμεί ακόμα
+επιβεβαίωση composer check:all). Απομένουν 5 ευρήματα UI/UX.
+
+Τρίτο (τελικό) τρέξιμο, μετά το id-cast fix: phpcs 283/283, phpstan 155/155
+χωρίς σφάλματα, unit 919 tests / 2544 assertions (1 skipped), integration
+410 tests / 2625 assertions -- 1 αποτυχία, η ίδια `DashboardTilesTest` που
+περιγράφεται πάνω (προϋπάρχον time-boundary ζήτημα, άσχετο με phone/
+customers, τεκμηριωμένο εκεί από το ίδιο το test). Καμία αποτυχία σχετική
+με αυτή την αλλαγή. Έτοιμο για commit.
+
+---
+
+## 2026-08-26 (145)
+
+### `ECRM_Files::serve()` δεχόταν οποιονδήποτε κρατούσε το token — εύρημα ελέγχου #8
+
+Το `serve()` έλεγχε ΜΟΝΟ το signed token (`bound_uid` μέσα σε αυτό, λήξη 1
+ώρα) -- ποτέ αν ο τρέχων αιτών ήταν καν συνδεδεμένος, ούτε αν ήταν ο ίδιος
+χρήστης με αυτόν που πήρε αρχικά το link. Το route registration το λέει
+ρητά: `permission_callback => __return_true`. Όποιος έβρισκε/έκλεβε/
+προωθούσε ένα link μέσα στην ισχύ του, έπαιρνε το αρχείο -- σαρωμένη
+ταυτότητα, λογαριασμός ΔΕΗ, ό,τι είχε επισυναφθεί σε σύμβαση.
+
+Πριν αλλάξει κάτι, ρωτήθηκε ο ιδιοκτήτης (AskUserQuestion) αν υπάρχει ή
+σχεδιάζεται σενάριο emailed/SMS link σε μη-συνδεδεμένο παραλήπτη -- θα ήταν ο
+μόνος λόγος να ΜΗΝ απαιτείται σύνδεση. Απάντηση: όχι, δεν υπάρχει τέτοιο
+σχέδιο. Έλεγχος των δύο υπαρχόντων call sites του `ECRM_Files::url()`
+επιβεβαίωσε ότι και τα δύο ζουν ήδη πίσω από συνδεδεμένες οθόνες του CRM.
+
+**`includes/class-ecrm-files.php`:** νέα `public static function
+requesterMayView(int $bound_uid, int $requesting_uid, int $partner_user_id):
+bool`, ξεχωριστή μέθοδος (όχι inline μέσα στο `serve()`) γιατί το `serve()`
+τελειώνει σε `exit`/`readfile()` και η σουίτα δεν το φτάνει -- ίδιο μοτίβο με
+το `PayoutRepository::deletePending()` (§6γ, 1): η κρίσιμη λογική έπρεπε να
+ζει κάπου ελέγξιμο. Απορρίπτει αν ο αιτών δεν είναι συνδεδεμένος
+(`requesting_uid <= 0`), αν ο ΑΡΧΙΚΟΣ κάτοχος του token (`bound_uid`) δεν
+βλέπει πια τη σύμβαση -- ένα παλιό έγκυρο token δεν πρέπει να συνεχίζει να
+δουλεύει αφού ο κάτοχός του χάσει ορατότητα (αφαίρεση από ομάδα, αλλαγή
+ανάθεσης) -- και τέλος αν ο τρέχων αιτών δεν βλέπει τη σύμβαση. Το `serve()`
+καλεί τώρα αυτή τη μέθοδο αντί να στηρίζεται μόνο στο token.
+
+**`src/Http/DocumentsController.php`:** το σχόλιο πάνω από το
+`permission_callback => __return_true` ενημερώθηκε -- το route παραμένει
+σκόπιμα ανοιχτό (ο έλεγχος ζει στο `serve()`, όχι εδώ), αλλά η παλιά
+δικαιολογία («θα έσπαγε τα emailed links») δεν ισχύει πια.
+
+**`tests/Integration/FileServeSessionBindingTest.php`** (νέο): έξι tests --
+μη συνδεδεμένος αιτών, αιτών εκτός scope, ο πυρήνας του bug (bound_uid που
+έχασε ορατότητα ΑΝΑΜΕΣΑ στην έκδοση και τη χρήση του ίδιου token, ίδιο ζεύγος
+bound/requesting), αιτών εντός scope αλλά δεμένος σε άσχετο bound_uid,
+manager ακόμα μέσα στο downline, και ο ιδιοκτήτης βλέποντας το δικό του
+αρχείο.
+
+Καθαρό bug-fix ασφάλειας εξουσιοδότησης -- καμία οπτική αλλαγή, δεν
+χρειάστηκε mockup §1.8. Ευρήματα #1-7 ήδη διορθωμένα (139-144). Απομένουν: μη
+κρυπτογραφημένα τηλέφωνο/ημ. γέννησης (LOW, tech debt), και 5 ευρήματα
+UI/UX (missing .catch(), toast πριν από uncaught fetch, aria-label, mobile
+table treatment).
+
+Composer check:all: επιβεβαιώθηκε έμμεσα μέσα από το τρέξιμο του (146) --
+το `FileServeSessionBindingTest` (6 tests) περιλαμβανόταν στο πράσινο
+integration run (410 tests / 2625 assertions, καμία αποτυχία σε αυτό το
+αρχείο). Ένα από τα έξι tests χρειάστηκε διόρθωση στην πορεία
+(`Services::reset()` ανάμεσα σε δύο φάσεις -- βλ. (146) για γιατί) πριν
+περάσει πραγματικά· τεκμηριωμένο εκεί, όχι εδώ, γιατί εκεί ανακαλύφθηκε.
+
+---
+
 ## 2026-08-26 (144)
 
 ### Η αλλαγή ιδιοκτησίας σύμβασης δεν άφηνε πια ίχνος — εύρημα ελέγχου
