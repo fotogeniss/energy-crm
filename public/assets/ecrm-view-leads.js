@@ -194,8 +194,33 @@ function renderLeads(view, d) {
 			fetch(api('/leads/' + this.getAttribute('data-lconv') + '/convert'), { method: 'POST', headers: H() })
 				.then(function (r) { return r.json(); })
 				.then(function (res) {
-					if (res && res.ok && res.contract_id) { toast('Δημιουργήθηκε πρόχειρη σύμβαση.'); go('contracts'); setTimeout(function () { openDetail(res.contract_id); }, 60); }
-					else { bb.disabled = false; toast((res && res.error) || 'Αποτυχία.', false); }
+					if (!res || !res.ok || !res.contract_id) { bb.disabled = false; toast((res && res.error) || 'Αποτυχία.', false); return; }
+
+					/* Η μετατροπή πέτυχε ΗΔΗ -- ό,τι ακολουθεί είναι μπόνους και
+					 * δεν επιτρέπεται να την ακυρώσει. Γι' αυτό η ανάγνωση των
+					 * εγγράφων γίνεται ΜΕΤΑ, σε δικό της αίτημα: αν σκάσει το AI
+					 * ή αργήσει, η αίτηση υπάρχει και ο πωλητής προχωράει.
+					 *
+					 * Με apply=1 ο server ΓΡΑΦΕΙ ό,τι διάβασε στον πελάτη και τη
+					 * σύμβαση, μόνο σε κενά πεδία. Χωρίς αυτό η εξαγωγή γέμιζε
+					 * πεδία φόρμας που ζούσαν στον browser, και η καρτέλα έμενε
+					 * άδεια μέχρι να ανοίξει κάποιος τον οδηγό και να πατήσει
+					 * Αποθήκευση -- ακριβώς ο χαμένος χρόνος που καταργούμε. */
+					var cid = res.contract_id;
+					toast('Δημιουργήθηκε πρόχειρη σύμβαση. Διαβάζονται τα έγγραφα…');
+
+					var fd = new FormData();
+					fd.append('contract_id', String(cid));
+					fd.append('apply', '1');
+
+					fetch(api('/extract'), { method: 'POST', headers: H(), body: fd })
+						.then(function (r) { return r.json(); })
+						.then(function (ex) {
+							var n = (ex && ex.applied) ? ex.applied.length : 0;
+							if (n) { toast('Συμπληρώθηκαν ' + n + ' πεδία από τα έγγραφα. Έλεγξέ τα.'); }
+						})
+						.catch(function () { /* σιωπηλά: η αίτηση υπάρχει, τα πεδία συμπληρώνονται με το χέρι */ })
+						.finally(function () { go('contracts'); setTimeout(function () { openDetail(cid); }, 60); });
 				})
 				.catch(function () { bb.disabled = false; toast('Σφάλμα δικτύου.', false); });
 		});

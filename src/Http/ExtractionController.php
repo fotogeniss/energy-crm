@@ -20,6 +20,7 @@ use ECRM_RateLimit;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\FileRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -31,8 +32,20 @@ final class ExtractionController implements Controller
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
         private readonly FileRepository $files,
+        private readonly CustomerRepository $customers,
     ) {
     }
+
+    /**
+     * Πεδία της εξαγωγής που ζουν στη ΣΥΜΒΑΣΗ και όχι στον πελάτη.
+     *
+     * Ό,τι άλλο επιστρέφει ο εξαγωγέας αφορά το πρόσωπο. Ο διαχωρισμός είναι
+     * ρητός εδώ ώστε να μη χρειάζεται να τον ξαναβρεί κανείς διαβάζοντας δύο
+     * σχήματα πινάκων.
+     *
+     * @var list<string>
+     */
+    private const CONTRACT_FIELDS = ['supply_number', 'meter_number', 'invoice_code'];
 
     /**
      * Τα είδη εγγράφου που έχει νόημα να διαβάσει ο εξαγωγέας.
@@ -154,7 +167,86 @@ final class ExtractionController implements Controller
             $this->gate->leave();
         }
 
+        if (($result['ok'] ?? false) && $request->get_param('apply')) {
+            $result['applied'] = $this->applyToRecords(
+                (int) $request->get_param('contract_id'),
+                (array) ($result['data'] ?? [])
+            );
+        }
+
         return new WP_REST_Response($result, $result['ok'] ? 200 : 502);
+    }
+
+    /**
+     * Γράφει ό,τι διάβασε το AI στον πελάτη και στη σύμβαση.
+     *
+     * Υπάρχει επειδή η εξαγωγή γέμιζε **πεδία φόρμας**: ζούσε στον browser
+     * μέχρι να πατήσει κάποιος Αποθήκευση, οπότε η καρτέλα της αίτησης έμενε
+     * άδεια. Για τον πωλητή που μόλις μετέτρεψε υποψήφιο, το να πρέπει να
+     * ανοίξει τον οδηγό και να αποθηκεύσει για να δει στοιχεία που το σύστημα
+     * ήδη γνωρίζει, ήταν ακριβώς ο χαμένος χρόνος που ο «σύνδεσμός μου»
+     * υποτίθεται ότι εξοικονομεί.
+     *
+     * **Ποτέ δεν πατάει τιμή που υπάρχει.** Μόνο κενά γεμίζουν -- ίδια
+     * σημασιολογία με το `keepExisting` της αυτόματης διαδρομής στη φόρμα.
+     * Ό,τι έγραψε άνθρωπος νικάει ό,τι διάβασε μοντέλο, χωρίς εξαίρεση.
+     *
+     * Η εμβέλεια ελέγχεται σε κάθε γράψιμο ξεχωριστά, μέσα από τα ίδια
+     * `update()` που χρησιμοποιεί όλη η εφαρμογή.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return list<string> Τα πεδία που όντως γράφτηκαν.
+     */
+    private function applyToRecords(int $contractId, array $data): array
+    {
+        $scope    = $this->scopes->forCurrentUser();
+        $contract = $this->contracts->find($contractId, $scope);
+
+        if ($contract === null) {
+            return [];
+        }
+
+        $customerId    = (int) ($contract['customer_id'] ?? 0);
+        $customer      = $customerId > 0 ? $this->customers->find($customerId, $scope) : null;
+        $customerPatch = [];
+        $contractPatch = [];
+
+        foreach ($data as $field => $value) {
+            $value = is_string($value) ? trim($value) : $value;
+
+            if ($value === null || $value === '' || $field === 'customer_type') {
+                continue;
+            }
+
+            if (in_array($field, self::CONTRACT_FIELDS, true)) {
+                if ((string) ($contract[$field] ?? '') === '') {
+                    $contractPatch[$field] = $value;
+                }
+
+                continue;
+            }
+
+            if ($customer !== null && (string) ($customer[$field] ?? '') === '') {
+                $customerPatch[$field] = $value;
+            }
+        }
+
+        // Το ίδιο το JSON κρατιέται πάντα, ακόμα κι αν κανένα πεδίο δεν ήταν
+        // κενό: είναι το ίχνος ελέγχου του τι διάβασε το μοντέλο και πότε.
+        $contractPatch['extracted_json'] = (string) wp_json_encode($data);
+
+        $applied = [];
+
+        if ($customerPatch !== [] && $this->customers->update($customerId, $scope, $customerPatch)) {
+            $applied = array_keys($customerPatch);
+        }
+
+        if ($this->contracts->update($contractId, $scope, $contractPatch)) {
+            $applied = array_merge($applied, array_keys($contractPatch));
+        }
+
+        return array_values(array_diff($applied, ['extracted_json']));
     }
 
     /**

@@ -173,13 +173,22 @@ class ECRM_Intake {
 		}
 
 		$p       = $req->get_json_params() ?: $req->get_params();
-		$name    = sanitize_text_field( (string) ( $p['name'] ?? '' ) );
 		$phone   = self::phone( (string) ( $p['phone'] ?? '' ) );
 		$consent = ! empty( $p['consent'] );
 
-		if ( mb_strlen( $name ) < 3 ) {
-			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Συμπληρώστε ονοματεπώνυμο.' ], 400 );
-		}
+		/*
+		 * Το όνομα ΔΕΝ ζητιέται από τον πελάτη -- είναι τυπωμένο πάνω στην
+		 * ταυτότητα που ανεβάζει, και το διαβάζει το AI. Κάθε πεδίο που
+		 * γλιτώνει μια δημόσια φόρμα είναι πελάτης που δεν την παρατάει.
+		 *
+		 * Ως ετικέτα του υποψηφίου μπαίνει το κινητό: είναι το μόνο πραγματικό
+		 * αναγνωριστικό που έχουμε μέχρι να διαβαστούν τα έγγραφα, και είναι
+		 * ούτως ή άλλως αυτό που θα καλέσει ο πωλητής. Η στήλη είναι NOT NULL,
+		 * οπότε κάτι πρέπει να μπει· ένα «Νέος υποψήφιος» δεν θα βοηθούσε
+		 * κανέναν να ξεχωρίσει δύο γραμμές.
+		 */
+		$name = $phone;
+
 		if ( $phone === '' ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Συμπληρώστε έγκυρο κινητό.' ], 400 );
 		}
@@ -477,10 +486,8 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	<div id="form">
 		<div class="brand"><?php echo esc_html( $company ); ?></div>
 		<h1>Στείλε τα στοιχεία σου</h1>
-		<p class="lede">Δύο πεδία και δύο φωτογραφίες. Δεν χρειάζεται λογαριασμός.</p>
+		<p class="lede">Το κινητό σου και δύο φωτογραφίες. Τα υπόλοιπα τα διαβάζουμε από τα έγγραφα.</p>
 
-		<div class="f"><label for="nm">Ονοματεπώνυμο</label>
-			<input type="text" id="nm" autocomplete="name" placeholder="Γιώργος Παπαδόπουλος"></div>
 		<div class="f"><label for="ph">Κινητό</label>
 			<input type="tel" id="ph" autocomplete="tel" inputmode="tel" placeholder="69........"></div>
 
@@ -510,25 +517,22 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	(function () {
 		var REST = <?php echo wp_json_encode( $rest ); ?>;
 
-		/* Το refresh μετά την υποβολή έδειχνε ξανά άδεια φόρμα, και ο πελάτης
-		 * εύλογα ξαναέστελνε. Ευγένεια, ΟΧΙ μέτρο ασφαλείας -- το πραγματικό
-		 * μέτρο είναι η ιδεμποτεντία στον server, που ενώνει τη δεύτερη
-		 * υποβολή με τον ίδιο υποψήφιο αντί να φτιάχνει δεύτερο.
+		/* ΚΑΜΙΑ μνήμη συνεδρίας εδώ, και είναι απόφαση.
 		 *
-		 * sessionStorage και όχι localStorage: κρατά όσο η καρτέλα, δεν
-		 * αφήνει ίχνος στη συσκευή του πελάτη μετά. Σε τυλιγμένο try/catch --
-		 * σε ιδιωτική περιήγηση κάποιοι browsers πετούν και μόνο που το
-		 * αγγίζεις. */
-		var DONEKEY = 'ecrm_intake_done';
-		function remember() { try { sessionStorage.setItem(DONEKEY, '1'); } catch (e) {} }
-		function remembered() { try { return sessionStorage.getItem(DONEKEY) === '1'; } catch (e) { return false; } }
-
+		 * Μπήκε αρχικά sessionStorage ώστε το refresh να μη δείχνει ξανά άδεια
+		 * φόρμα. Έλυνε πρόβλημα που ΔΕΝ υπάρχει: τη διπλοεγγραφή την αποτρέπει
+		 * η ιδεμποτεντία στον server, που ενώνει τη δεύτερη υποβολή με τον ίδιο
+		 * υποψήφιο. Σε αντάλλαγμα κλείδωνε τη σελίδα για όλη τη συνεδρία, και
+		 * χρειάστηκε κουμπί εξόδου -- μπάλωμα πάνω σε μπάλωμα, με κείμενο που
+		 * μιλούσε στον πωλητή μέσα σε οθόνη του πελάτη.
+		 *
+		 * Ο πελάτης στέλνει μία φορά και τελειώνει. Refresh δείχνει τη φόρμα,
+		 * όπως κάθε φόρμα· δεύτερη υποβολή με το ίδιο κινητό καταλήγει στον
+		 * ίδιο φάκελο. Η προστασία ζει εκεί που ανήκει: στον server. */
 		function showDone() {
 			document.getElementById('form').style.display = 'none';
 			document.getElementById('done').style.display = 'block';
 		}
-
-		if (remembered()) { showDone(); }
 		var files = { provider_bill: [], id_card: [] };
 		var picking = null;
 		var fi = document.getElementById('fi');
@@ -591,9 +595,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 
 		document.getElementById('go').addEventListener('click', function () {
 			var go = this;
-			var name = document.getElementById('nm').value.trim();
 			var phone = document.getElementById('ph').value.trim();
-			if (name.length < 3) { say('Συμπλήρωσε το ονοματεπώνυμό σου.', 'err'); return; }
 			if (phone.replace(/\D+/g, '').length < 10) { say('Συμπλήρωσε έγκυρο κινητό.', 'err'); return; }
 			if (!document.getElementById('cs').checked) { say('Χρειάζεται η συναίνεσή σου για να προχωρήσουμε.', 'err'); return; }
 
@@ -605,7 +607,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 			fetch(REST, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: name, phone: phone, consent: true })
+				body: JSON.stringify({ phone: phone, consent: true })
 			})
 				.then(function (r) { return r.json(); })
 				.then(function (d) {
@@ -636,10 +638,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 						});
 					}, Promise.resolve());
 				})
-				.then(function () {
-					remember();
-					showDone();
-				})
+				.then(showDone)
 				.catch(function (e) {
 					go.disabled = false;
 					say((e && e.message) || 'Κάτι πήγε στραβά. Δοκίμασε ξανά.', 'err');

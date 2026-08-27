@@ -178,7 +178,18 @@ final class LeadsController implements Controller
             ], 200);
         }
 
-        [$first, $last] = self::splitName((string) $lead['name']);
+        /*
+         * Ο «σύνδεσμός μου» δεν ζητά πια όνομα από τον πελάτη -- το βγάζει το AI
+         * από την ταυτότητα. Ως ετικέτα του υποψηφίου μπαίνει το κινητό, που
+         * είναι το μόνο αναγνωριστικό μέχρι να διαβαστούν τα έγγραφα.
+         *
+         * Δεν γίνεται όμως ΟΝΟΜΑ ΠΕΛΑΤΗ. Πελάτης με ονοματεπώνυμο
+         * «306982774563» δεν είναι απλώς άσχημος: η αυτόματη εξαγωγή τρέχει με
+         * keepExisting και ΔΕΝ πατάει ό,τι υπάρχει ήδη, οπότε το σκουπίδι θα
+         * εμπόδιζε το πραγματικό όνομα να μπει ποτέ.
+         */
+        $hasLetters     = preg_match('/\p{L}/u', (string) $lead['name']) === 1;
+        [$first, $last] = $hasLetters ? self::splitName((string) $lead['name']) : ['', ''];
 
         $customerId = $this->customers->create([
             'customer_type' => 'individual',
