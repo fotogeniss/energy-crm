@@ -8,6 +8,8 @@
  *   customers      — end customers (individuals / sole props / companies)
  *   contracts      — applications / contracts (the core record)
  *   files          — uploaded documents linked to a contract
+ *   kb_entries     — knowledge base + τα μαθήματα της «Εκπαίδευσης» (section=training)
+ *   kb_read        — ποιος χρήστης δήλωσε ότι διάβασε ποιο μάθημα
  *   events         — audit/status-history log per contract
  *   assistant_messages — Λίτσα assistant conversation, per user (build queue 14)
  *
@@ -23,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '17';
+	const DB_VERSION = '18';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -319,6 +321,23 @@ class ECRM_DB {
 			PRIMARY KEY (id),
 			KEY provider_id (provider_id),
 			KEY section (section)
+		) {$charset};" );
+
+		/*
+		 * Ποιος πωλητής δήλωσε ότι διάβασε ποιο μάθημα.
+		 *
+		 * Ξεχωριστός πίνακας και όχι στήλη στο kb_entries, γιατί η σχέση
+		 * είναι χρήστης-προς-μάθημα: μια στήλη θα κρατούσε την πρόοδο ενός
+		 * μόνο ανθρώπου. Το unique key είναι ο φύλακας του διπλού κλικ.
+		 */
+		dbDelta( "CREATE TABLE {$p}kb_read (
+			id       BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			user_id  BIGINT UNSIGNED NOT NULL,
+			entry_id BIGINT UNSIGNED NOT NULL,
+			read_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY user_entry (user_id, entry_id),
+			KEY user_id (user_id)
 		) {$charset};" );
 
 		// --- events (status history / audit) ---------------------------------

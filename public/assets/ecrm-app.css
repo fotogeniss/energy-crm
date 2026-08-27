@@ -912,6 +912,59 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-kbanswer__close { margin-top:10px; border:1px solid var(--line); background:var(--bg); color:var(--muted-strong); border-radius:8px; padding:5px 12px; font-size:var(--fs-12); font-weight:600; cursor:pointer; }
 @media (max-width:560px){ .ecrm-kbsearchbox__q { flex-wrap:wrap; } .ecrm-kbask { width:100%; } }
 
+/* --- Εκπαίδευση ---------------------------------------------------------
+ * Δανείζεται το σκούρο πάνελ της Βάσης Γνώσης και το .ecrm-meter του
+ * Dashboard. Κανένα νέο token, κανένα νέο μέγεθος γραμματοσειράς: η μπάρα
+ * αλλάζει μόνο επιφάνεια, επειδή κάθεται σε σκούρο φόντο αντί σε κάρτα. */
+.ecrm-trainhead { background:linear-gradient(160deg,var(--surface-inverse),var(--surface-inverse-soft)); border-radius:16px; padding:16px 18px; margin-bottom:16px; }
+.ecrm-trainhead__top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:7px; }
+.ecrm-trainhead__lbl { color:var(--chrome-ink-hi); font-size:var(--fs-13); font-weight:700; }
+.ecrm-trainhead__val { color:var(--chrome-ink); font-size:var(--fs-12); font-variant-numeric:tabular-nums; }
+.ecrm-trainhead .ecrm-meter { background:var(--chrome-wash-2); }
+.ecrm-trainhead .ecrm-meter__f { background:var(--amber-bright); }
+
+.ecrm-lesson { background:var(--surface); border:1px solid var(--line-card); border-radius:12px; margin-bottom:8px; overflow:hidden; }
+.ecrm-lesson.is-open { border-color:var(--line-mid); box-shadow:0 6px 20px -12px rgba(0,0,0,.25); }
+.ecrm-lesson.is-done { background:var(--surface-2); border-color:var(--line-soft); }
+.ecrm-lesson__row { display:flex; align-items:center; gap:12px; padding:12px 14px; }
+.ecrm-lesson__n { flex:0 0 26px; height:26px; border-radius:999px; background:var(--surface-sunk); color:var(--muted-strong); font-size:var(--fs-12); font-weight:800; display:flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums; }
+.ecrm-lesson.is-done .ecrm-lesson__n { background:var(--st-active-bg); color:var(--st-active); }
+.ecrm-lesson__t { flex:1; min-width:0; display:block; text-align:left; background:transparent; border:0; padding:0; cursor:pointer; font:inherit; }
+.ecrm-lesson__ttl { display:block; font-size:var(--fs-14); font-weight:600; color:var(--ink); }
+.ecrm-lesson.is-done .ecrm-lesson__ttl { color:var(--muted-strong); }
+.ecrm-lesson__min { display:block; font-size:var(--fs-12); color:var(--muted); margin-top:1px; }
+.ecrm-lesson__read { flex:0 0 auto; border:1px solid var(--line-mid); background:var(--surface); color:var(--muted-strong); border-radius:8px; padding:6px 13px; font-size:var(--fs-12-5); font-weight:700; cursor:pointer; white-space:nowrap; font-family:inherit; }
+.ecrm-lesson__read:hover:not(:disabled) { background:var(--surface-sunk); color:var(--ink); }
+.ecrm-lesson__read:disabled { opacity:.55; cursor:default; }
+.ecrm-lesson.is-done .ecrm-lesson__read { background:var(--st-active-bg); color:var(--st-active); border-color:transparent; }
+.ecrm-lesson__body { padding:4px 16px 16px 52px; font-size:var(--fs-14); color:var(--navy-soft); line-height:1.6; border-top:1px solid var(--line-soft); }
+.ecrm-lesson__body h1,.ecrm-lesson__body h2,.ecrm-lesson__body h3,.ecrm-lesson__body strong { color:var(--ink); }
+.ecrm-lesson__body ul,.ecrm-lesson__body ol { padding-left:20px; margin:6px 0; }
+.ecrm-lesson__body p { margin:8px 0; }
+@media (max-width:560px){ .ecrm-lesson__row { flex-wrap:wrap; } .ecrm-lesson__read { width:100%; } .ecrm-lesson__body { padding-left:16px; } }
+
+/* --- Πίνακες μέσα σε κείμενο γραμμένο από τον admin ---------------------
+ * Ο συντάκτης του WordPress βγάζει σκέτο <table>, συχνά με border="1", και
+ * ποτέ με class. Το kit έχει .ecrm-table, αλλά κανείς δεν πρόκειται να
+ * γράφει class="ecrm-table" μέσα στον editor κάθε φορά — το περιεχόμενο το
+ * γράφει άνθρωπος, όχι κώδικας. Οπότε το ίδιο ύφος δίνεται με βάση το
+ * στοιχείο, στα δύο σώματα καρτέλας που δέχονται ελεύθερο HTML.
+ *
+ * Μέχρι τώρα ο πίνακας έπεφτε στο default του browser: σε σκούρα εμφάνιση
+ * έβγαινε με λευκές γραμμές γύρω από κάθε κελί και έμοιαζε σαν να λείπει το
+ * CSS. Το βρήκε ο ιδιοκτήτης με screenshot στις 27/08. Το border:0 στα κελιά
+ * ακυρώνει και το border="1" του συντάκτη — παρουσιαστικό attribute, οπότε ο
+ * κανόνας CSS το νικάει χωρίς !important.
+ *
+ * border-collapse:separate και όχι collapse: με collapse το border-radius
+ * δεν κόβει τις γωνίες, και η κάρτα θα έβγαινε με στρογγυλό πλαίσιο και
+ * τετράγωνο πίνακα μέσα του. */
+.ecrm-kbentry__body,.ecrm-lesson__body { overflow-x:auto; }
+.ecrm-kbentry__body table,.ecrm-lesson__body table { width:100%; border-collapse:separate; border-spacing:0; margin:10px 0; font-size:var(--fs-13); background:var(--surface); border:1px solid var(--line-card); border-radius:var(--radius); overflow:hidden; }
+.ecrm-kbentry__body th,.ecrm-lesson__body th { text-align:left; font-size:var(--fs-11); font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); padding:8px 12px; background:var(--bg); border:0; border-bottom:1px solid var(--line-card); white-space:nowrap; }
+.ecrm-kbentry__body td,.ecrm-lesson__body td { padding:9px 12px; border:0; border-bottom:1px solid var(--line-soft); color:var(--navy-soft); vertical-align:top; }
+.ecrm-kbentry__body tr:last-child td,.ecrm-lesson__body tr:last-child td { border-bottom:0; }
+
 /* --- Global search (topbar) --- */
 .ecrm-gsearch { position:relative; flex:1; max-width:520px; margin:0 18px; }
 .ecrm-gsearch > input { width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 14px; font-size:var(--fs-14); background:var(--bg); outline:none; }
