@@ -18,6 +18,15 @@ use EnergyCRM\Http\Guards;
 
 class ECRM_KB {
 
+	/**
+	 * Η ενότητα των μαθημάτων της οθόνης «Εκπαίδευση».
+	 *
+	 * Ζει στον ΙΔΙΟ πίνακα με τις καρτέλες παρόχων επίτηδες: ίδιο σχήμα
+	 * (τίτλος, σώμα, σειρά), ίδια φόρμα admin, ίδιο import/export JSON. Ό,τι
+	 * χώριζε τα δύο ήταν μια οθόνη, όχι ένας πίνακας.
+	 */
+	const SECTION_TRAINING = 'training';
+
 	public static function init(): void {
 		add_action( 'rest_api_init', [ __CLASS__, 'routes' ] );
 	}
@@ -37,10 +46,31 @@ class ECRM_KB {
 			'callback'            => [ __CLASS__, 'ask' ],
 			'permission_callback' => Guards::crmUser(),
 		] );
+		register_rest_route( \EnergyCRM\Http\Router::NAMESPACE, '/kb/read', [
+			'methods'             => 'POST',
+			'callback'            => [ __CLASS__, 'mark_read' ],
+			'permission_callback' => Guards::crmUser(),
+		] );
 	}
 
+	/**
+	 * Το πλήρες λεξιλόγιο ενοτήτων — ό,τι μπορεί να γράψει ο admin.
+	 */
 	public static function sections(): array {
-		return [ 'docs' => 'Δικαιολογητικά', 'guarantees' => 'Εγγυήσεις', 'charges' => 'Χρεώσεις', 'other' => 'Άλλο' ];
+		return [ 'docs' => 'Δικαιολογητικά', 'guarantees' => 'Εγγυήσεις', 'charges' => 'Χρεώσεις', 'other' => 'Άλλο', self::SECTION_TRAINING => 'Εκπαίδευση' ];
+	}
+
+	/**
+	 * Οι ενότητες που εμφανίζονται ως φίλτρα στη «Βάση Γνώσης».
+	 *
+	 * Χωρίς αυτό, το «Εκπαίδευση» θα έβγαινε ως chip σε μια οθόνη που δεν
+	 * δείχνει ποτέ μαθήματα — φίλτρο που πάντα επιστρέφει μηδέν.
+	 */
+	public static function browsable_sections(): array {
+		$s = self::sections();
+		unset( $s[ self::SECTION_TRAINING ] );
+
+		return $s;
 	}
 
 	public static function customer_types(): array {
@@ -159,8 +189,20 @@ class ECRM_KB {
 
 		$where  = [ 'active = 1' ];
 		$params = [];
+
+		/*
+		 * Τα μαθήματα και οι καρτέλες παρόχων μοιράζονται πίνακα, όχι οθόνη.
+		 * Χωρίς αυτόν τον διαχωρισμό, 12 μαθήματα για το ίδιο το CRM θα
+		 * κάθονταν ανάμεσα στα δικαιολογητικά της ZeniΘ, κάτω από την ομάδα
+		 * «—», επειδή δεν έχουν πάροχο. Τα ζητάς ρητά και τα παίρνεις· δεν
+		 * τα ζητάς και δεν εμφανίζονται πουθενά.
+		 */
+		$training = ( self::SECTION_TRAINING === $section );
+		$where[]  = $training ? 'section = %s' : 'section <> %s';
+		$params[] = self::SECTION_TRAINING;
+
 		if ( $energy && in_array( $energy, [ 'power', 'gas' ], true ) ) { $where[] = 'energy_type = %s'; $params[] = $energy; }
-		if ( $section && array_key_exists( $section, self::sections() ) ) { $where[] = 'section = %s'; $params[] = $section; }
+		if ( ! $training && $section && array_key_exists( $section, self::sections() ) ) { $where[] = 'section = %s'; $params[] = $section; }
 		if ( $type && array_key_exists( $type, self::customer_types() ) ) { $where[] = 'customer_type = %s'; $params[] = $type; }
 		if ( $prov ) { $where[] = 'provider_id = %d'; $params[] = $prov; }
 		if ( $q !== '' ) {
@@ -170,11 +212,18 @@ class ECRM_KB {
 		}
 		$sql = "SELECT id, provider_id, provider_name, energy_type, section, customer_type, title, body, sort_order
 				FROM {$t} WHERE " . implode( ' AND ', $where ) . ' ORDER BY provider_name, sort_order, id';
-		$rows = $params ? $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A ) : $wpdb->get_results( $sql, ARRAY_A );
+		// Το $params δεν είναι ποτέ πια άδειο (το φίλτρο ενότητας μπαίνει
+		// πάντα), οπότε ο κλάδος χωρίς prepare() έφυγε αντί να μείνει νεκρός.
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
 
 		$sections = self::sections();
 		$ctypes   = self::customer_types();
 		$energies = [ 'power' => 'Ρεύμα', 'gas' => 'Αέριο' ];
+
+		// Ποια μαθήματα έχει δηλώσει διαβασμένα ΑΥΤΟΣ ο χρήστης. Ένα ερώτημα,
+		// και μόνο για την «Εκπαίδευση»: η «Βάση Γνώσης» δεν έχει έννοια
+		// προόδου και δεν πληρώνει γι' αυτήν.
+		$read = $training ? self::read_ids( get_current_user_id() ) : [];
 
 		// Group by provider (preserve order).
 		$groups = [];
@@ -193,6 +242,7 @@ class ECRM_KB {
 				'section_label' => $sections[ $r['section'] ] ?? $r['section'],
 				'type'          => $r['customer_type'],
 				'type_label'    => $ctypes[ $r['customer_type'] ] ?? '',
+				'read'          => isset( $read[ (int) $r['id'] ] ),
 			];
 		}
 
@@ -200,8 +250,110 @@ class ECRM_KB {
 			'ok'       => true,
 			'groups'   => array_values( $groups ),
 			'count'    => count( $rows ),
-			'sections' => $sections,
+			'sections' => self::browsable_sections(),
 			'types'    => $ctypes,
+			'progress' => $training ? self::progress( get_current_user_id() ) : null,
 		], 200 );
+	}
+
+	/**
+	 * «Το διάβασα» / «δεν το διάβασα» για ένα μάθημα.
+	 *
+	 * Ρητή δήλωση του πωλητή, ΟΧΙ συμπέρασμα από το ότι άνοιξε την καρτέλα.
+	 * Το αυτόματο («την άνοιξε άρα τη διάβασε») λέει ψέματα, και μια πρόοδος
+	 * που λέει ψέματα δεν την κοιτάει κανείς — ούτε ο ίδιος. Γι' αυτό
+	 * ξεπατιέται κιόλας: αν κάτι δεν το θυμάται, το ξαναβάζει στη λίστα του.
+	 */
+	public static function mark_read( WP_REST_Request $req ): WP_REST_Response {
+		global $wpdb;
+
+		$uid = get_current_user_id();
+		$p   = $req->get_json_params() ?: $req->get_params();
+		$id  = (int) ( $p['id'] ?? 0 );
+		$on  = ! empty( $p['read'] );
+
+		$entries = ECRM_DB::table( 'kb_entries' );
+		$reads   = ECRM_DB::table( 'kb_read' );
+
+		/*
+		 * Το id πρέπει να είναι ΕΝΕΡΓΟ ΜΑΘΗΜΑ, όχι οποιαδήποτε καρτέλα.
+		 * Αλλιώς ο πίνακας προόδου γεμίζει ids δικαιολογητικών και το
+		 * «4 από 12» παύει να σημαίνει οτιδήποτε.
+		 */
+		$exists = (int) $wpdb->get_var( $wpdb->prepare(
+			"SELECT COUNT(*) FROM {$entries} WHERE id = %d AND active = 1 AND section = %s",
+			$id,
+			self::SECTION_TRAINING
+		) );
+		if ( ! $exists ) {
+			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Άγνωστο μάθημα.' ], 404 );
+		}
+
+		if ( $on ) {
+			/*
+			 * INSERT IGNORE, όχι SELECT-μετά-INSERT: δύο γρήγορα κλικ από το
+			 * ίδιο χέρι είναι δύο αιτήματα, και το unique key (user_id,
+			 * entry_id) είναι ο μόνος φύλακας που δεν χάνει την κούρσα.
+			 */
+			$wpdb->query( $wpdb->prepare(
+				"INSERT IGNORE INTO {$reads} (user_id, entry_id, read_at) VALUES (%d, %d, %s)",
+				$uid,
+				$id,
+				current_time( 'mysql' )
+			) );
+		} else {
+			$wpdb->delete( $reads, [ 'user_id' => $uid, 'entry_id' => $id ], [ '%d', '%d' ] );
+		}
+
+		return new WP_REST_Response( [ 'ok' => true, 'read' => $on ] + self::progress( $uid ), 200 );
+	}
+
+	/**
+	 * Πόσα από πόσα — μετρημένο στη βάση, όχι στον browser.
+	 *
+	 * Ο browser ξέρει μόνο όσα μαθήματα κατέβασε· αν κάποιο απενεργοποιηθεί
+	 * ή προστεθεί όσο η οθόνη είναι ανοιχτή, το δικό του άθροισμα γίνεται
+	 * λάθος σιωπηλά. Η βάση δεν έχει αυτό το πρόβλημα.
+	 *
+	 * @return array{done:int,total:int}
+	 */
+	public static function progress( int $user_id ): array {
+		global $wpdb;
+
+		$entries = ECRM_DB::table( 'kb_entries' );
+		$reads   = ECRM_DB::table( 'kb_read' );
+
+		$total = (int) $wpdb->get_var( $wpdb->prepare(
+			"SELECT COUNT(*) FROM {$entries} WHERE active = 1 AND section = %s",
+			self::SECTION_TRAINING
+		) );
+		$done = (int) $wpdb->get_var( $wpdb->prepare(
+			"SELECT COUNT(*) FROM {$reads} r INNER JOIN {$entries} e ON e.id = r.entry_id WHERE r.user_id = %d AND e.active = 1 AND e.section = %s",
+			$user_id,
+			self::SECTION_TRAINING
+		) );
+
+		return [ 'done' => $done, 'total' => $total ];
+	}
+
+	/**
+	 * @return array<int,true> Τα ids που ο χρήστης έχει σημειώσει «το διάβασα».
+	 */
+	private static function read_ids( int $user_id ): array {
+		global $wpdb;
+
+		if ( $user_id <= 0 ) {
+			return [];
+		}
+
+		$t   = ECRM_DB::table( 'kb_read' );
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT entry_id FROM {$t} WHERE user_id = %d", $user_id ) );
+
+		$out = [];
+		foreach ( (array) $ids as $id ) {
+			$out[ (int) $id ] = true;
+		}
+
+		return $out;
 	}
 }

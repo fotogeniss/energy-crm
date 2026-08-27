@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Οθόνη «Εκπαίδευση» (πρόταση §1.8)</title>
+<style>
+:root{
+  --n0:#ffffff; --n25:#fdfdfc; --n50:#f8f8f6; --n100:#f1f1ee; --n150:#e9e8e4;
+  --n200:#dedcd7; --n300:#c6c4bd; --n400:#a3a099; --n450:#83817a; --n500:#6e6c66;
+  --n600:#5c5a55; --n700:#42413d; --n800:#2a2926; --n900:#1a1a18;
+  --p50:#eafaea; --p100:#d2f5d3; --p300:#6bdd6d; --p400:#16c217; --p500:#12a413;
+  --st-active:#00531e; --st-active-bg:#e3f0e4;
+  --st-pending:#ab5506; --st-pending-bg:#fcf2ec;
+  --st-cancel:#c32b47; --st-cancel-bg:#fdeaea;
+  --cat-teal:#007a79; --cat-teal-bg:#e3f4f3;
+  --cat-violet:#9255a3; --cat-violet-bg:#f6eef8;
+
+  --ink:var(--n800); --muted:var(--n500); --muted-strong:var(--n600);
+  --faint:var(--n450); --line:var(--n200); --line-soft:var(--n100);
+  --line-card:var(--n150); --line-mid:var(--n300);
+  --bg:var(--n50); --surface:var(--n0); --surface-sunk:var(--n100);
+  --surface-track:var(--n150);
+  --surface-inverse:var(--n900); --surface-inverse-soft:var(--n800);
+  --navy-soft:var(--n700);
+  --amber:var(--p400); --amber-bright:var(--p300);
+  --accent-hover:var(--p500); --accent-wash:var(--p50); --accent-wash-2:var(--p100);
+  --on-accent:#0b3d0c; --chrome-ink-hi:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+
+/* ---- σελίδα ---- */
+.doc-head{border-bottom:2px solid var(--line);padding-bottom:20px;margin-bottom:32px}
+.doc-head h1{margin:0 0 6px;font-size:26px;font-weight:800;letter-spacing:-.01em}
+.doc-head .sub{color:var(--muted);font-size:14px}
+.doc-head .rule{margin-top:14px;background:var(--st-pending-bg);color:var(--st-pending);
+  display:inline-block;padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:700}
+
+h2{font-size:19px;font-weight:800;margin:44px 0 4px;letter-spacing:-.01em}
+h2 .num{color:var(--n300);margin-right:8px;font-variant-numeric:tabular-nums}
+h2+.lede{color:var(--muted-strong);font-size:14px;margin:0 0 18px}
+
+.panel{background:var(--surface);border:1px solid var(--line-card);border-radius:14px;
+  padding:18px;margin:14px 0}
+.panel__cap{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:999px;display:inline-block}
+.dot.before{background:var(--st-cancel)}
+.dot.after{background:var(--p400)}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800}
+td code{background:var(--surface-sunk);padding:1px 6px;border-radius:5px;font-size:12.5px}
+.cost{white-space:nowrap;font-weight:700}
+.cost.low{color:var(--st-active)}
+.cost.mid{color:var(--st-pending)}
+
+ul.clean{margin:8px 0;padding-left:20px}
+ul.clean li{margin:5px 0;font-size:14px}
+.note{background:var(--accent-wash);border-left:3px solid var(--p400);
+  padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0;font-size:13.5px;color:var(--navy-soft)}
+.warn{background:var(--st-pending-bg);border-left:3px solid var(--st-pending);
+  padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0;font-size:13.5px;color:var(--navy-soft)}
+
+/* ---- ρεαλιστικό app chrome ---- */
+.app{display:grid;grid-template-columns:196px 1fr;border:1px solid var(--line-card);
+  border-radius:14px;overflow:hidden;background:var(--surface)}
+.side{background:linear-gradient(160deg,var(--surface-inverse),var(--surface-inverse-soft));
+  padding:14px 10px}
+.side__lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+  color:#ffffff4d;padding:8px 10px 6px;font-weight:800}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav i{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;
+  color:#a8a69f;font-size:13px;font-style:normal;cursor:default}
+.nav i.on{background:#ffffff1a;color:var(--chrome-ink-hi);font-weight:700}
+.nav i.new{color:var(--p300)}
+.nav i .g{width:16px;text-align:center;opacity:.85}
+.main{padding:18px;background:var(--bg);min-height:340px}
+
+.kbsearch{background:linear-gradient(160deg,var(--surface-inverse),var(--surface-inverse-soft));
+  border-radius:16px;padding:14px;margin-bottom:14px}
+.kbsearch__t{color:var(--chrome-ink-hi);font-size:18px;font-weight:800;margin-bottom:12px}
+.kbsearch__q{display:flex;align-items:center;gap:10px;background:var(--surface);
+  border-radius:10px;padding:10px 14px;font-size:15px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.chip{background:#ffffff0f;color:#a8a69f;border:1px solid #ffffff14;border-radius:999px;
+  padding:4px 11px;font-size:12px;font-weight:600}
+.chip.on{background:var(--p400);color:var(--on-accent);border-color:transparent}
+
+.grouphead{font-size:15px;font-weight:800;color:var(--ink);padding:6px 2px;
+  display:flex;align-items:center;gap:10px;margin-top:10px}
+.groupcount{font-size:12px;font-weight:600;color:var(--muted);
+  background:var(--surface-sunk);padding:2px 8px;border-radius:999px}
+
+.entry{background:var(--surface);border:1px solid var(--line-card);border-radius:12px;
+  margin-bottom:8px;overflow:hidden}
+.entry__head{display:flex;align-items:center;gap:10px;padding:13px 16px}
+.entry__title{flex:1;font-size:14px;font-weight:600;color:var(--ink)}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.badge.sec{background:var(--st-active-bg);color:var(--st-active)}
+.badge.gas{background:var(--cat-teal-bg);color:var(--cat-teal)}
+.badge.pow{background:var(--st-pending-bg);color:var(--st-pending)}
+.badge.typ{background:var(--cat-violet-bg);color:var(--cat-violet)}
+.chev{color:var(--faint);font-size:18px}
+
+/* ---- νέα οθόνη ---- */
+.trainhead{background:linear-gradient(160deg,var(--surface-inverse),var(--surface-inverse-soft));
+  border-radius:16px;padding:16px 18px;margin-bottom:16px}
+.trainhead__t{color:var(--chrome-ink-hi);font-size:18px;font-weight:800}
+.trainhead__s{color:#a8a69f;font-size:13px;margin-top:2px}
+.progwrap{margin-top:14px}
+.progtop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.progtop b{color:var(--chrome-ink-hi);font-size:13px;font-weight:700}
+.progtop span{color:#a8a69f;font-size:12px;font-variant-numeric:tabular-nums}
+.meter{height:9px;border-radius:999px;background:#ffffff1a;overflow:hidden}
+.meter__f{display:block;height:100%;background:var(--p300);border-radius:999px;
+  transition:width .45s ease;width:0}
+
+.lesson{background:var(--surface);border:1px solid var(--line-card);border-radius:12px;
+  margin-bottom:8px;display:flex;align-items:center;gap:12px;padding:12px 14px;
+  transition:border-color .2s,background .2s}
+.lesson.done{background:var(--n25);border-color:var(--line-soft)}
+.lesson__n{flex:0 0 26px;height:26px;border-radius:999px;background:var(--surface-sunk);
+  color:var(--muted-strong);font-size:12px;font-weight:800;display:flex;
+  align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.lesson.done .lesson__n{background:var(--st-active-bg);color:var(--st-active)}
+.lesson__b{flex:1;min-width:0}
+.lesson__t{font-size:14px;font-weight:600;color:var(--ink)}
+.lesson.done .lesson__t{color:var(--muted-strong)}
+.lesson__m{font-size:12px;color:var(--muted);margin-top:1px}
+.readbtn{flex:0 0 auto;border:1px solid var(--line-mid);background:var(--surface);
+  color:var(--muted-strong);border-radius:8px;padding:6px 13px;font-size:12.5px;
+  font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.readbtn:hover{background:var(--surface-sunk);color:var(--ink)}
+.lesson.done .readbtn{background:var(--st-active-bg);color:var(--st-active);
+  border-color:transparent}
+.hint{text-align:center;font-size:12.5px;color:var(--muted);margin-top:12px;font-style:italic}
+
+.lessonlist{counter-reset:l}
+.ll{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:14px}
+.ll:last-child{border-bottom:0}
+.ll b{flex:0 0 26px;color:var(--n300);font-variant-numeric:tabular-nums;font-weight:800}
+.ll span{color:var(--muted);font-size:12.5px;display:block;margin-top:1px}
+
+@media(max-width:720px){
+  .app{grid-template-columns:1fr}
+  .side{display:none}
+  .wrap{padding:20px 14px 60px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="doc-head">
+  <h1>Οθόνη «Εκπαίδευση» — πρόταση προς έγκριση</h1>
+  <div class="sub">Energy CRM · 27/08/2026 · μακέτα πριν την υλοποίηση</div>
+  <div class="rule">§1.8 — καμία γραμμή κώδικα πριν εγκριθεί αυτή η μακέτα</div>
+</div>
+
+<h2><span class="num">1</span>Τι μετρήθηκε πρώτα</h2>
+<p class="lede">Πριν προταθεί οτιδήποτε, μετρήθηκε ο ζωντανός κώδικας — όχι τα docs.</p>
+
+<table>
+  <thead><tr><th style="width:44%">Εύρημα</th><th>Τι σημαίνει</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>52 ενεργές καρτέλες</b> στη Βάση Γνώσης<br><code>wp_ecrm_kb_entries WHERE active=1</code></td>
+      <td>Το περιεχόμενο <b>όντως γράφεται</b>. Δεν είναι άδειο κέλυφος όπως τα <code>commission_rules</code>. Αυτό δικαιολογεί να επενδύσουμε σε δεύτερη οθόνη περιεχομένου.</td>
+    </tr>
+    <tr>
+      <td>Η φόρμα admin δέχεται ήδη<br><b>«— Γενικό / χωρίς πάροχο —»</b></td>
+      <td>Καρτέλες που δεν αφορούν πάροχο — δηλαδή ακριβώς το εκπαιδευτικό υλικό — γράφονται <b>ήδη σήμερα</b>. Μηδέν αλλαγή στον admin.</td>
+    </tr>
+    <tr>
+      <td>Υπάρχει <b>import/export JSON</b><br><code>ecrm_kb_import</code> / <code>ecrm_kb_export</code></td>
+      <td>Τα μαθήματα ανεβαίνουν με ένα αρχείο, όχι με 12 χειροκίνητες καταχωρήσεις.</td>
+    </tr>
+    <tr>
+      <td>Υπάρχει έτοιμο <code>.ecrm-meter</code><br>(σε χρήση στο Dashboard)</td>
+      <td>Η μπάρα προόδου <b>δεν χρειάζεται νέο CSS</b> — ξαναχρησιμοποιείται.</td>
+    </tr>
+    <tr>
+      <td><code>kb_entries</code> έχει ήδη <code>sort_order</code></td>
+      <td>Η σειρά των μαθημάτων υπάρχει ως στήλη. Δεν χρειάζεται νέος πίνακας περιεχομένου.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <b>Το συμπέρασμα:</b> ο χρήστης θα δει μια <em>κανονική νέα οθόνη εκπαίδευσης</em>,
+  αλλά από κάτω δεν χτίζεται δεύτερο σύστημα περιεχομένου — καβαλάει αυτό που ήδη δουλεύει.
+</div>
+
+<h2><span class="num">2</span>ΠΡΙΝ — τι βλέπει σήμερα ένας καινούριος</h2>
+<p class="lede">Μπαίνει πρώτη μέρα. Η μόνη «βοήθεια» στο μενού είναι η Βάση Γνώσης.</p>
+
+<div class="panel">
+  <div class="panel__cap"><span class="dot before"></span>Σήμερα · οθόνη «Βάση Γνώσης»</div>
+  <div class="app">
+    <div class="side">
+      <div class="side__lbl">Καθημερινά</div>
+      <div class="nav">
+        <i><span class="g">▤</span>Αρχική</i>
+        <i class="new"><span class="g">＋</span>Νέα αίτηση</i>
+        <i><span class="g">▦</span>Συμβάσεις</i>
+        <i><span class="g">✓</span>Εργασίες</i>
+        <i><span class="g">☺</span>Πελάτες</i>
+      </div>
+      <div class="side__lbl">Περισσότερα</div>
+      <div class="nav">
+        <i><span class="g">◷</span>Εκκρεμότητες</i>
+        <i><span class="g">↻</span>Λήξεις</i>
+        <i class="on"><span class="g">▣</span>Βάση Γνώσης</i>
+      </div>
+    </div>
+    <div class="main">
+      <div class="kbsearch">
+        <div class="kbsearch__t">Βάση Γνώσης</div>
+        <div class="kbsearch__q"><span>🔍</span><span>Αναζήτηση…</span></div>
+        <div class="chips">
+          <span class="chip on">Όλα</span><span class="chip">Ρεύμα</span><span class="chip">Αέριο</span>
+          <span class="chip">Δικαιολογητικά</span><span class="chip">Εγγυήσεις</span><span class="chip">Χρεώσεις</span>
+        </div>
+      </div>
+      <div class="grouphead">ZeniΘ <span class="groupcount">9</span></div>
+      <div class="entry"><div class="entry__head">
+        <span class="entry__title">Δικαιολογητικά ZeniΘ — Οικιακά (Γ1/Γ1Ν)</span>
+        <span class="badge pow">Ρεύμα</span><span class="badge sec">Δικαιολογητικά</span>
+        <span class="chev">›</span></div></div>
+      <div class="entry"><div class="entry__head">
+        <span class="entry__title">Εγγυήσεις ZeniΘ — Επαγγελματικά</span>
+        <span class="badge gas">Αέριο</span><span class="badge typ">Επαγγελματικά</span>
+        <span class="chev">›</span></div></div>
+      <div class="grouphead">Protergia <span class="groupcount">11</span></div>
+      <div class="entry"><div class="entry__head">
+        <span class="entry__title">Χρεώσεις Protergia — αλλαγή ΑΦΜ</span>
+        <span class="badge sec">Χρεώσεις</span>
+        <span class="chev">›</span></div></div>
+      <div class="hint">…και άλλες 49 καρτέλες, ομαδοποιημένες ανά πάροχο</div>
+    </div>
+  </div>
+</div>
+
+<div class="warn">
+  <b>Το πρόβλημα δεν είναι ότι λείπει περιεχόμενο — είναι ότι λείπει <em>είδος</em> περιεχομένου.</b>
+  Και οι 52 καρτέλες μιλάνε για <b>παρόχους</b>, όχι για <b>το CRM</b>. Ο καινούριος δεν ρωτάει
+  «τι δικαιολογητικά θέλει η ZeniΘ» — ρωτάει «τι κάνω τώρα». Επιπλέον:
+  <ul class="clean" style="margin-top:8px">
+    <li><b>Δεν υπάρχει σειρά.</b> Ομαδοποίηση ανά πάροχο· κανένα «ξεκίνα από εδώ».</li>
+    <li><b>Δεν υπάρχει πρόοδος.</b> Ούτε αυτός ούτε εσύ ξέρετε τι έχει διαβάσει.</li>
+    <li><b>Η Λίτσα είναι <em>pull</em>.</b> Απαντά αν ξέρεις τι να ρωτήσεις — ο καινούριος δεν ξέρει.</li>
+  </ul>
+</div>
+
+<h2><span class="num">3</span>ΜΕΤΑ — η νέα οθόνη «Εκπαίδευση»</h2>
+<p class="lede">Πάτα τα κουμπιά «Το διάβασα» — η μπάρα είναι ζωντανή.</p>
+
+<div class="panel">
+  <div class="panel__cap"><span class="dot after"></span>Πρόταση · νέο μενού «Εκπαίδευση»</div>
+  <div class="app">
+    <div class="side">
+      <div class="side__lbl">Καθημερινά</div>
+      <div class="nav">
+        <i><span class="g">▤</span>Αρχική</i>
+        <i class="new"><span class="g">＋</span>Νέα αίτηση</i>
+        <i><span class="g">▦</span>Συμβάσεις</i>
+        <i><span class="g">✓</span>Εργασίες</i>
+        <i><span class="g">☺</span>Πελάτες</i>
+      </div>
+      <div class="side__lbl">Περισσότερα</div>
+      <div class="nav">
+        <i><span class="g">◷</span>Εκκρεμότητες</i>
+        <i><span class="g">↻</span>Λήξεις</i>
+        <i><span class="g">▣</span>Βάση Γνώσης</i>
+        <i class="on"><span class="g">🎓</span>Εκπαίδευση</i>
+      </div>
+    </div>
+    <div class="main">
+      <div class="trainhead">
+        <div class="trainhead__t">Εκπαίδευση</div>
+        <div class="trainhead__s">Με τη σειρά. Ξεκίνα από το 1 — δεν χρειάζεται να τα ξέρεις όλα σήμερα.</div>
+        <div class="progwrap">
+          <div class="progtop"><b>Η πρόοδός σου</b><span id="pt">0 από 6</span></div>
+          <div class="meter"><span class="meter__f" id="pf"></span></div>
+        </div>
+      </div>
+      <div id="lessons">
+        <div class="lesson"><div class="lesson__n">1</div><div class="lesson__b">
+          <div class="lesson__t">Καλώς ήρθες — τι είναι το Energy CRM</div>
+          <div class="lesson__m">3 λεπτά</div></div>
+          <button class="readbtn">Το διάβασα</button></div>
+        <div class="lesson"><div class="lesson__n">2</div><div class="lesson__b">
+          <div class="lesson__t">Η Αρχική — τι σου λένε τα πλακίδια</div>
+          <div class="lesson__m">2 λεπτά</div></div>
+          <button class="readbtn">Το διάβασα</button></div>
+        <div class="lesson"><div class="lesson__n">3</div><div class="lesson__b">
+          <div class="lesson__t">Νέα αίτηση — βήμα προς βήμα</div>
+          <div class="lesson__m">6 λεπτά</div></div>
+          <button class="readbtn">Το διάβασα</button></div>
+        <div class="lesson"><div class="lesson__n">4</div><div class="lesson__b">
+          <div class="lesson__t">Οι καταστάσεις μιας σύμβασης — τι σημαίνει η καθεμία</div>
+          <div class="lesson__m">4 λεπτά</div></div>
+          <button class="readbtn">Το διάβασα</button></div>
+        <div class="lesson"><div class="lesson__n">5</div><div class="lesson__b">
+          <div class="lesson__t">Εκκρεμότητες — γιατί κοκκινίζει κάτι και τι κάνεις</div>
+          <div class="lesson__m">3 λεπτά</div></div>
+          <button class="readbtn">Το διάβασα</button></div>
+        <div class="lesson"><div class="lesson__n">6</div><div class="lesson__b">
+          <div class="lesson__t">Η Λίτσα — πώς να τη ρωτάς σωστά</div>
+          <div class="lesson__m">2 λεπτά</div></div>
+          <button class="readbtn">Το διάβασα</button></div>
+      </div>
+      <div class="hint">Το «Το διάβασα» δεν κλειδώνει τίποτα — μπορεί να το ξεπατήσει όποτε θέλει.</div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <b>Γιατί κουμπί «Το διάβασα» και όχι αυτόματο tracking;</b> Το αυτόματο («το άνοιξε άρα το
+  διάβασε») λέει ψέματα και δεν το εμπιστεύεται κανείς. Το ρητό κουμπί είναι μια <em>δήλωση</em>
+  του πωλητή — και ακριβώς γι' αυτό έχει νόημα αργότερα να τη δεις κι εσύ.
+</div>
+
+<h2><span class="num">4</span>Τι αλλάζει στον κώδικα</h2>
+<p class="lede">Πέντε σημεία. Κανένα δεν αγγίζει υπάρχουσα ροή.</p>
+
+<table>
+  <thead><tr><th style="width:38%">Σημείο</th><th>Αλλαγή</th><th style="width:14%">Κόστος</th></tr></thead>
+  <tbody>
+    <tr><td><code>ECRM_KB::sections()</code></td>
+      <td>Προσθήκη <code>'training' =&gt; 'Εκπαίδευση'</code>. Περνάει αυτόματα σε admin dropdown, φίλτρα και ετικέτες — μία πηγή αλήθειας.</td>
+      <td class="cost low">1 γραμμή</td></tr>
+    <tr><td><code>ECRM_KB::list_entries()</code></td>
+      <td>Το <code>section=training</code> <b>εξαιρείται</b> από τη Βάση Γνώσης όταν δεν ζητηθεί ρητά, ώστε να μη μπερδευτεί με τους παρόχους.</td>
+      <td class="cost low">~3 γραμμές</td></tr>
+    <tr><td>Νέος πίνακας <code>ecrm_kb_read</code></td>
+      <td><code>user_id</code>, <code>entry_id</code>, <code>read_at</code>. Τρεις στήλες, unique key στο ζεύγος.</td>
+      <td class="cost low">1 dbDelta</td></tr>
+    <tr><td>Νέο endpoint <code>POST /kb/read</code></td>
+      <td>Toggle «διαβάστηκε» για τον τρέχοντα χρήστη. Ίδιο <code>Guards::crmUser()</code> με τα υπόλοιπα KB routes.</td>
+      <td class="cost low">~25 γραμμές</td></tr>
+    <tr><td>Νέο <code>ecrm-view-training.js</code> + μενού</td>
+      <td>Ίδιο σχήμα με το υπάρχον <code>ecrm-view-kb.js</code>. Η μπάρα είναι το υπάρχον <code>.ecrm-meter</code>.</td>
+      <td class="cost mid">~110 γραμμές</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <b>Μηδέν νέο CSS token, μηδέν νέο μέγεθος γραμματοσειράς.</b> Όλα τα χρώματα και τα
+  <code>--fs-*</code> αυτής της μακέτας είναι ήδη υπαρκτά στο kit — μάθημα από την (149),
+  όπου ένα <code>font-size: 8.5px</code> έριξε τον <code>TypographyIsDecidedInOnePlaceTest</code>.
+</div>
+
+<h2><span class="num">5</span>Τα 12 μαθήματα που προτείνω</h2>
+<p class="lede">Γραμμένα πάνω στις πραγματικές οθόνες του μενού — όχι γενικόλογα.</p>
+
+<div class="panel lessonlist">
+  <div class="ll"><b>1</b><div>Καλώς ήρθες — τι είναι το Energy CRM<span>Τι λύνει, τι δεν είναι, πού ζητάς βοήθεια</span></div></div>
+  <div class="ll"><b>2</b><div>Η Αρχική — τι σου λένε τα πλακίδια<span>Ποιος αριθμός σημαίνει «κάνε κάτι τώρα»</span></div></div>
+  <div class="ll"><b>3</b><div>Νέα αίτηση — βήμα προς βήμα<span>Ο οδηγός, τα πεδία που φιλτράρονται ανά πάροχο, η ετικέτα AI</span></div></div>
+  <div class="ll"><b>4</b><div>Ανέβασμα εγγράφων και τι διαβάζει μόνο του<span>Τι αναγνωρίζεται αυτόματα, τι ελέγχεις πάντα με το μάτι</span></div></div>
+  <div class="ll"><b>5</b><div>Οι καταστάσεις μιας σύμβασης<span>Πρόχειρη → Υπογεγραμμένη → Ενεργή: ποιος την κουνάει και πότε</span></div></div>
+  <div class="ll"><b>6</b><div>Εκκρεμότητες — γιατί κοκκινίζει κάτι<span>Τι περιμένει από σένα και τι από τον πάροχο</span></div></div>
+  <div class="ll"><b>7</b><div>Εργασίες — η καθημερινή σου λίστα<span>Πώς δεν ξεχνιέται τηλέφωνο ή επανέλεγχος</span></div></div>
+  <div class="ll"><b>8</b><div>Πελάτες και ιστορικό<span>Πού βλέπεις τι έχει ήδη γίνει πριν τηλεφωνήσεις</span></div></div>
+  <div class="ll"><b>9</b><div>Λήξεις — η πιο εύκολη πώλησή σου<span>Γιατί οι ανανεώσεις είναι έτοιμο χρήμα</span></div></div>
+  <div class="ll"><b>10</b><div>Προσφορά — πώς βγάζεις σύγκριση μπροστά στον πελάτη<span>Τι να μη υποσχεθείς</span></div></div>
+  <div class="ll"><b>11</b><div>Βάση Γνώσης — πώς βρίσκεις δικαιολογητικά σε 10 δευτερόλεπτα<span>Τα φίλτρα, και το κουμπί «Ρώτα»</span></div></div>
+  <div class="ll"><b>12</b><div>Η Λίτσα — πώς να τη ρωτάς σωστά<span>Τι ξέρει, τι δεν ξέρει, πότε να μην τη ρωτάς</span></div></div>
+</div>
+
+<div class="warn">
+  <b>Το δύσκολο δεν είναι ο κώδικας, είναι το κείμενο.</b> Τα κείμενα τα γράφω εγώ ως
+  αρχείο JSON έτοιμο για import — αλλά <b>πρέπει να τα διαβάσεις και να τα διορθώσεις</b>
+  όπου μιλάς εσύ διαφορετικά. Ένα εκπαιδευτικό κείμενο που δεν ακούγεται σαν εσένα,
+  δεν το εμπιστεύεται η ομάδα σου.
+</div>
+
+<h2><span class="num">6</span>Τι ΔΕΝ μπαίνει στην v1 — σκόπιμα</h2>
+<div class="panel">
+  <ul class="clean">
+    <li><b>Ποιος από την ομάδα έχει διαβάσει τι.</b> Ο πίνακας <code>kb_read</code> το κρατάει ήδη — απλά δεν φτιάχνουμε ακόμα οθόνη. Μπαίνει μετά, χωρίς migration.</li>
+    <li><b>Κουίζ / τεστ.</b> Θέλει βαθμολόγηση, σωστές απαντήσεις, «απέτυχες» — άλλη συζήτηση.</li>
+    <li><b>Βίντεο.</b> Το <code>body</code> είναι ήδη <code>wp_kses_post</code>, οπότε embed μπαίνει αργότερα χωρίς αλλαγή σχήματος.</li>
+    <li><b>Καθοδήγηση με βελάκια πάνω στην οθόνη (tour).</b> Απορρίφθηκε: σπάει σε κάθε αλλαγή UI και το wizard άλλαξε 3 φορές αυτόν τον μήνα.</li>
+    <li><b>Υποχρεωτική σειρά / κλείδωμα μαθημάτων.</b> Ο πωλητής είναι ενήλικας — αν θέλει να πάει κατευθείαν στο 9, πάει.</li>
+  </ul>
+</div>
+
+<h2><span class="num">7</span>Τι χρειάζομαι από σένα</h2>
+<div class="panel">
+  <ul class="clean">
+    <li><b>Έγκριση της μακέτας</b> ως έχει, ή πες τι αλλάζει.</li>
+    <li><b>Οι τίτλοι των 12</b> — σου κάνουν; Λείπει κάτι που ρωτάνε συνέχεια οι καινούριοι;</li>
+    <li>Μετά την έγκριση: υλοποίηση → <code>composer check:all</code> από σένα → CHANGELOG → commit.</li>
+  </ul>
+</div>
+
+<script>
+(function(){
+  var total = 6, done = 0;
+  var pt = document.getElementById('pt'), pf = document.getElementById('pf');
+  function paint(){
+    pt.textContent = done + ' από ' + total;
+    pf.style.width = Math.round(done / total * 100) + '%';
+  }
+  document.getElementById('lessons').addEventListener('click', function(e){
+    var b = e.target.closest('.readbtn');
+    if (!b) return;
+    var row = b.closest('.lesson');
+    var isDone = row.classList.toggle('done');
+    b.textContent = isDone ? '✓ Διαβάστηκε' : 'Το διάβασα';
+    done += isDone ? 1 : -1;
+    paint();
+  });
+  paint();
+})();
+</script>
+
+</div>
+</body>
+</html>

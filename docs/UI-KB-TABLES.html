@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Πίνακες σε καρτέλες — διόρθωση (§1.8)</title>
+<style>
+.light{
+  --n0:#ffffff;--bg:#f8f8f6;--surface:#ffffff;--surface-2:#fdfdfc;
+  --line-card:#e9e8e4;--line-soft:#f1f1ee;--ink:#2a2926;--muted:#6e6c66;
+  --navy-soft:#42413d;--radius:12px;
+}
+.dark{
+  --bg:#111110;--surface:#1a1a18;--surface-2:#1f1f1c;
+  --line-card:#2a2926;--line-soft:#232320;--ink:#f1f1ee;--muted:#a3a099;
+  --navy-soft:#dedcd7;--radius:12px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#f8f8f6;color:#2a2926;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding:30px 18px 70px}
+h1{font-size:23px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:#6e6c66;font-size:14px;margin-bottom:6px}
+.rule{background:#fcf2ec;color:#ab5506;display:inline-block;padding:6px 12px;
+  border-radius:8px;font-size:12.5px;font-weight:700;margin-bottom:26px}
+h2{font-size:17px;font-weight:800;margin:34px 0 10px}
+.cap{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+  color:#6e6c66;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:999px;display:inline-block}
+.bad{background:#c32b47}.good{background:#16c217}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.pair{grid-template-columns:1fr}}
+
+/* --- πραγματική καρτέλα Βάσης Γνώσης --- */
+.stage{background:var(--bg);padding:14px;border-radius:14px;border:1px solid var(--line-card)}
+.kbentry{background:var(--surface);border:1px solid var(--line-card);
+  border-radius:12px;overflow:hidden}
+.kbentry__head{padding:13px 16px;font-size:14px;font-weight:600;color:var(--ink)}
+.kbentry__body{padding:4px 18px 16px;font-size:14px;color:var(--navy-soft);
+  line-height:1.6;border-top:1px solid var(--line-soft)}
+.kbentry__body p{margin:8px 0}
+
+/* ΠΡΙΝ: σκέτο <table border="1"> όπως το βγάζει ο συντάκτης */
+.before table{border-collapse:collapse}
+.before td,.before th{border:1px solid;padding:2px}
+
+/* ΜΕΤΑ: η προτεινόμενη προσθήκη */
+.after .kbentry__body table{width:100%;border-collapse:separate;border-spacing:0;
+  margin:10px 0;font-size:13px;background:var(--surface);
+  border:1px solid var(--line-card);border-radius:var(--radius);overflow:hidden}
+.after .kbentry__body th{text-align:left;font-size:11px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+  padding:8px 12px;background:var(--bg);border:0;
+  border-bottom:1px solid var(--line-card);white-space:nowrap}
+.after .kbentry__body td{padding:9px 12px;border:0;
+  border-bottom:1px solid var(--line-soft);color:var(--navy-soft);vertical-align:top}
+.after .kbentry__body tr:last-child td{border-bottom:0}
+
+.note{background:#eafaea;border-left:3px solid #16c217;padding:12px 16px;
+  border-radius:0 10px 10px 0;margin:18px 0;font-size:13.5px;color:#42413d}
+.warn{background:#fcf2ec;border-left:3px solid #ab5506;padding:12px 16px;
+  border-radius:0 10px 10px 0;margin:18px 0;font-size:13.5px;color:#42413d}
+code{background:#f1f1ee;padding:1px 6px;border-radius:5px;font-size:12.5px}
+ul{margin:8px 0;padding-left:20px;font-size:14px}
+li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Πίνακες μέσα σε καρτέλες — διόρθωση</h1>
+<div class="sub">Energy CRM · 27/08/2026 · αφορά Βάση Γνώσης <em>και</em> Εκπαίδευση</div>
+<div class="rule">§1.8 — μικρή, αλλά είναι οπτική αλλαγή· θέλει το ναι σου</div>
+
+<h2>Τι συμβαίνει</h2>
+<p>Το <code>.ecrm-kbentry__body</code> δίνει ύφος σε <code>h1–h3</code>,
+<code>strong</code>, <code>ul/ol</code> και <code>p</code> — αλλά <strong>όχι σε
+<code>table</code></strong>. Όποιος πίνακας γράφεται από τον συντάκτη πέφτει στο
+default του browser. Σε σκούρα εμφάνιση αυτό βγαίνει με λευκές γραμμές, ακριβώς
+όπως στο screenshot σου.</p>
+<p>Το ίδιο θα ίσχυε και στα νέα μαθήματα, γιατί το
+<code>.ecrm-lesson__body</code> αντέγραψε το ίδιο σύνολο κανόνων.</p>
+
+<h2>Σκούρα εμφάνιση — όπως το είδες</h2>
+<div class="pair">
+  <div>
+    <div class="cap"><span class="dot bad"></span>Πριν</div>
+    <div class="stage dark before">
+      <div class="kbentry">
+        <div class="kbentry__head">Εγγυήσεις ΦΑΕΕ — Υφιστάμενοι Οικιακοί Πελάτες</div>
+        <div class="kbentry__body">
+          <table><tbody>
+            <tr><th>Οφειλές</th><th>Εγγύηση</th></tr>
+            <tr><td>Χωρίς οφειλές</td><td>30€</td></tr>
+            <tr><td>Με οφειλές</td><td>45€</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="cap"><span class="dot good"></span>Μετά</div>
+    <div class="stage dark after">
+      <div class="kbentry">
+        <div class="kbentry__head">Εγγυήσεις ΦΑΕΕ — Υφιστάμενοι Οικιακοί Πελάτες</div>
+        <div class="kbentry__body">
+          <table><tbody>
+            <tr><th>Οφειλές</th><th>Εγγύηση</th></tr>
+            <tr><td>Χωρίς οφειλές</td><td>30€</td></tr>
+            <tr><td>Με οφειλές</td><td>45€</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Ανοιχτή εμφάνιση — το ίδιο CSS</h2>
+<div class="pair">
+  <div>
+    <div class="cap"><span class="dot bad"></span>Πριν</div>
+    <div class="stage light before">
+      <div class="kbentry">
+        <div class="kbentry__head">Εγγυήσεις ΦΑΕΕ — Υφιστάμενοι Οικιακοί Πελάτες</div>
+        <div class="kbentry__body">
+          <table><tbody>
+            <tr><th>Οφειλές</th><th>Εγγύηση</th></tr>
+            <tr><td>Χωρίς οφειλές</td><td>30€</td></tr>
+            <tr><td>Με οφειλές</td><td>45€</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="cap"><span class="dot good"></span>Μετά</div>
+    <div class="stage light after">
+      <div class="kbentry">
+        <div class="kbentry__head">Εγγυήσεις ΦΑΕΕ — Υφιστάμενοι Οικιακοί Πελάτες</div>
+        <div class="kbentry__body">
+          <table><tbody>
+            <tr><th>Οφειλές</th><th>Εγγύηση</th></tr>
+            <tr><td>Χωρίς οφειλές</td><td>30€</td></tr>
+            <tr><td>Με οφειλές</td><td>45€</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Τι ακριβώς προστίθεται</h2>
+<ul>
+  <li>Πέντε κανόνες CSS στο <code>ecrm-app.css</code>, με στόχο το
+      <em>στοιχείο</em> <code>table/th/td</code> μέσα στα δύο σώματα καρτέλας.</li>
+  <li>Ίδιο ύφος με το υπάρχον <code>.ecrm-table</code> του kit — δεν εφευρίσκεται
+      νέα εμφάνιση πίνακα.</li>
+  <li><strong>Μηδέν νέο token, μηδέν νέο μέγεθος γραμματοσειράς.</strong></li>
+  <li>Το <code>border:0</code> στα κελιά ακυρώνει και το <code>border="1"</code>
+      που βάζει μόνος του ο συντάκτης — γι' αυτό φαίνονταν όλες οι γραμμές.</li>
+  <li>Το σώμα της καρτέλας παίρνει <code>overflow-x:auto</code>, ώστε ένας
+      φαρδύς πίνακας να κυλάει στο κινητό αντί να σπάει τη σελίδα.</li>
+</ul>
+
+<div class="note">
+<b>Γιατί στο στοιχείο και όχι σε class:</b> το kit έχει ήδη
+<code>.ecrm-table</code>, αλλά κανείς δεν πρόκειται να γράφει
+<code>class="ecrm-table"</code> μέσα στον συντάκτη του WordPress κάθε φορά.
+Το περιεχόμενο γράφεται από άνθρωπο σε editor, όχι από κώδικα.
+</div>
+
+<div class="warn">
+<b>Δεν το λέω bug-fix.</b> Οι πίνακες δεν είχαν <em>ποτέ</em> ύφος εδώ — δεν
+επαναφέρω παλιά σωστή συμπεριφορά, προσθέτω καινούρια. Γι' αυτό περνάει από
+έγκριση αντί να μπει κατευθείαν.
+</div>
+
+</div>
+</body>
+</html>
