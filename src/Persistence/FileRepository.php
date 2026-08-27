@@ -78,6 +78,56 @@ final class FileRepository
      * resolves inside the protected directory. The caller embeds it in a PDF,
      * so a tampered row would otherwise be a way to read a file off the disk.
      */
+    /**
+     * Τα αποθηκευμένα έγγραφα μιας αίτησης που έχει νόημα να διαβάσει το AI.
+     *
+     * Υπάρχει επειδή το /extract δεχόταν ΜΟΝΟ αρχεία που μόλις ανέβηκαν. Όταν
+     * τα έγγραφα τα στέλνει ο ίδιος ο πελάτης από τον «σύνδεσμό μου», κανείς
+     * δεν τα ξανανεβάζει -- και χωρίς αυτό ο πωλητής θα έβλεπε άδεια πεδία
+     * πάνω από φάκελο γεμάτο χαρτιά.
+     *
+     * Δύο φίλτρα, και τα δύο σκόπιμα:
+     *
+     * - **Μόνο τα ζητούμενα είδη.** Ο εξαγωγέας είναι γραμμένος για ταυτότητα
+     *   και λογαριασμό παρόχου. Το συμπληρωμένο έντυπο ή μια εξουσιοδότηση δεν
+     *   προσθέτουν πεδία· προσθέτουν κόστος κλήσης και θόρυβο στο μοντέλο.
+     * - **Μόνο διαδρομές μέσα στον προστατευμένο φάκελο.** Η διαδρομή έρχεται
+     *   από γραμμή βάσης και ο καλών στέλνει τα bytes σε ΕΞΩΤΕΡΙΚΟ API: χωρίς
+     *   τον έλεγχο, μια πειραγμένη γραμμή θα ήταν τρόπος να διαβαστεί
+     *   οποιοδήποτε αρχείο του διακομιστή. Ίδιος έλεγχος με το
+     *   latestPathOfKind(), για τον ίδιο ακριβώς λόγο.
+     *
+     * Η εμβέλεια ΔΕΝ ελέγχεται εδώ -- είναι ευθύνη του καλούντος, όπως και στο
+     * forContract().
+     *
+     * @param list<string> $kinds
+     * @param list<string> $mimes
+     *
+     * @return list<array{path: string, mime: string, kind: string}>
+     */
+    public function extractableForContract(int $contractId, array $kinds, array $mimes): array
+    {
+        $documents = [];
+
+        foreach ($this->forContract($contractId) as $row) {
+            $path = (string) ($row['path'] ?? '');
+            $mime = (string) ($row['mime'] ?? '');
+            $kind = (string) ($row['doc_kind'] ?? '');
+
+            if ($path === '' || ! in_array($kind, $kinds, true) || ! in_array($mime, $mimes, true)) {
+                continue;
+            }
+
+            if (! $this->storage->contains($path) || ! is_readable($path)) {
+                continue;
+            }
+
+            $documents[] = ['path' => $path, 'mime' => $mime, 'kind' => $kind];
+        }
+
+        return $documents;
+    }
+
     public function latestPathOfKind(int $contractId, string $kind): ?string
     {
         global $wpdb;

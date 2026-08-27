@@ -163,7 +163,7 @@ class ECRM_Intake {
 	// --- Η δημόσια υποβολή ----------------------------------------------------
 
 	public static function rest_submit( WP_REST_Request $req ): WP_REST_Response {
-		if ( class_exists( 'ECRM_RateLimit' ) && ! ECRM_RateLimit::allow( 'intake_submit', 8, 600 ) ) {
+		if ( class_exists( 'ECRM_RateLimit' ) && ! ECRM_RateLimit::allow( 'intake_submit', 4, 900 ) ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Πολλές προσπάθειες. Δοκιμάστε αργότερα.' ], 429 );
 		}
 
@@ -188,7 +188,48 @@ class ECRM_Intake {
 		}
 
 		global $wpdb;
-		$wpdb->insert( ECRM_DB::table( 'leads' ), [
+		$lt = ECRM_DB::table( 'leads' );
+
+		/*
+		 * Ιδεμποτεντία -- ΟΧΙ λήξη του συνδέσμου.
+		 *
+		 * Ο σύνδεσμος είναι σκόπιμα μόνιμος ανά πωλητή: τον στέλνει σε δεκάδες
+		 * πελάτες. Αν «καιγόταν» μετά την πρώτη υποβολή, ο δεύτερος πελάτης δεν
+		 * θα μπορούσε να τον χρησιμοποιήσει και ο πωλητής θα παρήγαγε καινούριο
+		 * κάθε φορά -- ακριβώς ό,τι απορρίφθηκε στον σχεδιασμό.
+		 *
+		 * Το πραγματικό κενό ήταν ότι κάθε refresh έφτιαχνε ΝΕΟ υποψήφιο (το
+		 * βρήκε ο ιδιοκτήτης, πρώτη ζωντανή δοκιμή). Εδώ η ίδια υποβολή --
+		 * ίδιος πωλητής, ίδιο κινητό, ακόμα «νέος», ακόμα αμετάτρεπτος --
+		 * ενώνεται με τον υπάρχοντα αντί να τον διπλασιάσει.
+		 *
+		 * Παρενέργεια που είναι χαρακτηριστικό: ο πελάτης που έστειλε τον
+		 * λογαριασμό και ξέχασε την ταυτότητα ξαναμπαίνει και τη στέλνει στον
+		 * ΙΔΙΟ υποψήφιο.
+		 *
+		 * Η απάντηση είναι πανομοιότυπη είτε βρέθηκε είτε φτιάχτηκε, οπότε
+		 * κανείς δεν μαθαίνει από έξω αν υπάρχει πελάτης με κάποιο τηλέφωνο.
+		 *
+		 * NOW() - INTERVAL και όχι ημερομηνία υπολογισμένη σε PHP: το
+		 * created_at το γράφει η MySQL με το δικό της ρολόι, και σύγκριση δύο
+		 * ρολογιών είναι ακριβώς η κατηγορία σφάλματος που έχει ήδη δαγκώσει
+		 * αυτό το plugin (HANDOVER §8).
+		 */
+		$existing = (int) $wpdb->get_var( $wpdb->prepare(
+			"SELECT id FROM {$lt}
+			  WHERE partner_user_id = %d AND phone = %s AND source = 'link'
+			    AND stage = 'new' AND contract_id IS NULL
+			    AND created_at > ( NOW() - INTERVAL 12 HOUR )
+			  ORDER BY id DESC LIMIT 1",
+			$uid,
+			$phone
+		) );
+
+		if ( $existing > 0 ) {
+			return new WP_REST_Response( [ 'ok' => true, 'ref' => self::lead_ref( $uid, $existing ) ], 200 );
+		}
+
+		$wpdb->insert( $lt, [
 			'partner_user_id' => $uid,
 			'name'            => $name,
 			'phone'           => $phone,
@@ -468,6 +509,26 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	<script>
 	(function () {
 		var REST = <?php echo wp_json_encode( $rest ); ?>;
+
+		/* Το refresh μετά την υποβολή έδειχνε ξανά άδεια φόρμα, και ο πελάτης
+		 * εύλογα ξαναέστελνε. Ευγένεια, ΟΧΙ μέτρο ασφαλείας -- το πραγματικό
+		 * μέτρο είναι η ιδεμποτεντία στον server, που ενώνει τη δεύτερη
+		 * υποβολή με τον ίδιο υποψήφιο αντί να φτιάχνει δεύτερο.
+		 *
+		 * sessionStorage και όχι localStorage: κρατά όσο η καρτέλα, δεν
+		 * αφήνει ίχνος στη συσκευή του πελάτη μετά. Σε τυλιγμένο try/catch --
+		 * σε ιδιωτική περιήγηση κάποιοι browsers πετούν και μόνο που το
+		 * αγγίζεις. */
+		var DONEKEY = 'ecrm_intake_done';
+		function remember() { try { sessionStorage.setItem(DONEKEY, '1'); } catch (e) {} }
+		function remembered() { try { return sessionStorage.getItem(DONEKEY) === '1'; } catch (e) { return false; } }
+
+		function showDone() {
+			document.getElementById('form').style.display = 'none';
+			document.getElementById('done').style.display = 'block';
+		}
+
+		if (remembered()) { showDone(); }
 		var files = { provider_bill: [], id_card: [] };
 		var picking = null;
 		var fi = document.getElementById('fi');
@@ -498,6 +559,36 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 			});
 		}
 
+		/* Σμίκρυνση ΠΡΙΝ το ανέβασμα, και δεν είναι καλλωπισμός.
+		 *
+		 * Φωτογραφία σύγχρονου κινητού είναι 4-8MB· σε base64 φουσκώνει κατά
+		 * 33% και ξεπερνά το προεπιλεγμένο post_max_size (8M) της PHP. Το
+		 * αίτημα τότε απορρίπτεται πριν καν φτάσει στο WordPress. Στα 1600px
+		 * το κείμενο ενός λογαριασμού παραμένει άνετα αναγνώσιμο, και το
+		 * αρχείο πέφτει 5-10 φορές -- που μετράει και στα δεδομένα του πελάτη.
+		 *
+		 * PDF και HEIC περνούν ως έχουν: το <img> δεν τα φορτώνει, οπότε η
+		 * onerror τα στέλνει αυτούσια και ο server τα δέχεται κανονικά. */
+		function shrink(file) {
+			if (file.type.indexOf('image/') !== 0 || file.type === 'image/heic') { return toDataUrl(file); }
+			return new Promise(function (res) {
+				var img = new Image();
+				var url = URL.createObjectURL(file);
+				img.onload = function () {
+					URL.revokeObjectURL(url);
+					var max = 1600, w = img.naturalWidth, h = img.naturalHeight;
+					if (w <= max && h <= max && file.size < 1200000) { toDataUrl(file).then(res); return; }
+					var s = Math.min(1, max / Math.max(w, h));
+					var cv = document.createElement('canvas');
+					cv.width = Math.round(w * s); cv.height = Math.round(h * s);
+					cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+					res(cv.toDataURL('image/jpeg', 0.82));
+				};
+				img.onerror = function () { URL.revokeObjectURL(url); toDataUrl(file).then(res); };
+				img.src = url;
+			});
+		}
+
 		document.getElementById('go').addEventListener('click', function () {
 			var go = this;
 			var name = document.getElementById('nm').value.trim();
@@ -524,19 +615,30 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 					return all.reduce(function (chain, item, i) {
 						return chain.then(function () {
 							say('Ανέβασμα ' + (i + 1) + ' από ' + all.length + '…', 'ok');
-							return toDataUrl(item.f).then(function (data) {
+							return shrink(item.f).then(function (data) {
 								return fetch(REST + '/file', {
 									method: 'POST',
 									headers: { 'Content-Type': 'application/json' },
 									body: JSON.stringify({ ref: d.ref, kind: item.k, data: data })
-								}).then(function (r) { return r.json(); });
+								});
+							}).then(function (r) {
+								/* Η πρώτη γραφή διάβαζε την απάντηση και ΔΕΝ την
+								 * κοίταζε ποτέ. Κάθε αποτυχία ανεβάσματος περνούσε
+								 * σιωπηλά και η σελίδα έλεγε «Τα λάβαμε» ενώ δεν
+								 * είχε αποθηκευτεί τίποτα. Το έπιασε ο ιδιοκτήτης
+								 * στην πρώτη ζωντανή δοκιμή, όχι κάποιο test:
+								 * αυτή η σελίδα δεν έχει καμία αυτόματη κάλυψη. */
+								if (r.status === 413) { throw new Error('Το αρχείο είναι πολύ μεγάλο για τον διακομιστή.'); }
+								return r.json().then(function (res) {
+									if (!res || !res.ok) { throw new Error((res && res.error) || 'Το αρχείο δεν ανέβηκε.'); }
+								});
 							});
 						});
 					}, Promise.resolve());
 				})
 				.then(function () {
-					document.getElementById('form').style.display = 'none';
-					document.getElementById('done').style.display = 'block';
+					remember();
+					showDone();
 				})
 				.catch(function (e) {
 					go.disabled = false;

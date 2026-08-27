@@ -17,15 +17,33 @@ namespace EnergyCRM\Http;
 
 use ECRM_Extractor;
 use ECRM_RateLimit;
+use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Infrastructure\ExtractionGate;
+use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\FileRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
 final class ExtractionController implements Controller
 {
-    public function __construct(private readonly ExtractionGate $gate)
-    {
+    public function __construct(
+        private readonly ExtractionGate $gate,
+        private readonly ScopeResolver $scopes,
+        private readonly ContractRepository $contracts,
+        private readonly FileRepository $files,
+    ) {
     }
+
+    /**
+     * Τα είδη εγγράφου που έχει νόημα να διαβάσει ο εξαγωγέας.
+     *
+     * Το prompt του είναι γραμμένο για ταυτότητα και λογαριασμό παρόχου. Ό,τι
+     * άλλο κρέμεται από μια αίτηση -- συμπληρωμένο έντυπο, εξουσιοδότηση --
+     * δεν προσθέτει πεδία, μόνο κόστος.
+     *
+     * @var list<string>
+     */
+    private const EXTRACTABLE_KINDS = ['id_card', 'provider_bill'];
 
     private const ALLOWED_MIMES = [
         'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf',
@@ -53,36 +71,63 @@ final class ExtractionController implements Controller
 
         $uploads = $request->get_file_params()['files'] ?? null;
 
+        /*
+         * Δεύτερη είσοδος: έγγραφα που είναι ΗΔΗ αποθηκευμένα.
+         *
+         * Ως τις 27/08 δεχόταν μόνο αρχεία που μόλις ανέβηκαν, και το σχόλιο
+         * στην κορυφή του αρχείου εξηγεί γιατί ήταν σωστό: τα έγγραφα δεν
+         * άγγιζαν ποτέ τον δίσκο. Ο «σύνδεσμός μου» άλλαξε την πραγματικότητα
+         * -- εκεί ο ΠΕΛΑΤΗΣ στέλνει τα χαρτιά του και αποθηκεύονται πριν καν
+         * υπάρξει αίτηση. Χωρίς αυτή τη διαδρομή, ο πωλητής έβλεπε άδεια πεδία
+         * πάνω από γεμάτο φάκελο και θα έπρεπε να τα ξανανεβάσει με το χέρι.
+         *
+         * Η ασφάλεια δεν χαλαρώνει: το contract_id ελέγχεται με την εμβέλεια
+         * του χρήστη, και οι διαδρομές περνούν από τον έλεγχο περιορισμού του
+         * FileRepository πριν διαβαστεί ένα byte.
+         */
         if (empty($uploads)) {
-            return new WP_REST_Response(['ok' => false, 'error' => 'Δεν ανέβηκαν αρχεία.'], 400);
-        }
+            $contractId = (int) $request->get_param('contract_id');
 
-        $kinds     = (array) $request->get_param('kinds');
-        $documents = [];
-
-        foreach (self::normalise($uploads) as $index => $upload) {
-            if (($upload['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-                continue;
+            if ($contractId <= 0) {
+                return new WP_REST_Response(['ok' => false, 'error' => 'Δεν ανέβηκαν αρχεία.'], 400);
             }
 
-            $mime = self::mimeOf($upload);
+            $documents = $this->storedDocuments($contractId);
 
-            if ($mime === null) {
-                continue;
+            if ($documents === []) {
+                return new WP_REST_Response(
+                    ['ok' => false, 'error' => 'Δεν βρέθηκαν έγγραφα πελάτη σε αυτή την αίτηση.'],
+                    404
+                );
+            }
+        } else {
+            $kinds     = (array) $request->get_param('kinds');
+            $documents = [];
+
+            foreach (self::normalise($uploads) as $index => $upload) {
+                if (($upload['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+                    continue;
+                }
+
+                $mime = self::mimeOf($upload);
+
+                if ($mime === null) {
+                    continue;
+                }
+
+                $documents[] = [
+                    'path' => $upload['tmp_name'],
+                    'mime' => $mime,
+                    'kind' => sanitize_text_field((string) ($kinds[$index] ?? 'other')),
+                ];
             }
 
-            $documents[] = [
-                'path' => $upload['tmp_name'],
-                'mime' => $mime,
-                'kind' => sanitize_text_field((string) ($kinds[$index] ?? 'other')),
-            ];
-        }
-
-        if ($documents === []) {
-            return new WP_REST_Response(
-                ['ok' => false, 'error' => 'Μη υποστηριζόμενα αρχεία (μόνο PDF/JPG/PNG).'],
-                400
-            );
+            if ($documents === []) {
+                return new WP_REST_Response(
+                    ['ok' => false, 'error' => 'Μη υποστηριζόμενα αρχεία (μόνο PDF/JPG/PNG).'],
+                    400
+                );
+            }
         }
 
         // Everything above is cheap. Past this line a worker is held for as
@@ -110,6 +155,28 @@ final class ExtractionController implements Controller
         }
 
         return new WP_REST_Response($result, $result['ok'] ? 200 : 502);
+    }
+
+    /**
+     * Έγγραφα ήδη αποθηκευμένα σε μια αίτηση που ο χρήστης έχει δικαίωμα να δει.
+     *
+     * Η εμβέλεια ελέγχεται ΕΔΩ και όχι στο UI: το contract_id έρχεται από τον
+     * browser και δεν αποδεικνύει τίποτα. Αίτηση εκτός εμβέλειας απαντά όπως
+     * και ανύπαρκτη -- δεν επιβεβαιώνεται καν ότι υπάρχει.
+     *
+     * @return list<array{path: string, mime: string, kind: string}>
+     */
+    private function storedDocuments(int $contractId): array
+    {
+        if ($this->contracts->find($contractId, $this->scopes->forCurrentUser()) === null) {
+            return [];
+        }
+
+        return $this->files->extractableForContract(
+            $contractId,
+            self::EXTRACTABLE_KINDS,
+            self::ALLOWED_MIMES
+        );
     }
 
     /**
