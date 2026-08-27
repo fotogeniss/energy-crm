@@ -575,6 +575,12 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			if (!c) return;
 			state.contract_id = parseInt(c.id, 10) || 0;
 			state.customer_id = parseInt(c.customer_id, 10) || 0;
+			/* Το «Εξαγωγή με AI» γεννιέται disabled στο markup και το ξεκλειδώνει
+			 * ΜΟΝΟ η renderFiles(), που ως τώρα έτρεχε μόνο όταν άλλαζαν αρχεία.
+			 * Σε επεξεργασία υπάρχουσας αίτησης δεν έτρεχε ποτέ, οπότε το κουμπί
+			 * έμενε κλειδωμένο και η εξαγωγή από ΑΠΟΘΗΚΕΥΜΕΝΑ έγγραφα -- ολόκληρο
+			 * το νόημα του «συνδέσμου μου» -- ήταν απρόσιτη. */
+			renderFiles();
 			setStage(c.status);
 			setChip('energy_type', c.energy_type); state.energy_type = c.energy_type || 'power';
 			setChip('category', c.category); state.category = c.category || 'home';
@@ -617,6 +623,34 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// ώστε να δει πρώτα πάροχο και πρόγραμμα, με ένα κλικ για οπουδήποτε.
 			state.wmax = WSTEPS; goStep(1, false);
 			root.scrollIntoView ? root.scrollIntoView({ behavior: 'smooth', block: 'start' }) : window.scrollTo(0, 0);
+
+			/* Αυτόματη ανάγνωση των εγγράφων που έστειλε ο ΠΕΛΑΤΗΣ.
+			 *
+			 * Στη δημόσια υποβολή το AI δεν τρέχει ποτέ -- ανώνυμος δεν ξοδεύει
+			 * credits. Εδώ όμως είμαστε στο άλλο άκρο: συνδεδεμένος πωλητής που
+			 * μόλις άνοιξε την αίτηση. Το να πατάει κουμπί για κάτι που θα
+			 * πατούσε ούτως ή άλλως είναι χαμένος χρόνος, και ο χρόνος ήταν
+			 * όλος ο λόγος που φτιάχτηκε ο «σύνδεσμός μου».
+			 *
+			 * ΔΥΟ φύλακες κόστους, γιατί η κλήση πληρώνεται:
+			 *
+			 * - Τρέχει μόνο αν το ΑΦΜ είναι ΚΕΝΟ. Γεμάτη αίτηση δεν έχει τίποτα
+			 *   να κερδίσει από δεύτερη ανάγνωση.
+			 * - Αν η αίτηση δεν έχει έγγραφα πελάτη, ο server απαντά 404 πριν
+			 *   φτάσει σε μοντέλο: ένα ταξίδι δικτύου, μηδέν κόστος.
+			 *
+			 * ΜΟΝΟ το ΑΦΜ, και όχι «ΑΦΜ ΚΑΙ Επώνυμο» όπως ήταν στην πρώτη
+			 * γραφή: η μετατροπή υποψηφίου γράφει ΠΑΝΤΑ όνομα/επώνυμο από το
+			 * lead, οπότε το Επώνυμο δεν είναι ποτέ κενό -- και ο φύλακας
+			 * έκοβε την αυτόματη εξαγωγή ακριβώς στην περίπτωση για την οποία
+			 * φτιάχτηκε. Το ΑΦΜ αντίθετα δεν το γράφει καμία διαδρομή πλην της
+			 * εξαγωγής ή του χεριού, άρα «κενό ΑΦΜ» σημαίνει πράγματι «δεν έχει
+			 * διαβαστεί τίποτα ακόμα».
+			 *
+			 * Με auto=true, ώστε η setField() να μην πατάει ό,τι υπάρχει ήδη. */
+			if (state.contract_id && !readField('afm')) {
+				setTimeout(function () { runExtraction(true); }, 400);
+			}
 		}
 
 		function resetForm() {
@@ -874,7 +908,10 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 					if (!d || !d.ok) {
 						statusEl.textContent = '';
 						// A failed automatic pass may be retried by the button.
-						if (auto) { extractedFor = ''; }
+						// Σιωπηλά: η αυτόματη διαδρομή τρέχει χωρίς να τη ζητήσει
+						// κανείς, και «αίτηση χωρίς έγγραφα πελάτη» είναι η
+						// κανονική περίπτωση, όχι σφάλμα που αξίζει μήνυμα.
+						if (auto) { extractedFor = ''; return; }
 						toast((d && d.error) || 'Η εξαγωγή απέτυχε.', false);
 						return;
 					}
@@ -904,7 +941,10 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				})
 				.catch(function () {
 					statusEl.textContent = '';
-					if (auto) { extractedFor = ''; }
+					if (auto) { extractedFor = ''; return; }
+					// Σιωπηλά στην αυτόματη διαδρομή: τρέχει χωρίς να τη ζητήσει
+					// κανείς, και «αίτηση χωρίς έγγραφα» δεν είναι σφάλμα του
+					// χρήστη -- είναι η κανονική περίπτωση.
 					toast('Σφάλμα δικτύου στην εξαγωγή.', false);
 				})
 				.finally(function () {

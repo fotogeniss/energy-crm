@@ -120,7 +120,13 @@ final class ControllerFactory
 
             // Tools.
             new ImportController(),
-            new ExtractionController(Services::extractionGate(), $scope, Services::contracts(), Services::files()),
+            new ExtractionController(
+                Services::extractionGate(),
+                $scope,
+                Services::contracts(),
+                Services::files(),
+                Services::customers()
+            ),
             new VatLookupController(),
             new QuoteController(),
         ];
