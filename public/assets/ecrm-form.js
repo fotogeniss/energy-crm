@@ -771,7 +771,9 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// it re-arms the automatic pass exactly like adding a file does.
 			ul.querySelectorAll('.ecrm-kind').forEach(function (s) { s.addEventListener('change', function () { state.files[this.getAttribute('data-i')].kind = this.value; scheduleExtraction(); }); });
 			ul.querySelectorAll('.ecrm-fileitem__rm').forEach(function (b) { b.addEventListener('click', function () { state.files.splice(parseInt(this.getAttribute('data-i'), 10), 1); renderFiles(); }); });
-			extractBtn.disabled = state.files.length === 0;
+			// Ενεργό και χωρίς νεοδιαλεγμένα αρχεία, όταν η αίτηση υπάρχει ήδη:
+			// τα έγγραφα μπορεί να τα έστειλε ο ΠΕΛΑΤΗΣ από τον δημόσιο σύνδεσμο.
+			extractBtn.disabled = state.files.length === 0 && !state.contract_id;
 			scheduleExtraction();
 		}
 
@@ -806,6 +808,9 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// Identity of the current document set, so an automatic pass never
 		// repeats over files it has already read.
 		function filesSignature() {
+			// Χωρίς νεοδιαλεγμένα αρχεία, ταυτότητα του συνόλου είναι η ίδια η
+			// αίτηση: τα έγγραφα κάθονται ήδη στον διακομιστή.
+			if (!state.files.length) { return state.contract_id ? 'contract:' + state.contract_id : ''; }
 			return state.files.map(function (i) {
 				return i.file.name + ':' + i.file.size + ':' + i.kind;
 			}).join('|');
@@ -821,7 +826,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		}
 
 		function runExtraction(auto) {
-			if (!state.files.length || extractionRunning) return;
+			if ((!state.files.length && !state.contract_id) || extractionRunning) return;
 			var signature = filesSignature();
 			if (auto && signature === extractedFor) return;
 			extractionRunning = true;
@@ -837,7 +842,15 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			var waited = 0;
 			function send() {
 				var fd = new FormData();
-				state.files.forEach(function (item) { fd.append('files[]', item.file); fd.append('kinds[]', item.kind); });
+				if (state.files.length) {
+					state.files.forEach(function (item) { fd.append('files[]', item.file); fd.append('kinds[]', item.kind); });
+				} else {
+					/* Καμία επιλογή αρχείων: τα έγγραφα είναι ήδη στον διακομιστή
+					 * -- τα έστειλε ο πελάτης από τον «σύνδεσμό μου» και
+					 * ακολούθησαν στη μετατροπή. Στέλνεται μόνο το id· ο server
+					 * ελέγχει την εμβέλεια και διαβάζει από τον δίσκο. */
+					fd.append('contract_id', String(state.contract_id));
+				}
 				return fetch(api('/extract'), { method: 'POST', headers: headers(false), body: fd })
 					.then(function (r) { return r.json(); })
 					.then(function (d) {
@@ -896,7 +909,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				})
 				.finally(function () {
 					extractionRunning = false;
-					extractBtn.disabled = state.files.length === 0;
+					extractBtn.disabled = state.files.length === 0 && !state.contract_id;
 					extractBtn.classList.remove('is-loading');
 				});
 		}
