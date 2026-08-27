@@ -10,6 +10,7 @@
  *   files          — uploaded documents linked to a contract
  *   kb_entries     — knowledge base + τα μαθήματα της «Εκπαίδευσης» (section=training)
  *   kb_read        — ποιος χρήστης δήλωσε ότι διάβασε ποιο μάθημα
+ *   leads          — υποψήφιοι· και όσοι έρχονται μόνοι τους από τον «σύνδεσμό μου»
  *   events         — audit/status-history log per contract
  *   assistant_messages — Λίτσα assistant conversation, per user (build queue 14)
  *
@@ -25,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '18';
+	const DB_VERSION = '19';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -191,9 +192,19 @@ class ECRM_DB {
 		// --- files ----------------------------------------------------------
 		// attachment_id: WP media id, for documents still in the library
 		// doc_kind:      id_card|provider_bill|other
+		/*
+		 * Το lead_id προστέθηκε 27/08 μαζί με τον «σύνδεσμό μου»: ο πελάτης
+		 * ανεβάζει έγγραφα ΠΡΙΝ υπάρξει σύμβαση, οπότε το αρχείο κρέμεται από
+		 * τον υποψήφιο. Στη μετατροπή σε αίτηση γεμίζει το contract_id και το
+		 * lead_id ΜΕΝΕΙ -- η προέλευση δεν σβήνεται: φαίνεται ποια έγγραφα τα
+		 * έφερε ο ίδιος ο πελάτης και ποια ο πωλητής.
+		 *
+		 * Δεν χρειάστηκε να γίνει nullable το contract_id. Ήταν ήδη.
+		 */
 		dbDelta( "CREATE TABLE {$p}files (
 			id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			contract_id BIGINT UNSIGNED NULL,
+			lead_id     BIGINT UNSIGNED NULL,
 			attachment_id BIGINT UNSIGNED NULL,
 			doc_kind    VARCHAR(24) NOT NULL DEFAULT 'other',
 			filename    VARCHAR(255) NULL,
@@ -201,7 +212,8 @@ class ECRM_DB {
 			path        VARCHAR(500) NULL,
 			created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
-			KEY contract_id (contract_id)
+			KEY contract_id (contract_id),
+			KEY lead_id (lead_id)
 		) {$charset};" );
 
 		// --- commission rules ----------------------------------------------
@@ -279,6 +291,13 @@ class ECRM_DB {
 		// source:      phone|chatbot|referral|walk_in|social|other
 		// energy_type: power|gas|mobile|'' (όλα)
 		// stage:       new|contacted|callback|qualified|won|lost
+		/*
+		 * consent_at / consent_ip: μόνο για υποψηφίους που ήρθαν από τον
+		 * δημόσιο «σύνδεσμό μου». Ιδιώτης στέλνει ταυτότητα μέσα από δημόσια
+		 * σελίδα -- η συναίνεση είναι νομικό τεκμήριο, όχι checkbox, οπότε
+		 * παίρνει δικές της στήλες αντί να χωθεί στο notes. Ίδιο σκεπτικό με
+		 * τα signed_at/signed_ip της σύμβασης.
+		 */
 		dbDelta( "CREATE TABLE {$p}leads (
 			id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			partner_user_id BIGINT UNSIGNED NULL,
@@ -293,6 +312,8 @@ class ECRM_DB {
 			notes         LONGTEXT NULL,
 			contract_id   BIGINT UNSIGNED NULL,
 			lost_reason   VARCHAR(160) NULL,
+			consent_at    DATETIME NULL,
+			consent_ip    VARCHAR(64) NULL,
 			created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),

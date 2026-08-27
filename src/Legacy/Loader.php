@@ -59,6 +59,7 @@ final class Loader
             'public/class-ecrm-shortcodes.php',
             'public/class-ecrm-app.php',
             'public/class-ecrm-tracking.php',
+            'public/class-ecrm-intake.php',
         ];
     }
 
@@ -86,6 +87,7 @@ final class Loader
             'ECRM_Shortcodes',
             'ECRM_App',
             'ECRM_Tracking',
+            'ECRM_Intake',
         ];
     }
 
