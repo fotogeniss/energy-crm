@@ -379,6 +379,14 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-timeline li:not(:last-child)::after { content: ""; position: absolute; left: 5px; top: 14px; bottom: 0; width: 2px; background: var(--line); }
 .ecrm-timeline__dot { width: 12px; height: 12px; flex: 0 0 12px; border-radius: 50%; background: var(--amber); margin-top: 2px; z-index: 1; box-shadow: 0 0 0 3px var(--accent-wash); }
 .ecrm-timeline__txt { font-size: var(--fs-14); color: var(--ink); font-weight: 500; }
+/* Το μήνυμα ενός γεγονότος -- σχόλιο παρόχου, λόγος μαζικής αλλαγής, η
+   εξήγηση του AutoProcess. Υπήρχε ήδη στα δεδομένα εδώ και μήνες σε πολλές
+   διαδρομές γραφής και δεν το έδειχνε καμία οθόνη -- διορθώθηκε 27/08/2026
+   (docs/CHANGELOG.md). Δική του γραμμή, ανάμεσα στην ετικέτα και την ώρα:
+   ελεύθερο κείμενο από πάροχο ή συνεργάτη δεν πρέπει να μοιάζει με το
+   «από → προς» που παράγει ο ίδιος ο κώδικας. */
+.ecrm-timeline__note { font-size: var(--fs-12-5); color: var(--muted); margin-top: 3px;
+	background: var(--surface-track); border-radius: 6px; padding: 5px 8px; }
 .ecrm-timeline__time { font-size: var(--fs-12); color: var(--muted); margin-top: 2px; }
 /* «Ποιος» -- build queue 09/10, docs/UI-TIMELINE-ACTOR.html (§1.8, εγκρίθηκε
    25/08). Δική του γραμμή κάτω από την ώρα, όχι δίπλα της: σε στενή οθόνη

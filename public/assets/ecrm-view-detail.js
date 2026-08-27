@@ -183,12 +183,25 @@ function renderDetail(view, d) {
 			var label = e.type === 'status_change'
 				? (statuses[e.from_status] || e.from_status || '—') + ' → ' + (statuses[e.to_status] || e.to_status || '—')
 				: (e.message || e.type);
+			/* Το `message` ενός status_change γράφεται εδώ και μήνες σε πολλές
+			 * διαδρομές -- χειροκίνητο σχόλιο αλλαγής, «Μαζική αλλαγή
+			 * κατάστασης», η εξήγηση του AutoProcess, το IP της ηλεκτρονικής
+			 * υπογραφής, τώρα και το σχόλιο του παρόχου από την εισαγωγή Excel
+			 * -- αλλά καμία οθόνη δεν το έδειχνε ποτέ: η ετικέτα από πάνω παίρνει
+			 * ΜΟΝΟ το βέλος «από → προς». Δεν ήταν σχεδιαστική επιλογή, ήταν
+			 * κενό (27/08/2026, docs/CHANGELOG.md). Δική του γραμμή, ΚΑΤΩ από
+			 * την ετικέτα και όχι μέσα της: το «από → προς» το παράγει ο ίδιος ο
+			 * κώδικας, το μήνυμα το γράφει άνθρωπος ή πάροχος -- δεν πρέπει να
+			 * μοιάζουν το ίδιο πράγμα. */
+			var note = (e.type === 'status_change' && e.message) ? e.message : '';
 			var who = e.actor
 				? (e.actor === 'Σύστημα'
 					? '<div class="ecrm-timeline__who"><span class="ecrm-timeline__whoname is-sys">' + esc(e.actor) + '</span></div>'
 					: '<div class="ecrm-timeline__who"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(e.actor) + '">' + esc(initials(e.actor)) + '</span><span class="ecrm-timeline__whoname">' + esc(e.actor) + '</span></div>')
 				: '';
-			return '<li><span class="ecrm-timeline__dot"></span><div><div class="ecrm-timeline__txt">' + esc(label) + '</div><div class="ecrm-timeline__time">' + timeAgo(e.created_at) + '</div>' + who + '</div></li>';
+			return '<li><span class="ecrm-timeline__dot"></span><div><div class="ecrm-timeline__txt">' + esc(label) + '</div>' +
+				(note ? '<div class="ecrm-timeline__note">' + esc(note) + '</div>' : '') +
+				'<div class="ecrm-timeline__time">' + timeAgo(e.created_at) + '</div>' + who + '</div></li>';
 		}).join('') + '</ul>'
 		: '<div class="ecrm-empty">Καμία καταγραφή.</div>';
 

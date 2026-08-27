@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Επιστροφή κατάστασης από τον πάροχο — μακέτα §1.8</title>
+<style>
+:root{
+--n0:#ffffff;--n25:#fdfdfc;--n50:#f7f7f5;--n100:#f1f1ee;--n150:#e9e8e4;--n200:#dedcd7;
+--n300:#c6c4bd;--n400:#a3a099;--n500:#6e6c66;--n700:#42413d;--n800:#2a2926;--n900:#1a1a18;
+--p50:#eafaea;--p200:#a5eba7;--p400:#16c217;--p700:#0b690c;
+--bg:var(--n50);--surface:var(--n0);--surface-track:var(--n150);--line:var(--n200);
+--line-card:var(--n150);--ink:var(--n800);--muted:var(--n500);--navy:var(--n900);
+--amber:var(--p400);--accent-wash:var(--p50);--accent-ink:var(--p700);--accent-soft:var(--p200);
+--radius:12px;--err:#c32b47;--err-bg:#fdeaea;
+}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]){
+--bg:#111110;--surface:#1a1a18;--surface-track:#2a2926;--line:#2a2926;--line-card:#2a2926;
+--ink:#f1f1ee;--muted:#a3a099;--navy:#f8f8f6;--accent-wash:#0e2a10;--accent-ink:#6bdd6d;
+--accent-soft:#0b690c;--err:#ff8fa3;--err-bg:#3a1620;
+}}
+:root[data-theme="dark"]{
+--bg:#111110;--surface:#1a1a18;--surface-track:#2a2926;--line:#2a2926;--line-card:#2a2926;
+--ink:#f1f1ee;--muted:#a3a099;--navy:#f8f8f6;--accent-wash:#0e2a10;--accent-ink:#6bdd6d;
+--accent-soft:#0b690c;--err:#ff8fa3;--err-bg:#3a1620;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+font-family:Manrope,Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+line-height:1.55;padding:28px 20px 80px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:26px;font-weight:800;letter-spacing:-.01em;margin:0 0 6px}
+.lede{color:var(--muted);font-size:15px;margin:0 0 8px;max-width:70ch}
+.meta{font-size:12px;color:var(--muted);border-top:1px solid var(--line-card);
+padding-top:10px;margin-top:14px}
+h2{font-size:19px;font-weight:800;margin:38px 0 4px;letter-spacing:-.01em}
+h2 .tag{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+color:var(--accent-ink);background:var(--accent-wash);border:1px solid var(--accent-soft);
+border-radius:99px;padding:2px 8px;vertical-align:middle;margin-inline-end:8px}
+h3{font-size:14px;font-weight:800;margin:0 0 10px;letter-spacing:.04em;
+text-transform:uppercase;color:var(--muted)}
+p.why{color:var(--muted);font-size:14px;margin:0 0 16px;max-width:78ch}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:820px){.cols{grid-template-columns:1fr}}
+.pane{background:var(--surface);border:1px solid var(--line-card);border-radius:var(--radius);
+padding:16px 18px 18px}
+.pane--before{opacity:.92}
+.pane--after{border-color:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-wash)}
+.step{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+color:var(--muted);margin:0 0 12px}
+ul.tl{list-style:none;margin:0;padding:0}
+ul.tl li{display:flex;gap:12px;padding:0 0 16px;position:relative}
+ul.tl li:not(:last-child)::after{content:"";position:absolute;left:5px;top:14px;bottom:0;
+width:2px;background:var(--line)}
+.dot{width:12px;height:12px;flex:0 0 12px;border-radius:50%;background:var(--amber);
+margin-top:3px;z-index:1;box-shadow:0 0 0 3px var(--accent-wash)}
+.txt{font-size:14px;color:var(--ink);font-weight:500}
+.time{font-size:12px;color:var(--muted);margin-top:2px}
+.who{display:inline-flex;align-items:center;gap:5px;margin-top:5px}
+.whoname{font-size:11px;color:var(--muted);font-weight:600}
+.whoname.sys{font-style:italic;font-weight:500}
+.mark{width:16px;height:16px;flex:0 0 16px;border-radius:50%;display:grid;place-items:center;
+font-size:9px;font-weight:800;background:var(--surface-track);color:var(--ink)}
+.said{margin-top:6px;font-size:13px;color:var(--ink);background:var(--surface-track);
+border-inline-start:3px solid var(--accent-soft);border-radius:0 8px 8px 0;padding:7px 10px}
+.said b{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+color:var(--muted);display:block;margin-bottom:2px}
+.said.is-bad{border-inline-start-color:var(--err);background:var(--err-bg);color:var(--err)}
+.said.is-bad b{color:var(--err);opacity:.8}
+.gone{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:start;font-size:10.5px;font-weight:800;letter-spacing:.06em;
+text-transform:uppercase;color:var(--muted);padding:0 8px 8px 0;border-bottom:1px solid var(--line-card)}
+td{padding:8px 8px 8px 0;border-bottom:1px solid var(--line-card);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.sel{display:inline-block;min-width:180px;border:1px solid var(--line);border-radius:8px;
+padding:6px 9px;background:var(--surface);font-size:13px;color:var(--ink)}
+.sel.empty{color:var(--muted)}
+.sel::after{content:" ▾";color:var(--muted)}
+.row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-card)}
+.row:last-child{border-bottom:0}
+.row__label{flex:0 0 190px;font-size:12.5px;color:var(--muted);font-weight:600}
+.new{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;
+text-transform:uppercase;color:var(--accent-ink);background:var(--accent-wash);
+border:1px solid var(--accent-soft);border-radius:99px;padding:1px 7px;margin-inline-start:8px}
+.banner{display:flex;gap:10px;align-items:flex-start;background:var(--accent-wash);
+border:1px solid var(--accent-soft);border-radius:10px;padding:10px 12px;margin-bottom:14px;
+font-size:13px;color:var(--ink)}
+.banner b{display:block;font-size:12px;color:var(--accent-ink)}
+.banner .lnk{color:var(--accent-ink);text-decoration:underline;font-size:12px;
+white-space:nowrap;margin-inline-start:auto}
+.note{background:var(--surface);border:1px solid var(--line-card);border-inline-start:3px solid var(--amber);
+border-radius:0 10px 10px 0;padding:12px 16px;margin:18px 0;font-size:14px}
+.note b{display:block;margin-bottom:4px}
+.note ul{margin:8px 0 0;padding-inline-start:20px;color:var(--muted);font-size:13.5px}
+.note li{margin-bottom:5px}
+.q{background:var(--surface);border:1px solid var(--line-card);border-radius:var(--radius);
+padding:16px 18px;margin-top:14px}
+.q ol{margin:8px 0 0;padding-inline-start:20px}
+.q li{margin-bottom:10px;font-size:14px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+background:var(--surface-track);border-radius:5px;padding:1px 5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Επιστροφή κατάστασης από τον πάροχο</h1>
+<p class="lede">Μακέτα κατά §1.8, προς έγκριση πριν γραφτεί κώδικας. Δύο αλλαγές πάνω
+στη ροή «Εισαγωγή Excel παρόχου» που <strong>υπάρχει ήδη ολόκληρη</strong>: το Β κρατά
+τα λόγια του παρόχου, το Α θυμάται την αντιστοίχιση.</p>
+<p class="meta">27/08/2026 · Δύο ξεχωριστά commit, Β πρώτα · Καμία αλλαγή σχήματος βάσης
+στο Β — η στήλη <code>events.message</code> υπάρχει και γράφεται ήδη</p>
+
+<div class="note">
+<b>Τι μετρήθηκε πρώτα, και άλλαξε την πρόταση</b>
+Η ροή δεν λείπει. Το <code>/import/parse</code> διαβάζει xlsx/csv, βρίσκει μόνο του τις
+στήλες, η προεπισκόπηση σέβεται τον γράφο μεταβάσεων, και το <code>apply</code> περνά από
+<code>ContractLifecycle::moveTo()</code> — ειδοποίηση, SMS, <code>AutoProcess</code>.
+<ul>
+<li>Το <code>message</code> κάθε αλλαγής κατάστασης <strong>δεν εμφανίζεται πουθενά</strong>:
+στο <code>ecrm-view-detail.js:183-185</code> το <code>status_change</code> δείχνει μόνο
+«από → προς». Το σταθερό «Ενημέρωση από Excel παρόχου» γράφεται εδώ και μήνες και δεν το
+έχει δει ποτέ κανείς.</li>
+<li>Το <code>importState.statusMap</code> χτίζεται από την αρχή σε κάθε εισαγωγή, με
+ευρετικές του <code>guessStatus()</code>. Τίποτα δεν αποθηκεύεται ανά πάροχο.</li>
+</ul>
+</div>
+
+<h2><span class="tag">Β</span>Τα λόγια του παρόχου φτάνουν στην καρτέλα</h2>
+<p class="why">Ο πάροχος γράφει τον λόγο μέσα στο ίδιο αρχείο, σε διπλανή στήλη. Σήμερα τον
+πετάμε. Ο πωλητής βλέπει «Ακυρώθηκε» και σηκώνει τηλέφωνο για να μάθει γιατί.</p>
+
+<div class="cols">
+  <div class="pane pane--before">
+    <div class="step">Πριν · Ιστορικό ροής</div>
+    <ul class="tl">
+      <li><span class="dot"></span><div>
+        <div class="txt">Υπογράφηκε → Στάλθηκε στον πάροχο</div>
+        <div class="time">πριν 6 μέρες</div>
+        <div class="who"><span class="mark">ΚΠ</span><span class="whoname">Κώστας Παππάς</span></div>
+      </div></li>
+      <li><span class="dot"></span><div>
+        <div class="txt">Στάλθηκε στον πάροχο → Ακυρώθηκε</div>
+        <div class="time">πριν 2 ώρες</div>
+        <div class="who"><span class="mark">ΚΠ</span><span class="whoname">Κώστας Παππάς</span></div>
+      </div></li>
+    </ul>
+    <div class="gone">Γιατί ακυρώθηκε; Δεν το λέει πουθενά — και ο πάροχος το είχε γράψει.</div>
+  </div>
+
+  <div class="pane pane--after">
+    <div class="step">Μετά · Ιστορικό ροής</div>
+    <ul class="tl">
+      <li><span class="dot"></span><div>
+        <div class="txt">Υπογράφηκε → Στάλθηκε στον πάροχο</div>
+        <div class="time">πριν 6 μέρες</div>
+        <div class="who"><span class="mark">ΚΠ</span><span class="whoname">Κώστας Παππάς</span></div>
+      </div></li>
+      <li><span class="dot"></span><div>
+        <div class="txt">Στάλθηκε στον πάροχο → Ακυρώθηκε</div>
+        <div class="said is-bad"><b>Ο πάροχος είπε</b>ΑΠΟΡΡΙΨΗ — ο αριθμός μετρητή δεν
+        αντιστοιχεί στην παροχή</div>
+        <div class="time">πριν 2 ώρες</div>
+        <div class="who"><span class="whoname sys">Εισαγωγή Excel · Κώστας Παππάς</span></div>
+      </div></li>
+    </ul>
+    <div class="gone">Ο πωλητής ξέρει τι να διορθώσει, χωρίς τηλέφωνο.</div>
+  </div>
+</div>
+
+<h3 style="margin-top:26px">Και μία γραμμή παραπάνω στην αντιστοίχιση στηλών</h3>
+<div class="cols">
+  <div class="pane pane--before">
+    <div class="step">Πριν · 1 · Αντιστοίχιση στηλών</div>
+    <div class="row"><span class="row__label">Αριθμός παροχής</span>
+      <span class="sel">ΑΡ. ΠΑΡΟΧΗΣ</span></div>
+    <div class="row"><span class="row__label">Κατάσταση</span>
+      <span class="sel">ΚΑΤΑΣΤΑΣΗ ΑΙΤΗΣΗΣ</span></div>
+  </div>
+  <div class="pane pane--after">
+    <div class="step">Μετά · 1 · Αντιστοίχιση στηλών</div>
+    <div class="row"><span class="row__label">Αριθμός παροχής</span>
+      <span class="sel">ΑΡ. ΠΑΡΟΧΗΣ</span></div>
+    <div class="row"><span class="row__label">Κατάσταση</span>
+      <span class="sel">ΚΑΤΑΣΤΑΣΗ ΑΙΤΗΣΗΣ</span></div>
+    <div class="row"><span class="row__label">Σχόλιο / αιτία <span class="new">νέο</span></span>
+      <span class="sel">ΠΑΡΑΤΗΡΗΣΕΙΣ</span></div>
+  </div>
+</div>
+<p class="why" style="margin-top:12px">Προαιρετική. Αν ο πάροχος δεν στέλνει τέτοια στήλη,
+διαλέγεις «— καμία —» και το ιστορικό γράφει ό,τι γράφει σήμερα. Καμία εισαγωγή δεν
+σταματά επειδή λείπει.</p>
+
+<h2><span class="tag">Α</span>Η αντιστοίχιση θυμάται τον πάροχο</h2>
+<p class="why">Δέκα πάροχοι, ο καθένας με δικό του λεξιλόγιο, και κάθε φορά τα ξαναδιαλέγεις
+από την αρχή. Ο χάρτης αποθηκεύεται ανά πάροχο και έρχεται έτοιμος την επόμενη φορά.</p>
+
+<div class="cols">
+  <div class="pane pane--before">
+    <div class="step">Πριν · 2 · Καταστάσεις παρόχου → δικές σου</div>
+    <table>
+      <thead><tr><th>Κατάσταση παρόχου</th><th>Δική σου</th></tr></thead>
+      <tbody>
+        <tr><td>ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ</td><td><span class="sel">Ενεργή</span></td></tr>
+        <tr><td>ΣΕ ΕΞΕΛΙΞΗ</td><td><span class="sel empty">— αγνόησε —</span></td></tr>
+        <tr><td>ΑΠΟΡΡΙΦΘΗ</td><td><span class="sel empty">— αγνόησε —</span></td></tr>
+        <tr><td>ΕΚΚΡΕΜΕΙ ΕΓΓΡΑΦΟ</td><td><span class="sel empty">— αγνόησε —</span></td></tr>
+        <tr><td>ΠΡΟΣ ΥΠΟΓΡΑΦΗ</td><td><span class="sel empty">— αγνόησε —</span></td></tr>
+      </tbody>
+    </table>
+    <div class="gone">Τέσσερα από τα πέντε στο χέρι, κάθε φορά, για κάθε πάροχο.</div>
+  </div>
+
+  <div class="pane pane--after">
+    <div class="step">Μετά · 2 · Καταστάσεις παρόχου → δικές σου</div>
+    <div class="banner">
+      <div><b>Αποθηκευμένη αντιστοίχιση · Protergia</b>
+      5 από 5 ήρθαν έτοιμες. Άλλαξε ό,τι θες — αποθηκεύεται ξανά.</div>
+      <span class="lnk">καθάρισμα</span>
+    </div>
+    <table>
+      <thead><tr><th>Κατάσταση παρόχου</th><th>Δική σου</th></tr></thead>
+      <tbody>
+        <tr><td>ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ</td><td><span class="sel">Ενεργή</span></td></tr>
+        <tr><td>ΣΕ ΕΞΕΛΙΞΗ</td><td><span class="sel">Σε επεξεργασία</span></td></tr>
+        <tr><td>ΑΠΟΡΡΙΦΘΗ</td><td><span class="sel">Ακυρώθηκε</span></td></tr>
+        <tr><td>ΕΚΚΡΕΜΕΙ ΕΓΓΡΑΦΟ</td><td><span class="sel">Εκκρεμεί</span></td></tr>
+        <tr><td>ΠΡΟΣ ΥΠΟΓΡΑΦΗ</td><td><span class="sel">Περιμένει υπογραφή</span></td></tr>
+      </tbody>
+    </table>
+    <div class="gone">Μία νέα τιμή του παρόχου εμφανίζεται άδεια και ζητά απόφαση —
+    οι υπόλοιπες δεν ξαναρωτιούνται.</div>
+  </div>
+</div>
+
+<div class="note" style="margin-top:26px">
+<b>Τι ΔΕΝ αλλάζει, σκόπιμα</b>
+<ul>
+<li>Ο γράφος μεταβάσεων και η πύλη του <code>signed</code> μένουν ακριβώς όπως είναι.
+Το κείμενο του παρόχου είναι <em>καταγραφή</em>, ποτέ άδεια για μετάβαση.</li>
+<li>Το κείμενο μπαίνει σε <strong>δική του γραμμή</strong> με ετικέτα «Ο πάροχος είπε»,
+όχι στην ίδια γραμμή με το «από → προς». Ανθρώπινο σχόλιο και λόγια παρόχου δεν πρέπει
+να μοιάζουν.</li>
+<li>Η αντιστοίχιση του Α δένεται στον <strong>πάροχο</strong>, όχι στον χρήστη: το
+λεξιλόγιο είναι του παρόχου, και δύο συνεργάτες που ανεβάζουν το ίδιο αρχείο πρέπει να
+βλέπουν την ίδια αντιστοίχιση.</li>
+</ul>
+</div>
+
+<div class="q">
+<b style="font-size:14px">Τρεις αποφάσεις πριν γραφτεί κώδικας</b>
+<ol>
+<li><strong>Μήκος κειμένου.</strong> Προτείνω κόψιμο στους <strong>300 χαρακτήρες</strong>
+— αρκεί για αιτία απόρριψης, δεν αφήνει ολόκληρη στήλη σχολίων να γεμίσει το ιστορικό.
+Συμφωνείς;</li>
+<li><strong>Όταν η κατάσταση δεν αλλάζει.</strong> Αν ο πάροχος στέλνει την ίδια κατάσταση
+αλλά <em>νέο</em> σχόλιο, το κρατάμε ως γεγονός; Σήμερα η γραμμή μετριέται
+<code>unchanged</code> και δεν γράφεται τίποτα. Προτείνω <strong>ναι</strong>: «ο πάροχος
+είπε κάτι νέο» είναι πληροφορία ακόμα κι όταν δεν κουνήθηκε τίποτα.</li>
+<li><strong>Πού ζει ο χάρτης του Α.</strong> Στήλη <code>status_map</code> (JSON) στον
+πίνακα παρόχων, ή δικός του πίνακας μία γραμμή ανά τιμή; Προτείνω <strong>JSON στη
+στήλη</strong> — δεν ερωτάται ποτέ με SQL, διαβάζεται ολόκληρος μία φορά, και δεν
+προσθέτει πίνακα που θα θέλει δική του οθόνη.</li>
+</ol>
+</div>
+
+</div>
+</body>
+</html>

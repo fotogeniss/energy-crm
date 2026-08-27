@@ -5,11 +5,11 @@
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 
-var importState = { columns: [], rows: [], total: 0, supplyCol: -1, statusCol: -1, statusMap: {} };
+var importState = { columns: [], rows: [], total: 0, supplyCol: -1, statusCol: -1, messageCol: -1, statusMap: {} };
 export function initImport() {
 	var view = viewEl('import');
 	// Only render the dropzone once per visit (reset state each entry).
-	importState = { columns: [], rows: [], total: 0, supplyCol: -1, statusCol: -1, statusMap: {} };
+	importState = { columns: [], rows: [], total: 0, supplyCol: -1, statusCol: -1, messageCol: -1, statusMap: {} };
 	view.innerHTML =
 		'<header class="ecrm-head"><h2 class="ecrm-title">Εισαγωγή Excel παρόχου</h2>' +
 		'<p class="ecrm-sub">Ανέβασε το αρχείο του παρόχου, αντιστοίχισε στήλες και ενημέρωσε τα statuses βάσει αριθμού παροχής.</p></header>' +
@@ -50,6 +50,10 @@ function autodetect() {
 		var l = (c || '').toLowerCase();
 		if (importState.supplyCol < 0 && /(παροχ|ηκασπ|supply)/.test(l)) importState.supplyCol = i;
 		if (importState.statusCol < 0 && /(κατάστ|καταστ|status|στάδιο|σταδιο)/.test(l)) importState.statusCol = i;
+		// Προαιρετική -- ΔΕΝ παίρνει προεπιλογή σαν τις δύο πάνω. Αν ο πάροχος
+		// δεν στέλνει τέτοια στήλη, μένει -1 («— καμία —») και τίποτα δεν
+		// αλλάζει σε σχέση με σήμερα.
+		if (importState.messageCol < 0 && /(σχόλ|σχολ|παρατηρ|αιτιολ|comment|reason|remark)/.test(l)) importState.messageCol = i;
 	});
 	if (importState.supplyCol < 0) importState.supplyCol = 0;
 	if (importState.statusCol < 0) importState.statusCol = Math.min(2, cols.length - 1);
@@ -62,6 +66,10 @@ function distinctStatusValues() {
 function renderMapping(view) {
 	var wrap = view.querySelector('[data-imap]');
 	var colOpts = function (sel) { return importState.columns.map(function (c, i) { return '<option value="' + i + '"' + (i === sel ? ' selected' : '') + '>' + esc(c || ('Στήλη ' + (i + 1))) + '</option>'; }).join(''); };
+	// Προαιρετική, γι' αυτό έχει δικό της «— καμία —» αντί να πέφτει πάνω σε
+	// στήλη που δεν είναι δική της -- ο πάροχος σπάνια στέλνει αιτιολογία, και
+	// λάθος επιλεγμένη στήλη θα κατέληγε στο ιστορικό της σύμβασης.
+	var msgOpts = '<option value="-1"' + (importState.messageCol < 0 ? ' selected' : '') + '>— καμία —</option>' + colOpts(importState.messageCol);
 
 	var statusSlugs = (ECRM && ECRM.statuses) ? ECRM.statuses : {}; // slug->label
 	var distinct = distinctStatusValues();
@@ -77,7 +85,8 @@ function renderMapping(view) {
 	wrap.innerHTML =
 		'<div class="ecrm-card"><div class="ecrm-step">1 · Αντιστοίχιση στηλών</div>' +
 		'<div class="ecrm-row"><span class="ecrm-row__label">Αριθμός παροχής</span><select class="ecrm-select" data-supplycol>' + colOpts(importState.supplyCol) + '</select></div>' +
-		'<div class="ecrm-row"><span class="ecrm-row__label">Κατάσταση</span><select class="ecrm-select" data-statuscol>' + colOpts(importState.statusCol) + '</select></div></div>' +
+		'<div class="ecrm-row"><span class="ecrm-row__label">Κατάσταση</span><select class="ecrm-select" data-statuscol>' + colOpts(importState.statusCol) + '</select></div>' +
+		'<div class="ecrm-row"><span class="ecrm-row__label">Σχόλιο / αιτία (προαιρετικό)</span><select class="ecrm-select" data-msgcol>' + msgOpts + '</select></div></div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">2 · Αντιστοίχιση καταστάσεων παρόχου → δικές σου</div>' +
 		'<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Κατάσταση παρόχου</th><th>Δική σου κατάσταση</th></tr></thead><tbody>' + (mapRows || '<tr><td colspan="2">—</td></tr>') + '</tbody></table></div></div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">3 · Εφαρμογή</div>' +
@@ -87,6 +96,7 @@ function renderMapping(view) {
 
 	wrap.querySelector('[data-supplycol]').addEventListener('change', function () { importState.supplyCol = +this.value; });
 	wrap.querySelector('[data-statuscol]').addEventListener('change', function () { importState.statusCol = +this.value; renderMapping(view); });
+	wrap.querySelector('[data-msgcol]').addEventListener('change', function () { importState.messageCol = +this.value; });
 	wrap.querySelectorAll('[data-smap]').forEach(function (sel) { sel.addEventListener('change', function () { importState.statusMap[this.getAttribute('data-smap')] = this.value; }); });
 	wrap.querySelector('[data-preview]').addEventListener('click', function () { applyImport(view, true, this); });
 	wrap.querySelector('[data-apply]').addEventListener('click', function () { if (confirm('Ενημέρωση καταστάσεων στις συμβάσεις;')) applyImport(view, false, this); });
@@ -105,12 +115,21 @@ function guessStatus(val) {
 	return '';
 }
 function buildPairs() {
-	var sc = importState.supplyCol, stc = importState.statusCol, pairs = [];
+	var sc = importState.supplyCol, stc = importState.statusCol, mc = importState.messageCol, pairs = [];
 	importState.rows.forEach(function (r) {
 		var supply = (r[sc] || '').trim();
 		var raw = (r[stc] || '').trim();
 		var slug = importState.statusMap[raw] || '';
-		if (supply && slug) pairs.push({ supply: supply, status: slug });
+		if (!supply || !slug) return;
+		var pair = { supply: supply, status: slug };
+		// Ο server κόβει στους 300 χαρακτήρες ούτως ή άλλως -- εδώ απλώς δεν
+		// στέλνεται καθόλου κλειδί όταν το κελί είναι κενό ή δεν επιλέχθηκε
+		// στήλη, ώστε ο φύλακας «— καμία —» να είναι πράγματι «τίποτα».
+		if (mc >= 0) {
+			var note = (r[mc] || '').trim();
+			if (note) pair.message = note;
+		}
+		pairs.push(pair);
 	});
 	return pairs;
 }
@@ -124,6 +143,7 @@ function applyImport(view, dry, btn) {
 			if (!d || !d.ok) { toast((d && d.error) || 'Αποτυχία.', false); return; }
 			var rep = view.querySelector('[data-report]');
 			var refused = Number(d.rejected_total) || 0;
+			var noted = Number(d.noted) || 0;
 
 			/* Οι απορρίψεις εμφανίζονται. Το Excel του παρόχου μπορεί να ζητά
 			 * μετάβαση που η ροή δεν επιτρέπει — «ακυρωμένη» πίσω σε «ενεργή»,
@@ -133,6 +153,7 @@ function applyImport(view, dry, btn) {
 				'<span>Βρέθηκαν: <b>' + esc(d.matched) + '</b></span>' +
 				'<span>' + (dry ? 'Θα ενημερωθούν' : 'Ενημερώθηκαν') + ': <b>' + esc(d.updated) + '</b></span>' +
 				'<span>Ίδια: <b>' + esc(d.unchanged) + '</b></span>' +
+				(noted ? '<span>' + (dry ? 'Θα καταγραφεί σχόλιο' : 'Καταγράφηκε σχόλιο') + ': <b>' + noted + '</b></span>' : '') +
 				(refused ? '<span class="is-warn">Δεν επιτρέπονται: <b>' + refused + '</b></span>' : '') +
 				'<span>Χωρίς αντιστοίχιση: <b>' + esc(d.unmatched_total) + '</b></span></div>' +
 				(d.unmatched_total ? '<div class="ecrm-muted" style="margin-top:8px">Δεν βρέθηκαν: ' + d.unmatched.map(esc).join(', ') + (d.unmatched_total > d.unmatched.length ? '…' : '') + '</div>' : '') +
