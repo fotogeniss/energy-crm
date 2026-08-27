@@ -193,7 +193,25 @@ class ECRM_Import {
 	// Apply: update contract statuses by supply number
 	// ---------------------------------------------------------------------
 	/**
-	 * @param array $pairs  List of [ 'supply' => string, 'status' => slug ]
+	 * Πάνω από αυτό το μήκος το σχόλιο του παρόχου κόβεται.
+	 *
+	 * Απόφαση ιδιοκτήτη 27/08/2026: αρκεί για μια πρόταση αιτιολογίας, δεν
+	 * αφήνει ολόκληρη ελεύθερη στήλη να γεμίσει το ιστορικό της σύμβασης.
+	 */
+	private const NOTE_MAX_LEN = 300;
+
+	/**
+	 * Το σχόλιο του παρόχου από τη στήλη-αιτιολογία, κομμένο σε λογικό μήκος —
+	 * ή null αν η στήλη δεν επιλέχθηκε ή το κελί ήταν κενό.
+	 */
+	private static function provider_note( string $raw ): ?string {
+		$note = trim( $raw );
+
+		return $note === '' ? null : mb_substr( $note, 0, self::NOTE_MAX_LEN );
+	}
+
+	/**
+	 * @param array $pairs  List of [ 'supply' => string, 'status' => slug, 'message'?: string ]
 	 * @param bool  $dry    If true, only report; don't write.
 	 * @return array report
 	 */
@@ -205,7 +223,7 @@ class ECRM_Import {
 		$ph     = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 		$valid  = ECRM_DB::statuses();
 
-		$matched = 0; $updated = 0; $unchanged = 0; $unmatched = []; $rejected = [];
+		$matched = 0; $updated = 0; $unchanged = 0; $noted = 0; $unmatched = []; $rejected = [];
 
 		foreach ( $pairs as $pair ) {
 			$supply = trim( (string) ( $pair['supply'] ?? '' ) );
@@ -213,6 +231,7 @@ class ECRM_Import {
 			if ( $supply === '' || ! isset( $valid[ $status ] ) ) {
 				continue;
 			}
+			$note = self::provider_note( (string) ( $pair['message'] ?? '' ) );
 
 			$row = $wpdb->get_row( $wpdb->prepare(
 				"SELECT id, status, signed_at, partner_user_id FROM {$ct}"
@@ -226,7 +245,25 @@ class ECRM_Import {
 			}
 			$matched++;
 			if ( $row['status'] === $status ) {
-				$unchanged++;
+				/*
+				 * Ίδια κατάσταση, αλλά αν ήρθε ΝΕΟ σχόλιο από τον πάροχο αξίζει
+				 * να καταγραφεί — «είπε κάτι» είναι πληροφορία ακόμα κι όταν δεν
+				 * κουνήθηκε τίποτα. Απόφαση ιδιοκτήτη 27/08/2026.
+				 *
+				 * Γεγονός τύπου 'note', ΟΧΙ 'status_change' με ίδιο from/to: θα
+				 * ζωγράφιζε «Ακυρώθηκε → Ακυρώθηκε» στο χρονολόγιο, που δεν λέει
+				 * τίποτα σε κανέναν.
+				 */
+				if ( null !== $note ) {
+					$noted++;
+					if ( ! $dry ) {
+						\EnergyCRM\Services::events()->record( (int) $row['id'], $uid, 'note', [
+							'message' => 'Ο πάροχος (Excel): «' . $note . '»',
+						] );
+					}
+				} else {
+					$unchanged++;
+				}
 				continue;
 			}
 
@@ -284,7 +321,12 @@ class ECRM_Import {
 				$moved = \EnergyCRM\Services::lifecycle()->moveTo( (int) $row['id'], $status, [
 					'user_id' => get_current_user_id(),
 					'from'    => (string) $row['status'],
-					'message' => 'Ενημέρωση από Excel παρόχου',
+					// Το σχόλιο του παρόχου γίνεται μέρος του ΙΔΙΟΥ μηνύματος
+					// που ήδη γράφεται — όχι δεύτερο πεδίο, όχι νέα στήλη. Το
+					// «Ενημέρωση από Excel παρόχου» παραμένει έτσι κι αλλιώς,
+					// ώστε το ιστορικό να λέει ΠΩΣ έγινε η αλλαγή ακόμα κι όταν
+					// ο πάροχος δεν έστειλε αιτιολογία.
+					'message' => 'Ενημέρωση από Excel παρόχου' . ( null !== $note ? ': «' . $note . '»' : '' ),
 				] );
 
 				if ( ! $moved ) {
@@ -301,6 +343,7 @@ class ECRM_Import {
 			'matched'        => $matched,
 			'updated'        => $updated,
 			'unchanged'      => $unchanged,
+			'noted'          => $noted,
 			'unmatched'      => array_slice( $unmatched, 0, 100 ),
 			'unmatched_total'=> count( $unmatched ),
 			'rejected'       => array_slice( $rejected, 0, 100 ),
