@@ -19,6 +19,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddContractListIndexes;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerAfmIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerPhoneIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
+use EnergyCRM\Persistence\Schema\Migrations\AddIntakeColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddPayoutAmountColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddEventStatusIndex;
@@ -65,6 +66,7 @@ final class MigrationList
             new AddEventStatusIndex(),
             new WidenCustomerPhoneColumn(),
             new AddCustomerPhoneIndex(),
+            new AddIntakeColumns(),
         ];
     }
 }

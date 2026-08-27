@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use ECRM_Files;
 use ECRM_Leads;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
@@ -231,6 +232,12 @@ final class LeadsController implements Controller
 
             return new WP_REST_Response(['ok' => false, 'error' => 'Η μετατροπή εκτελείται ήδη.'], 409);
         }
+
+        // Τα έγγραφα που ανέβασε ο ΙΔΙΟΣ ο πελάτης από τον δημόσιο σύνδεσμο
+        // ακολουθούν τη σύμβαση αντί να ξαναζητηθούν. Μετά το finishConversion()
+        // και όχι πριν: αν χανόταν η διεκδίκηση, ο πρόχειρος διαγράφεται και τα
+        // αρχεία θα είχαν μετακομίσει σε σύμβαση που δεν υπάρχει πια.
+        ECRM_Files::attach_lead_to_contract($id, $contractId);
 
         return new WP_REST_Response(['ok' => true, 'contract_id' => $contractId], 200);
     }

@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ο σύνδεσμός μου — ο πελάτης ανεβάζει, ο πωλητής ελέγχει</title>
+<style>
+:root{
+  --n0:#ffffff;--n25:#fdfdfc;--n50:#f8f8f6;--n100:#f1f1ee;--n150:#e9e8e4;
+  --n200:#dedcd7;--n300:#c6c4bd;--n400:#a3a099;--n450:#83817a;--n500:#6e6c66;
+  --n600:#5c5a55;--n700:#42413d;--n800:#2a2926;--n900:#1a1a18;
+  --p50:#eafaea;--p100:#d2f5d3;--p300:#6bdd6d;--p400:#16c217;--p500:#12a413;
+  --st-active:#00531e;--st-active-bg:#e3f0e4;
+  --st-pending:#ab5506;--st-pending-bg:#fcf2ec;
+  --st-cancel:#c32b47;--st-cancel-bg:#fdeaea;
+  --st-new:#0072b7;--st-new-bg:#ecf2fc;
+  --cat-teal:#007a79;--cat-teal-bg:#e3f4f3;
+  --cat-violet:#9255a3;--cat-violet-bg:#f6eef8;
+  --ink:var(--n800);--muted:var(--n500);--muted-strong:var(--n600);
+  --line:var(--n200);--line-soft:var(--n100);--line-card:var(--n150);
+  --bg:var(--n50);--surface:var(--n0);--surface-sunk:var(--n100);
+  --navy-soft:var(--n700);--radius:12px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+.wrap{max-width:1040px;margin:0 auto;padding:32px 20px 90px}
+
+.doc-head{border-bottom:2px solid var(--line);padding-bottom:20px;margin-bottom:8px}
+.doc-head h1{margin:0 0 6px;font-size:26px;font-weight:800;letter-spacing:-.015em}
+.doc-head .sub{color:var(--muted);font-size:14px}
+.doc-head .rule{margin-top:14px;background:var(--st-pending-bg);color:var(--st-pending);
+  display:inline-block;padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:700}
+
+h2{font-size:19px;font-weight:800;margin:46px 0 4px;letter-spacing:-.01em}
+h2 .num{color:var(--n300);margin-right:8px;font-variant-numeric:tabular-nums}
+h2+.lede{color:var(--muted-strong);font-size:14px;margin:0 0 18px}
+h3{font-size:15px;font-weight:800;margin:22px 0 6px}
+
+.panel{background:var(--surface);border:1px solid var(--line-card);
+  border-radius:14px;padding:18px;margin:14px 0}
+
+table{width:100%;border-collapse:separate;border-spacing:0;margin:14px 0;font-size:13.5px;
+  background:var(--surface);border:1px solid var(--line-card);border-radius:var(--radius);overflow:hidden}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--muted);font-weight:800;padding:9px 12px;background:var(--bg);
+  border-bottom:1px solid var(--line-card)}
+td{padding:10px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+code{background:var(--surface-sunk);padding:1px 6px;border-radius:5px;font-size:12.5px}
+.cost{white-space:nowrap;font-weight:700}
+.low{color:var(--st-active)}.mid{color:var(--st-pending)}.hi{color:var(--st-cancel)}
+
+ul.clean{margin:8px 0;padding-left:20px}
+ul.clean li{margin:5px 0;font-size:14px}
+.note{background:var(--p50);border-left:3px solid var(--p400);padding:13px 16px;
+  border-radius:0 10px 10px 0;margin:16px 0;font-size:13.5px;color:var(--navy-soft)}
+.warn{background:var(--st-pending-bg);border-left:3px solid var(--st-pending);padding:13px 16px;
+  border-radius:0 10px 10px 0;margin:16px 0;font-size:13.5px;color:var(--navy-soft)}
+.stop{background:var(--st-cancel-bg);border-left:3px solid var(--st-cancel);padding:13px 16px;
+  border-radius:0 10px 10px 0;margin:16px 0;font-size:13.5px;color:var(--navy-soft)}
+
+/* ---- ροή ---- */
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+.step{background:var(--surface);border:1px solid var(--line-card);border-radius:12px;
+  padding:14px;position:relative}
+.step__n{width:24px;height:24px;border-radius:999px;background:var(--st-active-bg);
+  color:var(--st-active);font-size:12px;font-weight:800;display:flex;align-items:center;
+  justify-content:center;margin-bottom:8px}
+.step__t{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.step__d{font-size:12.5px;color:var(--muted)}
+.step__who{position:absolute;top:12px;right:12px;font-size:10px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:999px}
+.who-c{background:var(--cat-teal-bg);color:var(--cat-teal)}
+.who-s{background:var(--cat-violet-bg);color:var(--cat-violet)}
+@media(max-width:760px){.flow{grid-template-columns:1fr 1fr}}
+@media(max-width:460px){.flow{grid-template-columns:1fr}}
+
+/* ---- κινητό ---- */
+.split{display:grid;grid-template-columns:300px 1fr;gap:22px;align-items:start}
+@media(max-width:800px){.split{grid-template-columns:1fr}}
+.phone{background:var(--n900);border-radius:26px;padding:9px;box-shadow:0 18px 40px -22px rgba(0,0,0,.5)}
+.phone__scr{background:var(--bg);border-radius:19px;overflow:hidden}
+.ph-top{background:var(--n900);color:#fff;padding:12px 15px}
+.ph-top__b{font-size:12px;opacity:.6}
+.ph-top__t{font-size:15px;font-weight:800;margin-top:1px}
+.ph-body{padding:14px}
+.fld{margin-bottom:11px}
+.fld label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.fld .inp{background:var(--surface);border:1px solid var(--line);border-radius:9px;
+  padding:9px 11px;font-size:13.5px;color:var(--n400)}
+.shot{border:1.5px dashed var(--line-mid,#c6c4bd);border-radius:11px;padding:15px 12px;
+  text-align:center;background:var(--surface);margin-bottom:9px}
+.shot__i{font-size:22px}
+.shot__t{font-size:13px;font-weight:700;color:var(--ink);margin-top:3px}
+.shot__d{font-size:11.5px;color:var(--muted)}
+.shot.done{border-style:solid;border-color:var(--p400);background:var(--p50)}
+.shot.done .shot__t{color:var(--st-active)}
+.consent{display:flex;gap:8px;font-size:11.5px;color:var(--muted-strong);
+  background:var(--surface-sunk);border-radius:9px;padding:10px;margin:10px 0}
+.consent .bx{flex:0 0 15px;height:15px;border-radius:4px;background:var(--p400);
+  color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.send{background:var(--p400);color:#0b3d0c;border:0;border-radius:10px;padding:11px;
+  width:100%;font-size:14px;font-weight:800;text-align:center}
+
+/* ---- κάρτα υποψηφίου ---- */
+.lead{background:var(--surface);border:1px solid var(--line-card);border-radius:12px;padding:15px}
+.lead__hd{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:3px}
+.lead__nm{font-size:15px;font-weight:800}
+.pill{font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:999px}
+.pill.new{background:var(--st-new-bg);color:var(--st-new)}
+.pill.src{background:var(--cat-teal-bg);color:var(--cat-teal)}
+.lead__meta{font-size:12.5px;color:var(--muted);margin-bottom:11px}
+.docs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.doc{display:flex;align-items:center;gap:7px;background:var(--surface-sunk);
+  border-radius:9px;padding:7px 11px;font-size:12.5px;font-weight:600;color:var(--navy-soft)}
+.doc span{font-size:15px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:700;border:1px solid var(--line-mid,#c6c4bd);
+  background:var(--surface);color:var(--muted-strong)}
+.btn.pri{background:var(--p400);color:#0b3d0c;border-color:transparent}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="doc-head">
+  <h1>«Ο σύνδεσμός μου» — ο πελάτης ανεβάζει, ο πωλητής ελέγχει</h1>
+  <div class="sub">Energy CRM · 27/08/2026 · λίστα «λιγότερο πληκτρολόγιο», σημείο Δ</div>
+  <div class="rule">§1.8 — μακέτα προς έγκριση· καμία γραμμή κώδικα πριν το ναι σου</div>
+</div>
+
+<h2><span class="num">1</span>Τι αλλάζει, σε μία πρόταση</h2>
+<p class="lede">Δεν γλιτώνουμε πεδία. Αλλάζουμε <em>ποιος</em> τα γράφει.</p>
+
+<div class="panel">
+  <p style="margin:0;font-size:15px">
+    Σήμερα ο πωλητής κρατάει τον λογαριασμό του πελάτη και πληκτρολογεί ~20 πεδία.<br>
+    Με αυτό, ο <strong>πελάτης</strong> φωτογραφίζει τα δικά του χαρτιά από το κινητό του,
+    και ο πωλητής <strong>ελέγχει</strong> ό,τι διάβασε το AI.
+  </p>
+</div>
+
+<h2><span class="num">2</span>Η ροή</h2>
+<p class="lede">Τέσσερα βήματα. Τα δύο πρώτα δεν αγγίζουν τον πωλητή καθόλου.</p>
+
+<div class="flow">
+  <div class="step"><span class="step__who who-s">πωλητής</span>
+    <div class="step__n">1</div>
+    <div class="step__t">Στέλνει τον σύνδεσμό του</div>
+    <div class="step__d">SMS ή WhatsApp. Ένας σύνδεσμος, πάντα ο ίδιος, δικός του.</div></div>
+  <div class="step"><span class="step__who who-c">πελάτης</span>
+    <div class="step__n">2</div>
+    <div class="step__t">Ανεβάζει από το κινητό</div>
+    <div class="step__d">Όνομα, τηλέφωνο, φωτογραφία λογαριασμού και ταυτότητας.</div></div>
+  <div class="step"><span class="step__who who-s">πωλητής</span>
+    <div class="step__n">3</div>
+    <div class="step__t">Βλέπει Υποψήφιο με τα αρχεία</div>
+    <div class="step__d">Πατάει «Μετατροπή σε αίτηση» — τα έγγραφα ακολουθούν.</div></div>
+  <div class="step"><span class="step__who who-s">πωλητής</span>
+    <div class="step__n">4</div>
+    <div class="step__t">Πατάει «Εξαγωγή AI» και ελέγχει</div>
+    <div class="step__d">Τα πεδία γεμίζουν με ετικέτα AI. Ελέγχει, διορθώνει, οριστικοποιεί.</div></div>
+</div>
+
+<div class="stop">
+  <b>Η πιο σημαντική απόφαση: το AI ΔΕΝ τρέχει στην υποβολή.</b><br>
+  Τρέχει μόνο όταν το ζητήσει ο πωλητής, από μέσα, συνδεδεμένος. Ένα δημόσιο endpoint
+  που καλεί πληρωμένο API είναι ανοιχτή στρόφιγγα κόστους: όποιος έχει τον σύνδεσμο
+  ανεβάζει εικόνες και ξοδεύει δικά σου credits. Έτσι η δημόσια πλευρά <em>μόνο
+  αποθηκεύει</em> — καμία πληρωμένη κλήση δεν ξεκινά ποτέ από ανώνυμο.
+</div>
+
+<h2><span class="num">3</span>Τι βλέπει ο πελάτης</h2>
+<p class="lede">Μία οθόνη, στο κινητό, χωρίς λογαριασμό και χωρίς εφαρμογή.</p>
+
+<div class="split">
+  <div class="phone"><div class="phone__scr">
+    <div class="ph-top">
+      <div class="ph-top__b">Energy CRM</div>
+      <div class="ph-top__t">Στείλε μου τα στοιχεία σου</div>
+    </div>
+    <div class="ph-body">
+      <div class="fld"><label>Ονοματεπώνυμο</label><div class="inp">Γιώργος Παπαδόπουλος</div></div>
+      <div class="fld"><label>Κινητό</label><div class="inp">69········</div></div>
+
+      <div class="shot done"><div class="shot__i">✅</div>
+        <div class="shot__t">Λογαριασμός ρεύματος</div>
+        <div class="shot__d">IMG_2841.jpg — ανέβηκε</div></div>
+      <div class="shot"><div class="shot__i">📷</div>
+        <div class="shot__t">Ταυτότητα (μπρος & πίσω)</div>
+        <div class="shot__d">Πάτα για φωτογραφία</div></div>
+
+      <div class="consent"><span class="bx">✓</span>
+        <span>Συμφωνώ να χρησιμοποιηθούν τα στοιχεία μου για την υποβολή αίτησης
+        ενεργειακού συμβολαίου.</span></div>
+
+      <div class="send">Αποστολή</div>
+    </div>
+  </div></div>
+
+  <div>
+    <h3>Γιατί ζητάει τηλέφωνο ενώ το διαβάζει και το AI</h3>
+    <p style="font-size:14px;margin:6px 0 14px">Γιατί ο λογαριασμός <em>δεν</em> έχει πάντα
+    κινητό, και χωρίς τηλέφωνο ο υποψήφιος είναι άχρηστος. Δύο πεδία που γράφει ο πελάτης
+    σε δέκα δευτερόλεπτα εξασφαλίζουν ότι υπάρχει πάντα τρόπος επικοινωνίας.</p>
+
+    <h3>Γιατί δεν ζητάει ΑΦΜ, διεύθυνση, ΑΔΤ</h3>
+    <p style="font-size:14px;margin:6px 0 14px">Γιατί όσα περισσότερα ζητάς, τόσοι
+    λιγότεροι τελειώνουν. Όλα αυτά είναι <strong>μέσα στα έγγραφα</strong> — άσε το AI
+    να τα βγάλει. Κάθε επιπλέον πεδίο εδώ είναι πελάτης που τα παρατάει στη μέση.</p>
+
+    <h3>Η συναίνεση δεν είναι διακοσμητική</h3>
+    <p style="font-size:14px;margin:6px 0 0">Καταγράφεται με <strong>χρονοσήμανση και IP</strong>,
+    όπως ήδη γίνεται στην υπογραφή του <code>/track</code>. Συλλέγεις ταυτότητες από
+    ιδιώτες μέσω δημόσιας σελίδας — χωρίς καταγεγραμμένη συναίνεση δεν στέκει.</p>
+  </div>
+</div>
+
+<h2><span class="num">4</span>Τι βλέπει ο πωλητής</h2>
+<p class="lede">Στην υπάρχουσα οθόνη «Υποψήφιοι». Νέα πηγή, τίποτα άλλο καινούριο.</p>
+
+<div class="panel">
+  <div class="lead">
+    <div class="lead__hd">
+      <span class="lead__nm">Γιώργος Παπαδόπουλος</span>
+      <span class="pill new">Νέος</span>
+      <span class="pill src">Από τον σύνδεσμό μου</span>
+    </div>
+    <div class="lead__meta">6944······ · υποβλήθηκε πριν 4 λεπτά</div>
+    <div class="docs">
+      <div class="doc"><span>📄</span> Λογαριασμός ρεύματος</div>
+      <div class="doc"><span>🪪</span> Ταυτότητα — μπρος</div>
+      <div class="doc"><span>🪪</span> Ταυτότητα — πίσω</div>
+    </div>
+    <div class="acts">
+      <button class="btn pri">Μετατροπή σε αίτηση</button>
+      <button class="btn">Τηλεφώνησε</button>
+      <button class="btn">Απόρριψη</button>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  Τα έγγραφα <strong>ακολουθούν</strong> στη μετατροπή: μπαίνουν στη νέα αίτηση χωρίς να
+  ξαναανέβουν. Εκεί ο πωλητής πατάει «Εξαγωγή AI» — η ίδια λειτουργία που ήδη χρησιμοποιεί.
+</div>
+
+<h2><span class="num">5</span>Ασφάλεια — τι αντιγράφεται από πού</h2>
+<p class="lede">Τίποτα καινούριο δεν επινοείται. Η δημόσια διαδρομή έχει ήδη σκληρύνει μία φορά.</p>
+
+<table>
+  <thead><tr><th style="width:33%">Μηχανισμός</th><th>Από πού</th></tr></thead>
+  <tbody>
+    <tr><td><b>Token υπογεγραμμένο με HMAC</b></td>
+      <td>Ίδιο σχήμα με <code>ECRM_Tracking::sign()</code> — <code>wp_salt('auth')</code>, κλειδί ανά πωλητή, <b>ανακλήσιμο</b>. Η επαλήθευση <b>ποτέ δεν παράγει κλειδί</b>, ακριβώς όπως το <code>verify()</code>: αλλιώς αίτημα σε τυχαίο id θα έγραφε στη βάση.</td></tr>
+    <tr><td><b>Rate limit ανά IP</b></td>
+      <td><code>ECRM_RateLimit::allow()</code> — κάνει ήδη μόνο του IP bucket για ανώνυμους. Ίδια όρια με το <code>track_upload</code>.</td></tr>
+    <tr><td><b>Έλεγχος αρχείου</b></td>
+      <td>Whitelist MIME, <b>magic bytes</b>, όριο 12MB — αυτούσια από το <code>rest_upload()</code>. Δηλωμένος τύπος που λέει ψέματα απορρίπτεται.</td></tr>
+    <tr><td><b>Αποθήκευση</b></td>
+      <td><code>ECRM_Files::put_bytes()</code> → προστατευμένος φάκελος με <code>Y/m</code>, <b>όχι</b> βιβλιοθήκη πολυμέσων. Δεν σερβίρεται χωρίς υπογεγραμμένο token.</td></tr>
+    <tr><td><b>Συναίνεση</b></td>
+      <td>Χρονοσήμανση + IP, όπως στην υπογραφή του <code>/track</code>.</td></tr>
+    <tr><td><b>Χωρίς λογαριασμό, χωρίς captcha</b></td>
+      <td>Ο σύνδεσμος είναι το διαπιστευτήριο. Χωρίς αυτόν, τίποτα δεν φτάνει στο endpoint.</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="num">6</span>Τι αλλάζει στον κώδικα</h2>
+
+<table>
+  <thead><tr><th style="width:36%">Σημείο</th><th>Αλλαγή</th><th style="width:13%">Κόστος</th></tr></thead>
+  <tbody>
+    <tr><td>Σχήμα</td><td>Νέα στήλη <code>files.lead_id</code> (nullable). Το <code>contract_id</code> είναι <b>ήδη</b> nullable — μετρημένο — άρα αρχείο χωρίς σύμβαση είναι ήδη νόμιμη κατάσταση. <code>DB_VERSION</code> 18→19.</td><td class="cost low">1 dbDelta</td></tr>
+    <tr><td>Κλειδί πωλητή</td><td><code>user_meta</code>, παράγεται στην πρώτη ζήτηση συνδέσμου, ανακλήσιμο.</td><td class="cost low">~30 γρ.</td></tr>
+    <tr><td>Δημόσια σελίδα</td><td>Νέα διαδρομή <code>/intake/{token}</code>, ίδιο σχήμα με το <code>ECRM_Tracking::maybe_render()</code>.</td><td class="cost mid">~160 γρ.</td></tr>
+    <tr><td>Δημόσιο endpoint</td><td><code>POST /intake/{token}</code> — δημιουργεί Υποψήφιο + αρχεία. <b>Καμία κλήση AI.</b></td><td class="cost mid">~120 γρ.</td></tr>
+    <tr><td>Μετατροπή</td><td>Το <code>LeadsController::convert()</code> μεταφέρει και τα αρχεία στη νέα αίτηση.</td><td class="cost low">~15 γρ.</td></tr>
+    <tr><td>«Ο σύνδεσμός μου»</td><td>Κουμπί αντιγραφής + ανάκλησης, στην οθόνη Υποψήφιοι.</td><td class="cost low">~40 γρ.</td></tr>
+    <tr><td>Λεξιλόγιο</td><td>Νέα πηγή <code>'link' => 'Από τον σύνδεσμό μου'</code> στο <code>ECRM_Leads::sources()</code>.</td><td class="cost low">1 γραμμή</td></tr>
+  </tbody>
+</table>
+
+<div class="warn">
+  <b>Διόρθωση πρόβλεψης (27/08, πριν γραφτεί κώδικας).</b> Αυτή η παράγραφος έλεγε
+  «<b>+2 unit</b>, δύο νέα αρχεία σε <code>public/assets/</code>». <b>Λάθος.</b> Η σελίδα
+  του πελάτη χτίζεται όπως το <code>ECRM_Tracking::maybe_render()</code>: <b>αυτοτελής,
+  με CSS και JS μέσα στο PHP</b>, ώστε καμία αλλαγή στο kit να μη μπορεί να σπάσει την
+  οθόνη που βλέπει ο πελάτης. Άρα <b>κανένα</b> νέο αρχείο σε <code>public/assets/</code>,
+  άρα κανένα νέο unit test. Και ο <code>RestRouteGuardTest</code> χρησιμοποιεί
+  <code>foreach</code> μέσα σε μία μέθοδο, όχι <code>dataProvider</code> — νέα διαδρομή
+  δεν προσθέτει test, χρειάζεται μόνο ρητή εγγραφή στη λίστα
+  <code>PUBLIC_ROUTES</code> με γραμμένο τον λόγο.
+  <br><br>
+  Το πραγματικό κόστος είναι αλλού: <b>phpcs 283 → 285</b> (δύο νέα PHP σε σαρωμένους
+  φακέλους) και <b>phpstan 155 → 156</b> (μόνο το <code>src/</code> αναλύεται· το
+  <code>public/</code> απλώς σαρώνεται).
+  <br><br>
+  <b>Το τίμημα του αυτοτελούς:</b> τα χρώματα και τα μεγέθη της σελίδας δεν ελέγχονται
+  από τους φύλακες τυπογραφίας/χρώματος. Είναι τυφλό σημείο <em>ήδη τεκμηριωμένο</em>
+  στον <code>TypographyIsDecidedInOnePlaceTest</code>, που ονομάζει ρητά το
+  <code>class-ecrm-tracking.php</code>. Η νέα σελίδα μπαίνει συνειδητά στην ίδια σκιά.
+</div>
+
+<h2><span class="num">7</span>Εκτός v1 — σκόπιμα</h2>
+<div class="panel">
+  <ul class="clean">
+    <li><b>Αυτόματη εξαγωγή AI στην υποβολή.</b> Ο λόγος είναι στο §2 και δεν αλλάζει.</li>
+    <li><b>Ανοιχτή δημόσια φόρμα χωρίς token.</b> Θα ήταν φόρμα spam με φωτογραφίες ταυτοτήτων.</li>
+    <li><b>Captcha.</b> Ο σύνδεσμος είναι ήδη το φράγμα· προσθέτει τριβή στον πελάτη χωρίς αντάλλαγμα.</li>
+    <li><b>Ειδοποίηση email/SMS στον πωλητή.</b> Το καμπανάκι αρκεί για v1· μπαίνει εύκολα μετά.</li>
+    <li><b>Υπογραφή από τον πελάτη εδώ.</b> Υπάρχει ήδη στο <code>/track</code>, μετά τη σύμβαση. Δεν το διπλασιάζουμε.</li>
+  </ul>
+</div>
+
+<h2><span class="num">8</span>Τι χρειάζομαι από σένα</h2>
+<div class="panel">
+  <ul class="clean">
+    <li><b>Έγκριση της ροής</b> ως έχει, ή πες τι αλλάζει.</li>
+    <li><b>Ο σύνδεσμος να είναι μόνιμος ανά πωλητή</b> (τον στέλνει σε όποιον θέλει) ή <b>ένας ανά πελάτη</b> (τον παράγει κάθε φορά); Προτείνω μόνιμο — λιγότερη τριβή, και η ανάκληση υπάρχει αν διαρρεύσει.</li>
+    <li><b>Τα δύο πεδία</b> (όνομα, κινητό) σου φτάνουν, ή θες και <b>email</b>;</li>
+    <li>Το κείμενο συναίνεσης θέλει το ναι <b>δικηγόρου</b>, όχι δικό μου. Γράφω προσχέδιο.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

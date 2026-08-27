@@ -160,6 +160,36 @@ class ECRM_Files {
 	 *
 	 * @return array{path:string, filename:string, mime:string}|null
 	 */
+	/**
+	 * Τα έγγραφα ενός υποψηφίου ακολουθούν τη σύμβαση που προέκυψε από αυτόν.
+	 *
+	 * Ο πελάτης τα ανέβασε από τον δημόσιο σύνδεσμο πριν υπάρξει σύμβαση. Στη
+	 * μετατροπή δεν αντιγράφονται και δεν ξαναζητούνται -- αλλάζει μόνο σε τι
+	 * κρέμονται.
+	 *
+	 * Το lead_id ΔΕΝ καθαρίζεται: η προέλευση είναι πληροφορία, όχι σκουπίδι.
+	 * Χωρίς αυτήν, κανείς δεν ξεχωρίζει μετά ποια έγγραφα έφερε ο ίδιος ο
+	 * πελάτης από αυτά που ανέβασε ο πωλητής.
+	 *
+	 * Το `contract_id IS NULL` είναι φύλακας ιδεμποτεντίας: δεύτερη κλήση δεν
+	 * ξανακουνάει αρχείο που έχει ήδη βρει σπίτι.
+	 */
+	public static function attach_lead_to_contract( int $lead_id, int $contract_id ): int {
+		global $wpdb;
+
+		if ( $lead_id <= 0 || $contract_id <= 0 ) {
+			return 0;
+		}
+
+		$t = ECRM_DB::table( 'files' );
+
+		return (int) $wpdb->query( $wpdb->prepare(
+			"UPDATE {$t} SET contract_id = %d WHERE lead_id = %d AND contract_id IS NULL",
+			$contract_id,
+			$lead_id
+		) );
+	}
+
 	public static function put_bytes( string $bytes, string $ext, string $mime, string $filename = '' ): ?array {
 		if ( $bytes === '' ) { return null; }
 		$dest = self::storage()->newPath( $ext );

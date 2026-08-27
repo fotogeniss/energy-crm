@@ -943,6 +943,19 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-lesson__body p { margin:8px 0; }
 @media (max-width:560px){ .ecrm-lesson__row { flex-wrap:wrap; } .ecrm-lesson__read { width:100%; } .ecrm-lesson__body { padding-left:16px; } }
 
+/* --- «Ο σύνδεσμός μου» (Υποψήφιοι) --------------------------------------
+ * Ο σύνδεσμος που στέλνει ο πωλητής στον πελάτη για να ανεβάσει μόνος του τα
+ * έγγραφά του. Κρυφός μέχρι να ζητηθεί: κάθε εμφάνιση θα παρήγαγε κλειδί σε
+ * πωλητές που δεν πρόκειται να τον χρησιμοποιήσουν. */
+.ecrm-head__acts { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.ecrm-mylink { background:var(--accent-wash); border:1px solid var(--accent-wash-2); border-radius:12px; padding:14px 16px; margin-bottom:14px; }
+.ecrm-mylink__hd { font-size:var(--fs-12); font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--st-active); margin-bottom:8px; }
+.ecrm-mylink__row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.ecrm-mylink__url { flex:1; min-width:200px; background:var(--surface); border:1px solid var(--line-card); border-radius:8px; padding:8px 11px; font-size:var(--fs-12-5); color:var(--ink); overflow-wrap:anywhere; }
+.ecrm-mylink__note { font-size:var(--fs-12-5); color:var(--muted-strong); margin-top:9px; }
+.ecrm-linkbtn { border:0; background:transparent; padding:0; font:inherit; font-size:var(--fs-12-5); color:var(--st-cancel); text-decoration:underline; cursor:pointer; }
+@media (max-width:560px){ .ecrm-mylink__url { min-width:0; width:100%; } }
+
 /* --- Πίνακες μέσα σε κείμενο γραμμένο από τον admin ---------------------
  * Ο συντάκτης του WordPress βγάζει σκέτο <table>, συχνά με border="1", και
  * ποτέ με class. Το kit έχει .ecrm-table, αλλά κανείς δεν πρόκειται να

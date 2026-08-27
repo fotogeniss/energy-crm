@@ -36,6 +36,9 @@ class ECRM_Leads {
 	}
 
 	public static function sources(): array {
-		return [ 'phone' => 'Τηλέφωνο', 'chatbot' => 'Chatbot', 'referral' => 'Σύσταση', 'walk_in' => 'Επίσκεψη', 'social' => 'Social', 'other' => 'Άλλο' ];
+		// Το 'link' γράφεται ΜΟΝΟ από το ECRM_Intake, δηλαδή από τον ίδιο τον
+		// πελάτη μέσα από τον δημόσιο σύνδεσμο του πωλητή. Ξεχωρίζει από το
+		// 'chatbot' επίτηδες: εδώ ξέρεις ποιος πωλητής τον έφερε.
+		return [ 'phone' => 'Τηλέφωνο', 'link' => 'Από τον σύνδεσμό μου', 'chatbot' => 'Chatbot', 'referral' => 'Σύσταση', 'walk_in' => 'Επίσκεψη', 'social' => 'Social', 'other' => 'Άλλο' ];
 	}
 }

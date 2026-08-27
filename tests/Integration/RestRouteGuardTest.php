@@ -73,6 +73,22 @@ final class RestRouteGuardTest extends IntegrationTestCase
 
         self::ROOT . '/track/(?P<token>[A-Za-z0-9\-]+)/upload' =>
             'The customer uploading their own documents from the tracking page.',
+
+        /*
+         * Ο δημόσιος «σύνδεσμός μου» (27/08/2026). Ο πελάτης στέλνει ΤΑ ΔΙΚΑ ΤΟΥ
+         * στοιχεία πριν υπάρξει σύμβαση, οπότε δεν υπάρχει τίποτα να ανήκει σε
+         * λογαριασμό — το token είναι το διαπιστευτήριο, ίδιο σχήμα HMAC με το
+         * /track και ανακλητό ανά πωλητή.
+         *
+         * Και οι δύο διαδρομές ΓΡΑΦΟΥΝ, δεν διαβάζουν: τίποτα δεν επιστρέφεται
+         * για υπάρχοντα δεδομένα, οπότε άκυρο token δεν διαρρέει πληροφορία —
+         * απαντά 404 και τελειώνει. Rate limit ανά IP και στις δύο.
+         */
+        self::ROOT . '/intake/(?P<token>\d+\-[a-f0-9]{20})' =>
+            'ECRM_Intake::rest_submit — ο πελάτης στέλνει όνομα/κινητό/συναίνεση με υπογεγραμμένο token πωλητή.',
+
+        self::ROOT . '/intake/(?P<token>\d+\-[a-f0-9]{20})/file' =>
+            'ECRM_Intake::rest_file — ένα έγγραφο τη φορά, δεμένο σε υπογεγραμμένο ref του ίδιου υποψηφίου.',
     ];
 
     protected function tearDown(): void

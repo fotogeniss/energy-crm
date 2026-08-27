@@ -86,7 +86,11 @@ function renderLeads(view, d) {
 	view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Πριν τη σύμβαση</div><h2 class="ecrm-title">Leads</h2>' +
 		'<p class="ecrm-sub">Υποψήφιοι πελάτες & επανακλήσεις</p></div>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-lnew><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέο Lead</button></header>' +
+		'<div class="ecrm-head__acts">' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-mylink><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Ο σύνδεσμός μου</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-lnew><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέο Lead</button>' +
+		'</div></header>' +
+		'<div class="ecrm-mylink" data-mylinkbox hidden></div>' +
 		'<div class="ecrm-leadfilters"><div class="ecrm-search"><input type="search" class="ecrm-input" placeholder="Αναζήτηση ονόματος, τηλεφώνου, ενδιαφέροντος…" value="' + esc(leadsState.q) + '" data-lq></div></div>' +
 		'<div class="ecrm-kbfilter ecrm-leadstages">' + sChips + '</div>' +
 		form +
@@ -94,6 +98,60 @@ function renderLeads(view, d) {
 
 	// wiring
 	view.querySelector('[data-lnew]').addEventListener('click', function () { leadsState.editing = {}; leadsState.showForm = true; renderLeads(view, d); });
+
+	/* «Ο σύνδεσμός μου»: ο σύνδεσμος που στέλνει ο πωλητής στον πελάτη για να
+	 * ανεβάσει μόνος του λογαριασμό και ταυτότητα. Ένας ανά πωλητή, μόνιμος,
+	 * ανακλήσιμος. Ζητιέται από τον server μόνο όταν πατηθεί το κουμπί —
+	 * αλλιώς κάθε φόρτωση της οθόνης θα παρήγαγε κλειδί σε πωλητές που δεν
+	 * πρόκειται να τον χρησιμοποιήσουν ποτέ. */
+	var linkBox = view.querySelector('[data-mylinkbox]');
+	function paintLink(url) {
+		if (!url) { linkBox.hidden = true; return; }
+		linkBox.innerHTML =
+			'<div class="ecrm-mylink__hd">Στείλε αυτόν τον σύνδεσμο στον πελάτη</div>' +
+			'<div class="ecrm-mylink__row"><code class="ecrm-mylink__url">' + esc(url) + '</code>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--primary" data-lcopy>Αντιγραφή</button></div>' +
+			'<div class="ecrm-mylink__note">Ο πελάτης γράφει όνομα και κινητό και ανεβάζει τα έγγραφά του. ' +
+			'Εμφανίζεται εδώ ως υποψήφιος, με τα αρχεία μέσα. ' +
+			'<button type="button" class="ecrm-linkbtn" data-lrevoke>Ακύρωση αυτού του συνδέσμου</button></div>';
+		linkBox.hidden = false;
+		linkBox.querySelector('[data-lcopy]').addEventListener('click', function () {
+			var ok = false;
+			try { ok = document.execCommand && window.getSelection && (function () {
+				var r = document.createRange();
+				r.selectNodeContents(linkBox.querySelector('.ecrm-mylink__url'));
+				var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+				var done = document.execCommand('copy'); s.removeAllRanges(); return done;
+			})(); } catch (e) { ok = false; }
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(url).then(function () { toast('Ο σύνδεσμος αντιγράφηκε.'); },
+					function () { toast(ok ? 'Ο σύνδεσμος αντιγράφηκε.' : 'Αντίγραψέ τον με το χέρι.', ok); });
+			} else {
+				toast(ok ? 'Ο σύνδεσμος αντιγράφηκε.' : 'Αντίγραψέ τον με το χέρι.', ok);
+			}
+		});
+		linkBox.querySelector('[data-lrevoke]').addEventListener('click', function () {
+			if (!window.confirm('Ο παλιός σύνδεσμος θα πάψει να δουλεύει αμέσως, και σε όποιον τον έχεις ήδη στείλει. Να συνεχίσω;')) { return; }
+			fetch(api('/intake/link/revoke'), { method: 'POST', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (res) {
+					if (!res || !res.ok) { toast('Αποτυχία ακύρωσης.', false); return; }
+					toast('Ο σύνδεσμος ανανεώθηκε.');
+					paintLink(res.url);
+				})
+				.catch(function () { toast('Σφάλμα δικτύου.', false); });
+		});
+	}
+	view.querySelector('[data-mylink]').addEventListener('click', function () {
+		if (!linkBox.hidden) { linkBox.hidden = true; return; }
+		fetch(api('/intake/link'), { headers: H() })
+			.then(function (r) { return r.json(); })
+			.then(function (res) {
+				if (!res || !res.ok || !res.url) { toast('Δεν ήταν δυνατή η δημιουργία συνδέσμου.', false); return; }
+				paintLink(res.url);
+			})
+			.catch(function () { toast('Σφάλμα δικτύου.', false); });
+	});
 	var lq = view.querySelector('[data-lq]');
 	lq.addEventListener('input', function () { leadsState.q = this.value; clearTimeout(leadsT); leadsT = setTimeout(loadLeads, 300); });
 	if (leadsState.q) { lq.focus(); lq.setSelectionRange(lq.value.length, lq.value.length); }
