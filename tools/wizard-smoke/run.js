@@ -131,16 +131,37 @@ const step = function () {
 	ok('βήμα 1', step() === '1');
 	ok('τα 2-4 ξανακλείδωσαν', qa('[data-wgo]').slice(1).every(function (b) { return b.disabled; }));
 
+	/* Το ΑΦΜ κρίνει ΠΟΥ ανοίγει η επεξεργασία, και είναι ο ίδιος φύλακας που
+	   κρίνει αν θα τρέξει η αυτόματη εξαγωγή. Γεμάτο ΑΦΜ σημαίνει «τα έγγραφα
+	   διαβάστηκαν ήδη», άρα το βήμα 2 (Έγγραφα & AI) δεν έχει τι να προσφέρει
+	   και ο συνεργάτης προσγειώνεται κατευθείαν στα στοιχεία. Κενό ΑΦΜ σημαίνει
+	   το αντίθετο, και τότε ξεκινά από την αρχή όπως πάντα.
+
+	   Και τα δύο ελέγχονται εδώ: ένα σήμα με δύο αποτελέσματα δεν αποδεικνύεται
+	   με τη μία του πλευρά. */
 	console.log('\n7. επεξεργασία: ξεκλειδώνουν και τα τέσσερα');
 	w.ECRMForm.edit({
 		id: 42, customer_id: 5, status: 'draft', provider_id: 7, program_id: 3,
 		energy_type: 'power', category: 'home', customer_type: 'individual', code: 'CR-1', afm: '094014201'
 	});
 	await tick();
-	ok('ξεκινά στο βήμα 1', step() === '1');
+	ok('με ΑΦΜ, ανοίγει κατευθείαν στο βήμα 3', step() === '3', 'ορατά: ' + step());
 	ok('και τα τέσσερα είναι κλικαριστά', qa('[data-wgo]').every(function (b) { return !b.disabled; }));
 	qa('[data-wgo]')[3].click();
 	ok('πηδάει κατευθείαν στο 4', step() === '4');
+
+	console.log('\n8. επεξεργασία χωρίς ΑΦΜ: ξεκινά από το βήμα 1');
+	// reset() πρώτα, όπως κάνει και το openEdit() της εφαρμογής: η setField()
+	// αγνοεί κενή τιμή, οπότε χωρίς καθάρισμα θα έμενε στο DOM το ΑΦΜ του (7)
+	// και ο έλεγχος θα μετρούσε την προηγούμενη αίτηση.
+	w.ECRMForm.reset();
+	w.ECRMForm.edit({
+		id: 43, customer_id: 6, status: 'draft', provider_id: 7, program_id: 3,
+		energy_type: 'power', category: 'home', customer_type: 'individual', code: 'CR-2', afm: ''
+	});
+	await tick();
+	ok('χωρίς ΑΦΜ, ξεκινά στο βήμα 1', step() === '1', 'ορατά: ' + step());
+	ok('αλλά και πάλι ξεκλείδωτα και τα τέσσερα', qa('[data-wgo]').every(function (b) { return !b.disabled; }));
 
 	console.log('\n' + (fails ? '✗ ΑΠΟΤΥΧΙΕΣ: ' + fails : '✓ ΟΛΑ ΠΕΡΑΣΑΝ') + '  (' + passes + ' έλεγχοι)');
 	process.exit(fails ? 1 : 0);
