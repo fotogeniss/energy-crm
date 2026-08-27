@@ -1182,11 +1182,24 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		function checkCustomerMatch() {
 			var box = q('[data-custmatch]');
 			if (!box) return;
-			var v = readField('afm');
-			if (!v || !validAfm(v)) { box.hidden = true; box.innerHTML = ''; return; }
+			/* Ο αριθμός παροχής μετράει όσο και το ΑΦΜ.
+			 *
+			 * Ήταν η μόνη διαφορά με τον server: το /customers/check δεχόταν
+			 * `supply` από την πρώτη μέρα και το duplicatesOf() έψαχνε ήδη
+			 * c.supply_number -- απλώς κανείς δεν του το έστελνε ποτέ. Οπότε
+			 * όποιος ξεκινούσε από τον λογαριασμό που κρατούσε στο χέρι του,
+			 * δηλαδή ολόκληρη η ροή των Λήξεων, δεν έβλεπε ποτέ την πρόταση
+			 * επαναχρησιμοποίησης και ξαναπληκτρολογούσε 15 πεδία.
+			 *
+			 * Άκυρο ΑΦΜ δεν στέλνεται (θα έβγαζε θόρυβο σε κάθε πάτημα
+			 * πλήκτρου), αλλά ΔΕΝ μπλοκάρει την αναζήτηση με παροχή. */
+			var afm = readField('afm');
+			var supply = readField('supply_number');
+			if (!afm || !validAfm(afm)) { afm = ''; }
+			if (!afm && !supply) { box.hidden = true; box.innerHTML = ''; return; }
 			clearTimeout(custMatchT);
 			custMatchT = setTimeout(function () {
-				fetch(api('/customers/check') + '?afm=' + encodeURIComponent(v), { headers: headers(false) })
+				fetch(api('/customers/check') + '?afm=' + encodeURIComponent(afm) + '&supply=' + encodeURIComponent(supply), { headers: headers(false) })
 					.then(function (r) { return r.json(); })
 					.then(function (d) {
 						var m = (d && d.matches) || [];
@@ -1196,8 +1209,14 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 						if (!m.length || !m[0].id || already) { box.hidden = true; box.innerHTML = ''; return; }
 						var name = m[0].company_name || (((m[0].first_name || '') + ' ' + (m[0].last_name || '')).trim()) || 'πελάτη';
 						var n = m.length;
+						// Να λέει την αλήθεια για το ΤΙ ταίριαξε: «Αυτό το ΑΦΜ»
+						// πάνω από ταίριασμα παροχής θα ήταν λάθος μήνυμα, και
+						// ο πωλητής θα έψαχνε ΑΦΜ που δεν έχει γράψει ακόμα.
+						var byAfm = !!(afm && m[0].afm && String(m[0].afm) === String(afm));
 						box.innerHTML =
-							'<div class="ecrm-custmatch__hd">Αυτό το ΑΦΜ υπάρχει ήδη στο CRM</div>' +
+							'<div class="ecrm-custmatch__hd">' +
+							(byAfm ? 'Αυτό το ΑΦΜ υπάρχει ήδη στο CRM' : 'Αυτή η παροχή υπάρχει ήδη στο CRM') +
+							'</div>' +
 							'<div class="ecrm-custmatch__meta"><strong>' + esc(name) + '</strong> — ' + n + (n === 1 ? ' σύμβαση' : ' συμβάσεις') + ' στο όνομά του</div>' +
 							'<div class="ecrm-custmatch__btns">' +
 							'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-usecust="' + parseInt(m[0].id, 10) + '">Χρησιμοποίησε τα στοιχεία του</button>' +
@@ -1207,7 +1226,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 						var useBtn = box.querySelector('[data-usecust]');
 						if (useBtn) useBtn.addEventListener('click', function () { fillFromCustomer(parseInt(this.getAttribute('data-usecust'), 10), this); });
 						var openBtn = box.querySelector('[data-opencust]');
-						if (openBtn) openBtn.addEventListener('click', function () { openCustomerContracts(v); });
+						if (openBtn) openBtn.addEventListener('click', function () { openCustomerContracts(m[0].afm || afm || supply); });
 					})
 					.catch(function () {});
 			}, 300);
@@ -1251,6 +1270,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			var d = this.value.replace(/\D+/g, '');
 			var warn = d && (state.energy_type === 'power' ? (d.length < 9 || d.length > 13) : (d.length < 6 || d.length > 16));
 			fieldNote(this, warn ? 'Ελέγξτε τον αριθμό παροχής.' : '', 'warn');
+			checkCustomerMatch();
 		});
 
 		function save(status, btn) {
