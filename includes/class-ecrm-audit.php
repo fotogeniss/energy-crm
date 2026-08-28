@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use EnergyCRM\Domain\Audit\ValueMask;
+
 class ECRM_Audit {
 
 	/** Fields we never surface in the trail (internal/noisy). */
@@ -66,13 +68,32 @@ class ECRM_Audit {
 
 	/**
 	 * Write a single field_change event for a set of diffs.
+	 *
+	 * Ό,τι περνά από `ValueMask` (τα κρυπτογραφημένα πεδία, βλ. εκεί το
+	 * docblock) δεν γράφεται ποτέ σε καθαρό κείμενο εδώ — το ιστορικό
+	 * ενεργειών δεν είναι δεύτερη, ανασφάλιστη αντιγραφή της βάσης. Πεδία
+	 * χωρίς τιμή στο `ValueMask::isOpaque()` δεν παίρνουν καν βέλος «παλιά →
+	 * νέα»: μια μερική μάσκα εκεί θα έλεγε είτε πολλά είτε τίποτα.
+	 *
+	 * Αφορά μόνο ΝΕΕΣ εγγραφές, ρητή απόφαση 28/08/2026 — βλ.
+	 * docs/CHANGELOG.md (168). Ό,τι έχει ήδη γραφτεί καθαρό στο `events`
+	 * μένει καθαρό.
 	 */
 	public static function log( int $contract_id, array $changes, ?int $user_id = null ): void {
 		if ( ! $changes ) { return; }
 		global $wpdb;
 		$parts = [];
 		foreach ( $changes as $field => $pair ) {
-			$parts[] = sprintf( '%s: %s → %s', self::label( $field ), self::v( $pair[0] ), self::v( $pair[1] ) );
+			if ( ValueMask::isOpaque( $field ) ) {
+				$parts[] = sprintf( '%s: %s', self::label( $field ), ValueMask::CHANGED );
+				continue;
+			}
+			$parts[] = sprintf(
+				'%s: %s → %s',
+				self::label( $field ),
+				self::v( ValueMask::apply( $field, $pair[0] ) ),
+				self::v( ValueMask::apply( $field, $pair[1] ) )
+			);
 		}
 		$wpdb->insert( ECRM_DB::table( 'events' ), [
 			'contract_id' => $contract_id,
