@@ -192,36 +192,57 @@ class ECRM_Import {
 	// ---------------------------------------------------------------------
 	// Apply: update contract statuses by supply number
 	// ---------------------------------------------------------------------
-	/**
-	 * Πάνω από αυτό το μήκος το σχόλιο του παρόχου κόβεται.
+	/*
+	 * Το κόψιμο του σχολίου ΔΕΝ ζει πια εδώ.
 	 *
-	 * Απόφαση ιδιοκτήτη 27/08/2026: αρκεί για μια πρόταση αιτιολογίας, δεν
-	 * αφήνει ολόκληρη ελεύθερη στήλη να γεμίσει το ιστορικό της σύμβασης.
+	 * Γεννήθηκε σε αυτό το αρχείο στην (159) και ήταν λάθος που παραδέχτηκα
+	 * στην ίδια εγγραφή: κανόνας περιεχομένου μέσα σε legacy κλάση ανάγνωσης
+	 * υπολογιστικού φύλλου. Μετακόμισε στο ProviderNote (§1.12: ό,τι αγγίζεται
+	 * σε legacy μετακομίζει προς το Domain όταν είναι φθηνό).
+	 *
+	 * Η απόδειξη ότι ανήκει εκεί ήρθε αμέσως: τον ίδιο κανόνα τον χρειάζεται
+	 * και η διαδρομή που θα φέρνει καταστάσεις από API παρόχου (§1.13).
 	 */
-	private const NOTE_MAX_LEN = 300;
 
 	/**
-	 * Το σχόλιο του παρόχου από τη στήλη-αιτιολογία, κομμένο σε λογικό μήκος —
-	 * ή null αν η στήλη δεν επιλέχθηκε ή το κελί ήταν κενό.
-	 */
-	private static function provider_note( string $raw ): ?string {
-		$note = trim( $raw );
-
-		return $note === '' ? null : mb_substr( $note, 0, self::NOTE_MAX_LEN );
-	}
-
-	/**
-	 * @param array $pairs  List of [ 'supply' => string, 'status' => slug, 'message'?: string ]
-	 * @param bool  $dry    If true, only report; don't write.
+	 * @param array $pairs       List of [ 'supply' => string, 'status' => slug, 'message'?: string ]
+	 * @param bool  $dry         If true, only report; don't write.
+	 * @param int   $provider_id Περιορίζει το ταίριασμα σε αυτόν τον πάροχο· 0 = χωρίς περιορισμό.
 	 * @return array report
 	 */
-	public static function apply( array $pairs, bool $dry ): array {
+	public static function apply( array $pairs, bool $dry, int $provider_id = 0 ): array {
 		global $wpdb;
 		$ct     = ECRM_DB::table( 'contracts' );
 		$uid    = get_current_user_id();
 		$ids    = ECRM_DB::visible_user_ids( $uid );
 		$ph     = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 		$valid  = ECRM_DB::statuses();
+
+		/*
+		 * ΣΦΑΛΜΑ ΤΑΙΡΙΑΣΜΑΤΟΣ, βρέθηκε 28/08/2026 σχεδιάζοντας τον χάρτη.
+		 *
+		 * Το ερώτημα παρακάτω έψαχνε ΜΟΝΟ με αριθμό παροχής και `LIMIT 1`,
+		 * χωρίς ταξινόμηση. Ο αριθμός παροχής (ΗΚΑΣΠ) όμως ανήκει στο ΣΗΜΕΙΟ
+		 * ΚΑΤΑΝΑΛΩΣΗΣ, όχι στον πάροχο: πελάτης που άλλαξε πάροχο έχει ΔΥΟ
+		 * συμβάσεις με τον ίδιο αριθμό. Τότε το `LIMIT 1` διάλεγε αυθαίρετα,
+		 * και ένα αρχείο Protergia μπορούσε να ενημερώσει την παλιά σύμβαση
+		 * ΔΕΗ του ίδιου σημείου.
+		 *
+		 * Ο πάροχος έρχεται από την οθόνη, όπου ο χρήστης τον διαλέγει ούτως ή
+		 * άλλως για να φορτωθεί ο χάρτης — οπότε η διόρθωση ήταν δωρεάν.
+		 *
+		 * Με 0 (καμία επιλογή) δεν μπαίνει φίλτρο παρόχου -- η διόρθωση δεν
+		 * επιβάλλεται σιωπηλά σε ροή που δεν ξέρει πάροχο.
+		 *
+		 * Το `ORDER BY id DESC` όμως μπαίνει ΠΑΝΤΑ, και είναι δεύτερη μικρή
+		 * αλλαγή που αξίζει να ειπωθεί: παλιά, δύο συμβάσεις με τον ίδιο
+		 * αριθμό παροχής έδιναν απροσδιόριστο αποτέλεσμα -- ό,τι επέστρεφε η
+		 * MySQL εκείνη τη στιγμή. Τώρα δίνουν πάντα τη ΝΕΟΤΕΡΗ, που είναι και
+		 * η σωστή απάντηση στο «ποια σύμβαση αφορά αυτή η γραμμή». Χωρίς
+		 * ταξινόμηση, το ίδιο αρχείο μπορούσε να δώσει άλλο αποτέλεσμα σε δύο
+		 * εκτελέσεις χωρίς να αλλάξει τίποτα.
+		 */
+		$scope_provider = $provider_id > 0 ? ' AND provider_id = %d' : '';
 
 		$matched = 0; $updated = 0; $unchanged = 0; $noted = 0; $unmatched = []; $rejected = [];
 
@@ -231,12 +252,18 @@ class ECRM_Import {
 			if ( $supply === '' || ! isset( $valid[ $status ] ) ) {
 				continue;
 			}
-			$note = self::provider_note( (string) ( $pair['message'] ?? '' ) );
+			$note = \EnergyCRM\Providers\Domain\ProviderNote::fromRaw( (string) ( $pair['message'] ?? '' ) );
+
+			$params = array_merge( [ $supply ], $ids );
+			if ( $provider_id > 0 ) {
+				$params[] = $provider_id;
+			}
 
 			$row = $wpdb->get_row( $wpdb->prepare(
 				"SELECT id, status, signed_at, partner_user_id FROM {$ct}"
-					. " WHERE supply_number = %s AND partner_user_id IN ($ph) LIMIT 1",
-				array_merge( [ $supply ], $ids )
+					. " WHERE supply_number = %s AND partner_user_id IN ($ph){$scope_provider}"
+					. ' ORDER BY id DESC LIMIT 1',
+				$params
 			), ARRAY_A );
 
 			if ( ! $row ) {

@@ -24,6 +24,19 @@
  * το «μέχρι εδώ», ώστε η τρίτη να κοκκινίσει τη σουίτα αντί να περάσει
  * απαρατήρητη.
  *
+ * ## Τι σημαίνει «Persistence» μετά τις κάθετες φέτες
+ *
+ * Γράφτηκε στην (160) κοιτάζοντας μόνο τον φάκελο `src/Persistence/`. Την
+ * επόμενη μέρα η πρώτη κάθετη φέτα (§1.14) έφτιαξε το
+ * `src/Providers/Persistence/` — ίδιο layer, άλλος άξονας — και ο έλεγχος θα
+ * κοκκίνιζε για repository που κάνει ακριβώς τη δουλειά του.
+ *
+ * Διορθώθηκε στην (161) ώστε να αναγνωρίζει **οποιονδήποτε** φάκελο
+ * `Persistence` μέσα στο `src/`. Το ίδιο ακριβώς χρειάστηκε και το
+ * `.phpcs.xml.dist`, για τον ίδιο λόγο, την ίδια μέρα: κανόνας γραμμένος με
+ * layer-first διαδρομή δεν αναγνωρίζει το ίδιο layer όταν αλλάξει ο άξονας.
+ * Αξίζει να το θυμάται ο επόμενος που θα γράψει φύλακα με διαδρομές μέσα του.
+ *
  * @package EnergyCRM
  */
 
@@ -80,7 +93,9 @@ final class DatabaseAccessStaysInPersistenceTest extends TestCase
 
             $relative = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));
 
-            if (str_starts_with($relative, 'src/Persistence/')) {
+            // Οριζόντιο layer ή layer μέσα σε κάθετη φέτα — και τα δύο είναι
+            // «Persistence». Ο άξονας οργάνωσης δεν αλλάζει τι επιτρέπεται.
+            if (self::isPersistence($relative)) {
                 continue;
             }
 
@@ -93,6 +108,13 @@ final class DatabaseAccessStaysInPersistenceTest extends TestCase
         sort($files);
 
         return $files;
+    }
+
+    /** `src/Persistence/...` ή `src/<Φέτα>/Persistence/...` — ίδιο layer, άλλος άξονας. */
+    private static function isPersistence(string $relative): bool
+    {
+        return str_starts_with($relative, 'src/Persistence/')
+            || preg_match('#^src/[^/]+/Persistence/#', $relative) === 1;
     }
 
     public function testNothingOutsidePersistenceTouchesTheDatabase(): void

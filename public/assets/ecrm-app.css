@@ -415,6 +415,18 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 @media (max-width: 600px) { .ecrm-head__actions { width: 100%; justify-content: space-between; } }
 
 /* import report */
+/* Το μπάνερ της αντιστοίχισης: λέει ΑΠΟ ΠΟΥ ήρθαν οι επιλογές, όχι απλώς ότι
+   υπάρχουν. Τρεις καταστάσεις, τρία χρώματα, καμία σιωπή — docs/UI-PROVIDER-REPLY-2.html
+   (§1.8, εγκρίθηκε 28/08). Χωρίς αυτό ο χρήστης βλέπει γεμάτα κουτιά και δεν
+   ξέρει αν κάτι αποθηκεύτηκε ποτέ. */
+.ecrm-import-banner { border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: var(--fs-13); }
+.ecrm-import-banner b { display: block; font-size: var(--fs-12-5); margin-bottom: 2px; }
+.ecrm-import-banner.is-ok { background: var(--accent-wash); border: 1px solid var(--accent-soft); color: var(--ink); }
+.ecrm-import-banner.is-ok b { color: var(--accent-ink); }
+.ecrm-import-banner.is-warn { background: var(--st-pending-bg); border: 1px solid var(--st-pending); color: var(--ink); }
+.ecrm-import-banner.is-warn b { color: var(--st-pending); }
+.ecrm-import-banner.is-mute { background: var(--surface-track); border: 1px solid var(--line-card); color: var(--muted); }
+
 .ecrm-import-report { margin-top: 14px; }
 .ecrm-import-stats { display: flex; flex-wrap: wrap; gap: 18px; font-size: var(--fs-14); color: var(--ink); }
 .ecrm-import-stats b { color: var(--navy); font-size: var(--fs-16); }

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Α — ο πάροχος στην οθόνη εισαγωγής (συμπλήρωμα μακέτας)</title>
+<style>
+:root{
+--n0:#fff;--n50:#f7f7f5;--n100:#f1f1ee;--n150:#e9e8e4;--n200:#dedcd7;--n500:#6e6c66;
+--n800:#2a2926;--n900:#1a1a18;--p50:#eafaea;--p200:#a5eba7;--p400:#16c217;--p700:#0b690c;
+--bg:var(--n50);--surface:var(--n0);--track:var(--n150);--line:var(--n200);--line-card:var(--n150);
+--ink:var(--n800);--muted:var(--n500);--accent-wash:var(--p50);--accent-ink:var(--p700);
+--accent-soft:var(--p200);--radius:12px;--err:#c32b47;--err-bg:#fdeaea;--warn:#8a6100;--warn-bg:#fdf3d7;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+--bg:#111110;--surface:#1a1a18;--track:#2a2926;--line:#2a2926;--line-card:#2a2926;
+--ink:#f1f1ee;--muted:#a3a099;--accent-wash:#0e2a10;--accent-ink:#6bdd6d;--accent-soft:#0b690c;
+--err:#ff8fa3;--err-bg:#3a1620;--warn:#f0c34a;--warn-bg:#33280d;}}
+:root[data-theme="dark"]{
+--bg:#111110;--surface:#1a1a18;--track:#2a2926;--line:#2a2926;--line-card:#2a2926;
+--ink:#f1f1ee;--muted:#a3a099;--accent-wash:#0e2a10;--accent-ink:#6bdd6d;--accent-soft:#0b690c;
+--err:#ff8fa3;--err-bg:#3a1620;--warn:#f0c34a;--warn-bg:#33280d;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+line-height:1.55;padding:28px 20px 80px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto}
+h1{font-size:25px;font-weight:800;letter-spacing:-.01em;margin:0 0 6px}
+.lede{color:var(--muted);font-size:15px;margin:0 0 8px;max-width:72ch}
+.meta{font-size:12px;color:var(--muted);border-top:1px solid var(--line-card);padding-top:10px;margin-top:14px}
+h2{font-size:18px;font-weight:800;margin:34px 0 4px;letter-spacing:-.01em}
+p.why{color:var(--muted);font-size:14px;margin:0 0 16px;max-width:78ch}
+.pane{background:var(--surface);border:1px solid var(--line-card);border-radius:var(--radius);padding:16px 18px 18px;margin-bottom:14px}
+.pane--after{border-color:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-wash)}
+.step{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-card)}
+.row:last-child{border-bottom:0}
+.row__label{flex:0 0 200px;font-size:12.5px;color:var(--muted);font-weight:600}
+.sel{display:inline-block;min-width:210px;border:1px solid var(--line);border-radius:8px;padding:6px 9px;
+background:var(--surface);font-size:13px;color:var(--ink)}
+.sel.empty{color:var(--muted)}
+.sel::after{content:" ▾";color:var(--muted)}
+.sel.is-new{border-color:var(--accent-soft);box-shadow:0 0 0 2px var(--accent-wash)}
+.new{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+color:var(--accent-ink);background:var(--accent-wash);border:1px solid var(--accent-soft);border-radius:99px;padding:1px 7px;margin-inline-start:8px}
+.banner{display:flex;gap:10px;align-items:flex-start;border-radius:10px;padding:10px 12px;margin:12px 0 0;font-size:13px}
+.banner b{display:block;font-size:12px}
+.banner--ok{background:var(--accent-wash);border:1px solid var(--accent-soft);color:var(--ink)}
+.banner--ok b{color:var(--accent-ink)}
+.banner--warn{background:var(--warn-bg);border:1px solid var(--warn);color:var(--ink)}
+.banner--warn b{color:var(--warn)}
+.banner--mute{background:var(--track);border:1px solid var(--line-card);color:var(--muted)}
+.lnk{color:var(--accent-ink);text-decoration:underline;font-size:12px;white-space:nowrap;margin-inline-start:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+th{text-align:start;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+padding:0 8px 8px 0;border-bottom:1px solid var(--line-card)}
+td{padding:8px 8px 8px 0;border-bottom:1px solid var(--line-card);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.note{background:var(--surface);border:1px solid var(--line-card);border-inline-start:3px solid var(--p400);
+border-radius:0 10px 10px 0;padding:12px 16px;margin:18px 0;font-size:14px}
+.note b{display:block;margin-bottom:4px}
+.note ul{margin:8px 0 0;padding-inline-start:20px;color:var(--muted);font-size:13.5px}
+.note li{margin-bottom:6px}
+.bug{border-inline-start-color:var(--err)}
+.bug b{color:var(--err)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--track);border-radius:5px;padding:1px 5px}
+.q{background:var(--surface);border:1px solid var(--line-card);border-radius:var(--radius);padding:16px 18px;margin-top:16px}
+.q ol{margin:8px 0 0;padding-inline-start:20px}
+.q li{margin-bottom:10px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Α — ο πάροχος στην οθόνη εισαγωγής</h1>
+<p class="lede">Συμπλήρωμα στη <code>UI-PROVIDER-REPLY.html</code>, που εγκρίθηκε. Η πρώτη
+μακέτα έδειχνε το μπάνερ «Αποθηκευμένη αντιστοίχιση · Protergia» αλλά <strong>δεν έδειχνε
+ποτέ πώς επιλέγεται ο πάροχος</strong> — γιατί υπέθεσα ότι η οθόνη τον ξέρει. Δεν τον ξέρει.</p>
+<p class="meta">28/08/2026 · Μετρήθηκε: το <code>ecrm-view-import.js</code> δεν έχει καμία
+έννοια παρόχου, και το <code>window.ECRM</code> δίνει <code>rest, nonce, statuses, caps</code> — όχι παρόχους</p>
+
+<div class="note bug">
+<b>Και μαζί βρέθηκε πραγματικό σφάλμα ταιριάσματος</b>
+Η <code>ECRM_Import::apply()</code> ψάχνει
+<code>WHERE supply_number = %s AND partner_user_id IN (…) LIMIT 1</code> —
+<strong>χωρίς πάροχο και χωρίς <code>ORDER BY</code></strong>.
+<ul>
+<li>Ο αριθμός παροχής (ΗΚΑΣΠ) ανήκει στο <strong>σημείο κατανάλωσης</strong>, όχι στον πάροχο.
+Πελάτης που άλλαξε πάροχο έχει <strong>δύο</strong> συμβάσεις με τον ίδιο αριθμό παροχής.</li>
+<li>Τότε το <code>LIMIT 1</code> χωρίς ταξινόμηση διαλέγει <strong>αυθαίρετα</strong> — και ένα
+αρχείο Protergia μπορεί να ενημερώσει την παλιά σύμβαση ΔΕΗ του ίδιου σημείου.</li>
+<li>Ο πάροχος που θα διαλέγεις για την αντιστοίχιση <strong>λύνει ακριβώς αυτό</strong>, δωρεάν.</li>
+</ul>
+</div>
+
+<h2>Βήμα 1 — μία γραμμή παραπάνω, πρώτη</h2>
+<p class="why">Ο πάροχος μπαίνει <strong>πάνω</strong> από τις στήλες: είναι αυτός που καθορίζει
+ποια αποθηκευμένη αντιστοίχιση θα φορτωθεί, άρα πρέπει να απαντηθεί πρώτος.</p>
+
+<div class="pane pane--after">
+  <div class="step">Μετά · 1 · Αρχείο παρόχου</div>
+  <div class="row"><span class="row__label">Πάροχος <span class="new">νέο</span></span>
+    <span class="sel is-new">Protergia</span></div>
+  <div class="row"><span class="row__label">Αριθμός παροχής</span><span class="sel">ΑΡ. ΠΑΡΟΧΗΣ</span></div>
+  <div class="row"><span class="row__label">Κατάσταση</span><span class="sel">ΚΑΤΑΣΤΑΣΗ ΑΙΤΗΣΗΣ</span></div>
+  <div class="row"><span class="row__label">Σχόλιο / αιτία (προαιρετικό)</span><span class="sel">ΠΑΡΑΤΗΡΗΣΕΙΣ</span></div>
+</div>
+
+<h2>Βήμα 2 — τρεις καταστάσεις του μπάνερ</h2>
+<p class="why">Το μπάνερ λέει πάντα την αλήθεια για το πού βρήκε τις τιμές, ώστε να μη νομίζεις
+ποτέ ότι κάτι αποθηκεύτηκε ενώ δεν αποθηκεύτηκε.</p>
+
+<div class="pane">
+  <div class="step">α · Δεν έχει επιλεγεί πάροχος</div>
+  <div class="banner banner--mute">
+    <div><b>Χωρίς πάροχο — μόνο αυτόματη αναγνώριση</b>
+    Διάλεξε πάροχο για να θυμάται τις επιλογές σου την επόμενη φορά. Η εισαγωγή δουλεύει
+    κανονικά και χωρίς αυτόν.</div>
+  </div>
+</div>
+
+<div class="pane pane--after">
+  <div class="step">β · Βρέθηκε αποθηκευμένη αντιστοίχιση</div>
+  <div class="banner banner--ok">
+    <div><b>Αποθηκευμένη αντιστοίχιση · Protergia</b>
+    4 από 5 ήρθαν έτοιμες. Η <em>ΠΡΟΣ ΥΠΟΓΡΑΦΗ</em> είναι καινούρια και ζητά απόφαση.</div>
+    <span class="lnk">καθάρισμα</span>
+  </div>
+  <table>
+    <thead><tr><th>Κατάσταση παρόχου</th><th>Δική σου</th><th>Από πού</th></tr></thead>
+    <tbody>
+      <tr><td>ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ</td><td><span class="sel">Ενεργή</span></td><td>αποθηκευμένη</td></tr>
+      <tr><td>ΣΕ ΕΞΕΛΙΞΗ</td><td><span class="sel">Σε επεξεργασία</span></td><td>αποθηκευμένη</td></tr>
+      <tr><td>ΑΠΟΡΡΙΦΘΗ</td><td><span class="sel">Ακυρώθηκε</span></td><td>αποθηκευμένη</td></tr>
+      <tr><td>ΕΚΚΡΕΜΕΙ ΕΓΓΡΑΦΟ</td><td><span class="sel">Εκκρεμεί</span></td><td>αποθηκευμένη</td></tr>
+      <tr><td>ΠΡΟΣ ΥΠΟΓΡΑΦΗ</td><td><span class="sel empty">— αγνόησε —</span></td><td>νέα τιμή</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="pane">
+  <div class="step">γ · Πάροχος επιλεγμένος, καμία αποθηκευμένη ακόμα</div>
+  <div class="banner banner--warn">
+    <div><b>Πρώτη φορά για τη ΖΕΝΙΘ</b>
+    Οι επιλογές παρακάτω είναι αυτόματες εικασίες. Θα αποθηκευτούν όταν πατήσεις
+    «Ενημέρωση καταστάσεων».</div>
+  </div>
+</div>
+
+<div class="note">
+<b>Πού ζει ο κώδικας — §1.14, πρώτη κάθετη φέτα</b>
+<ul>
+<li><code>src/Providers/Domain/</code> — καθαρός PHP: η μετάφραση λεξιλογίου, οι ευρετικές
+(που σήμερα ζουν σε JavaScript) και το κόψιμο σχολίου στους 300 χαρακτήρες.</li>
+<li><code>src/Providers/Persistence/</code> — ανάγνωση/εγγραφή του χάρτη στη στήλη
+<code>providers.status_map</code> (JSON, μία migration).</li>
+<li><code>src/Providers/Http/</code> — δύο διαδρομές: «λύσε αυτές τις τιμές» και «αποθήκευσε
+τον χάρτη». <strong>Ένα integration καλεί τις ίδιες.</strong></li>
+<li>Ο browser <strong>ζωγραφίζει</strong> — δεν αποφασίζει. Σήμερα η
+<code>guessStatus()</code> είναι JavaScript, άρα κανένα cron ή webhook δεν μπορεί να τη
+χρησιμοποιήσει (§1.13).</li>
+<li>Μαζί φεύγει από το <code>includes/class-ecrm-import.php</code> η
+<code>provider_note()</code> — παράβαση του §1.12 που παραδέχτηκα στην (159).</li>
+</ul>
+</div>
+
+<div class="q">
+<b style="font-size:14px">Δύο ερωτήματα πριν γραφτεί κώδικας</b>
+<ol>
+<li><strong>Εγκρίνεις τη γραμμή «Πάροχος»</strong> στο βήμα 1; Χωρίς αυτήν, «αποθηκευμένη
+αντιστοίχιση ανά πάροχο» δεν έχει κλειδί.</li>
+<li><strong>Όταν διαλέγεις πάροχο, να περιορίζεται και το ταίριασμα σε αυτόν;</strong>
+Διορθώνει το σφάλμα παραπάνω. Παρενέργεια που πρέπει να ξέρεις: γραμμή που σήμερα
+ταιριάζει με σύμβαση <em>άλλου</em> παρόχου θα εμφανίζεται πλέον ως «χωρίς αντιστοίχιση» —
+που είναι το σωστό, αλλά είναι αλλαγή σε νούμερα που ήδη βλέπεις. Προτείνω <strong>ναι</strong>,
+και μόνο όταν έχει επιλεγεί πάροχος.</li>
+</ol>
+</div>
+
+</div>
+</body>
+</html>
