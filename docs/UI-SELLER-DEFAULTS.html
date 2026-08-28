@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Μακέτα — Προεπιλογές ανά πωλητή (Βήμα 1)</title>
+<style>
+:root{
+	--n0:#ffffff; --n25:#fdfdfc; --n50:#f8f8f6; --n100:#f1f1ee; --n150:#e9e8e4;
+	--n200:#dedcd7; --n300:#c6c4bd; --n400:#a3a099; --n500:#6e6c66; --n600:#5c5a55;
+	--n700:#42413d; --n800:#2a2926; --n900:#1a1a18;
+	--p50:#eafaea; --p100:#d2f5d3; --p200:#a5eba7; --p300:#6bdd6d;
+	--p400:#16c217; --p500:#12a413; --p600:#0e8610; --p700:#0b690c;
+	--surface:var(--n0); --ink:var(--n800); --navy:var(--n900); --muted:var(--n500);
+	--line:var(--n200); --line-soft:var(--n100); --line-card:var(--n150);
+	--line-mid:var(--n300); --accent-hover:var(--p500); --accent-ink:var(--p700);
+	--accent-wash:var(--p50); --accent-wash-2:var(--p100); --accent-soft:var(--p200);
+	--fs-18:18px; --fs-15:15px; --fs-14:14px; --fs-13-5:13.5px; --fs-13:13px;
+	--fs-12-5:12.5px; --fs-12:12px; --fs-11:11px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--n50);color:var(--ink);
+	font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+	font-size:var(--fs-14);line-height:1.5;padding:28px 20px 60px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px;color:var(--navy);letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:var(--fs-13);margin:0 0 26px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+.pane{background:var(--surface);border:1px solid var(--line-card);border-radius:14px;overflow:hidden}
+.pane__hd{padding:11px 16px;font-size:var(--fs-12);font-weight:800;letter-spacing:.06em;
+	text-transform:uppercase;border-bottom:1px solid var(--line-soft)}
+.pane--before .pane__hd{color:var(--muted);background:var(--n50)}
+.pane--after .pane__hd{color:var(--accent-ink);background:var(--accent-wash)}
+.pane__body{padding:18px 16px 20px}
+
+/* ---- αντίγραφο του πραγματικού Βήματος 1 ---- */
+.ecrm-card{border:1px solid var(--line-card);border-radius:12px;padding:15px 15px 17px;background:var(--surface)}
+.ecrm-step{display:flex;align-items:center;gap:9px;font-size:var(--fs-15);font-weight:800;
+	color:var(--navy);margin-bottom:13px}
+.ecrm-step__n{width:22px;height:22px;border-radius:50%;background:var(--p400);color:#fff;
+	display:grid;place-items:center;font-size:var(--fs-12);font-weight:800;flex:0 0 22px}
+.ecrm-step__hint{font-size:var(--fs-12);font-weight:600;color:var(--muted);margin-left:auto}
+.ecrm-providers{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.ecrm-provider{height:64px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);
+	display:grid;place-items:center;padding:8px;font-weight:700;color:var(--navy);
+	font-size:var(--fs-13);cursor:pointer}
+.ecrm-provider.is-on{border-color:var(--accent-hover);background:var(--accent-wash);
+	box-shadow:0 0 0 3px var(--accent-wash-2)}
+.ecrm-row{display:flex;align-items:center;gap:16px;padding:9px 0;flex-wrap:wrap;
+	border-top:1px solid var(--line-soft);margin-top:14px}
+.ecrm-row__label{width:110px;flex:0 0 110px;font-size:var(--fs-12);font-weight:700;
+	letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.ecrm-chips{display:flex;gap:8px;flex-wrap:wrap}
+.ecrm-chip{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
+	border-radius:999px;padding:7px 14px;font-size:var(--fs-12-5);font-weight:600;cursor:pointer}
+.ecrm-chip.is-on{border-color:var(--accent-hover);background:var(--accent-wash);color:var(--accent-ink)}
+.ecrm-select{border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--surface);
+	font-size:var(--fs-13);color:var(--ink);min-width:230px;font-family:inherit}
+.ecrm-select.is-empty{color:var(--n400)}
+
+/* ---- η νέα κάρτα πρότασης ---- */
+.ecrm-usual{background:var(--accent-wash);border:1px solid var(--accent-soft);border-radius:12px;
+	padding:13px 14px;margin:0 0 13px}
+.ecrm-usual__hd{font-weight:800;color:var(--navy);font-size:var(--fs-13-5);margin-bottom:4px}
+.ecrm-usual__meta{font-size:var(--fs-12-5);color:var(--muted);margin-bottom:11px}
+.ecrm-usual__meta strong{color:var(--ink)}
+.ecrm-btn{border:none;border-radius:8px;font-family:inherit;font-size:var(--fs-12-5);font-weight:600;
+	padding:8px 15px;cursor:pointer;line-height:1;display:inline-flex;align-items:center;gap:8px}
+.ecrm-btn--primary{background:var(--p400);color:#fff}
+.ecrm-btn--ghost{background:transparent;color:var(--muted);border:1.5px solid var(--line)}
+
+.note{margin-top:11px;font-size:var(--fs-12);color:var(--muted);line-height:1.6}
+.note strong{color:var(--ink)}
+.arrow{text-align:center;color:var(--muted);font-size:var(--fs-12);margin:14px 0 2px;font-weight:700}
+
+.expl{margin-top:34px;background:var(--surface);border:1px solid var(--line-card);
+	border-radius:14px;padding:20px 22px}
+.expl h2{font-size:var(--fs-15);margin:0 0 12px;color:var(--navy);letter-spacing:.01em}
+.expl h3{font-size:var(--fs-13);margin:20px 0 7px;color:var(--navy);text-transform:uppercase;
+	letter-spacing:.05em}
+.expl p{margin:0 0 10px;font-size:var(--fs-13);color:var(--n700);line-height:1.65}
+.expl ul{margin:0 0 10px;padding-left:19px;font-size:var(--fs-13);color:var(--n700);line-height:1.7}
+.expl li{margin-bottom:5px}
+.expl code{background:var(--n100);border-radius:4px;padding:1px 5px;font-size:var(--fs-12);
+	font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.flag{border-left:3px solid var(--p400);background:var(--accent-wash);padding:11px 14px;
+	border-radius:0 8px 8px 0;margin:14px 0}
+.flag p{margin:0;font-size:var(--fs-12-5)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Προεπιλογές ανά πωλητή — Βήμα 1 της αίτησης</h1>
+<p class="sub">Μακέτα §1.8 · «Λιγότερο πληκτρολόγιο» #4 · 28/08/2026 · <strong>ορατή πρόταση με ένα κλικ</strong>, τα «συνήθη» βγαίνουν <strong>αυτόματα από το ιστορικό</strong> του κάθε πωλητή</p>
+
+<div class="cols">
+
+	<!-- ================= ΠΡΙΝ ================= -->
+	<section class="pane pane--before">
+		<div class="pane__hd">Πριν — σήμερα</div>
+		<div class="pane__body">
+
+			<div class="ecrm-card">
+				<div class="ecrm-step"><span class="ecrm-step__n">1</span> Επιλογή Παρόχου</div>
+				<div class="ecrm-providers">
+					<div class="ecrm-provider">Πρωτεύς</div>
+					<div class="ecrm-provider">Ήρων</div>
+					<div class="ecrm-provider">Elpedison</div>
+					<div class="ecrm-provider">Orizon</div>
+				</div>
+
+				<div class="ecrm-row">
+					<span class="ecrm-row__label">Είδος</span>
+					<div class="ecrm-chips">
+						<span class="ecrm-chip is-on">Ηλεκτρισμός</span>
+						<span class="ecrm-chip">Φυσικό Αέριο</span>
+						<span class="ecrm-chip">Κινητή</span>
+					</div>
+				</div>
+
+				<div class="ecrm-row">
+					<span class="ecrm-row__label">Πρόγραμμα</span>
+					<select class="ecrm-select is-empty" disabled><option>—</option></select>
+				</div>
+			</div>
+
+			<p class="note">Κάθε νέα αίτηση ξεκινά κενή. Ο πωλητής που βάζει <strong>κάθε μέρα τον ίδιο πάροχο</strong> κάνει τα ίδια δύο κλικ ξανά και ξανά: διάλεξε πάροχο → διάλεξε πρόγραμμα. Η οθόνη δεν θυμάται τίποτα.</p>
+
+		</div>
+	</section>
+
+	<!-- ================= ΜΕΤΑ ================= -->
+	<section class="pane pane--after">
+		<div class="pane__hd">Μετά — η πρόταση</div>
+		<div class="pane__body">
+
+			<div class="ecrm-card">
+				<div class="ecrm-step"><span class="ecrm-step__n">1</span> Επιλογή Παρόχου</div>
+
+				<div class="ecrm-usual">
+					<div class="ecrm-usual__hd">Συνήθως βάζεις <strong>Πρωτεύς</strong></div>
+					<div class="ecrm-usual__meta">Ηλεκτρισμός · <strong>Οικιακό Σταθερό 12μηνο</strong> — σε 14 από τις τελευταίες 20 αιτήσεις σου</div>
+					<button class="ecrm-btn ecrm-btn--primary" type="button">Βάλ’ το</button>
+				</div>
+
+				<div class="ecrm-providers">
+					<div class="ecrm-provider">Πρωτεύς</div>
+					<div class="ecrm-provider">Ήρων</div>
+					<div class="ecrm-provider">Elpedison</div>
+					<div class="ecrm-provider">Orizon</div>
+				</div>
+
+				<div class="ecrm-row">
+					<span class="ecrm-row__label">Είδος</span>
+					<div class="ecrm-chips">
+						<span class="ecrm-chip is-on">Ηλεκτρισμός</span>
+						<span class="ecrm-chip">Φυσικό Αέριο</span>
+						<span class="ecrm-chip">Κινητή</span>
+					</div>
+				</div>
+
+				<div class="ecrm-row">
+					<span class="ecrm-row__label">Πρόγραμμα</span>
+					<select class="ecrm-select is-empty" disabled><option>—</option></select>
+				</div>
+			</div>
+
+			<div class="arrow">↓ μετά το πάτημα «Βάλ’ το»</div>
+
+			<div class="ecrm-card">
+				<div class="ecrm-step"><span class="ecrm-step__n">1</span> Επιλογή Παρόχου
+					<span class="ecrm-step__hint">Επιλεγμένος πάροχος: Πρωτεύς</span></div>
+
+				<div class="ecrm-providers">
+					<div class="ecrm-provider is-on">Πρωτεύς</div>
+					<div class="ecrm-provider">Ήρων</div>
+					<div class="ecrm-provider">Elpedison</div>
+					<div class="ecrm-provider">Orizon</div>
+				</div>
+
+				<div class="ecrm-row">
+					<span class="ecrm-row__label">Είδος</span>
+					<div class="ecrm-chips">
+						<span class="ecrm-chip is-on">Ηλεκτρισμός</span>
+						<span class="ecrm-chip">Φυσικό Αέριο</span>
+					</div>
+				</div>
+
+				<div class="ecrm-row">
+					<span class="ecrm-row__label">Πρόγραμμα</span>
+					<select class="ecrm-select"><option>Οικιακό Σταθερό 12μηνο</option></select>
+				</div>
+			</div>
+
+			<p class="note">Η κάρτα <strong>εξαφανίζεται</strong> μόλις επιλεγεί πάροχος — είτε από το κουμπί είτε με το χέρι. Δεν ξαναεμφανίζεται σε αυτή την αίτηση.</p>
+
+		</div>
+	</section>
+
+</div>
+
+<!-- ================= ΕΞΗΓΗΣΕΙΣ ================= -->
+<section class="expl">
+	<h2>Τι ακριβώς αλλάζει, και τι όχι</h2>
+
+	<p>Μία νέα κάρτα πρότασης μέσα στο Βήμα 1, πάνω από τα λογότυπα των παρόχων. Κανένα υπάρχον στοιχείο δεν μετακινείται, δεν αλλάζει μέγεθος και δεν αλλάζει χρώμα. Η κάρτα δανείζεται αυτούσιο το ύφος της κάρτας «Αυτό το ΑΦΜ υπάρχει ήδη στο CRM» που ήδη ζει στην ίδια φόρμα — ίδιο πράσινο φόντο, ίδιο περίγραμμα, ίδιο κουμπί.</p>
+
+	<h3>Γιατί πρόταση και όχι σιωπηλή προεπιλογή</h3>
+	<p>Ήταν ρητή απόφασή σου, και είναι η σωστή: μια σιωπηλά προεπιλεγμένη επιλογή γλιτώνει ένα κλικ ακόμα, αλλά αν ο πωλητής δεν κοιτάξει, φεύγει αίτηση σε λάθος πάροχο. Το κόστος του λάθους είναι πολύ μεγαλύτερο από το κέρδος του κλικ. Έτσι, τίποτα δεν επιλέγεται χωρίς να το πατήσει κάποιος.</p>
+
+	<h3>Από πού βγαίνει το «συνήθως»</h3>
+	<ul>
+		<li>Από τις <strong>τελευταίες 20 συμβάσεις του ίδιου του πωλητή</strong> — όχι της ομάδας, όχι της εταιρείας. Είναι η δική του συνήθεια.</li>
+		<li>Προτείνεται μόνο αν ο ίδιος συνδυασμός εμφανίζεται <strong>τουλάχιστον 3 φορές</strong>. Καινούριος πωλητής με δύο αιτήσεις δεν βλέπει κάρτα — γιατί δεν θα ήταν αλήθεια ότι «συνήθως» βάζει κάτι.</li>
+		<li>Η κάρτα λέει <strong>τον πραγματικό αριθμό</strong> («14 από τις τελευταίες 20»), ώστε να φαίνεται πόσο ισχυρή είναι η συνήθεια και να μην είναι μαύρο κουτί.</li>
+		<li><strong>Προσαρμόζεται μόνη της.</strong> Αν αλλάξει ο πάροχος που δουλεύει, μετά από λίγες αιτήσεις αλλάζει και η πρόταση. Καμία οθόνη ρυθμίσεων, τίποτα να συντηρηθεί.</li>
+	</ul>
+
+	<h3>Τι ακριβώς βάζει το κουμπί</h3>
+	<p>Και τα τρία μαζί, γιατί το ένα χωρίς το άλλο δεν στέκει: <strong>πάροχο</strong>, <strong>είδος</strong> (ηλεκτρισμός / αέριο / κινητή) και <strong>πρόγραμμα</strong>. Αν έμπαινε μόνο ο πάροχος, ένα πρόγραμμα αερίου δεν θα φαινόταν καν στη λίστα, γιατί η λίστα φιλτράρεται από το είδος — και το είδος ξεκινά πάντα στο «Ηλεκτρισμός».</p>
+
+	<div class="flag">
+		<p><strong>Δεν εμφανίζεται σε επεξεργασία υπάρχουσας αίτησης.</strong> Εκεί ο πάροχος είναι ήδη αυτός που γράφτηκε στη σύμβαση, και μια πρόταση να αλλάξει θα ήταν επικίνδυνη — όχι βοηθητική.</p>
+	</div>
+
+	<h3>Τι ΔΕΝ αλλάζει</h3>
+	<ul>
+		<li>Καμία νέα στήλη, κανένα migration, καμία αποθήκευση προτίμησης πουθενά. Ο υπολογισμός γίνεται τη στιγμή που φορτώνει η φόρμα, από συμβάσεις που ήδη υπάρχουν.</li>
+		<li>Καμία νέα κλήση δικτύου: το «συνήθως» ταξιδεύει μέσα στην ίδια απάντηση <code>/providers</code> που η φόρμα ζητά ούτως ή άλλως στο άνοιγμα.</li>
+		<li>Καμία αλλαγή στην εμβέλεια. Το ερώτημα κοιτάζει <strong>μόνο</strong> τις δικές του συμβάσεις — δεν ανοίγει κανένα παράθυρο σε δεδομένα άλλου.</li>
+		<li>Ο πωλητής μπορεί να αγνοήσει την πρόταση και να διαλέξει ό,τι θέλει, όπως σήμερα.</li>
+	</ul>
+</section>
+
+</div>
+</body>
+</html>

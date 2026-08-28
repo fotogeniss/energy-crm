@@ -282,6 +282,7 @@ class ECRM_Shortcodes {
 
 			<section class="ecrm-card">
 				<div class="ecrm-step"><span class="ecrm-step__n">1</span> Επιλογή Παρόχου <span class="ecrm-step__hint" data-selprov></span></div>
+				<div class="ecrm-usual" data-usual hidden></div>
 				<div class="ecrm-providers" data-providers><div class="ecrm-loading">Φόρτωση παρόχων…</div></div>
 			</section>
 

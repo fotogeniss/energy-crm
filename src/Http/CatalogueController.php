@@ -19,6 +19,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Forms\MobilePlans;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ProviderRepository;
+use EnergyCRM\Providers\Persistence\UsualChoiceRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -31,6 +32,7 @@ final class CatalogueController implements Controller
         private readonly ScopeResolver $scopes,
         private readonly ProviderRepository $providers,
         private readonly ContractQueries $queries,
+        private readonly UsualChoiceRepository $usual,
     ) {
     }
 
@@ -68,6 +70,12 @@ final class CatalogueController implements Controller
             // next to a figure the paper form fixes in advance. No PII, no DB
             // read — the same static table the renderer already uses.
             'mobile_pricing'   => MobilePlans::pricingTable(),
+            // Τι βάζει συνήθως ΑΥΤΟΣ ο πωλητής -- ταξιδεύει εδώ και όχι σε δική
+            // του διαδρομή επειδή η φόρμα ζητά ούτως ή άλλως τον κατάλογο στο
+            // άνοιγμα: δεύτερη κλήση θα ήταν δεύτερη αναμονή σε κινητό, για ένα
+            // ερώτημα που κοιτάζει είκοσι γραμμές. `null` όταν δεν υπάρχει
+            // αρκετά καθαρή συνήθεια -- τότε η οθόνη δεν δείχνει τίποτα.
+            'usual'            => $this->usual->forPartner($this->scopes->forCurrentUser()->actorId())->toArray(),
         ], 200);
     }
 

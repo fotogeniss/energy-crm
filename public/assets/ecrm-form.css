@@ -975,11 +975,23 @@
  * το .ecrm-btn--ai, όχι το κόκκινο/πορτοκαλί του .ecrm-dupwarn: εκείνο είναι
  * προειδοποίηση («μπορεί να κάνεις λάθος»), αυτό εδώ είναι πρόταση βοήθειας
  * («κάτσε, το ξέρουμε ήδη»). Ίδιο χρώμα σημαίνει ίδιο νόημα παντού. */
-.ecrm-custmatch { background:var(--accent-wash); border:1px solid var(--accent-soft); border-radius:12px; padding:13px 14px; margin:4px 0 12px; }
-.ecrm-custmatch__hd { font-weight:800; color:var(--navy); font-size:var(--fs-13-5); margin-bottom:4px; }
-.ecrm-custmatch__meta { font-size:var(--fs-12-5); color:var(--muted); margin-bottom:11px; }
-.ecrm-custmatch__meta strong { color:var(--ink); }
+/* Οι δύο κάρτες πρότασης της φόρμας -- «ο πελάτης υπάρχει ήδη» (build queue 08)
+   και «συνήθως βάζεις αυτόν τον πάροχο» (Λιγότερο πληκτρολόγιο 4). Μοιράζονται
+   κανόνες ΕΠΙΤΗΔΕΣ: είναι το ίδιο πράγμα δύο φορές -- ήσυχη πρόταση μέσα στη
+   ροή, με κουμπί που δεν πατιέται μόνο του. Αν αποκλίνουν οπτικά, ο πωλητής θα
+   τις διαβάζει ως δύο διαφορετικού βάρους μηνύματα, που δεν είναι. */
+.ecrm-custmatch,
+.ecrm-usual { background:var(--accent-wash); border:1px solid var(--accent-soft); border-radius:12px; padding:13px 14px; margin:4px 0 12px; }
+.ecrm-custmatch__hd,
+.ecrm-usual__hd { font-weight:800; color:var(--navy); font-size:var(--fs-13-5); margin-bottom:4px; }
+.ecrm-custmatch__meta,
+.ecrm-usual__meta { font-size:var(--fs-12-5); color:var(--muted); margin-bottom:11px; }
+.ecrm-custmatch__meta strong,
+.ecrm-usual__meta strong { color:var(--ink); }
 .ecrm-custmatch__btns { display:flex; gap:8px; flex-wrap:wrap; }
+/* Η κάρτα του παρόχου κάθεται ΠΑΝΩ από το πλέγμα των λογοτύπων, όχι κάτω από
+   πεδίο, οπότε δεν χρειάζεται το πάνω περιθώριο που έχει η custmatch. */
+.ecrm-usual { margin-top:0; }
 
 
 /* Πεδία που ζητά συγκεκριμένα η αίτηση του επιλεγμένου παρόχου. */

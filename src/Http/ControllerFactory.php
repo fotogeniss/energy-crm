@@ -32,6 +32,7 @@ namespace EnergyCRM\Http;
 use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Providers\Http\ProviderStatusMapController;
 use EnergyCRM\Providers\Persistence\ProviderStatusMapRepository;
+use EnergyCRM\Providers\Persistence\UsualChoiceRepository;
 use EnergyCRM\Services;
 
 final class ControllerFactory
@@ -118,7 +119,7 @@ final class ControllerFactory
             new ThemeController($scope),
 
             // Catalogue and form metadata.
-            new CatalogueController($scope, Services::providers(), $queries),
+            new CatalogueController($scope, Services::providers(), $queries, new UsualChoiceRepository()),
             new ProviderFormController(),
 
             // Tools.
