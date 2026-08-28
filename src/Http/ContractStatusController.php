@@ -195,12 +195,39 @@ final class ContractStatusController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => $refusal], 409);
         }
 
-        // Bytes before rows: the foreign key would drop the file records and
-        // leave the documents themselves on disk with nothing pointing at them.
-        $this->files->purgeForContracts([$id]);
+        /*
+         * Τρία βήματα, όχι δύο -- ίδια σειρά με τη μαζική διαγραφή.
+         *
+         * Η σειρά «bytes πρώτα» που υπήρχε εδώ έλυνε ένα πραγματικό ρίσκο: το
+         * `files.contract_id` είναι `ON DELETE CASCADE`, οπότε αν έφευγε πρώτη
+         * η σύμβαση, οι γραμμές εξαφανίζονταν χωρίς να αγγιχτεί ο δίσκος και
+         * τα αρχεία έμεναν ορφανά (81 τέτοια μετρήθηκαν κάποτε -- δες
+         * `ContractDeleteBytesTest`).
+         *
+         * Έλυνε όμως το ένα ρίσκο δημιουργώντας το αντίθετο: αν αποτύγχανε η
+         * διαγραφή της σύμβασης, τα σαρωμένα δελτία ταυτότητας ήταν **ήδη
+         * σβησμένα, οριστικά**, για σύμβαση που επέζησε. Το πρωτότυπο δεν
+         * υπήρξε ποτέ αλλού.
+         *
+         * Η μαζική διαδρομή το διόρθωσε στις 18/08 (CHANGELOG (31), εύρημα 19)
+         * με τρία βήματα -- **η μονή διαδρομή έμεινε πίσω** και κρατούσε το
+         * παλιό σφάλμα δέκα μέρες. Στιγμιότυπο, διαγραφή, bytes μετά.
+         */
+        $doomed = $this->files->recordsForContracts([$id]);
 
-        return $this->contracts->delete($id, $scope)
-            ? new WP_REST_Response(['ok' => true], 200)
-            : new WP_REST_Response(['ok' => false, 'error' => 'Η διαγραφή απέτυχε.'], 500);
+        if (! $this->contracts->delete($id, $scope)) {
+            return new WP_REST_Response(
+                ['ok' => false, 'error' => 'Η διαγραφή απέτυχε· τα έγγραφα δεν πειράχτηκαν.'],
+                500
+            );
+        }
+
+        // Οι γραμμές έφυγαν με το CASCADE -- αν το foreign key υπάρχει. Αν δεν
+        // εφαρμόστηκε ποτέ (το AddForeignKeys καταγράφει και προσπερνά), αυτό
+        // τις καθαρίζει. Και στις δύο περιπτώσεις τα bytes φεύγουν παρακάτω.
+        $this->files->purgeForContracts([$id]);
+        $this->files->forgetBytes($doomed);
+
+        return new WP_REST_Response(['ok' => true], 200);
     }
 }
