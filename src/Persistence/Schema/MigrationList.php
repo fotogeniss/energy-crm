@@ -22,6 +22,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddIntakeColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddPayoutAmountColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
+use EnergyCRM\Persistence\Schema\Migrations\AddProviderRefColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProviderStatusMapColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddSupplyNumberIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddEventStatusIndex;
@@ -71,6 +72,7 @@ final class MigrationList
             new AddIntakeColumns(),
             new AddProviderStatusMapColumn(),
             new AddSupplyNumberIndex(),
+            new AddProviderRefColumn(),
         ];
     }
 }
