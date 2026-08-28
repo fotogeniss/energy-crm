@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Μακέτα — Μάσκα ευαίσθητων τιμών στο χρονολόγιο</title>
+<style>
+:root{
+	--n0:#ffffff; --n25:#fdfdfc; --n50:#f8f8f6; --n100:#f1f1ee; --n150:#e9e8e4;
+	--n200:#dedcd7; --n300:#c6c4bd; --n400:#a3a099; --n500:#6e6c66; --n600:#5c5a55;
+	--n700:#42413d; --n800:#2a2926; --n900:#1a1a18;
+	--p50:#eafaea; --p100:#d2f5d3; --p200:#a5eba7; --p300:#6bdd6d;
+	--p400:#16c217; --p500:#12a413; --p600:#0e8610; --p700:#0b690c;
+	--r50:#fdecec; --r100:#fbd9d9; --r300:#f08a8a; --r500:#d13b3b; --r700:#9c2020;
+	--a50:#fff6e6; --a300:#f0c070; --a700:#8a5a10;
+	--surface:var(--n0); --ink:var(--n800); --navy:var(--n900); --muted:var(--n500);
+	--line:var(--n200); --line-soft:var(--n100); --line-card:var(--n150);
+	--accent-hover:var(--p500); --accent-ink:var(--p700);
+	--accent-wash:var(--p50); --accent-wash-2:var(--p100); --accent-soft:var(--p200);
+	--fs-18:18px; --fs-15:15px; --fs-14:14px; --fs-13-5:13.5px; --fs-13:13px;
+	--fs-12-5:12.5px; --fs-12:12px; --fs-11:11px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--n50);color:var(--ink);
+	font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+	font-size:var(--fs-14);line-height:1.5;padding:28px 20px 70px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px;color:var(--navy);letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:var(--fs-13);margin:0 0 8px}
+h2{font-size:var(--fs-15);color:var(--navy);margin:34px 0 10px;letter-spacing:-.01em}
+h2 .num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;
+	background:var(--n800);color:#fff;font-size:var(--fs-11);font-weight:800;margin-right:7px;
+	vertical-align:1px}
+p.lead{color:var(--n600);font-size:var(--fs-13);margin:0 0 14px;max-width:80ch}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+.pane{background:var(--surface);border:1px solid var(--line-card);border-radius:14px;overflow:hidden}
+.pane__hd{padding:11px 16px;font-size:var(--fs-12);font-weight:800;letter-spacing:.06em;
+	text-transform:uppercase;border-bottom:1px solid var(--line-soft);
+	display:flex;align-items:center;gap:8px}
+.pane--before .pane__hd{color:var(--r700);background:var(--r50)}
+.pane--after .pane__hd{color:var(--accent-ink);background:var(--accent-wash)}
+.pane__body{padding:16px}
+.tag{margin-left:auto;font-size:var(--fs-11);font-weight:700;letter-spacing:0;text-transform:none;
+	padding:2px 8px;border-radius:999px}
+.pane--before .tag{background:var(--r100);color:var(--r700)}
+.pane--after .tag{background:var(--accent-wash-2);color:var(--accent-ink)}
+
+/* ---- αντίγραφο του πραγματικού χρονολογίου (ecrm-view-detail.js) ---- */
+.ecrm-timeline{list-style:none;margin:0;padding:0}
+.ecrm-timeline li{position:relative;padding:0 0 16px 20px;border-left:2px solid var(--line-soft)}
+.ecrm-timeline li:last-child{padding-bottom:2px;border-left-color:transparent}
+.ecrm-timeline li::before{content:"";position:absolute;left:-6px;top:4px;width:10px;height:10px;
+	border-radius:50%;background:var(--n300);border:2px solid var(--surface)}
+.ecrm-timeline li.is-edit::before{background:var(--p400)}
+.ecrm-tl__label{font-size:var(--fs-13-5);color:var(--navy);font-weight:600;line-height:1.45}
+.ecrm-tl__meta{font-size:var(--fs-11);color:var(--muted);margin-top:3px;
+	display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ecrm-cell-mark{width:19px;height:19px;border-radius:50%;display:grid;place-items:center;
+	font-size:9.5px;font-weight:800;color:#fff;background:hsl(var(--h,140) 45% 42%)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.hot{background:var(--r100);color:var(--r700);border-radius:3px;padding:0 3px;font-weight:700}
+.safe{background:var(--accent-wash-2);color:var(--accent-ink);border-radius:3px;padding:0 3px;font-weight:700}
+
+/* ---- πίνακας παραλλαγών ---- */
+table{border-collapse:collapse;width:100%;background:var(--surface);
+	border:1px solid var(--line-card);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line-soft);
+	font-size:var(--fs-13);vertical-align:top}
+th{background:var(--n50);font-size:var(--fs-11);font-weight:800;letter-spacing:.05em;
+	text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+td.f{font-weight:700;color:var(--navy);white-space:nowrap}
+.opt{background:var(--surface);border:1px solid var(--line-card);border-radius:14px;
+	padding:15px 17px 17px;margin-bottom:14px}
+.opt--rec{border-color:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-wash)}
+.opt__hd{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.opt__k{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;
+	background:var(--n100);color:var(--n700);font-weight:800;font-size:var(--fs-12);flex:0 0 24px}
+.opt--rec .opt__k{background:var(--p400);color:#fff}
+.opt__t{font-size:var(--fs-15);font-weight:800;color:var(--navy)}
+.opt__badge{margin-left:auto;font-size:var(--fs-11);font-weight:700;padding:2px 9px;
+	border-radius:999px;background:var(--accent-wash-2);color:var(--accent-ink)}
+.opt__why{font-size:var(--fs-13);color:var(--n600);margin:6px 0 12px;max-width:78ch}
+.opt__cost{font-size:var(--fs-12);color:var(--muted);margin-top:11px;padding-top:10px;
+	border-top:1px solid var(--line-soft)}
+.opt__cost b{color:var(--n700)}
+.note{background:var(--a50);border:1px solid var(--a300);border-radius:12px;
+	padding:13px 16px;font-size:var(--fs-13);color:var(--n700);margin:16px 0}
+.note b{color:var(--a700)}
+.note--red{background:var(--r50);border-color:var(--r300)}
+.note--red b{color:var(--r700)}
+.foot{margin-top:38px;padding-top:16px;border-top:1px solid var(--line);
+	font-size:var(--fs-12);color:var(--muted)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+	background:var(--n100);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Μάσκα ευαίσθητων τιμών στο ιστορικό ενεργειών</h1>
+<p class="sub">Μακέτα §1.8 · 28/08/2026 · καρτέλα σύμβασης → χρονολόγιο · <span class="mono">events.message</span></p>
+
+<div class="note note--red">
+<b>Το πρόβλημα, μετρημένο.</b> Οι στήλες <code>afm, adt, street, street_no, postal_code, phone</code>
+αποθηκεύονται κρυπτογραφημένες (<span class="mono">CustomerFields.php:67</span>). Αλλά η
+<span class="mono">ECRM_Audit::log()</span> (<span class="mono">class-ecrm-audit.php:71-82</span>)
+γράφει την <b>παλιά και τη νέα τιμή σε καθαρό κείμενο</b> στο <span class="mono">events.message</span>,
+γιατί η <span class="mono">excluded()</span> δεν τις περιέχει. Το <code>ECRM_ENCRYPT_PII</code>
+παρακάμπτεται από την πλαϊνή πόρτα.
+</div>
+
+<h2><span class="num">1</span>Πριν και μετά — η ίδια καρτέλα</h2>
+<p class="lead">Το χρονολόγιο αποδίδεται από το <span class="mono">ecrm-view-detail.js:185</span>
+(<span class="mono">e.message || e.type</span>). Οι γραμμές είναι πραγματικού σχήματος, με
+πλαστά στοιχεία.</p>
+
+<div class="cols">
+	<div class="pane pane--before">
+		<div class="pane__hd">Πριν <span class="tag">σήμερα στη βάση</span></div>
+		<div class="pane__body">
+			<ul class="ecrm-timeline">
+				<li class="is-edit">
+					<div class="ecrm-tl__label">Τροποποίηση — ΑΦΜ: <span class="hot mono">128456789</span> → <span class="hot mono">128456712</span> · ΑΔΤ: <span class="hot mono">ΑΚ742318</span> → <span class="hot mono">ΑΜ915604</span></div>
+					<div class="ecrm-tl__meta"><span class="ecrm-cell-mark" style="--h:200">ΓΠ</span> Γιώργος Παπαδόπουλος · σήμερα 14:22</div>
+				</li>
+				<li class="is-edit">
+					<div class="ecrm-tl__label">Τροποποίηση — Οδός: <span class="hot mono">Ακαδημίας</span> → <span class="hot mono">Σόλωνος</span> · Αριθμός: <span class="hot mono">42</span> → <span class="hot mono">7</span> · ΤΚ: <span class="hot mono">10671</span> → <span class="hot mono">10672</span></div>
+					<div class="ecrm-tl__meta"><span class="ecrm-cell-mark" style="--h:200">ΓΠ</span> Γιώργος Παπαδόπουλος · σήμερα 14:19</div>
+				</li>
+				<li class="is-edit">
+					<div class="ecrm-tl__label">Τροποποίηση — Κινητό: <span class="hot mono">6941234567</span> → <span class="hot mono">6979876543</span> · Επίθετο: <span class="mono">Παπαδάκη</span> → <span class="mono">Παπαδάκης</span></div>
+					<div class="ecrm-tl__meta"><span class="ecrm-cell-mark" style="--h:20">ΜΛ</span> Μαρία Λάμπρου · χθες 18:03</div>
+				</li>
+				<li>
+					<div class="ecrm-tl__label">Εκκρεμεί → Δρομολογημένη</div>
+					<div class="ecrm-tl__meta"><span class="ecrm-cell-mark" style="--h:20">ΜΛ</span> Μαρία Λάμπρου · χθες 17:58</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	<div class="pane pane--after">
+		<div class="pane__hd">Μετά <span class="tag">παραλλαγή Β</span></div>
+		<div class="pane__body">
+			<ul class="ecrm-timeline">
+				<li class="is-edit">
+					<div class="ecrm-tl__label">Τροποποίηση — ΑΦΜ: <span class="safe mono">••••••789</span> → <span class="safe mono">••••••712</span> · ΑΔΤ: <span class="safe mono">•••••318</span> → <span class="safe mono">•••••604</span></div>
+					<div class="ecrm-tl__meta"><span class="ecrm-cell-mark" style="--h:200">ΓΠ</span> Γιώργος Παπαδόπουλος · σήμερα 14:22</div>
+				</li>
+				<li class="is-edit">
+					<div class="ecrm-tl__label">Τροποποίηση — Οδός: <span class="safe">άλλαξε</span> · Αριθμός: <span class="safe">άλλαξε</span> · ΤΚ: <span class="safe mono">106••</span> → <span class="safe mono">106••</span></div>
+					<div class="ecrm-tl__meta"><span class="ecrm-cell-mark" style="--h:200">ΓΠ</span> Γιώργος Παπαδόπουλος · σήμερα 14:19</div>
+				</li>
+				<li class="is-edit">
+					<div class="ecrm-tl__label">Τροποποίηση — Κινητό: <span class="safe mono">••••••567</span> → <span class="safe mono">••••••543</span> · Επίθετο: <span class="mono">Παπαδάκη</span> → <span class="mono">Παπαδάκης</span></div>
+					<div class="ecrm-tl__meta"><span class="ecrm-cell-mark" style="--h:20">ΜΛ</span> Μαρία Λάμπρου · χθες 18:03</div>
+				</li>
+				<li>
+					<div class="ecrm-tl__label">Εκκρεμεί → Δρομολογημένη</div>
+					<div class="ecrm-tl__meta"><span class="ecrm-cell-mark" style="--h:20">ΜΛ</span> Μαρία Λάμπρου · χθες 17:58</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<div class="note">
+<b>Δύο πράγματα που ΔΕΝ αλλάζουν, σκόπιμα.</b> (α) Το <b>Επίθετο</b> μένει ολόκληρο: δεν είναι
+κρυπτογραφημένη στήλη, οπότε μάσκα εκεί θα έκρυβε κάτι που η βάση ούτως ή άλλως κρατά καθαρό —
+θόρυβος χωρίς κέρδος. (β) Οι γραμμές <b>αλλαγής κατάστασης</b> δεν αγγίζονται καθόλου· δεν
+περνούν από την <span class="mono">ECRM_Audit</span>.
+</div>
+
+<h2><span class="num">2</span>Η απόφαση: τι σημαίνει μάσκα στα ελεύθερα πεδία</h2>
+<p class="lead">Για ΑΦΜ, ΑΔΤ και τηλέφωνο η απάντηση είναι προφανής — τελευταία 3 ψηφία, αρκετά
+για να πει «άλλαξε πράγματι», άχρηστα για να ταυτοποιήσουν άνθρωπο. Για <b>οδό, αριθμό και ΤΚ</b>
+δεν είναι, και εκεί θέλω τη δική σου επιλογή.</p>
+
+<div class="opt">
+	<div class="opt__hd"><span class="opt__k">Α</span><span class="opt__t">Τελευταίοι χαρακτήρες, παντού η ίδια λογική</span></div>
+	<div class="opt__why">Ένας κανόνας για όλα τα πεδία: κράτα τους 3 τελευταίους χαρακτήρες.
+	Το πλεονέκτημα είναι ότι δεν υπάρχει τίποτα να θυμάται κανείς.</div>
+	<table>
+		<tr><th>Πεδίο</th><th>Πριν</th><th>Μετά</th><th>Διαβάζεται;</th></tr>
+		<tr><td class="f">ΑΦΜ</td><td class="mono">128456789</td><td class="mono">••••••789</td><td>ναι</td></tr>
+		<tr><td class="f">Οδός</td><td class="mono">Ακαδημίας</td><td class="mono">••••••ίας</td><td>όχι — κατάληξη, όχι πληροφορία</td></tr>
+		<tr><td class="f">Αριθμός</td><td class="mono">42</td><td class="mono">42</td><td><b>καθόλου μάσκα</b> — είναι ήδη 2 χαρακτήρες</td></tr>
+		<tr><td class="f">ΤΚ</td><td class="mono">10671</td><td class="mono">••671</td><td>κρύβει τον νομό, δείχνει το τετράγωνο — ανάποδα</td></tr>
+	</table>
+	<div class="opt__cost"><b>Κόστος:</b> το φθηνότερο, μία μέθοδος. <b>Πρόβλημα:</b> ο ίδιος
+	κανόνας σε πεδίο 2 χαρακτήρων δεν κρύβει τίποτα, και στο ΤΚ κρύβει λάθος μισό.</div>
+</div>
+
+<div class="opt opt--rec">
+	<div class="opt__hd"><span class="opt__k">Β</span><span class="opt__t">Αριθμοί μασκάρονται, κείμενο λέει μόνο «άλλαξε»</span><span class="opt__badge">η πρότασή μου</span></div>
+	<div class="opt__why">Δύο κατηγορίες αντί για μία. Τα αναγνωριστικά (ΑΦΜ, ΑΔΤ, τηλέφωνο)
+	κρατούν 3 ψηφία. Το ΤΚ κρατά τα <b>πρώτα</b> 3 — ο νομός είναι χρήσιμος και δεν ταυτοποιεί
+	κανέναν. Οδός και αριθμός δεν προσπαθούν καν: λένε ότι άλλαξαν και σταματούν.</div>
+	<table>
+		<tr><th>Πεδίο</th><th>Πριν</th><th>Μετά</th><th>Γιατί</th></tr>
+		<tr><td class="f">ΑΦΜ</td><td class="mono">128456789</td><td class="mono">••••••789</td><td>3 ψηφία ξεχωρίζουν αλλαγή, δεν ταυτοποιούν</td></tr>
+		<tr><td class="f">ΑΔΤ</td><td class="mono">ΑΚ742318</td><td class="mono">•••••318</td><td>ίδια λογική· κρύβει και τα γράμματα σειράς</td></tr>
+		<tr><td class="f">Κινητό</td><td class="mono">6941234567</td><td class="mono">••••••567</td><td>ο πάροχος κινητής κρύβεται μαζί</td></tr>
+		<tr><td class="f">ΤΚ</td><td class="mono">10671</td><td class="mono">106••</td><td><b>πρώτα</b> 3 = περιοχή· χρήσιμο και ακίνδυνο</td></tr>
+		<tr><td class="f">Οδός</td><td class="mono">Ακαδημίας</td><td>άλλαξε</td><td>κάθε μερική εκδοχή είτε λέει πολλά είτε τίποτα</td></tr>
+		<tr><td class="f">Αριθμός</td><td class="mono">42</td><td>άλλαξε</td><td>δεν χωρά μάσκα σε 1-3 χαρακτήρες</td></tr>
+	</table>
+	<div class="opt__cost"><b>Κόστος:</b> μία μέθοδος με δύο κλάδους και έναν πίνακα ανά πεδίο —
+	περίπου 25 γραμμές. <b>Κέρδος:</b> κάθε γραμμή του χρονολογίου λέει την αλήθεια για το τι
+	άλλαξε, χωρίς να κουβαλά τίποτα που να αξίζει σε κλέφτη.</div>
+</div>
+
+<div class="opt">
+	<div class="opt__hd"><span class="opt__k">Γ</span><span class="opt__t">Καμία τιμή, μόνο ο κατάλογος των πεδίων</span></div>
+	<div class="opt__why">Η γραμμή γίνεται <b>«Τροποποίηση — ΑΦΜ, ΑΔΤ, Οδός, ΤΚ»</b> και τέλος.
+	Καμία τιμή, ούτε μασκαρισμένη.</div>
+	<table>
+		<tr><th>Πεδίο</th><th>Πριν</th><th>Μετά</th><th>Διαβάζεται;</th></tr>
+		<tr><td class="f">όλα</td><td class="mono">ΑΦΜ: 128456789 → 128456712</td><td>ΑΦΜ</td><td>ξέρεις ότι άλλαξε, ποτέ αν διορθώθηκε ή χάλασε</td></tr>
+	</table>
+	<div class="opt__cost"><b>Κόστος:</b> το απλούστερο και το ασφαλέστερο. <b>Τι χάνεται:</b>
+	η μόνη χρήση του χρονολογίου — «ο πελάτης λέει ότι δεν έδωσε ποτέ αυτό το ΑΦΜ, ποιος το
+	άλλαξε και σε τι;». Με το Γ, το ιστορικό απαντά μόνο «κάποιος, κάποτε».</div>
+</div>
+
+<h2><span class="num">3</span>Τι μένει ρητά ανοιχτό</h2>
+<div class="note">
+<b>Οι υπάρχουσες γραμμές δεν καθαρίζονται.</b> Απόφαση ιδιοκτήτη, 28/08: η μάσκα ισχύει
+<b>μόνο για νέες εγγραφές</b>. Ό,τι έχει ήδη γραφτεί στο <span class="mono">events.message</span>
+μένει σε καθαρό κείμενο στη βάση επ' αόριστον. Καταγράφεται εδώ και στο CHANGELOG ως
+<b>σκόπιμη</b> παράλειψη, όχι ξεχασμένη — ώστε αν κάποτε γίνει εργαλείο καθαρισμού, να ξέρει
+ο επόμενος ότι το κενό ήταν γνωστό.
+</div>
+
+<div class="foot">
+Μακέτα κατά §1.8 — καμία γραμμή κώδικα πριν από ρητή έγκριση.
+Αρχεία που θα αγγιχτούν στην υλοποίηση: <code>includes/class-ecrm-audit.php</code> (μάσκα),
+<code>tests/Unit/</code> (νέο test). Καμία αλλαγή σε CSS ή markup — μόνο το κείμενο που
+παράγει ο server. Δεν αλλάζει σχήμα βάσης, δεν χρειάζεται migration.
+</div>
+
+</div>
+</body>
+</html>
