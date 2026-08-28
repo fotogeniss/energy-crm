@@ -30,6 +30,8 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use EnergyCRM\Infrastructure\TeamInvite;
+use EnergyCRM\Providers\Http\ProviderStatusMapController;
+use EnergyCRM\Providers\Persistence\ProviderStatusMapRepository;
 use EnergyCRM\Services;
 
 final class ControllerFactory
@@ -106,6 +108,7 @@ final class ControllerFactory
             new CommissionsController($scope, Services::commissions()),
             new PayoutsController($scope, Services::payouts()),
             new AnalyticsController($scope, Services::analytics()),
+            new ProviderStatusMapController(new ProviderStatusMapRepository()),
 
             // Work management.
             new TasksController($scope, Services::tasks(), Services::contracts()),

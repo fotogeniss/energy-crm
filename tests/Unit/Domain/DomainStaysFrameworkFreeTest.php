@@ -30,6 +30,16 @@
  * Δεν είναι άδεια: κάθε ένα από τα τρία είναι χρέος του §1.12 και πληρώνεται
  * όταν αγγιχτεί το αρχείο ούτως ή άλλως.
  *
+ * ## Ποιο «Domain» σαρώνεται
+ *
+ * Και το οριζόντιο `src/Domain/` και κάθε `src/<Φέτα>/Domain/` των κάθετων
+ * φετών (§1.14). Η πρώτη γραφή κοίταζε μόνο το πρώτο, και θα άφηνε κάθε νέα
+ * φέτα **αφύλακτη** — δηλαδή ακριβώς τον κώδικα που γράφεται από εδώ και πέρα.
+ * Βρέθηκε την επόμενη μέρα, με την πρώτη φέτα (`src/Providers/`), μαζί με το
+ * ίδιο λάθος στο `.phpcs.xml.dist` και στον αδελφό έλεγχο της βάσης: κανόνας
+ * γραμμένος με layer-first διαδρομή δεν αναγνωρίζει το ίδιο layer όταν αλλάξει
+ * ο άξονας.
+ *
  * @package EnergyCRM
  */
 
@@ -96,7 +106,7 @@ final class DomainStaysFrameworkFreeTest extends TestCase
 
         /** @var RecursiveIteratorIterator<RecursiveDirectoryIterator> $it */
         $it = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($root . '/src/Domain', FilesystemIterator::SKIP_DOTS)
+            new RecursiveDirectoryIterator($root . '/src', FilesystemIterator::SKIP_DOTS)
         );
 
         foreach ($it as $file) {
@@ -104,11 +114,15 @@ final class DomainStaysFrameworkFreeTest extends TestCase
                 continue;
             }
 
+            $relative = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));
+
+            if (! self::isDomain($relative)) {
+                continue;
+            }
+
             $source = (string) file_get_contents($file->getPathname());
 
             if (preg_match(self::WORDPRESS, $source) === 1) {
-                $relative = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));
-
                 $found[$relative] = true;
             }
         }
@@ -117,6 +131,13 @@ final class DomainStaysFrameworkFreeTest extends TestCase
         sort($files);
 
         return $files;
+    }
+
+    /** `src/Domain/...` ή `src/<Φέτα>/Domain/...` — ίδιο layer, άλλος άξονας. */
+    private static function isDomain(string $relative): bool
+    {
+        return str_starts_with($relative, 'src/Domain/')
+            || preg_match('#^src/[^/]+/Domain/#', $relative) === 1;
     }
 
     public function testNoNewDomainFileReachesForWordPress(): void

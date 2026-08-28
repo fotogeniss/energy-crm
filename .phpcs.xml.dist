@@ -166,9 +166,17 @@
         it, not to a blanket warning on every query.
 
         Note that WordPress.DB.PreparedSQL stays enabled everywhere.
+
+        Το δεύτερο μοτίβο, `src/*/Persistence/*`, προστέθηκε 28/08/2026 με την
+        πρώτη ΚΑΘΕΤΗ φέτα (HANDOVER §1.14): το `src/Providers/Persistence/`
+        είναι το ίδιο layer με άλλον άξονα — χαρακτηριστικό απ' έξω, layer από
+        μέσα. Χωρίς αυτό, ένα repository έξω από τον παλιό φάκελο θα κοκκίνιζε
+        για τη δουλειά που είναι ο ορισμός του, και ο πειρασμός θα ήταν να
+        γραφτεί στο λάθος σημείο για να περάσει ο έλεγχος.
     -->
     <rule ref="WordPress.DB.DirectDatabaseQuery">
         <exclude-pattern>src/Persistence/*</exclude-pattern>
+        <exclude-pattern>src/*/Persistence/*</exclude-pattern>
 
         <!--
             Same reasoning for the legacy tree, which is almost entirely direct
@@ -192,6 +200,7 @@
     -->
     <rule ref="WordPress.Security.EscapeOutput.ExceptionNotEscaped">
         <exclude-pattern>src/Persistence/*</exclude-pattern>
+        <exclude-pattern>src/*/Persistence/*</exclude-pattern>
 
         <!--
             Same argument for ECRM_FormFill, the only legacy site: it throws

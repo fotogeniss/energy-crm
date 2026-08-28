@@ -136,14 +136,37 @@ final class RestRouteGuardTest extends IntegrationTestCase
         );
 
         $onDisk = [];
+        $root   = dirname(__DIR__, 2);
 
-        foreach (glob(dirname(__DIR__, 2) . '/src/Http/*Controller.php') ?: [] as $path) {
-            // The Controller interface itself matches the glob; is_subclass_of
-            // is false for a type against itself, which filters it out.
-            $class = 'EnergyCRM\\Http\\' . basename($path, '.php');
+        // Δύο μοτίβα, όχι ένα: το layer-first `src/Http/*Controller.php` για
+        // τον υπάρχοντα κώδικα, και το κάθετο `src/*/Http/*Controller.php` για
+        // ό,τι γράφεται πλέον σε φέτα (§1.14). Ο ίδιος τυφλός σαρωτής που
+        // βρέθηκε στην (161) στο DatabaseAccessStaysInPersistenceTest και στο
+        // DomainStaysFrameworkFreeTest -- εδώ δεν φάνηκε τότε μόνο επειδή η
+        // (161) δεν είχε ακόμα φτάσει σε αυτό το σημείο του commit.
+        $patterns = [
+            $root . '/src/Http/*Controller.php'   => 'EnergyCRM\\Http\\',
+            $root . '/src/*/Http/*Controller.php' => null,
+        ];
 
-            if (is_subclass_of($class, Controller::class)) {
-                $onDisk[] = $class;
+        foreach ($patterns as $pattern => $fixedNamespace) {
+            foreach (glob($pattern) ?: [] as $path) {
+                $namespace = $fixedNamespace;
+
+                if ($namespace === null) {
+                    // .../src/<Feature>/Http/<Class>.php -> EnergyCRM\<Feature>\Http
+                    $relative = str_replace('\\', '/', substr($path, strlen($root . '/src/')));
+                    $feature  = strstr($relative, '/', true);
+                    $namespace = 'EnergyCRM\\' . $feature . '\\Http\\';
+                }
+
+                // The Controller interface itself matches the glob; is_subclass_of
+                // is false for a type against itself, which filters it out.
+                $class = $namespace . basename($path, '.php');
+
+                if (is_subclass_of($class, Controller::class)) {
+                    $onDisk[] = $class;
+                }
             }
         }
 

@@ -51,6 +51,9 @@ final class ImportController implements Controller
                     'maxItems' => self::MAX_ROWS,
                 ],
                 'dry' => ['type' => 'boolean', 'default' => false],
+                // Προαιρετικό: 0 σημαίνει «δεν διάλεξε πάροχος», και τότε το
+                // ταίριασμα μένει όπως ήταν. Δες ECRM_Import::apply().
+                'provider_id' => ['type' => 'integer', 'default' => 0],
             ],
         ]);
     }
@@ -74,7 +77,11 @@ final class ImportController implements Controller
     public function apply(WP_REST_Request $request): WP_REST_Response
     {
         return new WP_REST_Response(
-            ECRM_Import::apply((array) $request['pairs'], (bool) $request['dry']),
+            ECRM_Import::apply(
+                (array) $request['pairs'],
+                (bool) $request['dry'],
+                (int) $request['provider_id']
+            ),
             200
         );
     }
