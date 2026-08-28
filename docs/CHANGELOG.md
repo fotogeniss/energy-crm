@@ -7,6 +7,52 @@
 
 ---
 
+## 2026-08-28 (162)
+
+### Index στο contracts.supply_number — η εισαγωγή κατάστασης παρόχου σάρωνε ολόκληρο τον πίνακα ανά γραμμή
+
+Μετρημένο στις 27/08 (`claude/energy-crm-next-chat-prompt.md`), επιβεβαιώθηκε ξανά
+σήμερα διαβάζοντας το σχήμα: το `contracts` έχει `KEY` σε `partner_user_id`,
+`status`, `provider_id`, `customer_id` -- **όχι** σε `supply_number`.
+
+Η `ECRM_Import::apply()` (η ίδια μέθοδος που διορθώθηκε στην (161) για το
+matching bug) τρέχει
+
+```
+SELECT ... WHERE supply_number = %s AND partner_user_id IN (...) ORDER BY id DESC LIMIT 1
+```
+
+**μία φορά ανά γραμμή** του αρχείου Excel -- ως 2000 γραμμές σε μία εισαγωγή,
+διαδραστικά, με τον ιδιοκτήτη να περιμένει με ανοιχτή καρτέλα. Χωρίς index αυτό
+είναι πλήρης σάρωση του πίνακα `contracts` 2000 φορές στη σειρά. Το ίδιο πεδίο
+διαβάζεται με ακριβές `=` και στο `ContractQueries` (ο έλεγχος διπλοεγγραφής του
+οδηγού, ενώ πληκτρολογεί ο πωλητής) -- η αναζήτηση `LIKE '%...%'` εκεί δεν
+ωφελείται από index ούτως ή άλλως, οπότε αυτή η αλλαγή προσθέτει index, δεν
+ξαναγράφει εκείνη την αναζήτηση.
+
+Migration `0023`, ίδιο μοτίβο με το `AddContractListIndexes` (0007): ελέγχει αν
+υπάρχει ήδη το index πριν το προσθέσει (ιδεμπoτεντ σε επανάληψη). Το
+`supply_number` δεν είναι κρυπτογραφημένο (δεν εμφανίζεται σε καμία λίστα
+`ENCRYPTED`), άρα κανονικό index -- όχι blind-index/backfill όπως χρειάστηκε το
+ΑΦΜ ή το τηλέφωνο.
+
+Καμία δοκιμή αφιερωμένη σε αυτή τη migration -- ίδια σύμβαση με το
+`AddContractListIndexes`/`AddEventStatusIndex`/`AddCustomerAfmIndex`: τα απλά
+`ADD INDEX` χωρίς μετασχηματισμό δεδομένων δεν έχουν δικό τους test, τρέχουν ως
+μέρος του migration bootstrap κάθε integration test.
+
+**Πρόβλεψη:** phpcs **297 → 298** (ένα νέο αρχείο). phpstan **161 → 162** (+1,
+`src/` αναλύεται). unit **958 → 961** (+3: τρεις αφιλτράριστοι φύλακες με
+`dataProvider` σαρώνουν `src/` ανά αρχείο -- μάθημα της (161), εφαρμόζεται εδώ
+πριν ξαναγίνει λάθος πρόβλεψη). integration **422** αμετάβλητο (καμία νέα
+integration δοκιμή, η migration τρέχει ήδη σε κάθε bootstrap).
+
+**Laravel-ready;** Το `AddSupplyNumberIndex` είναι migration -- ζει στο
+`src/Persistence/Schema/Migrations/`, θα ξαναγραφτεί ως Laravel migration
+(`Schema::table(...)->index(...)`), καμία λογική domain μέσα του.
+
+---
+
 ## 2026-08-28 (161)
 
 ### Α: ο χάρτης καταστάσεων θυμάται τον πάροχο — πρώτη κάθετη φέτα, και δύο σφάλματα που φάνηκαν γράφοντάς την

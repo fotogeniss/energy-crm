@@ -23,6 +23,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddIntakeColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddPayoutAmountColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProviderStatusMapColumn;
+use EnergyCRM\Persistence\Schema\Migrations\AddSupplyNumberIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddEventStatusIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddTrackKeyColumn;
 use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
@@ -69,6 +70,7 @@ final class MigrationList
             new AddCustomerPhoneIndex(),
             new AddIntakeColumns(),
             new AddProviderStatusMapColumn(),
+            new AddSupplyNumberIndex(),
         ];
     }
 }
