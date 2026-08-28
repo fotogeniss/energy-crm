@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Μακέτα — «Ο πελάτης έστειλε τον λογαριασμό»</title>
+<style>
+:root{
+	--n0:#ffffff; --n25:#fdfdfc; --n50:#f8f8f6; --n100:#f1f1ee; --n150:#e9e8e4;
+	--n200:#dedcd7; --n300:#c6c4bd; --n400:#a3a099; --n500:#6e6c66; --n600:#5c5a55;
+	--n700:#42413d; --n800:#2a2926; --n900:#1a1a18;
+	--p50:#eafaea; --p100:#d2f5d3; --p200:#a5eba7; --p300:#6bdd6d;
+	--p400:#16c217; --p500:#12a413; --p600:#0e8610; --p700:#0b690c;
+	--r50:#fdecec; --r100:#fbd9d9; --r300:#f08a8a; --r500:#d13b3b; --r700:#9c2020;
+	--a50:#fff6e6; --a100:#ffedcc; --a300:#f0c070; --a700:#8a5a10;
+	--b50:#eaf2fd; --b100:#d4e5fb; --b300:#7fb0ee; --b700:#1d4f8f;
+	--surface:var(--n0); --ink:var(--n800); --navy:var(--n900); --muted:var(--n500);
+	--line:var(--n200); --line-soft:var(--n100); --line-card:var(--n150);
+	--accent-hover:var(--p500); --accent-ink:var(--p700);
+	--accent-wash:var(--p50); --accent-wash-2:var(--p100); --accent-soft:var(--p200);
+	--fs-18:18px; --fs-16:16px; --fs-15:15px; --fs-14:14px; --fs-13-5:13.5px;
+	--fs-13:13px; --fs-12-5:12.5px; --fs-12:12px; --fs-11:11px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--n50);color:var(--ink);
+	font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+	font-size:var(--fs-14);line-height:1.5;padding:28px 20px 70px}
+.wrap{max-width:1240px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px;color:var(--navy);letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:var(--fs-13);margin:0 0 8px}
+h2{font-size:var(--fs-15);color:var(--navy);margin:36px 0 10px;letter-spacing:-.01em}
+h2 .num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;
+	background:var(--n800);color:#fff;font-size:var(--fs-11);font-weight:800;margin-right:7px;
+	vertical-align:1px}
+p.lead{color:var(--n600);font-size:var(--fs-13);margin:0 0 14px;max-width:82ch}
+.note{background:var(--a50);border:1px solid var(--a300);border-radius:12px;
+	padding:13px 16px;font-size:var(--fs-13);color:var(--n700);margin:16px 0;max-width:100ch}
+.note b{color:var(--a700)}
+.note--red{background:var(--r50);border-color:var(--r300)}
+.note--red b{color:var(--r700)}
+.note--blue{background:var(--b50);border-color:var(--b300)}
+.note--blue b{color:var(--b700)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+	background:var(--n100);padding:1px 5px;border-radius:4px}
+
+/* ---- σκηνή διαλόγου ---- */
+.stage{background:var(--n700);border-radius:14px;padding:26px 18px;display:grid;
+	place-items:start center;min-height:100px}
+.stage--tight{padding:20px 14px}
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+@media(max-width:1080px){.cols3{grid-template-columns:1fr}}
+.cap{font-size:var(--fs-12);font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+	color:var(--muted);margin:0 0 7px}
+.cap--ok{color:var(--accent-ink)}
+.cap--warn{color:var(--a700)}
+
+/* ---- αντίγραφο του πραγματικού ecrm-modal ---- */
+.ecrm-modal{background:var(--surface);border-radius:14px;padding:20px 20px 16px;
+	width:100%;max-width:430px;position:relative;
+	box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.ecrm-modal__x{position:absolute;top:10px;right:11px;border:0;background:transparent;
+	font-size:20px;line-height:1;color:var(--n400);cursor:pointer;padding:3px 6px}
+.ecrm-modal__eyebrow{font-size:var(--fs-11);font-weight:800;letter-spacing:.07em;
+	text-transform:uppercase;color:var(--accent-ink);margin-bottom:5px}
+.ecrm-modal__title{font-size:var(--fs-16);font-weight:800;color:var(--navy);margin:0 0 5px;
+	letter-spacing:-.01em;padding-right:22px}
+.ecrm-modal__lead{font-size:var(--fs-13);color:var(--n600);margin:0 0 14px}
+.ecrm-modal__bar{display:flex;align-items:center;gap:9px;margin-top:16px;
+	padding-top:13px;border-top:1px solid var(--line-soft)}
+.ecrm-modal__spacer{flex:1}
+.ecrm-btn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
+	border-radius:8px;padding:8px 15px;font-size:var(--fs-13);font-weight:700;cursor:pointer;
+	font-family:inherit}
+.ecrm-btn--primary{background:var(--p400);border-color:var(--p400);color:#fff}
+.ecrm-btn--ghost{background:transparent;color:var(--n600)}
+.ecrm-btn--sm{padding:6px 12px;font-size:var(--fs-12-5)}
+
+/* ---- τα δύο μπλοκ μέσα στο σώμα ---- */
+.blk{border:1px solid var(--line-card);border-radius:11px;padding:11px 13px 12px;
+	margin-bottom:10px;background:var(--n25)}
+.blk__hd{display:flex;align-items:center;gap:7px;font-size:var(--fs-12);font-weight:800;
+	color:var(--navy);margin-bottom:8px}
+.blk__hd .n{margin-left:auto;font-size:var(--fs-11);font-weight:700;color:var(--muted)}
+.ai-dot{width:16px;height:16px;border-radius:5px;background:var(--b100);color:var(--b700);
+	display:grid;place-items:center;font-size:9px;font-weight:800;flex:0 0 16px}
+.usual-dot{width:16px;height:16px;border-radius:5px;background:var(--accent-wash-2);
+	color:var(--accent-ink);display:grid;place-items:center;font-size:9.5px;font-weight:800;flex:0 0 16px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:var(--fs-12-5)}
+.kv dt{color:var(--muted);font-weight:600;white-space:nowrap}
+.kv dd{margin:0;color:var(--ink);font-weight:600;
+	font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.more{font-size:var(--fs-11);color:var(--muted);margin-top:7px;padding-top:6px;
+	border-top:1px dashed var(--line-soft)}
+.usual-line{font-size:var(--fs-13);color:var(--ink);line-height:1.45}
+.usual-line strong{color:var(--accent-ink)}
+.usual-meta{font-size:var(--fs-11);color:var(--muted);margin-top:3px}
+.blk--empty{background:var(--a50);border-color:var(--a300)}
+.blk--empty .blk__hd{color:var(--a700)}
+.empty-txt{font-size:var(--fs-12-5);color:var(--n700)}
+
+/* ---- ΠΡΙΝ: το native confirm ---- */
+.winconfirm{background:#f0f0f0;border:1px solid #999;border-radius:7px;width:100%;
+	max-width:400px;box-shadow:0 14px 40px rgba(0,0,0,.3);overflow:hidden;
+	font-family:"Segoe UI",Tahoma,sans-serif}
+.winconfirm__hd{background:#fff;padding:9px 12px;font-size:12.5px;color:#222;
+	border-bottom:1px solid #ddd;font-weight:600}
+.winconfirm__bd{background:#fff;padding:16px 14px 20px;font-size:13px;color:#111}
+.winconfirm__ft{padding:10px 12px;display:flex;gap:8px;justify-content:flex-end;background:#f0f0f0}
+.winbtn{border:1px solid #adadad;background:#e1e1e1;border-radius:3px;padding:5px 20px;
+	font-size:12.5px;cursor:pointer;font-family:inherit}
+.winbtn--p{border-color:#0078d4;background:#0078d4;color:#fff}
+
+/* ---- ροή ---- */
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:12px 0 4px}
+.step{background:var(--surface);border:1px solid var(--line-card);border-radius:10px;
+	padding:9px 13px;font-size:var(--fs-12-5);color:var(--ink);display:flex;
+	align-items:center;font-weight:600}
+.step--new{border-color:var(--accent-soft);background:var(--accent-wash);color:var(--accent-ink);font-weight:800}
+.step--gone{border-style:dashed;color:var(--n400);text-decoration:line-through;background:var(--n50)}
+.arrow{display:flex;align-items:center;padding:0 7px;color:var(--n300);font-weight:800}
+.foot{margin-top:38px;padding-top:16px;border-top:1px solid var(--line);
+	font-size:var(--fs-12);color:var(--muted);max-width:100ch}
+table{border-collapse:collapse;width:100%;max-width:960px;background:var(--surface);
+	border:1px solid var(--line-card);border-radius:12px;overflow:hidden;margin-top:10px}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line-soft);
+	font-size:var(--fs-13);vertical-align:top}
+th{background:var(--n50);font-size:var(--fs-11);font-weight:800;letter-spacing:.05em;
+	text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+td.q{font-weight:700;color:var(--navy);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>«Ο πελάτης έστειλε τον λογαριασμό»</h1>
+<p class="sub">Μακέτα §1.8 · 28/08/2026 · όψη Leads → μετατροπή · ιδέα ιδιοκτήτη, ίδια μέρα</p>
+
+<div class="note note--blue">
+<b>Τι είναι αυτό, με μία πρόταση.</b> Οι τρεις μηχανές (AI extraction,
+<code>UsualChoice</code>, customer intake) υπάρχουν και δουλεύουν. Αυτό που λείπει
+είναι <b>η στιγμή που τις δείχνει μαζί</b>, πριν ο πωλητής πει «ναι». Καμία νέα
+μηχανή — μία οθόνη και μια αλλαγή σειράς.
+</div>
+
+<h2><span class="num">1</span>Η ροή: τι αλλάζει, και τι όχι</h2>
+
+<p class="lead"><b>Σήμερα</b> — η ερώτηση γίνεται <b>πριν</b> το AI τρέξει, οπότε ο
+πωλητής λέει «ναι» χωρίς να ξέρει τι θα βρεθεί:</p>
+
+<div class="flow">
+	<div class="step">intake → lead</div><div class="arrow">→</div>
+	<div class="step" style="border-color:var(--r300);background:var(--r50);color:var(--r700)">confirm() «Δημιουργία;»</div><div class="arrow">→</div>
+	<div class="step">δημιουργία σύμβασης</div><div class="arrow">→</div>
+	<div class="step">AI γράφει (apply=1)</div><div class="arrow">→</div>
+	<div class="step">toast «5 πεδία»</div><div class="arrow">→</div>
+	<div class="step">καρτέλα</div>
+</div>
+
+<p class="lead" style="margin-top:18px"><b>Μετά</b> — το AI διαβάζει τα έγγραφα του
+<b>lead</b>, ο πωλητής βλέπει τι βρέθηκε, και <b>μόνο τότε</b> δημιουργείται η σύμβαση:</p>
+
+<div class="flow">
+	<div class="step">intake → lead</div><div class="arrow">→</div>
+	<div class="step step--new">AI διαβάζει (χωρίς apply)</div><div class="arrow">→</div>
+	<div class="step step--new">η οθόνη από κάτω</div><div class="arrow">→</div>
+	<div class="step step--new">«Ναι, συνέχισε»</div><div class="arrow">→</div>
+	<div class="step">δημιουργία σύμβασης <em>με τα στοιχεία</em></div><div class="arrow">→</div>
+	<div class="step">καρτέλα</div>
+</div>
+
+<div class="note">
+<b>Γιατί αλλάζει η σειρά και δεν προστίθεται απλώς οθόνη.</b> Τρεις λόγοι, με τον
+τρίτο να είναι ο μόνος που δεν είναι προτίμηση:
+<br><br>
+<b>(α)</b> Ταιριάζει με τη διατύπωση: «Βρήκα… συνήθως… <em>να συνεχίσουμε;</em>» — η
+ερώτηση είναι τελευταία.
+<b>(β)</b> Δεν μένουν ορφανά προσχέδια όταν ο πωλητής αλλάξει γνώμη (§1.7,
+«πεντακάθαρο»).
+<b>(γ)</b> <b>Αποφεύγει εξαίρεση σε κανόνα ασφαλείας.</b> Η (166) αποφάσισε ρητά ότι
+το «συνήθως βάζεις» <b>δεν</b> εμφανίζεται σε επεξεργασία, γιατί «ο πάροχος είναι ήδη
+γραμμένος· πρόταση να αλλάξει θα ήταν επικίνδυνη». Αν φτιάξουμε πρώτα τη σύμβαση,
+αυτή η οθόνη <em>είναι</em> τεχνικά επεξεργασία και θα χρειαζόταν εξαίρεση. Με τη νέα
+σειρά, δεν υπάρχει σύμβαση — άρα δεν υπάρχει σύγκρουση.
+</div>
+
+<h2><span class="num">2</span>Πριν και μετά, η ίδια στιγμή</h2>
+
+<div class="cols3" style="grid-template-columns:1fr 1fr">
+	<div>
+		<p class="cap">Πριν — σήμερα στον κώδικα</p>
+		<div class="stage stage--tight">
+			<div class="winconfirm">
+				<div class="winconfirm__hd">localhost λέει</div>
+				<div class="winconfirm__bd">Δημιουργία πρόχειρης σύμβασης από αυτό το lead;</div>
+				<div class="winconfirm__ft">
+					<button class="winbtn winbtn--p">OK</button>
+					<button class="winbtn">Άκυρο</button>
+				</div>
+			</div>
+		</div>
+		<p style="font-size:var(--fs-12);color:var(--muted);margin-top:9px">
+			<code>ecrm-view-leads.js:192</code> — native <code>confirm()</code>. Μηδέν
+			πληροφορία: ούτε τι έστειλε ο πελάτης, ούτε τι διάβασε το AI (δεν έχει τρέξει),
+			ούτε τι βάζει συνήθως ο πωλητής.
+		</p>
+	</div>
+
+	<div>
+		<p class="cap cap--ok">Μετά — η πλήρης περίπτωση</p>
+		<div class="stage stage--tight">
+			<div class="ecrm-modal">
+				<button class="ecrm-modal__x" aria-label="Κλείσιμο">×</button>
+				<div class="ecrm-modal__eyebrow">Από τον σύνδεσμό σου</div>
+				<h3 class="ecrm-modal__title">Ο πελάτης έστειλε τον λογαριασμό</h3>
+				<p class="ecrm-modal__lead"><strong>Μαρία Κ.</strong> · 2 έγγραφα · πριν 12 λεπτά</p>
+
+				<div class="blk">
+					<div class="blk__hd"><span class="ai-dot">AI</span> Βρήκα αυτά τα στοιχεία <span class="n">7 πεδία</span></div>
+					<dl class="kv">
+						<dt>Όνομα</dt><dd>Μαρία Καραγιάννη</dd>
+						<dt>ΑΦΜ</dt><dd>128456789</dd>
+						<dt>Αρ. παροχής</dt><dd>41 50238104</dd>
+						<dt>Οδός</dt><dd>Ακαδημίας 42</dd>
+						<dt>ΤΚ / Πόλη</dt><dd>10671 · Αθήνα</dd>
+					</dl>
+					<div class="more">και 2 ακόμα — μετρητής, τιμολόγιο</div>
+				</div>
+
+				<div class="blk">
+					<div class="blk__hd"><span class="usual-dot">✓</span> Η συνήθειά σου</div>
+					<div class="usual-line">Συνήθως βάζεις <strong>Protergia</strong> — Ηλεκτρισμός, <strong>Οικιακό Value</strong></div>
+					<div class="usual-meta">σε 14 από τις τελευταίες 20 αιτήσεις σου</div>
+				</div>
+
+				<div class="ecrm-modal__bar">
+					<span class="ecrm-modal__spacer"></span>
+					<button class="ecrm-btn ecrm-btn--ghost">Άκυρο</button>
+					<button class="ecrm-btn ecrm-btn--primary">Ναι, συνέχισε</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<h2><span class="num">3</span>Οι δύο περιπτώσεις που ΔΕΝ είναι η ευτυχισμένη</h2>
+<p class="lead">Μια οθόνη που σχεδιάστηκε μόνο για την καλή περίπτωση σπάει σιωπηλά
+στις άλλες δύο. Και οι δύο είναι συνηθισμένες: το AI αποτυγχάνει ή τα έγγραφα είναι
+θολά, και ο νέος πωλητής δεν έχει ακόμα συνήθεια.</p>
+
+<div class="cols3">
+	<div>
+		<p class="cap cap--warn">Το AI δεν διάβασε τίποτα</p>
+		<div class="stage stage--tight">
+			<div class="ecrm-modal">
+				<button class="ecrm-modal__x" aria-label="Κλείσιμο">×</button>
+				<div class="ecrm-modal__eyebrow">Από τον σύνδεσμό σου</div>
+				<h3 class="ecrm-modal__title">Ο πελάτης έστειλε τον λογαριασμό</h3>
+				<p class="ecrm-modal__lead"><strong>Μαρία Κ.</strong> · 2 έγγραφα · πριν 12 λεπτά</p>
+
+				<div class="blk blk--empty">
+					<div class="blk__hd"><span class="ai-dot" style="background:var(--a100);color:var(--a700)">AI</span> Δεν κατάφερα να διαβάσω τα έγγραφα</div>
+					<div class="empty-txt">Θα τα βρεις στην αίτηση για να τα δεις μόνος σου. Τα πεδία μένουν κενά.</div>
+				</div>
+
+				<div class="blk">
+					<div class="blk__hd"><span class="usual-dot">✓</span> Η συνήθειά σου</div>
+					<div class="usual-line">Συνήθως βάζεις <strong>Protergia</strong> — Ηλεκτρισμός, <strong>Οικιακό Value</strong></div>
+					<div class="usual-meta">σε 14 από τις τελευταίες 20 αιτήσεις σου</div>
+				</div>
+
+				<div class="ecrm-modal__bar">
+					<span class="ecrm-modal__spacer"></span>
+					<button class="ecrm-btn ecrm-btn--ghost">Άκυρο</button>
+					<button class="ecrm-btn ecrm-btn--primary">Συνέχισε χειροκίνητα</button>
+				</div>
+			</div>
+		</div>
+		<p style="font-size:var(--fs-12);color:var(--muted);margin-top:9px">
+			Η αποτυχία <b>δεν</b> μπλοκάρει τη δημιουργία — αλλάζει μόνο το κείμενο του
+			κουμπιού, ώστε ο πωλητής να ξέρει τι τον περιμένει.
+		</p>
+	</div>
+
+	<div>
+		<p class="cap cap--warn">Νέος πωλητής — καμία συνήθεια</p>
+		<div class="stage stage--tight">
+			<div class="ecrm-modal">
+				<button class="ecrm-modal__x" aria-label="Κλείσιμο">×</button>
+				<div class="ecrm-modal__eyebrow">Από τον σύνδεσμό σου</div>
+				<h3 class="ecrm-modal__title">Ο πελάτης έστειλε τον λογαριασμό</h3>
+				<p class="ecrm-modal__lead"><strong>Μαρία Κ.</strong> · 2 έγγραφα · πριν 12 λεπτά</p>
+
+				<div class="blk">
+					<div class="blk__hd"><span class="ai-dot">AI</span> Βρήκα αυτά τα στοιχεία <span class="n">7 πεδία</span></div>
+					<dl class="kv">
+						<dt>Όνομα</dt><dd>Μαρία Καραγιάννη</dd>
+						<dt>ΑΦΜ</dt><dd>128456789</dd>
+						<dt>Αρ. παροχής</dt><dd>41 50238104</dd>
+						<dt>Οδός</dt><dd>Ακαδημίας 42</dd>
+						<dt>ΤΚ / Πόλη</dt><dd>10671 · Αθήνα</dd>
+					</dl>
+					<div class="more">και 2 ακόμα — μετρητής, τιμολόγιο</div>
+				</div>
+
+				<div class="ecrm-modal__bar">
+					<span class="ecrm-modal__spacer"></span>
+					<button class="ecrm-btn ecrm-btn--ghost">Άκυρο</button>
+					<button class="ecrm-btn ecrm-btn--primary">Ναι, συνέχισε</button>
+				</div>
+			</div>
+		</div>
+		<p style="font-size:var(--fs-12);color:var(--muted);margin-top:9px">
+			Το μπλοκ της συνήθειας <b>εξαφανίζεται ολόκληρο</b>. Δεν γράφει «δεν έχω
+			αρκετά δεδομένα» — ο πωλητής δεν χρωστά εξήγηση στο σύστημα. Ίδιο κατώφλι
+			με την (166): <code>MIN_TIMES = 3</code>.
+		</p>
+	</div>
+
+	<div>
+		<p class="cap cap--warn">Και τα δύο άδεια</p>
+		<div class="stage stage--tight">
+			<div class="ecrm-modal">
+				<button class="ecrm-modal__x" aria-label="Κλείσιμο">×</button>
+				<div class="ecrm-modal__eyebrow">Από τον σύνδεσμό σου</div>
+				<h3 class="ecrm-modal__title">Ο πελάτης έστειλε στοιχεία</h3>
+				<p class="ecrm-modal__lead"><strong>Μαρία Κ.</strong> · χωρίς έγγραφα · πριν 12 λεπτά</p>
+
+				<div class="blk blk--empty">
+					<div class="blk__hd"><span class="ai-dot" style="background:var(--a100);color:var(--a700)">—</span> Δεν στάλθηκαν έγγραφα</div>
+					<div class="empty-txt">Θα δημιουργηθεί αίτηση με ό,τι συμπλήρωσε ο πελάτης στη φόρμα.</div>
+				</div>
+
+				<div class="ecrm-modal__bar">
+					<span class="ecrm-modal__spacer"></span>
+					<button class="ecrm-btn ecrm-btn--ghost">Άκυρο</button>
+					<button class="ecrm-btn ecrm-btn--primary">Συνέχισε χειροκίνητα</button>
+				</div>
+			</div>
+		</div>
+		<p style="font-size:var(--fs-12);color:var(--muted);margin-top:9px">
+			Ο διάλογος <b>δεν εξαφανίζεται</b> ούτε εδώ. Αν εμφανιζόταν άλλοτε ναι κι
+			άλλοτε όχι, ο πωλητής δεν θα ήξερε ποτέ αν πάτησε κάτι.
+		</p>
+	</div>
+</div>
+
+<h2><span class="num">4</span>Πέντε αποφάσεις που ενσωματώνει η μακέτα</h2>
+<p class="lead">Καθεμία μπορεί να αλλάξει με μία λέξη σου. Τις γράφω για να είναι
+ορατές, όχι θαμμένες στον κώδικα.</p>
+
+<table>
+	<tr><th>Ερώτημα</th><th>Η επιλογή της μακέτας</th><th>Γιατί</th></tr>
+	<tr>
+		<td class="q">Ένα κλικ ή προεπιλογή;</td>
+		<td><b>Ένα κλικ.</b> Το «Ναι, συνέχισε» βάζει και τα τρία (πάροχος, είδος, πρόγραμμα).</td>
+		<td>Απόφαση (166): ορατή πρόταση, ποτέ σιωπηλή προεπιλογή. Εδώ ισχύει <em>περισσότερο</em> — ο πωλητής δεν πληκτρολόγησε τίποτα ο ίδιος, άρα έχει ακόμα λιγότερο λόγο να προσέξει.</td>
+	</tr>
+	<tr>
+		<td class="q">Επεξεργάσιμα τα στοιχεία εδώ;</td>
+		<td><b>Όχι.</b> Μόνο ανάγνωση· η διόρθωση γίνεται στην καρτέλα, όπως πάντα.</td>
+		<td>Δεύτερο σημείο επεξεργασίας = δεύτερο σημείο να γίνει λάθος, και διπλή υλοποίηση validation. Η οθόνη είναι <em>στιγμή</em>, όχι φόρμα.</td>
+	</tr>
+	<tr>
+		<td class="q">Πόσα πεδία δείχνει;</td>
+		<td><b>Πέντε, μετά «και N ακόμα».</b></td>
+		<td>Ο σκοπός είναι «αναγνωρίζω τον πελάτη μου και το AI δούλεψε», όχι έλεγχος γραμμή-γραμμή. Δέκα πεδία σε κινητό δεν διαβάζονται.</td>
+	</tr>
+	<tr>
+		<td class="q">Μασκάρονται ΑΦΜ/ΑΔΤ;</td>
+		<td><b>Όχι.</b> Πλήρεις τιμές.</td>
+		<td>Διαφορετικό πράγμα από την (168): εκεί μασκάρεται ό,τι <em>αποθηκεύεται</em> σε δεύτερο αντίγραφο. Εδώ ο πωλητής βλέπει ζωντανά τα δεδομένα του πελάτη του, που θα τα δει ούτως ή άλλως στην καρτέλα. Μάσκα θα έκανε την οθόνη άχρηστη για τον σκοπό της.</td>
+	</tr>
+	<tr>
+		<td class="q">Πού ζει;</td>
+		<td><b>Modal στην όψη Leads</b>, με το υπάρχον <code>openDialog()</code>.</td>
+		<td>Δεν αγγίζει το γράφημα στατικών imports του <code>ecrm-app.js</code> (γραμμένη σχεδιαστική απόφαση). Είναι στιγμή, όχι προορισμός — δεν επιστρέφεις ποτέ εκεί. Το <code>ecrm-dialog.js</code> φορτώνεται ήδη.</td>
+	</tr>
+</table>
+
+<h2><span class="num">5</span>Τι χρειάζεται στον server, και τι δεν χρειάζεται</h2>
+
+<div class="note">
+<b>Μία μόνο προσθήκη.</b> Το <code>/extract</code> βρίσκει αποθηκευμένα έγγραφα
+<em>μόνο</em> μέσω <code>contract_id</code> (<code>storedDocuments()</code>). Ο πίνακας
+<code>files</code> όμως έχει <b>και</b> <code>lead_id</code>
+(<code>class-ecrm-db.php:207</code>), και το intake αποθηκεύει εκεί. Χρειάζεται
+διαδρομή <code>lead_id</code>, με τον <b>ίδιο</b> έλεγχο εμβέλειας — το lead ανήκει
+στον <code>partner_user_id</code> που ρωτά, αλλιώς 404.
+<br><br>
+<b>Τι ΔΕΝ χρειάζεται:</b> το <code>/extract</code> δουλεύει ήδη χωρίς
+<code>apply</code> και επιστρέφει <code>data</code> χωρίς να γράψει τίποτα. Το
+<code>UsualChoice</code> εκτίθεται ήδη στο <code>GET /providers</code>. Καμία migration,
+καμία νέα στήλη, καμία νέα μηχανή.
+</div>
+
+<div class="note note--red">
+<b>Το κόστος της νέας σειράς, γραμμένο πριν το πεις «ναι».</b> Σήμερα η σύμβαση
+δημιουργείται <em>πρώτη</em>, οπότε υπάρχει ακόμα κι αν σκάσει το AI. Με τη νέα σειρά,
+μια αποτυχία εξαγωγής έρχεται <em>πριν</em> τη δημιουργία. Γι' αυτό η μεσαία οθόνη του
+§3 υπάρχει και δεν είναι διακοσμητική: <b>η αποτυχία του AI δεν μπλοκάρει ποτέ τη
+δημιουργία</b> — αλλάζει μόνο το κείμενο του κουμπιού σε «Συνέχισε χειροκίνητα». Αν
+αυτό δεν υλοποιηθεί σωστά, η αλλαγή σειράς είναι παλινδρόμηση, όχι βελτίωση.
+</div>
+
+<div class="foot">
+Μακέτα κατά §1.8 — καμία γραμμή κώδικα πριν από ρητή έγκριση.
+Προτεινόμενη υλοποίηση σε <b>δύο commits</b>: (α) το <code>/extract</code> διαβάζει
+έγγραφα lead — δοκιμάσιμο μόνο του, μηδέν οπτική αλλαγή· (β) η οθόνη και η νέα σειρά
+στο <code>ecrm-view-leads.js</code>. Αρχεία: <code>src/Http/ExtractionController.php</code>,
+<code>src/Persistence/FileRepository.php</code>, <code>public/assets/ecrm-view-leads.js</code>,
+<code>public/assets/ecrm-app.css</code>. Το <code>ecrm-form.js</code> <b>δεν</b> αγγίζεται —
+άρα δεν χρειάζεται wizard-smoke.
+</div>
+
+</div>
+</body>
+</html>

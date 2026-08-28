@@ -8,6 +8,19 @@
  * agent saves the contract, which is what makes an abandoned extraction leave
  * no identity documents behind.
  *
+ * ## Τρεις πηγές εγγράφων, μία διαδρομή
+ *
+ * - **ανεβασμένα αρχεία** (`files[]`) — η αρχική περίπτωση, ο οδηγός φόρμας.
+ * - **`contract_id`** — έγγραφα ήδη κρεμασμένα σε αίτηση (27/08).
+ * - **`lead_id`** — έγγραφα που έστειλε ο ΠΕΛΑΤΗΣ από τον σύνδεσμό του,
+ *   **πριν υπάρξει αίτηση** (28/08). Χωρίς αυτό, η ανάγνωση ήταν αναγκαστικά
+ *   μετά τη δημιουργία της σύμβασης, οπότε ο πωλητής έλεγε «ναι» χωρίς να
+ *   ξέρει τι θα βρεθεί. Δες `docs/UI-INTAKE-HANDOFF.html`.
+ *
+ * Τα `contract_id` και `lead_id` είναι **αμοιβαία αποκλειόμενα** και το
+ * `apply` αφορά **μόνο** το πρώτο: με lead δεν υπάρχει ακόμα τίποτα να
+ * γραφτεί, και αυτό είναι το ζητούμενο, όχι περιορισμός.
+ *
  * @package EnergyCRM
  */
 
@@ -22,6 +35,7 @@ use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\FileRepository;
+use EnergyCRM\Persistence\LeadRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -33,6 +47,7 @@ final class ExtractionController implements Controller
         private readonly ContractRepository $contracts,
         private readonly FileRepository $files,
         private readonly CustomerRepository $customers,
+        private readonly LeadRepository $leads,
     ) {
     }
 
@@ -100,16 +115,42 @@ final class ExtractionController implements Controller
          */
         if (empty($uploads)) {
             $contractId = (int) $request->get_param('contract_id');
+            $leadId     = (int) $request->get_param('lead_id');
 
-            if ($contractId <= 0) {
+            /*
+             * Δύο πηγές, ΠΟΤΕ μαζί. Το `lead_id` υπάρχει για την οθόνη που
+             * ρωτά «να συνεχίσουμε;» ΠΡΙΝ δημιουργηθεί αίτηση: τα έγγραφα του
+             * πελάτη είναι ήδη στον δίσκο με `lead_id`, και μέχρι σήμερα ο
+             * εξαγωγέας δεν είχε τρόπο να τα δει χωρίς σύμβαση.
+             *
+             * Αν σταλούν και τα δύο, η αίτηση απορρίπτεται αντί να διαλέξει
+             * το ένα σιωπηλά: δύο αναγνωριστικά σημαίνει ότι ο καλών δεν ξέρει
+             * τι ζητά, και μια σιωπηλή προτεραιότητα εδώ θα ήταν ακριβώς το
+             * είδος κανόνα που κανείς δεν θυμάται όταν σπάσει.
+             */
+            if ($contractId > 0 && $leadId > 0) {
+                return new WP_REST_Response(
+                    ['ok' => false, 'error' => 'Δώσε είτε contract_id είτε lead_id, όχι και τα δύο.'],
+                    400
+                );
+            }
+
+            if ($contractId <= 0 && $leadId <= 0) {
                 return new WP_REST_Response(['ok' => false, 'error' => 'Δεν ανέβηκαν αρχεία.'], 400);
             }
 
-            $documents = $this->storedDocuments($contractId);
+            $documents = $leadId > 0
+                ? $this->leadDocuments($leadId)
+                : $this->storedDocuments($contractId);
 
             if ($documents === []) {
                 return new WP_REST_Response(
-                    ['ok' => false, 'error' => 'Δεν βρέθηκαν έγγραφα πελάτη σε αυτή την αίτηση.'],
+                    [
+                        'ok'    => false,
+                        'error' => $leadId > 0
+                            ? 'Δεν βρέθηκαν έγγραφα πελάτη σε αυτό το lead.'
+                            : 'Δεν βρέθηκαν έγγραφα πελάτη σε αυτή την αίτηση.',
+                    ],
                     404
                 );
             }
@@ -167,9 +208,21 @@ final class ExtractionController implements Controller
             $this->gate->leave();
         }
 
-        if (($result['ok'] ?? false) && $request->get_param('apply')) {
+        /*
+         * Το `apply` γράφει σε ΑΙΤΗΣΗ. Με `lead_id` δεν υπάρχει αίτηση ακόμα --
+         * αυτό είναι ολόκληρο το νόημα της διαδρομής -- οπότε το γράψιμο
+         * παραλείπεται ρητά αντί να πέσει στο `applyToRecords(0, …)`.
+         *
+         * Εκείνο θα επέστρεφε ούτως ή άλλως κενό (`find(0)` δίνει null), άρα
+         * δεν είναι διόρθωση σφάλματος. Είναι ο ίδιος ο κανόνας γραμμένος: η
+         * ασφάλεια που προκύπτει κατά τύχη από μια άλλη συνάρτηση παύει να
+         * ισχύει τη μέρα που αλλάξει εκείνη.
+         */
+        $applyTo = (int) $request->get_param('contract_id');
+
+        if (($result['ok'] ?? false) && $request->get_param('apply') && $applyTo > 0) {
             $result['applied'] = $this->applyToRecords(
-                (int) $request->get_param('contract_id'),
+                $applyTo,
                 (array) ($result['data'] ?? [])
             );
         }
@@ -266,6 +319,29 @@ final class ExtractionController implements Controller
 
         return $this->files->extractableForContract(
             $contractId,
+            self::EXTRACTABLE_KINDS,
+            self::ALLOWED_MIMES
+        );
+    }
+
+    /**
+     * Έγγραφα που ο πελάτης έστειλε σε ένα lead, πριν υπάρξει αίτηση.
+     *
+     * Ίδιος έλεγχος εμβέλειας με την `storedDocuments()`, ίδια σιωπή: lead
+     * εκτός εμβέλειας απαντά όπως και ανύπαρκτο. Το `lead_id` έρχεται από τον
+     * browser και δεν αποδεικνύει τίποτα -- ο μόνος κριτής είναι το
+     * `LeadRepository::find()` με το `UserScope` του συνδεδεμένου.
+     *
+     * @return list<array{path: string, mime: string, kind: string}>
+     */
+    private function leadDocuments(int $leadId): array
+    {
+        if ($this->leads->find($leadId, $this->scopes->forCurrentUser()) === null) {
+            return [];
+        }
+
+        return $this->files->extractableForLead(
+            $leadId,
             self::EXTRACTABLE_KINDS,
             self::ALLOWED_MIMES
         );
