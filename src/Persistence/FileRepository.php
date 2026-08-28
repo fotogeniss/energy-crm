@@ -66,6 +66,37 @@ final class FileRepository
     }
 
     /**
+     * Έγγραφα κρεμασμένα σε ένα lead — ό,τι έστειλε ο πελάτης από τον σύνδεσμο.
+     *
+     * Ίδιο σχήμα με την `forContract()`, άλλη στήλη. Χωριστή μέθοδος και όχι
+     * παράμετρος στην πρώτη: το «ποια στήλη» δεν είναι επιλογή του καλούντος,
+     * είναι δύο διαφορετικές ερωτήσεις που τυχαίνει να μοιράζονται πίνακα.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function forLead(int $leadId): array
+    {
+        global $wpdb;
+
+        if ($leadId <= 0) {
+            return [];
+        }
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT id, doc_kind, filename, mime, attachment_id, path, protected
+                 FROM %i WHERE lead_id = %d ORDER BY id',
+                $this->table,
+                $leadId
+            ),
+            ARRAY_A
+        );
+
+        return $rows;
+    }
+
+    /**
      * The newest document of a kind whose bytes are actually there.
      *
      * Newest by id, which is insertion order: the signing page inserts a fresh
@@ -107,9 +138,50 @@ final class FileRepository
      */
     public function extractableForContract(int $contractId, array $kinds, array $mimes): array
     {
+        return self::extractableFrom($this->forContract($contractId), $kinds, $mimes);
+    }
+
+    /**
+     * Τα ίδια, για έγγραφα που ο ΠΕΛΑΤΗΣ έστειλε πριν υπάρξει αίτηση.
+     *
+     * Ο «σύνδεσμός μου» αποθηκεύει με `lead_id`, όχι `contract_id` — τα δύο
+     * είναι ξεχωριστές στήλες του ίδιου πίνακα (`class-ecrm-db.php`). Μέχρι
+     * σήμερα ο εξαγωγέας έφτανε στα έγγραφα μόνο μέσω αίτησης, οπότε η
+     * ανάγνωση ήταν αναγκαστικά ΜΕΤΑ τη δημιουργία της. Αυτό υπάρχει για να
+     * μπορεί να γίνει ΠΡΙΝ: ο πωλητής βλέπει τι βρέθηκε και μετά αποφασίζει.
+     *
+     * Η εμβέλεια ΔΕΝ ελέγχεται εδώ, όπως και στην αδελφή από πάνω — ο καλών
+     * ρωτά πρώτα το `LeadRepository::find()` με το `UserScope` του.
+     *
+     * @param list<string> $kinds
+     * @param list<string> $mimes
+     *
+     * @return list<array{path: string, mime: string, kind: string}>
+     */
+    public function extractableForLead(int $leadId, array $kinds, array $mimes): array
+    {
+        return self::extractableFrom($this->forLead($leadId), $kinds, $mimes);
+    }
+
+    /**
+     * Το φίλτρο, μία φορά.
+     *
+     * Ήταν το σώμα της `extractableForContract()`. Βγήκε εδώ όταν
+     * προστέθηκε η αδελφή της για τα leads: δεύτερη γραφή του ίδιου φίλτρου
+     * θα ήταν δεύτερο σημείο να ξεχαστεί ο έλεγχος `contains()` — που είναι
+     * ο έλεγχος ασφαλείας, όχι λεπτομέρεια (δες το docblock από πάνω).
+     *
+     * @param list<array<string, mixed>> $rows
+     * @param list<string>               $kinds
+     * @param list<string>               $mimes
+     *
+     * @return list<array{path: string, mime: string, kind: string}>
+     */
+    private function extractableFrom(array $rows, array $kinds, array $mimes): array
+    {
         $documents = [];
 
-        foreach ($this->forContract($contractId) as $row) {
+        foreach ($rows as $row) {
             $path = (string) ($row['path'] ?? '');
             $mime = (string) ($row['mime'] ?? '');
             $kind = (string) ($row['doc_kind'] ?? '');

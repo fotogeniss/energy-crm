@@ -129,7 +129,8 @@ final class ControllerFactory
                 $scope,
                 Services::contracts(),
                 Services::files(),
-                Services::customers()
+                Services::customers(),
+                Services::leads()
             ),
             new VatLookupController(),
             new QuoteController(),
