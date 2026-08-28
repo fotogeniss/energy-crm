@@ -399,7 +399,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// providers + programs
 		fetch(api('/providers'), { headers: headers() })
 			.then(function (r) { return r.json(); })
-			.then(function (d) { programsCache = d.programs || []; mobilePricing = d.mobile_pricing || {}; renderProviders(d.providers || []); providersLoaded = true; if (pendingProvider) { selectProvider(pendingProvider); pendingProvider = null; } renderPrograms(); })
+			.then(function (d) { programsCache = d.programs || []; mobilePricing = d.mobile_pricing || {}; renderProviders(d.providers || []); providersLoaded = true; if (pendingProvider) { selectProvider(pendingProvider); pendingProvider = null; } renderPrograms(); renderUsual(d.usual); })
 			.catch(function () { q('[data-providers]').innerHTML = '<div class="ecrm-empty">Δεν φόρτωσαν οι πάροχοι.</div>'; });
 
 		function renderProviders(list) {
@@ -419,6 +419,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				b.addEventListener('click', function () {
 					wrap.querySelectorAll('.ecrm-provider').forEach(function (x) { x.classList.remove('is-on'); });
 					b.classList.add('is-on'); state.provider_id = parseInt(p.id, 10);
+					hideUsual();
 					var lab = q('[data-selprov]'); if (lab) lab.textContent = 'Επιλεγμένος πάροχος: ' + p.name;
 					limitEnergyToProvider();
 					renderPrograms();
@@ -427,6 +428,87 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				});
 				wrap.appendChild(b);
 			});
+		}
+
+		/* --- «Συνήθως βάζεις...» (Λιγότερο πληκτρολόγιο 4, 28/08/2026) ---------
+		 *
+		 * Ο πωλητής που δουλεύει καθημερινά με τον ίδιο πάροχο ξανακάνει τα ίδια
+		 * δύο κλικ σε κάθε αίτηση. Ο server μετράει τις τελευταίες συμβάσεις του
+		 * (UsualChoiceRepository) και στέλνει τον επικρατέστερο συνδυασμό μαζί με
+		 * τον κατάλογο -- εδώ απλώς ζωγραφίζεται.
+		 *
+		 * ΠΡΟΤΑΣΗ, όχι σιωπηλή προεπιλογή: απόφαση ιδιοκτήτη, 28/08, και ο λόγος
+		 * είναι ότι το λάθος κοστίζει πολύ περισσότερο από το κλικ. Αίτηση που
+		 * φεύγει σε λάθος πάροχο επειδή κανείς δεν κοίταξε μια προ-διαλεγμένη
+		 * τιμή είναι χειρότερη από δύο κλικ. Τίποτα δεν επιλέγεται μόνο του.
+		 *
+		 * Ονόματα δεν έρχονται από τον server: ο κατάλογος είναι ήδη εδώ. */
+		var ENERGY_LABEL = { power: 'Ηλεκτρισμός', gas: 'Φυσικό Αέριο', mobile: 'Κινητή Τηλεφωνία' };
+
+		function hideUsual() {
+			var box = q('[data-usual]');
+			if (box) { box.hidden = true; box.innerHTML = ''; }
+		}
+
+		function renderUsual(u) {
+			var box = q('[data-usual]');
+			if (!box) return;
+			if (!u || !u.provider_id) { hideUsual(); return; }
+
+			/* Σε ΕΠΕΞΕΡΓΑΣΙΑ δεν εμφανίζεται ποτέ: ο πάροχος είναι ήδη γραμμένος
+			 * στη σύμβαση, και πρόταση να αλλάξει θα ήταν επικίνδυνη, όχι
+			 * βοηθητική. Ίδιος έλεγχος και για φόρμα όπου έχει ήδη διαλεγεί
+			 * πάροχος με το χέρι -- η πρόταση έχει ήδη απαντηθεί. */
+			if (state.contract_id || state.provider_id) { hideUsual(); return; }
+
+			var pbtn = root.querySelector('.ecrm-provider[data-pid="' + parseInt(u.provider_id, 10) + '"]');
+			if (!pbtn) { hideUsual(); return; }
+
+			var pname = pbtn.getAttribute('data-pname') || '';
+			var prog = null;
+			if (u.program_id) {
+				programsCache.forEach(function (pr) {
+					if (parseInt(pr.id, 10) === parseInt(u.program_id, 10)) prog = pr.name;
+				});
+			}
+
+			var kind = ENERGY_LABEL[u.energy_type] || '';
+			var what = esc(kind) + (prog ? ' · <strong>' + esc(prog) + '</strong>' : '');
+
+			box.innerHTML =
+				'<div class="ecrm-usual__hd">Συνήθως βάζεις <strong>' + esc(pname) + '</strong></div>' +
+				'<div class="ecrm-usual__meta">' + what + ' — σε ' + parseInt(u.times, 10) +
+				' από τις τελευταίες ' + parseInt(u.of, 10) + ' αιτήσεις σου</div>' +
+				'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-useusual>Βάλ\u2019 το</button>';
+			box.hidden = false;
+
+			var btn = box.querySelector('[data-useusual]');
+			if (btn) btn.addEventListener('click', function () { applyUsual(u); });
+		}
+
+		function applyUsual(u) {
+			/* Η σειρά μετράει. Πάροχος πρώτα: το limitEnergyToProvider() κρύβει
+			 * τα είδη που δεν πουλά, οπότε το chip πρέπει να πατηθεί ΑΦΟΥ ξέρουμε
+			 * ότι είναι ορατό. Είδος δεύτερο: η λίστα προγραμμάτων φιλτράρεται
+			 * από αυτό, και ξεκινά πάντα στο «Ηλεκτρισμός» -- πρόγραμμα αερίου
+			 * δεν θα υπήρχε καν στη λίστα αν έμπαινε πρώτο. Πρόγραμμα τελευταίο. */
+			var pbtn = root.querySelector('.ecrm-provider[data-pid="' + parseInt(u.provider_id, 10) + '"]');
+			if (pbtn) pbtn.click();
+
+			var chip = root.querySelector('.ecrm-chips[data-field="energy_type"] .ecrm-chip[data-val="' + u.energy_type + '"]');
+			if (chip && chip.style.display !== 'none') chip.click();
+
+			if (u.program_id) {
+				var sel = q('[data-program]');
+				if (sel) {
+					sel.value = String(u.program_id);
+					// Μόνο αν το πρόγραμμα υπάρχει όντως στη φιλτραρισμένη λίστα:
+					// απενεργοποιημένο πρόγραμμα δεν πρέπει να ξαναζωντανέψει εδώ.
+					if (sel.value === String(u.program_id)) sel.dispatchEvent(new Event('change'));
+				}
+			}
+
+			hideUsual();
 		}
 
 		function renderPrograms() {
@@ -449,6 +531,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 
 		function selectProvider(pid) {
 			pid = parseInt(pid, 10);
+			hideUsual();
 			if (!providersLoaded) { pendingProvider = pid; return; }
 			var btn = root.querySelector('.ecrm-provider[data-pid="' + pid + '"]');
 			qa('.ecrm-provider').forEach(function (x) { x.classList.remove('is-on'); });
