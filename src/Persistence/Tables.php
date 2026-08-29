@@ -22,6 +22,7 @@ final class Tables
     public const EVENTS             = 'events';
     public const FILES              = 'files';
     public const KB_ENTRIES         = 'kb_entries';
+    public const KB_READ            = 'kb_read';
     public const LEADS              = 'leads';
     public const NOTIFICATIONS      = 'notifications';
     public const PAYOUTS            = 'payouts';
@@ -36,6 +37,12 @@ final class Tables
 
     /**
      * Every table the plugin owns, unprefixed.
+     *
+     * AUDIT 29/08: `kb_read` (dbDelta, class-ecrm-db.php) was missing from
+     * this list -- the one place HealthChecks and EnsureInnoDb (0003) ask
+     * "which tables exist?". It was invisible to both: the health screen
+     * said "14 από 14" while a 15th table quietly existed, and a table lost
+     * entirely would never have tripped the one check meant to notice.
      *
      * @return list<string>
      */
@@ -55,6 +62,7 @@ final class Tables
             self::TASKS,
             self::LEADS,
             self::KB_ENTRIES,
+            self::KB_READ,
             self::NOTIFICATIONS,
         ];
     }
