@@ -721,9 +721,39 @@ class ECRM_Shortcodes {
 					</label>
 
 					<?php $ecrm_field( 'mobile_msisdn', 'Αριθμός Κινητού', 'text', true, '69…' ); ?>
-					<?php $ecrm_field( 'sim_number', 'Αριθμός Κάρτας SIM', 'text', true ); ?>
+					<?php
+					/*
+					 * Ίδιο κέλυφος .ecrm-input-wrap με το ΑΦΜ λίγο πιο πάνω -- δεν
+					 * φτιάχνεται δεύτερο μοτίβο, δεύτερος χρήστης του υπάρχοντος.
+					 * Το data-scan="sim_number" είναι γενικό επίτηδες (§1.13): το
+					 * ίδιο κουμπί, το ίδιο JS, θα δούλευε σε οποιοδήποτε πεδίο που
+					 * θα αποκτούσε ανάγκη ανάγνωσης barcode αύριο.
+					 */
+					?>
+					<label class="ecrm-field" data-for="sim_number">
+						<span class="ecrm-field__label">Αριθμός Κάρτας SIM</span>
+						<span class="ecrm-input-wrap">
+							<input type="text" name="sim_number" class="ecrm-input" data-extra="1" autocomplete="off">
+							<button type="button" class="ecrm-input-btn ecrm-scan-btn" data-scan="sim_number" aria-label="Σάρωση barcode κάρτας SIM">
+								<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><path d="M7 8v8M10 8v8M13.5 8v8M17 8v8"/></svg>
+							</button>
+						</span>
+					</label>
 					<?php $ecrm_field( 'subsidy_type', 'Τύπος Επιδότησης', 'text', true, 'π.χ. Έκπτωση Παγίου' ); ?>
 				</div>
+
+				<?php
+				/*
+				 * Η κρυφή είσοδος λήψης, ΞΕΧΩΡΙΣΤΗ από το data-camera του
+				 * τμήματος Εγγράφων. Δύο λόγοι: (1) εκείνη δέχεται PDF+JPG+PNG
+				 * για έγγραφα φακέλου -- εδώ θέλουμε ΜΟΝΟ εικόνα, μία λήψη· (2)
+				 * η αλλαγή εδώ ενεργοποιεί το barcode/AI της κάρτας SIM, όχι το
+				 * addFiles() του φακέλου -- διαφορετικός χειριστής, διαφορετική
+				 * είσοδος, ίδιο ζεύγος button+input capture="environment" με
+				 * το data-camera-pick.
+				 */
+				?>
+				<input type="file" data-scan-camera accept="image/*" capture="environment" hidden>
 
 				<?php
 				// Το COMBO είναι το μόνο σημείο όπου η κινητή αγγίζει το ρεύμα:

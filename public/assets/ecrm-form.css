@@ -612,6 +612,28 @@
 /* Ίδιο υπόλειμμα iris, στον παλμό του πεδίου που γέμισε το AI. */
 @keyframes ecrm-pulse { 0% { box-shadow: 0 0 0 0 rgba(22,194,23,.45); } 100% { box-shadow: 0 0 0 8px rgba(22,194,23,0); } }
 
+/* Σήμανση SCAN -- ξεχωριστή από το AI (ai-mark, πάνω). Το barcode είναι
+ * ανάγνωση μηχανής, σωστή ή τίποτα· το AI μαντεύει από εικόνα. Ίδια ετικέτα
+ * θα έλεγε ψέματα για το πόσο πρέπει να ελέγξει ο συνεργάτης το πεδίο.
+ * Μπλε αντί για πράσινο -- ο ίδιος τόνος με το --st-new του συστήματος
+ * κατάστασης, όχι νέο χρώμα. docs/UI-SIM-SCAN.html, §4. */
+.ecrm-field.is-scan .ecrm-input { background: var(--st-new-bg); border-color: var(--st-new); animation: ecrm-pulse-scan 1.6s ease; }
+.ecrm-field.scan-mark .ecrm-field__label { display: flex; align-items: center; gap: 6px; }
+.ecrm-field.scan-mark .ecrm-field__label::after {
+	content: "SCAN"; font-size: var(--fs-10); font-weight: 800; letter-spacing: .04em;
+	color: var(--st-new); background: var(--st-new-bg); padding: 1px 5px; border-radius: 5px; line-height: 1.5;
+}
+.ecrm-field.scan-mark .ecrm-input { border-color: var(--st-new); }
+@keyframes ecrm-pulse-scan { 0% { box-shadow: 0 0 0 0 rgba(0,114,183,.4); } 100% { box-shadow: 0 0 0 8px rgba(0,114,183,0); } }
+
+/* Το κουμπί σάρωσης -- ίδιο μοτίβο με .ecrm-input-btn (ΑΦΜ), ίδια απόκρυψη σε
+ * desktop με το .ecrm-camera-btn: χρησιμοποιεί την κάμερα της συσκευής, άρα
+ * δεν έχει νόημα εκεί που δεν υπάρχει. Ίδιο κριτήριο pointer/hover, όχι
+ * πλάτος οθόνης -- απόφαση ιδιοκτήτη 24/08, εφαρμοσμένη ξανά εδώ. */
+@media (hover: hover) and (pointer: fine) {
+	.ecrm-scan-btn { display: none; }
+}
+
 /* Κατάταξη συνεργατών: τα 🥇🥈🥉 ήταν τρία emoji που το κάθε λειτουργικό τα
  * ζωγραφίζει αλλιώς, και μετά το τέταρτο έγραφε «4». Τώρα είναι ΕΝΑ πράγμα με
  * τέσσερις καταστάσεις — αριθμός σε κύκλο — και οι τρεις πρώτοι απλώς παίρνουν

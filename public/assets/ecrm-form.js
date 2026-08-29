@@ -180,6 +180,146 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			}
 		}
 
+		/*
+		 * Σάρωση barcode -- πρώτα η κάμερα του συστήματος διαβάζει το
+		 * barcode τοπικά, δωρεάν, ακαριαία. Αν αποτύχει (browser χωρίς
+		 * BarcodeDetector, ή θολό/γρατζουνισμένο barcode), η ΙΔΙΑ φωτογραφία
+		 * πάει στο AI -- το ίδιο prompt που ήδη διαβάζει κάρτα SIM (backend
+		 * CHANGELOG 173). Μία λήψη, δύο προσπάθειες. docs/UI-SIM-SCAN.html.
+		 *
+		 * Γενικό επίτηδες: `data-scan="<πεδίο>"` δουλεύει σε οποιοδήποτε
+		 * κουμπί, όχι μόνο στο sim_number -- §1.13, μη κλείσεις δρόμο για
+		 * αύριο (π.χ. μετρητή, αν αποδειχθεί ότι έχει barcode).
+		 */
+		var scanCamera = q('[data-scan-camera]');
+		var scanTarget = null;
+
+		// Ένα ICCID είναι 19-20 ψηφία και ξεκινά με 89 (πρόθεμα
+		// τηλεπικοινωνιών, ITU E.118). Αυτό δεν είναι μαντεψιά -- είναι ο
+		// έλεγχος σχήματος που αντικαθιστά την επιβεβαίωση που δεν έγινε
+		// ακόμα (βλ. σημείωση §1.15 στο UI-SIM-SCAN.html): αν το barcode
+		// αποκωδικοποιηθεί σε κάτι εκτός αυτού του σχήματος, ΔΕΝ γεμίζει το
+		// πεδίο -- πέφτει σιωπηλά στο AI, με την ίδια φωτογραφία. Ό,τι δεν
+		// περνά ποτέ αυτόν τον έλεγχο θα ήταν έτσι κι αλλιώς λάθος πεδίο.
+		var ICCID_RE = /^89\d{17,18}$/;
+
+		function iccidFrom(raw) {
+			var digits = String(raw == null ? '' : raw).replace(/\D/g, '');
+			return ICCID_RE.test(digits) ? digits : null;
+		}
+
+		/* Επιστρέφει Promise<string|null>. Ποτέ δεν απορρίπτει -- κάθε
+		 * αποτυχία (χωρίς υποστήριξη, χωρίς barcode στην εικόνα, σφάλμα
+		 * αποκωδικοποίησης) είναι απλώς "δεν βρέθηκε", όχι σφάλμα προς τον
+		 * χρήστη. Η απόφαση για το τι γίνεται μετά ανήκει στον καλούντα. */
+		function detectBarcode(file) {
+			if (typeof window.BarcodeDetector === 'undefined') { return Promise.resolve(null); }
+
+			var detector;
+			try {
+				// Code 128 είναι ο τυπικός τύπος barcode σε βάση κάρτας SIM.
+				// Code 39 μπαίνει δίπλα του σχεδόν δωρεάν και καλύπτει
+				// παλαιότερες εκτυπώσεις. Ο περιορισμός τύπων αποτρέπει να
+				// διαβαστεί κατά λάθος κάποιο άσχετο barcode συσκευασίας.
+				detector = new window.BarcodeDetector({ formats: ['code_128', 'code_39'] });
+			} catch (e) {
+				return Promise.resolve(null);
+			}
+
+			return Promise.resolve()
+				.then(function () { return createImageBitmap(file); })
+				.then(function (bitmap) { return detector.detect(bitmap); })
+				.then(function (codes) {
+					for (var i = 0; i < codes.length; i++) {
+						var v = iccidFrom(codes[i].rawValue);
+						if (v) { return v; }
+					}
+					return null;
+				})
+				.catch(function () { return null; });
+		}
+
+		/* Ίδιο κέλυφος με το setField(), ΞΕΧΩΡΙΣΤΗ σήμανση: 'scan-mark' αντί
+		 * για 'ai-mark' -- η μπλε ετικέτα SCAN λέει "ανάγνωση μηχανής",
+		 * διαφορετικό βαθμό εμπιστοσύνης από το πράσινο AI. Πάντα
+		 * αντικαθιστά: το κουμπί πατήθηκε ρητά, όπως το κουμπί εξαγωγής. */
+		function setFieldFromScan(name, val) {
+			var input = root.querySelector('.ecrm-input[name="' + name + '"]');
+			if (!input || val == null || val === '') { return; }
+			input.value = val;
+			var field = input.closest('.ecrm-field');
+			if (field) {
+				field.classList.remove('ai-mark');
+				field.classList.add('is-scan');
+				setTimeout(function () { field.classList.remove('is-scan'); }, 1800);
+				field.classList.add('scan-mark');
+				if (field.classList.contains('is-offform')) {
+					field.classList.remove('is-offform');
+					paintMoreToggles();
+				}
+			}
+		}
+
+		/* Το δίχτυ: η ΙΔΙΑ φωτογραφία στον εξαγωγέα, με το είδος sim_card. Δεν
+		 * περνά από το state.files/addFiles() -- αυτό το κανάλι δεν αποθηκεύει
+		 * τη φωτογραφία στην αίτηση, μόνο τη διαβάζει μία φορά και την ξεχνά,
+		 * ίδια λογική με "τα ανεβάσματα δεν αγγίζουν ποτέ δίσκο" στην κορυφή
+		 * του ExtractionController. */
+		function scanWithAi(fieldName, file) {
+			var statusEl = q('[data-ai-status]');
+			if (statusEl) { statusEl.textContent = 'Ανάλυση κάρτας SIM με AI…'; }
+
+			var fd = new FormData();
+			fd.append('files[]', file);
+			fd.append('kinds[]', 'sim_card');
+
+			fetch(api('/extract'), { method: 'POST', headers: headers(false), body: fd })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (statusEl) { statusEl.textContent = ''; }
+					if (!d || !d.ok || !d.data) {
+						toast('Δεν διαβάστηκε ούτε το barcode ούτε το AI. Πληκτρολόγησέ το.', false);
+						return;
+					}
+					var filled = 0;
+					['sim_number', 'mobile_msisdn'].forEach(function (k) {
+						if (d.data[k]) { setField(k, d.data[k], false); filled++; }
+					});
+					if (filled) {
+						toast('Το barcode δεν διαβάστηκε -- συμπληρώθηκε με AI. Έλεγξέ το.');
+					} else {
+						toast('Δεν βρέθηκαν στοιχεία SIM στη φωτογραφία. Πληκτρολόγησέ το.', false);
+					}
+				})
+				.catch(function () {
+					if (statusEl) { statusEl.textContent = ''; }
+					toast('Σφάλμα δικτύου στη σάρωση.', false);
+				});
+		}
+
+		root.querySelectorAll('[data-scan]').forEach(function (btn) {
+			btn.addEventListener('click', function () {
+				if (!scanCamera) { return; }
+				scanTarget = btn.getAttribute('data-scan');
+				scanCamera.click();
+			});
+		});
+
+		if (scanCamera) {
+			scanCamera.addEventListener('change', function () {
+				var file = this.files && this.files[0];
+				var field = scanTarget;
+				this.value = '';
+				scanTarget = null;
+				if (!file || !field) { return; }
+
+				detectBarcode(file).then(function (value) {
+					if (value) { setFieldFromScan(field, value); return; }
+					scanWithAi(field, file);
+				});
+			});
+		}
+
 		// chips
 		qa('.ecrm-chips').forEach(function (group) {
 			var field = group.getAttribute('data-field');
@@ -1255,8 +1395,8 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// ετικέτα δεν προσθέτει τίποτα πια. Ένας delegated listener στη ρίζα,
 		// όχι ένας ανά πεδίο, γιατί τα πεδία που γεμίζει το AI αλλάζουν κάθε φορά.
 		root.addEventListener('input', function (e) {
-			var field = e.target.closest && e.target.closest('.ecrm-field.ai-mark');
-			if (field) field.classList.remove('ai-mark');
+			var field = e.target.closest && e.target.closest('.ecrm-field.ai-mark, .ecrm-field.scan-mark');
+			if (field) { field.classList.remove('ai-mark'); field.classList.remove('scan-mark'); }
 		});
 
 		// Supply / billing address: ticked means "same as the customer's", and
