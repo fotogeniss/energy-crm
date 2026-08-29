@@ -9,7 +9,11 @@
  *
  * What crosses the scope boundary is only the *fact* of a clash. Outside the
  * actor's scope the customer's name, the colleague's name and even the contract
- * id are withheld — "άλλος συνεργάτης δικτύου" is the whole disclosure.
+ * id are withheld — "άλλος συνεργάτης δικτύου" is the whole disclosure. AUDIT
+ * 29/08: code, status, status_label and provider used to leak unconditionally
+ * too, undoing this paragraph in practice -- present() now withholds them the
+ * same way. Rate-limited like /lookup/afm (VatLookupController): unauthenticated
+ * scope, company-wide reach, worth the same budget against a hammering script.
  *
  * @package EnergyCRM
  */
@@ -19,6 +23,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_DB;
+use ECRM_RateLimit;
 use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
@@ -50,6 +55,13 @@ final class DuplicateCheckController implements Controller
 
     public function check(WP_REST_Request $request): WP_REST_Response
     {
+        // Company-wide by design (see class docblock) -- exactly the kind of
+        // route a script can hammer to enumerate colleagues' contracts one
+        // guess at a time. Same budget as /lookup/afm.
+        if (! ECRM_RateLimit::allow('duplicate', 30, 300)) {
+            return ECRM_RateLimit::too_many();
+        }
+
         $afm    = ECRM_Validate::digits((string) $request['afm']);
         $supply = trim((string) $request['supply']);
 
@@ -91,12 +103,15 @@ final class DuplicateCheckController implements Controller
         }
 
         return [
-            // Zero when out of scope: the row must not be openable.
+            // Zero -- or '' below -- when out of scope: the row must not be
+            // openable, and nothing past the fact of the clash may cross the
+            // boundary (see class docblock). AUDIT 29/08: these four used to
+            // leak unconditionally.
             'id'           => $visible ? (int) $row['id'] : 0,
-            'code'         => $row['code'],
-            'status'       => $row['status'],
-            'status_label' => $labels[$row['status']] ?? $row['status'],
-            'provider'     => $row['provider_name'],
+            'code'         => $visible ? $row['code'] : '',
+            'status'       => $visible ? $row['status'] : '',
+            'status_label' => $visible ? ($labels[$row['status']] ?? $row['status']) : '',
+            'provider'     => $visible ? $row['provider_name'] : '',
             'customer'     => $customer ?: ($visible ? '—' : 'άλλος συνεργάτης δικτύου'),
             'owner'        => $isMine ? 'εσύ' : ($ownerName ?: ($visible ? '—' : '')),
             'is_mine'      => $isMine,
