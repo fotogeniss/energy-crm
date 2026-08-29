@@ -478,6 +478,16 @@ class ECRM_Tracking {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Η αίτηση δεν δέχεται πλέον έγγραφα.' ], 400 );
 		}
 
+		// Πόσα αρχεία κρέμονται ήδη. Ίδιο όριο και ίδιος λόγος με το
+		// ECRM_Intake::rest_file() -- χωρίς αυτό, ο σύνδεσμος παρακολούθησης
+		// γίνεται δωρεάν αποθηκευτικός χώρος για όποιον τον έχει, ασχέτως αν
+		// είναι ο πελάτης ή κάποιος στον οποίο το προώθησε. AUDIT 29/08.
+		$ft    = ECRM_DB::table( 'files' );
+		$count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ft} WHERE contract_id = %d", $id ) );
+		if ( $count >= 6 ) {
+			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Έχετε ήδη ανεβάσει τον μέγιστο αριθμό αρχείων.' ], 400 );
+		}
+
 		$p    = $req->get_json_params() ?: $req->get_params();
 		$kind = sanitize_key( (string) ( $p['kind'] ?? 'other' ) );
 		$catalog = class_exists( 'ECRM_Docs' ) ? ECRM_Docs::kinds() : [ 'other' => 'Άλλο έγγραφο' ];
