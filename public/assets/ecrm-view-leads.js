@@ -6,6 +6,7 @@
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { fmtDate } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
+import { openDialog } from '@energy-crm/dialog';
 
 var leadsState = { stage: '', q: '', editing: null, showForm: false };
 export function loadLeads() {
@@ -189,43 +190,315 @@ function renderLeads(view, d) {
 	});
 	view.querySelectorAll('[data-lconv]').forEach(function (b) {
 		b.addEventListener('click', function () {
-			if (!confirm('Δημιουργία πρόχειρης σύμβασης από αυτό το lead;')) return;
-			var bb = this; bb.disabled = true;
-			fetch(api('/leads/' + this.getAttribute('data-lconv') + '/convert'), { method: 'POST', headers: H() })
-				.then(function (r) { return r.json(); })
-				.then(function (res) {
-					if (!res || !res.ok || !res.contract_id) { bb.disabled = false; toast((res && res.error) || 'Αποτυχία.', false); return; }
+			var bb = this;
+			var id = +this.getAttribute('data-lconv');
+			var lead = (d.leads || []).filter(function (x) { return x.id === id; })[0] || {};
 
-					/* Η μετατροπή πέτυχε ΗΔΗ -- ό,τι ακολουθεί είναι μπόνους και
-					 * δεν επιτρέπεται να την ακυρώσει. Γι' αυτό η ανάγνωση των
-					 * εγγράφων γίνεται ΜΕΤΑ, σε δικό της αίτημα: αν σκάσει το AI
-					 * ή αργήσει, η αίτηση υπάρχει και ο πωλητής προχωράει.
-					 *
-					 * Με apply=1 ο server ΓΡΑΦΕΙ ό,τι διάβασε στον πελάτη και τη
-					 * σύμβαση, μόνο σε κενά πεδία. Χωρίς αυτό η εξαγωγή γέμιζε
-					 * πεδία φόρμας που ζούσαν στον browser, και η καρτέλα έμενε
-					 * άδεια μέχρι να ανοίξει κάποιος τον οδηγό και να πατήσει
-					 * Αποθήκευση -- ακριβώς ο χαμένος χρόνος που καταργούμε. */
-					var cid = res.contract_id;
-					toast('Δημιουργήθηκε πρόχειρη σύμβαση. Διαβάζονται τα έγγραφα…');
+			// Το κουμπί κλειδώνει ΤΩΡΑ και ξεκλειδώνει μόνο αν η ροή σταματήσει
+			// -- άκυρο, Escape, ή αποτυχία δημιουργίας. Σε επιτυχία δεν
+			// ξεκλειδώνει ποτέ: η οθόνη έχει ήδη φύγει στην καρτέλα.
+			bb.disabled = true;
 
-					var fd = new FormData();
-					fd.append('contract_id', String(cid));
-					fd.append('apply', '1');
-
-					fetch(api('/extract'), { method: 'POST', headers: H(), body: fd })
-						.then(function (r) { return r.json(); })
-						.then(function (ex) {
-							var n = (ex && ex.applied) ? ex.applied.length : 0;
-							if (n) { toast('Συμπληρώθηκαν ' + n + ' πεδία από τα έγγραφα. Έλεγξέ τα.'); }
-						})
-						.catch(function () { /* σιωπηλά: η αίτηση υπάρχει, τα πεδία συμπληρώνονται με το χέρι */ })
-						.finally(function () { go('contracts'); setTimeout(function () { openDetail(cid); }, 60); });
-				})
-				.catch(function () { bb.disabled = false; toast('Σφάλμα δικτύου.', false); });
+			openHandoff(id, lead, function () { bb.disabled = false; });
 		});
 	});
 	view.querySelectorAll('[data-lopen]').forEach(function (b) {
 		b.addEventListener('click', function () { var id = +this.getAttribute('data-lopen'); go('contracts'); setTimeout(function () { openDetail(id); }, 60); });
+	});
+}
+
+/* ── Η παράδοση: από τον σύνδεσμο του πελάτη σε αίτηση ────────────────────
+ *
+ * ## Γιατί άλλαξε η σειρά
+ *
+ * Ως τις 28/08 η ροή ήταν «ρώτα → φτιάξε → διάβασε»: ένα native confirm()
+ * χωρίς καμία πληροφορία, μετά η σύμβαση, και μόνο στο τέλος το AI. Ο πωλητής
+ * έλεγε «ναι» για κάτι που δεν είχε δει. Τώρα είναι «διάβασε → δείξε → ρώτα →
+ * φτιάξε». Μακέτα docs/UI-INTAKE-HANDOFF.html, εγκεκριμένη, CHANGELOG (172).
+ *
+ * ## Ο κανόνας που δεν επιτρέπεται να σπάσει
+ *
+ * Η ΑΠΟΤΥΧΙΑ ΤΟΥ AI ΔΕΝ ΜΠΛΟΚΑΡΕΙ ΠΟΤΕ ΤΗ ΔΗΜΙΟΥΡΓΙΑ. Με την παλιά σειρά αυτό
+ * ήταν δωρεάν — η σύμβαση υπήρχε ήδη όταν έτρεχε το AI. Με τη νέα, η αποτυχία
+ * έρχεται ΠΡΙΝ, οπότε πρέπει να γραφτεί ρητά: κάθε σφάλμα εξαγωγής καταλήγει
+ * σε `null` δεδομένα και σε διάλογο που ΑΝΟΙΓΕΙ ΚΑΝΟΝΙΚΑ, με άλλο κείμενο
+ * κουμπιού. Αν αυτό σπάσει, η αλλαγή σειράς είναι παλινδρόμηση.
+ *
+ * ## Γιατί δύο κλήσεις εξαγωγής θα ήταν λάθος
+ *
+ * Το `/extract` με `lead_id` ΔΙΑΒΑΖΕΙ και δεν γράφει (δεν υπάρχει ακόμα
+ * αίτηση). Μετά τη δημιουργία, το ίδιο JSON στέλνεται πίσω με `data` — ο
+ * εξαγωγέας δεν ξανακαλείται. Ο `ECRM_Extractor` δεν έχει cache: δεύτερη
+ * ανάγνωση των ΙΔΙΩΝ αρχείων θα πλήρωνε το μοντέλο δεύτερη φορά σε κάθε
+ * αίτηση. CHANGELOG (171).
+ */
+
+/* Ετικέτες μόνο για τα πεδία που ΔΕΙΧΝΕΙ αυτός ο διάλογος.
+ *
+ * Ναι, υπάρχει ήδη χάρτης στο `ECRM_Audit::label()`. Δεν έρχεται από εκεί:
+ * είναι PHP, και μια διαδρομή που θα σέρβιρε οκτώ συμβολοσειρές θα ήταν ένα
+ * ολόκληρο round-trip για κείμενο που δεν αλλάζει ποτέ. Αυτό ΔΕΝ είναι
+ * αντίγραφο του χάρτη -- είναι η λίστα προβολής αυτής της οθόνης, με ρητή
+ * σειρά, και μεγαλώνει μόνο αν αλλάξει η οθόνη. */
+var HANDOFF_LABEL = {
+	first_name: 'Όνομα', last_name: 'Επίθετο', father_name: 'Πατρώνυμο',
+	company_name: 'Επωνυμία', afm: 'ΑΦΜ', doy: 'ΔΟΥ', adt: 'ΑΔΤ',
+	birth_date: 'Ημ. γέννησης', region: 'Νομός', city: 'Πόλη',
+	street: 'Οδός', street_no: 'Αριθμός', postal_code: 'ΤΚ',
+	phone: 'Τηλέφωνο', mobile: 'Κινητό', email: 'Email',
+	supply_number: 'Αριθμός παροχής', meter_number: 'Μετρητής',
+	invoice_code: 'Τιμολόγιο',
+};
+
+/* Πόσα δείχνονται πριν το «και N ακόμα». Πέντε: ο σκοπός είναι «αναγνωρίζω
+ * τον πελάτη μου και το AI δούλεψε», όχι έλεγχος γραμμή-γραμμή. Δέκα πεδία σε
+ * κινητό δεν διαβάζονται. Απόφαση της μακέτας, §4. */
+var HANDOFF_SHOWN = 5;
+
+function handoffValue(data, key) {
+	var v = data && data[key];
+	return (v === null || v === undefined) ? '' : String(v).trim();
+}
+
+/* Οι σειρές του πίνακα, με σταθερή σειρά προτεραιότητας.
+ *
+ * Συγχωνευμένες όπου ο πωλητής τις διαβάζει ως ένα πράγμα: όνομα+επίθετο,
+ * οδός+αριθμός, ΤΚ+πόλη. Δύο γραμμές για «Ακαδημίας» και «42» δεν βοηθούν
+ * κανέναν να αναγνωρίσει τον πελάτη του. */
+function handoffRows(data) {
+	var rows = [], used = [];
+	function take() { for (var i = 0; i < arguments.length; i++) { used.push(arguments[i]); } }
+
+	var name = [handoffValue(data, 'first_name'), handoffValue(data, 'last_name')].filter(Boolean).join(' ');
+	if (!name) { name = handoffValue(data, 'company_name'); }
+	if (name) { rows.push(['Όνομα', name]); }
+	take('first_name', 'last_name', 'company_name');
+
+	if (handoffValue(data, 'afm')) { rows.push(['ΑΦΜ', handoffValue(data, 'afm')]); }
+	take('afm');
+
+	if (handoffValue(data, 'supply_number')) { rows.push(['Αρ. παροχής', handoffValue(data, 'supply_number')]); }
+	take('supply_number');
+
+	var street = [handoffValue(data, 'street'), handoffValue(data, 'street_no')].filter(Boolean).join(' ');
+	if (street) { rows.push(['Οδός', street]); }
+	take('street', 'street_no');
+
+	var where = [handoffValue(data, 'postal_code'), handoffValue(data, 'city')].filter(Boolean).join(' · ');
+	if (where) { rows.push(['ΤΚ / Πόλη', where]); }
+	take('postal_code', 'city');
+
+	// Ό,τι απέμεινε γεμάτο: μετριέται και ονομάζεται, δεν δείχνεται.
+	var rest = Object.keys(HANDOFF_LABEL).filter(function (k) {
+		return used.indexOf(k) === -1 && handoffValue(data, k) !== '';
+	}).map(function (k) { return HANDOFF_LABEL[k]; });
+
+	return { rows: rows.slice(0, HANDOFF_SHOWN), rest: rest, total: rows.length + rest.length };
+}
+
+/* Το μπλοκ του AI. Τρεις καταστάσεις, καμία τους «άδεια οθόνη». */
+function handoffAiBlock(data, hadDocuments) {
+	var f = data ? handoffRows(data) : null;
+
+	if (!f || !f.total) {
+		return '<div class="ecrm-handoff ecrm-handoff--empty">' +
+			'<div class="ecrm-handoff__hd"><span class="ecrm-handoff__dot ecrm-handoff__dot--off">' +
+			(hadDocuments ? 'AI' : '—') + '</span> ' +
+			(hadDocuments ? 'Δεν κατάφερα να διαβάσω τα έγγραφα' : 'Δεν στάλθηκαν έγγραφα') + '</div>' +
+			'<div class="ecrm-handoff__empty">' +
+			(hadDocuments
+				? 'Θα τα βρεις στην αίτηση για να τα δεις μόνος σου. Τα πεδία μένουν κενά.'
+				: 'Θα δημιουργηθεί αίτηση με ό,τι συμπλήρωσε ο πελάτης στη φόρμα.') +
+			'</div></div>';
+	}
+
+	var kv = f.rows.map(function (r) {
+		return '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>';
+	}).join('');
+
+	var more = f.rest.length
+		? '<div class="ecrm-handoff__more">και ' + f.rest.length + ' ακόμα — ' + esc(f.rest.join(', ')) + '</div>'
+		: '';
+
+	return '<div class="ecrm-handoff">' +
+		'<div class="ecrm-handoff__hd"><span class="ecrm-handoff__dot">AI</span> Βρήκα αυτά τα στοιχεία' +
+		'<span class="ecrm-handoff__n">' + f.total + (f.total === 1 ? ' πεδίο' : ' πεδία') + '</span></div>' +
+		'<dl class="ecrm-handoff__kv">' + kv + '</dl>' + more +
+	'</div>';
+}
+
+/* Το μπλοκ της συνήθειας -- ή ΤΙΠΟΤΑ.
+ *
+ * Νέος πωλητής δεν βλέπει «δεν έχω αρκετά δεδομένα». Δεν χρωστά εξήγηση στο
+ * σύστημα, και μια απολογία σε κάθε αίτηση είναι θόρυβος. Ίδιο κατώφλι με την
+ * (166): ο server στέλνει `usual: null` κάτω από MIN_TIMES. */
+function handoffUsualBlock(usual, catalogue) {
+	if (!usual || !usual.provider_id) { return ''; }
+
+	var pname = '';
+	(catalogue.providers || []).forEach(function (p) {
+		if (parseInt(p.id, 10) === parseInt(usual.provider_id, 10)) { pname = p.name; }
+	});
+	if (!pname) { return ''; }
+
+	var prog = '';
+	if (usual.program_id) {
+		(catalogue.programs || []).forEach(function (pr) {
+			if (parseInt(pr.id, 10) === parseInt(usual.program_id, 10)) { prog = pr.name; }
+		});
+	}
+
+	var kind = { power: 'Ηλεκτρισμός', gas: 'Φυσικό Αέριο', mobile: 'Κινητή Τηλεφωνία' }[usual.energy_type] || '';
+
+	return '<div class="ecrm-handoff ecrm-handoff--usual">' +
+		'<div class="ecrm-handoff__hd"><span class="ecrm-handoff__dot ecrm-handoff__dot--ok">✓</span> Η συνήθειά σου</div>' +
+		'<div class="ecrm-handoff__usual">Συνήθως βάζεις <strong>' + esc(pname) + '</strong>' +
+			(kind ? ' — ' + esc(kind) : '') + (prog ? ', <strong>' + esc(prog) + '</strong>' : '') + '</div>' +
+		'<div class="ecrm-handoff__meta">σε ' + parseInt(usual.times, 10) +
+			' από τις τελευταίες ' + parseInt(usual.of, 10) + ' αιτήσεις σου</div>' +
+	'</div>';
+}
+
+/* Διαβάζει τα έγγραφα του lead ΧΩΡΙΣ να γράψει τίποτα.
+ *
+ * Κάθε αποτυχία -- δίκτυο, 404 χωρίς έγγραφα, 503 ουρά, 502 μοντέλο --
+ * καταλήγει στο ίδιο: `{ data: null, hadDocuments: … }`. Ο διάλογος ανοίγει
+ * ούτως ή άλλως. Δες τον κανόνα στην κορυφή. */
+function handoffRead(leadId) {
+	var fd = new FormData();
+	fd.append('lead_id', String(leadId));
+
+	return fetch(api('/extract'), { method: 'POST', headers: H(), body: fd })
+		.then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+		.then(function (res) {
+			// 404 εδώ σημαίνει ένα και μόνο πράγμα: ο πελάτης δεν έστειλε
+			// αναγνώσιμα έγγραφα. Ο έλεγχος εμβέλειας απαντά ΤΟ ΙΔΙΟ 404 --
+			// αλλά αυτό δεν συμβαίνει εδώ, το lead είναι από τη δική του λίστα.
+			if (res.status === 404) { return { data: null, hadDocuments: false }; }
+			if (res.body && res.body.ok && res.body.data) { return { data: res.body.data, hadDocuments: true }; }
+			return { data: null, hadDocuments: true };
+		})
+		.catch(function () { return { data: null, hadDocuments: true }; });
+}
+
+/* Ο κατάλογος, για τα ΟΝΟΜΑΤΑ παρόχου και προγράμματος.
+ *
+ * Το `usual` ταξιδεύει με ids -- η (166) αποφάσισε ρητά να μη στέλνονται
+ * ονόματα, γιατί η φόρμα έχει ήδη τον κατάλογο. Εδώ δεν τον έχουμε, οπότε
+ * ζητιέται. Αποτυχία = καμία συνήθεια στην οθόνη, τίποτα άλλο. */
+function handoffCatalogue() {
+	return fetch(api('/providers'), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) { return d || {}; })
+		.catch(function () { return {}; });
+}
+
+/* Τα «μπόνους» γραψίματα, ΜΕΤΑ τη δημιουργία. Κανένα δεν μπορεί να την
+ * ακυρώσει: καθένα καταπίνει τα σφάλματά του και επιστρέφει πάντα. */
+function handoffApplyData(contractId, data) {
+	var fd = new FormData();
+	fd.append('contract_id', String(contractId));
+	fd.append('apply', '1');
+	fd.append('data', JSON.stringify(data));
+
+	return fetch(api('/extract'), { method: 'POST', headers: H(), body: fd })
+		.then(function (r) { return r.json(); })
+		.then(function (res) { return (res && res.applied) ? res.applied.length : 0; })
+		.catch(function () { return 0; });
+}
+
+function handoffApplyUsual(contractId, usual) {
+	var body = {
+		contract_id: contractId,
+		provider_id: usual.provider_id,
+		energy_type: usual.energy_type,
+	};
+	if (usual.program_id) { body.program_id = usual.program_id; }
+
+	return fetch(api('/contracts'), {
+		method: 'POST',
+		headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+		body: JSON.stringify(body),
+	})
+		.then(function (r) { return r.json(); })
+		.then(function (res) { return !!(res && res.ok); })
+		.catch(function () { return false; });
+}
+
+/* Η δημιουργία, και μόνο μετά τα μπόνους. */
+function handoffConvert(leadId, data, usual, onFailure) {
+	toast('Δημιουργείται η αίτηση…');
+
+	fetch(api('/leads/' + leadId + '/convert'), { method: 'POST', headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (res) {
+			if (!res || !res.ok || !res.contract_id) {
+				onFailure();
+				toast((res && res.error) || 'Αποτυχία.', false);
+				return;
+			}
+
+			var cid = res.contract_id;
+
+			/* ΣΕΙΡΙΑΚΑ, όχι Promise.all. Και τα δύο γράφουν στην ΙΔΙΑ γραμμή
+			 * `contracts`: το πρώτο τα πεδία που διάβασε το AI, το δεύτερο
+			 * πάροχο/είδος/πρόγραμμα. Παράλληλα, το δεύτερο θα διάβαζε την
+			 * υπάρχουσα γραμμή πριν προλάβει να γράψει το πρώτο -- και η
+			 * σειρά που θα κέρδιζε θα άλλαζε από τρέξιμο σε τρέξιμο. Δύο
+			 * γρήγορα ερωτήματα βάσης σε σειρά κοστίζουν λιγότερο από ένα
+			 * σφάλμα που εμφανίζεται μία στις δέκα φορές. */
+			var step = data ? handoffApplyData(cid, data) : Promise.resolve(0);
+
+			step.then(function (written) {
+				var next = (usual && usual.provider_id)
+					? handoffApplyUsual(cid, usual)
+					: Promise.resolve(false);
+
+				return next.then(function () { return written; });
+			}).then(function (written) {
+				toast(written
+					? 'Η αίτηση δημιουργήθηκε — συμπληρώθηκαν ' + written + ' πεδία. Έλεγξέ τα.'
+					: 'Η αίτηση δημιουργήθηκε.');
+				go('contracts');
+				setTimeout(function () { openDetail(cid); }, 60);
+			});
+		})
+		.catch(function () { onFailure(); toast('Σφάλμα δικτύου.', false); });
+}
+
+/* Η στιγμή ολόκληρη. */
+function openHandoff(leadId, lead, onAbort) {
+	toast('Διαβάζονται τα έγγραφα του πελάτη…');
+
+	Promise.all([handoffRead(leadId), handoffCatalogue()]).then(function (out) {
+		var read = out[0], catalogue = out[1];
+		var found = !!(read.data && handoffRows(read.data).total);
+		var usual = catalogue.usual || null;
+
+		var subtitle = [];
+		if (lead.phone) { subtitle.push(' · ' + lead.phone); }
+
+		var confirmed = false;
+
+		var dlg = openDialog({
+			eyebrow: 'Από τον σύνδεσμό σου',
+			title: read.hadDocuments ? 'Ο πελάτης έστειλε τον λογαριασμό' : 'Ο πελάτης έστειλε στοιχεία',
+			lead: [{ b: lead.name || 'Υποψήφιος' }].concat(subtitle),
+			body: handoffAiBlock(read.data, read.hadDocuments) + handoffUsualBlock(usual, catalogue),
+			cancel: 'Άκυρο',
+			// Το κείμενο του κουμπιού είναι ΤΟ ΜΟΝΟ που αλλάζει όταν αποτύχει το
+			// AI. Ο πωλητής ξέρει τι τον περιμένει, και προχωράει ούτως ή άλλως.
+			confirm: found ? 'Ναι, συνέχισε' : 'Συνέχισε χειροκίνητα',
+			onConfirm: function (el, close, btn) {
+				confirmed = true;
+				btn.disabled = true;
+				close();
+				handoffConvert(leadId, read.data, usual, onAbort);
+			},
+			// Κλείσιμο με ×, Escape ή πέπλο: το κουμπί της κάρτας ξεκλειδώνει.
+			onClose: function () { if (!confirmed) { onAbort(); } },
+		});
+
+		return dlg;
 	});
 }

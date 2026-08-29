@@ -89,7 +89,12 @@ class ECRM_Shortcodes {
 			'@energy-crm/scope',
 		],
 		'@energy-crm/navigate'         => [],
-		'@energy-crm/view-leads'       => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
+		'@energy-crm/view-leads'       => [
+			'@energy-crm/util',
+			'@energy-crm/format',
+			'@energy-crm/navigate',
+			'@energy-crm/dialog',
+		],
 		'@energy-crm/view-renewals'    => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-tasks'       => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-calc'        => [ '@energy-crm/util', '@energy-crm/format' ],
