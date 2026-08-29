@@ -323,15 +323,12 @@ class ECRM_Intake {
 		}
 
 		// Magic bytes, ώστε ο δηλωμένος τύπος να μη μπορεί να πει ψέματα.
-		$sig_ok = true;
-		if ( 'application/pdf' === $mime ) {
-			$sig_ok = ( '%PDF-' === substr( $bin, 0, 5 ) );
-		} elseif ( 'image/png' === $mime ) {
-			$sig_ok = ( "\x89PNG\r\n\x1a\n" === substr( $bin, 0, 8 ) );
-		} elseif ( 'image/jpeg' === $mime ) {
-			$sig_ok = ( "\xFF\xD8\xFF" === substr( $bin, 0, 3 ) );
-		}
-		if ( ! $sig_ok ) {
+		// AUDIT 29/08: webp/heic περνούσαν χωρίς κανέναν έλεγχο εδώ -- ίδιο
+		// κενό με το ECRM_Tracking::rest_upload(), ίδια διόρθωση: το ίδιο
+		// σημείο αλήθειας που ήδη χρησιμοποιεί το ECRM_Files::store() από
+		// τις 2026-08-18.
+		$sniffed = \EnergyCRM\Infrastructure\UploadCheck::sniff( substr( $bin, 0, \EnergyCRM\Infrastructure\UploadCheck::HEAD_BYTES ) );
+		if ( '' === $sniffed || $sniffed !== $mime ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Ο τύπος αρχείου δεν ταιριάζει.' ], 400 );
 		}
 

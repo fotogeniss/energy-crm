@@ -512,16 +512,13 @@ class ECRM_Tracking {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Το αρχείο είναι πολύ μεγάλο (μέγιστο 12MB).' ], 400 );
 		}
 		// Magic-byte sanity so the declared MIME can't lie about the payload.
-		$sig_ok = true;
-		if ( $mime === 'application/pdf' ) {
-			$sig_ok = ( substr( $bin, 0, 5 ) === '%PDF-' );
-		} elseif ( $mime === 'image/png' ) {
-			$sig_ok = ( substr( $bin, 0, 8 ) === "\x89PNG\r\n\x1a\n" );
-		} elseif ( $mime === 'image/jpeg' ) {
-			$sig_ok = ( substr( $bin, 0, 3 ) === "\xFF\xD8\xFF" );
-		}
-		// webp/heic: trust the whitelist + size check.
-		if ( ! $sig_ok ) {
+		// AUDIT 29/08: webp/heic used to skip this ("trust the whitelist +
+		// size check") -- the one gap between this anonymous route and the
+		// authenticated upload (ECRM_Files::store(), which has sniffed every
+		// type through UploadCheck since 2026-08-18). Same check, same class,
+		// no more gap.
+		$sniffed = \EnergyCRM\Infrastructure\UploadCheck::sniff( substr( $bin, 0, \EnergyCRM\Infrastructure\UploadCheck::HEAD_BYTES ) );
+		if ( '' === $sniffed || $sniffed !== $mime ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Ο τύπος αρχείου δεν ταιριάζει.' ], 400 );
 		}
 
