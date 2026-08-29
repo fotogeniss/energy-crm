@@ -25,6 +25,7 @@ class ECRM_Docs {
 		return apply_filters( 'ecrm_doc_kinds', [
 			'id_card'       => 'Ταυτότητα/Διαβατήριο',
 			'provider_bill' => 'Λογαριασμός παρόχου',
+			'sim_card'      => 'Κάρτα SIM',
 			'authorization' => 'Εξουσιοδότηση',
 			'residence'     => 'Αποδεικτικό κατοικίας',
 			'e9'            => 'Ε9 / στοιχεία ακινήτου',

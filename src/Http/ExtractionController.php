@@ -41,6 +41,7 @@ namespace EnergyCRM\Http;
 use ECRM_Extractor;
 use ECRM_RateLimit;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Contract\ExtraFields;
 use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
@@ -73,6 +74,20 @@ final class ExtractionController implements Controller
     private const CONTRACT_FIELDS = ['supply_number', 'meter_number', 'invoice_code'];
 
     /**
+     * Πεδία της εξαγωγής που ζουν ΜΕΣΑ στο `extra_json`, όχι σε στήλη.
+     *
+     * Η κινητή τηλεφωνία δεν έχει δικές της στήλες: ό,τι ζητά το έντυπο του
+     * παρόχου και δεν είναι στήλη καταλήγει στον σάκο `extra_json`
+     * (`data-extra="1"` στη φόρμα, `ExtraFields::toJson()` στην αποθήκευση).
+     * Ο εξαγωγέας δεν ξέρει τίποτα από αυτό -- διαβάζει και επιστρέφει
+     * επίπεδα κλειδιά. Ο διαχωρισμός γίνεται ΕΔΩ, στο ίδιο σημείο που
+     * ξεχωρίζει ήδη τη σύμβαση από τον πελάτη.
+     *
+     * @var list<string>
+     */
+    private const EXTRA_FIELDS = ['sim_number', 'mobile_msisdn'];
+
+    /**
      * Τα είδη εγγράφου που έχει νόημα να διαβάσει ο εξαγωγέας.
      *
      * Το prompt του είναι γραμμένο για ταυτότητα και λογαριασμό παρόχου. Ό,τι
@@ -81,7 +96,7 @@ final class ExtractionController implements Controller
      *
      * @var list<string>
      */
-    private const EXTRACTABLE_KINDS = ['id_card', 'provider_bill'];
+    private const EXTRACTABLE_KINDS = ['id_card', 'provider_bill', 'sim_card'];
 
     private const ALLOWED_MIMES = [
         'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf',
@@ -287,10 +302,32 @@ final class ExtractionController implements Controller
         $customerPatch = [];
         $contractPatch = [];
 
+        /*
+         * Ο σάκος `extra_json` διαβάζεται ΜΙΑ φορά, ολόκληρος, και γράφεται
+         * ΜΙΑ φορά, ολόκληρος. Δεν υπάρχει «ενημέρωσε ένα κλειδί» σε στήλη
+         * JSON: κάθε γράψιμο αντικαθιστά το κείμενο. Άρα ό,τι υπάρχει ήδη
+         * μέσα πρέπει να επιβιώσει -- ένα `sim_number` που γράφτηκε πάνω σε
+         * σάκο που δεν διαβάστηκε πρώτα θα έσβηνε σιωπηλά τις απαντήσεις του
+         * εντύπου του παρόχου, χωρίς κανένα σφάλμα πουθενά.
+         */
+        $extra      = self::decodeExtra($contract['extra_json'] ?? null);
+        $extraDirty = false;
+
         foreach ($data as $field => $value) {
             $value = is_string($value) ? trim($value) : $value;
 
             if ($value === null || $value === '' || $field === 'customer_type') {
+                continue;
+            }
+
+            if (in_array($field, self::EXTRA_FIELDS, true)) {
+                // Ίδιος κανόνας με παντού αλλού: μόνο κενά γεμίζουν. Ό,τι
+                // πληκτρολόγησε άνθρωπος στο έντυπο νικά ό,τι διάβασε μοντέλο.
+                if ((string) ($extra[$field] ?? '') === '') {
+                    $extra[$field] = (string) $value;
+                    $extraDirty    = true;
+                }
+
                 continue;
             }
 
@@ -307,6 +344,13 @@ final class ExtractionController implements Controller
             }
         }
 
+        // Μόνο αν όντως άλλαξε κάτι. Ένα γράψιμο που ξαναπερνά τον ίδιο σάκο
+        // από το `ExtraFields::toJson()` θα άλλαζε τη σειρά των κλειδιών και
+        // θα γέμιζε το ιστορικό με «άλλαξε» χωρίς να έχει αλλάξει τίποτα.
+        if ($extraDirty) {
+            $contractPatch['extra_json'] = ExtraFields::toJson($extra);
+        }
+
         // Το ίδιο το JSON κρατιέται πάντα, ακόμα κι αν κανένα πεδίο δεν ήταν
         // κενό: είναι το ίχνος ελέγχου του τι διάβασε το μοντέλο και πότε.
         $contractPatch['extracted_json'] = (string) wp_json_encode($data);
@@ -321,7 +365,57 @@ final class ExtractionController implements Controller
             $applied = array_merge($applied, array_keys($contractPatch));
         }
 
+        /*
+         * Το `extra_json` δεν είναι πεδίο που αναγνωρίζει ο πωλητής -- είναι
+         * το δοχείο. Στη λίστα των γραμμένων μπαίνουν τα ΚΛΕΙΔΙΑ που όντως
+         * γέμισαν, ώστε το «συμπληρώθηκαν N πεδία» να μετράει το ίδιο πράγμα
+         * που βλέπει στην οθόνη.
+         */
+        if ($extraDirty && in_array('extra_json', $applied, true)) {
+            $applied = array_merge(
+                array_diff($applied, ['extra_json']),
+                array_values(array_intersect(self::EXTRA_FIELDS, array_keys($extra)))
+            );
+        }
+
         return array_values(array_diff($applied, ['extracted_json']));
+    }
+
+    /**
+     * Ο σάκος `extra_json` ως πίνακας -- ποτέ null, ποτέ φωλιασμένος.
+     *
+     * Η στήλη είναι `NULL` σε κάθε σύμβαση που δεν έχει περάσει ποτέ από
+     * έντυπο παρόχου, και το περιεχόμενό της γράφτηκε από άλλη διαδρομή σε
+     * άλλη μέρα. Τίποτα από τα δύο δεν εγγυάται έγκυρο JSON τη στιγμή που το
+     * διαβάζουμε, οπότε ό,τι δεν αποκωδικοποιείται σε πίνακα αντιμετωπίζεται
+     * ως άδειος σάκος.
+     *
+     * @return array<string, string>
+     */
+    private static function decodeExtra(mixed $raw): array
+    {
+        if (! is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+
+        if (! is_array($decoded)) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach ($decoded as $key => $value) {
+            // Ο σάκος είναι επίπεδος εξ ορισμού (`ExtraFields::toJson()`
+            // ισοπεδώνει τα πάντα σε συμβολοσειρές). Ό,τι δεν είναι, δεν
+            // μπήκε από εδώ και δεν το ερμηνεύουμε.
+            if (is_scalar($value)) {
+                $out[(string) $key] = (string) $value;
+            }
+        }
+
+        return $out;
     }
 
     /**
