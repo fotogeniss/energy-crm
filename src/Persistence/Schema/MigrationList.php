@@ -36,6 +36,7 @@ use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
 use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaHomePlans;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
+use EnergyCRM\Persistence\Schema\Migrations\RetargetContractListIndexToUpdatedAt;
 use EnergyCRM\Persistence\Schema\Migrations\WidenEncryptedColumns;
 use EnergyCRM\Persistence\Schema\Migrations\WidenCustomerPhoneColumn;
 
@@ -73,6 +74,7 @@ final class MigrationList
             new AddProviderStatusMapColumn(),
             new AddSupplyNumberIndex(),
             new AddProviderRefColumn(),
+            new RetargetContractListIndexToUpdatedAt(),
         ];
     }
 }
