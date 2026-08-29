@@ -776,9 +776,15 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 					var m = (d && d.matches) || [];
 					if (!m.length) { warn.hidden = true; warn.innerHTML = ''; return; }
 					var rows = m.map(function (x) {
+						// AUDIT 29/08: code and status_label are withheld by the API
+						// (empty string) when !x.in_scope, but render defensively too --
+						// an empty <strong></strong>/pill would still look like a bug.
+						var code = x.in_scope ? ('<strong>' + esc(x.code) + '</strong> — ') : '';
+						var status = x.in_scope
+							? ' <span class="ecrm-pillstat">' + esc(x.status_label) + '</span>'
+							: '';
 						var who = x.in_scope ? (x.owner ? ' · ' + esc(x.owner) : '') : ' · άλλος συνεργάτης δικτύου';
-						return '<li><strong>' + esc(x.code) + '</strong> — ' + esc(x.customer) +
-							' <span class="ecrm-pillstat">' + esc(x.status_label) + '</span>' + who +
+						return '<li>' + code + esc(x.customer) + status + who +
 							' <span class="ecrm-muted">(' + (x.match_on === 'afm' ? 'ίδιο ΑΦΜ' : 'ίδια παροχή') + ')</span></li>';
 					}).join('');
 					warn.innerHTML = '<div class="ecrm-dupwarn__head">⚠️ Πιθανή διπλοεγγραφή — βρέθηκαν ' + m.length +
