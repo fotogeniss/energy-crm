@@ -976,6 +976,33 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-linkbtn { border:0; background:transparent; padding:0; font:inherit; font-size:var(--fs-12-5); color:var(--st-cancel); text-decoration:underline; cursor:pointer; }
 @media (max-width:560px){ .ecrm-mylink__url { min-width:0; width:100%; } }
 
+/* --- Η παράδοση: ο διάλογος lead -> αίτηση ------------------------------
+ * Ζει ΜΕΣΑ στο .ecrm-modal (ecrm-dialog.js), δεν το αντικαθιστά. Τρία μπλοκ
+ * με το ίδιο κέλυφος: τι διάβασε το AI, και τι βάζει συνήθως ο πωλητής.
+ * Το δεύτερο λείπει ολόκληρο σε νέο πωλητή -- δεν αδειάζει, δεν υπάρχει.
+ * Μακέτα docs/UI-INTAKE-HANDOFF.html, CHANGELOG (172). */
+.ecrm-handoff { background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:13px 14px; margin-bottom:11px; }
+.ecrm-handoff--usual { background:var(--accent-wash); border-color:var(--accent-soft); }
+.ecrm-handoff--empty { background:var(--surface); }
+.ecrm-handoff__hd { display:flex; align-items:center; gap:8px; font-size:var(--fs-13); font-weight:700; color:var(--navy); margin-bottom:9px; }
+.ecrm-handoff__dot { display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:20px; padding:0 6px; border-radius:6px; background:var(--accent-wash-2); color:var(--st-active); font-size:var(--fs-11); font-weight:800; letter-spacing:.04em; }
+.ecrm-handoff__dot--off { background:var(--line-soft); color:var(--muted-strong); }
+.ecrm-handoff__dot--ok { background:var(--accent-soft); color:var(--st-active); }
+/* Ο μετρητής πεδίων σπρώχνεται δεξιά, μακριά από τον τίτλο: είναι δευτερεύων. */
+.ecrm-handoff__n { margin-left:auto; font-size:var(--fs-11); font-weight:700; color:var(--muted); }
+/* Δύο στήλες: ετικέτα σταθερή, τιμή ελαστική. Σε κινητό η ετικέτα στενεύει
+   αντί να τυλίγεται -- «Αρ. παροχής» σε δύο γραμμές διαβάζεται χειρότερα από
+   μια στενή στήλη. */
+.ecrm-handoff__kv { display:grid; grid-template-columns:112px 1fr; gap:5px 12px; margin:0; font-size:var(--fs-13); }
+.ecrm-handoff__kv dt { color:var(--muted); }
+.ecrm-handoff__kv dd { margin:0; color:var(--ink); font-weight:600; overflow-wrap:anywhere; }
+.ecrm-handoff__more { margin-top:9px; font-size:var(--fs-12-5); color:var(--muted); }
+.ecrm-handoff__empty { font-size:var(--fs-13); color:var(--muted-strong); line-height:1.5; }
+.ecrm-handoff__usual { font-size:var(--fs-13-5); color:var(--ink); }
+.ecrm-handoff__usual strong { color:var(--navy); }
+.ecrm-handoff__meta { margin-top:4px; font-size:var(--fs-12-5); color:var(--muted); }
+@media (max-width:560px){ .ecrm-handoff__kv { grid-template-columns:92px 1fr; } }
+
 /* --- Πίνακες μέσα σε κείμενο γραμμένο από τον admin ---------------------
  * Ο συντάκτης του WordPress βγάζει σκέτο <table>, συχνά με border="1", και
  * ποτέ με class. Το kit έχει .ecrm-table, αλλά κανείς δεν πρόκειται να
