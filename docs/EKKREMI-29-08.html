@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="el" data-kit="light"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Τι έχει μείνει — 29/08/2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--pg:#f6f6f4;--pg2:#fff;--pg-ink:#1a1a18;--pg-mu:#6e6c66;--pg-line:#dedcd7;--pg-acc:#0b690c;
+--pg-acc-bg:#eafaea;--pg-warn:#ab5506;--pg-warn-bg:#fcf2ec;--pg-bad:#c32b47;--pg-bad-bg:#fdeaea;
+--pg-sunk:#eeeeeb;--pg-blue:#0062a8;--pg-blue-bg:#e6eef8}
+html[data-kit="dark"]{--pg:#0d0d0c;--pg2:#161614;--pg-ink:#f1f1ee;--pg-mu:#a3a099;--pg-line:#33322e;
+--pg-acc:#6bdd6d;--pg-acc-bg:#12240f;--pg-warn:#ffb682;--pg-warn-bg:#3f322a;--pg-bad:#fb8a91;
+--pg-bad-bg:#423030;--pg-sunk:#1f1f1c;--pg-blue:#8db8f7;--pg-blue-bg:#2f3540}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--pg-ink);line-height:1.5;
+font-family:"Manrope",-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.bar{position:sticky;top:0;z-index:9;background:var(--pg2);border-bottom:1px solid var(--pg-line);padding:10px 16px}
+.bar-in{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:14px;color:var(--pg-acc)}
+.bar-in .sub{font-size:12px;color:var(--pg-mu)}
+.tg{margin-left:auto;border:1px solid var(--pg-line);background:var(--pg);color:var(--pg-ink);
+border-radius:999px;padding:7px 14px;font:700 12.5px/1 inherit;cursor:pointer}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px 70px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:26px 0 8px;line-height:1.25}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--pg-mu);margin:40px 0 4px}
+h2+.t{font-size:19px;font-weight:800;margin:0 0 10px;letter-spacing:-.01em}
+p{margin:0 0 10px;font-size:14px}
+p.d{color:var(--pg-mu);font-size:13.5px;max-width:840px}
+.lede{font-size:15.5px;max-width:840px}
+ul{margin:6px 0 12px;padding-left:20px;font-size:13.5px}li{margin-bottom:5px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:var(--pg-sunk);
+border:1px solid var(--pg-line);border-radius:4px;padding:1px 4px;word-break:break-word}
+.note{font-size:13px;color:var(--pg-mu);line-height:1.55;padding:11px 13px;border-radius:10px;
+margin:10px 0;background:var(--pg2);border:1px solid var(--pg-line)}
+.note b{color:var(--pg-ink)}
+.note.bad{background:var(--pg-bad-bg);border-color:var(--pg-bad)}.note.bad b{color:var(--pg-bad)}
+.note.ok{background:var(--pg-acc-bg);border-color:var(--pg-acc)}.note.ok b{color:var(--pg-acc)}
+.note.warn{background:var(--pg-warn-bg);border-color:var(--pg-warn)}.note.warn b{color:var(--pg-warn)}
+.law{background:var(--pg2);border:2px solid var(--pg-acc);border-radius:14px;padding:18px 20px;margin:16px 0}
+.law p{font-size:16.5px;font-weight:800;margin:0;line-height:1.45;letter-spacing:-.01em}
+.tbl{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:560px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--pg-line);vertical-align:top}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--pg-mu);white-space:nowrap}
+td code,th code{white-space:nowrap;word-break:normal}
+td.c{text-align:center;font-weight:800}
+.tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:10px;font-weight:800;
+text-transform:uppercase;white-space:nowrap;vertical-align:middle}
+.tA{background:var(--pg-bad-bg);color:var(--pg-bad)}
+.tB{background:var(--pg-warn-bg);color:var(--pg-warn)}
+.tC{background:var(--pg-blue-bg);color:var(--pg-blue)}
+.tD{background:var(--pg-sunk);color:var(--pg-mu);border:1px solid var(--pg-line)}
+.tE{background:var(--pg-acc-bg);color:var(--pg-acc)}
+.it{background:var(--pg2);border:1px solid var(--pg-line);border-left:4px solid var(--pg-line);
+border-radius:12px;padding:14px 16px;margin:12px 0}
+.it.a{border-left-color:var(--pg-bad)}
+.it.b{border-left-color:var(--pg-warn)}
+.it.c{border-left-color:var(--pg-blue)}
+.it.d{border-left-color:var(--pg-mu)}
+.it .hd{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px}
+.it .n{font-size:11px;font-weight:800;color:var(--pg-mu);letter-spacing:.08em}
+.it .h{font-size:15px;font-weight:800;margin:0 0 7px;line-height:1.35;letter-spacing:-.01em}
+.it p{font-size:13.5px;margin:0 0 7px}.it p:last-child{margin:0}
+.it .where{font:400 11.5px/1.5 ui-monospace,Consolas,monospace;color:var(--pg-mu);margin:0 0 7px}
+.tier{display:flex;align-items:baseline;gap:10px;margin:30px 0 2px}
+.tier .num{font-size:30px;font-weight:800;color:var(--pg-line);line-height:1;letter-spacing:-.03em}
+.tier .lab{font-size:17px;font-weight:800;letter-spacing:-.01em}
+.tier .cnt{font-size:12px;color:var(--pg-mu);margin-left:auto}
+.hr{height:1px;background:var(--pg-line);margin:36px 0 0;border:0}
+.foot{font-size:12px;color:var(--pg-mu);margin-top:26px;line-height:1.6}
+ol{font-size:14px;line-height:1.6;padding-left:22px}ol li{margin-bottom:7px}
+</style></head>
+<body>
+
+<div class="bar"><div class="bar-in">
+<span class="brand">ENERGY&nbsp;CRM</span>
+<span class="sub">Τι έχει μείνει — συνολικά · 29/08/2026</span>
+<button class="tg" id="tg" type="button">Σκούρο</button>
+</div></div>
+
+<div class="wrap">
+
+<h1>Τι έχει μείνει, όλο μαζί</h1>
+
+<p class="lede">Η ανοιχτή λίστα του HANDOVER, συγχωνευμένη με τα ευρήματα της σημερινής σάρωσης, ταξινομημένη
+κατά <b>τι κοστίζει αν το αφήσεις</b>. Δύο πράγματα βγήκαν από τη λίστα επειδή μετρήθηκαν και ήταν ήδη
+κλειστά· ένα μπήκε επειδή το HANDOVER το έλεγε λάθος.</p>
+
+<div class="law"><p>Το βάρος δεν είναι εκεί που το περίμενα. Ο κώδικας είναι σε καλή κατάσταση —
+<b>το μισό της λίστας δεν είναι κώδικας, είναι αποφάσεις και χαρτί</b> που περιμένουν εσένα, όχι εμένα.</p></div>
+
+<div class="tbl"><table>
+<tr><th>Κατηγορία</th><th class="c">Ανοιχτά</th><th>Ποιος το ξεμπλοκάρει</th></tr>
+<tr><td><b>Ασφάλεια / GDPR στον κώδικα</b></td><td class="c">3</td><td>Εσύ αποφασίζεις το Α1, εγώ γράφω</td></tr>
+<tr><td><b>Χειροκίνητα περάσματα</b></td><td class="c">2</td><td>Μόνο εσύ — καμία αυτόματη κάλυψη</td></tr>
+<tr><td><b>Λογική / αρχιτεκτονική</b></td><td class="c">4 + μικρά</td><td>Εγώ</td></tr>
+<tr><td><b>Κενά στο δίκτυο ασφαλείας</b></td><td class="c">8</td><td>Εγώ</td></tr>
+<tr><td><b>Χαρτί GDPR</b></td><td class="c">6</td><td>Εσύ + δικηγόρος</td></tr>
+<tr><td><b>Αποφάσεις ιδιοκτήτη (§6γ)</b></td><td class="c">5</td><td>Μόνο εσύ</td></tr>
+<tr><td><b>Δοκιμές στο clone site (§6α)</b></td><td class="c">4</td><td>Μόνο εσύ</td></tr>
+<tr><td><b>Διαδικαστικά</b></td><td class="c">5</td><td>Μοιρασμένα</td></tr>
+</table></div>
+
+<div class="note ok"><b>Βγήκαν από τη λίστα σήμερα, με μέτρηση:</b> (α) το «επόμενο μεγάλο βήμα — γρήγορη Νέα
+Αίτηση» ήταν <b>ήδη χτισμένο</b> στις (170)/(171)/(172)· η ενότητα του HANDOVER δεν ενημερώθηκε μετά την
+υλοποίηση. (β) Ο «επίπεδος φάκελος εγγράφων» και οι δύο προτάσεις της 28/08 (<code>cards()</code>,
+lazy-loading) είχαν ήδη κλείσει με μέτρηση και μένουν κλειστά.</div>
+
+<!-- ══════════ ΕΠΙΠΕΔΟ 1 ══════════ -->
+<div class="tier"><span class="num">1</span><span class="lab">Θέλει απόφαση ή δουλειά αυτή τη βδομάδα</span>
+<span class="cnt">5 πράγματα</span></div>
+<p class="d">Όλα αφορούν προσωπικά δεδομένα ή κώδικα που μόλις μπήκε και δεν έχει πατηθεί ποτέ από άνθρωπο.</p>
+
+<div class="it a">
+<div class="hd"><span class="n">1.1</span><span class="tag tA">Ασφάλεια</span><span class="tag tD">Δική σου απόφαση πρώτα</span></div>
+<div class="h"><code>/contracts/duplicate</code> — μαντείο ΑΦΜ για κάθε πωλητή</div>
+<p class="where">src/Http/DuplicateCheckController.php:76-108 · επαληθευμένο 29/08</p>
+<p>Το docblock λέει ότι περνά «μόνο το <i>γεγονός</i> μιας σύγκρουσης»· ο κώδικας επιστρέφει
+<code>code</code>, <code>status</code>, <code>status_label</code> και <code>provider</code> χωρίς όρο, χωρίς rate
+limit, σε κάθε <code>ecrm_seller</code>. <b>Η ερώτηση για σένα:</b> τι πρέπει να περνά το όριο; Αν ισχύει το
+docblock → μισή ώρα δουλειά. Αν ο πάροχος χρειάζεται όντως, αλλάζει το docblock — και μπαίνει στο Άρθρο 30 (5.1).</p>
+</div>
+
+<div class="it a">
+<div class="hd"><span class="n">1.2</span><span class="tag tA">Ασφάλεια</span><span class="tag tE">Έτοιμο να γραφτεί</span></div>
+<div class="h">Ο σύνδεσμος παρακολούθησης δέχεται απεριόριστα αρχεία</div>
+<p class="where">public/class-ecrm-tracking.php:462-548 · επαληθευμένο 29/08</p>
+<p>Το intake έχει όριο 6 με γραμμένο τον λόγο· το tracking δεν έχει κανένα. 1,7 GB/ώρα από μία IP, με
+ισάριθμες ειδοποιήσεις στον πωλητή. <b>Δεν χρειάζεται απόφαση</b> — η απόφαση υπάρχει ήδη γραμμένη δίπλα.</p>
+</div>
+
+<div class="it a">
+<div class="hd"><span class="n">1.3</span><span class="tag tA">Χειροκίνητο</span><span class="tag tD">Μόνο εσύ</span></div>
+<div class="h">Πέρασμα Α — η οθόνη παράδοσης lead→αίτηση (172)</div>
+<p>Έξι σενάρια. Το κρίσιμο είναι το (3): με σβησμένο API key ο διάλογος <b>πρέπει</b> να ανοίξει και η αίτηση
+<b>πρέπει</b> να δημιουργηθεί. Αν αυτό αποτύχει, η αλλαγή σειράς της (172) είναι παλινδρόμηση — και η αλλαγή
+σειράς είναι όλο το commit. Καμία αυτόματη κάλυψη· το <code>wizard-smoke</code> δεν αγγίζει αυτή τη ροή.</p>
+</div>
+
+<div class="it a">
+<div class="hd"><span class="n">1.4</span><span class="tag tA">Χειροκίνητο</span><span class="tag tD">Μόνο εσύ</span></div>
+<div class="h">Πέρασμα Β — το κουμπί σάρωσης SIM (174)</div>
+<p>Έξι σενάρια, ιδανικά σε πραγματικό Android. Το κρίσιμο είναι το (2): αν το barcode δεν διαβαστεί, η
+<b>ίδια</b> φωτογραφία πρέπει να πάει αυτόματα σε AI χωρίς δεύτερη ενέργεια. Ο κώδικας μπήκε χθες και δεν τον
+έχει δει πωλητής.</p>
+</div>
+
+<div class="it b">
+<div class="hd"><span class="n">1.5</span><span class="tag tB">Δίκτυο ασφαλείας</span><span class="tag tE">Έτοιμο να γραφτεί</span></div>
+<div class="h">Ένα integration test εμβέλειας στο <code>/customers</code></div>
+<p class="where">src/Http/CustomersController.php — μηδέν integration tests</p>
+<p>Το endpoint που γυρίζει ΑΦΜ, ΑΔΤ, τηλέφωνα και διευθύνσεις δεν έχει κανένα test που να αποδεικνύει ότι ο
+συνεργάτης Α δεν βλέπει τους πελάτες του Β. Για τις <i>συμβάσεις</i> αυτό αποδεικνύεται υποδειγματικά — ο
+καθρέφτης υπάρχει έτοιμος στο <code>ContractRestAccessTest:147</code>.</p>
+</div>
+
+<!-- ══════════ ΕΠΙΠΕΔΟ 2 ══════════ -->
+<div class="tier"><span class="num">2</span><span class="lab">Πραγματικά κενά, χωρίς πίεση χρόνου</span>
+<span class="cnt">12 πράγματα</span></div>
+
+<div class="it b">
+<div class="hd"><span class="n">2.1</span><span class="tag tB">Ασφάλεια</span></div>
+<div class="h">Magic bytes για webp/heic μόνο στις ανώνυμες διαδρομές</div>
+<p class="where">class-ecrm-tracking.php:505-515 · class-ecrm-intake.php:326-336 · υπάρχει ήδη λύση: UploadCheck::sniff()</p>
+<p>Οι δύο διαδρομές που δέχονται bytes από άγνωστο ελέγχουν <b>λιγότερα</b> από τη διαδρομή που δέχεται bytes
+από πωλητή. Δεν είναι stored XSS (ο φάκελος είναι κλειδωμένος, <code>nosniff</code> στέλνεται)· είναι
+φιλοξενία αυθαίρετου blob και ανεπαλήθευτα bytes προς τον AI εξαγωγέα.</p>
+</div>
+
+<div class="it b">
+<div class="hd"><span class="n">2.2</span><span class="tag tB">Λογική</span></div>
+<div class="h">Το index της λίστας ταξινομεί σε στήλη που δεν χρησιμοποιεί κανείς</div>
+<p class="where">AddContractListIndexes.php:33 → <code>created_at</code> · ContractQueries.php:99, 142, 293 → <code>ORDER BY updated_at</code></p>
+<p>Το filesort που γράφτηκε το migration για να εξαλείψει είναι ακόμα εκεί. <b>Δεν το μέτρησα σε κλίμακα</b> —
+με 2 συμβάσεις δεν φαίνεται τίποτα. Η διόρθωση είναι μία γραμμή· η <i>απόδειξη</i> ότι χρειάζεται θέλει
+συνθετικά δεδομένα, όπως ακριβώς έκλεισε το <code>cards()</code> στην (169).</p>
+</div>
+
+<div class="it b">
+<div class="hd"><span class="n">2.3</span><span class="tag tB">Λογική</span></div>
+<div class="h">Ο <code>kb_read</code> είναι αόρατος στη μηχανή σχήματος — η οθόνη Υγείας λέει «14 από 14» ενώ είναι 15</div>
+<p class="where">class-ecrm-db.php:354 (υπάρχει) · Tables.php:18-31 (λείπει) · HealthChecks.php:213 · EnsureInnoDb.php:37</p>
+<p>Αν χαθεί ο πίνακας, το μόνο σημείο που υποτίθεται ότι σε ειδοποιεί δεν τον κοιτάζει. Και δεν γίνεται ποτέ
+InnoDB.</p>
+</div>
+
+<div class="it b">
+<div class="hd"><span class="n">2.4</span><span class="tag tB">Λογική</span></div>
+<div class="h">Η πολιτική 5xx τηρείται σε 1 από 5 σημεία</div>
+<p class="where">ErrorLog.php:26-31 (ο κανόνας) · μόνο DocumentsController.php:172 τον τηρεί</p>
+<p>Τα άλλα πέντε γυρίζουν σκέτη συμβολοσειρά χωρίς κωδικό και χωρίς log — <b>μαζί με το
+<code>LeadsController.php:216</code></b>, που είναι ακριβώς η ροή της (172). Όταν τηλεφωνήσει πωλητής «δεν
+αποθηκεύεται», δεν υπάρχει τίποτα να κοιτάξεις.</p>
+</div>
+
+<div class="it b">
+<div class="hd"><span class="n">2.5</span><span class="tag tB">Δίκτυο ασφαλείας</span></div>
+<div class="h">Επτά ακόμα ακάλυπτα, κατά σειρά ρίσκου</div>
+<ul>
+<li><code>/payouts/{id}/statement</code> — χειροποίητος έλεγχος εμβέλειας (το λέει το ίδιο του το docblock), μηδέν tests. <b>Χρήματα.</b></li>
+<li><code>/contracts/{id}/files</code> upload/delete — η συνδεδεμένη διαδρομή έχει <b>λιγότερη</b> κάλυψη από την ανώνυμη.</li>
+<li><code>/import/parse</code>, <code>/import/apply</code> — μαζικός writer χωρίς test εμβέλειας.</li>
+<li><code>Retention</code> (cron, GDPR 90 μέρες) — αν σταματήσει, <b>τίποτα δεν κοκκινίζει</b> και οι ταυτότητες συσσωρεύονται.</li>
+<li><code>DocumentProtection</code> (cron) — το repository δοκιμασμένο, ο οδηγός όχι.</li>
+<li><code>countPayable()</code> — γνωστή, γραμμένη, «σιωπηλά λάθος ευρώ» περίπτωση πέρα από το LIMIT 2.000.</li>
+<li><code>/filters</code>, <code>/team/live</code>, <code>/network</code>, <code>/notifications</code> — 19 από τα 54 route paths χωρίς integration test.</li>
+</ul>
+<p class="d">Κανένα δεν είναι ανώνυμα προσβάσιμο — το <code>RestRouteGuardTest</code> το εγγυάται. Το κενό είναι
+στη <b>μισθωτικότητα</b>, που αποδεικνύεται μόνο για τις συμβάσεις.</p>
+</div>
+
+<div class="it b">
+<div class="hd"><span class="n">2.6</span><span class="tag tB">CI</span><span class="tag tE">≈6 γραμμές YAML</span></div>
+<div class="h">52 assertions που δεν φυλάνε τίποτα</div>
+<p>Ούτε το <code>tools/js-tests/</code> (20) ούτε το <code>tools/wizard-smoke/</code> (32) τρέχουν στο CI — δεν
+υπάρχει βήμα <code>node</code> στο <code>ci.yml</code>. Οι runners έχουν ήδη Node. Το wizard-smoke είναι το μόνο
+που στέκεται ανάμεσα σε ένα refactor της φόρμας και ένα σιωπηλά αλλαγμένο POST body.</p>
+</div>
+
+<div class="it c">
+<div class="hd"><span class="n">2.7</span><span class="tag tC">Καθαριότητα</span></div>
+<div class="h">Τέσσερα μικρά, με μία γραμμή το καθένα</div>
+<ul>
+<li><code>Services::</code> μέσα στο <code>src/</code> ενάντια στη ρητή του απαγόρευση — καθαρότερο:
+<code>ContractsReadController.php:205</code>.</li>
+<li>Τρίτο αντίγραφο του χάρτη ετικετών ενέργειας στο <code>ecrm-form.js:586</code>, που υπάρχει μόνο επειδή το
+αρχείο δεν εισάγει ποτέ το <code>@energy-crm/format</code>.</li>
+<li>Ο έλεγχος ΑΦΜ γραμμένος δύο φορές (PHP ↔ JS) <b>χωρίς σχόλιο που να τα συνδέει</b> — σε αντίθεση με κάθε
+άλλη διπλοεγγραφή του repo, που είναι τεκμηριωμένη.</li>
+<li>Έξι <code>.catch(function(){})</code> χωρίς σχόλιο στο front end· όλα σε background ενέργειες, άρα
+πιθανότατα σωστά — αλλά κανένα δεν το λέει.</li>
+</ul>
+</div>
+
+<!-- ══════════ ΕΠΙΠΕΔΟ 3 ══════════ -->
+<div class="tier"><span class="num">3</span><span class="lab">Περιμένουν εσένα — δεν μπορώ να προχωρήσω χωρίς απάντηση</span>
+<span class="cnt">15 πράγματα</span></div>
+
+<div class="it d">
+<div class="hd"><span class="n">3.1</span><span class="tag tD">Χαρτί</span></div>
+<div class="h">GDPR / DPA — έξι κομμάτια, όλα για δικηγόρο</div>
+<p>Ο ρόλος έχει αποφασιστεί (δικά μας καταστήματα). Μένουν: <b>Άρθρο 30</b> (και μέσα του η καταχώρηση της AI
+επεξεργασίας), <b>Άρθρο 13</b> πλήρες, <b>DPIA</b>, <b>zero data retention</b> με τον πάροχο AI, <b>DPA με την
+Anthropic</b>, και η <b>δέσμευση εμπιστευτικότητας προσωπικού</b> (άρ. 29/32.4). Οι επτά έτοιμες ερωτήσεις
+ζουν στο <code>docs/GDPR-DPA.html §8</code>.</p>
+<p class="d"><b>Σύνδεση με το 1.1:</b> ό,τι αποφασίσεις για το <code>/contracts/duplicate</code> περιγράφεται
+στο Άρθρο 30 ως εσωτερική διαβίβαση. Απάντησέ το πριν πάει το χαρτί στον δικηγόρο, όχι μετά.</p>
+</div>
+
+<div class="it d">
+<div class="hd"><span class="n">3.2</span><span class="tag tD">Αποφάσεις</span></div>
+<div class="h">Πέντε ανοιχτές αποφάσεις — <b>η έγκυρη διατύπωση είναι στο HANDOVER §6γ</b></div>
+<p class="d">Δεν τις αντιγράφω εδώ. Το ίδιο το §6γ γράφει ότι είναι το ένα σημείο, και ότι το
+<code>NEXT-SESSION.md</code> απέδειξε τι παθαίνει το δεύτερο αντίγραφο — βρέθηκε δύο συνεδρίες πίσω να ζητά
+δουλειά που είχε γίνει. Εδώ μόνο ο τίτλος και τι μπλοκάρει:</p>
+<ul>
+<li><b>(8) Ποιος επιτρέπεται να δημιουργεί και να πληρώνει εκκαθάριση;</b> — <b>αυτό μπλοκάρει το υπόλοιπο
+μισό του C4</b>, όχι τα υπόλοιπα. Σήμερα πληρώνει μόνο διαχειριστής WordPress.</li>
+<li><b>(4) Ακυρώνονται οι πληρωτέες <code>Routed</code>/<code>Resolved</code>;</b> — αλλάζει τον γράφο καταστάσεων.</li>
+<li><b>(5) Επιστροφή προμήθειας σε ακύρωση πληρωμένης σύμβασης.</b> Μηδέν εκκαθαρίσεις σήμερα — γι' αυτό
+πρέπει να απαντηθεί <b>πριν</b> γίνει η πρώτη.</li>
+<li><b>(3) Το <code>period</code> της εκκαθάρισης</b> — επιβεβαίωση, όχι απόφαση από το μηδέν. Δεν μπλοκάρει τίποτα.</li>
+<li><b>(6) Τα βάρη των κανόνων προμήθειας</b> — ρωτιέται <b>μόλις μπουν κανόνες</b> στο
+<code>commission_rules</code>· ήταν άδειο.</li>
+</ul>
+</div>
+
+<div class="it d">
+<div class="hd"><span class="n">3.3</span><span class="tag tD">Δοκιμές στο clone</span></div>
+<div class="h">Τέσσερα περάσματα που καμία σουίτα δεν βλέπει — §6α</div>
+<ul>
+<li><code>ECRM_ENCRYPT_PII</code> στο <code>crm-test</code>: καρτέλα, αναζήτηση με πλήρες ΑΦΜ, προειδοποίηση
+διπλοεγγραφής, PDF. Αν κάπου φανεί <code>ecrm1:…</code>, ξέφυγε διαδρομή ανάγνωσης.</li>
+<li>Μια πραγματική <b>εξαγωγή χωρίς φίλτρα</b> από την οθόνη — το test κρίνει μόνο ότι το αίτημα περνάει, όχι
+ότι το αρχείο βγαίνει σωστό.</li>
+<li>Παρτίδα εκκαθάρισης: άθροισμα → PDF → <b>ακύρωση</b> → επιβεβαίωση ότι ξαναϋπολογίζεται ζωντανά. Οι
+handlers είναι <code>admin_post</code> και τελειώνουν σε <code>exit</code> — άπιαστοι από τη σουίτα.</li>
+<li>Τυπώνει η Protergia διαφορετικό <b>επαγγελματικό</b> έντυπο ανά τιμολόγιο; Αν ναι, χρειάζονται τα έντυπα
+από σένα — <b>όχι κώδικας</b>, ο κλάδος υπάρχει ήδη.</li>
+</ul>
+</div>
+
+<div class="it d">
+<div class="hd"><span class="n">3.4</span><span class="tag tD">Διαδικαστικά</span></div>
+<div class="h">Πέντε μικρά που δεν χάνονται αλλά ξεχνιούνται</div>
+<ul>
+<li><b>CI branch protection.</b> Το CI είναι πράσινο· μένει ο κανόνας στο GitHub ώστε να μη δέχεται merge με
+κόκκινο check. Δουλειά δική σου στο UI του GitHub, σου δίνω τα βήματα όποτε πεις.</li>
+<li><b>Τα 27 <code>exclude-pattern</code> με prefix <code>energy-crm/</code></b> στο <code>.phpcs.xml.dist</code>
+σπάνε αν μετονομαστεί ποτέ ο φάκελος. <i>(Το HANDOVER λέει 24· μέτρησα 27.)</i></li>
+<li><b>Το §8.4</b>: η δόκιμη εντολή <code>grep -rln "\.js\b" tests/Unit/</code> υποκαταμετρά κατά ένα — λείπει
+το <code>NoRemoteFontsTest</code>, που ελέγχει επέκταση με <code>in_array()</code>. Θέλει καταγραφή στο §8.2.</li>
+<li><b>Δύο υποθέσεις timezone</b> — η ζώνη <code>SYSTEM</code> της MySQL και η αντίφαση της σουίτας.</li>
+<li><b><code>php</code>, <code>composer</code>, <code>phpstan</code>, <code>phpunit-err.tmp.txt</code></b>:
+αρχεία 0 bytes στη ρίζα από παραπατημένη εντολή της 28/08. Σβήσ' τα με <code>del</code> — το VM δεν σβήνει
+αρχεία.</li>
+</ul>
+</div>
+
+<div class="it d">
+<div class="hd"><span class="n">3.5</span><span class="tag tD">Μέτρησέ το πριν το πιστέψεις</span></div>
+<div class="h">Ό,τι απομένει από το <code>UI-UX-MAP.html</code></div>
+<p>Το HANDOVER το γράφει με αυτά ακριβώς τα λόγια, και η σημερινή σάρωση έδειξε γιατί: <b>η ίδια η ανοιχτή
+λίστα είχε δύο κλειστά πράγματα μέσα της.</b> Μη δουλέψεις κανένα από αυτά χωρίς να μετρήσεις πρώτα τον
+ζωντανό κώδικα.</p>
+</div>
+
+<hr class="hr">
+<h2>Αν έπρεπε να διαλέξεις μία μέρα</h2>
+<div class="t">Με αυτή τη σειρά, και ο λόγος για τον καθένα</div>
+<ol>
+<li><b>Απάντησε το 1.1</b> (τι περνά το όριο στο duplicate). Είναι το μόνο που μπλοκάρει <i>και</i> κώδικα
+<i>και</i> χαρτί, και είναι μία πρόταση απάντηση.</li>
+<li><b>Κάνε τα δύο χειροκίνητα περάσματα</b> (1.3, 1.4). Είναι ο μόνος τρόπος να μάθουμε αν τα τρία commits
+της 29/08 δουλεύουν σε αληθινό κινητό. Μέχρι τότε είναι αδοκίμαστος κώδικας σε παραγωγή.</li>
+<li><b>Άσε με να γράψω 1.2, 1.5 και 2.6</b> — cap αρχείων, ένα test εμβέλειας, έξι γραμμές CI. Μικρά,
+οριοθετημένα, <b>ταιριάζουν σε Sonnet</b>.</li>
+</ol>
+
+<div class="note warn"><b>Το ένα πράγμα που θα με ανησυχούσε στη θέση σου:</b> τα 1.3 και 1.4 δεν είναι
+γραφειοκρατία. Τρία commits μπήκαν χθες και άλλαξαν <b>τη σειρά</b> μιας ροής που αγγίζει προσωπικά δεδομένα,
+και κανένας άνθρωπος δεν τα έχει πατήσει. Όλα τα υπόλοιπα της λίστας περιμένουν χωρίς κόστος· αυτά δύο όχι.</div>
+
+<p class="foot">Πηγές: HANDOVER §6α/§6β/§6γ/§8, <code>docs/CHANGELOG.md</code> (170)-(174),
+<code>docs/GDPR-DPA.html §8</code>, και η σάρωση της 29/08 (<code>docs/KRITIKI-29-08.html</code>). Τα ευρήματα
+1.1, 1.2, 2.2, 2.3 επαληθεύτηκαν από εμένα στον ζωντανό κώδικα· τα υπόλοιπα προέρχονται από τη σάρωση και
+αξίζουν δικό σου βλέμμα πριν γίνουν εργασία. Οι αποφάσεις του §6γ <b>δεν αντιγράφονται εδώ</b> — η έγκυρη
+διατύπωση μένει στο ένα σημείο, όπως ορίζει το ίδιο το §6γ.</p>
+
+</div>
+
+<script>
+(function(){var b=document.getElementById('tg'),h=document.documentElement;
+b.addEventListener('click',function(){var d=h.getAttribute('data-kit')==='dark';
+h.setAttribute('data-kit',d?'light':'dark');b.textContent=d?'Σκούρο':'Ανοιχτό';});})();
+</script>
+</body></html>

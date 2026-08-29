@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="el" data-kit="light"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CI — Ολόκληρο το αρχείο</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--pg:#f6f6f4;--pg2:#fff;--pg-ink:#1a1a18;--pg-mu:#6e6c66;--pg-line:#dedcd7;--pg-acc:#0b690c;
+--pg-acc-bg:#eafaea;--pg-sunk:#eeeeeb}
+html[data-kit="dark"]{--pg:#0d0d0c;--pg2:#161614;--pg-ink:#f1f1ee;--pg-mu:#a3a099;--pg-line:#33322e;
+--pg-acc:#6bdd6d;--pg-acc-bg:#12240f;--pg-sunk:#1f1f1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--pg-ink);line-height:1.5;
+font-family:"Manrope",-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.bar{position:sticky;top:0;z-index:9;background:var(--pg2);border-bottom:1px solid var(--pg-line);padding:10px 16px}
+.bar-in{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:14px;color:var(--pg-acc)}
+.bar-in .sub{font-size:12px;color:var(--pg-mu)}
+.tg{margin-left:auto;border:1px solid var(--pg-line);background:var(--pg);color:var(--pg-ink);
+border-radius:999px;padding:7px 14px;font:700 12.5px/1 inherit;cursor:pointer}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px 60px}
+h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:24px 0 8px;line-height:1.3}
+h2{font-size:15px;font-weight:800;margin:26px 0 8px;letter-spacing:-.01em}
+p{margin:0 0 10px;font-size:14px}
+p.d{color:var(--pg-mu);font-size:13.5px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:var(--pg-sunk);
+border:1px solid var(--pg-line);border-radius:4px;padding:1px 4px;word-break:break-word}
+.note{font-size:13px;color:var(--pg-mu);line-height:1.55;padding:11px 13px;border-radius:10px;
+margin:10px 0;background:var(--pg2);border:1px solid var(--pg-line)}
+.note b{color:var(--pg-ink)}
+.note.ok{background:var(--pg-acc-bg);border-color:var(--pg-acc)}.note.ok b{color:var(--pg-acc)}
+.copybar{position:sticky;top:53px;z-index:8;display:flex;align-items:center;justify-content:space-between;
+gap:10px;margin:14px 0 0;background:var(--pg2);border:1px solid var(--pg-line);border-radius:10px 10px 0 0;
+padding:10px 14px}
+.copybar .lab{font-size:12px;color:var(--pg-mu)}
+.copybtn{border:1px solid var(--pg-acc);background:var(--pg-acc-bg);color:var(--pg-acc);
+border-radius:8px;padding:7px 14px;font:800 13px/1 inherit;cursor:pointer}
+.copybtn.done{background:var(--pg-acc);color:#fff}
+.code{font:400 11.5px/1.6 ui-monospace,Consolas,monospace;background:var(--pg-sunk);
+border:1px solid var(--pg-line);border-top:none;border-radius:0 0 10px 10px;padding:14px 16px;
+white-space:pre;color:var(--pg-ink);margin:0 0 16px;overflow-x:auto;max-height:65vh;overflow-y:auto}
+ol{font-size:13.5px;padding-left:20px;line-height:1.7}
+</style></head>
+<body>
+
+<div class="bar"><div class="bar-in">
+<span class="brand">ENERGY&nbsp;CRM</span>
+<span class="sub">ci.yml — ολόκληρο το αρχείο, έτοιμο για επικόλληση</span>
+<button class="tg" id="tg" type="button">Σκούρο</button>
+</div></div>
+
+<div class="wrap">
+
+<h1>Αντικατέστησε ΟΛΟΚΛΗΡΟ το ci.yml με αυτό</h1>
+
+<p class="d">Ελέγχθηκε με πραγματικό YAML parser — έγκυρο. Δύο jobs: <code>js-tests</code> (νέο) και
+<code>check</code> (το υπάρχον, αναλλοίωτο). Καμία ανάγκη να μετράς κενά — απλά σβήσε τα πάντα στο
+<code>ci.yml</code> και επικόλλησε αυτό.</p>
+
+<div class="copybar"><span class="lab">Ολόκληρο το αρχείο, 116 γραμμές</span>
+<button class="copybtn" id="cp" type="button">Αντιγραφή όλου του αρχείου</button></div>
+<div class="code" id="snippet">name: CI
+
+# Τρέχει σε κάθε push και σε κάθε pull request προς main/ui-kit. Δεν
+# αντικαθιστά τον pre-commit hook (.githooks/pre-commit) — μένουν και οι δύο.
+# Ο hook πιάνει το λάθος σε δευτερόλεπτα, πριν γραφτεί στο ιστορικό· αυτό εδώ
+# πιάνει ό,τι ξεφύγει από τον hook (λάθος λίστα επεκτάσεων, --no-verify,
+# clone χωρίς hooksPath) και τρέχει ΠΑΝΤΑ ολόκληρο το check:all, integration
+# συμπεριλαμβανομένου — κάτι που ο hook ρητά δεν κάνει (docs/TESTING.md).
+#
+# Δες docs/CI-PROPOSAL.html για το πλήρες σκεπτικό, μετρημένο πριν γραφτεί
+# αυτό το αρχείο.
+
+on:
+  push:
+    branches: [main, ui-kit]
+  pull_request:
+    branches: [main, ui-kit]
+
+jobs:
+  js-tests:
+    runs-on: ubuntu-latest
+
+    # Οι δύο μοναδικές σουίτες JavaScript του repo — tools/js-tests (format,
+    # scope, navigate: 20 tests) και tools/wizard-smoke (jsdom, 31 assertions,
+    # το ΜΟΝΟ πράγμα που στέκεται ανάμεσα σε ένα refactor του ecrm-form.js και
+    # ένα σιωπηλά αλλαγμένο POST body). Ως τώρα καμία από τις δύο δεν έτρεχε
+    # στο CI -- έτρεχαν μόνο αν κάποιος τις θυμόταν με το χέρι. AUDIT 29/08.
+    #
+    # Ξεχωριστό job από το `check`: δεν χρειάζεται PHP/MySQL, και μια αποτυχία
+    # εδώ πρέπει να ξεχωρίζει καθαρά από μια αποτυχία στη σουίτα PHP.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: &quot;20&quot;
+
+      - name: tools/js-tests
+        working-directory: tools/js-tests
+        run: npm test
+
+      - name: tools/wizard-smoke
+        working-directory: tools/wizard-smoke
+        run: |
+          npm ci
+          npm test
+
+  check:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: energy_crm_tests
+        ports:
+          - 3306:3306
+        options: &gt;-
+          --health-cmd=&quot;mysqladmin ping&quot;
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      ECRM_TEST_DB_NAME: energy_crm_tests
+      ECRM_TEST_DB_USER: root
+      ECRM_TEST_DB_PASSWORD: &quot;&quot;
+      ECRM_TEST_DB_HOST: 127.0.0.1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # PHP 8.2 ΜΕ sodium — ρητά, όχι τυχαία. Χωρίς sodium παραλείπονται 6
+      # tests αντί για 1 και τα PII tests δεν τρέχουν καθόλου (docs/HANDOVER.md
+      # §3). Ένα CI που τρέχει χωρίς sodium θα έδειχνε πράσινο κάθε μέρα χωρίς
+      # να το μάθει ποτέ κανείς — ακριβώς η μορφή Ε του §8.
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: &quot;8.2&quot;
+          extensions: sodium, mysqli, gd, zip, mbstring
+          coverage: none
+
+      - name: Composer cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles(&#x27;composer.lock&#x27;) }}
+          restore-keys: composer-
+
+      - name: composer install
+        run: composer install --no-interaction --prefer-dist
+
+      - name: composer check:all
+        run: composer check:all 2&gt;&amp;1 | tee ci-check-all.tmp.txt
+
+      # Ο κωδικός εξόδου του composer ήδη κοκκινίζει αν κάτι απέτυχε (το
+      # tools/check-suite.php το εγγυάται — απαιτεί γραμμή σύνοψης, όχι μόνο
+      # κωδικό 0, δες CHANGELOG (86)). Αυτό το βήμα προσθέτει τον έλεγχο που
+      # ΔΕΝ κάνει κανένα από τα δύο: ότι η κρυπτογράφηση όντως ελέγχθηκε.
+      #
+      # Με sodium παρόν, το ΣΩΣΤΟ πλήθος skipped είναι ακριβώς 1 — το
+      # FieldCipherTest που σκόπιμα παραλείπεται ΟΤΑΝ υπάρχει sodium (ελέγχει
+      # τη συμπεριφορά χωρίς). 0 ή ≥2 σημαίνει ότι κάτι άλλαξε απρόβλεπτα.
+      - name: Επιβεβαίωση ότι η κρυπτογράφηση ελέγχθηκε πραγματικά
+        run: |
+          if ! grep -qE &quot;Skipped: 1\.$&quot; ci-check-all.tmp.txt; then
+            echo &quot;::error::Δεν βρέθηκε &#x27;Skipped: 1.&#x27; στην έξοδο του unit suite.&quot;
+            echo &quot;::error::Είτε το sodium δεν φορτώθηκε (Skipped: 6 — τα PII tests ΔΕΝ έτρεξαν)&quot;
+            echo &quot;::error::είτε άλλαξε ο αριθμός των σκόπιμα παραλειπόμενων tests. Δες docs/HANDOVER.md §3.&quot;
+            exit 1
+          fi
+          echo &quot;OK: ακριβώς 1 σκόπιμα παραλειπόμενο test (sodium παρόν).&quot;
+
+      - name: Πλήρης έξοδος (πάντα, ακόμη κι αν πέρασε)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: check-all-output
+          path: ci-check-all.tmp.txt
+          retention-days: 14
+</div>
+
+<div class="note ok"><b>Πώς να το χρησιμοποιήσεις:</b> άνοιξε το <code>.github\workflows\ci.yml</code>,
+επίλεξε τα πάντα μέσα στο αρχείο (Ctrl+A) και σβήσε τα (Delete), μετά πάτησε το κουμπί πάνω και επικόλλησε
+(Ctrl+V). Αποθήκευσε (Ctrl+S).</div>
+
+<h2>Μετά την επικόλληση</h2>
+<ol>
+<li>Αποθήκευσε το αρχείο.</li>
+<li>Άνοιξε το Site Shell του Local (πάνω στο site <code>crm</code> → «Open Site Shell»).</li>
+<li><code>cd wp-content\plugins\energy-crm</code></li>
+<li><code>git status</code> — δες ότι μόνο το <code>.github/workflows/ci.yml</code> άλλαξε (και ό,τι άλλο
+έχεις ήδη ανοιχτό από πριν).</li>
+<li><code>git add .github\workflows\ci.yml</code></li>
+<li><code>git commit -m "Πρόσθεσε τα δύο JS suites στο CI (tools/js-tests, tools/wizard-smoke)"</code></li>
+<li><code>git push</code></li>
+<li>GitHub → tab <b>Actions</b> → θα δεις δύο jobs να τρέχουν: <code>check</code> (παλιό) και
+<code>js-tests</code> (νέο). Το <code>js-tests</code> τελειώνει γρήγορα — δεν χρειάζεται MySQL.</li>
+</ol>
+
+</div>
+
+<script>
+(function(){var b=document.getElementById('tg'),h=document.documentElement;
+b.addEventListener('click',function(){var d=h.getAttribute('data-kit')==='dark';
+h.setAttribute('data-kit',d?'light':'dark');b.textContent=d?'Σκούρο':'Ανοιχτό';});})();
+(function(){var btn=document.getElementById('cp'),el=document.getElementById('snippet');
+btn.addEventListener('click',function(){
+try{
+  var text=el.textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok,fail);
+  } else { fallback(); }
+}catch(e){fallback();}
+function ok(){btn.textContent='Αντιγράφηκε ✓';btn.classList.add('done');setTimeout(function(){btn.textContent='Αντιγραφή όλου του αρχείου';btn.classList.remove('done');},1800);}
+function fail(){fallback();}
+function fallback(){
+  var r=document.createRange();r.selectNodeContents(el);
+  var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  try{document.execCommand('copy');ok();}catch(e){}
+  s.removeAllRanges();
+}
+});})();
+</script>
+</body></html>

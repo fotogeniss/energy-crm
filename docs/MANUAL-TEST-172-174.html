@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="el" data-kit="light"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Χειροκίνητος έλεγχος — (172) &amp; (174)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--pg:#f6f6f4;--pg2:#fff;--pg-ink:#1a1a18;--pg-mu:#6e6c66;--pg-line:#dedcd7;--pg-acc:#0b690c;
+--pg-acc-bg:#eafaea;--pg-sunk:#eeeeeb;--pg-warn:#8a5a00;--pg-warn-bg:#fdf3e0;--pg-bad:#a8271f;--pg-bad-bg:#fcebe9}
+html[data-kit="dark"]{--pg:#0d0d0c;--pg2:#161614;--pg-ink:#f1f1ee;--pg-mu:#a3a099;--pg-line:#33322e;
+--pg-acc:#6bdd6d;--pg-acc-bg:#12240f;--pg-sunk:#1f1f1c;--pg-warn:#e0ac4b;--pg-warn-bg:#2b210c;--pg-bad:#ef6b62;--pg-bad-bg:#2a1512}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--pg-ink);line-height:1.5;
+font-family:"Manrope",-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.bar{position:sticky;top:0;z-index:9;background:var(--pg2);border-bottom:1px solid var(--pg-line);padding:10px 16px}
+.bar-in{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:14px;color:var(--pg-acc)}
+.bar-in .sub{font-size:12px;color:var(--pg-mu)}
+.count{font-size:12px;color:var(--pg-mu);margin-left:auto}
+.tg{border:1px solid var(--pg-line);background:var(--pg);color:var(--pg-ink);
+border-radius:999px;padding:7px 14px;font:700 12.5px/1 inherit;cursor:pointer}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 70px}
+h1{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:26px 0 8px;line-height:1.25}
+h2{font-size:16px;font-weight:800;margin:34px 0 4px;letter-spacing:-.01em}
+h2 .tag{font-size:11px;font-weight:800;color:var(--pg-mu);background:var(--pg-sunk);border:1px solid var(--pg-line);
+border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:2px}
+p{margin:0 0 10px;font-size:14px}
+p.d{color:var(--pg-mu);font-size:13.5px}
+ul,ol{margin:6px 0 10px;padding-left:20px;font-size:13.5px}li{margin-bottom:5px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em;background:var(--pg-sunk);
+border:1px solid var(--pg-line);border-radius:4px;padding:1px 4px;word-break:break-word}
+.note{font-size:13px;color:var(--pg-mu);line-height:1.55;padding:11px 13px;border-radius:10px;
+margin:10px 0;background:var(--pg2);border:1px solid var(--pg-line)}
+.note b{color:var(--pg-ink)}
+.note.warn{background:var(--pg-warn-bg);border-color:var(--pg-warn)}.note.warn b{color:var(--pg-warn)}
+.scn{border:1px solid var(--pg-line);border-radius:12px;background:var(--pg2);margin:12px 0;overflow:hidden;
+transition:border-color .15s}
+.scn.pass{border-color:var(--pg-acc)}
+.scn.fail{border-color:var(--pg-bad)}
+.scn-h{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--pg-line)}
+.scn-n{width:24px;height:24px;border-radius:50%;background:var(--pg-sunk);color:var(--pg-mu);font:800 12px/24px inherit;
+text-align:center;flex:none}
+.scn.pass .scn-n{background:var(--pg-acc-bg);color:var(--pg-acc)}
+.scn.fail .scn-n{background:var(--pg-bad-bg);color:var(--pg-bad)}
+.scn-t{font-weight:700;font-size:13.5px;flex:1}
+.scn-b{padding:12px 14px}
+.scn-b p{margin:0 0 8px}
+.lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--pg-mu);font-weight:800;margin:0 0 3px}
+.exp{background:var(--pg-sunk);border-radius:8px;padding:9px 11px;font-size:13px;margin:2px 0 10px}
+.btns{display:flex;gap:8px;margin-top:8px}
+.pb{flex:1;border:1px solid var(--pg-line);background:var(--pg);color:var(--pg-ink);border-radius:8px;
+padding:8px;font:700 12.5px/1 inherit;cursor:pointer}
+.pb.on-pass{background:var(--pg-acc-bg);border-color:var(--pg-acc);color:var(--pg-acc)}
+.pb.on-fail{background:var(--pg-bad-bg);border-color:var(--pg-bad);color:var(--pg-bad)}
+textarea{width:100%;margin-top:8px;border:1px solid var(--pg-line);background:var(--pg);color:var(--pg-ink);
+border-radius:8px;padding:8px 10px;font:400 13px/1.5 inherit;resize:vertical;min-height:38px}
+.summary{position:sticky;bottom:0;background:var(--pg2);border-top:1px solid var(--pg-line);padding:12px 16px;
+display:flex;gap:14px;align-items:center;font-size:13px;flex-wrap:wrap}
+.summary b{font-size:15px}
+.sw{max-width:860px;margin:0 auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap;width:100%}
+</style></head>
+<body>
+
+<div class="bar"><div class="bar-in">
+<span class="brand">ENERGY&nbsp;CRM</span>
+<span class="sub">Χειροκίνητος έλεγχος — δύο περάσματα</span>
+<button class="tg" id="tg" type="button">Σκούρο</button>
+</div></div>
+
+<div class="wrap">
+
+<h1>Χειροκίνητος έλεγχος πριν βγει σε πωλητές</h1>
+<p class="d">Καμία από τις δύο ροές παρακάτω δεν έχει αυτόματη κάλυψη (<code>docs/NEXT-SESSION.md</code>,
+«Χειροκίνητος έλεγχος που χρωστάει»). Πέρασμα Α γίνεται σε browser, ιδανικά desktop· Πέρασμα Β χρειάζεται
+πραγματικό κινητό Android/Chrome και μια πραγματική κάρτα SIM με barcode. Τσέκαρε κάθε σενάριο Πέρασε/Απέτυχε
+καθώς προχωράς — η σελίδα κρατά την κατάσταση μόνο όσο μένει ανοιχτή σε αυτή την καρτέλα.</p>
+
+<div class="note warn"><b>Πριν ξεκινήσεις — ετοίμασε:</b> (1) ένα lead με ήδη ανεβασμένα έγγραφα, (2) ένα lead
+χωρίς κανένα έγγραφο, (3) πρόσβαση στο <code>Energy CRM → Ρυθμίσεις</code> στο wp-admin για να αδειάσεις
+προσωρινά το κλειδί AI, (4) έναν πωλητή με ≥3 μη-πρόχειρες αιτήσεις στον ίδιο πάροχο («συνήθεια»), (5) έναν
+τελείως νέο πωλητή χωρίς καμία αίτηση. Χωρίς αυτά τα σενάρια 3-5 του Περάσματος Α δεν ελέγχονται σωστά.</p></div>
+
+<h2>Πέρασμα Α — Η οθόνη παράδοσης <span class="tag">CHANGELOG (172)</span></h2>
+<p class="d">Όψη Leads μέσα στην εφαρμογή, κουμπί «Μετατροπή σε σύμβαση» πάνω σε κάθε lead.</p>
+
+<div class="scn" data-s="a1">
+<div class="scn-h"><span class="scn-n">1</span><span class="scn-t">Lead με έγγραφα, το AI διαβάζει</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Πάτα «Μετατροπή σε σύμβαση» πάνω στο lead που έχει ήδη ανεβασμένα έγγραφα.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Ανοίγει διάλογος με πίνακα πεδίων που διάβασε το AI και κουμπί «Ναι, συνέχισε». Μετά το πάτημα, η
+καρτέλα της νέας αίτησης ανοίγει με τα πεδία <b>ήδη γεμάτα</b>.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="a2">
+<div class="scn-h"><span class="scn-n">2</span><span class="scn-t">Lead χωρίς κανένα έγγραφο</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Πάτα «Μετατροπή σε σύμβαση» πάνω στο lead χωρίς κανένα ανεβασμένο έγγραφο.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Διάλογος «Δεν στάλθηκαν έγγραφα», κουμπί «Συνέχισε χειροκίνητα». Η αίτηση <b>δημιουργείται
+κανονικά</b> μετά το πάτημα.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="a3">
+<div class="scn-h"><span class="scn-n">3</span><span class="scn-t">Το AI αποτυγχάνει — το πιο σημαντικό σενάριο</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Στο <code>Energy CRM → Ρυθμίσεις</code>, άδειασε προσωρινά το κλειδί AI και αποθήκευσε. Ξαναγύρνα στο lead
+με έγγραφα (σενάριο 1) και πάτα «Μετατροπή σε σύμβαση». <b>Μην ξεχάσεις να επαναφέρεις το κλειδί μετά.</b></p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Ο διάλογος <b>ΠΡΕΠΕΙ να ανοίξει</b> κανονικά, με «Δεν κατάφερα να διαβάσω τα έγγραφα». Η δημιουργία
+της αίτησης <b>ΠΡΕΠΕΙ να δουλέψει</b> μέσω «Συνέχισε χειροκίνητα». Αν αυτό σπάσει, η αλλαγή σειράς του (172)
+είναι παλινδρόμηση, όχι βελτίωση.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="a4">
+<div class="scn-h"><span class="scn-n">4</span><span class="scn-t">Πωλητής με «συνήθεια» (≥3 μη-πρόχειρες, ίδιος πάροχος)</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Σύνδεση ως ο πωλητής με τις ≥3 αιτήσεις στον ίδιο πάροχο. Μετατροπή ενός lead του σε σύμβαση.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Το μπλοκ «Η συνήθειά σου» εμφανίζεται στον διάλογο. Μετά το «Ναι, συνέχισε», η αίτηση έχει
+<b>πάροχο, είδος και πρόγραμμα ήδη συμπληρωμένα</b>.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="a5">
+<div class="scn-h"><span class="scn-n">5</span><span class="scn-t">Νέος πωλητής χωρίς συνήθεια</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Σύνδεση ως πωλητής χωρίς καμία προηγούμενη αίτηση. Μετατροπή lead σε σύμβαση.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Το μπλοκ της συνήθειας <b>λείπει ολόκληρο</b> από τον διάλογο — καμία απολογία, κανένα κενό
+πλαίσιο.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="a6">
+<div class="scn-h"><span class="scn-n">6</span><span class="scn-t">Άκυρο / Escape / ×</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Άνοιξε τον διάλογο (οποιοδήποτε lead) και έκλεισέ τον με το ×, μετά ξανά με Escape, μετά με «Άκυρο» αν
+υπάρχει τέτοιο κουμπί — δοκίμασε και τους τρεις τρόπους.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Σε κάθε περίπτωση το κουμπί «Μετατροπή σε σύμβαση» στην κάρτα <b>ξεκλειδώνει</b> και μπορεί να
+ξαναπατηθεί. <b>Καμία αίτηση δεν δημιουργήθηκε</b> — έλεγξε ότι δεν εμφανίστηκε ορφανή σύμβαση.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<h2>Πέρασμα Β — Κουμπί σάρωσης SIM <span class="tag">CHANGELOG (174)</span></h2>
+<p class="d">Πεδίο «Αριθμός Κάρτας SIM» στη φόρμα αίτησης. <b>Χρειάζεται πραγματικό κινητό Android με Chrome</b>
+και μια πραγματική κάρτα SIM με ευανάγνωστο barcode — δεν ελέγχεται σε desktop (το κουμπί δεν εμφανίζεται εκεί,
+βλ. σενάριο 5).</p>
+
+<div class="scn" data-s="b1">
+<div class="scn-h"><span class="scn-n">1</span><span class="scn-t">Barcode διαβάζεται καθαρά</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Στο πεδίο SIM, πάτα το κουμπί σάρωσης, τράβα φωτογραφία πραγματικής κάρτας SIM με ευανάγνωστο barcode.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Το πεδίο γεμίζει <b>αμέσως</b>, μπλε pulse, ετικέτα <b>«SCAN»</b> δίπλα στο label, σωστό ICCID
+(19-20 ψηφία, ξεκινά από 89).</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="b2">
+<div class="scn-h"><span class="scn-n">2</span><span class="scn-t">Barcode θολό / δεν διαβάζεται</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Πάτα το κουμπί σάρωσης, τράβα φωτογραφία με το barcode εκτός εστίασης ή καλυμμένο.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Η <b>ίδια</b> φωτογραφία πάει αυτόματα σε AI, χωρίς δεύτερη ενέργεια από εσένα. Αν βρεθεί κάτι, το
+πεδίο γεμίζει με ετικέτα <b>«AI»</b> (πράσινη), όχι «SCAN». Αν ούτε το AI βρει τίποτα: toast μήνυμα, πεδίο
+κενό, καμία σιωπηλή αποτυχία.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="b3">
+<div class="scn-h"><span class="scn-n">3</span><span class="scn-t">Ξαναπάτημα με ήδη γεμάτο πεδίο</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Με το πεδίο SIM ήδη γεμάτο (από σενάριο 1), πάτα ξανά το κουμπί σάρωσης με διαφορετική κάρτα SIM.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Η νέα τιμή <b>αντικαθιστά</b> την παλιά — επιβεβαίωσε ότι όντως άλλαξε το πεδίο, όχι ότι η νέα
+σάρωση αγνοήθηκε σιωπηλά.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="b4">
+<div class="scn-h"><span class="scn-n">4</span><span class="scn-t">Χειροκίνητη επεξεργασία μετά τη σάρωση</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Με το πεδίο SIM γεμάτο από scan (ετικέτα «SCAN» ορατή), άγγιξε/επεξεργάσου το πεδίο με το χέρι.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Η ετικέτα «SCAN» <b>εξαφανίζεται</b> μόλις αγγίξεις το πεδίο — ίδιος μηχανισμός με την ετικέτα «AI».</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="b5">
+<div class="scn-h"><span class="scn-n">5</span><span class="scn-t">Desktop / χωρίς touch</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Άνοιξε τη φόρμα σε κανονικό desktop browser (ποντίκι, όχι touch).</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Το κουμπί σάρωσης δίπλα στο πεδίο SIM <b>δεν πρέπει να φαίνεται καθόλου</b>.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+<div class="scn" data-s="b6">
+<div class="scn-h"><span class="scn-n">6</span><span class="scn-t">Browser χωρίς BarcodeDetector (π.χ. iOS Safari)</span></div>
+<div class="scn-b">
+<p class="lab">Βήματα</p>
+<p>Αν υπάρχει διαθέσιμο iPhone ή Firefox mobile, δοκίμασε το κουμπί σάρωσης εκεί. Αν δεν υπάρχει τέτοια
+συσκευή διαθέσιμη, σημείωσέ το και προσπέρασε — δεν είναι μπλοκάρισμα.</p>
+<p class="lab">Αναμενόμενο</p>
+<div class="exp">Το κουμπί δουλεύει κανονικά και πηγαίνει <b>κατευθείαν σε AI</b>, χωρίς κανένα ορατό σφάλμα στον
+χρήστη.</div>
+<div class="btns"><button class="pb" data-v="pass" type="button">✓ Πέρασε</button><button class="pb" data-v="fail" type="button">✕ Απέτυχε</button></div>
+<textarea placeholder="Σημειώσεις (προαιρετικό)…"></textarea>
+</div></div>
+
+</div>
+
+<div class="summary"><div class="sw">
+<span><b id="cPass">0</b> πέρασαν</span>
+<span><b id="cFail">0</b> απέτυχαν</span>
+<span><b id="cLeft">12</b> εκκρεμούν</span>
+<span id="cCopy" style="margin-left:auto;font-size:12px;color:var(--pg-mu)">Πάτα «Αντιγραφή αποτελεσμάτων» όταν τελειώσεις</span>
+<button class="tg" id="copy" type="button">Αντιγραφή αποτελεσμάτων</button>
+</div></div>
+
+<script>
+(function(){var b=document.getElementById('tg'),h=document.documentElement;
+b.addEventListener('click',function(){var d=h.getAttribute('data-kit')==='dark';
+h.setAttribute('data-kit',d?'light':'dark');b.textContent=d?'Σκούρο':'Ανοιχτό';});})();
+
+(function(){
+var scns = Array.prototype.slice.call(document.querySelectorAll('.scn'));
+var state = {};
+function refresh(){
+	var p=0,f=0;
+	scns.forEach(function(el){
+		var v = state[el.dataset.s];
+		el.classList.toggle('pass', v==='pass');
+		el.classList.toggle('fail', v==='fail');
+		var btns = el.querySelectorAll('.pb');
+		btns[0].classList.toggle('on-pass', v==='pass');
+		btns[1].classList.toggle('on-fail', v==='fail');
+		if(v) { v==='pass' ? p++ : f++; }
+	});
+	document.getElementById('cPass').textContent=p;
+	document.getElementById('cFail').textContent=f;
+	document.getElementById('cLeft').textContent=(scns.length-p-f);
+}
+scns.forEach(function(el){
+	var btns = el.querySelectorAll('.pb');
+	btns[0].addEventListener('click', function(){ state[el.dataset.s]='pass'; refresh(); });
+	btns[1].addEventListener('click', function(){ state[el.dataset.s]='fail'; refresh(); });
+});
+refresh();
+
+document.getElementById('copy').addEventListener('click', function(){
+	var lines = ['Χειροκίνητος έλεγχος (172)/(174) — αποτελέσματα:'];
+	scns.forEach(function(el){
+		var v = state[el.dataset.s] || 'εκκρεμεί';
+		var title = el.querySelector('.scn-t').textContent;
+		var note = el.querySelector('textarea').value.trim();
+		lines.push('- [' + el.dataset.s + '] ' + title + ': ' + v + (note ? ' — ' + note : ''));
+	});
+	var text = lines.join('\n');
+	function ok(){ var btn=document.getElementById('copy'); btn.textContent='Αντιγράφηκε ✓'; setTimeout(function(){btn.textContent='Αντιγραφή αποτελεσμάτων';},1600); }
+	try{
+		if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(ok); }
+		else { throw 0; }
+	}catch(e){
+		var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select();
+		try{document.execCommand('copy'); ok();}catch(e2){}
+		document.body.removeChild(ta);
+	}
+});
+})();
+</script>
+</body></html>
