@@ -17,6 +17,35 @@ on:
     branches: [main, ui-kit]
 
 jobs:
+  js-tests:
+    runs-on: ubuntu-latest
+
+    # Οι δύο μοναδικές σουίτες JavaScript του repo — tools/js-tests (format,
+    # scope, navigate: 20 tests) και tools/wizard-smoke (jsdom, 31 assertions,
+    # το ΜΟΝΟ πράγμα που στέκεται ανάμεσα σε ένα refactor του ecrm-form.js και
+    # ένα σιωπηλά αλλαγμένο POST body). Ως τώρα καμία από τις δύο δεν έτρεχε
+    # στο CI -- έτρεχαν μόνο αν κάποιος τις θυμόταν με το χέρι. AUDIT 29/08.
+    #
+    # Ξεχωριστό job από το `check`: δεν χρειάζεται PHP/MySQL, και μια αποτυχία
+    # εδώ πρέπει να ξεχωρίζει καθαρά από μια αποτυχία στη σουίτα PHP.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: tools/js-tests
+        working-directory: tools/js-tests
+        run: npm test
+
+      - name: tools/wizard-smoke
+        working-directory: tools/wizard-smoke
+        run: |
+          npm ci
+          npm test
+
   check:
     runs-on: ubuntu-latest
 
