@@ -43,7 +43,7 @@ jobs:
       - name: tools/wizard-smoke
         working-directory: tools/wizard-smoke
         run: |
-          npm ci
+          npm install
           npm test
 
   check:
