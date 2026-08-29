@@ -39,6 +39,10 @@ class ECRM_Extractor {
 			'company_name', 'adt', 'birth_date', 'region', 'city', 'street',
 			'street_no', 'postal_code', 'phone', 'mobile', 'email',
 			'supply_number', 'meter_number', 'invoice_code',
+			// Κινητή τηλεφωνία. Δεν είναι στήλες -- ζουν στο extra_json της
+			// σύμβασης (data-extra="1" στη φόρμα). Ο εξαγωγέας δεν ξέρει πού
+			// καταλήγουν, και σωστά: δουλειά του είναι να ΔΙΑΒΑΣΕΙ.
+			'sim_number', 'mobile_msisdn',
 		];
 	}
 
@@ -66,8 +70,12 @@ class ECRM_Extractor {
 			$block = self::file_to_block( $f );
 			if ( $block ) {
 				// Label each doc so the model knows which is which.
-				$label = $f['kind'] === 'id_card' ? 'ΕΓΓΡΑΦΟ: Ταυτότητα/Διαβατήριο'
-					: ( $f['kind'] === 'provider_bill' ? 'ΕΓΓΡΑΦΟ: Λογαριασμός παρόχου' : 'ΕΓΓΡΑΦΟ' );
+				$labels = [
+					'id_card'       => 'ΕΓΓΡΑΦΟ: Ταυτότητα/Διαβατήριο',
+					'provider_bill' => 'ΕΓΓΡΑΦΟ: Λογαριασμός παρόχου',
+					'sim_card'      => 'ΕΓΓΡΑΦΟ: Κάρτα SIM (φωτογραφία της πλαστικής βάσης)',
+				];
+				$label  = $labels[ $f['kind'] ] ?? 'ΕΓΓΡΑΦΟ';
 				$content[] = [ 'type' => 'text', 'text' => $label ];
 				$content[] = $block;
 			}
@@ -135,7 +143,7 @@ class ECRM_Extractor {
 	private static function prompt(): string {
 		$keys = implode( ', ', self::fields() );
 		return <<<PROMPT
-Είσαι βοηθός καταχώρισης για ελληνικό CRM ενεργειακών συμβολαίων. Θα σου δοθούν φωτογραφίες/PDF εγγράφων (ελληνική ταυτότητα ή διαβατήριο, και λογαριασμός παρόχου ρεύματος/αερίου). Διάβασέ τα και εξήγαγε τα στοιχεία του πελάτη.
+Είσαι βοηθός καταχώρισης για ελληνικό CRM ενεργειακών συμβολαίων και συμβολαίων κινητής. Θα σου δοθούν φωτογραφίες/PDF εγγράφων (ελληνική ταυτότητα ή διαβατήριο, λογαριασμός παρόχου ρεύματος/αερίου, ή φωτογραφία της πλαστικής βάσης κάρτας SIM). Διάβασέ τα και εξήγαγε τα στοιχεία.
 
 Επέστρεψε ΜΟΝΟ ένα JSON object — χωρίς markdown, χωρίς σχόλια, χωρίς κείμενο πριν ή μετά. Τα κλειδιά πρέπει να είναι ακριβώς αυτά: {$keys}.
 
@@ -144,11 +152,13 @@ class ECRM_Extractor {
 - birth_date: μορφή YYYY-MM-DD. Αν δεν υπάρχει, null.
 - afm: 9 ψηφία ΑΦΜ. supply_number: ο αριθμός παροχής/ΗΚΑΣΠ από τον λογαριασμό.
 - Διεύθυνση: σπάσε σε street (οδός), street_no (αριθμός), city (πόλη), region (νομός), postal_code (ΤΚ).
+- sim_number: το ICCID της κάρτας SIM — 19 ή 20 ψηφία, τυπωμένο στην πλαστική βάση, συνήθως δίπλα σε barcode και ξεκινά με 89. Επίστρεψέ το ΜΟΝΟ ως ψηφία, χωρίς κενά ή παύλες. Αν διαβάζονται λιγότερα από 19 ψηφία, βάλε null αντί για μισό αριθμό: ένα κομμένο ICCID αποτυγχάνει σιωπηλά στην ενεργοποίηση.
+- mobile_msisdn: ο αριθμός κινητού που τυπώνεται στη βάση της SIM, αν υπάρχει. Δεν είναι το ίδιο με το mobile (το προσωπικό τηλέφωνο του πελάτη από την ταυτότητα ή τον λογαριασμό).
 - Για ό,τι ΔΕΝ διαβάζεται καθαρά, βάλε null. ΜΗΝ μαντεύεις και ΜΗΝ εφευρίσκεις τιμές.
 - Κράτα ελληνικούς χαρακτήρες ως έχουν (μην τους κάνεις transliteration).
 
 Παράδειγμα σχήματος εξόδου:
-{"customer_type":"individual","afm":"123456789","doy":"Δ ΑΘΗΝΩΝ","first_name":"ΓΕΩΡΓΙΟΣ","last_name":"ΠΑΠΑΔΟΠΟΥΛΟΣ","father_name":"ΙΩΑΝΝΗΣ","company_name":null,"adt":"ΑΒ123456","birth_date":"1985-04-12","region":"ΑΤΤΙΚΗΣ","city":"ΑΘΗΝΑ","street":"ΕΡΜΟΥ","street_no":"15","postal_code":"10563","phone":null,"mobile":"6900000000","email":null,"supply_number":"0199999990001","meter_number":null,"invoice_code":null}
+{"customer_type":"individual","afm":"123456789","doy":"Δ ΑΘΗΝΩΝ","first_name":"ΓΕΩΡΓΙΟΣ","last_name":"ΠΑΠΑΔΟΠΟΥΛΟΣ","father_name":"ΙΩΑΝΝΗΣ","company_name":null,"adt":"ΑΒ123456","birth_date":"1985-04-12","region":"ΑΤΤΙΚΗΣ","city":"ΑΘΗΝΑ","street":"ΕΡΜΟΥ","street_no":"15","postal_code":"10563","phone":null,"mobile":"6900000000","email":null,"supply_number":"0199999990001","meter_number":null,"invoice_code":null,"sim_number":null,"mobile_msisdn":null}
 PROMPT;
 	}
 

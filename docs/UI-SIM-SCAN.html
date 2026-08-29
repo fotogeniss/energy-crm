@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Μακέτα — Σάρωση barcode κάρτας SIM</title>
+<style>
+:root{
+	--n0:#ffffff; --n25:#fdfdfc; --n50:#f8f8f6; --n100:#f1f1ee; --n150:#e9e8e4;
+	--n200:#dedcd7; --n300:#c6c4bd; --n400:#a3a099; --n500:#6e6c66; --n600:#5c5a55;
+	--n700:#42413d; --n800:#2a2926; --n900:#1a1a18;
+	--p50:#eafaea; --p100:#d2f5d3; --p200:#a5eba7; --p300:#6bdd6d;
+	--p400:#16c217; --p500:#12a413; --p600:#0e8610; --p700:#0b690c;
+	--r50:#fdecec; --r100:#fbd9d9; --r300:#f08a8a; --r500:#d13b3b; --r700:#9c2020;
+	--a50:#fff6e6; --a100:#ffedcc; --a300:#f0c070; --a700:#8a5a10;
+	--b50:#eaf2fd; --b100:#d4e5fb; --b300:#7fb0ee; --b500:#3d82d8; --b700:#1d4f8f;
+	--surface:var(--n0); --ink:var(--n800); --navy:var(--n900); --muted:var(--n500);
+	--line:var(--n200); --line-soft:var(--n100); --line-card:var(--n150);
+	--accent-ink:var(--p700); --accent-wash:var(--p50); --accent-wash-2:var(--p100);
+	--accent-soft:var(--p200); --amber:#f0a020;
+	--fs-18:18px; --fs-16:16px; --fs-15:15px; --fs-14:14px; --fs-13-5:13.5px;
+	--fs-13:13px; --fs-12-5:12.5px; --fs-12:12px; --fs-11:11px; --fs-10:10px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--n50);color:var(--ink);
+	font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+	font-size:var(--fs-14);line-height:1.5;padding:28px 20px 70px}
+.wrap{max-width:1240px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px;color:var(--navy);letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:var(--fs-13);margin:0 0 8px}
+h2{font-size:var(--fs-15);color:var(--navy);margin:36px 0 10px;letter-spacing:-.01em}
+h2 .num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;
+	background:var(--n800);color:#fff;font-size:var(--fs-11);font-weight:800;margin-right:7px;
+	vertical-align:1px}
+p.lead{color:var(--n600);font-size:var(--fs-13);margin:0 0 14px;max-width:82ch}
+.note{background:var(--a50);border:1px solid var(--a300);border-radius:12px;
+	padding:13px 16px;font-size:var(--fs-13);color:var(--n700);margin:16px 0;max-width:100ch}
+.note b{color:var(--a700)}
+.note--red{background:var(--r50);border-color:var(--r300)}
+.note--red b{color:var(--r700)}
+.note--blue{background:var(--b50);border-color:var(--b300)}
+.note--blue b{color:var(--b700)}
+.note--ok{background:var(--p50);border-color:var(--p200)}
+.note--ok b{color:var(--p700)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+	background:var(--n100);padding:1px 5px;border-radius:4px}
+
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+@media(max-width:1080px){.cols3,.cols2{grid-template-columns:1fr}}
+.cap{font-size:var(--fs-12);font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+	color:var(--muted);margin:0 0 7px}
+.cap--ok{color:var(--accent-ink)}
+.cap--warn{color:var(--a700)}
+.cap--blue{color:var(--b700)}
+.hint{font-size:var(--fs-12);color:var(--muted);margin-top:9px}
+
+/* ---- σκηνή: το τηλέφωνο ---- */
+.stage{background:var(--n700);border-radius:14px;padding:22px 18px;display:grid;
+	place-items:start center}
+.phone{background:var(--surface);border-radius:14px;padding:16px;width:100%;max-width:330px;
+	box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.phone--dark{background:#111;padding:0;overflow:hidden}
+
+/* ---- αντίγραφο του πραγματικού πεδίου ---- */
+.ecrm-field{display:flex;flex-direction:column;gap:4px;margin-bottom:13px}
+.ecrm-field__label{font-size:var(--fs-11);font-weight:600;color:var(--muted);
+	display:flex;align-items:center;gap:6px}
+.ecrm-input{border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+	font-size:var(--fs-13);font-family:inherit;color:var(--ink);background:var(--surface);
+	width:100%;min-width:0}
+.ecrm-input--mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.ecrm-input-wrap{display:flex}
+.ecrm-input-wrap .ecrm-input{border-top-right-radius:0;border-bottom-right-radius:0;flex:1}
+.ecrm-input-btn{border:1px solid var(--line);border-left:none;background:var(--n50);
+	border-radius:0 8px 8px 0;padding:0 13px;cursor:pointer;color:var(--muted);
+	display:grid;place-items:center}
+.ecrm-i{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;
+	stroke-linecap:round;stroke-linejoin:round}
+
+/* σημάνσεις προέλευσης */
+.badge{font-size:var(--fs-10);font-weight:800;letter-spacing:.04em;padding:1px 5px;
+	border-radius:5px;line-height:1.5}
+.badge--ai{color:var(--p600);background:var(--p100)}
+.badge--scan{color:var(--b700);background:var(--b100)}
+.filled-ai .ecrm-input{border-color:var(--p200)}
+.filled-scan .ecrm-input{border-color:var(--b300)}
+
+/* ---- η οθόνη κάμερας ---- */
+.cam{aspect-ratio:3/4;background:linear-gradient(160deg,#2a2a28,#111);position:relative;
+	display:grid;place-items:center}
+.cam__card{width:76%;height:44%;border-radius:9px;background:linear-gradient(150deg,#e8e6e0,#cfccc4);
+	box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;flex-direction:column;
+	justify-content:flex-end;padding:11px;gap:6px;transform:rotate(-1.5deg)}
+.cam__bars{height:26px;background:repeating-linear-gradient(90deg,#1a1a18 0 2px,transparent 2px 4px,
+	#1a1a18 4px 5px,transparent 5px 9px,#1a1a18 9px 12px,transparent 12px 13px);border-radius:1px}
+.cam__digits{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9px;
+	color:#3a3a36;letter-spacing:.06em}
+.cam__frame{position:absolute;inset:22% 10%;border-radius:12px;
+	box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
+.cam__frame::before,.cam__frame::after{content:"";position:absolute;width:26px;height:26px;
+	border:3px solid var(--p400)}
+.cam__frame::before{top:-2px;left:-2px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+.cam__frame::after{bottom:-2px;right:-2px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+.cam__hint{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;
+	font-size:var(--fs-12);text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.cam__x{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;
+	background:rgba(0,0,0,.5);color:#fff;border:0;font-size:17px;line-height:1;cursor:pointer}
+
+/* ---- ροή ---- */
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:12px 0 4px}
+.step{background:var(--surface);border:1px solid var(--line-card);border-radius:10px;
+	padding:9px 13px;font-size:var(--fs-12-5);color:var(--ink);display:flex;
+	align-items:center;font-weight:600}
+.step--new{border-color:var(--b300);background:var(--b50);color:var(--b700);font-weight:800}
+.step--ok{border-color:var(--accent-soft);background:var(--accent-wash);color:var(--accent-ink);font-weight:800}
+.step--alt{border-style:dashed;color:var(--n600);background:var(--n25)}
+.arrow{display:flex;align-items:center;padding:0 7px;color:var(--n300);font-weight:800}
+.branch{margin-left:26px;padding-left:16px;border-left:2px solid var(--line-card)}
+
+table{border-collapse:collapse;width:100%;max-width:1000px;background:var(--surface);
+	border:1px solid var(--line-card);border-radius:12px;overflow:hidden;margin-top:10px}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line-soft);
+	font-size:var(--fs-13);vertical-align:top}
+th{background:var(--n50);font-size:var(--fs-11);font-weight:800;letter-spacing:.05em;
+	text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+td.q{font-weight:700;color:var(--navy);white-space:nowrap}
+.foot{margin-top:38px;padding-top:16px;border-top:1px solid var(--line);
+	font-size:var(--fs-12);color:var(--muted);max-width:100ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Σάρωση barcode — κάρτα SIM</h1>
+<p class="sub">Μακέτα §1.8 · 29/08/2026 · οδηγός αίτησης, ενότητα Κινητής · ερώτημα ιδιοκτήτη, ίδια μέρα</p>
+
+<div class="note note--blue">
+<b>Τι είναι, με μία πρόταση.</b> Ένα κουμπί δίπλα στο πεδίο «Αριθμός Κάρτας SIM».
+Ο πωλητής το πατά, φωτογραφίζει την πλαστική βάση, και το πεδίο γεμίζει — από το
+barcode αν διαβάζεται, αλλιώς από το AI. <b>Μία λήψη, δύο προσπάθειες.</b>
+</div>
+
+<div class="note note--ok">
+<b>Το μισό υπάρχει ήδη.</b> Το commit (173) έμαθε στον εξαγωγέα να διαβάζει κάρτα
+SIM (<code>sim_number</code>, <code>mobile_msisdn</code>, είδος <code>sim_card</code>),
+και το <code>extra_json</code> γεμίζει χωρίς να σβήνει τον υπόλοιπο σάκο. Άρα η
+διαδρομή του AI <b>δουλεύει από σήμερα</b>. Αυτή η μακέτα προσθέτει μόνο τον
+<b>γρήγορο δρόμο</b>: το barcode, που είναι ακαριαίο και δωρεάν.
+</div>
+
+<h2><span class="num">1</span>Γιατί αυτό το πεδίο και όχι κάποιο άλλο</h2>
+
+<p class="lead">Είχα προτείνει να κλείσει το θέμα barcode, επειδή ο αριθμός παροχής
+διαβάζεται ήδη από το AI. Ήταν σωστή μέτρηση σε λάθος σημείο. Το ICCID είναι
+<b>άλλη ιστορία</b>:</p>
+
+<table>
+	<tr><th>Πεδίο</th><th>Μήκος</th><th>Έλεγχος λάθους</th><th>Πότε φαίνεται το λάθος</th></tr>
+	<tr>
+		<td class="q">ΑΦΜ</td><td>9 ψηφία</td>
+		<td><b style="color:var(--p700)">Ναι</b> — <code>ECRM_Validate::afm()</code>, έλεγχος ψηφίου</td>
+		<td>Αμέσως, στη φόρμα</td>
+	</tr>
+	<tr>
+		<td class="q">Αρ. παροχής</td><td>~11–13</td>
+		<td>Όχι, αλλά το διαβάζει ήδη το AI από τον λογαριασμό</td>
+		<td>—</td>
+	</tr>
+	<tr style="background:var(--r50)">
+		<td class="q">Αρ. κάρτας SIM<br>(ICCID)</td><td><b>19–20 ψηφία</b></td>
+		<td><b style="color:var(--r700)">Κανένας.</b> Πληκτρολογείται με το χέρι, ελεύθερο κείμενο</td>
+		<td><b style="color:var(--r700)">Μέρες αργότερα, στον πάροχο</b> — η ενεργοποίηση αποτυγχάνει και ο πωλητής δεν βλέπει το γιατί</td>
+	</tr>
+</table>
+
+<p class="hint">Πηγή: <code>public/class-ecrm-shortcodes.php:724</code> —
+<code>$ecrm_field( 'sim_number', 'Αριθμός Κάρτας SIM', 'text', true )</code>, δηλαδή
+απλό <code>&lt;input type="text"&gt;</code> χωρίς κανέναν έλεγχο.</p>
+
+<h2><span class="num">2</span>Πού ζει το κουμπί</h2>
+
+<p class="lead">Δεν εφευρίσκεται τίποτα. Το μοτίβο «input με κουμπί κολλητά δεξιά»
+υπάρχει ήδη και χρησιμοποιείται από την <b>αναζήτηση ΑΦΜ</b>
+(<code>ecrm-form.css:896–904</code>, <code>class-ecrm-shortcodes.php:510</code>).
+Το barcode γίνεται ο δεύτερος χρήστης του — μηδέν νέο CSS μοτίβο.</p>
+
+<div class="cols2">
+	<div>
+		<p class="cap">Πριν — σήμερα</p>
+		<div class="stage">
+			<div class="phone">
+				<label class="ecrm-field">
+					<span class="ecrm-field__label">Αριθμός Κινητού</span>
+					<input class="ecrm-input" value="6944123456">
+				</label>
+				<label class="ecrm-field" style="margin-bottom:0">
+					<span class="ecrm-field__label">Αριθμός Κάρτας SIM</span>
+					<input class="ecrm-input ecrm-input--mono" placeholder="">
+				</label>
+			</div>
+		</div>
+		<p class="hint">Κενό κουτί. Ο πωλητής διαβάζει 19 ψηφία από πλαστικό
+		και τα πληκτρολογεί σε τηλέφωνο, όρθιος, στο σπίτι του πελάτη.</p>
+	</div>
+
+	<div>
+		<p class="cap cap--blue">Μετά</p>
+		<div class="stage">
+			<div class="phone">
+				<label class="ecrm-field">
+					<span class="ecrm-field__label">Αριθμός Κινητού</span>
+					<input class="ecrm-input" value="6944123456">
+				</label>
+				<label class="ecrm-field" style="margin-bottom:0">
+					<span class="ecrm-field__label">Αριθμός Κάρτας SIM</span>
+					<span class="ecrm-input-wrap">
+						<input class="ecrm-input ecrm-input--mono" placeholder="">
+						<button type="button" class="ecrm-input-btn" aria-label="Σάρωση barcode">
+							<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true">
+								<path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/>
+								<path d="M7 8v8M10 8v8M13.5 8v8M17 8v8"/>
+							</svg>
+						</button>
+					</span>
+				</label>
+			</div>
+		</div>
+		<p class="hint">Ίδιο πεδίο, ίδιο πλάτος, ένα κουμπί. Το πεδίο μένει
+		<b>πλήρως πληκτρολογήσιμο</b> — το κουμπί δεν αντικαθιστά τίποτα.</p>
+	</div>
+</div>
+
+<h2><span class="num">3</span>Η ροή: μία λήψη, δύο προσπάθειες</h2>
+
+<div class="flow">
+	<div class="step">πάτημα κουμπιού</div><div class="arrow">→</div>
+	<div class="step step--new">η κάμερα του τηλεφώνου</div><div class="arrow">→</div>
+	<div class="step step--new"><code style="background:none">BarcodeDetector</code></div>
+</div>
+
+<div class="branch">
+	<div class="flow">
+		<div class="step step--ok">βρέθηκε → το πεδίο γεμίζει</div>
+		<div class="arrow">·</div>
+		<div class="step" style="border:0;background:none;padding-left:0">ακαριαίο, δωρεάν, χωρίς δίκτυο</div>
+	</div>
+	<div class="flow">
+		<div class="step step--alt">δεν βρέθηκε → η ΙΔΙΑ φωτογραφία στο AI</div>
+		<div class="arrow">→</div>
+		<div class="step step--ok">το πεδίο γεμίζει</div>
+	</div>
+</div>
+
+<div class="note note--ok">
+<b>Γιατί η φωτογραφία και όχι ζωντανό βίντεο.</b> Ζωντανό στόχαστρο θα διάβαζε πιο
+γρήγορα ένα θολό barcode — αλλά <b>δεν αφήνει τίποτα πίσω του</b>. Με φωτογραφία,
+όταν το barcode είναι γρατζουνισμένο ή τσαλακωμένο, <b>η ίδια λήψη πάει στο AI</b>
+που διαβάζει τα τυπωμένα ψηφία από κάτω. Το δίχτυ είναι δωρεάν, επειδή το αρχείο
+υπάρχει ήδη. Με βίντεο θα έπρεπε να πιάσουμε καρέ επίτηδες — περισσότερος κώδικας
+για χειρότερο δίχτυ.
+<br><br>
+Είναι και το <b>υπάρχον</b> μοτίβο: <code>class-ecrm-shortcodes.php:420</code> έχει
+ήδη <code>&lt;input type="file" capture="environment"&gt;</code> για τη λήψη
+εγγράφων. Το κουμπί barcode χρησιμοποιεί τον ίδιο μηχανισμό.
+</div>
+
+<h2><span class="num">4</span>Οι τρεις καταστάσεις του πεδίου</h2>
+
+<div class="cols3">
+	<div>
+		<p class="cap">Κενό</p>
+		<div class="stage"><div class="phone">
+			<label class="ecrm-field" style="margin-bottom:0">
+				<span class="ecrm-field__label">Αριθμός Κάρτας SIM</span>
+				<span class="ecrm-input-wrap">
+					<input class="ecrm-input ecrm-input--mono" placeholder="">
+					<button type="button" class="ecrm-input-btn" aria-label="Σάρωση barcode">
+						<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><path d="M7 8v8M10 8v8M13.5 8v8M17 8v8"/></svg>
+					</button>
+				</span>
+			</label>
+		</div></div>
+		<p class="hint">Όπως κάθε άλλο πεδίο.</p>
+	</div>
+
+	<div>
+		<p class="cap cap--blue">Γέμισε από barcode</p>
+		<div class="stage"><div class="phone filled-scan">
+			<label class="ecrm-field" style="margin-bottom:0">
+				<span class="ecrm-field__label">Αριθμός Κάρτας SIM
+					<span class="badge badge--scan">SCAN</span></span>
+				<span class="ecrm-input-wrap">
+					<input class="ecrm-input ecrm-input--mono" value="8930012345678901234">
+					<button type="button" class="ecrm-input-btn" aria-label="Σάρωση barcode">
+						<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><path d="M7 8v8M10 8v8M13.5 8v8M17 8v8"/></svg>
+					</button>
+				</span>
+			</label>
+		</div></div>
+		<p class="hint">Μπλε σήμανση, όχι πράσινη. Το barcode <b>δεν είναι AI</b> —
+		είναι ανάγνωση μηχανής, χωρίς περιθώριο λάθους. Δύο διαφορετικά πράγματα,
+		δύο διαφορετικές ετικέτες.</p>
+	</div>
+
+	<div>
+		<p class="cap cap--ok">Γέμισε από AI</p>
+		<div class="stage"><div class="phone filled-ai">
+			<label class="ecrm-field" style="margin-bottom:0">
+				<span class="ecrm-field__label">Αριθμός Κάρτας SIM
+					<span class="badge badge--ai">AI</span></span>
+				<span class="ecrm-input-wrap">
+					<input class="ecrm-input ecrm-input--mono" value="8930012345678901234">
+					<button type="button" class="ecrm-input-btn" aria-label="Σάρωση barcode">
+						<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><path d="M7 8v8M10 8v8M13.5 8v8M17 8v8"/></svg>
+					</button>
+				</span>
+			</label>
+		</div></div>
+		<p class="hint">Η <b>υπάρχουσα</b> σήμανση <code>.ecrm-field.ai-mark</code>,
+		αναλλοίωτη. Φεύγει μόλις ο πωλητής αγγίξει το ίδιο πεδίο — ίδιος κανόνας
+		με σήμερα.</p>
+	</div>
+</div>
+
+<h2><span class="num">5</span>Η οθόνη λήψης, και πού ΔΕΝ εμφανίζεται τίποτα</h2>
+
+<div class="cols2">
+	<div>
+		<p class="cap cap--blue">Στο κινητό — η κάμερα του συστήματος</p>
+		<div class="stage" style="padding:18px">
+			<div class="phone phone--dark">
+				<div class="cam">
+					<div class="cam__card">
+						<div class="cam__bars"></div>
+						<div class="cam__digits">8930 0123 4567 8901 234</div>
+					</div>
+					<div class="cam__frame"></div>
+					<button class="cam__x" aria-label="Άκυρο">×</button>
+					<div class="cam__hint">Στόχευσε το barcode της SIM</div>
+				</div>
+			</div>
+		</div>
+		<p class="hint">Η κάμερα είναι <b>του τηλεφώνου</b>, όχι δική μας οθόνη —
+		<code>capture="environment"</code>. Άρα κληρονομεί αυτόφωτο, ζουμ και εστίαση
+		δωρεάν, και ο πωλητής ξέρει ήδη πώς δουλεύει.</p>
+	</div>
+
+	<div>
+		<p class="cap cap--warn">Σε desktop — το κουμπί λείπει</p>
+		<div class="stage">
+			<div class="phone" style="max-width:100%">
+				<label class="ecrm-field" style="margin-bottom:0">
+					<span class="ecrm-field__label">Αριθμός Κάρτας SIM</span>
+					<input class="ecrm-input ecrm-input--mono" placeholder="">
+				</label>
+			</div>
+		</div>
+		<div class="note" style="margin-top:12px">
+		<b>Δεν είναι νέα απόφαση — είναι η ίδια, εφαρμοσμένη.</b> Στις 24/08 ο
+		ιδιοκτήτης ζήτησε ρητά να κρύβεται το κουμπί λήψης φωτογραφίας σε desktop:
+		«σε desktop δεν έχει νόημα κουμπί λήψης φωτογραφίας»
+		(<code>ecrm-form.css:798–806</code>). Το κριτήριο εκεί δεν είναι το πλάτος
+		οθόνης αλλά <code>@media (hover:hover) and (pointer:fine)</code>, ώστε ένα
+		tablet σε landscape να το βλέπει και ένα στενό παράθυρο desktop όχι. Το
+		barcode ακολουθεί <b>τον ίδιο κανόνα, με τον ίδιο selector</b>.
+		</div>
+	</div>
+</div>
+
+<h2><span class="num">6</span>Έξι αποφάσεις</h2>
+<p class="lead">Καθεμία αλλάζει με μία λέξη σου. Τις γράφω για να είναι ορατές,
+όχι θαμμένες στον κώδικα.</p>
+
+<table>
+	<tr><th>Ερώτημα</th><th>Η επιλογή της μακέτας</th><th>Γιατί</th></tr>
+	<tr>
+		<td class="q">Βιβλιοθήκη ή native;</td>
+		<td><b>Native <code>BarcodeDetector</code>, μηδέν bytes.</b></td>
+		<td>Είπες «σχεδόν όλοι Android», όπου υπάρχει. Το <code>NoRemoteFontsTest</code> απαγορεύει CDN, άρα βιβλιοθήκη θα έμπαινε τοπικά: <b>~60–80KB gzip</b> πάνω στα ~174KB που μέτρησα στην κλειστή πρόταση #3 — για μια συσκευή που δεν έχουν.</td>
+	</tr>
+	<tr>
+		<td class="q">Τι γίνεται αν ο browser δεν το έχει;</td>
+		<td><b>Τίποτα ορατό.</b> Το κουμπί δουλεύει κανονικά — απλώς η φωτογραφία πάει κατευθείαν στο AI.</td>
+		<td>Ο πωλητής δεν χρειάζεται να μάθει τι είναι το <code>BarcodeDetector</code>. Ένα μήνυμα «ο browser σου δεν υποστηρίζει…» είναι πληροφορία για μηχανικό, όχι για πωλητή σε σαλόνι.</td>
+	</tr>
+	<tr>
+		<td class="q">Ίδια σήμανση με το AI;</td>
+		<td><b>Όχι. Μπλε «SCAN» δίπλα στο πράσινο «AI».</b></td>
+		<td>Το barcode διαβάζεται από μηχανή και είναι <em>σωστό ή τίποτα</em>. Το AI μαντεύει ψηφία από εικόνα και μπορεί να κάνει λάθος. Ίδια ετικέτα θα έλεγε ψέματα για το πόσο πρέπει να ελέγξει ο πωλητής.</td>
+	</tr>
+	<tr>
+		<td class="q">Πατάει τιμή που υπάρχει;</td>
+		<td><b>Ναι — αλλά μόνο εδώ.</b> Ο πωλητής πάτησε το κουμπί· είναι ρητή ενέργεια.</td>
+		<td>Διαφορετικό από την αυτόματη εξαγωγή (<code>keepExisting</code>), που τρέχει χωρίς να τη ζητήσει κανείς. Ένα κουμπί που πατήθηκε και δεν έκανε τίποτα επειδή «υπήρχε ήδη τιμή» είναι σπασμένο κουμπί.</td>
+	</tr>
+	<tr>
+		<td class="q">Μόνο για SIM;</td>
+		<td><b>Όχι — γενική ικανότητα.</b> Ένα <code>data-scan="&lt;πεδίο&gt;"</code> που κουμπώνει σε οποιοδήποτε input.</td>
+		<td>Η SIM είναι ο πρώτος χρήστης. Ο μετρητής είναι ο δεύτερος <em>αν</em> αποδειχθεί ότι έχει barcode. §1.13: δεν χτίζεται τώρα, αλλά δεν κλείνει ο δρόμος.</td>
+	</tr>
+	<tr>
+		<td class="q">Τι τύποι barcode;</td>
+		<td><b>Code 128 και Code 39</b> — και ό,τι άλλο δίνει δωρεάν ο detector.</td>
+		<td>Το ICCID σε βάση SIM τυπώνεται τυπικά σε Code 128. Ο περιορισμός τύπων δεν κοστίζει τίποτα και αποτρέπει το να διαβαστεί κατά λάθος κάποιο άσχετο barcode της συσκευασίας.</td>
+	</tr>
+</table>
+
+<div class="note note--red">
+<b>Το ένα πράγμα που δεν έχω επιβεβαιώσει, και δεν το μαντεύω.</b> Ότι το barcode
+στη βάση της SIM <b>είναι</b> το ICCID και όχι κάποιος άλλος εσωτερικός κωδικός του
+παρόχου. Το ίδιο λάθος έκανα με τον λογαριασμό ρεύματος, όπου ο κωδικός πληρωμής
+δεν είναι ο αριθμός παροχής. <b>Πριν γραφτεί ο κώδικας:</b> πάρε μια κάρτα SIM
+Orizon, σάρωσε το barcode με οποιαδήποτε δωρεάν εφαρμογή, και πες μου αν το νούμερο
+που βγαίνει είναι ίδιο με τα ψηφία που είναι τυπωμένα από κάτω. Αν είναι — γράφουμε.
+Αν όχι — το barcode διαβάζει λάθος πεδίο και μένει μόνο η διαδρομή του AI, που ήδη
+δουλεύει από το (173).
+</div>
+
+<h2><span class="num">7</span>Τι χρειάζεται στον server</h2>
+
+<div class="note note--ok">
+<b>Τίποτα.</b> Το (173) έβαλε ήδη τα <code>sim_number</code> / <code>mobile_msisdn</code>
+στα πεδία του εξαγωγέα, το είδος εγγράφου <code>sim_card</code>, και τον τρίτο κλάδο
+της <code>applyToRecords()</code> που γράφει στο <code>extra_json</code> χωρίς να
+σβήνει τον υπόλοιπο σάκο. Το barcode είναι <b>αμιγώς frontend</b>: γεμίζει το ίδιο
+πεδίο φόρμας που θα γέμιζε ο πωλητής με το χέρι, και αποθηκεύεται από την ίδια
+διαδρομή. Καμία migration, καμία νέα στήλη, καμία νέα διαδρομή.
+</div>
+
+<div class="foot">
+Μακέτα κατά §1.8 — καμία γραμμή κώδικα πριν από ρητή έγκριση.
+Αρχεία που θα αγγιχτούν: <code>public/class-ecrm-shortcodes.php</code> (το κουμπί
+στο πεδίο), <code>public/assets/ecrm-form.js</code> (η λήψη και η ανάγνωση),
+<code>public/assets/ecrm-form.css</code> (η σήμανση SCAN). Το
+<code>ecrm-form.js</code> <b>αγγίζεται</b>, άρα αυτό το commit <b>χρειάζεται
+<code>wizard-smoke</code></b> — σε αντίθεση με τα (170)–(173).
+</div>
+
+</div>
+</body>
+</html>

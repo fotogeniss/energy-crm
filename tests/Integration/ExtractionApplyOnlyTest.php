@@ -180,6 +180,90 @@ final class ExtractionApplyOnlyTest extends IntegrationTestCase
         self::assertSame(400, $response->get_status());
     }
 
+    // --- ο σάκος extra_json (κινητή τηλεφωνία) -------------------------------
+
+    /**
+     * Το ICCID καταλήγει ΜΕΣΑ στο `extra_json`, όχι σε στήλη.
+     *
+     * Η κινητή δεν έχει δικές της στήλες: `sim_number` και `mobile_msisdn`
+     * ζουν στον σάκο που γεμίζει το έντυπο του παρόχου. Ο εξαγωγέας
+     * επιστρέφει επίπεδα κλειδιά και δεν ξέρει τίποτα από αυτό -- ο
+     * διαχωρισμός γίνεται στον controller.
+     */
+    public function testSimNumberIsWrittenIntoTheExtraBag(): void
+    {
+        $contractId = $this->makeContract(['status' => 'draft', 'mobile' => '6900000000']);
+
+        $response = $this->extract([
+            'contract_id' => $contractId,
+            'apply'       => '1',
+            'data'        => wp_json_encode(['sim_number' => '8930012345678901234']),
+        ]);
+
+        self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
+
+        // Στη λίστα μπαίνει το ΚΛΕΙΔΙ, όχι το δοχείο: ο πωλητής δεν αναγνωρίζει
+        // «extra_json» ως πεδίο, και το «συμπληρώθηκαν N πεδία» πρέπει να
+        // μετράει ό,τι βλέπει στην οθόνη.
+        self::assertContains('sim_number', $response->get_data()['applied']);
+        self::assertNotContains('extra_json', $response->get_data()['applied']);
+
+        self::assertSame('8930012345678901234', $this->extraOf($contractId)['sim_number'] ?? null);
+    }
+
+    /**
+     * ΤΟ ΚΡΙΣΙΜΟ: ό,τι υπάρχει ήδη στον σάκο επιβιώνει.
+     *
+     * Δεν υπάρχει «ενημέρωσε ένα κλειδί» σε στήλη JSON -- κάθε γράψιμο
+     * αντικαθιστά ολόκληρο το κείμενο. Ένα `sim_number` γραμμένο πάνω σε σάκο
+     * που δεν διαβάστηκε πρώτα θα έσβηνε σιωπηλά τις απαντήσεις του εντύπου,
+     * χωρίς σφάλμα πουθενά και χωρίς να το δει κανείς μέχρι να τυπωθεί λάθος
+     * χαρτί.
+     */
+    public function testTheRestOfTheExtraBagSurvives(): void
+    {
+        $contractId = $this->makeContract([
+            'status'      => 'draft',
+            'mobile'      => '6900000000',
+            'energy_type' => 'mobile',
+            'extra'       => ['mobile_offer' => 'family', 'subsidy_type' => 'Έκπτωση Παγίου'],
+        ]);
+
+        self::assertSame('family', $this->extraOf($contractId)['mobile_offer'] ?? null, 'Το fixture δεν έγραψε extra.');
+
+        $this->extract([
+            'contract_id' => $contractId,
+            'apply'       => '1',
+            'data'        => wp_json_encode(['sim_number' => '8930012345678901234']),
+        ]);
+
+        $extra = $this->extraOf($contractId);
+
+        self::assertSame('8930012345678901234', $extra['sim_number'] ?? null);
+        self::assertSame('family', $extra['mobile_offer'] ?? null, 'Ο υπόλοιπος σάκος σβήστηκε.');
+        self::assertSame('Έκπτωση Παγίου', $extra['subsidy_type'] ?? null, 'Ο υπόλοιπος σάκος σβήστηκε.');
+    }
+
+    /** Ό,τι πληκτρολόγησε άνθρωπος μέσα στον σάκο νικά ό,τι διάβασε μοντέλο. */
+    public function testAnExistingSimNumberIsNeverOverwritten(): void
+    {
+        $contractId = $this->makeContract([
+            'status'      => 'draft',
+            'mobile'      => '6900000000',
+            'energy_type' => 'mobile',
+            'extra'       => ['sim_number' => '8930099999999999999'],
+        ]);
+
+        $response = $this->extract([
+            'contract_id' => $contractId,
+            'apply'       => '1',
+            'data'        => wp_json_encode(['sim_number' => '8930012345678901234']),
+        ]);
+
+        self::assertNotContains('sim_number', $response->get_data()['applied']);
+        self::assertSame('8930099999999999999', $this->extraOf($contractId)['sim_number'] ?? null);
+    }
+
     // --- fixtures ------------------------------------------------------------
 
     /**
@@ -197,6 +281,26 @@ final class ExtractionApplyOnlyTest extends IntegrationTestCase
         self::assertGreaterThan(0, $data['contract_id'] ?? 0, 'Το fixture δεν αποθηκεύτηκε.');
 
         return (int) $data['contract_id'];
+    }
+
+    /**
+     * Ο σάκος `extra_json` της σύμβασης, αποκωδικοποιημένος.
+     *
+     * @return array<string, mixed>
+     */
+    private function extraOf(int $contractId): array
+    {
+        global $wpdb;
+
+        $raw = (string) $wpdb->get_var($wpdb->prepare(
+            'SELECT extra_json FROM %i WHERE id = %d',
+            Tables::name(Tables::CONTRACTS),
+            $contractId
+        ));
+
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**
