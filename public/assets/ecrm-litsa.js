@@ -42,8 +42,7 @@ import { api, esc } from '@energy-crm/util';
 			return;
 		}
 		body.innerHTML = history.map(function (m) {
-			return '<div class="ecrm-msg ecrm-msg--' + (m.role === 'user' ? 'me' : 'bot') + '">' + esc(m.content).replace(/
-/g, '<br>') + '</div>';
+			return '<div class="ecrm-msg ecrm-msg--' + (m.role === 'user' ? 'me' : 'bot') + '">' + esc(m.content).replace(/\n/g, '<br>') + '</div>';
 		}).join('') + (busy ? '<div class="ecrm-msg ecrm-msg--bot ecrm-msg--typing"><span></span><span></span><span></span></div>' : '');
 		body.scrollTop = body.scrollHeight;
 	}

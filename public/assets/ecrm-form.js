@@ -367,7 +367,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			if (!card) return;
 
 			var name = providerName();
-			if (!name) { card.hidden = true; applyTemplateFilter([]); return; }
+			if (!name) { card.hidden = true; applyTemplateFilter([]); refreshDocOverlay(null); return; }
 
 			var qs = '?provider=' + encodeURIComponent(name) +
 				'&energy=' + encodeURIComponent(state.energy_type || 'power') +
@@ -378,6 +378,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			if (provFieldsCache[qs]) {
 				paintProviderFields(card, provFieldsCache[qs]);
 				applyTemplateFilter(provFieldsCache[qs].main_inputs);
+				refreshDocOverlay(provFieldsCache[qs]);
 				return;
 			}
 
@@ -388,6 +389,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 					provFieldsCache[qs] = d;
 					paintProviderFields(card, d);
 					applyTemplateFilter(d.main_inputs);
+					refreshDocOverlay(d);
 				})
 				.catch(function () { card.hidden = true; });
 		}
@@ -536,6 +538,217 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			});
 
 			card.hidden = false;
+		}
+
+		// ── «Πάνω στο έντυπο» ─────────────────────────────────────────────
+		// Ζητήθηκε ρητά 30/08: «να εμφανίζεται το έγγραφο της αίτησης και ο
+		// υπάλληλος να συμπληρώνει κατευθείαν πάνω στην αίτηση». Το ίδιο
+		// assets/forms/{template}.json+jpg που ήδη εμπιστεύεται η εκτύπωση
+		// (class-ecrm-formfill.php) τοποθετεί ΖΩΝΤΑΝΑ input πάνω στην εικόνα
+		// του εντύπου, αντί μόνο στο τελικό PDF.
+		//
+		// Καμία δεύτερη πηγή αλήθειας: τα overlay input ΔΕΝ κρατάνε δική τους
+		// τιμή -- γράφουν κατευθείαν στο πραγματικό .ecrm-input και πυροδοτούν
+		// το ίδιο 'input'/'change' event, οπότε dup-check, το «ai-mark» του
+		// AI, η Γρήγορη σύνοψη και το collect() συνεχίζουν να δουλεύουν
+		// ΑΝΑΛΛΟΙΩΤΑ, ό,τι όψη κι αν βλέπει ο συνεργάτης.
+		//
+		// Ρητά περιορισμένο σε Protergia για αυτόν τον πρώτο γύρο (ζητήθηκε
+		// έτσι: «δεν θέλω να χαλάσει το υπάρχον») -- ο μηχανισμός θα δούλευε
+		// γενικά (κάθε πάροχος έχει ήδη JSON+JPG), αλλά η ΕΜΦΑΝΙΣΗ κλειδώνεται
+		// εδώ (docOverlaySupported), όχι στο backend, ώστε να ανοίγει σε
+		// επόμενους παρόχους χωρίς αλλαγή στο REST.
+		//
+		// Μόνο σελίδα 1 προς το παρόν, και μόνο πεδία με ΑΚΡΙΒΩΣ ένα .ecrm-input
+		// από πίσω -- ένα πεδίο εντύπου όπως το «Ονοματεπώνυμο» που αντιστοιχεί
+		// σε ΔΥΟ inputs (Όνομα+Επίθετο) δεν έχει ξεκάθαρο ένα κουτί να πάει,
+		// οπότε μένει εκτός mockup, όχι μαντεψιά.
+		var docOverlayBuilt = null; // template key που είναι ήδη χτισμένο, ή null
+		var docSlots = []; // [{ input, target }]
+
+		function docOverlaySupported(d) {
+			return !!(d && /^protergia/.test(d.template || '') && d.positions
+				&& d.positions.fields && Object.keys(d.positions.fields).length && d.positions.pageSize);
+		}
+
+		// ΔΙΟΡΘΩΘΗΚΕ 30/08 (screenshot ιδιοκτήτη μέσα στο πραγματικό έντυπο --
+		// «να συμπληρώνονται και αυτά τα σημεία», έλειπαν Τηλέφωνο/Κινητό/
+		// E-Mail επικοινωνίας, Τ.Κ/Πόλη αποστολής, Υφιστάμενος Προμηθευτής).
+		//
+		// Η πρώτη γραφή υπέθετε ότι το `d.fields` είναι keyed by fill key
+		// (`d.fields[fillKey]`) -- λάθος. Το `ProviderFormFields::forTemplate()`
+		// γυρίζει `$out[$input] = [...]`: το κλειδί είναι το όνομα του ΔΙΚΟΥ ΜΑΣ
+		// input (π.χ. "contact_phone"), όχι το fill key του εντύπου
+		// ("tilefono_epikoinonias") -- ίδιο σκεπτικό με το paintProviderFields
+		// παραπάνω, που γι' αυτό δουλεύει σωστά ήδη (διαβάζει Object.keys(d.fields)
+		// σαν ονόματα input, όχι fill keys). Κάθε είσοδος όμως κρατάει
+		// `.source` = το fill key που απαντάει -- αρκεί να αντιστραφεί το
+		// mapping για να βρεθεί ποιο input αντιστοιχεί σε ποιο fill key.
+		//
+		// Ένα fill key με ΔΥΟ inputs πίσω (π.χ. onomateponymo_epikoinonias =
+		// contact_first_name + contact_last_name) σκόπιμα ΔΕΝ λύνεται εδώ --
+		// ίδιος κανόνας με το column_inputs.length===1 παρακάτω, τεκμηριωμένος
+		// ήδη ως v1 όριο.
+		// ΕΠΕΚΤΑΘΗΚΕ 30/08 (ζητήθηκε ρητά: «βάλε και διεύθυνση αποστολής
+		// λογαριασμού και διεύθυνση παροχής»): και οι δύο είναι σύνθετα πεδία
+		// -- ΔΥΟ inputs πίσω από ΕΝΑ σημείο του χαρτιού (Οδός + Αριθμός), ίδιο
+		// σχήμα με τη διεύθυνση κατοικίας. Αντί να μείνουν εκτός σαν πριν,
+		// παίρνουν ΔΥΟ μικρά input δίπλα-δίπλα στο ΙΔΙΟ σημείο -- κάθε ένα
+		// bound στο δικό του πραγματικό .ecrm-input, όχι μάντεμα/split ενός
+		// string (μια οδός σαν «28ης Οκτωβρίου 55» δεν κόβεται αξιόπιστα σε
+		// «δρόμος» + «αριθμός» με regex). Τρία ή περισσότερα inputs πίσω από
+		// ένα fill key (π.χ. πλήρης διεύθυνση = οδός+αριθμός+πόλη+Τ.Κ) μένουν
+		// εκτός v1 -- τα Τ.Κ/Πόλη ήδη καλύπτονται σαν ξεχωριστά σημεία του
+		// εντύπου, οπότε δεν χάνεται τίποτα.
+		function docOverlayInputNames(fillKey, d) {
+			var matches = [];
+			if (d.fields) {
+				Object.keys(d.fields).forEach(function (name) {
+					if (d.fields[name].source === fillKey) matches.push(name);
+				});
+			}
+			if (matches.length) return matches;
+
+			return (d.column_inputs || {})[fillKey] || [];
+		}
+
+		function docOverlayInputLabel(name, d) {
+			if (d.fields && d.fields[name]) return d.fields[name].label;
+			var field = root.querySelector('[data-for="' + name + '"]');
+			var lbl = field && field.querySelector('.ecrm-field__label');
+			return lbl ? lbl.textContent.replace(/\*$/, '').trim() : name;
+		}
+
+		function docOverlayField(fillKey, d) {
+			var names = docOverlayInputNames(fillKey, d);
+			if (names.length !== 1) return null;
+			return root.querySelector('[data-for="' + names[0] + '"]');
+		}
+
+		function docFieldLabel(fillKey, d) {
+			var names = docOverlayInputNames(fillKey, d);
+			if (names.length === 1) return docOverlayInputLabel(names[0], d);
+			return fillKey;
+		}
+
+		function docShowView(view) {
+			var classic = root.querySelector('[data-classic-view]');
+			var docSec  = root.querySelector('[data-doc-overlay]');
+			if (classic) classic.hidden = (view === 'doc');
+			if (docSec) docSec.hidden = (view !== 'doc');
+			root.querySelectorAll('.ecrm-docsw__tab').forEach(function (t) {
+				t.classList.toggle('is-on', t.getAttribute('data-docview') === view);
+			});
+			if (view === 'doc') syncDocOverlayValues();
+		}
+
+		root.querySelectorAll('.ecrm-docsw__tab').forEach(function (tab) {
+			tab.addEventListener('click', function () { docShowView(tab.getAttribute('data-docview')); });
+		});
+
+		function buildDocOverlay(d) {
+			var box = root.querySelector('[data-doc-overlay] [data-docoverlay-box]');
+			var img = root.querySelector('[data-doc-overlay] [data-docoverlay-img]');
+			if (!box || !img) return;
+
+			box.querySelectorAll('.ecrm-docfld').forEach(function (n) { n.remove(); });
+			docSlots = [];
+
+			img.src = (ECRM.formsUrl || '') + d.template + '-1.jpg';
+
+			var pw = d.positions.pageSize.w, ph = d.positions.pageSize.h;
+			var fields = d.positions.fields;
+
+			Object.keys(fields).forEach(function (fillKey) {
+				var pos = fields[fillKey];
+				if ((pos.page || 1) !== 1) return; // σελίδα 1 μόνο προς το παρόν
+
+				var names = docOverlayInputNames(fillKey, d);
+				if (!names.length || names.length > 2) return; // άγνωστο, ή πολύ σύνθετο για v1
+
+				var targets = names.map(function (n) {
+					var field = root.querySelector('[data-for="' + n + '"]');
+					return field ? field.querySelector('.ecrm-input') : null;
+				});
+				// Κάθε input πρέπει να υπάρχει ΚΑΙ να είναι πραγματικό <input> --
+				// ένα από τα δύο σαν <select> (π.χ. dropdown) αναιρεί όλη τη
+				// σύνθετη θέση, όχι μόνο το ένα κουτί.
+				if (targets.some(function (t) { return !t || t.tagName !== 'INPUT'; })) return;
+
+				var multi = names.length > 1;
+				var wrap = document.createElement('div');
+				wrap.className = 'ecrm-docfld' + (multi ? ' ecrm-docfld--multi' : '');
+				wrap.style.left = (pos.x / pw * 100) + '%';
+				wrap.style.top  = (pos.y / ph * 100) + '%';
+
+				var tag = document.createElement('span');
+				tag.className = 'ecrm-docfld__tag';
+				tag.textContent = multi ? names.map(function (n) { return docOverlayInputLabel(n, d); }).join(' / ') : docFieldLabel(fillKey, d);
+				wrap.appendChild(tag);
+
+				targets.forEach(function (target, i) {
+					var placeholder = multi ? docOverlayInputLabel(names[i], d) : docFieldLabel(fillKey, d);
+
+					var input = document.createElement('input');
+					input.type = 'text';
+					input.className = 'ecrm-docfld__i';
+					input.value = target.value || '';
+					input.placeholder = placeholder;
+
+					input.addEventListener('input', function () {
+						target.value = input.value;
+						target.dispatchEvent(new Event('input', { bubbles: true }));
+					});
+					input.addEventListener('change', function () {
+						target.dispatchEvent(new Event('change', { bubbles: true }));
+					});
+
+					wrap.appendChild(input);
+					docSlots.push({ input: input, target: target });
+				});
+
+				box.appendChild(wrap);
+			});
+		}
+
+		function syncDocOverlayValues() {
+			docSlots.forEach(function (s) {
+				if (document.activeElement !== s.input) s.input.value = s.target.value || '';
+			});
+		}
+
+		// Ζωντανή αλλαγή οπουδήποτε (πληκτρολόγηση στην κλασική φόρμα,
+		// autofill από αναζήτηση ΑΦΜ, autofill από το AI του Βήματος 2)
+		// κρατάει τα overlay input συγχρονισμένα ΚΑΙ όσο δεν είναι ορατά --
+		// αλλιώς η εναλλαγή tab θα έδειχνε παλιά δεδομένα.
+		root.addEventListener('input', function (e) {
+			if (!docSlots.length) return;
+			docSlots.forEach(function (s) {
+				if (s.target === e.target && document.activeElement !== s.input) s.input.value = s.target.value || '';
+			});
+		});
+
+		function refreshDocOverlay(d) {
+			var sw  = root.querySelector('[data-docsw]');
+			var sec = root.querySelector('[data-doc-overlay]');
+			if (!sw || !sec) return;
+
+			if (!docOverlaySupported(d)) {
+				sw.hidden = true;
+				docShowView('classic');
+				docOverlayBuilt = null;
+				docSlots = [];
+				return;
+			}
+
+			sw.hidden = false;
+
+			if (docOverlayBuilt !== d.template) {
+				buildDocOverlay(d);
+				docOverlayBuilt = d.template;
+			} else {
+				syncDocOverlayValues();
+			}
 		}
 
 		// duplicate check on ΑΦΜ / supply number

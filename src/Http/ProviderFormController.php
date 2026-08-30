@@ -78,6 +78,7 @@ final class ProviderFormController implements Controller
                 'template'    => '',
                 'fields'      => [],
                 'main_inputs' => [],
+                'positions'   => [],
             ], 200);
         }
 
@@ -95,6 +96,21 @@ final class ProviderFormController implements Controller
             // το ζητάει ήδη σε κάθε αλλαγή παρόχου, προγράμματος ή τύπου
             // πελάτη, που είναι ακριβώς οι στιγμές που αλλάζει η απάντηση.
             'main_inputs' => ProviderFormFields::mainFormInputsForTemplate($template, $dir),
+
+            // «Πάνω στο έντυπο» (30/08): οι συντεταγμένες του ΙΔΙΟΥ template.json
+            // που ήδη εμπιστεύεται η εκτύπωση (class-ecrm-formfill.php), ώστε η
+            // JS να τοποθετήσει input πάνω στην εικόνα του εντύπου. Άδειο array
+            // όταν δεν υπάρχει (ή δεν έχει ακόμα φτιαχτεί) template.json για
+            // αυτόν τον συνδυασμό -- η JS το διαβάζει ως «καμία επικάλυψη
+            // διαθέσιμη εδώ», ποτέ ως σφάλμα.
+            'positions' => ProviderFormFields::positionsForTemplate($template, $dir),
+
+            // Ίδιο COLUMN_INPUTS που ήδη υπολογίζει το main_inputs παραπάνω,
+            // αλλά εδώ σε πλήρη μορφή (fill key => ποια πεδία της ΚΥΡΙΑΣ φόρμας
+            // το συμπληρώνουν) -- η JS το χρειάζεται για να ξέρει ΠΟΙΟ .ecrm-input
+            // να γράψει όταν ο χρήστης πληκτρολογεί πάνω στο έντυπο. Ίδιος
+            // πίνακας παντού, καμία δεύτερη αντιγραφή στη JS να ξεσυγχρονιστεί.
+            'column_inputs' => ProviderFormFields::columnInputMap(),
         ], 200);
     }
 }

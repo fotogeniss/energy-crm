@@ -1134,3 +1134,62 @@
 	.ecrm-layout { flex-direction: column; }
 	.ecrm-summary { flex-basis: auto; width: 100%; position: static; order: -1; }
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+ * «Πάνω στο έντυπο» -- ζητήθηκε ρητά 30/08 («να εμφανίζεται το έγγραφο
+ * της αίτησης και ο υπάλληλος να συμπληρώνει κατευθείαν πάνω στην
+ * αίτηση»). Ο διακόπτης δείχνει τη «Κλασική φόρμα» (το section() από
+ * πάνω, ανέγγιχτο) ή το «Πάνω στο έντυπο» -- η ίδια εικόνα του εντύπου
+ * που ήδη τυπώνει η παραγωγή, με πραγματικά input πάνω στις πραγματικές
+ * θέσεις (assets/forms/{template}.json, ίδιο αρχείο με το
+ * class-ecrm-formfill.php). Κρυφό by default (.ecrm-docsw[hidden] στο
+ * PHP) -- η JS το ξεσκεπάζει μόνο όταν βρει template.json+jpg για τον
+ * τρέχοντα πάροχο, κλειδωμένο ρητά σε Protergia προς το παρόν
+ * (docOverlaySupported στο ecrm-form.js). Καμία αλλαγή στο styling του
+ * υπάρχοντος .ecrm-card/.ecrm-field -- μόνο νέες κλάσεις. */
+.ecrm-docsw {
+	display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+	margin-bottom: 12px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+.ecrm-docsw__label { font-size: var(--fs-13); font-weight: 700; color: var(--ink); }
+.ecrm-docsw__tabs { display: flex; gap: 2px; background: var(--surface-sunk); border-radius: 9px; padding: 3px; }
+.ecrm-docsw__tab {
+	border: none; background: none; font-family: inherit; font-size: var(--fs-12-5); font-weight: 700;
+	color: var(--muted); padding: 7px 13px; border-radius: 7px; cursor: pointer;
+}
+.ecrm-docsw__tab.is-on { background: var(--surface); color: var(--accent-ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+
+.ecrm-docoverlay .ecrm-step { margin-bottom: 12px; }
+.ecrm-docbox { position: relative; max-width: 620px; margin: 0 auto; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.ecrm-docbox img { display: block; width: 100%; height: auto; }
+.ecrm-docoverlay__hint { font-size: var(--fs-11-5); color: var(--muted); text-align: center; margin: 10px 0 0; }
+
+/* Θέση σε % πάνω στην εικόνα -- υπολογίζεται από τα mm του JSON, το
+ * translate(0,-50%) κεντράρει κάθετα στο σημείο εκτύπωσης αντί να ξεκινά
+ * από πάνω του (πιο κοντά σε πώς διαβάζεται το χειρόγραφο πάνω σε
+ * έντυπο). */
+.ecrm-docfld { position: absolute; transform: translate(0, -50%); }
+.ecrm-docfld__i {
+	font-family: inherit; font-size: var(--fs-10-5); padding: 2px 4px; min-width: 56px;
+	border: 1px solid var(--p300); border-radius: 3px; background: var(--accent-wash); color: var(--accent-ink);
+	font-weight: 700; outline: none;
+}
+.ecrm-docfld__i::placeholder { color: var(--accent-ink); opacity: .4; font-weight: 400; }
+.ecrm-docfld__i:focus { background: var(--surface); border-color: var(--accent-hover); box-shadow: 0 0 0 3px var(--accent-wash); }
+.ecrm-docfld__tag {
+	position: absolute; bottom: 100%; left: 0; margin-bottom: 2px; font-size: var(--fs-9); font-weight: 700;
+	color: var(--accent-ink); background: var(--surface); padding: 1px 4px; border-radius: 3px; white-space: nowrap;
+	opacity: 0; pointer-events: none; transition: opacity .12s ease; box-shadow: 0 2px 6px -2px rgba(0,0,0,.2);
+}
+.ecrm-docfld:focus-within .ecrm-docfld__tag, .ecrm-docfld:hover .ecrm-docfld__tag { opacity: 1; }
+
+/* Σύνθετο σημείο εντύπου -- 2 inputs πίσω από ΕΝΑ σημείο (π.χ. Οδός +
+ * Αριθμός) -- 30/08. Δίπλα-δίπλα, όχι το ένα κάτω από το άλλο: το
+ * translate(0,-50%) του .ecrm-docfld κεντράρει κάθετα στο σημείο
+ * εκτύπωσης, μια κάθετη στοίβα θα μετατόπιζε το πάνω κουτί μακριά από
+ * τη γραμμή του χαρτιού. */
+.ecrm-docfld--multi { display: flex; gap: 3px; }
+.ecrm-docfld--multi .ecrm-docfld__i { min-width: 44px; }
+.ecrm-docfld--multi .ecrm-docfld__i:first-child { flex: 2; }
+.ecrm-docfld--multi .ecrm-docfld__i:last-child { flex: 1; }
