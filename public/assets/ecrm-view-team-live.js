@@ -22,6 +22,8 @@ export function loadTeamLive() {
 	teamLiveTimer = setInterval(function () {
 		var v = viewEl('teamlive');
 		if (!v || !v.classList.contains('is-active')) { clearInterval(teamLiveTimer); return; }
+		// Best-effort: μία αποτυχημένη ανανέωση απλά αφήνει τον πίνακα στα
+		// τελευταία γνωστά νούμερα μέχρι το επόμενο tick των 30".
 		fetch(api('/team/live'), { headers: H() }).then(function (r) { return r.json(); })
 			.then(function (d) { if (d && d.ok) renderTeamLive(v, d); }).catch(function () {});
 	}, 30000);

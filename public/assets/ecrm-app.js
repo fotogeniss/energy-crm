@@ -96,6 +96,8 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 				method: 'POST',
 				headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
 				body: JSON.stringify({ theme: next })
+			// Best-effort: το tab άλλαξε ήδη οπτικά. Αν δεν αποθηκευτεί η
+			// προτίμηση, το επόμενο load απλά ξαναδείχνει το προηγούμενο θέμα.
 			}).catch(function () {});
 		});
 	});
@@ -195,6 +197,8 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 				fetch(api('/search') + '?q=' + encodeURIComponent(q), { headers: H() })
 					.then(function (r) { return r.json(); })
 					.then(function (d) { if (d && d.ok) gRender(d.results || []); })
+					// Background αναζήτηση: αποτυχία σημαίνει απλά καμία λίστα
+					// αποτελεσμάτων -- δεν υπάρχει κάτι να γυρίσει πίσω.
 					.catch(function () {});
 			}, 250);
 		});
@@ -216,6 +220,8 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 				if (!d || !d.ok) return;
 				renderBell(d);
 			})
+			// Polling: αν αποτύχει, το κουδούνι μένει στην τελευταία γνωστή
+			// κατάσταση μέχρι το επόμενο loadBell().
 			.catch(function () {});
 	}
 
@@ -263,6 +269,8 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 		if (unread > 0 && bellPanel && !bellPanel.hidden) {
 			fetch(api('/notifications/read'), { method: 'POST', headers: H() })
 				.then(function () { if (bellBadge) { if (stale > 0) { bellBadge.textContent = stale > 99 ? '99+' : stale; } else { bellBadge.hidden = true; } } })
+				// Best-effort: το badge έμεινε ήδη σωστό οπτικά· αν η σήμανση
+				// read στο server αποτύχει, θα ξανασταλεί στο επόμενο άνοιγμα.
 				.catch(function () {});
 		}
 	}

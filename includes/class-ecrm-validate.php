@@ -22,6 +22,13 @@ class ECRM_Validate {
 	/**
 	 * Validate a Greek ΑΦΜ via its modulo-11 check digit.
 	 * Returns true for a structurally valid 9-digit ΑΦΜ.
+	 *
+	 * Ο ΙΔΙΟΣ αλγόριθμος ξαναγράφεται σε JS -- validAfm() στο
+	 * public/assets/ecrm-form.js -- για στιγμιαίο feedback στο πεδίο πριν
+	 * φύγει το αίτημα. Δεν καλείται αυτή η μέθοδος μέσω κάποιου build step·
+	 * PHP και JS δεν μοιράζονται κώδικα εδώ, οπότε τα δύο αντίγραφα πρέπει να
+	 * αλλάζουν ΜΑΖΙ. Ο τελικός κριτής παραμένει εδώ (βλ. ContractSaveController) --
+	 * το JS είναι μόνο πρόβλεψη για τον χρήστη, ποτέ η πύλη.
 	 */
 	public static function afm( string $afm ): bool {
 		$d = self::digits( $afm );

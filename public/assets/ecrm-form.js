@@ -1,4 +1,5 @@
 import { api, esc, rejectedNote, toast } from '@energy-crm/util';
+import { energyLabel } from '@energy-crm/format';
 import { openCustomerContracts } from '@energy-crm/navigate';
 
 /* Energy CRM — New Contract form behaviour.
@@ -582,9 +583,8 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		 * φεύγει σε λάθος πάροχο επειδή κανείς δεν κοίταξε μια προ-διαλεγμένη
 		 * τιμή είναι χειρότερη από δύο κλικ. Τίποτα δεν επιλέγεται μόνο του.
 		 *
-		 * Ονόματα δεν έρχονται από τον server: ο κατάλογος είναι ήδη εδώ. */
-		var ENERGY_LABEL = { power: 'Ηλεκτρισμός', gas: 'Φυσικό Αέριο', mobile: 'Κινητή Τηλεφωνία' };
-
+		 * Ονόματα δεν έρχονται από τον server: energyLabel() του @energy-crm/format
+		 * ήδη τα ξέρει -- τρίτο τοπικό αντίγραφο ήταν περιττό (AUDIT §2.7). */
 		function hideUsual() {
 			var box = q('[data-usual]');
 			if (box) { box.hidden = true; box.innerHTML = ''; }
@@ -612,7 +612,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				});
 			}
 
-			var kind = ENERGY_LABEL[u.energy_type] || '';
+			var kind = u.energy_type ? energyLabel(u.energy_type) : '';
 			var what = esc(kind) + (prog ? ' · <strong>' + esc(prog) + '</strong>' : '');
 
 			box.innerHTML =
@@ -791,6 +791,8 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 						' υπάρχουσες συμβάσεις:</div><ul class="ecrm-dupwarn__list">' + rows + '</ul>' +
 						'<div class="ecrm-dupwarn__note">Έλεγξέ το πριν συνεχίσεις — μπορεί να είναι ήδη καταχωρημένη.</div>';
 					warn.hidden = false;
+				// Best-effort: αν αποτύχει, απλά δεν εμφανίζεται η προειδοποίηση --
+				// η ίδια η αποθήκευση θα ξανακάνει τον έλεγχο στον server.
 				}).catch(function () {});
 			}, 400);
 		}
@@ -1456,6 +1458,11 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		});
 
 		// --- Live validation: ΑΦΜ check digit + soft supply check ---
+		// Ο ΙΔΙΟΣ αλγόριθμος με ECRM_Validate::afm() (includes/class-ecrm-validate.php)
+		// -- εδώ ξαναγράφεται σε JS μόνο για στιγμιαίο feedback στο πεδίο, πριν
+		// φύγει καν το αίτημα. Ο server ξαναελέγχει στο save (ContractSaveController)
+		// και είναι ο τελικός κριτής -- αυτό εδώ δεν εμποδίζει τίποτα μόνο του.
+		// Αλλαγή στο ένα αντίγραφο σημαίνει έλεγχο και του άλλου.
 		function validAfm(s) {
 			var d = (s || '').replace(/\D+/g, '');
 			if (d.length !== 9 || d === '000000000') return false;
@@ -1530,6 +1537,8 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 						var openBtn = box.querySelector('[data-opencust]');
 						if (openBtn) openBtn.addEventListener('click', function () { openCustomerContracts(m[0].afm || afm || supply); });
 					})
+					// Best-effort: αν αποτύχει, απλά δεν εμφανίζεται η κάρτα υπάρχοντος
+					// πελάτη -- η φόρμα παραμένει χρησιμοποιήσιμη κανονικά.
 					.catch(function () {});
 			}, 300);
 		}

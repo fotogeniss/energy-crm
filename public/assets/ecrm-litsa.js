@@ -90,6 +90,9 @@ import { api, esc } from '@energy-crm/util';
 		if (!history.length) return;
 		if (!confirm('Διαγραφή της συνομιλίας με τη Λίτσα;')) return;
 		fetch(api('/assistant/history/clear'), { method: 'POST', headers: headers() })
+			// Η τοπική συνομιλία καθαρίζει έτσι κι αλλιώς (.finally παρακάτω) --
+			// αν αποτύχει το server-side clear, δεν υπάρχει λόγος να το δει ο
+			// χρήστης· θα ξαναδοκιμαστεί φυσικά στην επόμενη clearHistory().
 			.catch(function () {})
 			.finally(function () { history = []; render(); });
 	}

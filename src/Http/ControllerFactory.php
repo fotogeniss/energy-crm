@@ -62,7 +62,14 @@ final class ControllerFactory
 
         return [
             // Contracts — read, write, status, bulk, documents.
-            new ContractsReadController($scope, $queries, $details, Services::events(), Services::files()),
+            new ContractsReadController(
+                $scope,
+                $queries,
+                $details,
+                Services::events(),
+                Services::files(),
+                Services::statusDwell(),
+            ),
             new ContractSaveController(
                 $scope,
                 Services::contracts(),

@@ -28,7 +28,7 @@ use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\FileRepository;
-use EnergyCRM\Services;
+use EnergyCRM\Persistence\StatusDwellRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -43,6 +43,7 @@ final class ContractsReadController implements Controller
         private readonly ContractDetails $details,
         private readonly EventRepository $events,
         private readonly FileRepository $files,
+        private readonly StatusDwellRepository $dwellRepository,
     ) {
     }
 
@@ -144,7 +145,7 @@ final class ContractsReadController implements Controller
         // η διασπορά που απαγορεύει το testTheWindowIsOneNumberInOnePlace, από
         // τον ίδιο που έγραψε το test. Ένα σημείο: ECRM_Tracking.
         $row['sign_window_hours'] = ECRM_Tracking::SIGN_WINDOW_HOURS;
-        $row['stuck']         = self::stuck($row);
+        $row['stuck']         = $this->stuck($row);
 
         // What the status panel is allowed to offer, per the same graph the
         // server enforces (ContractStatus::allowedNext()) — the screen used to
@@ -191,7 +192,7 @@ final class ContractsReadController implements Controller
      *
      * @return array{days: int, typical: int, sample: int}|null
      */
-    private static function stuck(array $row): ?array
+    private function stuck(array $row): ?array
     {
         $status = (string) ($row['status'] ?? '');
         $id     = (int) ($row['id'] ?? 0);
@@ -202,7 +203,7 @@ final class ContractsReadController implements Controller
             return null;
         }
 
-        $dwell = Services::statusDwell();
+        $dwell = $this->dwellRepository;
         $days  = $dwell->daysInStatus($id, $status);
 
         if (null === $days) {
