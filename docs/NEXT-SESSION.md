@@ -491,3 +491,41 @@ Priority 3 παραπάνω) και το `ContractLifecycle::moveTo()` race (π�
 Ό,τι απομένει από το Priority 1 (NotificationRepository dedupe,
 ContractDocuments::store(), NetworkRepository::rebuild(), τα δύο ήδη-guarded
 σημεία χωρίς test) παραμένει ανοιχτό, χωρίς να έχει ζητηθεί ρητά ακόμα.
+
+## ΚΛΕΙΣΤΟ 30/08 — ολόκληρο το §1 και §2 του EKKREMI-29-08.html
+
+Ο ιδιοκτήτης ζήτησε να περάσω τη λίστα με τη σειρά από το 2.1. Μέτρηση, όχι
+υπόθεση, σε κάθε σημείο πριν γραφτεί έστω μία γραμμή -- και βρέθηκε πως όλα
+ήταν **ήδη διορθωμένα**, με commit και test το καθένα, από νωρίτερα στις
+29-30/08 (πιθανώς προηγούμενη συνεδρία/πέρασμα εκτός αυτής της περίληψης):
+
+- **1.1** `/contracts/duplicate` -- `6d41a12`, `present()` κρατά μόνο το
+  «γεγονός της σύγκρουσης» εκτός scope, rate limit ήδη εκεί.
+  `DuplicateCheckScopeTest.php`.
+- **1.2** tracking link χωρίς cap αρχείων -- `dedb857`, ίδιο όριο 6 με το
+  intake. `TrackingUploadCapTest.php`.
+- **1.3, 1.4** τα δύο χειροκίνητα περάσματα -- ήδη καταγεγραμμένα ΚΛΕΙΣΤΑ
+  παραπάνω («ΚΛΕΙΣΤΟ 29/08 — χειροκίνητος έλεγχος, δύο οθόνες»), και ο
+  ιδιοκτήτης το επιβεβαίωσε ΞΑΝΑ ρητά στις 30/08 («ta exw kanei kai einai
+  ok»). Δύο ανεξάρτητες επιβεβαιώσεις, ίδιο αποτέλεσμα.
+- **1.5** integration test εμβέλειας `/customers` -- `22d0e78`,
+  `CustomerRestAccessTest.php`.
+- **2.1** magic bytes webp/heic -- `fda4350`, `TrackingUploadMagicBytesTest.php`.
+- **2.2** index σε λάθος στήλη -- `6a24a98`, migration 0025
+  `RetargetContractListIndexToUpdatedAt`, μετρημένο με 2.500 συνθετικές
+  γραμμές. `RetargetContractListIndexToUpdatedAtTest.php`.
+- **2.3** `kb_read` αόρατο στο σχήμα -- `2a3b955`, μπήκε στο `Tables::all()`.
+  `TablesListMatchesTheRealSchemaTest.php`.
+- **2.4** πολιτική 5xx -- `36d6fe9`, το εύρημα ήταν παρωχημένο εξαρχής: το
+  `ErrorLog::catchRestFailure()` είναι ήδη global στο `rest_post_dispatch`
+  από το `Plugin::boot()`, πιάνει κάθε 5xx σε route κάτω από `/ecrm/v1`
+  ανεξάρτητα ποιος controller το γύρισε. `ErrorLogRestFailureTest.php`.
+- **2.5, 2.6, 2.7** -- κλείσανε μέσα σε αυτή τη συνεδρία, βλ. CHANGELOG
+  (172)-(177).
+
+Πρόσθηκε banner στο ίδιο το `docs/EKKREMI-29-08.html` που το λέει ρητά:
+ξεπερασμένο, μην ξαναπροτείνεις τίποτα από §1/§2 χωρίς νέα μέτρηση. Ό,τι
+μένει πραγματικά ανοιχτό από ολόκληρο το έγγραφο είναι **μόνο το §3** --
+χαρτί GDPR/DPA, οι 5 αποφάσεις του §6γ, τα 4 clone-site περάσματα,
+procedural. Όλα «μόνο εσύ» ή «εσύ + δικηγόρος» -- κανένα δεν είναι δικό
+μου να προχωρήσει χωρίς εσένα.
