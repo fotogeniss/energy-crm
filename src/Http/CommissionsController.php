@@ -61,8 +61,19 @@ final class CommissionsController implements Controller
         $paid    = 0.0;
         $unpaid  = 0.0;
 
+        // AUDIT 30/08: το `$total`/`$paid`/`$unpaid` αθροίζαν το ΑΣΤΡΟΓΓΥΛΕΥΤΟ
+        // `$amount` και στρογγύλευαν μία φορά στο τέλος, ενώ κάθε γραμμή στο
+        // `$rows[]` έδειχνε το ατομικά στρογγυλεμένο ποσό (`round($amount, 2)`
+        // εκεί, πριν τη διόρθωση). Το ίδιο το `admin/class-ecrm-payouts.php::
+        // create()` το λέει ρητά στο δικό του docblock: «το σύνολο είναι το
+        // άθροισμα των στρογγυλεμένων γραμμών, όχι η στρογγυλεμένη ολότητα»
+        // -- ακριβώς επειδή αλλιώς το εμφανιζόμενο σύνολο μπορεί να διαφωνήσει
+        // κατά ένα λεπτό με το άθροισμα των γραμμών που βλέπει ο συνεργάτης
+        // στην ίδια οθόνη. Εδώ δεν εφαρμοζόταν αυτή η αρχή -- το `$amount`
+        // στρογγυλεύεται τώρα ΜΙΑ φορά, αμέσως μετά τον υπολογισμό, και η
+        // ίδια στρογγυλεμένη τιμή τροφοδοτεί και τη γραμμή και το άθροισμα.
         foreach ($this->commissions->payable($scope, ECRM_DB::payable_statuses()) as $row) {
-            $amount   = CommissionAmount::of($row, [ECRM_Commissions::class, 'amount_for']);
+            $amount   = round(CommissionAmount::of($row, [ECRM_Commissions::class, 'amount_for']), 2);
             $isPaid   = ($row['payout_status'] ?? '') === 'paid';
             $customer = $row['company_name']
                 ?: trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
@@ -74,7 +85,7 @@ final class CommissionsController implements Controller
                 'code'     => $row['code'],
                 'customer' => $customer !== '' ? $customer : '—',
                 'provider' => $row['provider_name'] ?: '—',
-                'amount'   => round($amount, 2),
+                'amount'   => $amount,
                 'paid'     => $isPaid,
             ];
 
@@ -90,9 +101,10 @@ final class CommissionsController implements Controller
         $expected = 0.0;
 
         // Ζωντανός υπολογισμός, σωστά: τίποτα από αυτά δεν έχει μπει σε
-        // παρτίδα, άρα δεν υπάρχει στιγμιότυπο να σεβαστούμε.
+        // παρτίδα, άρα δεν υπάρχει στιγμιότυπο να σεβαστούμε. Ίδια διόρθωση
+        // εδώ: στρογγυλεύεται πριν την πρόσθεση, όχι μετά.
         foreach ($this->commissions->inProgress($scope, self::IN_PROGRESS) as $row) {
-            $expected += (float) ECRM_Commissions::amount_for($row);
+            $expected += round((float) ECRM_Commissions::amount_for($row), 2);
         }
 
         $monthly = MonthlyTotals::from($entries);
