@@ -548,9 +548,11 @@ upoloipa»):
 2. **✅ ΔΙΟΡΘΩΘΗΚΕ 30/08.** `CustomerRepository::update()` -- ήταν
    `isReachable()` scoped, μετά `$wpdb->update()` ΧΩΡΙΣ scope στο WHERE
    (μόνο `id`). Βλ. CHANGELOG (179), `CustomerUpdateScopeTest.php`.
-3. **ΕΚΚΡΕΜΕΙ.** `/assistant` (Λίτσα chat, `includes/class-ecrm-assistant.php`)
-   χωρίς rate limit -- σε αντίθεση με `duplicate`, `track_upload`, `kb_ask`,
-   SMS test-send που έχουν όλα.
+3. **✅ ΔΙΟΡΘΩΘΗΚΕ 30/08.** `/assistant` (Λίτσα chat,
+   `includes/class-ecrm-assistant.php`) -- ήταν χωρίς rate limit, σε
+   αντίθεση με `duplicate`, `track_upload`, `kb_ask`, SMS test-send. Ίδιο
+   όριο με το `kb_ask` (20/300s). Βλ. CHANGELOG (180),
+   `AssistantChatRateLimitTest.php`.
 4. **ΕΚΚΡΕΜΕΙ.** `TimeLimit::atLeast()` (`src/Infrastructure/TimeLimit.php`)
    μπορεί να ΜΕΙΩΣΕΙ ήδη μεγαλύτερο όριο εκτέλεσης -- έπρεπε μόνο να
    επεκτείνει.
