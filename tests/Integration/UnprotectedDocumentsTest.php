@@ -214,6 +214,56 @@ final class UnprotectedDocumentsTest extends IntegrationTestCase
         self::assertSame(1, $this->documents->count());
     }
 
+    /**
+     * The claim guard flagProtected() relies on, tested directly.
+     *
+     * AUDIT εύρημα §2.5 (EKKREMI-29-08.html): the guard itself
+     * (`WHERE id = %d AND (protected = 0 OR protected IS NULL)`) already
+     * exists and is documented as a claim rather than an overwrite, but no
+     * test had ever produced the 'skipped' outcome it exists to produce.
+     * `protect()`/`flagProtected()` are private -- protectBatch() only ever
+     * re-selects rows still marked unprotected, so two sequential calls
+     * cannot reproduce the race (the second call simply finds nothing left
+     * to do). This exercises the exact guarded UPDATE flagProtected() runs,
+     * simulating two overlapping cron ticks racing to claim the same row:
+     * the first claim must win, the second must be told it lost, and the
+     * row must keep the first winner's path.
+     */
+    public function testTheClaimGuardLetsOnlyOneOfTwoConcurrentClaimsWin(): void
+    {
+        global $wpdb;
+
+        $contractId = $this->makeContract();
+        $fileId     = $this->makeUnprotectedRow($contractId);
+
+        $table          = Tables::name(Tables::FILES);
+        $firstWinnerPath  = $this->putBytes();
+        $secondLoserPath  = $this->putBytes();
+
+        $firstClaim = $wpdb->query($wpdb->prepare(
+            'UPDATE %i SET path = %s, protected = 1, attachment_id = NULL
+             WHERE id = %d AND (protected = 0 OR protected IS NULL)',
+            $table,
+            $firstWinnerPath,
+            $fileId
+        ));
+
+        $secondClaim = $wpdb->query($wpdb->prepare(
+            'UPDATE %i SET path = %s, protected = 1, attachment_id = NULL
+             WHERE id = %d AND (protected = 0 OR protected IS NULL)',
+            $table,
+            $secondLoserPath,
+            $fileId
+        ));
+
+        self::assertSame(1, $firstClaim, 'The first claim must win.');
+        self::assertSame(0, $secondClaim, 'The second, losing claim must change nothing.');
+
+        $row = $this->fileRow($fileId);
+        self::assertNotNull($row);
+        self::assertSame($firstWinnerPath, $row['path'], "The row must keep the winner's path, not the loser's.");
+    }
+
     // --- Fixtures ------------------------------------------------------------
 
     /** One provider for the whole test, reused by every contract. */
