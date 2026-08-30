@@ -50,35 +50,47 @@ final class ContractTransitions
     /**
      * Write the new status, and whatever columns come with it.
      *
-     * `updated_at` is set here rather than left to the caller, because a status
-     * change that does not touch it is a change nobody can find afterwards. But
-     * it is written by a second, separate query — not inside the $wpdb->update()
-     * above it — with the database's own NOW(), not current_time('mysql').
+     * AUDIT 30/08: αυτή η εγγραφή ήταν σκέτο `$wpdb->update(..., ['id' =>
+     * $contractId])` -- χωρίς όρο πάνω στην κατάσταση από την οποία ξεκινάει.
+     * `ContractLifecycle::moveTo()` διαβάζει το `$from` μία φορά, νωρίτερα,
+     * με ξεχωριστό ερώτημα (`statusOf()`) -- ανάμεσα σε αυτό το διάβασμα και
+     * αυτή τη γραφή δεν υπήρχε καμία εγγύηση ότι η σύμβαση έμεινε εκεί. Δύο
+     * ταυτόχρονες κλήσεις moveTo() πάνω στην ίδια σύμβαση (π.χ. το cron sweep
+     * προς 'active' και μια μαζική ενέργεια προς 'cancelled' -- ή ένα διπλό
+     * κλικ) θα έγραφαν και οι δύο, η δεύτερη σιωπηλά πάνω από την πρώτη, χωρίς
+     * κανένα σφάλμα και χωρίς loser.
      *
-     * Δύο ρολόγια στην ίδια στήλη, μετρημένο 22/08: η CREATE TABLE βάζει ήδη
-     * `ON UPDATE CURRENT_TIMESTAMP` (το ρολόι ΤΗΣ MySQL) σε αυτή τη στήλη, κι
-     * αυτή η γραμμή έγραφε από πάνω το ρολόι ΤΗΣ PHP (current_time('mysql'),
-     * που ακολουθεί το timezone_string του site). Όσο οι δύο ζώνες συμπίπτουν
-     * δεν φαίνεται — ίδια ιστορία με το (83) στο PayoutRepository::markPaid().
-     * Η λύση εκεί ήταν η ίδια: να γράφει η βάση, όχι να μαντέψουμε ποια ζώνη
-     * έχει η PHP.
+     * Η λύση είναι το ίδιο σχήμα που ήδη χρησιμοποιεί το PayoutRepository
+     * (deletePending()/markPaid()) και το UnprotectedDocuments::flagProtected():
+     * μια δεσμευμένη (guarded) UPDATE με τον όρο `WHERE status = $expectedFrom`
+     * μέσα στο ίδιο ερώτημα.
      *
-     * Δεν έγινε μέσα στο ίδιο $wpdb->update() επειδή δεν γίνεται: το
-     * $wpdb->update() παραθέτει κάθε τιμή ως literal string — ένα 'NOW()' εκεί
-     * θα γραφόταν η κυριολεκτική συμβολοσειρά "NOW()", όχι η συνάρτηση. Και δεν
-     * αφέθηκε στο σιωπηλό `ON UPDATE CURRENT_TIMESTAMP` της MySQL, γιατί η
-     * ContractLifecycle::moveTo() καλεί applyTransition() και όταν η κατάσταση
-     * ΔΕΝ αλλάζει (force=true) — οπότε αν το `status` γραφόταν με την ίδια τιμή
-     * που είχε ήδη, το αν η MySQL θεωρεί αυτό «αλλαγή» και ενεργοποιεί το
-     * ON UPDATE είναι στοίχημα ανά έκδοση/ρύθμιση, όχι σιγουριά· ρητή εγγραφή
-     * με NOW() δεν έχει αυτό το ερώτημα.
+     * Η νίκη κρίνεται με ΔΥΟ διαφορετικούς τρόπους ανάλογα με το αν η τιμή
+     * αλλάζει, γιατί ένας μόνο τρόπος αποδείχτηκε λάθος και στις δύο άκρες:
      *
-     * Δύο ερωτήματα, όχι ένα ατομικό — σκόπιμα: το εναλλακτικό (μία raw SQL με
-     * δυναμικό SET για το status + τις ~35 πιθανές extra στήλες) θα σήμαινε να
-     * ξαναγραφτεί χειροκίνητα η λογική τύπων/NULL του $wpdb->update() για ένα
-     * σύνολο στηλών που ήδη αλλάζει (WritableColumns). Το παράθυρο ανάμεσα στα
-     * δύο ερωτήματα είναι υπο-χιλιοστού-δευτερολέπτου σε μονοπάτι που δεν είναι
-     * hot (χειροκίνητη μετάβαση από admin/cron) — αποδεκτό εδώ.
+     * - `$status !== $expectedFrom` (κανονική μετάβαση): οι επηρεασμένες
+     *   γραμμές του `$wpdb->update()` είναι αξιόπιστο σήμα -- η τιμή αλλάζει
+     *   πάντα όταν ο όρος ταιριάξει, άρα >0 σημαίνει σίγουρη νίκη. Πρώτη
+     *   μορφή αυτής της μεθόδου δοκίμασε αντ' αυτού «ξαναδιάβασε το status
+     *   μετά τη γραφή και σύγκρινε με το target» -- έσπασε στο εξής σενάριο,
+     *   πιασμένο από `ContractLifecycleMoveToRaceTest`: δύο κλήσεις θέλουν
+     *   τον ΙΔΙΟ στόχο, η μία κερδίζει, η δεύτερη χάνει το guard (0 γραμμές)
+     *   αλλά το ξαναδιάβασμα βλέπει τη σωστή τελική κατάσταση ΕΤΣΙ Κ' ΕΤΣΙ --
+     *   και θα ανέφερε ψευδώς νίκη στη χαμένη, διπλασιάζοντας το event log
+     *   και τις ειδοποιήσεις στη `moveTo()`.
+     * - `$status === $expectedFrom` (`force => true` χωρίς πραγματική αλλαγή):
+     *   εδώ δεν υπάρχει ανταγωνισμός ανάμεσα σε δύο ΔΙΑΦΟΡΕΤΙΚΕΣ τιμές, οπότε
+     *   το ξαναδιάβασμα είναι ασφαλές -- ρωτάει απλώς αν η γραμμή είναι ΤΩΡΑ
+     *   σε αυτή την κατάσταση, που είναι ό,τι ζητά το force. Οι επηρεασμένες
+     *   γραμμές ΔΕΝ θα βοηθούσαν εδώ, γιατί η MySQL μπορεί να αναφέρει 0
+     *   ΑΚΟΜΑ ΚΑΙ όταν ο όρος ταίριαξε, αφού η τιμή δεν άλλαξε.
+     *
+     * `updated_at` παραμένει σε δεύτερο, ξεχωριστό ερώτημα -- για τον ίδιο λόγο
+     * που ίσχυε ήδη πριν (βλ. ContractUpdatedAtTest): η βάση γράφει με NOW(),
+     * όχι η PHP με current_time('mysql'). Τώρα φέρει και αυτό τον ίδιο όρο
+     * κατάστασης, ώστε να μην ανανεώνεται το ρολόι μιας γραμμής που τελικά δεν
+     * έφτασε στη στοχευμένη κατάσταση -- και δεν εκτελείται καθόλου όταν η
+     * πρώτη γραφή χάθηκε.
      *
      * The extra columns pass through the writable filter, which the old inline
      * version did not do: they are internal today (`signed_at`, `signed_ip`),
@@ -86,25 +98,90 @@ final class ContractTransitions
      * filter is now WritableColumns, shared with the save path rather than
      * copied — two lists that agree today are one column away from disagreeing.
      *
+     * @param string|null $expectedFrom Guard value, or null when the caller
+     *                                    genuinely does not know the previous
+     *                                    status (unconditional write, no race
+     *                                    guard -- see above).
      * @param array<string, mixed> $extraColumns
+     *
+     * @return bool True when the contract is now in $status -- because this
+     *              call put it there, or because it already was. False when
+     *              a concurrent transition won and left it somewhere else.
      */
-    public function applyTransition(int $contractId, string $status, array $extraColumns = []): void
-    {
+    public function applyTransition(
+        int $contractId,
+        string $status,
+        ?string $expectedFrom,
+        array $extraColumns = []
+    ): bool {
         global $wpdb;
 
         if ($contractId <= 0) {
-            return;
+            return false;
         }
 
-        $wpdb->update(
+        if ($expectedFrom === null) {
+            // Ο καλών δηλώνει ρητά ότι δεν ξέρει την προηγούμενη κατάσταση
+            // (`from => null` στη moveTo() -- π.χ. οι διαδρομές υπογραφής,
+            // βλ. docblock εκεί). Ο γράφος μεταβάσεων έχει ήδη παρακαμφθεί για
+            // αυτή την κλήση (κανένα `canMoveTo()`/`CancellationGate` δεν
+            // έτρεξε), άρα δεν υπάρχει τιμή να δεσμεύσουμε τη γραφή πάνω της --
+            // δεσμεύοντας σε άδεια συμβολοσειρά θα απέτυχε ΠΑΝΤΑ, αφού καμία
+            // πραγματική σύμβαση δεν έχει status=''. Ίδια συμπεριφορά με πριν
+            // τη διόρθωση: άνευ όρων εγγραφή, καμία προστασία race εδώ.
+            $wpdb->update(
+                $this->table,
+                ['status' => $status] + WritableColumns::filter($extraColumns),
+                ['id' => $contractId]
+            );
+
+            $wpdb->query($wpdb->prepare(
+                'UPDATE %i SET updated_at = NOW() WHERE id = %d',
+                $this->table,
+                $contractId
+            ));
+
+            return true;
+        }
+
+        $updated = $wpdb->update(
             $this->table,
             ['status' => $status] + WritableColumns::filter($extraColumns),
-            ['id' => $contractId]
+            ['id' => $contractId, 'status' => $expectedFrom]
         );
 
-        $wpdb->query(
-            $wpdb->prepare('UPDATE %i SET updated_at = NOW() WHERE id = %d', $this->table, $contractId)
-        );
+        if ($status === $expectedFrom) {
+            // Force-χωρίς-αλλαγή: η τιμή μένει ίδια, οπότε οι επηρεασμένες
+            // γραμμές του update() παραπάνω μπορεί να είναι 0 ΑΚΟΜΑ ΚΑΙ όταν ο
+            // όρος ταίριαξε -- δεν υπάρχει εδώ πραγματικός ανταγωνισμός ανάμεσα
+            // σε δύο ΔΙΑΦΟΡΕΤΙΚΕΣ τιμές. Το μόνο που ρωτάμε είναι αν η γραμμή
+            // είναι ΤΩΡΑ σε αυτή την κατάσταση.
+            $applied = $this->statusOf($contractId) === $status;
+        } else {
+            // Εδώ η νέα τιμή είναι πάντα διαφορετική από το $expectedFrom, άρα
+            // οι επηρεασμένες γραμμές είναι αξιόπιστο σήμα: >0 σημαίνει ότι ο
+            // όρος ταίριαξε ΚΑΙ η τιμή άλλαξε πραγματικά -- δική μας νίκη.
+            // 0 σημαίνει ότι κάποιος άλλος είχε ήδη μετακινήσει τη σύμβαση
+            // αλλού -- ΑΝΕΞΑΡΤΗΤΑ αν το τελικό status τυχαίνει να συμπίπτει με
+            // το δικό μας target (statusOf() εδώ θα έδινε ψευδώς θετικό στην
+            // περίπτωση όπου κάποιος άλλος moveTo() κέρδισε τον ΙΔΙΟ στόχο --
+            // η moveTo() το ξαναελέγχει η ίδια, ρητά, όταν applyTransition()
+            // επιστρέψει false, ώστε αυτή η μέθοδος να μην κρύψει την ήττα).
+            $applied = ((int) $updated) > 0;
+        }
+
+        if (! $applied) {
+            return false;
+        }
+
+        $wpdb->query($wpdb->prepare(
+            'UPDATE %i SET updated_at = NOW() WHERE id = %d AND status = %s',
+            $this->table,
+            $contractId,
+            $status
+        ));
+
+        return true;
     }
 
     /**

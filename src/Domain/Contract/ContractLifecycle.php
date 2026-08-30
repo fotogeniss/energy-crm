@@ -85,6 +85,14 @@ final class ContractLifecycle
             ? (string) $options['from']
             : $this->transitions->statusOf($contractId);
 
+        // AUDIT 30/08: ξεχωριστό από το $from παραπάνω -- εκείνο γίνεται ήδη
+        // '' όταν ο καλών περάσει null, και χρησιμοποιείται σωστά αλλού (το
+        // «ήδη εκεί» κλαδί, το ιστορικό). Εδώ χρειάζεται να ξέρουμε αν ο
+        // καλών ΡΗΤΑ δήλωσε άγνωστη προέλευση, ώστε η applyTransition() να
+        // ΜΗΝ δεσμεύσει τη γραφή πάνω σε '' -- καμία σύμβαση δεν έχει ποτέ
+        // status='', άρα μια τέτοια δέσμευση θα απέτυχε πάντα.
+        $originUnknown = array_key_exists('from', $options) && $options['from'] === null;
+
         // Already there. True, because the caller asked for a state and the
         // contract is in it — but nothing is logged, since nothing happened.
         if ($from === $to && empty($options['force'])) {
@@ -108,7 +116,24 @@ final class ContractLifecycle
             return false;
         }
 
-        $this->transitions->applyTransition($contractId, $to, (array) ($options['extra'] ?? []));
+        $applied = $this->transitions->applyTransition(
+            $contractId,
+            $to,
+            $originUnknown ? null : $from,
+            (array) ($options['extra'] ?? [])
+        );
+
+        if (! $applied) {
+            // AUDIT 30/08: guarded write στο ContractTransitions -- κάποιος
+            // άλλος moveTo() έφτασε πρώτος και μετακίνησε τη σύμβαση μακριά από
+            // το $from ανάμεσα στο statusOf() εδώ πάνω και τη γραφή. Αν έφτασε
+            // ΑΚΡΙΒΩΣ στο ίδιο $to που ζητούσαμε κι εμείς, το αποτέλεσμα που
+            // ζητήθηκε ήδη ισχύει -- idempotent true, ΧΩΡΙΣ δεύτερο log/notify, γιατί
+            // αυτός που κέρδισε το πέρασε ήδη από το ΔΙΚΟ ΤΟΥ moveTo() και
+            // τα έκανε αυτά μία φορά. Αν έφτασε αλλού, η μετάβαση χάθηκε
+            // πραγματικά -- false, όχι σιωπηλή αντικατάσταση της κατάστασης.
+            return $this->transitions->statusOf($contractId) === $to;
+        }
 
         // Μια σύμβαση που μόλις ακυρώθηκε δεν πρέπει να συνεχίσει να μετράει
         // στο σύνολο μιας παρτίδας που δεν έχει πληρωθεί ακόμα -- ίδιο σημείο

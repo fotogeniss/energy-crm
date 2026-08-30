@@ -440,14 +440,22 @@ file:line evidence) στους 8 τομείς. Σύνοψη:
   `PayoutDeletePendingRaceTest.php`, `PayoutPaidAtTest.php`), lead→contract
   conversion claim (`LeadConversionClaimRaceTest.php`).
 - **Πραγματικά κενά, χωρίς guard ΚΑΙ χωρίς test:**
-  - `ContractLifecycle::moveTo()` (`src/Domain/Contract/ContractLifecycle.php:74-132`)
-    — read-then-write, το `ContractTransitions::applyTransition()`
-    (`src/Persistence/ContractTransitions.php:91-108`) είναι plain
-    `$wpdb->update` ΧΩΡΙΣ `WHERE status = $from`. Δύο ταυτόχρονες κλήσεις
-    (π.χ. το one-off event του AutoProcess και το 5-λεπτο sweep του, σχεδόν
-    ταυτόχρονα) μπορούν ΚΑΙ οι δύο να περάσουν τον έλεγχο και να εκτελέσουν
-    τη μετάβαση διπλά -- διπλό event log, διπλές ειδοποιήσεις. Το πιο
-    κεντρικό write στο σύστημα, χωρίς κανένα concurrency test.
+  - `ContractLifecycle::moveTo()` — **✅ ΔΙΟΡΘΩΘΗΚΕ 30/08.** Ήταν
+    read-then-write, το `ContractTransitions::applyTransition()` plain
+    `$wpdb->update` ΧΩΡΙΣ `WHERE status = $from`. Τώρα η `applyTransition()`
+    δέχεται το αναμενόμενο `$from` και δεσμεύει τη γραφή πάνω του
+    (`WHERE id=%d ... AND status = $expectedFrom` στο SET, plus guard και
+    στο δεύτερο query του `updated_at`), επιστρέφοντας `bool`. Η νίκη/ήττα
+    δεν κρίνεται από τις επηρεασμένες γραμμές (η MySQL αναφέρει 0 ΚΑΙ όταν ο
+    όρος ταίριαξε αν `force=>true` δεν αλλάζει τιμή) αλλά από άμεσο
+    ξαναδιάβασμα του status μετά τη γραφή. Η `moveTo()` σε ήττα: αν η
+    σύμβαση έφτασε ήδη στο ζητούμενο target (άλλος νικητής, ίδιος στόχος) —
+    `true`, idempotent, ΧΩΡΙΣ δεύτερο event/ειδοποίηση· αλλιώς `false`, καμία
+    σιωπηλή αντικατάσταση. Tests:
+    `tests/Integration/ContractLifecycleMoveToRaceTest.php` (3 tests) —
+    διαφορετικός στόχος από τον νικητή (τίποτα δεν αλλάζει), ίδιος στόχος με
+    τον νικητή (idempotent, καμία διπλή καταχώρηση), updated_at δεν αγγίζεται
+    στην ήττα.
   - `NotificationRepository::add()` (γραμμή 41-64) — plain insert, καμία
     dedupe. Ένα διπλό `moveTo()` (βλ. παραπάνω) στέλνει διπλό email/SMS με
     τίποτα να το εμποδίζει.
@@ -477,6 +485,9 @@ file:line evidence) στους 8 τομείς. Σύνοψη:
   `UnprotectedDocuments::flagProtected()` μετριάζει τον υποκείμενο κίνδυνο
   με claim guard.
 
-Αν ξανανοίξει αυτό το θέμα: το πιο αξιόλογο σημείο για να ξεκινήσει είναι
-το `ContractLifecycle::moveTo()` race (πιο κεντρικό) — το AFM validation gap
-στο `/extract?apply=1` διορθώθηκε 30/08 (βλ. Priority 3 παραπάνω).
+Και τα δύο ευρήματα αυτού του audit που είχαν πραγματικό, στοχευμένο fix
+διορθώθηκαν 30/08: το AFM validation gap στο `/extract?apply=1` (βλ.
+Priority 3 παραπάνω) και το `ContractLifecycle::moveTo()` race (παραπάνω).
+Ό,τι απομένει από το Priority 1 (NotificationRepository dedupe,
+ContractDocuments::store(), NetworkRepository::rebuild(), τα δύο ήδη-guarded
+σημεία χωρίς test) παραμένει ανοιχτό, χωρίς να έχει ζητηθεί ρητά ακόμα.
