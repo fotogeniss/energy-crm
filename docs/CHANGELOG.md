@@ -7,6 +7,66 @@
 
 ---
 
+## 2026-08-30 (178)
+
+### ContractsBulkController::changeStatus() -- η τέταρτη πόρτα του DraftExitGate
+
+Εσωτερική επισκόπηση bugs σε ολόκληρο το plugin, ζητημένη ρητά από τον
+ιδιοκτήτη («elekse gia bugs ton kodika file»), πριν το σημερινό GitHub/README
+task. Το `DraftExitGate` (ΑΦΜ πελάτη υποχρεωτικό για έξοδο από draft, βλ.
+docblock της κλάσης) καλείται ρητά από δύο σημεία -- `ContractSaveController`
+και `ContractStatusController` -- επειδή δεν είναι μέρος του
+`ContractLifecycle::moveTo()` (σε αντίθεση με το `CancellationGate`, που
+είναι). Το `ContractsBulkController::changeStatus()` είναι μια ΤΡΙΤΗ διαδρομή
+που καταλήγει στο ίδιο `moveTo()`, και δεν το ρωτούσε ποτέ: μια μαζική
+«Αλλαγή κατάστασης» σε πολλαπλή επιλογή έβγαζε ένα πρόχειρο χωρίς ΑΦΜ
+κατευθείαν σε «Εκκρεμότητα υπογραφής» με ένα κλικ -- ακριβώς το σενάριο
+που το `DraftExitAfmTest` δοκιμάζει ρητά στις άλλες δύο πόρτες, και που το
+gate υπάρχει για να εμποδίζει (η αναζήτηση duplicate τρέχει μόνο στο
+`afm_hash`, οπότε πελάτης χωρίς ΑΦΜ δεν μπορεί ποτέ να σημανθεί ως διπλός).
+
+Η ίδια βόλτα στον κώδικα βρήκε δεύτερο, μικρότερο bug στην ίδια μέθοδο: το
+`ContractRepository::reachableAmong()` -- το ερώτημα που φέρνει τις γραμμές
+για τη μαζική ενέργεια -- δεν επέλεγε καν τη στήλη `energy_type`, ενώ η
+`changeStatus()` λίγο πιο κάτω την περνάει στο `ECRM_Docs::missing_labels()`
+για να αποφασίσει ποια δικαιολογητικά χρειάζονται. Η στήλη έλειπε από το
+`SELECT`, άρα ήταν πάντα `''` σε αυτή τη διαδρομή -- και το
+`ECRM_Docs::required_for()` αφαιρεί το `e9` μόνο όταν `energy_type ===
+'mobile'`. Αποτέλεσμα: μια σύμβαση κινητής τηλεφωνίας μπλοκαριζόταν από τη
+μαζική μετάβαση σε «Δρομολογήθηκε»/«Ενεργή» για δήθεν λείπον `e9`, που δεν
+της χρειάζεται ποτέ -- λάθος προς τη μεριά του over-blocking, όχι security,
+αλλά ψευδές `missing`.
+
+Διόρθωση σε τρία σημεία:
+- `ContractRepository::reachableAmong()` -- προστέθηκε `energy_type` στο
+  `SELECT`.
+- `ContractsBulkController` -- νέα εξάρτηση `DraftExitGate` (constructor +
+  `ControllerFactory::all()`, ίδιο instance με τα άλλα δύο controllers μέσω
+  `Services::draftExitGate()`). Η `changeStatus()` δέχεται τώρα ολόκληρο το
+  `UserScope` αντί για σκέτο `actorId`, γιατί το gate χρειάζεται scope για
+  να διαβάσει τον πελάτη.
+- Μέσα στον βρόχο, μετά τον έλεγχο `canMoveTo()` και πριν το `moveTo()`:
+  `$this->draftExit->refusalOnMove($source, $target, $customerId, $scope)`.
+  Μια άρνηση δεν μετράει σαν `skipped` σιωπηλά -- νέο πεδίο απάντησης
+  `missing_afm` με δικό του notice, ίδιο μοτίβο με το υπάρχον `rejected` για
+  τον γράφο μεταβάσεων.
+
+`tests/Integration/BulkStatusDraftExitGateTest.php`, 3 tests: πρόχειρο χωρίς
+ΑΦΜ αρνείται (`updated: 0`, `missing_afm: 1`, status αμετάβλητο), το ίδιο
+πρόχειρο με αποθηκευμένο ΑΦΜ περνάει κανονικά, και η ακύρωση πρόχειρου χωρίς
+ΑΦΜ ΔΕΝ μπλοκάρεται ποτέ -- ίδια εξαίρεση με το `DraftExitGate::guards()`
+(«Cancelling is always allowed»), για να μην παγιδεύεται ημιτελής δουλειά
+στην οθόνη.
+
+**Laravel-ready;** Το `DraftExitGate` είναι ήδη καθαρή domain κλάση χωρίς
+WordPress state -- μεταφέρεται αυτούσιο. Η αλλαγή στον controller είναι
+ακριβώς αυτό που θα ήταν και σε Laravel: ένα Form Request/Action καλεί το
+ίδιο gate object που καλούν και τα άλλα δύο endpoints, αντί να το
+παρακάμπτει επειδή είναι "μόνο μαζική ενέργεια". Καμία τρίτη υλοποίηση του
+ίδιου κανόνα δεν προστέθηκε.
+
+---
+
 ## 2026-08-30 (177)
 
 ### ContractLifecycle::moveTo() race -- εξωτερικό audit, Priority 1

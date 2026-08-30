@@ -87,7 +87,14 @@ final class ControllerFactory
                 $cancel,
                 $deletion
             ),
-            new ContractsBulkController($scope, Services::contracts(), Services::files(), $lifecycle, $deletion),
+            new ContractsBulkController(
+                $scope,
+                Services::contracts(),
+                Services::files(),
+                $lifecycle,
+                $deletion,
+                $draftExit
+            ),
             new ContractDocumentsController($scope, $details, Services::files(), Services::contractDocuments()),
             new DocumentsController($scope, Services::contracts(), Services::files()),
             new DuplicateCheckController($scope, $queries),
