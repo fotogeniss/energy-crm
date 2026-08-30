@@ -248,7 +248,7 @@ final class ContractRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT id, status, activation_type, partner_user_id, customer_id
+                "SELECT id, status, activation_type, energy_type, partner_user_id, customer_id
                  FROM %i WHERE id IN ({$placeholders}){$clause}",
                 [$this->table, ...$ids, ...$scopeParams]
             ),

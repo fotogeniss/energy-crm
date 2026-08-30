@@ -27,6 +27,7 @@ use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\DeletionGate;
+use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\FileRepository;
 use WP_REST_Request;
@@ -48,6 +49,7 @@ final class ContractsBulkController implements Controller
         private readonly FileRepository $files,
         private readonly ContractLifecycle $lifecycle,
         private readonly DeletionGate $deletion,
+        private readonly DraftExitGate $draftExit,
     ) {
     }
 
@@ -110,7 +112,7 @@ final class ContractsBulkController implements Controller
         }
 
         return match ($action) {
-            'status' => $this->changeStatus($rows, (string) $request['value'], $scope->actorId()),
+            'status' => $this->changeStatus($rows, (string) $request['value'], $scope),
             'delete' => $this->delete($rows, $scope),
             'assign' => $this->assign($rows, (int) $request['value'], $scope),
             'export' => $this->export($rows, $scope),
@@ -127,8 +129,9 @@ final class ContractsBulkController implements Controller
     /**
      * @param list<array<string, mixed>> $rows
      */
-    private function changeStatus(array $rows, string $to, int $actorId): WP_REST_Response
+    private function changeStatus(array $rows, string $to, UserScope $scope): WP_REST_Response
     {
+        $actorId = $scope->actorId();
         $target = ContractStatus::tryFromSlug($to);
 
         if ($target === null) {
@@ -148,10 +151,11 @@ final class ContractsBulkController implements Controller
             ], 409);
         }
 
-        $gated    = in_array($target->value, ECRM_Docs::gate_statuses(), true);
-        $updated  = 0;
-        $skipped  = 0;
-        $rejected = [];
+        $gated     = in_array($target->value, ECRM_Docs::gate_statuses(), true);
+        $updated   = 0;
+        $skipped   = 0;
+        $rejected  = [];
+        $missingAfm = 0;
 
         foreach ($rows as $row) {
             $id   = (int) $row['id'];
@@ -183,6 +187,23 @@ final class ContractsBulkController implements Controller
                 continue;
             }
 
+            // Το ίδιο πηγαίο ΑΦΜ που ζητά το ContractSaveController και το
+            // ContractStatusController -- η μαζική ενέργεια περνούσε από
+            // εδώ χωρίς ποτέ να ρωτήσει, οπότε ένα πρόχειρο χωρίς ΑΦΜ έβγαινε
+            // από το draft με ένα κλικ σε μια μαζική επιλογή, ακριβώς αυτό
+            // που το gate υπάρχει για να εμποδίζει στα άλλα δύο σημεία.
+            $missingAfmReason = $source === null ? null : $this->draftExit->refusalOnMove(
+                $source,
+                $target,
+                (int) ($row['customer_id'] ?? 0),
+                $scope
+            );
+
+            if ($missingAfmReason !== null) {
+                $missingAfm++;
+                continue;
+            }
+
             // Ποιος το έκανε, και όχι ποιανού είναι. Το πεδίο κουβαλούσε τον
             // κάτοχο επειδή η ειδοποίηση το χρησιμοποιούσε ως παραλήπτη· τώρα
             // η ειδοποίηση βρίσκει μόνη της τον κάτοχο από τη σύμβαση, οπότε
@@ -207,6 +228,14 @@ final class ContractsBulkController implements Controller
                 implode('», «', array_unique($rejected)),
                 $target->label()
             );
+        }
+
+        if ($missingAfm > 0) {
+            $response['missing_afm'] = $missingAfm;
+            $response['notice']      = trim(($response['notice'] ?? '') . sprintf(
+                ' %d σύμβαση/εις δεν άλλαξαν: χρειάζονται ΑΦΜ πελάτη για να βγουν από το πρόχειρο.',
+                $missingAfm
+            ));
         }
 
         return new WP_REST_Response($response, 200);

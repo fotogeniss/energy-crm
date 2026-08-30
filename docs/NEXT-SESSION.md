@@ -529,3 +529,36 @@ ContractDocuments::store(), NetworkRepository::rebuild(), τα δύο ήδη-gua
 χαρτί GDPR/DPA, οι 5 αποφάσεις του §6γ, τα 4 clone-site περάσματα,
 procedural. Όλα «μόνο εσύ» ή «εσύ + δικηγόρος» -- κανένα δεν είναι δικό
 μου να προχωρήσει χωρίς εσένα.
+
+## Εσωτερική επισκόπηση bugs, 30/08 -- σε εξέλιξη
+
+Ο ιδιοκτήτης ζήτησε έλεγχο ολόκληρου του plugin για bugs («elekse gia bugs
+ton kodika file»), ξεχωριστό από το εξωτερικό audit παραπάνω. Έξι ευρήματα
+επιβεβαιωμένα (κάθε ένα διαβασμένο στον ζωντανό κώδικα, όχι υποθετικό), μετά
+GitHub description/topics/README (ρητή σειρά: «pame prwta github kai meta ta
+upoloipa»):
+
+1. **✅ ΔΙΟΡΘΩΘΗΚΕ 30/08.** `ContractsBulkController::changeStatus()` δεν
+   ρωτούσε το `DraftExitGate` -- τρίτη πόρτα εξόδου από draft χωρίς τον
+   έλεγχο ΑΦΜ που έχουν οι άλλες δύο. Βλ. CHANGELOG (178),
+   `BulkStatusDraftExitGateTest.php`. Ίδιο commit διόρθωσε και δεύτερο,
+   μικρότερο bug στην ίδια μέθοδο: `ContractRepository::reachableAmong()`
+   δεν επέλεγε `energy_type`, οπότε το doc-gate της μαζικής ενέργειας
+   έβλεπε πάντα άδειο energy_type.
+2. **ΕΚΚΡΕΜΕΙ.** `CustomerRepository::update()` -- TOCTOU: `isReachable()`
+   scoped, μετά `$wpdb->update()` ΧΩΡΙΣ scope στο WHERE (μόνο `id`).
+   Medium-high.
+3. **ΕΚΚΡΕΜΕΙ.** `/assistant` (Λίτσα chat, `includes/class-ecrm-assistant.php`)
+   χωρίς rate limit -- σε αντίθεση με `duplicate`, `track_upload`, `kb_ask`,
+   SMS test-send που έχουν όλα.
+4. **ΕΚΚΡΕΜΕΙ.** `TimeLimit::atLeast()` (`src/Infrastructure/TimeLimit.php`)
+   μπορεί να ΜΕΙΩΣΕΙ ήδη μεγαλύτερο όριο εκτέλεσης -- έπρεπε μόνο να
+   επεκτείνει.
+5. **ΕΚΚΡΕΜΕΙ.** `DashboardRepository::NEEDS_ME` λείπει `pending_signature`.
+   Low.
+6. **ΕΚΚΡΕΜΕΙ.** `PerformanceTier::forVolume()` λάθος `next`/`next_at` στο
+   ανώτατο tier (Diamond). Low.
+
+Σειρά επιδιόρθωσης: κατά σοβαρότητα, ίδιος βρόχος (μέτρηση → ελάχιστη
+υλοποίηση → tests → CHANGELOG → πρόβλεψη πλήθους test → ο πελάτης τρέχει
+`check:all`).
