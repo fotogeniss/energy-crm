@@ -124,6 +124,65 @@ final class ExtractionApplyOnlyTest extends IntegrationTestCase
         self::assertSame([], $response->get_data()['applied'], 'Άγνωστο/μη επιτρεπτό κλειδί γράφτηκε.');
     }
 
+    // --- ΑΦΜ: AUDIT εύρημα 30/08 -- η μόνη γραφή χωρίς επικύρωση -------------
+
+    /**
+     * Το ίδιο κενό που περιέγραψε το εξωτερικό audit: το ΑΦΜ που διάβασε το
+     * AI έγραφε κατευθείαν, χωρίς κανέναν έλεγχο ψηφίου -- σε αντίθεση με το
+     * ContractSaveController, που απορρίπτει ολόκληρο το save σε μη έγκυρο
+     * ΑΦΜ. Ένα λάθος ψηφίο δεν πρέπει να μπλοκάρει ΟΛΟΚΛΗΡΗ την εφαρμογή
+     * όμως -- μόνο το ίδιο το πεδίο δεν πρέπει να γραφτεί.
+     */
+    public function testAnInvalidAfmIsNotAppliedButOtherFieldsStillAre(): void
+    {
+        // mobile: χωρίς ΚΑΝΕΝΑ πεδίο πελάτη το ContractSaveController δεν
+        // φτιάχνει καν γραμμή customers (βλ. testDataIsAppliedToEmptyFields).
+        $contractId = $this->makeContract(['status' => 'draft', 'mobile' => '6900000000']);
+
+        $response = $this->extract([
+            'contract_id' => $contractId,
+            'apply'       => '1',
+            'data'        => wp_json_encode(['afm' => '123456789', 'first_name' => 'Μαρία']),
+        ]);
+
+        self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
+        self::assertNotContains(
+            'afm',
+            $response->get_data()['applied'],
+            'Ένα ΑΦΜ που αποτυγχάνει τον έλεγχο ψηφίου γράφτηκε.'
+        );
+        self::assertContains('first_name', $response->get_data()['applied'], 'Το ΑΦΜ μπλόκαρε και τα άλλα πεδία.');
+
+        global $wpdb;
+        $customerId = (int) $wpdb->get_var($wpdb->prepare(
+            'SELECT customer_id FROM %i WHERE id = %d',
+            Tables::name(Tables::CONTRACTS),
+            $contractId
+        ));
+        $stored = $wpdb->get_var($wpdb->prepare(
+            'SELECT afm FROM %i WHERE id = %d',
+            Tables::name(Tables::CUSTOMERS),
+            $customerId
+        ));
+
+        self::assertTrue($stored === null || $stored === '', 'Το μη έγκυρο ΑΦΜ έφτασε στη βάση.');
+    }
+
+    /** Control: ένα ΑΦΜ που περνάει τον έλεγχο ψηφίου γράφεται κανονικά. */
+    public function testAValidAfmIsApplied(): void
+    {
+        $contractId = $this->makeContract(['status' => 'draft', 'mobile' => '6900000000']);
+
+        $response = $this->extract([
+            'contract_id' => $contractId,
+            'apply'       => '1',
+            'data'        => wp_json_encode(['afm' => '090003373']),
+        ]);
+
+        self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
+        self::assertContains('afm', $response->get_data()['applied']);
+    }
+
     /** Σύμβαση άλλου partner απαντά όπως και ανύπαρκτη. */
     public function testAContractOfAnotherPartnerIsRefused(): void
     {
