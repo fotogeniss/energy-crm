@@ -425,6 +425,47 @@ final class ProviderFormFields
     }
 
     /**
+     * Raw field coordinates for a template -- «πάνω στο έντυπο», 30/08.
+     *
+     * Same JSON, same page-1-mm-from-top-left convention that
+     * class-ecrm-formfill.php already trusts to PRINT the finished PDF; this
+     * reads the identical file to POSITION live inputs on top of the page
+     * image instead. One file, two consumers, no second measurement to drift
+     * out of sync with the first.
+     *
+     * An unknown or unreadable template returns an empty array -- the caller
+     * must read that as «no overlay for this template» and fall back to the
+     * classic form, never as an error.
+     *
+     * @return array{
+     *     pageSize: array{w: float, h: float},
+     *     fields: array<string, array{page: int, x: float, y: float}>
+     * }|array{}
+     */
+    public static function positionsForTemplate(string $key, string $formsDir): array
+    {
+        $path = rtrim($formsDir, '/\\') . '/' . $key . '.json';
+
+        if ($key === '' || ! is_readable($path)) {
+            return [];
+        }
+
+        $map = json_decode((string) file_get_contents($path), true);
+
+        if (! is_array($map) || ! is_array($map['fields'] ?? null)) {
+            return [];
+        }
+
+        return [
+            'pageSize' => [
+                'w' => (float) ($map['page_w'] ?? 210.0),
+                'h' => (float) ($map['page_h'] ?? 297.0),
+            ],
+            'fields' => $map['fields'],
+        ];
+    }
+
+    /**
      * @return array<string, list<string>>
      */
     public static function columnInputMap(): array

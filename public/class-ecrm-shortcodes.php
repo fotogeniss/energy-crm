@@ -236,6 +236,10 @@ class ECRM_Shortcodes {
 			'nonce'    => wp_create_nonce( 'wp_rest' ),
 			'statuses' => ECRM_DB::statuses(),
 			'caps'     => $caps,
+			// «Πάνω στο έντυπο» (30/08): χρειάζεται να χτίσει URLs για
+			// assets/forms/{template}-{n}.jpg -- ήδη δημόσια στατικά αρχεία,
+			// καμία νέα σελίδα/endpoint γι' αυτά.
+			'formsUrl' => esc_url_raw( ECRM_URL . 'assets/forms/' ),
 		] );
 	}
 
@@ -482,6 +486,26 @@ class ECRM_Shortcodes {
 			     οθόνης· σε άλλο βήμα θα εμφανιζόταν εκεί που κανείς δεν κοιτά. -->
 			<div class="ecrm-dupwarn" data-dupwarn hidden></div>
 
+			<!-- «Πάνω στο έντυπο» -- ζητήθηκε ρητά 30/08 («να εμφανίζεται το
+			     έγγραφο της αίτησης και ο υπάλληλος να συμπληρώνει κατευθείαν
+			     πάνω στην αίτηση»). Ο μηχανισμός είναι γενικός (assets/forms/
+			     {template}.json+jpg υπάρχουν ΗΔΗ για όλους τους παρόχους,
+			     class-ecrm-formfill.php τα εμπιστεύεται σήμερα για την τελική
+			     εκτύπωση) -- αλλά η ΕΜΦΑΝΙΣΗ περιορίστηκε ρητά μόνο σε Protergia
+			     για αυτόν τον πρώτο γύρο (ecrm-form.js: docOverlaySupported()),
+			     ώστε να μη «χαλάσει το υπάρχον» πουθενά αλλού. Κρυφό by default
+			     -- η JS το ξεσκεπάζει ΜΟΝΟ όταν βρει θέσεις πεδίων για τον
+			     τρέχοντα πάροχο/πρόγραμμα. Καμία αλλαγή στο <section> από κάτω:
+			     η κλασική φόρμα μένει ΑΚΡΙΒΩΣ όπως ήταν. -->
+			<div class="ecrm-docsw" data-docsw hidden>
+				<span class="ecrm-docsw__label">Στοιχεία Πελάτη</span>
+				<div class="ecrm-docsw__tabs">
+					<button type="button" class="ecrm-docsw__tab is-on" data-docview="classic">Κλασική φόρμα</button>
+					<button type="button" class="ecrm-docsw__tab" data-docview="doc">Πάνω στο έντυπο</button>
+				</div>
+			</div>
+
+			<div data-classic-view>
 			<section class="ecrm-card">
 				<div class="ecrm-step"><span class="ecrm-step__n">3</span> Στοιχεία Πελάτη</div>
 
@@ -554,6 +578,22 @@ class ECRM_Shortcodes {
 			<section class="ecrm-card ecrm-provform" data-provider-fields hidden>
 				<div class="ecrm-step"><span class="ecrm-step__n"><svg class="ecrm-i ecrm-i--step" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span> <span data-provform-title>Απαιτούμενα από τον πάροχο</span></div>
 				<div class="ecrm-grid" data-provform-grid></div>
+			</section>
+			</div><!-- /[data-classic-view] -->
+
+			<!-- Ίδια πεδία με τα δύο <section> από πάνω -- ΔΕΝ αντιγράφονται,
+			     δανείζονται (ίδια τεχνική με το paintProviderFields παραπάνω):
+			     η JS γράφει κατευθείαν στο πραγματικό .ecrm-input πάνω στο
+			     έντυπο, όχι σε αντίγραφο. Έτσι το collect()/readField() και
+			     κάθε listener που ήδη ακούει το πραγματικό πεδίο (dup-check,
+			     AI-mark, Γρήγορη σύνοψη) συνεχίζουν να δουλεύουν ΑΝΑΛΛΟΙΩΤΑ,
+			     ό,τι όψη κι αν βλέπει ο χρήστης. -->
+			<section class="ecrm-card ecrm-docoverlay" data-doc-overlay hidden>
+				<div class="ecrm-step"><span class="ecrm-step__n"><svg class="ecrm-i ecrm-i--step" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span> Πάνω στο έντυπο</div>
+				<div class="ecrm-docbox" data-docoverlay-box>
+					<img data-docoverlay-img alt="Έντυπο αίτησης">
+				</div>
+				<p class="ecrm-docoverlay__hint">Μόνο τα πεδία που τυπώνονται σε αυτή τη σελίδα εμφανίζονται εδώ· τα υπόλοιπα μένουν στην «Κλασική φόρμα».</p>
 			</section>
 
 			<?php
