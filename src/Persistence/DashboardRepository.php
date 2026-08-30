@@ -28,9 +28,17 @@ final class DashboardRepository
      * πάροχο και ο συνεργάτης δεν έχει τι να κάνει. Το dashboard δείχνει
      * δουλειά, όχι αναμονή.
      *
+     * AUDIT 30/08: `pending_signature` έλειπε. Δεν είναι δεύτερο «περιμένει
+     * τον πάροχο» -- είναι ο πάροχος που ΓΥΡΝΑΕΙ πίσω την αίτηση ζητώντας
+     * νέα υπογραφή (βλ. `ContractStatus::allowedNext()`, το σχόλιο πάνω
+     * από το `Routed`), και η μόνη ενέργεια που την προχωράει είναι του
+     * συνεργάτη -- να ξαναστείλει τον σύνδεσμο υπογραφής
+     * (`SignLinkController::create()`). Ίδια κατηγορία με το
+     * `awaiting_signature`, απλά διαφορετικό σημείο εισόδου στον γράφο.
+     *
      * @var list<string>
      */
-    private const NEEDS_ME = ['pending', 'awaiting_signature', 'draft'];
+    private const NEEDS_ME = ['pending', 'awaiting_signature', 'pending_signature', 'draft'];
 
     /**
      * Οι στατικές καταστάσεις που ΔΕΝ μετρούν ως «ανοιχτή» αίτηση: η
@@ -275,7 +283,7 @@ final class DashboardRepository
                 'SELECT c.id, c.code, c.status, c.customer_id, c.updated_at, p.name provider,
                         DATEDIFF(UTC_TIMESTAMP(), c.updated_at) days
                  FROM %i c LEFT JOIN %i p ON p.id = c.provider_id
-                 WHERE c.partner_user_id = %d AND c.status IN (%s, %s, %s)
+                 WHERE c.partner_user_id = %d AND c.status IN (%s, %s, %s, %s)
                  ORDER BY c.updated_at ASC LIMIT %d',
                 [
                     Tables::name(Tables::CONTRACTS),

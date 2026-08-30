@@ -59,17 +59,33 @@ final class DashboardAttentionTest extends IntegrationTestCase
         $this->contractFor($this->alice, ['status' => 'pending']);
         $this->contractFor($this->alice, ['status' => 'draft']);
         $this->contractFor($this->alice, ['status' => 'awaiting_signature']);
+        $this->contractFor($this->alice, ['status' => 'pending_signature']);
         $this->contractFor($this->alice, ['status' => 'routed']);
         $this->contractFor($this->alice, ['status' => 'active']);
 
         $out = $this->dashboard->needsAttention($this->alice);
 
-        self::assertCount(3, $out);
+        self::assertCount(4, $out);
 
         $statuses = array_map(static fn (array $r): string => (string) $r['status'], $out);
         sort($statuses);
 
-        self::assertSame(['awaiting_signature', 'draft', 'pending'], $statuses);
+        self::assertSame(['awaiting_signature', 'draft', 'pending', 'pending_signature'], $statuses);
+    }
+
+    /**
+     * `pending_signature` -- ο πάροχος γύρισε πίσω την αίτηση ζητώντας νέα
+     * υπογραφή. Δική του assertion, ίδιος λόγος με το `routed` παρακάτω: η
+     * αποτυχία πρέπει να λέει ΤΙ έλειψε, όχι απλώς έναν αριθμό που άλλαξε.
+     */
+    public function testAContractSentBackForANewSignatureIsMyProblem(): void
+    {
+        $this->contractFor($this->alice, ['status' => 'pending_signature']);
+
+        $out = $this->dashboard->needsAttention($this->alice);
+
+        self::assertCount(1, $out);
+        self::assertSame('pending_signature', $out[0]['status']);
     }
 
     /**
