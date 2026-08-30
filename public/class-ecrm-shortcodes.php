@@ -276,6 +276,9 @@ class ECRM_Shortcodes {
 
 			<!-- Ο wizard: τέσσερα βήματα, όπως οι B1-B4 του UX kit. Η μπάρα είναι
 			     ΚΟΥΜΠΙΑ, όχι διακόσμηση: πίσω ελεύθερα, μπροστά όσο έχεις φτάσει. -->
+			<div class="ecrm-layout">
+			<div class="ecrm-main">
+
 			<nav class="ecrm-wsteps" data-wsteps aria-label="Βήματα αίτησης">
 				<button type="button" class="ecrm-wstep__b is-on" data-wgo="1" aria-current="step"><strong>Βήμα 1</strong>Πάροχος &amp; τύπος</button>
 				<button type="button" class="ecrm-wstep__b" data-wgo="2"><strong>Βήμα 2</strong>Έγγραφα &amp; AI</button>
@@ -958,6 +961,40 @@ class ECRM_Shortcodes {
 					<button type="button" class="ecrm-btn ecrm-btn--primary" data-save-changes hidden>Αποθήκευση Αλλαγών</button>
 				</div>
 			</footer>
+			</div><!-- /.ecrm-main -->
+
+			<!-- «Γρήγορη σύνοψη» -- ζητήθηκε ρητά 30/08 (screenshot εξωτερικού
+			     εργαλείου), για να ξέρει ο συνεργάτης πού βρίσκεται χωρίς να
+			     ανεβοκατεβαίνει τη φόρμα. Καθαρά στατικό markup εδώ -- το γεμίζει
+			     και το ενημερώνει το updateSummary() του ecrm-form.js σε κάθε
+			     αλλαγή πεδίου, ίδια πεδία με τη φόρμα, καμία δική του κλήση στο
+			     API. Ίδιο οπτικό λεξιλόγιο με το προϊόν: .ecrm-meter (dashboard)
+			     και .ecrm-rcheck (κάρτα σύμβασης), όχι νέο στυλ. -->
+			<aside class="ecrm-summary" data-summary aria-label="Γρήγορη σύνοψη αίτησης">
+				<p class="ecrm-summary__title">Γρήγορη σύνοψη</p>
+				<p class="ecrm-summary__sub">Ενημερώνεται αυτόματα καθώς συμπληρώνεις τη φόρμα.</p>
+
+				<dl class="ecrm-summary__rows">
+					<div class="ecrm-summary__row"><dt>Πελάτης</dt><dd data-sum="customer" class="is-empty">—</dd></div>
+					<div class="ecrm-summary__row"><dt>Περιοχή</dt><dd data-sum="region" class="is-empty">—</dd></div>
+					<div class="ecrm-summary__row"><dt>Πάροχος</dt><dd data-sum="provider" class="is-empty">—</dd></div>
+					<div class="ecrm-summary__row"><dt>Πρόγραμμα</dt><dd data-sum="program" class="is-empty">—</dd></div>
+				</dl>
+
+				<div class="ecrm-meter"><span class="ecrm-meter__f" data-sum-fill style="width:0%"></span></div>
+				<div class="ecrm-summary__pct"><span>Πληρότητα αίτησης</span><b data-sum-pct>0%</b></div>
+
+				<ul class="ecrm-rcheck">
+					<li data-sumcheck="providerProgram"><span class="ecrm-rcheck__m">○</span>Πάροχος &amp; πρόγραμμα</li>
+					<li data-sumcheck="identity"><span class="ecrm-rcheck__m">○</span>Στοιχεία ταυτότητας</li>
+					<li data-sumcheck="afmAdt"><span class="ecrm-rcheck__m">○</span>ΑΦΜ / ΑΔΤ</li>
+					<li data-sumcheck="address"><span class="ecrm-rcheck__m">○</span>Διεύθυνση</li>
+					<li data-sumcheck="contact"><span class="ecrm-rcheck__m">○</span>Στοιχεία επικοινωνίας</li>
+				</ul>
+
+				<p class="ecrm-summary__foot" data-sum-step>Βήμα 1 από 4</p>
+			</aside>
+			</div><!-- /.ecrm-layout -->
 		</div>
 		<?php
 		return (string) ob_get_clean();

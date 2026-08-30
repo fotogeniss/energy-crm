@@ -1038,3 +1038,60 @@
 	box-shadow: 0 0 0 1000px var(--surface) inset;
 	transition: background-color 9999s ease-in-out 0s;
 }
+
+
+/* --------------------------------------------------------------------
+ * «Γρήγορη σύνοψη» -- ζητήθηκε ρητά 30/08 (screenshot εξωτερικού
+ * εργαλείου: πλαϊνή κάρτα με βασικά στοιχεία + % πληρότητας, ώστε ο
+ * συνεργάτης να ξέρει πού βρίσκεται χωρίς να ανεβοκατεβαίνει τη φόρμα).
+ *
+ * Ίδιο ΚΡΙΤΗΡΙΟ σε δύο σημεία: `.ecrm-meter`/`.ecrm-meter__f` είναι
+ * pixel-για-pixel το ίδιο με το μέτρο του dashboard, και `.ecrm-rcheck`
+ * το ίδιο με το checklist της κάρτας σύμβασης (ecrm-view-detail.js), και
+ * τα δύο ζουν στο ecrm-app.css. Ξαναγράφτηκαν εδώ αντί να γίνει import,
+ * γιατί αυτό το αρχείο είναι το ΜΟΝΟ CSS που φορτώνει η αυτόνομη σελίδα
+ * της φόρμας (wp_enqueue_style('ecrm-form', ...) -- όχι το ecrm-app.css)
+ * -- ίδιες τιμές, όχι ίδιο import, ώστε να δουλεύει και εκτός app shell.
+ *
+ * Το πλάτος μένει ΜΕΣΑ στο υπάρχον max-width:920px του .ecrm (δεν αγγίζει
+ * global token) -- η σύνοψη παίρνει σταθερά 260px, η φόρμα ό,τι απομένει.
+ * Κάτω από 960px ιδεατού πλάτους σελίδας η σύνοψη κατεβαίνει κάτω από τη
+ * φόρμα αντί να τη στριμώχνει. */
+.ecrm-layout { display: flex; align-items: flex-start; gap: 20px; }
+.ecrm-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+
+.ecrm-summary {
+	flex: 0 0 260px; position: sticky; top: 16px;
+	background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px;
+}
+.ecrm-summary__title { font-size: var(--fs-15); font-weight: 800; margin: 0 0 2px; color: var(--ink); }
+.ecrm-summary__sub { font-size: var(--fs-11-5); color: var(--muted); margin: 0 0 16px; line-height: 1.4; }
+
+.ecrm-summary__rows { margin: 0 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.ecrm-summary__row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: var(--fs-12-5); }
+.ecrm-summary__row dt { margin: 0; color: var(--muted); }
+.ecrm-summary__row dd { margin: 0; font-weight: 700; color: var(--ink); text-align: right; overflow-wrap: anywhere; }
+.ecrm-summary__row dd.is-empty { font-weight: 400; color: var(--n300); }
+
+/* Ίδιο με το .ecrm-meter/.ecrm-meter__f του dashboard -- ύψος, ακτίνα,
+   μετάβαση, ίδια. Το χρώμα γεμίσματος --accent-hover αντί για σταθερή
+   τιμή, ώστε να ακολουθεί το ίδιο σκούρο θέμα με το υπόλοιπο αρχείο. */
+.ecrm-meter { height: 9px; border-radius: 999px; background: var(--n100); overflow: hidden; margin-bottom: 6px; }
+.ecrm-meter__f { display: block; height: 100%; background: var(--accent-hover); border-radius: 999px; transition: width .5s ease; }
+.ecrm-summary__pct { display: flex; justify-content: space-between; font-size: var(--fs-11); color: var(--muted); margin-bottom: 16px; }
+.ecrm-summary__pct b { color: var(--ink); font-size: var(--fs-12); }
+
+/* Ίδιο με το .ecrm-rcheck της κάρτας σύμβασης -- ίδιο κριτήριο «τι
+   λείπει» σε δύο σημεία του ίδιου ταξιδιού (αίτηση → σύμβαση). */
+.ecrm-rcheck { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.ecrm-rcheck li { display: flex; align-items: center; gap: 9px; font-size: var(--fs-12-5); color: var(--muted); }
+.ecrm-rcheck li.is-ok { color: var(--ink); }
+.ecrm-rcheck__m { width: 16px; flex: 0 0 16px; text-align: center; font-weight: 800; color: var(--line-strong); }
+.ecrm-rcheck li.is-ok .ecrm-rcheck__m { color: var(--accent-ink); }
+
+.ecrm-summary__foot { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: var(--fs-11); color: var(--muted); }
+
+@media (max-width: 960px) {
+	.ecrm-layout { flex-direction: column; }
+	.ecrm-summary { flex-basis: auto; width: 100%; position: static; order: -1; }
+}
