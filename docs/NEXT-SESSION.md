@@ -553,13 +553,25 @@ upoloipa»):
    αντίθεση με `duplicate`, `track_upload`, `kb_ask`, SMS test-send. Ίδιο
    όριο με το `kb_ask` (20/300s). Βλ. CHANGELOG (180),
    `AssistantChatRateLimitTest.php`.
-4. **ΕΚΚΡΕΜΕΙ.** `TimeLimit::atLeast()` (`src/Infrastructure/TimeLimit.php`)
-   μπορεί να ΜΕΙΩΣΕΙ ήδη μεγαλύτερο όριο εκτέλεσης -- έπρεπε μόνο να
-   επεκτείνει.
-5. **ΕΚΚΡΕΜΕΙ.** `DashboardRepository::NEEDS_ME` λείπει `pending_signature`.
-   Low.
-6. **ΕΚΚΡΕΜΕΙ.** `PerformanceTier::forVolume()` λάθος `next`/`next_at` στο
-   ανώτατο tier (Diamond). Low.
+4. **✅ ΔΙΟΡΘΩΘΗΚΕ 30/08.** `TimeLimit::atLeast()`
+   (`src/Infrastructure/TimeLimit.php`) -- μπορούσε να ΜΕΙΩΣΕΙ ήδη
+   μεγαλύτερο όριο εκτέλεσης όταν το ζητούμενο ήταν μικρότερο. Η κλάση
+   κρατά τώρα το δικό της deadline αντί να εμπιστεύεται το `ini_get()`
+   μετά την πρώτη κλήση. Βλ. CHANGELOG (181), `TimeLimitTest.php`.
+5. **✅ ΔΙΟΡΘΩΘΗΚΕ 30/08.** `DashboardRepository::NEEDS_ME` -- έλειπε
+   `pending_signature` (ο πάροχος ζητά νέα υπογραφή -- μόνο ο συνεργάτης
+   προχωράει αυτό). Βλ. CHANGELOG (182), `DashboardAttentionTest.php`.
+6. **✅ ΔΙΟΡΘΩΘΗΚΕ 30/08.** `PerformanceTier::forVolume()` -- `next`/
+   `next_at` ήταν λάθος στο ανώτατο tier (Diamond, έδειχνε ήδη ξεπερασμένο
+   Bronze). Βλ. CHANGELOG (183), `PerformanceTierTest.php`.
+
+## Έξι από έξι -- εσωτερική επισκόπηση 30/08 κλειστή
+
+Και τα έξι bugs της επισκόπησης (βλ. ενότητα «Εσωτερική επισκόπηση bugs,
+30/08» παραπάνω) διορθώθηκαν, με CHANGELOG (178)-(183) και δικό τους test
+το καθένα. Ο πελάτης τρέχει `composer check:all` για την τελευταία
+παρτίδα (183) και κάνει commit/push -- μετά από αυτό δεν μένει καμία
+εκκρεμότητα κώδικα από αυτή τη γραμμή δουλειάς.
 
 Σειρά επιδιόρθωσης: κατά σοβαρότητα, ίδιος βρόχος (μέτρηση → ελάχιστη
 υλοποίηση → tests → CHANGELOG → πρόβλεψη πλήθους test → ο πελάτης τρέχει

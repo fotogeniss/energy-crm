@@ -38,11 +38,21 @@ final class PerformanceTierTest extends TestCase
         self::assertSame(1, $tier['remaining']);
     }
 
+    /**
+     * AUDIT 30/08: this test's own name promised "nothing left to reach", but
+     * it never actually checked `next`/`next_at` -- only `remaining`, which
+     * happened to floor at 0 through `max(0, ...)` even while `next` was
+     * silently naming an already-surpassed tier (Bronze, at 15, for someone
+     * on 500). Asserting on `next`/`next_at` here is what the test's name
+     * already claimed to cover.
+     */
     public function testTheTopLevelHasNothingLeftToReach(): void
     {
         $tier = PerformanceTier::forVolume(500);
 
         self::assertSame('Diamond', $tier['current']);
+        self::assertSame('', $tier['next'], 'No tier above Diamond -- must not name an already-surpassed one.');
+        self::assertSame(0, $tier['next_at']);
         self::assertSame(0, $tier['remaining']);
     }
 
