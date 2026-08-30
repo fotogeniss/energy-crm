@@ -277,7 +277,7 @@ class ECRM_Shortcodes {
 			<!-- Ο wizard: τέσσερα βήματα, όπως οι B1-B4 του UX kit. Η μπάρα είναι
 			     ΚΟΥΜΠΙΑ, όχι διακόσμηση: πίσω ελεύθερα, μπροστά όσο έχεις φτάσει. -->
 			<div class="ecrm-layout">
-			<div class="ecrm-main">
+			<div class="ecrm-wizmain">
 
 			<nav class="ecrm-wsteps" data-wsteps aria-label="Βήματα αίτησης">
 				<button type="button" class="ecrm-wstep__b is-on" data-wgo="1" aria-current="step"><strong>Βήμα 1</strong>Πάροχος &amp; τύπος</button>
@@ -961,7 +961,7 @@ class ECRM_Shortcodes {
 					<button type="button" class="ecrm-btn ecrm-btn--primary" data-save-changes hidden>Αποθήκευση Αλλαγών</button>
 				</div>
 			</footer>
-			</div><!-- /.ecrm-main -->
+			</div><!-- /.ecrm-wizmain -->
 
 			<!-- «Γρήγορη σύνοψη» -- ζητήθηκε ρητά 30/08 (screenshot εξωτερικού
 			     εργαλείου), για να ξέρει ο συνεργάτης πού βρίσκεται χωρίς να
