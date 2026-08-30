@@ -32,6 +32,15 @@ class ECRM_Assistant {
 	}
 
 	public static function chat( WP_REST_Request $req ): WP_REST_Response {
+		// Έλλειψη rate limit εδώ, εντοπίστηκε στην εσωτερική επισκόπηση 30/08:
+		// το /duplicate, το /assistant/kb (kb_ask) και το track_upload έχουν
+		// όλα προϋπολογισμό, ενώ αυτό το endpoint -- που καλεί πραγματικό Claude
+		// API, με πραγματικό κόστος ανά αίτημα -- δεν είχε κανέναν. Ίδιο όριο
+		// με το kb_ask, γιατί είναι το ίδιο είδος κλήσης (LLM, ανά χρήστη).
+		if ( class_exists( 'ECRM_RateLimit' ) && ! ECRM_RateLimit::allow( 'assistant_chat', 20, 300 ) ) {
+			return ECRM_RateLimit::too_many();
+		}
+
 		$key = ECRM_Extractor::api_key();
 		if ( empty( $key ) ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν έχει οριστεί Claude API key. Ρυθμίσεις → Energy CRM.' ], 400 );
