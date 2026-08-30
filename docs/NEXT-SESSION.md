@@ -545,9 +545,9 @@ upoloipa»):
    μικρότερο bug στην ίδια μέθοδο: `ContractRepository::reachableAmong()`
    δεν επέλεγε `energy_type`, οπότε το doc-gate της μαζικής ενέργειας
    έβλεπε πάντα άδειο energy_type.
-2. **ΕΚΚΡΕΜΕΙ.** `CustomerRepository::update()` -- TOCTOU: `isReachable()`
-   scoped, μετά `$wpdb->update()` ΧΩΡΙΣ scope στο WHERE (μόνο `id`).
-   Medium-high.
+2. **✅ ΔΙΟΡΘΩΘΗΚΕ 30/08.** `CustomerRepository::update()` -- ήταν
+   `isReachable()` scoped, μετά `$wpdb->update()` ΧΩΡΙΣ scope στο WHERE
+   (μόνο `id`). Βλ. CHANGELOG (179), `CustomerUpdateScopeTest.php`.
 3. **ΕΚΚΡΕΜΕΙ.** `/assistant` (Λίτσα chat, `includes/class-ecrm-assistant.php`)
    χωρίς rate limit -- σε αντίθεση με `duplicate`, `track_upload`, `kb_ask`,
    SMS test-send που έχουν όλα.
