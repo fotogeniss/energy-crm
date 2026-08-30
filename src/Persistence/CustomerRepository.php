@@ -284,21 +284,78 @@ final class CustomerRepository
     }
 
     /**
+     * Update a customer the actor is allowed to touch.
+     *
+     * A customer row has no partner_user_id of its own (see the class
+     * docblock), so unlike ContractRepository::update() the scope cannot be
+     * folded into a plain `WHERE partner_user_id IN (...)` -- it has to be a
+     * subquery against the contracts that make the row reachable at all.
+     * Before this, the guard was `isReachable()` followed by an UNSCOPED
+     * `$wpdb->update(..., ['id' => $customerId])`: a check-then-act with
+     * nothing in the write itself stopping it from touching a customer that
+     * fell outside scope between the two -- ΑΦΜ, ΑΔΤ, address, all writable
+     * with no scope re-checked at the point that matters. Same shape of bug
+     * as the ContractLifecycle::moveTo() race closed in (177)/(178), applied
+     * to a table that has to express its scope through a join instead of a
+     * column.
+     *
      * @param array<string, mixed> $data
      *
-     * @return bool True when the customer was reachable and updated.
+     * @return bool True when a row within scope was matched.
      */
     public function update(int $customerId, UserScope $scope, array $data): bool
     {
         global $wpdb;
 
-        $data = $this->filterWritable($data);
-
-        if ($data === [] || ! $this->isReachable($customerId, $scope)) {
+        if ($customerId <= 0) {
             return false;
         }
 
-        return $wpdb->update($this->table, $this->fields->forStorage($data), ['id' => $customerId]) !== false;
+        $data = $this->filterWritable($data);
+
+        if ($data === []) {
+            return false;
+        }
+
+        $storage = $this->fields->forStorage($data);
+
+        $assignments = [];
+        $values      = [];
+
+        foreach ($storage as $column => $value) {
+            // Column names come from self::WRITABLE, never from the caller's keys.
+            $assignments[] = '`' . $column . '` = ' . ($value === null ? 'NULL' : '%s');
+
+            if ($value !== null) {
+                $values[] = $value;
+            }
+        }
+
+        if ($scope->isAdministrator()) {
+            $clause      = '';
+            $scopeParams = [];
+        } else {
+            $clause      = ' AND id IN (SELECT customer_id FROM %i WHERE partner_user_id IN ('
+                . $scope->placeholders() . '))';
+            $scopeParams = [$this->contractsTable, ...$scope->userIds()];
+        }
+
+        $sql = 'UPDATE %i SET ' . implode(', ', $assignments) . " WHERE id = %d{$clause}";
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $affected = $wpdb->query(
+            $wpdb->prepare($sql, [$this->table, ...$values, $customerId, ...$scopeParams])
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        if ($affected === false) {
+            return false;
+        }
+
+        // 0 affected rows can mean "outside scope" or "nothing actually
+        // changed" (the write was a no-op) -- only a follow-up read tells the
+        // two apart. Same reasoning as ContractRepository::update().
+        return $affected > 0 || $this->isReachable($customerId, $scope);
     }
 
     /**
