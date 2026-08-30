@@ -235,12 +235,19 @@ class ECRM_Payouts {
 		// στρογγυλεμένη ολότητα: οι γραμμές που βλέπει ο συνεργάτης πρέπει να
 		// βγάζουν το νούμερο που πληρώνεται, αλλιώς το ένα από τα δύο λέει
 		// ψέματα για ένα-δυο λεπτά και κανείς δεν ξέρει ποιο.
-		$total = 0.0;
+		//
+		// AUDIT 30/08: η ίδια η γραφή του στιγμιότυπου μεταφέρθηκε στο
+		// PayoutRepository::stampAmounts() -- έλειπε `payout_id` από το WHERE
+		// της, βλ. το docblock εκεί για το πλήρες σενάριο race. Η δουλειά
+		// εδώ μένει μόνο ο υπολογισμός.
+		$total   = 0.0;
+		$amounts = [];
 		foreach ( (array) $mine as $r ) {
-			$amount = round( self::amount( $r ), 2 );
-			$total += $amount;
-			$wpdb->update( $ct, [ 'payout_amount' => $amount ], [ 'id' => (int) $r['id'] ] );
+			$amount              = round( self::amount( $r ), 2 );
+			$total              += $amount;
+			$amounts[ (int) $r['id'] ] = $amount;
 		}
+		( new \EnergyCRM\Persistence\PayoutRepository() )->stampAmounts( $payout_id, $amounts );
 
 		$wpdb->update( $pt, [
 			'period' => self::period_for( (array) $mine ),

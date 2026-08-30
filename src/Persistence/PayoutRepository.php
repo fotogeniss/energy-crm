@@ -344,4 +344,47 @@ final class PayoutRepository
             )
         );
     }
+
+    /**
+     * Stamp each contract's `payout_amount` snapshot, guarded to the batch
+     * that still claims it.
+     *
+     * AUDIT 30/08: `ECRM_Payouts::create()` (`admin/class-ecrm-payouts.php`)
+     * used to write this snapshot with a plain `$wpdb->update(..., ['id' =>
+     * $id])` -- no `payout_id` in the WHERE. Between the SELECT that reads
+     * which contracts belong to the freshly-created batch and this write, a
+     * concurrent `releaseFromPendingBatch()` (a partner's contract cancelled
+     * out from under the batch) could already have nulled that contract's
+     * `payout_id`/`payout_amount` -- and the unguarded write would re-stamp a
+     * stale amount on a contract that no longer belongs to any batch. Same
+     * shape as every other guarded write in this class: the condition that
+     * decided the row was still fetchable has to be repeated in the WHERE of
+     * the write itself, not trusted from an earlier SELECT.
+     *
+     * Extracted here, not left inline in the admin handler, for the same
+     * reason `deletePending()`/`markPaid()` live here and not in
+     * `ECRM_Payouts`: that handler is `admin_post` and ends in `exit`, so the
+     * test suite cannot call it -- only a piece pulled out into a plain
+     * repository method can be measured.
+     *
+     * @param array<int, float> $amountsById Contract id => already-rounded amount.
+     */
+    public function stampAmounts(int $payoutId, array $amountsById): void
+    {
+        global $wpdb;
+
+        if ($payoutId <= 0) {
+            return;
+        }
+
+        $table = Tables::name(Tables::CONTRACTS);
+
+        foreach ($amountsById as $contractId => $amount) {
+            $wpdb->update(
+                $table,
+                ['payout_amount' => $amount],
+                ['id' => (int) $contractId, 'payout_id' => $payoutId]
+            );
+        }
+    }
 }
