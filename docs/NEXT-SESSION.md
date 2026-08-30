@@ -388,3 +388,95 @@ intake (ο πελάτης στέλνει στοιχεία + έγγραφα)
    και μετά) -- φρέσκο install δεν παίρνει ΚΑΝΕΝΑ από αυτά, το
    `Installer::activate()` τα μαρκάρει "already applied" χωρίς να τρέξουν.
    Συστημικό, ξεχωριστό audit item.
+
+## Εξωτερικό audit, 5 προτάσεις — αξιολογήθηκαν πάνω στον κώδικα, 29/08
+
+Κάποιος (όχι εγώ, εξωτερική άποψη χωρίς να έχει διαβάσει τον κώδικα) πρότεινε
+πέντε προτεραιότητες. Το καθένα ελέγχθηκε πάνω στον πραγματικό κώδικα πριν
+πιστευτεί — μη τα ξαναπροτείνεις χωρίς να διαβάσεις αυτό πρώτα.
+
+**Priority 2 (crypto πρέπει να αποτυγχάνει κλειστά) — ΗΔΗ ΛΥΜΕΝΟ, η πρόταση
+είναι παρωχημένη/λάθος.** `src/Infrastructure/MissingCipher.php` +
+`FieldCipher` ήδη σταματούν το write αν λείπει το sodium ενώ η κρυπτογράφηση
+είναι ενεργή — δεν αποθηκεύουν ποτέ plaintext. Το docblock περιγράφει
+κυριολεκτικά το σενάριο που φοβάται η πρόταση ως ήδη παρατηρημένο και ήδη
+διορθωμένο. Τίποτα να γίνει.
+
+**Priority 5 (README) — σωστό, φθηνό κέρδος.** Δεν υπάρχει καθόλου
+`README.md` στο repo root.
+
+**Priority 4 (Provider integration contract) — σωστό, χαμηλή προτεραιότητα
+τώρα.** Καμία πραγματική submission/polling/webhook ενσωμάτωση δεν υπάρχει
+σήμερα (ελέγχθηκε με grep) — τίποτα υπαρκτό δεν "σπάει". Προνοητικό σχέδιο
+για τον πρώτο πραγματικό πάροχο. `src/Providers/Domain/ProviderStatusMap.php`
+καλύπτει ήδη το κομμάτι external↔internal status (χρησιμοποιείται στο CSV
+import), δοκιμασμένο.
+
+**Priority 3 (AI provenance / validation) — μερικώς λάθος, αλλά με ένα
+πραγματικό εύρημα μέσα.** Το κύριο μονοπάτι αποθήκευσης
+(`ContractSaveController::save()`) ΗΔΗ καλεί `ECRM_Validate::afm()` σε κάθε
+πραγματικό save, ανεξαρτήτως προέλευσης δεδομένων — άρα δεν ισχύει "καμία
+επικύρωση". ΑΛΛΑ: το `/extract?apply=1&contract_id=X` (ExtractionController::
+applyToRecords(), γράφει κατευθείαν χωρίς νέο save) γράφει το ΑΦΜ που
+διάβασε το AI απευθείας μέσω `CustomerRepository::update()`, που ΔΕΝ καλεί
+`ECRM_Validate::afm()` ούτε καμία άλλη επικύρωση. Ένα λάθος ΑΦΜ που διάβασε
+λάθος το μοντέλο από θολή φωτογραφία μπαίνει στη βάση πριν καν ανοίξει
+κανείς τη φόρμα. Πραγματικό, στενό εύρημα — υποψήφιο για μικρό, στοχευμένο
+fix (πέρασε το ίδιο `ECRM_Validate::afm()` πριν το `customerPatch` γραφτεί).
+
+**✅ ΔΙΟΡΘΩΘΗΚΕ 30/08.** `ExtractionController::applyToRecords()` καλεί τώρα
+`ECRM_Validate::afm()` πριν γράψει το πεδίο `afm` — μη έγκυρο ΑΦΜ απλά δεν
+γράφεται (τα άλλα πεδία της ίδιας εφαρμογής συνεχίζουν κανονικά, δεν
+μπλοκάρεται όλο το `applyToRecords()`). Tests:
+`ExtractionApplyOnlyTest::testAnInvalidAfmIsNotAppliedButOtherFieldsStillAre`
++ `testAValidAfmIsApplied` (control).
+
+**Priority 1 (concurrency/idempotency audit σε 8 τομείς) — η πιο υπερβολική
+πρόταση, αλλά με πραγματικά ευρήματα μέσα.** Πλήρες audit έγινε (subagent,
+file:line evidence) στους 8 τομείς. Σύνοψη:
+- **Ήδη σωστά ΚΑΙ δοκιμασμένα** (η πρόταση λέει "τίποτα δεν υπάρχει" — λάθος
+  εδώ): payout delete/pay (`PayoutRepository::deletePending()`/`markPaid()`,
+  guarded UPDATE `WHERE ... AND status='pending'`, δοκιμασμένο σε
+  `PayoutDeletePendingRaceTest.php`, `PayoutPaidAtTest.php`), lead→contract
+  conversion claim (`LeadConversionClaimRaceTest.php`).
+- **Πραγματικά κενά, χωρίς guard ΚΑΙ χωρίς test:**
+  - `ContractLifecycle::moveTo()` (`src/Domain/Contract/ContractLifecycle.php:74-132`)
+    — read-then-write, το `ContractTransitions::applyTransition()`
+    (`src/Persistence/ContractTransitions.php:91-108`) είναι plain
+    `$wpdb->update` ΧΩΡΙΣ `WHERE status = $from`. Δύο ταυτόχρονες κλήσεις
+    (π.χ. το one-off event του AutoProcess και το 5-λεπτο sweep του, σχεδόν
+    ταυτόχρονα) μπορούν ΚΑΙ οι δύο να περάσουν τον έλεγχο και να εκτελέσουν
+    τη μετάβαση διπλά -- διπλό event log, διπλές ειδοποιήσεις. Το πιο
+    κεντρικό write στο σύστημα, χωρίς κανένα concurrency test.
+  - `NotificationRepository::add()` (γραμμή 41-64) — plain insert, καμία
+    dedupe. Ένα διπλό `moveTo()` (βλ. παραπάνω) στέλνει διπλό email/SMS με
+    τίποτα να το εμποδίζει.
+  - `ContractDocuments::store()` (`src/Infrastructure/ContractDocuments.php:88-128`)
+    — `purgeGenerated()` μετά re-insert, χωρίς κλείδωμα. Δύο ταυτόχρονα
+    (cron `onScheduled` vs `ensure()`) μπορούν να αφήσουν στιγμιαία μηδέν
+    έγγραφα και να κάνουν διπλό render.
+  - `NetworkRepository::rebuild()` (γραμμή 97-177) — διαβάζει παλιό path,
+    γράφει νέο, ξαναγράφει το subtree με LIKE-prefix UPDATE, χωρίς
+    συναλλαγή/κλείδωμα. Ταυτόχρονες αναδιοργανώσεις σε επικαλλεπαδάσενα
+    subtrees μπγραόνι να αλληλεπιδράσουν λάθος.
+  - `UnprotectedDocuments::flagProtected()` έχει ΗΔΗ σωστό claim guard
+    (`WHERE id=%d AND (protected=0 OR protected IS NULL)`, με docblock που
+    το εξηγεί ρητά) αλλά ΚΑΝΕΝΑ test δεν παράγει το 'skipped' αποτέλεσμα.
+  - Batch **δημιουργία** payout (`ECRM_Payouts::create()`,
+    `admin/class-ecrm-payouts.php:182-247`) έχει ΗΔΗ σωστό claim guard
+    (γραμμή 205-217) αλλά είναι `admin_post`/`exit`, άρα άπιαστο από τη
+    σουίτα (ίδιο μοτίβο με το paid_at, ήδη γνωστό περιορισμό).
+- **Αδιάφορα / ήδη ασφαλή από σχεδίαση:** commissions (μόνο on-read
+  υπολογισμός, καμία γραφή για να "τρέξει διπλά"), retention cron
+  (idempotent by construction — μηδενίζει ήδη- νΧδενοοιαση στήλη), imports
+  (`ECRM_Import::apply()` ελέγχει status παριν γράψει, ασφαλές σε retry —
+  δοκιμασμένο).
+- Καμία από τις τέσσερις προγραμματισμένες σκούπες (`Retention`,
+  `DocumentProtection`, `PiiBackfill`, το sweep hook του `AutoProcess`) δεν
+  έχει `wp_doing_cron`/κλείδωμα κατά επικάλυψης -- μόνο το
+  `UnprotectedDocuments::flagProtected()` μετριάζει τον υποκείμενο κίνδυνο
+  με claim guard.
+
+Αν ξανανοίξει αυτό το θέμα: το πιο αξιόλογο σημείο για να ξεκινήσει είναι
+το `ContractLifecycle::moveTo()` race (πιο κεντρικό) — το AFM validation gap
+στο `/extract?apply=1` διορθώθηκε 30/08 (βλ. Priority 3 παραπάνω).

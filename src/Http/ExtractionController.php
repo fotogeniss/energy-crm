@@ -40,6 +40,7 @@ namespace EnergyCRM\Http;
 
 use ECRM_Extractor;
 use ECRM_RateLimit;
+use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ExtraFields;
 use EnergyCRM\Infrastructure\ExtractionGate;
@@ -336,6 +337,18 @@ final class ExtractionController implements Controller
                     $contractPatch[$field] = $value;
                 }
 
+                continue;
+            }
+
+            // AUDIT 30/08: το AFM που διάβασε το AI έγραφε κατευθείαν εδώ χωρίς
+            // κανέναν έλεγχο, ενώ η κανονική αποθήκευση (ContractSaveController)
+            // ήδη απορρίπτει ολόκληρο το save σε μη έγκυρο ΑΦΜ. Ένα λάθος ψηφίο
+            // από θολή φωτογραφία έμπαινε στη βάση πριν καν ανοίξει κανείς τη
+            // φόρμα. Εδώ ΔΕΝ μπλοκάρεται όλη η εφαρμογή (θα εμπόδιζε π.χ. το
+            // supply_number να γεμίσει λόγω κακού ΑΦΜ) -- απλά δεν γράφεται το
+            // ΙΔΙΟ το πεδίο που απέτυχε τον έλεγχο. Ίδιος έλεγχος
+            // (ECRM_Validate::afm()), ίδιος κανόνας, στενή εφαρμογή.
+            if ('afm' === $field && ! ECRM_Validate::afm((string) $value)) {
                 continue;
             }
 
