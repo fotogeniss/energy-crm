@@ -32,6 +32,19 @@ namespace EnergyCRM\Infrastructure;
 
 final class TimeLimit
 {
+    /**
+     * Absolute time (`microtime(true)`) the budget we last set expires.
+     *
+     * Null means "we have never touched the limit in this process" -- the
+     * only state in which `ini_get('max_execution_time') === 0` is trusted to
+     * mean genuinely unlimited (see the guard below). Once we call
+     * `set_time_limit()` ourselves, `ini_get()` reports back whatever we just
+     * set rather than 0, so it can no longer answer "how much is actually
+     * left" -- only this class's own record of the deadline it last granted
+     * can.
+     */
+    private static ?float $deadline = null;
+
     private function __construct()
     {
     }
@@ -39,10 +52,28 @@ final class TimeLimit
     /**
      * Ask for at least this many seconds of execution time.
      *
-     * A limit of zero means unlimited, and unlimited is not something to
-     * improve on — that is the CLI's normal state and what the test suite
-     * relies on. Any other value is refreshed, which is the behaviour the web
-     * request wanted in the first place.
+     * AUDIT 30/08: the class docblock and this method's own name promise
+     * "never less", but the body called `set_time_limit($seconds)`
+     * unconditionally whenever a limit was in effect at all -- which resets
+     * the timer to exactly `$seconds` from *this* call, discarding whatever
+     * was left of a larger budget an earlier call already granted. Two calls
+     * in the same request, the second asking for less than the first still
+     * had remaining, silently shrank the deadline. Every caller today passes
+     * 60, so the shape of the bug never showed up in practice -- but that is
+     * luck in the call sites, not a guarantee in this method.
+     *
+     * The fix tracks the deadline this class itself has granted, in
+     * `self::$deadline`, and only calls `set_time_limit()` when the request
+     * genuinely needs more than what remains of it. `ini_get()` is trusted
+     * only once, before this class has ever touched the limit -- afterwards
+     * it reflects our own last write, not the original budget, so it cannot
+     * tell us what is left.
+     *
+     * A limit of zero, seen before this class has touched anything, means
+     * unlimited -- the CLI's normal state and what the test suite relies on
+     * — and is left alone for the rest of the process; this class never calls
+     * `set_time_limit()` at all in that case, so it can never be the one that
+     * takes an unlimited budget away.
      *
      * Safe to call where `set_time_limit()` is disabled by the host: the
      * function is checked rather than assumed, and a failure to extend is not
@@ -50,14 +81,41 @@ final class TimeLimit
      */
     public static function atLeast(int $seconds): void
     {
-        if ((int) ini_get('max_execution_time') === 0) {
-            return;
-        }
-
         if (! function_exists('set_time_limit')) {
             return;
         }
 
+        if ((int) ini_get('max_execution_time') === 0 && self::$deadline === null) {
+            return;
+        }
+
+        $now = microtime(true);
+
+        $remaining = self::$deadline !== null
+            ? self::$deadline - $now
+            : (float) ini_get('max_execution_time');
+
+        if ($remaining >= $seconds) {
+            // Already have at least this much left -- calling set_time_limit()
+            // here would reset the clock to $seconds from now, which is a cut,
+            // not an extension.
+            return;
+        }
+
         @set_time_limit($seconds); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+        self::$deadline = $now + $seconds;
+    }
+
+    /**
+     * Forget whatever deadline this class has granted itself.
+     *
+     * Test-only: the deadline is per-process state, and PHPUnit's process
+     * does not restart between tests. Without this, a test that grants sixty
+     * seconds would make every later test in the same run see fifty-nine
+     * point something already "remaining" and skip its own extension.
+     */
+    public static function resetForTests(): void
+    {
+        self::$deadline = null;
     }
 }
