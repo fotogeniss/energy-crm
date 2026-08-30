@@ -305,6 +305,8 @@ function renderContracts(view, d) {
 			});
 		});
 	}
+	// Best-effort: αν αποτύχει, απλά δεν εμφανίζονται αποθηκευμένα φίλτρα --
+	// η υπόλοιπη οθόνη δουλεύει κανονικά χωρίς αυτά.
 	fetch(api('/filters'), { headers: H() }).then(function (r) { return r.json(); })
 		.then(function (d) { if (d && d.ok) renderSavedFilters(d.filters || []); }).catch(function () {});
 
@@ -395,6 +397,8 @@ function renderContracts(view, d) {
 		// populate assignee list (team scope)
 		var assignSel = bar.querySelector('[data-bulk-assign]');
 		if (assignSel) {
+			// Best-effort: αν αποτύχει, το dropdown μένει άδειο -- η μαζική
+			// ενέργεια απλά δεν προσφέρει ανάθεση σε συγκεκριμένο μέλος.
 			fetch(api('/team'), { headers: H() }).then(function (r) { return r.json(); }).then(function (t) {
 				(t && t.members || []).forEach(function (m) { var o = document.createElement('option'); o.value = m.id; o.textContent = m.name; assignSel.appendChild(o); });
 			}).catch(function () {});

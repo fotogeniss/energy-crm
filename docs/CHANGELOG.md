@@ -7,6 +7,68 @@
 
 ---
 
+## 2026-08-30 (175)
+
+### Τέσσερα μικρά καθαρίσματα, ένα ανά γραμμή (2.7, EKKREMI-29-08.html)
+
+Τέσσερα σημεία με μία γραμμή διαφορά το καθένα, από το ίδιο audit που
+τροφοδότησε το 2.5. Καμία δεν άλλαξε συμπεριφορά για τον χρήστη -- όλες
+μηχανικές, στοχευμένες.
+
+- **`ContractsReadController.php:205`** -- κάλεσε `Services::statusDwell()`
+  μέσα σε `src/`, ενάντια στη ρητή απαγόρευση του ίδιου του `Services.php`
+  («New code under `src/` must NOT use this: take what you need in your
+  constructor»). Το `stuck()` ήταν `private static` ακριβώς επειδή δανειζόταν
+  το repository από τον service locator αντί να το παίρνει στον constructor.
+  Έγινε instance method, το `StatusDwellRepository` μπήκε στον constructor
+  (και στο `ControllerFactory`, όπου το `Services::` παραμένει σωστό --
+  sanctioned exception). Καμία αλλαγή συμπεριφοράς, κανένα test δεν αναφέρεται
+  στο `stuck` output ώστε να χρειαστεί ενημέρωση.
+- **`ecrm-form.js:586`** -- τρίτο τοπικό αντίγραφο του χάρτη ετικετών ενέργειας
+  (`{power: 'Ηλεκτρισμός', ...}`), ενώ το `ecrm-view-detail.js` εισάγει ήδη
+  `energyLabel()` από `@energy-crm/format` για ακριβώς την ίδια δουλειά. Το
+  αρχείο ήταν ήδη ES module (είχε άλλα imports) -- απλώς δεν εισήγαγε ποτέ
+  αυτό το ένα. Προστέθηκε το import, αφαιρέθηκε το τοπικό αντίγραφο. Η μοναδική
+  χρήση (`ENERGY_LABEL[u.energy_type] || ''`) κρατήθηκε ΑΚΡΙΒΩΣ ισοδύναμη
+  (`u.energy_type ? energyLabel(u.energy_type) : ''`) και όχι απλή
+  αντικατάσταση με `energyLabel(u.energy_type)`, γιατί η `energyLabel()`
+  επιστρέφει 'Ηλεκτρισμός' ως default για άγνωστη/κενή τιμή ενώ ο παλιός
+  κώδικας επέστρεφε ''. Το `tools/wizard-smoke/form.js` δεν χρειάστηκε
+  ξεχωριστή διόρθωση -- είναι build artifact του `ecrm-form.js` (gitignored,
+  βλ. `tools/wizard-smoke/.gitignore`), όχι δεύτερο πηγαίο αντίγραφο.
+- **`ECRM_Validate::afm()` ↔ `validAfm()` στο `ecrm-form.js`** -- ο ίδιος
+  αλγόριθμος modulo-11 γραμμένος δύο φορές, PHP και JS, χωρίς κανένα σχόλιο να
+  τις συνδέει -- σε αντίθεση με κάθε άλλη τεκμηριωμένη διπλοεγγραφή του repo.
+  Δεν αφαιρέθηκε η διπλοεγγραφή (PHP και JS δεν μοιράζονται κώδικα εδώ, χωρίς
+  build step): προστέθηκε σχόλιο και στις δύο πλευρές, το καθένα δείχνει στο
+  άλλο και λέει ρητά ποιος είναι ο τελικός κριτής (ο server, στο
+  `ContractSaveController` -- το JS είναι μόνο στιγμιαίο feedback, ποτέ πύλη).
+- **Έξι+ `.catch(function(){})` χωρίς σχόλιο.** Η καταμέτρηση του audit
+  βρήκε έξι· ο πραγματικός αριθμός στο frontend ήταν έντεκα ασχολίαστα (plus
+  ένα ήδη τεκμηριωμένο στο `ecrm-view-import.js:248`, που έμεινε όπως είναι).
+  Κάθε ένα ελέγχθηκε ξεχωριστά πριν προστεθεί σχόλιο -- όλα ήταν πράγματι
+  background/best-effort ενέργειες (θέμα, live search, κουδούνι, saved
+  filters, dropdown συνεργατών/ομάδας, προειδοποιήσεις διπλοεγγραφής,
+  auto-refresh) όπου η σιωπηλή αποτυχία είναι το σωστό: η οθόνη μένει
+  χρησιμοποιήσιμη, απλά χάνεται μια διευκόλυνση. Ένα σχόλιο ανά σημείο, λέει
+  τι ακριβώς χάνεται όταν αποτύχει. Αρχεία: `ecrm-app.js` (4), 
+  `ecrm-export-modal.js` (1), `ecrm-form.js` (2), `ecrm-litsa.js` (1),
+  `ecrm-view-contracts.js` (2), `ecrm-view-team-live.js` (1).
+
+**Tests:** μόνο το πρώτο σημείο άγγιξε πραγματικό PHP behavior (refactor, όχι
+αλλαγή λογικής) -- καμία υπάρχουσα σουίτα δεν αναφέρεται στο `stuck` output
+ή στο constructor signature του `ContractsReadController` έξω από το
+`ControllerFactory`, οπότε δεν αναμένεται καμία μεταβολή σε tests/assertions.
+Τα υπόλοιπα τρία είναι JS-only/σχόλια-only (η `tools/wizard-smoke` δεν τρέχει
+στο `composer check:all` -- βλ. README της).
+
+**Laravel-ready;** Το `ContractsReadController` fix ΕΙΝΑΙ ήδη το Laravel
+pattern -- constructor injection αντί για service locator -- άρα μεταφέρεται
+αυτούσιο, όχι ξαναγραμμένο. Τα άλλα τρία σημεία είναι frontend-only ή
+σχόλια-only, εκτός πεδίου για migration.
+
+---
+
 ## 2026-08-29 (174)
 
 ### Κουμπί σάρωσης SIM στη φόρμα — barcode πρώτα, AI ως δίχτυ ασφαλείας

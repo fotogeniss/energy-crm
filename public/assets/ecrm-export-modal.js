@@ -62,6 +62,8 @@ export function openExportModal(filters) {
 			members.forEach(function (m) { var o = document.createElement('option'); o.value = String(m.id); o.textContent = m.name; partnerSel.appendChild(o); });
 			if (filters.scope === 'team') partnerSel.value = 'team';
 		}
+	// Best-effort: αν αποτύχει, το dropdown μένει με μόνο τις προεπιλογές --
+	// δεν εμποδίζει την εξαγωγή, απλά χάνεται η επιλογή ανά μέλος.
 	}).catch(function () {});
 
 	ov.querySelector('[data-x-clear]').addEventListener('click', function () {
