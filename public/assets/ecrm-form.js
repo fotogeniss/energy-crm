@@ -347,6 +347,13 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			return b ? (b.getAttribute('data-pname') || '').trim() : '';
 		}
 
+		// Ίδιο σκεπτικό με το programCode() ακριβώς από κάτω, αλλά όνομα αντί
+		// για κωδικό -- η «Γρήγορη σύνοψη» δείχνει ό,τι διαβάζει άνθρωπος.
+		function programName() {
+			var pr = programsCache.filter(function (p) { return parseInt(p.id, 10) === state.program_id; })[0];
+			return pr ? String(pr.name || '') : '';
+		}
+
 		// The programme's code, not the name shown in the dropdown: the server
 		// picks which provider sheet to print from it, and a name is free text
 		// somebody can rename in the admin without meaning to change the form.
@@ -1270,7 +1277,81 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				else b.removeAttribute('aria-current');
 			});
 			paintFoot();
+			updateSummary();
 		}
+
+		/* «Γρήγορη σύνοψη» -- πλαϊνή κάρτα, ζητήθηκε ρητά 30/08. Καθαρή ανάγνωση
+		 * του state/DOM, καμία δική της κλήση στο δίκτυο: ό,τι ήδη υπάρχει στη
+		 * φόρμα, ξαναδιαβασμένο. Καλείται από το paintWizard() (κάθε αλλαγή
+		 * βήματος + το αρχικό render) και από τους delegated listeners πιο κάτω
+		 * (κάθε πληκτρολόγηση/επιλογή/κλικ σε chip), ώστε το "ενημερώνεται
+		 * αυτόματα" της υποτιτλοποίησης να είναι κυριολεκτικό.
+		 *
+		 * Τα πέντε checks αντιγράφουν το ΙΔΙΟ κριτήριο με το .ecrm-rcheck της
+		 * κάρτας σύμβασης (ecrm-view-detail.js) όπου συμπίπτουν τα πεδία --
+		 * ΑΦΜ/ΑΔΤ, στοιχεία ταυτότητας -- ώστε ο συνεργάτης να μη μαθαίνει δύο
+		 * διαφορετικά «τι σημαίνει έτοιμο» στο ίδιο ταξίδι. */
+		function summaryCustomerName() {
+			if (state.customer_type === 'company') return readField('company_name');
+			return (readField('first_name') + ' ' + readField('last_name')).trim();
+		}
+
+		function updateSummary() {
+			var box = root.querySelector('[data-summary]');
+			if (!box) return;
+
+			var rows = {
+				customer: summaryCustomerName(),
+				region: readField('region') || readField('city'),
+				provider: providerName(),
+				program: programName()
+			};
+			Object.keys(rows).forEach(function (key) {
+				var el = box.querySelector('[data-sum="' + key + '"]');
+				if (!el) return;
+				var val = rows[key];
+				el.textContent = val || '\u2014';
+				el.classList.toggle('is-empty', !val);
+			});
+
+			var isCompany = state.customer_type === 'company';
+			var checks = [
+				{ key: 'providerProgram', ok: !!(state.provider_id && state.program_id) },
+				{ key: 'identity', ok: isCompany ? !!readField('company_name') : !!(readField('first_name') && readField('last_name')) },
+				{ key: 'afmAdt', ok: isCompany ? !!readField('afm') : !!(readField('afm') && readField('adt')) },
+				{ key: 'address', ok: !!(readField('region') && readField('city') && readField('street')) },
+				{ key: 'contact', ok: !!(readField('phone') || readField('mobile')) }
+			];
+			checks.forEach(function (c) {
+				var li = box.querySelector('[data-sumcheck="' + c.key + '"]');
+				if (!li) return;
+				li.classList.toggle('is-ok', c.ok);
+				var mark = li.querySelector('.ecrm-rcheck__m');
+				if (mark) mark.textContent = c.ok ? '\u2713' : '\u25cb';
+			});
+
+			var done = checks.filter(function (c) { return c.ok; }).length;
+			var pct = Math.round(done / checks.length * 100);
+			var fill = box.querySelector('[data-sum-fill]');
+			if (fill) fill.style.width = pct + '%';
+			var pctEl = box.querySelector('[data-sum-pct]');
+			if (pctEl) pctEl.textContent = pct + '%';
+
+			var foot = box.querySelector('[data-sum-step]');
+			if (foot) foot.textContent = '\u0392\u03ae\u03bc\u03b1 ' + state.wstep + ' \u03b1\u03c0\u03cc ' + WSTEPS;
+		}
+
+		// Τα chips (πάροχος, energy_type, category) δεν πυροδοτούν φυσικό
+		// 'input'/'change' -- είναι κουμπιά με click. Τρία delegated listeners
+		// αντί για ένα ανά πεδίο -- τα πεδία που η σύνοψη διαβάζει αλλάζουν όλα
+		// μαζί, και το ready-όνομα state.provider_id/program_id αλλάζει πριν
+		// προλάβει το click να ανέβει (bubble) στο root -- η σειρά των handlers
+		// (το δικό του κουμπιού πρώτα, μετά αυτό του root στο bubbling) το εγγυάται.
+		root.addEventListener('input', updateSummary);
+		root.addEventListener('change', updateSummary);
+		root.addEventListener('click', function (e) {
+			if (e.target.closest && e.target.closest('.ecrm-chip, .ecrm-provider, [data-wgo], [data-wprev], [data-wnext]')) updateSummary();
+		});
 
 		/* Ο ΜΟΝΑΔΙΚΟΣ φράχτης που προσθέτει ο wizard — και δεν είναι καινούριος:
 		 * το save('new') αρνείται ήδη χωρίς πάροχο, και χωρίς πάροχο δεν έχουν
