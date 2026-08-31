@@ -67,16 +67,27 @@ function filesCard(c) {
 		checklist = '<div class="ecrm-step">Απαιτούμενα δικαιολογητικά</div><ul class="ecrm-checklist">' + rows + '</ul>' + banner;
 	}
 
+	// Έγγραφα λήξιμου είδους (π.χ. ταυτότητα) που έχουν ήδη λήξει -- παρόντα,
+	// αλλά όχι πια έγκυρα. Ξεχωριστό banner από το checklist: το ένα λέει
+	// "λείπει", το άλλο "υπάρχει αλλά δεν ισχύει πια" -- διαφορετικό πρόβλημα,
+	// ίδιο μπλοκάρισμα σε routed/active (ContractStatusController).
+	var expiredNote = '';
+	if (c.doc_expired && c.doc_expired.length) {
+		var elabels = c.doc_expired.map(function (e) { return esc(e.label) + ' (έληξε ' + esc(fmtDate(e.expires_at)) + ')'; }).join(', ');
+		expiredNote = '<div class="ecrm-check__note is-missing">Έχει λήξει: ' + elabels + ' — δεν μπορεί να δρομολογηθεί/ενεργοποιηθεί.</div>';
+	}
+
 	var list;
 	if (!files.length) {
 		list = '<div class="ecrm-empty">Δεν έχουν επισυναφθεί έγγραφα.</div>';
 	} else {
 		list = '<div class="ecrm-files">' + files.map(function (f) {
 			var thumb = f.is_image && f.url ? '<img src="' + esc(f.url) + '" alt="">' : '<span class="ecrm-file__ext">' + (f.mime === 'application/pdf' ? 'PDF' : 'DOC') + '</span>';
+			var expiryTag = f.expires_at ? '<span class="ecrm-file__kind">λήξη ' + esc(fmtDate(f.expires_at)) + '</span>' : '';
 			return '<a class="ecrm-file" href="' + esc(f.url || '#') + '" target="_blank" rel="noopener">' +
 				'<span class="ecrm-file__thumb">' + thumb + '</span>' +
 				'<span class="ecrm-file__meta"><span class="ecrm-file__name">' + esc(f.filename || 'έγγραφο') + '</span>' +
-				'<span class="ecrm-file__kind">' + esc(kindLabel[f.doc_kind] || 'Έγγραφο') + '</span></span></a>';
+				'<span class="ecrm-file__kind">' + esc(kindLabel[f.doc_kind] || 'Έγγραφο') + '</span>' + expiryTag + '</span></a>';
 		}).join('') + '</div>';
 	}
 
@@ -84,13 +95,15 @@ function filesCard(c) {
 	var kindOpts = Object.keys(kindLabel).map(function (k) {
 		return '<option value="' + esc(k) + '">' + esc(kindLabel[k]) + '</option>';
 	}).join('');
-	var upload = '<div class="ecrm-docup" data-docup="' + c.id + '">' +
+	var expirable = c.doc_expirable || [];
+	var upload = '<div class="ecrm-docup" data-docup="' + c.id + '" data-docup-expirable="' + esc(JSON.stringify(expirable)) + '">' +
 		'<select class="ecrm-input ecrm-docup__kind" data-docup-kind>' + kindOpts + '</select>' +
 		'<input type="file" multiple accept="image/*,application/pdf" data-docup-file>' +
+		'<input type="date" class="ecrm-input ecrm-docup__expiry" data-docup-expiry title="Ημερομηνία λήξης (αν υπάρχει πάνω στο έγγραφο)" hidden>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-docup-go>Προσθήκη</button>' +
 		'<span class="ecrm-docup__msg" data-docup-msg></span></div>';
 
-	return '<div class="ecrm-card">' + checklist + '<div class="ecrm-step">Έγγραφα</div>' + list + upload + '</div>';
+	return '<div class="ecrm-card">' + checklist + expiredNote + '<div class="ecrm-step">Έγγραφα</div>' + list + upload + '</div>';
 }
 /* Η ώρα υπογραφής, ΧΩΡΙΣ να περάσει από Date.
  *
@@ -758,15 +771,33 @@ function renderDetail(view, d) {
 		});
 	});
 
+	var docupWrap = view.querySelector('[data-docup]');
+	var docupKindSel = docupWrap ? docupWrap.querySelector('[data-docup-kind]') : null;
+	var docupExpiry = docupWrap ? docupWrap.querySelector('[data-docup-expiry]') : null;
+	// Το πεδίο λήξης φαίνεται μόνο για είδη που πραγματικά λήγουν (σήμερα:
+	// ταυτότητα/διαβατήριο) — η λίστα έρχεται από τον server
+	// (ECRM_Docs::expirable_kinds()), δεν είναι κωδικοποιημένη εδώ.
+	function syncExpiryVisibility() {
+		if (!docupWrap || !docupKindSel || !docupExpiry) return;
+		var expirable = [];
+		try { expirable = JSON.parse(docupWrap.getAttribute('data-docup-expirable') || '[]'); } catch (e) { expirable = []; }
+		var show = expirable.indexOf(docupKindSel.value) !== -1;
+		docupExpiry.hidden = !show;
+		if (!show) docupExpiry.value = '';
+	}
+	if (docupKindSel) { docupKindSel.addEventListener('change', syncExpiryVisibility); syncExpiryVisibility(); }
+
 	var docGo = view.querySelector('[data-docup-go]');
 	if (docGo) docGo.addEventListener('click', function () {
 		var wrap = view.querySelector('[data-docup]');
 		var input = wrap.querySelector('[data-docup-file]');
 		var kind = wrap.querySelector('[data-docup-kind]').value;
+		var expiryEl = wrap.querySelector('[data-docup-expiry]');
+		var expiry = expiryEl && !expiryEl.hidden ? expiryEl.value : '';
 		var msg = wrap.querySelector('[data-docup-msg]');
 		if (!input.files || !input.files.length) { msg.textContent = 'Επίλεξε αρχείο.'; msg.className = 'ecrm-docup__msg is-err'; return; }
 		var fd = new FormData();
-		for (var i = 0; i < input.files.length; i++) { fd.append('files[]', input.files[i]); fd.append('kinds[]', kind); }
+		for (var i = 0; i < input.files.length; i++) { fd.append('files[]', input.files[i]); fd.append('kinds[]', kind); fd.append('expires_at[]', expiry); }
 		var b = this; b.disabled = true; msg.textContent = 'Ανέβασμα…'; msg.className = 'ecrm-docup__msg';
 		fetch(api('/contracts/' + c.id + '/files'), { method: 'POST', headers: H(), body: fd })
 			.then(function (r) { return r.json(); })

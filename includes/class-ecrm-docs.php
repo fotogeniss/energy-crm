@@ -94,7 +94,65 @@ class ECRM_Docs {
 		return $req;
 	}
 
+	/**
+	 * Είδη εγγράφου που έχουν πραγματική ημερομηνία λήξης τυπωμένη πάνω τους.
+	 *
+	 * ΜΕΤΡΗΜΕΝΟ (31/08/2026): από τα 11 είδη του kinds(), μόνο η ταυτότητα/
+	 * διαβατήριο έχει κάτι τέτοιο -- λογαριασμός παρόχου, εξουσιοδότηση,
+	 * αποδεικτικό κατοικίας, Ε9 κ.λπ. δεν λήγουν με την ίδια έννοια (ή
+	 * χρειάζονται να είναι «πρόσφατα», όχι «μη ληγμένα» -- διαφορετικό
+	 * πρόβλημα, όχι εδώ). Filter, ίδιο μοτίβο με το ecrm_doc_kinds, ώστε ένα
+	 * site να προσθέσει π.χ. άδεια οδήγησης χωρίς αλλαγή στον πυρήνα.
+	 */
+	public static function expirable_kinds(): array {
+		return apply_filters( 'ecrm_expirable_doc_kinds', [ 'id_card' ] );
+	}
+
+	/**
+	 * Συνημμένα έγγραφα λήξιμου είδους που έχουν ΗΔΗ λήξει -- μόνο το πιο
+	 * πρόσφατο ανά είδος (ίδιο σκεπτικό με το `FileRepository::latestPathOfKind()`:
+	 * αν ανέβηκε νεότερη, έγκυρη ταυτότητα πάνω από μια ληγμένη, δεν υπάρχει
+	 * πια πρόβλημα).
+	 *
+	 * @return list<array{kind:string, label:string, expires_at:string}>
+	 */
+	public static function expired_docs( int $contract_id ): array {
+		global $wpdb;
+		$kinds = self::expirable_kinds();
+		if ( ! $kinds || $contract_id <= 0 ) {
+			return [];
+		}
+		$fl = ECRM_DB::table( 'files' );
+		$ph = implode( ',', array_fill( 0, count( $kinds ), '%s' ) );
+
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT doc_kind, expires_at FROM {$fl}
+			 WHERE contract_id = %d AND doc_kind IN ($ph) AND expires_at IS NOT NULL
+			 ORDER BY id DESC",
+			array_merge( [ $contract_id ], $kinds )
+		), ARRAY_A );
+
+		$latest = [];
+		foreach ( $rows as $r ) {
+			// ORDER BY id DESC -- η πρώτη γραμμή που βλέπουμε ανά kind είναι
+			// η νεότερη, οι επόμενες αγνοούνται.
+			if ( ! isset( $latest[ $r['doc_kind'] ] ) ) {
+				$latest[ $r['doc_kind'] ] = $r['expires_at'];
+			}
+		}
+
+		$today = current_time( 'Y-m-d' );
+		$out   = [];
+		foreach ( $latest as $kind => $expires_at ) {
+			if ( $expires_at < $today ) {
+				$out[] = [ 'kind' => $kind, 'label' => self::label( $kind ), 'expires_at' => $expires_at ];
+			}
+		}
+		return $out;
+	}
+
 	/** Statuses whose entry requires all documents to be present. */
+
 	public static function gate_statuses(): array {
 		return apply_filters( 'ecrm_doc_gate_statuses', [ 'routed', 'active' ] );
 	}

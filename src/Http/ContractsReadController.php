@@ -132,6 +132,8 @@ final class ContractsReadController implements Controller
             (string) ($row['energy_type'] ?? '')
         );
         $row['doc_kinds']     = ECRM_Docs::kinds();
+        $row['doc_expirable'] = ECRM_Docs::expirable_kinds();
+        $row['doc_expired']   = ECRM_Docs::expired_docs($id);
         $row['comms']         = self::comms($row);
 
         // Το λέει ο SERVER, όχι ο browser. Ο διάλογος θα μπορούσε να το βγάλει

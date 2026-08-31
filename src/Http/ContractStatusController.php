@@ -190,6 +190,21 @@ final class ContractStatusController implements Controller
                     'missing' => $missing,
                 ], 422);
             }
+
+            // Παρόν δεν σημαίνει έγκυρο -- μια ληγμένη ταυτότητα περνούσε το
+            // missing_labels() παραπάνω αφού το είδος υπάρχει, απλά έχει
+            // λήξει η ημερομηνία τυπωμένη πάνω της (ECRM_Docs::expired_docs()).
+            $expired = ECRM_Docs::expired_docs($id);
+
+            if ($expired) {
+                $labels = array_map(static fn (array $e): string => $e['label'], $expired);
+
+                return new WP_REST_Response([
+                    'ok'      => false,
+                    'error'   => 'Έχει λήξει: ' . implode(', ', $labels),
+                    'expired' => $expired,
+                ], 422);
+            }
         }
 
         $this->lifecycle->moveTo($id, $target->value, [
