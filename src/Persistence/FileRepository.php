@@ -54,7 +54,7 @@ final class FileRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT id, doc_kind, filename, mime, attachment_id, path, protected
+                'SELECT id, doc_kind, filename, mime, attachment_id, path, protected, expires_at
                  FROM %i WHERE contract_id = %d ORDER BY id',
                 $this->table,
                 $contractId
@@ -85,7 +85,7 @@ final class FileRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT id, doc_kind, filename, mime, attachment_id, path, protected
+                'SELECT id, doc_kind, filename, mime, attachment_id, path, protected, expires_at
                  FROM %i WHERE lead_id = %d ORDER BY id',
                 $this->table,
                 $leadId
@@ -232,8 +232,14 @@ final class FileRepository
      *
      * @return int The new file id, or 0 when the insert failed.
      */
-    public function attach(int $contractId, string $kind, string $filename, string $mime, string $path): int
-    {
+    public function attach(
+        int $contractId,
+        string $kind,
+        string $filename,
+        string $mime,
+        string $path,
+        ?string $expiresAt = null,
+    ): int {
         global $wpdb;
 
         $wpdb->insert($this->table, [
@@ -244,6 +250,7 @@ final class FileRepository
             'mime'          => $mime,
             'path'          => $path,
             'protected'     => 1,
+            'expires_at'    => $expiresAt,
         ]);
 
         return (int) $wpdb->insert_id;

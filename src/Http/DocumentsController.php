@@ -99,10 +99,11 @@ final class DocumentsController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν ανέβηκαν αρχεία.'], 400);
         }
 
-        $kinds    = (array) $request->get_param('kinds');
-        $saved    = [];
-        $rejected = [];
-        $why      = null;
+        $kinds      = (array) $request->get_param('kinds');
+        $expiryDates = (array) $request->get_param('expires_at');
+        $saved      = [];
+        $rejected   = [];
+        $why        = null;
 
         foreach (self::normalise($uploads) as $index => $upload) {
             $name = sanitize_file_name((string) ($upload['name'] ?? ''));
@@ -122,13 +123,15 @@ final class DocumentsController implements Controller
                 continue;
             }
 
-            $kind   = sanitize_text_field((string) ($kinds[$index] ?? 'other'));
-            $fileId = $this->files->attach(
+            $kind      = sanitize_text_field((string) ($kinds[$index] ?? 'other'));
+            $expiresAt = self::sanitizeExpiry($expiryDates[$index] ?? null);
+            $fileId    = $this->files->attach(
                 $contractId,
                 $kind,
                 $stored['filename'],
                 $stored['mime'],
-                $stored['path']
+                $stored['path'],
+                $expiresAt
             );
 
             if ($fileId <= 0) {
@@ -178,6 +181,29 @@ final class DocumentsController implements Controller
         );
 
         return sprintf('Δεν αποθηκεύτηκε — τεχνικό πρόβλημα, κωδικός %s.', $code);
+    }
+
+    /**
+     * Η ημερομηνία λήξης ενός εγγράφου, όπως τη γράφει ο συνεργάτης κοιτώντας
+     * το ίδιο το χαρτί -- ελεύθερο πεδίο ημερομηνίας, όχι επιλογή από λίστα,
+     * οπότε επικυρώνεται εδώ πριν φτάσει στη βάση. Οτιδήποτε δεν είναι μια
+     * πραγματική ημερομηνία σε μορφή Y-m-d αγνοείται σιωπηλά -- λάθος μορφή
+     * σημαίνει «δεν συμπληρώθηκε», όχι σφάλμα που μπλοκάρει το ανέβασμα του
+     * ίδιου του εγγράφου.
+     */
+    private static function sanitizeExpiry(mixed $value): ?string
+    {
+        if (! is_string($value) || $value === '') {
+            return null;
+        }
+
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+
+        if ($date === false || $date->format('Y-m-d') !== $value) {
+            return null;
+        }
+
+        return $value;
     }
 
     /**

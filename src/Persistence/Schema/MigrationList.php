@@ -26,6 +26,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddProviderRefColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProviderStatusMapColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddSupplyNumberIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddEventStatusIndex;
+use EnergyCRM\Persistence\Schema\Migrations\AddFileExpiryColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddTrackKeyColumn;
 use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
@@ -75,6 +76,7 @@ final class MigrationList
             new AddSupplyNumberIndex(),
             new AddProviderRefColumn(),
             new RetargetContractListIndexToUpdatedAt(),
+            new AddFileExpiryColumn(),
         ];
     }
 }
