@@ -62,6 +62,42 @@ final class NetworkRepository
     }
 
     /**
+     * The managers above a user, nearest first, the user themselves excluded.
+     *
+     * Moved here 31/08 from `ContractNotices::uplineOf()`, which had this
+     * exact code private to itself -- the escalation path in
+     * `ECRM_Notifications::escalations()` needed the identical walk and
+     * duplicating five lines of path arithmetic across two files is exactly
+     * the kind of drift `computePath()`'s cycle guard exists to prevent
+     * elsewhere. `ContractNotices` now calls this instead of its own copy.
+     *
+     * The stored path runs the other way round from the answer this method
+     * owes its caller: "/1/7/23/" is root first and *includes* 23. Hence the
+     * two adjustments, both of which matter --
+     *
+     *   - `array_slice(..., 0, -1)` drops the subject. Without it the owner
+     *     is told twice about their own contract, once as owner and once as
+     *     their own manager.
+     *   - `array_reverse` restores nearest-first, so callers can walk "who do
+     *     I tell first" in the natural order.
+     *
+     * A user id of zero has no path -- `NetworkPath::root()` rejects it --
+     * so it is turned away here.
+     *
+     * @return list<int>
+     */
+    public function uplineOf(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $lineage = NetworkPath::ids($this->pathFor($userId));
+
+        return array_reverse(array_slice($lineage, 0, -1));
+    }
+
+    /**
      * Every user id on the site, for actors whose visibility is unrestricted.
      *
      * @return list<int>

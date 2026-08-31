@@ -24,6 +24,10 @@
  * N+1 step 3 removed from `visible_user_ids()`, and it is removed here the same
  * way — the materialized path already holds the whole ancestry in one value.
  *
+ * The walk itself now lives in `NetworkRepository::uplineOf()` (31/08) — moved
+ * out from a private method here once `ECRM_Notifications::escalations()`
+ * needed the identical logic. Same code either way, one authoritative copy.
+ *
  * @package EnergyCRM
  */
 
@@ -31,7 +35,6 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Infrastructure;
 
-use EnergyCRM\Access\NetworkPath;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractDetails;
@@ -178,7 +181,7 @@ final class ContractNotices
 
         $this->notifications->add($owner, $type, $title, $body, $contractId);
 
-        foreach ($this->uplineOf($owner) as $managerId) {
+        foreach ($this->network->uplineOf($owner) as $managerId) {
             $this->notifications->add($managerId, $type, $title, $body, $contractId);
         }
     }
@@ -199,38 +202,4 @@ final class ContractNotices
         return ($company ?: $person) ?: self::FALLBACK_NAME;
     }
 
-    /**
-     * The managers above a user, nearest first, the user themselves excluded.
-     *
-     * The stored path runs the other way round from the answer this method owes
-     * its caller: "/1/7/23/" is root first and *includes* 23. Hence the two
-     * adjustments, both of which matter —
-     *
-     *   - `array_slice(..., 0, -1)` drops the subject. Without it the owner is
-     *     told twice about their own contract, once as owner and once as their
-     *     own manager, on every signature and every upload.
-     *   - `array_reverse` restores nearest-first, so the rows are written in the
-     *     order they always were.
-     *
-     * A user id of zero has no path — NetworkPath::root() rejects it — so it is
-     * turned away here. The old loop returned an empty array for the same input,
-     * and a contract whose partner_user_id never got set is exactly the kind of
-     * row that reaches this method through an anonymous signing link.
-     *
-     * The depth guard against a looping `ecrm_parent` did not go away, it moved
-     * down: NetworkRepository::computePath() stops on a repeated id, and
-     * NetworkPath::isValid() refuses a path that contains one.
-     *
-     * @return list<int>
-     */
-    private function uplineOf(int $userId): array
-    {
-        if ($userId <= 0) {
-            return [];
-        }
-
-        $lineage = NetworkPath::ids($this->network->pathFor($userId));
-
-        return array_reverse(array_slice($lineage, 0, -1));
-    }
 }
