@@ -56,6 +56,7 @@ final class ContractStatusTest extends TestCase
         return [
             'cancelled'  => [ContractStatus::Cancelled],
             'terminated' => [ContractStatus::Terminated],
+            'rejected'   => [ContractStatus::Rejected],
         ];
     }
 
@@ -155,5 +156,23 @@ final class ContractStatusTest extends TestCase
     public function testLabelsCoverEveryCase(): void
     {
         self::assertCount(count(ContractStatus::cases()), ContractStatus::labels());
+    }
+
+    /**
+     * Μια απόρριψη παρόχου φτάνει μόνο από όπου η μπάλα είναι ήδη στον
+     * πάροχο -- Routed/Processing/Pending, τα ίδια σημεία όπου φτάνει ήδη
+     * το Cancelled. ΟΧΙ από Resolved/Active: εκεί η αίτηση έφτασε ή πέρασε
+     * ενεργοποίηση, δεν "απορρίπτεται" πια.
+     */
+    public function testRejectedIsReachableOnlyWhereTheProviderHasTheBall(): void
+    {
+        self::assertTrue(ContractStatus::Routed->canMoveTo(ContractStatus::Rejected));
+        self::assertTrue(ContractStatus::Processing->canMoveTo(ContractStatus::Rejected));
+        self::assertTrue(ContractStatus::Pending->canMoveTo(ContractStatus::Rejected));
+
+        self::assertFalse(ContractStatus::Resolved->canMoveTo(ContractStatus::Rejected));
+        self::assertFalse(ContractStatus::Active->canMoveTo(ContractStatus::Rejected));
+        self::assertFalse(ContractStatus::Draft->canMoveTo(ContractStatus::Rejected));
+        self::assertFalse(ContractStatus::Signed->canMoveTo(ContractStatus::Rejected));
     }
 }

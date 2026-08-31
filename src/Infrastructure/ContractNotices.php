@@ -51,10 +51,13 @@ final class ContractNotices
      * κανέναν, και ένα καμπανάκι σε κάθε βήμα είναι θόρυβος που μαθαίνει τον
      * χρήστη να μην κοιτάζει.
      *
-     * Αυτές οι δύο είναι διαφορετικές: η **εκκρεμότητα** ζητά ενέργεια από τον
-     * συνεργάτη — είναι η μόνη κατάσταση που σημαίνει «κάτι λείπει, κάποιος
-     * πρέπει να το φτιάξει» — και η **ακύρωση** τερματίζει τη δουλειά του. Και
-     * στις δύο, το να το μάθει αργά είναι το ίδιο κακό με το να μην το μάθει.
+     * Τρεις διαφορετικές αιτίες: η **εκκρεμότητα** ζητά ενέργεια από τον
+     * συνεργάτη — «κάτι λείπει, κάποιος πρέπει να το φτιάξει» — η
+     * **ακύρωση** τερματίζει τη δουλειά του, και η **απόρριψη** (31/08) είναι
+     * ενέργεια παρόχου που επίσης ζητά κάτι από τον συνεργάτη -- εκεί μάλιστα
+     * δημιουργείται και εργασία, δες `RejectionFollowUp`, το καμπανάκι εδώ
+     * είναι το άμεσο σήμα, η εργασία είναι αυτή που δεν χάνεται. Και στις
+     * τρεις, το να το μάθει αργά είναι το ίδιο κακό με το να μην το μάθει.
      *
      * Μόνο ποιες καταστάσεις — το κείμενο έρχεται αποκλειστικά από
      * `ContractStatus::label()`, ώστε να μην υπάρχει δεύτερο σημείο που
@@ -62,7 +65,7 @@ final class ContractNotices
      *
      * @var list<ContractStatus>
      */
-    private const ANNOUNCED = [ContractStatus::Pending, ContractStatus::Cancelled];
+    private const ANNOUNCED = [ContractStatus::Pending, ContractStatus::Cancelled, ContractStatus::Rejected];
 
     public function __construct(
         private readonly ContractDetails $details,
@@ -119,8 +122,11 @@ final class ContractNotices
         }
 
         $title = $status->label() . ' — ' . (string) ($row['code'] ?? '');
-        $body   = $this->customerName($row) . ': η αίτηση '
-            . ($to === 'cancelled' ? 'ακυρώθηκε.' : 'χρειάζεται ενέργεια.');
+        $body   = $this->customerName($row) . ': η αίτηση ' . match ($to) {
+            'cancelled' => 'ακυρώθηκε.',
+            'rejected'  => 'απορρίφθηκε από τον πάροχο -- δημιουργήθηκε εργασία.',
+            default     => 'χρειάζεται ενέργεια.',
+        };
 
         $this->tell($row, 'status', $title, $body, $contractId);
     }

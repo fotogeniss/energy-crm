@@ -37,6 +37,12 @@ enum ContractStatus: string
     case Cancelled         = 'cancelled';
     case Terminated        = 'terminated';
 
+    // Rejected προστέθηκε 31/08: ξεχωριστό από το Cancelled επίτηδες -- ο
+    // ιδιοκτήτης το επέλεξε ρητά ("Νέο status «Rejected» (Συνιστάται)") αντί
+    // για εικασία πάνω στο μήνυμα ενός Cancelled, ώστε μια απόρριψη παρόχου
+    // να μετράει ξεχωριστά σε αναφορές/dashboard και όχι σαν γενική ακύρωση.
+    case Rejected           = 'rejected';
+
     public function label(): string
     {
         return match ($this) {
@@ -52,13 +58,14 @@ enum ContractStatus: string
             self::Active            => 'Ενεργή',
             self::Cancelled         => 'Ακυρώθηκε',
             self::Terminated        => 'Έκλεισε',
+            self::Rejected          => 'Απορρίφθηκε',
         };
     }
 
     /** Nothing leaves these. A new application is the way forward. */
     public function isTerminal(): bool
     {
-        return $this === self::Cancelled || $this === self::Terminated;
+        return $this === self::Cancelled || $this === self::Terminated || $this === self::Rejected;
     }
 
     /** Statuses that count as a payable contract for commission purposes. */
@@ -98,10 +105,10 @@ enum ContractStatus: string
                 self::PendingSignature, self::Cancelled,
             ],
             self::Processing => [
-                self::Pending, self::Resolved, self::Routed, self::Active, self::Cancelled,
+                self::Pending, self::Resolved, self::Routed, self::Active, self::Cancelled, self::Rejected,
             ],
             self::Pending => [
-                self::Processing, self::Resolved, self::Routed, self::Cancelled,
+                self::Processing, self::Resolved, self::Routed, self::Cancelled, self::Rejected,
             ],
             self::Resolved => [
                 self::Processing, self::Pending, self::Routed, self::Active, self::Cancelled,
@@ -117,14 +124,19 @@ enum ContractStatus: string
             // Το isPayable() περιλαμβάνει το Routed — μια αίτηση που γυρίζει
             // από εδώ σε νέα υπογραφή σταματά προσωρινά να μετρά για προμήθεια
             // μέχρι να ξαναφτάσει, που είναι το σωστό: δεν ολοκληρώθηκε ακόμη.
+            // Rejected προστέθηκε 31/08 στα ίδια τρία σημεία όπου φτάνει ήδη το
+            // Cancelled (Routed/Processing/Pending) -- εκεί είναι η μπάλα στον
+            // πάροχο, άρα εκεί μπορεί να έρθει μια απόρριψή του. ΟΧΙ στο
+            // Resolved/Active: μια αίτηση που έφτασε ή πέρασε ενεργοποίηση δεν
+            // "απορρίπτεται" πια, τερματίζεται (βλ. CancellationGate).
             self::Routed => [
                 self::Processing, self::Pending, self::Active,
-                self::PendingSignature, self::Cancelled, self::Terminated,
+                self::PendingSignature, self::Cancelled, self::Terminated, self::Rejected,
             ],
             self::Active => [
                 self::Pending, self::Terminated,
             ],
-            self::Cancelled, self::Terminated => [],
+            self::Cancelled, self::Terminated, self::Rejected => [],
         };
     }
 

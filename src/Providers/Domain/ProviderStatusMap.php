@@ -65,6 +65,7 @@ final class ProviderStatusMap
         '/(υπογρ|sign)/u'         => 'pending_signature',
         '/(επεξεργ|process)/u'    => 'processing',
         '/(τερματ|terminat)/u'    => 'terminated',
+        '/(απορρ|reject)/u'       => 'rejected',
         '/(νέα|νεα|new)/u'        => 'new',
     ];
 
