@@ -83,6 +83,94 @@ class ECRM_Notifications {
 		return max( 1, $d ?: 5 );
 	}
 
+	/**
+	 * Πόσες μέρες αδράνειας πριν μια εκκρεμότητα ανέβει και στον προϊστάμενο,
+	 * όχι μόνο στον ιδιοκτήτη της.
+	 *
+	 * ΜΕΤΡΗΜΕΝΟ κενό, όχι εικασία (31/08): το digest ήδη ενημερώνει ΚΑΘΕ
+	 * χρήστη -- συνεργάτη ΚΑΙ προϊστάμενο -- αλλά μόνο για τις ΔΙΚΕΣ ΤΟΥ
+	 * συμβάσεις (`run_digest()` καλεί `followups_for([$u->ID])`, ποτέ με τα
+	 * ID της ομάδας). Δηλαδή μια εκκρεμότητα που ο συνεργάτης αγνοεί δεν
+	 * φτάνει ΠΟΤΕ πουθενά αλλού -- το ΙΔΙΟ email, στον ΙΔΙΟ άνθρωπο που ήδη
+	 * το αγνοεί, επ' άπειρον. Το bell (`ContractNotices`) ανεβαίνει την
+	 * ιεραρχία σε πραγματικό χρόνο σε αλλαγή κατάστασης, αλλά αυτό το nag
+	 * επαναλαμβανόμενης αδράνειας όχι.
+	 *
+	 * Προεπιλογή διπλάσιο του threshold_days(): αν κάτι δεν έχει προσεχθεί
+	 * ούτε μετά από ΔΙΠΛΟ το συνηθισμένο παράθυρο, δεν είναι πια «ακόμα δεν
+	 * το είδε» -- ο συνεργάτης το έχει ήδη αγνοήσει μία φορά. Filter, όχι
+	 * νέα ρύθμιση στην οθόνη: κλιμακώνει αυτόματα αν αλλάξει το
+	 * `followup_days`, χωρίς δεύτερο πεδίο να ξεσυγχρονιστεί μαζί του.
+	 */
+	public static function escalation_days(): int {
+		return (int) apply_filters( 'ecrm_notifications_escalation_days', self::threshold_days() * 2 );
+	}
+
+	/**
+	 * Ανοιχτές συμβάσεις αδρανείς πέρα από το escalation_days(), ομαδοποιημένες
+	 * ανά ΠΡΟΪΣΤΑΜΕΝΟ (upline του ιδιοκτήτη) -- όχι ανά ιδιοκτήτη, αυτός τις
+	 * βλέπει ήδη στη δική του ενότητα «εκκρεμότητες» πιο πάνω στο ίδιο email.
+	 *
+	 * Ένα πέρασμα σε ΟΛΗ την εταιρεία αντί για ένα per-partner, γιατί ο
+	 * παραλήπτης εδώ δεν είναι ο ιδιοκτήτης της σύμβασης -- δεν ξέρουμε ποιον
+	 * να ρωτήσουμε πριν υπολογίσουμε ποιος είναι ο προϊστάμενος του καθενός.
+	 *
+	 * Γνωστό όριο, ίδιο σχήμα με το `missing_docs_for()`: ένα
+	 * `NetworkRepository::uplineOf()` (άρα `get_user_meta`) ανά αδρανή
+	 * σύμβαση, όχι ανά ανοιχτή -- μόνο όσες έχουν ήδη περάσει το διπλάσιο
+	 * όριο, δηλαδή μια μικρή μειοψηφία στην πράξη. Αποδεκτό στη σημερινή
+	 * κλίμακα, πρώτο σημείο να μετρηθεί αν μεγαλώσει η βάση συνεργατών.
+	 *
+	 * @return array<int, list<array<string, mixed>>> προϊστάμενος => γραμμές
+	 */
+	public static function escalations(): array {
+		global $wpdb;
+		$ct   = ECRM_DB::table( 'contracts' );
+		$cu   = ECRM_DB::table( 'customers' );
+		$open = self::open_statuses();
+		$sph  = implode( ',', array_fill( 0, count( $open ), '%s' ) );
+		$days = self::escalation_days();
+
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT c.id, c.code, c.status, c.partner_user_id,
+				DATEDIFF(NOW(), c.updated_at) AS age_days,
+				cu.first_name, cu.last_name, cu.company_name
+			 FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id = c.customer_id
+			 WHERE c.status IN ($sph) AND DATEDIFF(NOW(), c.updated_at) >= %d
+			 ORDER BY c.updated_at ASC LIMIT 200",
+			array_merge( $open, [ $days ] )
+		), ARRAY_A );
+
+		if ( ! $rows || ! class_exists( '\\EnergyCRM\\Services' ) ) {
+			return [];
+		}
+
+		$labels  = ECRM_DB::statuses();
+		$network = \EnergyCRM\Services::network();
+		$out     = [];
+
+		foreach ( $rows as $r ) {
+			$owner_id = (int) $r['partner_user_id'];
+			if ( $owner_id <= 0 ) {
+				continue;
+			}
+			$owner = get_userdata( $owner_id );
+			$name  = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
+			$line  = [
+				'code'         => $r['code'],
+				'customer'     => $name ?: '—',
+				'status_label' => $labels[ $r['status'] ] ?? $r['status'],
+				'age_days'     => (int) $r['age_days'],
+				'owner_name'   => $owner ? $owner->display_name : ( '#' . $owner_id ),
+			];
+			foreach ( $network->uplineOf( $owner_id ) as $manager_id ) {
+				$out[ $manager_id ][] = $line;
+			}
+		}
+
+		return $out;
+	}
+
 	public static function init(): void {
 		add_action( self::CRON_HOOK, [ __CLASS__, 'run_digest' ] );
 
@@ -210,13 +298,21 @@ class ECRM_Notifications {
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' );
 		$days    = self::threshold_days();
 
+		// Ένα πέρασμα σε όλη την εταιρεία, πριν τον βρόχο ανά χρήστη -- όχι
+		// ένα escalations() per partner. Η ίδια λίστα απλώς φιλτράρεται εδώ
+		// per προϊστάμενο, ίδιο σχήμα με το followups_for()/missing_docs_for()
+		// που ήδη παίρνουν [$u->ID] ένα-ένα, αλλά αυτή είναι company-wide εξ
+		// ορισμού (δες escalations()).
+		$escalations = self::escalations();
+
 		$users = get_users( [ 'role__in' => array_keys( ECRM_DB::roles() ), 'fields' => [ 'ID', 'user_email', 'display_name' ] ] );
 		foreach ( $users as $u ) {
 			if ( ! is_email( $u->user_email ) ) { continue; }
 			$data  = self::followups_for( [ (int) $u->ID ] );
 			$tasks = class_exists( 'ECRM_Tasks' ) ? ECRM_Tasks::due_list( (int) $u->ID ) : [];
 			$missing_docs = self::missing_docs_for( [ (int) $u->ID ] );
-			if ( ! $data['stale'] && ! $tasks && ! $missing_docs ) { continue; } // nothing to report
+			$escalated    = $escalations[ (int) $u->ID ] ?? [];
+			if ( ! $data['stale'] && ! $tasks && ! $missing_docs && ! $escalated ) { continue; } // nothing to report
 
 			$sections = [];
 
@@ -251,10 +347,30 @@ class ECRM_Notifications {
 				);
 			}
 
+			// Δεν είναι δικές του συμβάσεις -- ξεχωριστή ενότητα, ξεκάθαρα
+			// επισημασμένη ΠΟΙΟΣ τις κρατά, ώστε να μη μοιάζει με δική του
+			// δουλειά που ξέχασε.
+			if ( $escalated ) {
+				$elines = [];
+				foreach ( $escalated as $e ) {
+					$elines[] = sprintf(
+						'• %s — %s (%s, %d ημέρες) — συνεργάτης: %s',
+						$e['code'], $e['customer'], $e['status_label'], $e['age_days'], $e['owner_name']
+					);
+				}
+				$sections[] = sprintf(
+					"Της ομάδας σου, πάνω από %d ημέρες αδράνειας (%d):\n\n%s",
+					self::escalation_days(),
+					count( $escalated ),
+					implode( "\n", $elines )
+				);
+			}
+
 			$counts  = [];
 			if ( $data['stale'] ) { $counts[] = $data['stale'] . ' εκκρεμότητες'; }
 			if ( $tasks ) { $counts[] = count( $tasks ) . ' εργασίες'; }
 			if ( $missing_docs ) { $counts[] = count( $missing_docs ) . ' ελλείψεις'; }
+			if ( $escalated ) { $counts[] = count( $escalated ) . ' της ομάδας'; }
 			$subject = sprintf( '📋 %s - %s', implode( ' & ', $counts ), $company );
 			$body    = sprintf(
 				"Καλημέρα %s,\n\n%s\n\nΣυνδέσου στο CRM για να τα διαχειριστείς.\n\n%s",
