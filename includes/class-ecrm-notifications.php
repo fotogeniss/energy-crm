@@ -171,6 +171,54 @@ class ECRM_Notifications {
 		return $out;
 	}
 
+	/**
+	 * Leads με ραντεβού επανάκλησης (`callback_at`) που έχει ήδη περάσει,
+	 * ακόμα ανοιχτά -- ίδιο ερώτημα με το badge «Υποψήφιοι» της πλαϊνής
+	 * μπάρας (`public/class-ecrm-app.php`, `$leads_due`), εδώ σε παρτίδα
+	 * ανά συνεργάτη για το digest, ίδιο σχήμα με `followups_for()` και
+	 * `missing_docs_for()`.
+	 *
+	 * ΜΕΤΡΗΜΕΝΟ κενό, όχι εικασία (31/08): πριν από αυτό η μόνη ένδειξη
+	 * ήταν το badge -- παθητικό, μόνο όποιος ανοίξει το CRM το βλέπει. Ένα
+	 * lead που περιμένει τηλέφωνο και ο συνεργάτης δεν άνοιξε καθόλου την
+	 * εφαρμογή εκείνη τη μέρα δεν έφτανε ΠΟΥΘΕΝΑ αλλιώς -- σε αντίθεση με
+	 * τις συμβάσεις, που ήδη είχαν το δικό τους digest section.
+	 *
+	 * @return list<array{id:int, name:string, phone:string, stage_label:string, callback_at:string, age_days:int}>
+	 */
+	public static function overdue_leads_for( array $ids ): array {
+		global $wpdb;
+		if ( ! $ids ) {
+			return [];
+		}
+		$lt = ECRM_DB::table( 'leads' );
+		$ph = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT id, name, phone, stage, callback_at,
+				DATEDIFF(NOW(), callback_at) AS age_days
+			 FROM {$lt}
+			 WHERE partner_user_id IN ($ph) AND stage NOT IN ('won','lost')
+			   AND callback_at IS NOT NULL AND callback_at <= %s
+			 ORDER BY callback_at ASC LIMIT 200",
+			array_merge( $ids, [ current_time( 'mysql' ) ] )
+		), ARRAY_A );
+
+		$labels = class_exists( 'ECRM_Leads' ) ? ECRM_Leads::stages() : [];
+		$out    = [];
+		foreach ( $rows as $r ) {
+			$out[] = [
+				'id'          => (int) $r['id'],
+				'name'        => $r['name'] ?: '—',
+				'phone'       => (string) ( $r['phone'] ?? '' ),
+				'stage_label' => $labels[ $r['stage'] ] ?? $r['stage'],
+				'callback_at' => $r['callback_at'],
+				'age_days'    => max( 0, (int) $r['age_days'] ),
+			];
+		}
+		return $out;
+	}
+
 	public static function init(): void {
 		add_action( self::CRON_HOOK, [ __CLASS__, 'run_digest' ] );
 
@@ -312,7 +360,8 @@ class ECRM_Notifications {
 			$tasks = class_exists( 'ECRM_Tasks' ) ? ECRM_Tasks::due_list( (int) $u->ID ) : [];
 			$missing_docs = self::missing_docs_for( [ (int) $u->ID ] );
 			$escalated    = $escalations[ (int) $u->ID ] ?? [];
-			if ( ! $data['stale'] && ! $tasks && ! $missing_docs && ! $escalated ) { continue; } // nothing to report
+			$overdue_leads = self::overdue_leads_for( [ (int) $u->ID ] );
+			if ( ! $data['stale'] && ! $tasks && ! $missing_docs && ! $escalated && ! $overdue_leads ) { continue; } // nothing to report
 
 			$sections = [];
 
@@ -347,6 +396,22 @@ class ECRM_Notifications {
 				);
 			}
 
+			if ( $overdue_leads ) {
+				$llines = [];
+				foreach ( $overdue_leads as $l ) {
+					$when = mysql2date( 'd/m H:i', $l['callback_at'] );
+					$llines[] = sprintf(
+						'• %s — %s (%s, ραντεβού %s, %d ημέρες καθυστέρηση)',
+						$l['name'], $l['phone'] ?: 'χωρίς τηλέφωνο', $l['stage_label'], $when, $l['age_days']
+					);
+				}
+				$sections[] = sprintf(
+					"Υποψήφιοι με ραντεβού που πέρασε (%d):\n\n%s",
+					count( $overdue_leads ),
+					implode( "\n", $llines )
+				);
+			}
+
 			// Δεν είναι δικές του συμβάσεις -- ξεχωριστή ενότητα, ξεκάθαρα
 			// επισημασμένη ΠΟΙΟΣ τις κρατά, ώστε να μη μοιάζει με δική του
 			// δουλειά που ξέχασε.
@@ -371,6 +436,7 @@ class ECRM_Notifications {
 			if ( $tasks ) { $counts[] = count( $tasks ) . ' εργασίες'; }
 			if ( $missing_docs ) { $counts[] = count( $missing_docs ) . ' ελλείψεις'; }
 			if ( $escalated ) { $counts[] = count( $escalated ) . ' της ομάδας'; }
+			if ( $overdue_leads ) { $counts[] = count( $overdue_leads ) . ' υποψήφιοι'; }
 			$subject = sprintf( '📋 %s - %s', implode( ' & ', $counts ), $company );
 			$body    = sprintf(
 				"Καλημέρα %s,\n\n%s\n\nΣυνδέσου στο CRM για να τα διαχειριστείς.\n\n%s",
