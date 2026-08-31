@@ -119,6 +119,12 @@ class ECRM_App {
 		if ( current_user_can( \EnergyCRM\Access\Capability::MANAGE_TEAM ) ) {
 			// Ήταν 'Ομάδα Live' — «live» έμεινε αμετάφραστο (κανόνας 4).
 			$navMore[] = [ 'view' => 'teamlive', 'label' => 'Ομάδα τώρα', 'icon' => 'pulse' ];
+			// Νέο 31/08: το «Της ομάδας σου» section του email digest (197),
+			// τώρα και σαν δική του οθόνη -- ίδιο capability, ίδιος λόγος:
+			// μόνο όποιος διαχειρίζεται ομάδα έχει «της ομάδας σου» να δει.
+			// Ο ιδιοκτήτης το ζήτησε ρητά μέσα στο CRM, όχι μόνο σε email
+			// («δεν υπάρχει λόγος να στέλνονται mail και μαλακίες»).
+			$navMore[] = [ 'view' => 'escalations', 'label' => 'Καθυστερήσεις ομάδας', 'icon' => 'flag' ];
 		}
 		if ( current_user_can( \EnergyCRM\Access\Capability::VIEW_ANALYTICS ) ) {
 			$navMore[] = [ 'view' => 'analytics', 'label' => 'Στατιστικά', 'icon' => 'analytics' ];
@@ -293,6 +299,7 @@ class ECRM_App {
 					<!-- Analytics (managers) -->
 					<section class="ecrm-view" data-view="analytics"><div class="ecrm-loading">Φόρτωση…</div></section>
 					<section class="ecrm-view" data-view="teamlive"><div class="ecrm-loading">Φόρτωση…</div></section>
+					<section class="ecrm-view" data-view="escalations"><div class="ecrm-loading">Φόρτωση…</div></section>
 
 					<!-- Προσφορά / Calculator -->
 					<section class="ecrm-view" data-view="calc"><div class="ecrm-loading">Φόρτωση…</div></section>
@@ -380,6 +387,7 @@ class ECRM_App {
 			'euro'      => '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.6a4 4 0 1 0 0 6.8"/><path d="M7.5 10.8h6"/><path d="M7.5 13.2h6"/>',
 			'analytics' => '<path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/>',
 			'pulse'     => '<path d="M3 12h4l2 6 4-14 2 8h6"/>',
+			'flag'      => '<path d="M5 21V4"/><path d="M5 4h13l-3 4.5L18 13H5"/>',
 			'tasks'     => '<path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4V2.5"/><path d="M16 4V2.5"/>',
 			'calc'      => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M8 16h.01"/><path d="M12 16h.01"/><path d="M16 16h.01"/>',
 			'book'      => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',

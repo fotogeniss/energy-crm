@@ -7,6 +7,97 @@
 
 ---
 
+## 2026-08-31 (201)
+
+### Ενοποιημένη «προσοχή» μέσα στο CRM -- όχι νέο email, ρητή απαίτηση ιδιοκτήτη
+
+Μετά τα (197)-(200) ρωτήθηκα αν είμαι ικανοποιημένος με το πόσο αυτόματο
+είναι το σύστημα. Πρότεινα δύο ιδέες -- μία μετρημένη (μια ενοποιημένη
+οθόνη μέσα στην εφαρμογή για ό,τι ήδη υπολογίζει το digest), μία ρητά
+χαρακτηρισμένη ως εικασία (ορατότητα αποτυχίας παράδοσης email/SMS, δεν
+ερευνήθηκε). Ο ιδιοκτήτης προτίμησε την πρώτη, και μέσα στην ίδια
+συζήτηση έθεσε όριο για όλη την υπόλοιπη δουλειά: *"δεν υπάρχει λόγος να
+στέλνονται mail και μαλακίες, είπαμε τα θέλουμε όλα στο CRM"* -- το
+email digest (197)-(200) ΔΕΝ αγγίζεται, μένει όπως είναι· απλώς καμία
+ΝΕΑ αυτοματοποίηση δεν βγαίνει πια μόνο σε email.
+
+**Η ένταση που έπρεπε πρώτα να λυθεί.** Το υπάρχον widget
+`DashboardRepository::needsAttention()` αποκλείει ΣΚΟΠΙΜΑ το `routed`
+(δες `NEEDS_ME`, και το docblock του `DashboardAttentionTest`: «η μπάλα
+είναι στον πάροχο... η λίστα γεμίζει με γραμμές που δεν έχουν ενέργεια»).
+Το (200) μόλις έβαλε το `routed` στο daily digest ΑΚΡΙΒΩΣ επειδή κάποιος
+πρέπει να το παρακολουθεί. Δεν είναι αντίφαση -- είναι δύο διαφορετικά
+ερωτήματα (τι κάνω τώρα vs. τι μην ξεχάσω) -- αλλά μια ενοποιημένη οθόνη
+πάνω στο ίδιο query θα τα σύγκρουε. Παρουσιάστηκε ρητά στον ιδιοκτήτη με
+αναφορές κώδικα και δύο ερωτήσεις: (1) επέκταση του υπάρχοντος widget ή
+νέα οθόνη -- **επέκταση** (2) οι κλιμακώσεις προϊσταμένων να φανούν και
+στο CRM UI -- **ναι, ξεχωριστό tab**. Mockup με τα πραγματικά χρώματα/
+κλάσεις του CRM εγκρίθηκε ως έχει.
+
+**Η λύση, σε δύο κομμάτια -- το `needsAttention()` ΔΕΝ αγγίζεται.**
+
+1. `attention_extra` στο `/dashboard` payload (`DashboardController`) --
+   νέα, ξεχωριστή κάρτα «Ελλείψεις & προθεσμίες» δίπλα στο υπάρχον
+   «Χρειάζεται ενέργεια»: τρεις πηγές μαζεμένες (λείπον έγγραφο, ληγμένο
+   έγγραφο, lead με περασμένο ραντεβού), ταξινομημένες κατά `age_days`.
+   Το `ECRM_Notifications::missing_docs_for()` πήρε `age_days` (δεν το
+   είχε), και νέο `expired_docs_for()` -- εταιρικό αντίστοιχο του
+   per-contract `ECRM_Docs::expired_docs()` (199), εδώ συγκεντρωμένο σε
+   ΟΛΕΣ τις ανοιχτές αιτήσεις ενός συνεργάτη.
+2. `GET /team/escalations` (`TeamController`, gated MANAGE_TEAM, ίδιο
+   δικαίωμα με «Ομάδα τώρα») -- νέο tab «Καθυστερήσεις ομάδας», ίδιο
+   δεδομένο με το «Της ομάδας σου» section του digest
+   (`ECRM_Notifications::escalations()`), τώρα μέσα στην εφαρμογή αντί
+   μόνο σε email. Το `escalations()` πήρε `id`/`status` στη γραμμή --
+   δεν τα είχε, μόνο `status_label` (αρκετό για κείμενο email, όχι για
+   σωστό χρώμα badge ή άνοιγμα σύμβασης). Προσθετική αλλαγή, δεν σπάει
+   το digest.
+
+Frontend: νέο module `@energy-crm/view-escalations`
+(`ecrm-view-escalations.js`), καταχωρημένο στο import map
+(`class-ecrm-shortcodes.php`) και δρομολογημένο στο `ecrm-app.js`/
+`class-ecrm-app.php` με το ίδιο μοτίβο (καταχώρηση, dependency list,
+nav item, section placeholder) που ήδη ακολουθεί κάθε άλλη οθόνη. Η
+κάρτα «Ελλείψεις & προθεσμίες» ζει στο `ecrm-view-dashboard.js`,
+ξαναχρησιμοποιώντας το `.ecrm-attn`/`.ecrm-badge--*` που ήδη υπάρχει --
+μόνο η στήλη «είδος» (`.ecrm-attnx__kind`) και η ομαδοποιημένη λίστα του
+manager tab (`.ecrm-mgrgroup`/`.ecrm-mgrrow`) είναι νέο CSS.
+
+**Τι δεν έγινε.** Δεν υπάρχει ακόμα δική της καρτέλα lead στο κέλυφος --
+το κλικ σε lead γραμμή πάει στην ήδη υπάρχουσα οθόνη «Υποψήφιοι»
+(`go('leads')`), όχι σε βαθύ-σύνδεσμο συγκεκριμένου lead. Δεν αγγίχτηκε
+κανένα email template.
+
+**Τεστ.** Νέο `tests/Integration/EscalationsScopeTest.php` -- το
+`/team/escalations` είναι ΝΕΟ route, και ο έλεγχος αυτοματοποίησης
+(EKKREMI-29-08.html §2.5) καταγράφει ρητά «19 από 54 route paths χωρίς
+integration test» ως εύρημα προς διόρθωση, όχι κατάσταση προς επανάληψη.
+Ίδιο μοτίβο με το `NetworkScopeTest` (upline scope) και το
+`DashboardAttentionTest` (`ageContract()` με `DATE_SUB`, γιατί η
+παλαιότητα κρίνεται από `updated_at ON UPDATE CURRENT_TIMESTAMP`): scope
+(ο προϊστάμενος βλέπει μόνο τη δική του κατάντη ομάδα), κατώφλι
+(`escalation_days()`), φύλακας (`MANAGE_TEAM`), σχήμα γραμμής. Το
+`missing_docs_for()`/`expired_docs_for()`/`overdue_leads_for()`/
+`attention_extra` ΔΕΝ πήραν δικό τους PHPUnit -- ίδιο μοτίβο με τα
+αδέρφια τους (κανένα legacy `ECRM_Notifications` method δεν έχει, live-
+επαλήθευση μόνο), και το `needsAttention()` που δεν άλλαξε ήδη καλύπτεται
+από το δικό του test.
+
+**Αρχεία:** `includes/class-ecrm-notifications.php`,
+`src/Http/DashboardController.php`, `src/Http/TeamController.php`,
+`public/class-ecrm-shortcodes.php`, `public/class-ecrm-app.php`,
+`public/assets/ecrm-app.js`, `public/assets/ecrm-view-dashboard.js`,
+`public/assets/ecrm-view-escalations.js` (νέο),
+`public/assets/ecrm-app.css`,
+`tests/Integration/EscalationsScopeTest.php` (νέο).
+
+Laravel-ready; δύο REST endpoints πάνω σε repository/service methods,
+frontend σε module με ξεκάθαρο import graph -- τίποτα εδώ δεν κρατά
+WordPress-specific πέρα από τον ίδιο τον server (`register_rest_route`,
+`current_user_can`) που ήδη ισχύει για κάθε άλλο route του plugin.
+
+---
+
 ## 2026-08-31 (200)
 
 ### Το open_statuses() δεν έβλεπε routed/signed/resolved -- σφάλμα, όχι επιλογή

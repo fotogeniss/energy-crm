@@ -54,6 +54,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-partner'     => 'ecrm-view-partner.js',
 		'@energy-crm/view-team'        => 'ecrm-view-team.js',
 		'@energy-crm/view-team-live'   => 'ecrm-view-team-live.js',
+		'@energy-crm/view-escalations' => 'ecrm-view-escalations.js',
 		'@energy-crm/form'             => 'ecrm-form.js',
 		'@energy-crm/app'              => 'ecrm-app.js',
 		'@energy-crm/litsa'            => 'ecrm-litsa.js',
@@ -107,6 +108,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-partner'     => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-team'        => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-team-live'   => [ '@energy-crm/util', '@energy-crm/format' ],
+		'@energy-crm/view-escalations' => [ '@energy-crm/util', '@energy-crm/format' ],
 		'@energy-crm/form'             => [ '@energy-crm/util' ],
 		'@energy-crm/app'              => [
 			'@energy-crm/util',
@@ -123,6 +125,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/view-partner',
 			'@energy-crm/view-team',
 			'@energy-crm/view-team-live',
+			'@energy-crm/view-escalations',
 			'@energy-crm/navigate',
 			'@energy-crm/view-leads',
 			'@energy-crm/view-renewals',

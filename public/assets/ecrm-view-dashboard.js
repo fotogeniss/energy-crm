@@ -20,7 +20,7 @@
 
 import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
 import { timeAgo } from '@energy-crm/format';
-import { openDetail } from '@energy-crm/navigate';
+import { openDetail, go } from '@energy-crm/navigate';
 
 var MONTHS = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
 
@@ -197,6 +197,64 @@ function attentionHTML(list) {
 		}).join('') + '</ul></div>';
 }
 
+/* «Ελλείψεις & προθεσμίες» -- 31/08, δεύτερη κάρτα δίπλα στο «Χρειάζεται
+ * ενέργεια», ΕΠΙΤΗΔΕΣ ξεχωριστή αντί να μπει στην ίδια λίστα.
+ *
+ * Το attentionHTML() από πάνω μένει actionable-only με τη σημερινή του
+ * λογική (draft/pending/υπογραφή, ΧΩΡΙΣ routed) -- ρητή απόφαση ιδιοκτήτη να
+ * μη το αγγίξουμε (βλ. DashboardAttentionTest). Αυτή εδώ η κάρτα είναι κάτι
+ * διαφορετικό: τρεις πηγές (λείπον έγγραφο, ληγμένο έγγραφο, lead με
+ * περασμένο ραντεβού) που ΔΕΝ είναι «σύμβαση σε εξέλιξη», αλλά χρειάζονται
+ * δικό σου βήμα -- μαζεμένες εδώ ώστε να μη χαθούν σε μια οθόνη ο καθένας
+ * ξεχωριστά. Πηγή: `attention_extra` στο payload του `/dashboard`
+ * (`DashboardController`), πάνω σε `ECRM_Notifications::missing_docs_for()`
+ * / `expired_docs_for()` / `overdue_leads_for()`.
+ *
+ * Ταξινόμηση κατά `age_days` φθίνουσα σε ΟΛΗ τη μαζεμένη λίστα -- το πιο
+ * παλιό πράγμα πρώτο, ανεξάρτητα από ποια πηγή το έδωσε, γι' αυτό και το
+ * `age_days` προστέθηκε στο `missing_docs_for()` (δεν το είχε πριν). */
+function attentionExtraHTML(extra) {
+	extra = extra || {};
+	var rows = []
+		.concat((extra.missing_docs || []).map(function (r) {
+			return {
+				kind: 'doc', kindLabel: 'Έγγραφο', goContract: r.contract_id,
+				name: r.customer, meta: '#' + (r.code || '') + ' · λείπει ' + (r.missing || []).join(', '),
+				badge: 'pending', badgeLabel: 'Λείπει', age: Number(r.age_days) || 0
+			};
+		}))
+		.concat((extra.expired_docs || []).map(function (r) {
+			return {
+				kind: 'doc', kindLabel: 'Έγγραφο', goContract: r.contract_id,
+				name: r.customer, meta: '#' + (r.code || '') + ' · έληξε ' + (r.label || r.kind),
+				badge: 'cancelled', badgeLabel: 'Έληξε', age: Number(r.age_days) || 0
+			};
+		}))
+		.concat((extra.overdue_leads || []).map(function (r) {
+			return {
+				kind: 'lead', kindLabel: 'Lead', goLead: r.id,
+				name: r.name, meta: (r.phone || '') + ' · ραντεβού πέρασε',
+				badge: 'cancelled', badgeLabel: 'Επανάκληση', age: Number(r.age_days) || 0
+			};
+		}));
+
+	rows.sort(function (a, b) { return b.age - a.age; });
+
+	if (!rows.length) {
+		return '';
+	}
+
+	return '<div class="ecrm-card"><div class="ecrm-step">Ελλείψεις &amp; προθεσμίες</div>' +
+		'<ul class="ecrm-attn">' + rows.map(function (it, i) {
+			var goAttr = it.goContract ? ' data-attnx-contract="' + esc(it.goContract) + '"' : ' data-attnx-lead="' + esc(it.goLead) + '"';
+			return '<li data-attnx-i="' + i + '">' +
+				'<span class="ecrm-attnx__kind">' + esc(it.kindLabel) + '</span>' +
+				'<span class="ecrm-attn__m"><b>' + esc(it.name || '—') + '</b><small>' + esc(it.meta || '—') + '</small></span>' +
+				'<span class="ecrm-attn__s"><span class="ecrm-badge ecrm-badge--' + esc(it.badge) + '">' + esc(it.badgeLabel) + '</span></span>' +
+				'<button type="button" class="ecrm-attn__a"' + goAttr + '>Άνοιγμα</button></li>';
+		}).join('') + '</ul></div>';
+}
+
 /* Γραμμή, μία σειρά, χωρίς legend: ο τίτλος τη δηλώνει. Ετικέτα μόνο στο
  * τελευταίο σημείο — αριθμός σε κάθε σημείο είναι χάος και δεν διαβάζεται. */
 function trendHTML(monthly) {
@@ -299,6 +357,7 @@ function dashboardHTML(d) {
 		tilesHTML(tiles) +
 		levelHTML(lvl) +
 		attentionHTML(d.attention) +
+		attentionExtraHTML(d.attention_extra) +
 		'<div class="ecrm-cols">' + trendHTML(d.monthly) + providersHTML(d.by_provider) + '</div>' +
 		feedHTML(d.feed);
 }
@@ -315,6 +374,19 @@ function wire(view, d) {
 		b.addEventListener('click', function () {
 			openDetail(b.getAttribute('data-attn-go'));
 		});
+	});
+
+	// Ίδιο μοτίβο, δεύτερη κάρτα: contract-linked γραμμές ανοίγουν τη
+	// σύμβαση, lead γραμμές πάνε στην οθόνη υποψηφίων -- δεν υπάρχει ακόμα
+	// δική της καρτέλα lead στο κέλυφος, οπότε η λίστα είναι το πιο κοντινό
+	// σωστό προορισμό (όχι εικασία νέου route για μια κάρτα).
+	view.querySelectorAll('[data-attnx-contract]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			openDetail(b.getAttribute('data-attnx-contract'));
+		});
+	});
+	view.querySelectorAll('[data-attnx-lead]').forEach(function (b) {
+		b.addEventListener('click', function () { go('leads'); });
 	});
 
 	var tip = view.querySelector('[data-charttip]');

@@ -18,6 +18,7 @@ import { loadNetwork } from '@energy-crm/view-network';
 import { loadTeam } from '@energy-crm/view-team';
 import { openPartner } from '@energy-crm/view-partner';
 import { loadTeamLive } from '@energy-crm/view-team-live';
+import { loadEscalations } from '@energy-crm/view-escalations';
 
 /* Energy CRM — το κέλυφος, και μόνο αυτό.
  *
@@ -42,7 +43,7 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 
 	// ---- routing ----------------------------------------------------------
 	var loaded = {};
-	var VIEWS = ['dashboard','new-contract','leads','contracts','pending','tasks','customers','renewals','network','team','commissions','calc','kb','teamlive','analytics','import'];
+	var VIEWS = ['dashboard','new-contract','leads','contracts','pending','tasks','customers','renewals','network','team','commissions','calc','kb','teamlive','escalations','analytics','import'];
 	var suppressHash = false;
 	function go(view) {
 		app.setAttribute('data-view', view);
@@ -61,6 +62,7 @@ import { loadTeamLive } from '@energy-crm/view-team-live';
 		if (view === 'commissions') loadCommissions();
 		if (view === 'analytics') loadAnalytics();
 		if (view === 'teamlive') loadTeamLive();
+		if (view === 'escalations') loadEscalations();
 		if (view === 'calc') loadCalc();
 		if (view === 'kb') loadKB();
 		if (view === 'training') loadTraining();
