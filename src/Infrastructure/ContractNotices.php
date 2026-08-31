@@ -201,5 +201,4 @@ final class ContractNotices
 
         return ($company ?: $person) ?: self::FALLBACK_NAME;
     }
-
 }
