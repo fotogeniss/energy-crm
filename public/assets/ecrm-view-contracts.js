@@ -101,7 +101,12 @@ function expandPanel(c, view) {
 		(phone ? '<a class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" href="tel:' + esc(phone) + '">' + svgIcon('phone') + ' Κάλεσε</a>' : '') +
 		(viberNum ? '<a class="ecrm-btn ecrm-btn--viber ecrm-btn--sm" href="viber://chat?number=' + encodeURIComponent(viberNum) + '" target="_blank" rel="noopener">' + svgIcon('viber') + ' Viber</a>' : '') +
 		(email ? '<a class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" href="mailto:' + esc(email) + '">' + svgIcon('mail') + ' Email</a>' : '') +
-		(c.status === 'draft' ? '<button type="button" class="ecrm-btn ecrm-btn--danger ecrm-btn--sm" data-exp-del>' + svgIcon('trash') + ' Διαγραφή</button>' : '') +
+		// (191) Ίδιο κριτήριο διαγραφής με την καρτέλα αίτησης: ο server
+		// (DeletionGate) αρνείται μόνο ό,τι υπογράφηκε ΠΟΤΕ, όχι ό,τι έχει
+		// τρέχον status διαφορετικό από draft -- πριν έδειχνε το κουμπί ΜΟΝΟ
+		// σε πρόχειρο, οπότε μια αίτηση «Σε επεξεργασία» που ποτέ δεν
+		// υπογράφηκε δεν είχε ΚΑΜΙΑ επιλογή διαγραφής από εδώ.
+		(can('ecrm_delete_contract') ? '<button type="button" class="ecrm-btn ecrm-btn--danger ecrm-btn--sm" data-exp-del>' + svgIcon('trash') + ' Διαγραφή</button>' : '') +
 		'</div>';
 
 	return banner + cards + actions;
@@ -112,12 +117,34 @@ function bindExpand(box, c, view) {
 	if (edit) edit.addEventListener('click', function () { openEdit(c); });
 	var del = box.querySelector('[data-exp-del]');
 	if (del) del.addEventListener('click', function () {
-		if (!confirm('Διαγραφή πρόχειρης σύμβασης; Δεν αναιρείται.')) return;
-		var b = this; b.disabled = true;
-		fetch(api('/contracts/' + c.id), { method: 'DELETE', headers: H() })
-			.then(function (r) { return r.json(); })
-			.then(function (d) { if (d && d.ok) { toast('Διαγράφηκε.'); delete expandCache[c.id]; loadContracts(); } else { toast((d && d.error) || 'Αποτυχία.', false); b.disabled = false; } })
-			.catch(function () { toast('Σφάλμα δικτύου.', false); b.disabled = false; });
+		var b = this;
+
+		function doDelete() {
+			b.disabled = true;
+			fetch(api('/contracts/' + c.id), { method: 'DELETE', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (d) { if (d && d.ok) { toast('Διαγράφηκε.'); delete expandCache[c.id]; loadContracts(); } else { toast((d && d.error) || 'Αποτυχία.', false); b.disabled = false; } })
+				.catch(function () { toast('Σφάλμα δικτύου.', false); b.disabled = false; });
+		}
+
+		// (191) Ίδια πύλη με το ecrm-view-detail.js: πρόχειρο δεν έχει έγγραφα
+		// ούτε υπογραφή -- απλό confirm() αρκεί. Οτιδήποτε άλλο περνάει από
+		// πληκτρολόγηση κωδικού, ίδιο confirmTyped() dialog με την καρτέλα.
+		if (c.status === 'draft') {
+			if (!confirm('Διαγραφή πρόχειρης σύμβασης; Δεν αναιρείται.')) return;
+			doDelete();
+			return;
+		}
+
+		var hasCode = !!c.code;
+		confirmTyped({
+			expect: hasCode ? String(c.code) : String(c.id),
+			expectLabel: hasCode ? 'Πληκτρολόγησε τον κωδικό της αίτησης' : 'Πληκτρολόγησε τον αριθμό της αίτησης',
+			title: 'Διαγραφή αίτησης ' + (c.code || ('#' + c.id)),
+			lead: ['Η ενέργεια είναι ', { b: 'οριστική' }, ' και θα διαγράψει και τα σχετικά έγγραφα και τις ', { b: 'υπογραφές' }, '.'],
+			confirm: 'Οριστική διαγραφή',
+			onConfirm: doDelete,
+		});
 	});
 }
 

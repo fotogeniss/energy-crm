@@ -760,7 +760,19 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// providers + programs
 		fetch(api('/providers'), { headers: headers() })
 			.then(function (r) { return r.json(); })
-			.then(function (d) { programsCache = d.programs || []; mobilePricing = d.mobile_pricing || {}; renderProviders(d.providers || []); providersLoaded = true; if (pendingProvider) { selectProvider(pendingProvider); pendingProvider = null; } renderPrograms(); renderUsual(d.usual); })
+			.then(function (d) {
+				programsCache = d.programs || []; mobilePricing = d.mobile_pricing || {}; renderProviders(d.providers || []); providersLoaded = true;
+				// Επεξεργασία υπάρχουσας αίτησης: το applyEdit() καλεί selectProvider(c.provider_id)
+				// ΠΡΙΝ προλάβει να απαντήσει αυτό εδώ το fetch -- selectProvider() το βλέπει και
+				// απλώς αποθηκεύει pendingProvider, χωρίς state.provider_id/κλάση is-on ακόμα.
+				// Το applyEdit() τότε καλεί refreshProviderFields() σε άδειο state -- κάνει early
+				// return, καμία αίτηση /forms/fields. Χωρίς αυτή τη δεύτερη κλήση ΕΔΩ, το «Πάνω στο
+				// έντυπο» ανοίγει σε άδειο κουτί κάθε φορά που η επεξεργασία ανοίγει πιο γρήγορα απ'
+				// όσο προλαβαίνει να απαντήσει το /providers -- ό,τι είδαμε ζωντανά 31/08.
+				if (pendingProvider) { selectProvider(pendingProvider); pendingProvider = null; }
+				renderPrograms(); renderUsual(d.usual);
+				refreshProviderFields();
+			})
 			.catch(function () { q('[data-providers]').innerHTML = '<div class="ecrm-empty">Δεν φόρτωσαν οι πάροχοι.</div>'; });
 
 		function renderProviders(list) {
@@ -1060,6 +1072,19 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			var consentEl = q('[data-consent]');
 			if (consentEl) consentEl.checked = !!c.consent_at;
 			if (c.extra) { Object.keys(c.extra).forEach(function (k) { setField(k, c.extra[k]); }); }
+			// «Πάνω στο έντυπο» (31/08): selectProvider()/sel.value= παραπάνω ΔΕΝ
+			// στέλνουν 'change' -- τα μόνα σημεία που καλούν refreshProviderFields()
+			// είναι το κλικ σε κάρτα παρόχου, το chip και το onchange του
+			// dropdown προγράμματος, και applyEdit() δεν περνάει από κανένα τους.
+			// Αποτέλεσμα: σε ΝΕΑ αίτηση δούλευε (ο χρήστης διαλέγει με το χέρι,
+			// άρα κάποιο από τα τρία τρέχει πάντα), σε ΕΠΕΞΕΡΓΑΣΙΑ όχι -- ο
+			// διακόπτης «Πάνω στο έντυπο» άνοιγε σε άδειο κουτί χωρίς ΚΑΝΕΝΑ
+			// πεδίο, γιατί κανείς δεν είχε ζητήσει ποτέ positions/column_inputs
+			// από το /forms/fields. Ίδιο σχήμα λάθους με το CHANGELOG (189)
+			// docOverlayField() bug, διαφορετικό σημείο. Τρέχει ΕΔΩ, μετά τα
+			// CUST_FIELDS/ADDR_FIELDS/extra, ώστε τα overlay input να γεμίσουν
+			// με τις ΠΡΑΓΜΑΤΙΚΕΣ τιμές της αίτησης αντί για κενά.
+			refreshProviderFields();
 			// mobile_offer lives in the extras bag and is only restored above —
 			// applyCustomerType() ran earlier against whatever the select's
 			// default was, so a saved Family/COMBO contract would reopen with
