@@ -11,7 +11,7 @@
 import { api, esc, fetch, H, rejectedNote, toast, viewEl } from '@energy-crm/util';
 import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint } from '@energy-crm/format';
 import { go, openEdit } from '@energy-crm/navigate';
-import { confirmTyped, openDialog } from '@energy-crm/dialog';
+import { confirmTyped, confirmTypedWithReason, openDialog } from '@energy-crm/dialog';
 
 function copyText(text) {
 	text = String(text == null ? '' : text);
@@ -384,6 +384,48 @@ function renderDetail(view, d) {
 		function doDelete() {
 			b.disabled = true; var t = b.textContent; b.textContent = 'Διαγραφή…';
 			fetch(api('/contracts/' + c.id), { method: 'DELETE', headers: H() })
+				.then(function (r) { return r.text().then(function (x) { try { return JSON.parse(x); } catch (e) { throw new Error('Ο server δεν απάντησε σωστά.'); } }); })
+				.then(function (d2) {
+					if (d2 && d2.ok) { toast('Η αίτηση διαγράφηκε.', true); go('contracts'); }
+					// build queue #15: ο server αρνήθηκε γιατί υπογράφηκε
+					// ποτέ (code === 'was_signed'). Μόνο admin βλέπει τη
+					// δεύτερη πύλη -- ο έλεγχος εδώ είναι απλά για το αν θα
+					// την ΠΡΟΣΦΕΡΕΙ το UI, ξαναελέγχεται στον server.
+					else if (d2 && d2.code === 'was_signed' && window.ECRM && window.ECRM.isAdmin) {
+						b.disabled = false; b.textContent = t;
+						offerForceDelete(c, b);
+					}
+					else { b.disabled = false; b.textContent = t; toast((d2 && d2.error) || 'Αποτυχία διαγραφής.', false); }
+				})
+				.catch(function (err) { b.disabled = false; b.textContent = t; toast((err && err.message) || 'Σφάλμα δικτύου.', false); });
+		}
+
+		// build queue #15: η «ειδική πύλη» admin. Ανοίγει ΜΟΝΟ αφού η
+		// κανονική διαγραφή αρνήθηκε με 'was_signed' -- δεν είναι μόνιμα
+		// ορατό κουμπί, ώστε η ύπαρξή της να μη διδάσκει κανέναν να την
+		// προσπερνά. Ίδιος κωδικός αίτησης με το confirmTyped() παραπάνω,
+		// ΣΥΝ υποχρεωτική αιτιολογία -- δες confirmTypedWithReason().
+		function offerForceDelete(c, b) {
+			var hasCode = !!c.code;
+			confirmTypedWithReason({
+				eyebrow: 'Παράκαμψη admin',
+				expect: hasCode ? String(c.code) : String(c.id),
+				expectLabel: hasCode ? 'Πληκτρολόγησε τον κωδικό της αίτησης' : 'Πληκτρολόγησε τον αριθμό της αίτησης',
+				reasonLabel: 'Γιατί χρειάζεται να διαγραφεί αυτή η υπογεγραμμένη σύμβαση;',
+				title: 'Οριστική διαγραφή υπογεγραμμένης — ' + (c.code || ('#' + c.id)),
+				lead: ['Αυτή η σύμβαση ', { b: 'υπογράφηκε' }, '. Η κανονική διαγραφή την αρνείται εσκεμμένα. Ως admin μπορείς να προχωρήσεις, αλλά η ενέργεια είναι ', { b: 'οριστική' }, ' και καταγράφεται μόνιμα ποιος, πότε και γιατί.'],
+				confirm: 'Οριστική διαγραφή (admin)',
+				onConfirm: function (reason) { doForceDelete(c, b, reason); },
+			});
+		}
+
+		function doForceDelete(c, b, reason) {
+			b.disabled = true; var t = b.textContent; b.textContent = 'Διαγραφή…';
+			fetch(api('/contracts/' + c.id + '/force'), {
+				method: 'DELETE',
+				headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+				body: JSON.stringify({ reason: reason }),
+			})
 				.then(function (r) { return r.text().then(function (x) { try { return JSON.parse(x); } catch (e) { throw new Error('Ο server δεν απάντησε σωστά.'); } }); })
 				.then(function (d2) {
 					if (d2 && d2.ok) { toast('Η αίτηση διαγράφηκε.', true); go('contracts'); }

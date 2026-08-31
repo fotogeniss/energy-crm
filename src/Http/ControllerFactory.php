@@ -85,7 +85,8 @@ final class ControllerFactory
                 $lifecycle,
                 $draftExit,
                 $cancel,
-                $deletion
+                $deletion,
+                Services::deletionLog()
             ),
             new ContractsBulkController(
                 $scope,

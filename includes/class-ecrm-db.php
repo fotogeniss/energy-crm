@@ -13,6 +13,7 @@
  *   leads          — υποψήφιοι· και όσοι έρχονται μόνοι τους από τον «σύνδεσμό μου»
  *   events         — audit/status-history log per contract
  *   assistant_messages — Λίτσα assistant conversation, per user (build queue 14)
+ *   deletion_log   — μόνιμο αρχείο admin παράκαμψης διαγραφής υπογεγραμμένων (20/DB_VERSION)
  *
  * Designed so future sessions can bolt on: network/team, commissions, mail.
  *
@@ -26,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '19';
+	const DB_VERSION = '20';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -405,6 +406,32 @@ class ECRM_DB {
 			PRIMARY KEY (id),
 			KEY user_id (user_id),
 			KEY user_unread (user_id, read_at)
+		) {$charset};" );
+
+		// --- deletion_log ------------------------------------------------------
+		// Μόνιμο αρχείο: admin παρέκαμψε την άρνηση διαγραφής υπογεγραμμένης
+		// σύμβασης (DeletionGate::WAS_SIGNED). ΕΠΙΤΗΔΕΣ χωρίς foreign key και
+		// χωρίς στήλη ονομασμένη ακριβώς 'contract_id' -- deleted_contract_id
+		// είναι στιγμιότυπο, όχι ζωντανή σχέση, γιατί η γραμμή contracts που
+		// δείχνει έχει ήδη φύγει τη στιγμή που γράφεται αυτό εδώ. Αν λεγόταν
+		// 'contract_id' θα έμπαινε στη σάρωση του PersonalDataCoverageTest σαν
+		// ζωντανή ακμή προς πρόσωπο -- και ΔΕΝ είναι: το αρχείο αυτό υπάρχει
+		// ΓΙΑ να επιζήσει ενός αιτήματος διαγραφής, όχι για να το εξυπηρετήσει
+		// (GDPR άρθρο 17§3β -- τήρηση αρχείου για νομική υποχρέωση/λογοδοσία).
+		// Κρατά το ελάχιστο: κωδικό/κατάσταση σύμβασης, ποιος, πότε, γιατί --
+		// όχι όνομα πελάτη, όχι ιστορικό μηνυμάτων, ώστε να μην ξαναδημιουργεί
+		// σε νέο πίνακα ό,τι το PersonalDataEraser έσβησε αλλού.
+		dbDelta( "CREATE TABLE {$p}deletion_log (
+			id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			deleted_contract_id BIGINT UNSIGNED NOT NULL,
+			contract_code       VARCHAR(64) NOT NULL,
+			status_at_deletion  VARCHAR(32) NOT NULL,
+			reason              TEXT NOT NULL,
+			deleted_by          BIGINT UNSIGNED NOT NULL,
+			deleted_by_name     VARCHAR(190) NOT NULL,
+			deleted_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY deleted_at (deleted_at)
 		) {$charset};" );
 
 	}

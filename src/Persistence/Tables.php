@@ -17,6 +17,7 @@ final class Tables
 {
     public const ASSISTANT_MESSAGES = 'assistant_messages';
     public const COMMISSION_RULES   = 'commission_rules';
+    public const DELETION_LOG       = 'deletion_log';
     public const CONTRACTS          = 'contracts';
     public const CUSTOMERS          = 'customers';
     public const EVENTS             = 'events';
@@ -64,6 +65,7 @@ final class Tables
             self::KB_ENTRIES,
             self::KB_READ,
             self::NOTIFICATIONS,
+            self::DELETION_LOG,
         ];
     }
 
