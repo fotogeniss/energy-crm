@@ -25,6 +25,59 @@ class ECRM_Notifications {
 		return [ 'draft', 'new', 'pending', 'processing', 'pending_signature', 'awaiting_signature' ];
 	}
 
+	/**
+	 * Statuses to check for missing documents -- ίδιο "open" σύνολο με τα
+	 * follow-ups, μείον 'draft': μια πρόχειρη αίτηση αναμένεται ελλιπής, δεν
+	 * είναι κάτι να ειδοποιηθεί κανείς κάθε μέρα γι' αυτό.
+	 */
+	public static function doc_check_statuses(): array {
+		return array_values( array_diff( self::open_statuses(), [ 'draft' ] ) );
+	}
+
+	/**
+	 * Ανοιχτές αιτήσεις (ανά συνεργάτη) που δεν έχουν όλα τα απαιτούμενα
+	 * δικαιολογητικά -- ίδιος υπολογισμός με ECRM_Docs::missing_labels(),
+	 * απλά σε παρτίδα ανά συνεργάτη για το digest.
+	 *
+	 * @return list<array{id:int, code:string, customer:string, missing:list<string>}>
+	 */
+	public static function missing_docs_for( array $ids ): array {
+		global $wpdb;
+		if ( ! $ids ) {
+			return [];
+		}
+		$ct  = ECRM_DB::table( 'contracts' );
+		$cu  = ECRM_DB::table( 'customers' );
+		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+		$statuses = self::doc_check_statuses();
+		$sph = implode( ',', array_fill( 0, count( $statuses ), '%s' ) );
+
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT c.id, c.code, c.activation_type, c.energy_type,
+				cu.first_name, cu.last_name, cu.company_name
+			 FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id = c.customer_id
+			 WHERE c.partner_user_id IN ($ph) AND c.status IN ($sph)
+			 ORDER BY c.updated_at ASC LIMIT 200",
+			array_merge( $ids, $statuses )
+		), ARRAY_A );
+
+		$out = [];
+		foreach ( $rows as $r ) {
+			$missing = ECRM_Docs::missing_labels( (int) $r['id'], $r['activation_type'], $r['energy_type'] );
+			if ( ! $missing ) {
+				continue;
+			}
+			$name = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
+			$out[] = [
+				'id'       => (int) $r['id'],
+				'code'     => $r['code'],
+				'customer' => $name ?: '—',
+				'missing'  => $missing,
+			];
+		}
+		return $out;
+	}
+
 	public static function threshold_days(): int {
 		$d = class_exists( 'ECRM_Admin' ) ? (int) ECRM_Admin::get( 'followup_days', 5 ) : 5;
 		return max( 1, $d ?: 5 );
@@ -162,7 +215,8 @@ class ECRM_Notifications {
 			if ( ! is_email( $u->user_email ) ) { continue; }
 			$data  = self::followups_for( [ (int) $u->ID ] );
 			$tasks = class_exists( 'ECRM_Tasks' ) ? ECRM_Tasks::due_list( (int) $u->ID ) : [];
-			if ( ! $data['stale'] && ! $tasks ) { continue; } // nothing to report
+			$missing_docs = self::missing_docs_for( [ (int) $u->ID ] );
+			if ( ! $data['stale'] && ! $tasks && ! $missing_docs ) { continue; } // nothing to report
 
 			$sections = [];
 
@@ -185,9 +239,22 @@ class ECRM_Notifications {
 				$sections[] = sprintf( "Εργασίες προς διεκπεραίωση (%d):\n\n%s", count( $tasks ), implode( "\n", $tlines ) );
 			}
 
+			if ( $missing_docs ) {
+				$mlines = [];
+				foreach ( $missing_docs as $m ) {
+					$mlines[] = sprintf( '• %s — %s: λείπει %s', $m['code'], $m['customer'], implode( ', ', $m['missing'] ) );
+				}
+				$sections[] = sprintf(
+					"Αιτήσεις με ελλείψεις δικαιολογητικών (%d):\n\n%s",
+					count( $missing_docs ),
+					implode( "\n", $mlines )
+				);
+			}
+
 			$counts  = [];
 			if ( $data['stale'] ) { $counts[] = $data['stale'] . ' εκκρεμότητες'; }
 			if ( $tasks ) { $counts[] = count( $tasks ) . ' εργασίες'; }
+			if ( $missing_docs ) { $counts[] = count( $missing_docs ) . ' ελλείψεις'; }
 			$subject = sprintf( '📋 %s - %s', implode( ' & ', $counts ), $company );
 			$body    = sprintf(
 				"Καλημέρα %s,\n\n%s\n\nΣυνδέσου στο CRM για να τα διαχειριστείς.\n\n%s",
