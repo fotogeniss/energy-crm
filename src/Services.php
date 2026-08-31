@@ -32,6 +32,7 @@ use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Infrastructure\ContractNotices;
+use EnergyCRM\Infrastructure\RejectionFollowUp;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Infrastructure\ExtractionGate;
@@ -129,6 +130,8 @@ final class Services
     private static ?ContractLifecycle $lifecycle = null;
 
     private static ?AutoProcess $autoProcess = null;
+
+    private static ?RejectionFollowUp $rejectionFollowUp = null;
 
     private function __construct()
     {
@@ -327,6 +330,14 @@ final class Services
     public static function autoProcess(): AutoProcess
     {
         return self::$autoProcess ??= new AutoProcess(self::contractTransitions(), self::lifecycle());
+    }
+
+    public static function rejectionFollowUp(): RejectionFollowUp
+    {
+        return self::$rejectionFollowUp ??= new RejectionFollowUp(
+            self::contractDetails(),
+            self::tasks(),
+        );
     }
 
     public static function customers(): CustomerRepository

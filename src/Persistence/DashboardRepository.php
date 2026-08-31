@@ -50,7 +50,7 @@ final class DashboardRepository
      *
      * @var list<string>
      */
-    private const NOT_OPEN = ['active', 'cancelled', 'terminated'];
+    private const NOT_OPEN = ['active', 'cancelled', 'terminated', 'rejected'];
 
     private CustomerFields $fields;
 

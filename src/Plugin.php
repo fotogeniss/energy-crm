@@ -144,6 +144,11 @@ final class Plugin
         // να ξέρει ότι υπάρχουν ειδοποιήσεις.
         Services::contractNotices()->register();
 
+        // Απόρριψη από πάροχο -> αυτόματη εργασία παρακολούθησης. Ίδιο σημείο
+        // σύνδεσης με τα δύο παραπάνω, για τον ίδιο λόγο -- ο κύκλος ζωής δεν
+        // πρέπει να ξέρει ότι υπάρχουν εργασίες.
+        Services::rejectionFollowUp()->register();
+
         // The PDF builder listens for its own scheduled events; without this
         // the queue fills and nothing ever drains it.
         Services::documents()->register();

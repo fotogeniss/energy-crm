@@ -1,0 +1,72 @@
+feat(contracts): add Rejected status + auto-task on provider rejection (195)
+
+Continues the pipeline audit from (194): next stage in order, "if
+rejected -> creates task" from the owner's diagram. The owner chose a
+new dedicated ContractStatus::Rejected over reusing Cancelled, so a
+provider rejection stays visible in reporting/dashboards instead of
+reading as a generic cancellation.
+
+- ContractStatus: new terminal case Rejected ('rejected'), Greek label
+  "Απορρίφθηκε". Reachable only from Routed/Processing/Pending -- the
+  same three places Cancelled is already reachable from, where the
+  ball is genuinely with the provider. Not from Resolved/Active: an
+  application that reached or passed activation is not "rejected"
+  anymore, it terminates (CancellationGate).
+- ProviderStatusMap: new heuristic '/(απορρ|reject)/u' => 'rejected'.
+  No validation-logic change needed -- fromArray() already drops
+  unknown slugs via ContractStatus::tryFromSlug().
+- DashboardRepository::NOT_OPEN: added 'rejected' (hand-written SQL
+  list, deliberately separate from the enum per its own comment).
+- TeamController::terminalStatuses() needed no change: it already
+  derives its list from isTerminal() dynamically.
+- New RejectionFollowUp class (src/Infrastructure/), same shape as
+  AutoProcess and ContractNotices: listens on
+  ContractLifecycle::STATUS_CHANGED and creates a task assigned to
+  the contract's partner_user_id (due today, priority high) when a
+  contract lands on Rejected. No task is created when the contract
+  has no owner (tasks.assigned_to is NOT NULL). Wired into
+  Services.php / Plugin.php the same way as the other two listeners.
+  Due "today" and not "+1 day" (first draft) is a deliberate owner
+  call: a provider rejection is business risk, not something that
+  waits -- also the only way it shows up immediately in
+  ECRM_Tasks::due_count(), the sidebar badge next to "Εργασίες".
+- ContractNotices::ANNOUNCED gained Rejected (bell notification),
+  with its own message distinct from Cancelled.
+
+Caught by composer check:all, not guessed: first draft placed
+RejectionFollowUp under src/Domain/Contract/, next to AutoProcess.
+Wrong -- DomainStaysFrameworkFreeTest failed immediately: the class
+calls add_action()/current_time(), platform, not pure logic. Moved to
+src/Infrastructure/, where ContractNotices already lives doing the
+identical job. AutoProcess itself is already recorded debt in that
+test's ALLOWED list, not a placement to copy.
+
+Blast-radius grep done before writing code, not after: ~8 files
+reference ContractStatus::cases()/labels()/gate_statuses/isPayable/
+isTerminal, none needed a new match() arm -- they all read the enum
+dynamically (foreach cases(), in_array), not via match(). The only
+exhaustive match() over ContractStatus is in the enum itself
+(label(), allowedNext()), where the new arms were added.
+
+Tests: ContractStatusTest gained 'rejected' to the terminal-status
+data provider plus a dedicated reachability test. Verified with a
+standalone script (no WordPress dependency needed for this pure
+enum) -- 63 assertions, 0 failures, covering every case x every
+target transition including the new one.
+
+Backend/logic only, no new markup -- no mockup needed.
+
+Laravel-ready; ContractStatus is already framework-free PHP and
+transfers as-is. RejectionFollowUp is thin: add_action() becomes a
+Laravel event listener on the same event meaning
+(ContractLifecycle::STATUS_CHANGED becomes a domain event),
+TaskRepository::create() becomes Task::create() via Eloquent,
+ContractDetails::noticeSubject() stays the same query until
+Persistence itself moves. ProviderStatusMap is untouched
+structurally -- the new line is one more array entry, not a new
+dependency.
+
+Live-verified: moved a real test contract (PROTERGIA-5069) to
+Rejected -- an open task "Απορρίφθηκε από πάροχο — PROTERGIA-5069"
+appeared automatically in the owner's task list with the correct
+note text.
