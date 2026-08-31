@@ -20,9 +20,39 @@ class ECRM_Notifications {
 
 	const CRON_HOOK = 'ecrm_daily_followups';
 
-	/** Statuses that are "open" and may need follow-up. */
+	/**
+	 * Statuses that are "open" and may need follow-up.
+	 *
+	 * ΜΕΤΡΗΜΕΝΟ κενό, όχι εικασία (31/08/2026): μέχρι εδώ έλειπαν τα
+	 * 'routed', 'signed' και 'resolved' -- δηλαδή ΑΚΡΙΒΩΣ το στάδιο «στάλθηκε
+	 * στον πάροχο, περιμένουμε απάντηση» (§1.13, καμία API παρόχου δεν
+	 * υπάρχει ακόμα, άρα η μόνη παρακολούθηση είναι ανθρώπινη) ήταν αόρατο
+	 * και στο `followups_for()` ΚΑΙ στο `escalations()` (197) -- μια αίτηση
+	 * routed μπορούσε να κάτσει επ' άπειρον χωρίς να το μάθει ούτε ο
+	 * συνεργάτης ούτε ο προϊστάμενός του.
+	 *
+	 * Δεν ήταν σκόπιμη επιλογή: το `DashboardRepository::NOT_OPEN` (άλλο
+	 * σημείο του ίδιου plugin) θεωρεί «ανοιχτό» οτιδήποτε δεν είναι
+	 * ['active', 'cancelled', 'terminated', 'rejected'] -- δηλαδή ήδη
+	 * συμπεριλάμβανε routed/signed/resolved ως ανοιχτά. Το `open_statuses()`
+	 * εδώ απλώς δεν είχε ενημερωθεί όταν μπήκαν αυτές οι καταστάσεις.
+	 *
+	 * Ίδιο κατώφλι μερών με τα υπόλοιπα -- ρωτήθηκε ρητά ο ιδιοκτήτης αν το
+	 * routed (περιμένει πάροχο, όχι συνεργάτη) χρειάζεται μεγαλύτερο
+	 * κατώφλι, και προτίμησε το ίδιο threshold_days() παρά τη διαφορά:
+	 * λιγότερη πολυπλοκότητα τώρα, μπορεί να αλλάξει αργότερα αν φανεί
+	 * θόρυβος στην πράξη.
+	 *
+	 * Επίδραση: το `doc_check_statuses()` (ένα σύνολο πιο κάτω) παίρνει
+	 * αυτόματα τα τρία νέα statuses -- σκόπιμο, όχι παράπλευρη ζημιά: αν ένα
+	 * δικαιολογητικό λείψει ΜΕΤΑ το routing (π.χ. διαγράφηκε αρχείο), αξίζει
+	 * να εμφανιστεί στο digest όπως και πριν.
+	 */
 	public static function open_statuses(): array {
-		return [ 'draft', 'new', 'pending', 'processing', 'pending_signature', 'awaiting_signature' ];
+		return [
+			'draft', 'new', 'pending', 'processing', 'pending_signature', 'awaiting_signature',
+			'routed', 'signed', 'resolved',
+		];
 	}
 
 	/**
