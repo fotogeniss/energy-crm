@@ -69,7 +69,12 @@ class ECRM_Notifications {
 	 * δικαιολογητικά -- ίδιος υπολογισμός με ECRM_Docs::missing_labels(),
 	 * απλά σε παρτίδα ανά συνεργάτη για το digest.
 	 *
-	 * @return list<array{id:int, code:string, customer:string, missing:list<string>}>
+	 * `age_days` προστέθηκε 31/08 -- το dashboard widget «Ελλείψεις &
+	 * προθεσμίες» ενοποιεί αυτή τη λίστα με leads/ληγμένα έγγραφα και τα
+	 * ταξινομεί όλα μαζί κατά ηλικία· το email digest δεν το χρησιμοποιεί
+	 * (ήδη ταξινομεί με δικό του τρόπο), αλλά δεν βλάπτει να υπάρχει.
+	 *
+	 * @return list<array{id:int, code:string, customer:string, missing:list<string>, age_days:int}>
 	 */
 	public static function missing_docs_for( array $ids ): array {
 		global $wpdb;
@@ -84,6 +89,7 @@ class ECRM_Notifications {
 
 		$rows = $wpdb->get_results( $wpdb->prepare(
 			"SELECT c.id, c.code, c.activation_type, c.energy_type,
+				DATEDIFF(NOW(), c.updated_at) AS age_days,
 				cu.first_name, cu.last_name, cu.company_name
 			 FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id = c.customer_id
 			 WHERE c.partner_user_id IN ($ph) AND c.status IN ($sph)
@@ -103,6 +109,82 @@ class ECRM_Notifications {
 				'code'     => $r['code'],
 				'customer' => $name ?: '—',
 				'missing'  => $missing,
+				'age_days' => (int) $r['age_days'],
+			];
+		}
+		return $out;
+	}
+
+	/**
+	 * Έγγραφα λήξιμου είδους σε ανοιχτές αιτήσεις ενός συνεργάτη που έχουν
+	 * ήδη λήξει -- ίδια παρτίδα ανά partner_user_id με το missing_docs_for(),
+	 * πάνω στο ECRM_Docs::expired_docs() (per-contract) που ήδη μπλοκάρει το
+	 * routing (199), εδώ συγκεντρωμένο σε ΟΛΕΣ τις ανοιχτές αιτήσεις ενός
+	 * συνεργάτη -- για το dashboard widget «Ελλείψεις & προθεσμίες» και,
+	 * αργότερα αν χρειαστεί, ένα ακόμη digest section.
+	 *
+	 * Ζει εδώ και όχι στο ECRM_Docs επειδή είναι η ΙΔΙΑ δουλειά με το
+	 * missing_docs_for() από πάνω -- ίδιο σχήμα ερωτήματος, ίδιος
+	 * καταναλωτής -- και το ECRM_Docs ήδη καλείται από εδώ, όχι το
+	 * αντίστροφο.
+	 *
+	 * @return list<array{contract_id:int, code:string, customer:string, kind:string, label:string, expires_at:string, age_days:int}>
+	 */
+	public static function expired_docs_for( array $ids ): array {
+		global $wpdb;
+		if ( ! $ids || ! class_exists( 'ECRM_Docs' ) ) {
+			return [];
+		}
+		$kinds = ECRM_Docs::expirable_kinds();
+		if ( ! $kinds ) {
+			return [];
+		}
+		$ct = ECRM_DB::table( 'contracts' );
+		$cu = ECRM_DB::table( 'customers' );
+		$fl = ECRM_DB::table( 'files' );
+		$ph  = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+		$statuses = self::doc_check_statuses();
+		$sph = implode( ',', array_fill( 0, count( $statuses ), '%s' ) );
+		$kph = implode( ',', array_fill( 0, count( $kinds ), '%s' ) );
+
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT f.id AS file_id, f.contract_id, f.doc_kind, f.expires_at,
+				c.code, cu.first_name, cu.last_name, cu.company_name
+			 FROM {$fl} f
+			 INNER JOIN {$ct} c ON c.id = f.contract_id
+			 LEFT JOIN {$cu} cu ON cu.id = c.customer_id
+			 WHERE c.partner_user_id IN ($ph) AND c.status IN ($sph)
+			   AND f.doc_kind IN ($kph) AND f.expires_at IS NOT NULL
+			 ORDER BY f.contract_id ASC, f.id DESC",
+			array_merge( $ids, $statuses, $kinds )
+		), ARRAY_A );
+
+		// Μόνο το πιο πρόσφατο έγγραφο ανά (σύμβαση, είδος) -- ίδιο σκεπτικό
+		// με το ECRM_Docs::expired_docs(): ORDER BY f.id DESC σημαίνει η
+		// πρώτη γραμμή που βλέπουμε ανά κλειδί είναι η νεότερη.
+		$latest = [];
+		foreach ( $rows as $r ) {
+			$key = $r['contract_id'] . '|' . $r['doc_kind'];
+			if ( ! isset( $latest[ $key ] ) ) {
+				$latest[ $key ] = $r;
+			}
+		}
+
+		$today = current_time( 'Y-m-d' );
+		$out   = [];
+		foreach ( $latest as $r ) {
+			if ( $r['expires_at'] >= $today ) {
+				continue;
+			}
+			$name = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
+			$out[] = [
+				'contract_id' => (int) $r['contract_id'],
+				'code'        => $r['code'],
+				'customer'    => $name ?: '—',
+				'kind'        => $r['doc_kind'],
+				'label'       => ECRM_Docs::label( $r['doc_kind'] ),
+				'expires_at'  => $r['expires_at'],
+				'age_days'    => max( 0, (int) floor( ( strtotime( $today ) - strtotime( $r['expires_at'] ) ) / DAY_IN_SECONDS ) ),
 			];
 		}
 		return $out;
@@ -151,7 +233,14 @@ class ECRM_Notifications {
 	 * όριο, δηλαδή μια μικρή μειοψηφία στην πράξη. Αποδεκτό στη σημερινή
 	 * κλίμακα, πρώτο σημείο να μετρηθεί αν μεγαλώσει η βάση συνεργατών.
 	 *
-	 * @return array<int, list<array<string, mixed>>> προϊστάμενος => γραμμές
+	 * Το `id`/`status` προστέθηκαν 31/08 -- η αρχική γραφή είχε μόνο
+	 * `status_label` (κείμενο για το digest email), αλλά η νέα οθόνη CRM
+	 * `/team/escalations` χρειάζεται το ΚΑΝΟΝΙΚΟ status για να διαλέξει
+	 * σωστό χρώμα badge (ίδιες κλάσεις `.ecrm-badge--{status}` παντού) και
+	 * το id για να ανοίξει τη σύμβαση -- προσθετική αλλαγή, δεν σπάει το
+	 * email digest που ήδη διαβάζει μόνο το status_label.
+	 *
+	 * @return array<int, list<array{id:int, code:string, customer:string, status:string, status_label:string, age_days:int, owner_name:string}>> προϊστάμενος => γραμμές
 	 */
 	public static function escalations(): array {
 		global $wpdb;
@@ -187,8 +276,10 @@ class ECRM_Notifications {
 			$owner = get_userdata( $owner_id );
 			$name  = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
 			$line  = [
+				'id'           => (int) $r['id'],
 				'code'         => $r['code'],
 				'customer'     => $name ?: '—',
+				'status'       => $r['status'],
 				'status_label' => $labels[ $r['status'] ] ?? $r['status'],
 				'age_days'     => (int) $r['age_days'],
 				'owner_name'   => $owner ? $owner->display_name : ( '#' . $owner_id ),

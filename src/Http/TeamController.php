@@ -20,6 +20,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use ECRM_Commissions;
 use ECRM_DB;
+use ECRM_Notifications;
 use EnergyCRM\Domain\Commission\CommissionAmount;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\TeamInvite;
@@ -111,6 +112,16 @@ final class TeamController implements Controller
             'callback'            => [$this, 'network'],
             'permission_callback' => Guards::crmUser(),
         ]);
+
+        // Ίδια δεδομένα με το «Της ομάδας σου» section του email digest (197)
+        // -- τώρα και μέσα στο CRM, όχι μόνο σε email που μπορεί να χαθεί σε
+        // ένα inbox. MANAGE_TEAM, ίδιο δικαίωμα με το POST /team από πάνω: αν
+        // δεν διαχειρίζεσαι ομάδα, δεν υπάρχει «της ομάδας σου» να δεις.
+        register_rest_route(Router::NAMESPACE, '/team/escalations', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'escalations'],
+            'permission_callback' => $manager,
+        ]);
     }
 
     public function index(): WP_REST_Response
@@ -151,6 +162,25 @@ final class TeamController implements Controller
             'members'    => $out,
             'can_manage' => current_user_can(Capability::MANAGE_TEAM),
             'roles'      => array_map(static fn (array $r): string => $r['label'], $roles),
+        ], 200);
+    }
+
+    /**
+     * Οι αδρανείς συμβάσεις της ομάδας -- ίδιο υπολογισμό με το «Της ομάδας
+     * σου» section του email digest (`ECRM_Notifications::escalations()`),
+     * φιλτραρισμένο στον τρέχοντα προϊστάμενο. Flat λίστα -- η ομαδοποίηση
+     * ανά συνεργάτη γίνεται στο frontend, όχι εδώ, ίδιο μοτίβο με το
+     * needsAttention()/attention_extra του dashboard.
+     */
+    public function escalations(): WP_REST_Response
+    {
+        $actor = $this->scopes->forCurrentUser()->actorId();
+        $rows  = class_exists(ECRM_Notifications::class) ? ECRM_Notifications::escalations() : [];
+
+        return new WP_REST_Response([
+            'ok'   => true,
+            'days' => class_exists(ECRM_Notifications::class) ? ECRM_Notifications::escalation_days() : 0,
+            'rows' => $rows[$actor] ?? [],
         ], 200);
     }
 

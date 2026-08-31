@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use ECRM_Notifications;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Partner\PerformanceTier;
 use DateTimeImmutable;
@@ -83,6 +84,24 @@ final class DashboardController implements Controller
             // Ο αριθμός «7 εκκρεμότητες» δεν οδηγεί πουθενά· η λίστα ναι.
             // Πέντε, οι πιο στάσιμες πρώτα — δες DashboardRepository::needsAttention().
             'attention'   => $this->dashboard->needsAttention($actor),
+
+            // «Ελλείψεις & προθεσμίες», 31/08/2026 -- ό,τι χρειάζεται δικό
+            // του βήμα αλλά ΔΕΝ είναι «σύμβαση σε εξέλιξη»: λείπον/ληγμένο
+            // δικαιολογητικό, lead με περασμένο ραντεβού. Χωριστό από το
+            // 'attention' από πάνω επίτηδες -- εκείνο μένει actionable-only
+            // στη σημερινή του λογική (ΧΩΡΙΣ routed), αυτό εδώ είναι τρεις
+            // διαφορετικές πηγές μαζεμένες, το καθένα με το δικό του kind.
+            'attention_extra' => [
+                'missing_docs'  => class_exists(ECRM_Notifications::class)
+                    ? ECRM_Notifications::missing_docs_for([$actor])
+                    : [],
+                'expired_docs'  => class_exists(ECRM_Notifications::class)
+                    ? ECRM_Notifications::expired_docs_for([$actor])
+                    : [],
+                'overdue_leads' => class_exists(ECRM_Notifications::class)
+                    ? ECRM_Notifications::overdue_leads_for([$actor])
+                    : [],
+            ],
 
             // Τα τέσσερα πλακίδια, 25/08/2026 — δες DashboardRepository::tiles().
             'tiles'       => $this->dashboard->tiles($actor, $monthStart),

@@ -1478,6 +1478,37 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	font-family: inherit; font-size: var(--fs-12-5); font-weight: 600; color: var(--navy-soft); cursor: pointer; white-space: nowrap; }
 .ecrm-attn__a:hover { border-color: var(--line-strong); color: var(--navy); }
 
+/* Στήλη «είδος» της κάρτας «Ελλείψεις & προθεσμίες» -- η ίδια λίστα εδώ
+   μπλέκει τρεις διαφορετικές πηγές (σύμβαση/έγγραφο/lead), κάτι που η
+   κάρτα «Χρειάζεται ενέργεια» από πάνω δεν χρειάζεται (μία πηγή, ένα είδος).
+   Στοιχισμένη με το ίδιο πλάτος όπως το .ecrm-attn__s, ώστε οι δύο κάρτες να
+   μοιάζουν στήλη-με-στήλη παρόλο που η μία έχει μία επιπλέον. */
+.ecrm-attnx__kind { flex: 0 0 74px; font-size: var(--fs-11); font-weight: 700; text-transform: uppercase;
+	letter-spacing: .03em; color: var(--muted); }
+
+/* ── ομάδα · καθυστερήσεις (προϊστάμενοι) ── */
+.ecrm-mgrgroup { margin-bottom: 20px; }
+.ecrm-mgrgroup:last-child { margin-bottom: 0; }
+.ecrm-mgrgroup__head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.ecrm-mgrgroup__name { font-weight: 700; font-size: var(--fs-14); color: var(--navy); }
+.ecrm-mgrgroup__n { font-size: var(--fs-12); color: var(--muted); }
+.ecrm-mgrrow { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line-soft);
+	font-size: var(--fs-13-5); cursor: pointer; }
+.ecrm-mgrgroup .ecrm-mgrrow:first-of-type { border-top: none; }
+.ecrm-mgrrow:hover .ecrm-mgrrow__m b { color: var(--accent-ink); }
+.ecrm-mgrrow__badge { flex: 0 0 auto; }
+.ecrm-mgrrow__m { flex: 1; min-width: 0; }
+.ecrm-mgrrow__m b { display: block; font-weight: 600; color: var(--ink); }
+.ecrm-mgrrow__m small { display: block; color: var(--muted); font-size: var(--fs-12); margin-top: 2px; }
+.ecrm-mgrrow__age { flex: 0 0 96px; text-align: right; font-size: var(--fs-12-5); font-weight: 700; color: var(--st-pending); }
+.ecrm-mgrrow__age.is-critical { color: var(--st-cancel); }
+
+@media (max-width: 620px) {
+	.ecrm-attnx__kind { display: none; }
+	.ecrm-mgrrow { flex-wrap: wrap; }
+	.ecrm-mgrrow__age { flex: 0 0 auto; margin-left: auto; }
+}
+
 /* ── το γράφημα τάσης ── */
 /* Το SVG τεντώνεται οριζόντια (preserveAspectRatio="none") για να γεμίσει την
  * κάρτα σε κάθε πλάτος — και γι' αυτό ΔΕΝ περιέχει ούτε ένα κείμενο: το
