@@ -24,6 +24,7 @@ use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\DeletionLogRepository;
 use EnergyCRM\Persistence\FileRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -38,6 +39,7 @@ final class ContractStatusController implements Controller
         private readonly DraftExitGate $draftExit,
         private readonly CancellationGate $cancellation,
         private readonly DeletionGate $deletion,
+        private readonly DeletionLogRepository $deletionLog,
     ) {
     }
 
@@ -67,6 +69,28 @@ final class ContractStatusController implements Controller
             'callback'            => [$this, 'destroy'],
             'permission_callback' => Guards::needs(Capability::DELETE_CONTRACT),
             'args'                => ['id' => ['type' => 'integer', 'required' => true]],
+        ]);
+
+        /*
+         * «Ειδική πύλη» admin (build queue #15, docs/CHANGELOG.md 127) --
+         * ξεχωριστό route, όχι επέκταση του παραπάνω: δύο handlers στο ίδιο
+         * DELETE /contracts/{id} δεν γίνεται, και το κανονικό destroy() δεν
+         * πρέπει να αλλάξει καθόλου συμπεριφορά για partner/seller.
+         * manage_options -- ίδιο πρότυπο admin-gate με FormCalibrator,
+         * HealthPage, class-ecrm-app.php· καμία νέα ecrm_* capability.
+         */
+        register_rest_route(Router::NAMESPACE, '/contracts/(?P<id>\d+)/force', [
+            'methods'             => 'DELETE',
+            'callback'            => [$this, 'forceDestroy'],
+            'permission_callback' => Guards::needs('manage_options'),
+            'args'                => [
+                'id'     => ['type' => 'integer', 'required' => true],
+                'reason' => [
+                    'type'              => 'string',
+                    'required'          => true,
+                    'sanitize_callback' => 'sanitize_textarea_field',
+                ],
+            ],
         ]);
     }
 
@@ -192,7 +216,10 @@ final class ContractStatusController implements Controller
         $refusal = $this->deletion->refusalOnDelete($id);
 
         if ($refusal !== null) {
-            return new WP_REST_Response(['ok' => false, 'error' => $refusal], 409);
+            // 'code' μηχαναγνώσιμο δίπλα στο ελληνικό 'error': το frontend
+            // δεν πρέπει να ταιριάζει ελληνικό κείμενο για να αποφασίσει αν
+            // θα προσφέρει την «ειδική πύλη» admin.
+            return new WP_REST_Response(['ok' => false, 'error' => $refusal, 'code' => 'was_signed'], 409);
         }
 
         /*
@@ -225,6 +252,70 @@ final class ContractStatusController implements Controller
         // Οι γραμμές έφυγαν με το CASCADE -- αν το foreign key υπάρχει. Αν δεν
         // εφαρμόστηκε ποτέ (το AddForeignKeys καταγράφει και προσπερνά), αυτό
         // τις καθαρίζει. Και στις δύο περιπτώσεις τα bytes φεύγουν παρακάτω.
+        $this->files->purgeForContracts([$id]);
+        $this->files->forgetBytes($doomed);
+
+        return new WP_REST_Response(['ok' => true], 200);
+    }
+
+    /**
+     * «Ειδική πύλη» admin: διαγράφει ΚΑΙ μια σύμβαση που υπογράφηκε ποτέ,
+     * μόνο για manage_options (permission_callback στο routes()), και μόνο
+     * αφού καταγραφεί μόνιμα ποιος/πότε/γιατί στο deletion_log -- βλ.
+     * DeletionLogRepository για το γιατί ΔΕΝ ζει αυτό στο events.
+     */
+    public function forceDestroy(WP_REST_Request $request): WP_REST_Response
+    {
+        $scope  = $this->scopes->forCurrentUser();
+        $id     = (int) $request['id'];
+        $reason = trim((string) $request['reason']);
+
+        $current = $this->contracts->find($id, $scope);
+
+        if ($current === null) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
+        }
+
+        if ($reason === '') {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Χρειάζεται αιτιολογία.'], 422);
+        }
+
+        // Η πύλη αυτή υπάρχει ΓΙΑ την περίπτωση που το DeletionGate αρνείται.
+        // Αν δεν αρνείται (δεν υπογράφηκε ποτέ), δεν γίνεται σιωπηρή
+        // συντόμευση για συνηθισμένη διαγραφή -- υπάρχει ήδη το κανονικό
+        // DELETE /contracts/{id} γι' αυτό, με το δικό του scope/capability.
+        if ($this->deletion->refusalOnDelete($id) === null) {
+            return new WP_REST_Response(
+                [
+                    'ok'    => false,
+                    'error' => 'Αυτή η σύμβαση δεν έχει υπογραφεί ποτέ -- χρησιμοποίησε την κανονική διαγραφή.',
+                ],
+                409
+            );
+        }
+
+        $actor = wp_get_current_user();
+
+        // Στιγμιότυπο ΠΡΙΝ φύγει οτιδήποτε -- βλ. DeletionLogRepository.
+        $this->deletionLog->record(
+            $id,
+            (string) ($current['code'] ?? ''),
+            (string) ($current['status'] ?? ''),
+            $reason,
+            $scope->actorId(),
+            (string) $actor->display_name
+        );
+
+        // Ίδια τριβηματη σειρά με το destroy() -- δες το σχόλιο εκεί.
+        $doomed = $this->files->recordsForContracts([$id]);
+
+        if (! $this->contracts->delete($id, $scope)) {
+            return new WP_REST_Response(
+                ['ok' => false, 'error' => 'Η διαγραφή απέτυχε· τα έγγραφα δεν πειράχτηκαν.'],
+                500
+            );
+        }
+
         $this->files->purgeForContracts([$id]);
         $this->files->forgetBytes($doomed);
 

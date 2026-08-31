@@ -191,3 +191,71 @@ export function confirmTyped(o) {
 
 	return dlg;
 }
+
+/**
+ * Ίδια πύλη πληκτρολόγησης με το confirmTyped(), ΣΥΝ υποχρεωτική αιτιολογία.
+ *
+ * Δεν έγινε παράμετρος στο confirmTyped() -- θα άλλαζε τη συμπεριφορά και
+ * για τις τρεις υπάρχουσες χρήσεις του (καρτέλα αίτησης, γραμμή λίστας,
+ * μαζική διαγραφή), καμία από τις οποίες χρειάζεται αιτιολογία. Ξεχωριστό
+ * export, ίδιο σκεπτικό με το γιατί υπάρχει ξεχωριστό `openDialog()`.
+ *
+ * Μόνη χρήση προς το παρόν: η «ειδική πύλη» admin για διαγραφή σύμβασης που
+ * έχει ήδη υπογραφεί (build queue #15) -- εξ ορισμού σπάνια και σοβαρή, οπότε
+ * δικαιολογεί βαρύτερη τελετουργία από το confirmTyped() χωρίς να καθιστά
+ * τη νέα τελετουργία τον κανόνα παντού αλλού.
+ *
+ * @param {Object} o
+ * @param {string} o.expect       Τι πρέπει να πληκτρολογηθεί, ακριβώς.
+ * @param {string} o.expectLabel  Τι λέει η ετικέτα του πεδίου πληκτρολόγησης.
+ * @param {string} o.reasonLabel  Τι λέει η ετικέτα του πεδίου αιτιολογίας.
+ * @param {function(string)} o.onConfirm  Παίρνει την (κομμένη) αιτιολογία.
+ */
+export function confirmTypedWithReason(o) {
+	var expect = String(o.expect);
+
+	var body =
+		'<div class="ecrm-modal__card">' +
+			'<label class="ecrm-field"><span class="ecrm-field__label">' + esc(o.expectLabel || 'Επιβεβαίωση') + '</span>' +
+			'<input class="ecrm-input" data-gate autocomplete="off" spellcheck="false" placeholder="' + esc('πληκτρολόγησε: ' + expect) + '"></label>' +
+			'<label class="ecrm-field"><span class="ecrm-field__label">' + esc(o.reasonLabel || 'Αιτιολογία (υποχρεωτικό)') + '</span>' +
+			'<textarea class="ecrm-input" data-reason rows="3"></textarea></label>' +
+		'</div>';
+
+	var dlg = openDialog({
+		eyebrow: o.eyebrow || 'Μη αναστρέψιμη ενέργεια',
+		title: o.title,
+		lead: o.lead,
+		body: body,
+		confirm: o.confirm,
+		danger: true,
+		armed: false,
+		onConfirm: function (el, close) {
+			var field  = el.querySelector('[data-gate]');
+			var reason = el.querySelector('[data-reason]');
+			// Δεύτερος έλεγχος τη στιγμή του κλικ, ίδιο σκεπτικό με το
+			// confirmTyped(): ένα `disabled` που αφαιρέθηκε δεν πρέπει να
+			// είναι αρκετό.
+			if (!field || field.value !== expect) { return; }
+			if (!reason || !reason.value.trim()) { return; }
+			var trimmed = reason.value.trim();
+			close();
+			o.onConfirm(trimmed);
+		},
+	});
+
+	var input  = dlg.el.querySelector('[data-gate]');
+	var reason = dlg.el.querySelector('[data-reason]');
+	var go     = dlg.el.querySelector('[data-go]');
+
+	function refresh() { go.disabled = (input.value !== expect) || !reason.value.trim(); }
+
+	input.addEventListener('input', refresh);
+	reason.addEventListener('input', refresh);
+
+	input.addEventListener('keydown', function (e) {
+		if (e.key === 'Enter' && input.value === expect && reason.value.trim()) { e.preventDefault(); go.click(); }
+	});
+
+	return dlg;
+}

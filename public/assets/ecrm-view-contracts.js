@@ -17,7 +17,7 @@ import { api, can, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, svgIcon, timeAgo, tint, up } from '@energy-crm/format';
 import { openDetail, openEdit } from '@energy-crm/navigate';
 import { openExportModal } from '@energy-crm/export-modal';
-import { confirmTyped } from '@energy-crm/dialog';
+import { confirmTyped, confirmTypedWithReason } from '@energy-crm/dialog';
 import { scope, setScope } from '@energy-crm/scope';
 
 var contractsState = { status: '', q: '', page: 1, pageSize: 12 };
@@ -122,6 +122,42 @@ function bindExpand(box, c, view) {
 		function doDelete() {
 			b.disabled = true;
 			fetch(api('/contracts/' + c.id), { method: 'DELETE', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (d && d.ok) { toast('Διαγράφηκε.'); delete expandCache[c.id]; loadContracts(); }
+					// build queue #15: ίδιο σκεπτικό με το ecrm-view-detail.js
+					// -- η δεύτερη πύλη ανοίγει μόνο μετά την άρνηση, μόνο
+					// για admin, ξαναελέγχεται στον server.
+					else if (d && d.code === 'was_signed' && window.ECRM && window.ECRM.isAdmin) {
+						b.disabled = false;
+						offerForceDelete(c, b);
+					}
+					else { toast((d && d.error) || 'Αποτυχία.', false); b.disabled = false; }
+				})
+				.catch(function () { toast('Σφάλμα δικτύου.', false); b.disabled = false; });
+		}
+
+		function offerForceDelete(c, b) {
+			var hasCode = !!c.code;
+			confirmTypedWithReason({
+				eyebrow: 'Παράκαμψη admin',
+				expect: hasCode ? String(c.code) : String(c.id),
+				expectLabel: hasCode ? 'Πληκτρολόγησε τον κωδικό της αίτησης' : 'Πληκτρολόγησε τον αριθμό της αίτησης',
+				reasonLabel: 'Γιατί χρειάζεται να διαγραφεί αυτή η υπογεγραμμένη σύμβαση;',
+				title: 'Οριστική διαγραφή υπογεγραμμένης — ' + (c.code || ('#' + c.id)),
+				lead: ['Αυτή η σύμβαση ', { b: 'υπογράφηκε' }, '. Η κανονική διαγραφή την αρνείται εσκεμμένα. Ως admin μπορείς να προχωρήσεις, αλλά η ενέργεια είναι ', { b: 'οριστική' }, ' και καταγράφεται μόνιμα ποιος, πότε και γιατί.'],
+				confirm: 'Οριστική διαγραφή (admin)',
+				onConfirm: function (reason) { doForceDelete(c, b, reason); },
+			});
+		}
+
+		function doForceDelete(c, b, reason) {
+			b.disabled = true;
+			fetch(api('/contracts/' + c.id + '/force'), {
+				method: 'DELETE',
+				headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+				body: JSON.stringify({ reason: reason }),
+			})
 				.then(function (r) { return r.json(); })
 				.then(function (d) { if (d && d.ok) { toast('Διαγράφηκε.'); delete expandCache[c.id]; loadContracts(); } else { toast((d && d.error) || 'Αποτυχία.', false); b.disabled = false; } })
 				.catch(function () { toast('Σφάλμα δικτύου.', false); b.disabled = false; });

@@ -240,6 +240,11 @@ class ECRM_Shortcodes {
 			// assets/forms/{template}-{n}.jpg -- ήδη δημόσια στατικά αρχεία,
 			// καμία νέα σελίδα/endpoint γι' αυτά.
 			'formsUrl' => esc_url_raw( ECRM_URL . 'assets/forms/' ),
+			// build queue #15 -- η «ειδική πύλη» διαγραφής υπογεγραμμένων
+			// ελέγχεται ΚΑΙ πάλι στον server (permission_callback στο
+			// ContractStatusController::routes()) -- αυτό είναι μόνο για να
+			// αποφασίσει το UI αν θα προσφέρει τη δεύτερη πύλη μετά από 409.
+			'isAdmin'  => current_user_can( 'manage_options' ),
 		] );
 	}
 
