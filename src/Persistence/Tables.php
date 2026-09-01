@@ -22,6 +22,7 @@ final class Tables
     public const CUSTOMERS          = 'customers';
     public const EVENTS             = 'events';
     public const FILES              = 'files';
+    public const GUARANTEE_RULES    = 'guarantee_rules';
     public const KB_ENTRIES         = 'kb_entries';
     public const KB_READ            = 'kb_read';
     public const LEADS              = 'leads';
@@ -59,6 +60,7 @@ final class Tables
             self::EVENTS,
             self::SIGNATURES,
             self::COMMISSION_RULES,
+            self::GUARANTEE_RULES,
             self::PAYOUTS,
             self::TASKS,
             self::LEADS,

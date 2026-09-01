@@ -19,6 +19,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddContractListIndexes;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerAfmIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerPhoneIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
+use EnergyCRM\Persistence\Schema\Migrations\AddGuaranteeRuleForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddIntakeColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddPayoutAmountColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
@@ -77,6 +78,7 @@ final class MigrationList
             new AddProviderRefColumn(),
             new RetargetContractListIndexToUpdatedAt(),
             new AddFileExpiryColumn(),
+            new AddGuaranteeRuleForeignKeys(),
         ];
     }
 }
