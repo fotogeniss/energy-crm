@@ -264,20 +264,45 @@ final class DashboardTilesTest extends IntegrationTestCase
 
     public function testClosedMonthCountsTheEventNotJustTheColumn(): void
     {
-        $thisMonth = $this->contractFor('active');
-        $this->becameActiveDaysAgo($thisMonth, 2);
-        $this->stamp($thisMonth, ['payout_amount' => 120]);
+        // Ίδιο time-boundary flake με το (148)/testExpiringToday...: "2 μέρες
+        // πριν" σχετικά με το πραγματικό ρολόι μπορεί να πέσει τον
+        // ΠΡΟΗΓΟΥΜΕΝΟ μήνα όταν το check:all τρέχει την 1η ή 2η του μήνα --
+        // τότε το closed_month θα μετρούσε 0 αντί για 1, όχι επειδή η
+        // λογική είναι λάθος αλλά επειδή το test data σκόνταψε στα όρια του
+        // μήνα. Παγώνουμε το «τώρα» της σύνδεσης στη 15η του τρέχοντος
+        // μήνα -- ίδιο μοτίβο SET @@session.timestamp, ίδιο finally reset.
+        global $wpdb;
 
-        // Έγινε active ΠΕΡΣΙ (ας πούμε 90 μέρες πριν) — η στήλη λέει ακόμα
-        // «active» σήμερα, αλλά το γεγονός είναι έξω από το παράθυρο.
-        $longAgo = $this->contractFor('active');
-        $this->becameActiveDaysAgo($longAgo, 90);
-        $this->stamp($longAgo, ['payout_amount' => 80]);
+        // phpcs: το query είναι ολόκληρο literal, καμία μεταβλητή μέσα του --
+        // ίδιο σχήμα με το $wpdb->query("SET @@session.timestamp = ...") της
+        // testExpiringTodayCountsOnlyWhatIsAboutToExpireWithinToday() παραπάνω,
+        // που περνάει επίσης χωρίς prepare(). Ενδιάμεση μεταβλητή ($freezeAt)
+        // έκανε το WordPress.DB.PreparedSQL.NotPrepared να κοκκινίσει, γιατί ο
+        // sniff δεν αποδεικνύει στατικά ότι μια μεταβλητή είναι ασφαλής -- το
+        // literal concatenation μέσα στην ίδια την κλήση περνάει.
+        $wpdb->query(
+            "SET @@session.timestamp = UNIX_TIMESTAMP("
+            . "CONCAT(DATE_FORMAT(CURDATE(), '%Y-%m-15'), ' 12:00:00'))"
+        );
 
-        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+        try {
+            $thisMonth = $this->contractFor('active');
+            $this->becameActiveDaysAgo($thisMonth, 2);
+            $this->stamp($thisMonth, ['payout_amount' => 120]);
 
-        self::assertSame(1, $tiles['closed_month']);
-        self::assertEqualsWithDelta(120.0, $tiles['closed_month_commission'], 0.01);
+            // Έγινε active ΠΕΡΣΙ (ας πούμε 90 μέρες πριν) — η στήλη λέει ακόμα
+            // «active» σήμερα, αλλά το γεγονός είναι έξω από το παράθυρο.
+            $longAgo = $this->contractFor('active');
+            $this->becameActiveDaysAgo($longAgo, 90);
+            $this->stamp($longAgo, ['payout_amount' => 80]);
+
+            $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+            self::assertSame(1, $tiles['closed_month']);
+            self::assertEqualsWithDelta(120.0, $tiles['closed_month_commission'], 0.01);
+        } finally {
+            $wpdb->query('SET @@session.timestamp = DEFAULT');
+        }
     }
 
     public function testClosedMonthExcludesAContractThatWasCancelledAfter(): void
@@ -298,15 +323,35 @@ final class DashboardTilesTest extends IntegrationTestCase
 
     public function testClosedMonthCommissionIsNotDoubleCountedOnReactivation(): void
     {
-        $wentActiveTwice = $this->contractFor('active');
-        $this->becameActiveDaysAgo($wentActiveTwice, 10);
-        $this->becameActiveDaysAgo($wentActiveTwice, 3);
-        $this->stamp($wentActiveTwice, ['payout_amount' => 150]);
+        // Ίδιος λόγος παγώματος με το test παραπάνω: "10 μέρες πριν" περνάει
+        // σε προηγούμενο μήνα όταν τρέχει στην αρχή του μήνα.
+        global $wpdb;
 
-        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+        // phpcs: το query είναι ολόκληρο literal, καμία μεταβλητή μέσα του --
+        // ίδιο σχήμα με το $wpdb->query("SET @@session.timestamp = ...") της
+        // testExpiringTodayCountsOnlyWhatIsAboutToExpireWithinToday() παραπάνω,
+        // που περνάει επίσης χωρίς prepare(). Ενδιάμεση μεταβλητή ($freezeAt)
+        // έκανε το WordPress.DB.PreparedSQL.NotPrepared να κοκκινίσει, γιατί ο
+        // sniff δεν αποδεικνύει στατικά ότι μια μεταβλητή είναι ασφαλής -- το
+        // literal concatenation μέσα στην ίδια την κλήση περνάει.
+        $wpdb->query(
+            "SET @@session.timestamp = UNIX_TIMESTAMP("
+            . "CONCAT(DATE_FORMAT(CURDATE(), '%Y-%m-15'), ' 12:00:00'))"
+        );
 
-        self::assertSame(1, $tiles['closed_month'], 'Μία σύμβαση, όχι δύο γραμμές.');
-        self::assertEqualsWithDelta(150.0, $tiles['closed_month_commission'], 0.01);
+        try {
+            $wentActiveTwice = $this->contractFor('active');
+            $this->becameActiveDaysAgo($wentActiveTwice, 10);
+            $this->becameActiveDaysAgo($wentActiveTwice, 3);
+            $this->stamp($wentActiveTwice, ['payout_amount' => 150]);
+
+            $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+            self::assertSame(1, $tiles['closed_month'], 'Μία σύμβαση, όχι δύο γραμμές.');
+            self::assertEqualsWithDelta(150.0, $tiles['closed_month_commission'], 0.01);
+        } finally {
+            $wpdb->query('SET @@session.timestamp = DEFAULT');
+        }
     }
 
     // ── 5. «Εργασίες μου» ──────────────────────────────────────────────
