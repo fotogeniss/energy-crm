@@ -333,6 +333,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				if (field === 'energy_type') { renderPrograms(); applyEnergyType(); applyMobileOffer(); }
 				if (field === 'energy_type' || field === 'category') refreshKbDocs();
 				refreshProviderFields();
+				refreshGuaranteeSuggestion();
 			});
 		});
 
@@ -757,6 +758,33 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			if (el) { el.addEventListener('input', checkDup); el.addEventListener('change', checkDup); }
 		});
 
+		// η κλίμακα εγγύησης εξαρτάται και από το agreed_power -- ξαναρωτά
+		// ΜΟΝΟ αυτό το πεδίο, ίδιο μοτίβο debounce με το checkDup παραπάνω.
+		(function () {
+			var el = root.querySelector('[name="agreed_power"]');
+			if (el) { el.addEventListener('input', refreshGuaranteeSuggestion); el.addEventListener('change', refreshGuaranteeSuggestion); }
+		})();
+
+		// «Χρήση»: η ΜΟΝΗ πράξη που γράφει στο πεδίο. Δένεται μία φορά -- το
+		// κουμπί είναι στατικό στο DOM, μόνο hidden/ορατό αλλάζει.
+		(function () {
+			var btn = q('[data-guarantee-suggest-use]');
+			if (!btn) return;
+			btn.addEventListener('click', function () {
+				if (guaranteeSuggestAmount === null) return;
+				var input = root.querySelector('[name="guarantee"]');
+				var box = q('[data-guarantee-suggest]');
+				var text = q('[data-guarantee-suggest-text]');
+				if (input) input.value = fmtEuro(guaranteeSuggestAmount);
+				if (box && text) {
+					box.classList.add('is-used');
+					text.textContent = '✓ Χρησιμοποιήθηκε η πρόταση (' + fmtEuro(guaranteeSuggestAmount) +
+						' €) — μπορείς να την αλλάξεις';
+				}
+				btn.hidden = true;
+			});
+		})();
+
 		// providers + programs
 		fetch(api('/providers'), { headers: headers() })
 			.then(function (r) { return r.json(); })
@@ -772,6 +800,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				if (pendingProvider) { selectProvider(pendingProvider); pendingProvider = null; }
 				renderPrograms(); renderUsual(d.usual);
 				refreshProviderFields();
+				refreshGuaranteeSuggestion();
 			})
 			.catch(function () { q('[data-providers]').innerHTML = '<div class="ecrm-empty">Δεν φόρτωσαν οι πάροχοι.</div>'; });
 
@@ -798,6 +827,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 					renderPrograms();
 					refreshKbDocs();
 					refreshProviderFields();
+					refreshGuaranteeSuggestion();
 				});
 				wrap.appendChild(b);
 			});
@@ -897,6 +927,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				// Orizon splits its forms by programme, so the field list can
 				// change without the provider changing.
 				refreshProviderFields();
+				refreshGuaranteeSuggestion();
 				updateMobilePricing();
 			};
 		}
@@ -989,6 +1020,57 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 					panel.hidden = false;
 				}).catch(function () { panel.hidden = true; });
 			}, 200);
+		}
+
+		// ---- Guarantee: proposed amount next to the field, "Χρήση" button
+		// only -- ΠΟΤΕ αυτόματο γέμισμα. Ρητή απόφαση ιδιοκτήτη 01/09,
+		// μακέτα docs/UI-GUARANTEE-SUGGESTION.html, στάδιο 3 (CHANGELOG (212)).
+		// amount:null (καμία πρόταση) vs amount:0 (πρόταση μηδέν) είναι δύο
+		// διαφορετικές απαντήσεις σκόπιμα -- δες GuaranteeMatch (210) για γιατί.
+		var guaranteeSuggestT;
+		var guaranteeSuggestAmount = null;
+		function refreshGuaranteeSuggestion() {
+			var box = q('[data-guarantee-suggest]');
+			var text = q('[data-guarantee-suggest-text]');
+			var btn = q('[data-guarantee-suggest-use]');
+			if (!box || !text || !btn) return;
+
+			// Πριν διαλεγεί πάροχος δεν υπάρχει τι να προτείνεται -- ίδιο
+			// gate με το refreshProviderFields()/providerName().
+			if (!state.provider_id) {
+				box.hidden = true; box.classList.remove('is-used');
+				guaranteeSuggestAmount = null;
+				return;
+			}
+
+			clearTimeout(guaranteeSuggestT);
+			guaranteeSuggestT = setTimeout(function () {
+				var powerEl = root.querySelector('[name="agreed_power"]');
+				var qs = '?provider_id=' + state.provider_id +
+					'&program_id=' + (state.program_id || 0) +
+					'&energy_type=' + encodeURIComponent(state.energy_type || 'power') +
+					'&category=' + encodeURIComponent(state.category || 'home') +
+					'&agreed_power=' + encodeURIComponent(powerEl ? powerEl.value : '');
+
+				fetch(api('/guarantee/suggest') + qs, { headers: headers() })
+					.then(function (r) { return r.json(); })
+					.then(function (d) {
+						box.classList.remove('is-used');
+						if (!d || !d.ok || d.amount === null || d.amount === undefined) {
+							box.hidden = true; guaranteeSuggestAmount = null; return;
+						}
+						guaranteeSuggestAmount = d.amount;
+						text.innerHTML = 'Πρόταση: <span class="ecrm-guarantee-suggest__amt">' +
+							fmtEuro(d.amount) + ' €</span>';
+						btn.hidden = false;
+						box.hidden = false;
+					})
+					.catch(function () { box.hidden = true; guaranteeSuggestAmount = null; });
+			}, 400);
+		}
+
+		function fmtEuro(n) {
+			return (Math.round(n * 100) / 100).toFixed(2).replace('.', ',');
 		}
 
 		// ---- Duplicate check on ΑΦΜ / supply number ----
@@ -1085,6 +1167,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// CUST_FIELDS/ADDR_FIELDS/extra, ώστε τα overlay input να γεμίσουν
 			// με τις ΠΡΑΓΜΑΤΙΚΕΣ τιμές της αίτησης αντί για κενά.
 			refreshProviderFields();
+			refreshGuaranteeSuggestion();
 			// mobile_offer lives in the extras bag and is only restored above —
 			// applyCustomerType() ran earlier against whatever the select's
 			// default was, so a saved Family/COMBO contract would reopen with
