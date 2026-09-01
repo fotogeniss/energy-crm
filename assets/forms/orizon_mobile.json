@@ -236,7 +236,7 @@
   "programma_5gb": {
    "page": 1,
    "x": 78.7,
-   "y": 187.2,
+   "y": 190.4,
    "check": true,
    "size": 11,
    "bold": false
@@ -244,7 +244,7 @@
   "programma_10gb_5gb": {
    "page": 1,
    "x": 126.0,
-   "y": 187.2,
+   "y": 190.4,
    "check": true,
    "size": 11,
    "bold": false
@@ -252,7 +252,7 @@
   "programma_40gb": {
    "page": 1,
    "x": 158.3,
-   "y": 187.2,
+   "y": 190.4,
    "check": true,
    "size": 11,
    "bold": false
@@ -260,7 +260,7 @@
   "programma_unlimited": {
    "page": 1,
    "x": 197.6,
-   "y": 187.2,
+   "y": 190.4,
    "check": true,
    "size": 11,
    "bold": false
@@ -279,6 +279,18 @@
    "page": 11,
    "x": 62.7,
    "y": 182.7
+  },
+  "dieuthynsi_apostolis_etiketa": {
+   "page": 11,
+   "x": 10.6,
+   "y": 210.0,
+   "size": 8
+  },
+  "tropos_apostolis_logariasmou": {
+   "page": 11,
+   "x": 10.6,
+   "y": 219.0,
+   "size": 8
   }
  },
  "sigs": [

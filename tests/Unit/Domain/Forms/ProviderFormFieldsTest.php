@@ -35,6 +35,7 @@ final class ProviderFormFieldsTest extends TestCase
             ['contact_mobile'],
             ['contact_email'],
             ['mobile_msisdn'],
+            ['mobile_msisdn_2'],
             ['sim_number'],
             ['kad'],
             ['gemi'],
