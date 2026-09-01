@@ -713,23 +713,6 @@ class ECRM_Shortcodes {
 					<?php $ecrm_field( 'supply_city', 'Πόλη', 'text', false, '', '', 'section-supply shipping address-level2' ); ?>
 					<?php $ecrm_field( 'supply_region', 'Νομός', 'text', false, '', '', 'section-supply shipping address-level1' ); ?>
 				</div>
-
-				<?php
-				// The box every provider form labels "εφόσον είναι διαφορετική
-				// από τη διεύθυνση κατοικίας". It had no data behind it at all.
-				?>
-				<div class="ecrm-subhead">Διεύθυνση Αποστολής Λογαριασμού</div>
-				<label class="ecrm-syncbar">
-					<input type="checkbox" name="billing_addr_same" value="1" data-addr-same="billing" checked>
-					Ίδια με τη διεύθυνση του πελάτη
-				</label>
-				<div class="ecrm-grid" data-addr-fields="billing" hidden>
-					<?php $ecrm_field( 'billing_street', 'Οδός', 'text', false, '', '', 'section-bill billing address-line1' ); ?>
-					<?php $ecrm_field( 'billing_street_no', 'Αριθμός' ); ?>
-					<?php $ecrm_field( 'billing_postal_code', 'Τ.Κ', 'text', false, '', '', 'section-bill billing postal-code' ); ?>
-					<?php $ecrm_field( 'billing_city', 'Πόλη', 'text', false, '', '', 'section-bill billing address-level2' ); ?>
-					<?php $ecrm_field( 'billing_region', 'Νομός', 'text', false, '', '', 'section-bill billing address-level1' ); ?>
-				</div>
 			</section>
 
 			<?php
@@ -828,6 +811,19 @@ class ECRM_Shortcodes {
 				</div>
 
 				<?php
+				// Η Συνδυαστική δένει δύο γραμμές κινητής κάτω από το ίδιο ΑΦΜ
+				// (§ΓΕΝ.ΟΡΟΙ Ορίζον, «τουλάχιστον δύο (2) + συνδέσεις κινητής»).
+				// Μέχρι 2026-09-01 η αίτηση έπαιρνε μόνο ΕΝΑΝ αριθμό κινητού
+				// (mobile_msisdn), οπότε το έντυπο τυπωνόταν με τη 2η γραμμή
+				// κενή -- ζητήθηκε ρητά από τον πελάτη. Ίδιο μοτίβο με το
+				// COMBO ακριβώς από πάνω: εμφανίζεται μόνο για mobile_offer=
+				// family, γιατί δεν έχει νόημα σε απλή αίτηση ή σε COMBO.
+				?>
+				<div class="ecrm-grid" data-when-offer="family" hidden>
+					<?php $ecrm_field( 'mobile_msisdn_2', 'Αριθμός Κινητού (2ο, Συνδυαστικού)', 'text', true, '69…' ); ?>
+				</div>
+
+				<?php
 				// Τρεις τιμές, γιατί η προσφορά αλλάζει δύο φορές: τι κοστίζει
 				// κανονικά, τι πληρώνει όσο τρέχει η προσφορά, και πού
 				// επιστρέφει μετά. Μία τιμή για τα τρία σημαίνει ότι κάποιος
@@ -868,7 +864,7 @@ class ECRM_Shortcodes {
 							<option value="">—</option><option value="standing_order">Πάγια Εντολή</option><option value="manual">Με την παραλαβή</option>
 						</select>
 					</label>
-					<label class="ecrm-field" data-for="bill_delivery" data-when-energy="power,gas">
+					<label class="ecrm-field" data-for="bill_delivery" data-when-energy="power,gas,mobile">
 						<span class="ecrm-field__label">Τρόπος Αποστολής Λογαριασμού</span>
 						<select name="bill_delivery" class="ecrm-input" data-extra="1">
 							<option value="">—</option><option value="email">Email</option><option value="post">Ταχυδρομικώς</option><option value="both">Και τα δύο</option>
@@ -884,6 +880,29 @@ class ECRM_Shortcodes {
 					<?php // Χωρίς guard: το orizon_mobile.json ζητά κι αυτό εγγύηση, όχι μόνο ρεύμα/αέριο. ?>
 					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
 					<?php $ecrm_field( 'ar_koinoxristou', 'Αρ. Κοινόχρηστου Μετρητή', 'text', true, '', 'power,gas' ); ?>
+				</div>
+
+				<?php
+				// Η διεύθυνση αποστολής λογαριασμού μετακόμισε εδώ 2026-09-01
+				// (ίδιο μοτίβο με την εγγύηση, λίγο πιο πάνω): το πεδίο ζούσε
+				// μέσα στα Στοιχεία Μετρητή, κλειδωμένο πίσω από
+				// data-when-energy="power,gas", άρα αόρατο σε αίτηση κινητής --
+				// παρόλο που οι στήλες billing_street/billing_city/κλπ ήταν ήδη
+				// πραγματικές στήλες της βάσης, όχι νέο πεδίο. Κανένα από τα
+				// τέσσερα έντυπα Orizon δεν ζητούσε τη διεύθυνση αποστολής μέχρι
+				// τώρα -- βλ. CHANGELOG (208).
+				?>
+				<div class="ecrm-subhead">Διεύθυνση Αποστολής Λογαριασμού</div>
+				<label class="ecrm-syncbar">
+					<input type="checkbox" name="billing_addr_same" value="1" data-addr-same="billing" checked>
+					Ίδια με τη διεύθυνση του πελάτη
+				</label>
+				<div class="ecrm-grid" data-addr-fields="billing" hidden>
+					<?php $ecrm_field( 'billing_street', 'Οδός', 'text', false, '', '', 'section-bill billing address-line1' ); ?>
+					<?php $ecrm_field( 'billing_street_no', 'Αριθμός' ); ?>
+					<?php $ecrm_field( 'billing_postal_code', 'Τ.Κ', 'text', false, '', '', 'section-bill billing postal-code' ); ?>
+					<?php $ecrm_field( 'billing_city', 'Πόλη', 'text', false, '', '', 'section-bill billing address-level2' ); ?>
+					<?php $ecrm_field( 'billing_region', 'Νομός', 'text', false, '', '', 'section-bill billing address-level1' ); ?>
 				</div>
 
 				<?php

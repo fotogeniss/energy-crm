@@ -41,7 +41,7 @@ final class ProviderFormFields
         'poli_katoikias', 'tk_katoikias', 'nomos_katoikias',
         'dieuthynsi_paroxis', 'odos_arithmos_paroxis', 'odos_paroxis',
         'arithmos_odou_paroxis', 'poli_paroxis', 'tk_paroxis', 'nomos_paroxis',
-        'dieuthynsi_apostolis', 'odos_arithmos_apostolis', 'odos_apostolis',
+        'dieuthynsi_apostolis', 'dieuthynsi_apostolis_etiketa', 'odos_arithmos_apostolis', 'odos_apostolis',
         'arithmos_odou_apostolis', 'poli_apostolis', 'tk_apostolis', 'nomos_apostolis',
         'arithmos_paroxis', 'hkasp', 'arithmos_metriti', 'kodikos_timologiou', 'onoma_programmatos',
         'diarkeia_symvasis', 'arithmos_aitisis', 'imerominia_aitisis', 'imerominia_liksis', 'topos_aitisis',
@@ -84,6 +84,7 @@ final class ProviderFormFields
         'metrisi_imerisia_nyxterini' => ['meter_reading_type'],
         'metrisi_tilemetroumeni'     => ['meter_reading_type'],
         'pliromi_pagia_entoli'       => ['payment_method'],
+        'tropos_apostolis_logariasmou' => ['bill_delivery'],
         'onomateponymo_ekprosopou'   => ['rep_first_name', 'rep_last_name'],
         'onomateponymo_epikoinonias' => ['contact_first_name', 'contact_last_name'],
         'adt_epikoinonias'           => ['contact_adt'],
@@ -94,6 +95,7 @@ final class ProviderFormFields
 
         // Κινητή τηλεφωνία
         'arithmos_kinitou'           => ['mobile_msisdn'],
+        'deuteros_arithmos_kinitou'  => ['mobile_msisdn_2'],
         'arithmos_sim'               => ['sim_number'],
         'typos_epidotisis'           => ['subsidy_type'],
         'arxiki_timi_pagiou'         => ['base_price'],
@@ -174,6 +176,9 @@ final class ProviderFormFields
 
         // Διεύθυνση αποστολής λογαριασμού
         'dieuthynsi_apostolis'     => ['billing_street', 'billing_street_no', 'billing_city', 'billing_postal_code'],
+        'dieuthynsi_apostolis_etiketa' => [
+            'billing_street', 'billing_street_no', 'billing_city', 'billing_postal_code',
+        ],
         'odos_arithmos_apostolis'  => ['billing_street', 'billing_street_no'],
         'odos_apostolis'           => ['billing_street'],
         'arithmos_odou_apostolis'  => ['billing_street_no'],
@@ -242,6 +247,7 @@ final class ProviderFormFields
         'meter_position'     => 'Θέση Μετρητή (Εσωτερικός / Εξωτερικός)',
         'meter_reading_type' => 'Είδος Μέτρησης',
         'payment_method'     => 'Τρόπος Πληρωμής',
+        'bill_delivery'      => 'Τρόπος Αποστολής Λογαριασμού',
         'rep_first_name'     => 'Όνομα Νόμιμου Εκπροσώπου',
         'rep_last_name'      => 'Επώνυμο Νόμιμου Εκπροσώπου',
         'contact_first_name' => 'Όνομα Υπεύθυνου Επικοινωνίας',
@@ -253,6 +259,7 @@ final class ProviderFormFields
         'contact_email'      => 'Email Υπεύθυνου Επικοινωνίας',
 
         'mobile_msisdn'      => 'Αριθμός Κινητού',
+        'mobile_msisdn_2'    => 'Αριθμός Κινητού (2ο, Συνδυαστικού)',
         'sim_number'         => 'Αριθμός Κάρτας SIM',
         'subsidy_type'       => 'Τύπος Επιδότησης',
         'base_price'         => 'Αρχική Τιμή Παγίου (€)',
@@ -293,7 +300,7 @@ final class ProviderFormFields
      */
     private const NON_PERSONAL_INPUTS = [
         'anotato_orio', 'ar_koinoxristou', 'agreed_power', 'day_indication', 'guarantee',
-        'previous_provider', 'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
+        'previous_provider', 'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method', 'bill_delivery',
         'subsidy_type', 'base_price', 'offer_price', 'price_after',
         'request_type', 'mobile_offer',
     ];

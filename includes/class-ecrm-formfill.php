@@ -243,6 +243,18 @@ class ECRM_FormFill {
 			'poli_apostolis'           => $addr->billing->city,
 			'tk_apostolis'             => $addr->billing->postalCode,
 			'nomos_apostolis'          => $addr->billing->region,
+
+			// Ίδια δεδομένα με το 'dieuthynsi_apostolis' λίγο πιο πάνω, αλλά με
+			// τη δική της ενσωματωμένη ετικέτα: κανένα από τα τέσσερα έντυπα
+			// Ορίζον δεν έχει προτυπωμένο πεδίο "Διεύθυνση Αποστολής" πουθενά
+			// (grep σε assets/forms/orizon_*.json), οπότε ένα γυμνό
+			// 'dieuthynsi_apostolis' σε άδειο περιθώριο θα ήταν ασαφές -- ίδιο
+			// μάθημα με το 'deuteros_arithmos_kinitou' (208, πρώην 207).
+			'dieuthynsi_apostolis_etiketa' => (
+				$addr->billing->oneLine() !== ''
+					? 'ΔΙΕΥΘΥΝΣΗ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΟΥ: ' . $addr->billing->oneLine()
+					: ''
+			),
 			'kodikos_timologiou'       => (string) ( $c['invoice_code'] ?? '' ),
 			'onoma_programmatos'       => (string) ( $c['program_name'] ?? '' ),
 			'diarkeia_symvasis'        => $diarkeia,
@@ -285,6 +297,18 @@ class ECRM_FormFill {
 			'thesi_metriti_esoterikos' => ( $xg( 'meter_position' ) === 'inside'  ? 'X' : '' ),
 			'thesi_metriti_exoterikos' => ( $xg( 'meter_position' ) === 'outside' ? 'X' : '' ),
 			'pliromi_pagia_entoli'     => ( $xg( 'payment_method' ) === 'standing_order' ? 'X' : '' ),
+
+			// Ίδιο μοτίβο ετικέτας+τιμής με το 'dieuthynsi_apostolis_etiketa'
+			// λίγο πιο πάνω: το bill_delivery είχε ΜΗΔΕΝΙΚΟ print mapping σε
+			// όλα τα έντυπα μέχρι το (208) -- εδώ γράφεται μόνο η εκδοχή για
+			// έντυπα Ορίζον χωρίς προτυπωμένο πεδίο, με ελληνικό κείμενο αντί
+			// για την τιμή της βάσης (email/post/both).
+			'tropos_apostolis_logariasmou' => match ( $xg( 'bill_delivery' ) ) {
+				'email' => 'ΤΡΟΠΟΣ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΟΥ: Email',
+				'post'  => 'ΤΡΟΠΟΣ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΟΥ: Ταχυδρομικώς',
+				'both'  => 'ΤΡΟΠΟΣ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΟΥ: Email & Ταχυδρομικώς',
+				default => '',
+			},
 
 			// Communication contact (Υπεύθυνος Επικοινωνίας).
 			'onomateponymo_epikoinonias' => $contact_name,
@@ -335,6 +359,19 @@ class ECRM_FormFill {
 			// A mobile application describes a line, not a meter: the number
 			// being activated, the SIM it goes on, and the tariff over time.
 			'arithmos_kinitou'        => $xg( 'mobile_msisdn' ),
+			// Η Συνδυαστική (family) δένει 2 γραμμές κινητής κάτω από το
+			// ίδιο ΑΦΜ. Η 2η γραμμή τυπώνεται μόνο όταν επιλεγεί η Συνδυαστική
+			// -- σε κάθε άλλη περίπτωση η JS καθαρίζει το πεδίο, αλλά ο
+			// έλεγχος mobile_offer εδώ είναι δεύτερη γραμμή άμυνας, όχι
+			// εμπιστοσύνη στο frontend. Τυπώνεται με δική μας ετικέτα (όχι
+			// μόνο ο αριθμός) γιατί το χαρτί δεν έχει προτυπωμένο πεδίο εκεί
+			// -- ένας γυμνός αριθμός σε άδειο περιθώριο θα ήταν ασαφής σε
+			// υπογεγραμμένο έντυπο.
+			'deuteros_arithmos_kinitou' => (
+				$xg( 'mobile_offer' ) === 'family' && $xg( 'mobile_msisdn_2' ) !== ''
+					? '2ο ΚΙΝΗΤΟ ΣΥΝΔΥΑΣΤΙΚΟΥ: ' . $xg( 'mobile_msisdn_2' )
+					: ''
+			),
 			'arithmos_sim'            => $xg( 'sim_number' ),
 			'typos_epidotisis'        => $xg( 'subsidy_type' ),
 			// Three prices because the offer changes twice: what the plan
