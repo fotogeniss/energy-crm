@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use EnergyCRM\Infrastructure\TeamInvite;
+use EnergyCRM\Persistence\GuaranteeRuleRepository;
 use EnergyCRM\Providers\Http\ProviderStatusMapController;
 use EnergyCRM\Providers\Persistence\ProviderStatusMapRepository;
 use EnergyCRM\Providers\Persistence\UsualChoiceRepository;
@@ -149,6 +150,7 @@ final class ControllerFactory
             ),
             new VatLookupController(),
             new QuoteController(),
+            new GuaranteeSuggestController(new GuaranteeRuleRepository()),
         ];
     }
 }

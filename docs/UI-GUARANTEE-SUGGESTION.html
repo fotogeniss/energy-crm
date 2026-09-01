@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Μακέτα §1.8 — πρόταση εγγύησης στη φόρμα</title>
+<style>
+  :root{
+    --page-canvas:#f8f8f6; --n0:#fff; --n50:#f8f8f6; --n100:#f1f1ee; --n200:#dedcd7;
+    --n500:#6e6c66; --n700:#42413d; --n800:#2a2926; --n900:#1a1a18;
+    --p50:#eafaea; --p100:#d2f5d3; --p300:#6bdd6d; --p400:#16c217; --p500:#12a413; --p600:#0e8610; --p700:#0b690c;
+    --amber:var(--p400); --accent-wash:var(--p50); --accent-wash-2:var(--p100); --accent-ink:var(--p700);
+    --line:var(--n200); --surface:var(--n0); --ink:var(--n800); --muted:var(--n500); --navy:var(--n900);
+    --err:#c32b47; --err-bg:#fdeaea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page-canvas);color:var(--ink);
+    font:13px/1.5 "Segoe UI",Manrope,-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif}
+  .page{max-width:980px;margin:0 auto;padding:24px 20px 64px}
+
+  .doc{background:var(--n0);border:1px solid var(--line);border-left:4px solid var(--p500);
+    padding:16px 20px;margin-bottom:28px}
+  .doc h1{font-size:20px;margin:0 0 8px;color:var(--navy)}
+  .doc p{margin:8px 0;color:var(--muted);max-width:76ch}
+  .doc code{background:var(--n100);padding:1px 5px;border-radius:3px;font-size:12px}
+
+  .label{display:inline-block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:2px 7px;margin-bottom:10px}
+
+  .card{background:var(--n0);border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin-bottom:26px}
+  .step{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field__label{font-size:11px;font-weight:600;color:var(--muted)}
+  .input{height:36px;padding:0 11px;border:1px solid var(--line);border-radius:8px;
+    font-family:inherit;font-size:13px;color:var(--ink);background:var(--surface);width:100%}
+  .input:focus{outline:none;border-color:var(--amber)}
+
+  .suggest{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;flex-wrap:wrap}
+  .suggest__amt{color:var(--accent-ink);font-weight:700}
+  .suggest__label{color:var(--muted)}
+  .btn-use{border:1px solid var(--p500);background:var(--accent-wash);color:var(--accent-ink);
+    padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;cursor:default;white-space:nowrap}
+  .btn-use:hover{background:var(--accent-wash-2)}
+  .used{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--accent-ink);font-weight:600}
+  .used__check{width:15px;height:15px;border-radius:50%;background:var(--p500);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex:0 0 auto}
+  .none{margin-top:6px;font-size:11.5px;color:var(--n500)}
+
+  .row{display:flex;align-items:flex-start;gap:22px;padding:16px 0;border-top:1px solid var(--n100)}
+  .row:first-of-type{border-top:none;padding-top:0}
+  .row__tag{flex:0 0 148px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;padding-top:9px}
+  .row__body{flex:1;max-width:340px}
+  .row__note{flex:1;font-size:12px;color:var(--muted);max-width:34ch}
+
+  .q{background:var(--n0);border:1px solid var(--line);border-left:4px solid #dba617;padding:16px 20px}
+  .q h2{margin:0 0 10px;font-size:16px;color:var(--navy)}
+  .q ol{margin:0;padding-left:20px}
+  .q li{margin:8px 0;max-width:76ch}
+
+  .flow{background:var(--n0);border:1px solid var(--line);border-radius:10px;padding:16px 22px;margin-bottom:26px}
+  .flow h2{font-size:14px;margin:0 0 10px;color:var(--navy)}
+  .flow ol{margin:0;padding-left:20px;color:var(--ink)}
+  .flow li{margin:6px 0;max-width:74ch}
+  .flow code{background:var(--n100);padding:1px 5px;border-radius:3px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="doc">
+    <h1>Μακέτα §1.8 — πρόταση εγγύησης στη φόρμα (στάδιο 3 από 3)</h1>
+    <p>Πού μπαίνει: το ήδη υπάρχον πεδίο <strong>«Εγγύηση (€)»</strong> στα «Στοιχεία
+       Τιμολόγησης» (<code>public/class-ecrm-shortcodes.php</code>, γραμμή 881). Το πεδίο
+       <strong>δεν κλειδώνει και δεν γεμίζει μόνο του</strong> -- ο πωλητής βλέπει πρόταση
+       δίπλα και πατά «Χρήση» αν συμφωνεί, όπως ζητήθηκε ρητά.</p>
+    <p>Οι τρεις γραμμές παρακάτω δείχνουν τις μόνες τρεις καταστάσεις που υπάρχουν.
+       Καμία δεν είναι φανταστικό σενάριο εκτός λογικής -- είναι ακριβώς η συμπεριφορά
+       του <code>GuaranteeMatch</code> από το (210).</p>
+  </div>
+
+  <span class="label">Η φόρμα — «Στοιχεία Τιμολόγησης»</span>
+  <div class="card">
+    <div class="step">7 &nbsp;Στοιχεία Τιμολόγησης</div>
+
+    <div class="row">
+      <div class="row__tag">Κατάσταση 1</div>
+      <div class="row__body">
+        <div class="field">
+          <span class="field__label">Εγγύηση (€)</span>
+          <input class="input" value="" placeholder="">
+        </div>
+        <div class="none">Κανένας κανόνας δεν ταιριάζει — καμία πρόταση, ίδιο με σήμερα.</div>
+      </div>
+      <div class="row__note">Πάροχος χωρίς κανέναν κανόνα, ή κανόνας που δεν καλύπτει
+        αυτόν τον συνδυασμό. Το πεδίο μένει ακριβώς όπως είναι σήμερα — χωρίς chip, χωρίς
+        υπόδειξη. Ο πωλητής γράφει μόνος του.</div>
+    </div>
+
+    <div class="row">
+      <div class="row__tag">Κατάσταση 2</div>
+      <div class="row__body">
+        <div class="field">
+          <span class="field__label">Εγγύηση (€)</span>
+          <input class="input" value="" placeholder="">
+        </div>
+        <div class="suggest">
+          <span class="suggest__label">Πρόταση:</span>
+          <span class="suggest__amt">110,00 €</span>
+          <span class="btn-use">Χρήση</span>
+        </div>
+      </div>
+      <div class="row__note">Κανόνας ταίριαξε με θετικό ποσό (π.χ. ΔΕΗ, 8–15 kVA →
+        110 €). Το πεδίο μένει κενό και επεξεργάσιμο — η πρόταση είναι δίπλα, όχι μέσα.</div>
+    </div>
+
+    <div class="row">
+      <div class="row__tag">Κατάσταση 3</div>
+      <div class="row__body">
+        <div class="field">
+          <span class="field__label">Εγγύηση (€)</span>
+          <input class="input" value="110,00">
+        </div>
+        <div class="used">
+          <span class="used__check">✓</span>
+          Χρησιμοποιήθηκε η πρόταση (110,00 €) — μπορείς να την αλλάξεις
+        </div>
+      </div>
+      <div class="row__note">Μετά το κλικ στο «Χρήση»: η τιμή γράφεται στο πεδίο σαν να
+        την πληκτρολόγησε ο πωλητής (καμία κλειδαριά, κανένα readonly) και το chip
+        γίνεται μια μικρή, ήσυχη επιβεβαίωση από κάτω. Αν αλλάξει το πρόγραμμα/πάροχος
+        μετά, η πρόταση ξαναϋπολογίζεται και η επιβεβαίωση εξαφανίζεται.</div>
+    </div>
+  </div>
+
+  <span class="label">Η ειδική περίπτωση</span>
+  <div class="card" style="border-left:4px solid var(--p500)">
+    <div class="field" style="max-width:320px">
+      <span class="field__label">Εγγύηση (€)</span>
+      <input class="input" value="">
+    </div>
+    <div class="suggest">
+      <span class="suggest__label">Πρόταση:</span>
+      <span class="suggest__amt">0,00 €</span>
+      <span class="btn-use">Χρήση</span>
+    </div>
+    <p style="margin:12px 0 0;color:var(--muted);font-size:12px;max-width:64ch">
+      <strong>Αυτό ΔΕΝ είναι το ίδιο με την Κατάσταση 1.</strong> Εδώ υπάρχει κανόνας
+      («PROTERGIA → 0,00 €», δηλαδή «δεν ζητά εγγύηση») και εμφανίζεται σαν πρόταση με
+      κανονικό «Χρήση» — απλώς η τιμή του είναι μηδέν. Αν δεν φαινόταν chip, ο πωλητής
+      δεν θα ήξερε αν κανείς δεν ξέρει το ποσό ή αν ο πάροχος πράγματι δεν ζητά τίποτα.
+      Αυτός είναι ο λόγος που ο <code>GuaranteeMatch</code> επιστρέφει <code>null</code>
+      για «καμία πρόταση» και <code>0.0</code> για «πρόταση μηδέν» — δύο διαφορετικά
+      πράγματα, δύο διαφορετικές εμφανίσεις εδώ.
+    </p>
+  </div>
+
+  <div class="flow">
+    <h2>Πότε ξαναϋπολογίζεται η πρόταση</h2>
+    <ol>
+      <li>Στην αλλαγή παρόχου, προγράμματος, είδους ενέργειας ή κατηγορίας πελάτη — ίδια
+        σκανδάλη με το υπάρχον <code>refreshProviderFields()</code>.</li>
+      <li>Στην αλλαγή της «Συμφωνημένης Ισχύος (kVA)» (με μικρή καθυστέρηση όσο ο πωλητής
+        γράφει, όχι σε κάθε πάτημα πλήκτρου) — μόνο αυτό είναι πραγματικά νέο.</li>
+      <li>Ένα ελαφρύ αίτημα <code>GET /guarantee/suggest</code> (δίδυμο του ήδη υπάρχοντος
+        <code>/forms/fields</code>), που επιστρέφει <code>{amount: null}</code> ή
+        <code>{amount: 110}</code>/<code>{amount: 0}</code>. Καμία γραφή στη βάση, καμία
+        αλλαγή στο <code>collect()</code>/αποθήκευση της σύμβασης.</li>
+      <li>Αν ο πωλητής έχει ήδη γράψει κάτι στο πεδίο, η πρόταση εμφανίζεται δίπλα αλλά
+        <strong>δεν το αγγίζει ποτέ αυτόματα</strong> — το «Χρήση» είναι η μόνη πράξη που
+        γράφει στο πεδίο.</li>
+    </ol>
+  </div>
+
+  <div class="q">
+    <h2>Τι χρειάζομαι από εσένα</h2>
+    <ol>
+      <li>Τρεις καταστάσεις, ένα μηχανισμός («Χρήση») — έτσι το ήθελες;</li>
+      <li>Το κείμενο επιβεβαίωσης μετά το κλικ: «Χρησιμοποιήθηκε η πρόταση (…) — μπορείς
+        να την αλλάξεις». Σου ταιριάζει, ή θες κάτι πιο σύντομο;</li>
+      <li>Η καθυστέρηση στο πληκτρολόγημα της ισχύος (δεν ξαναρωτά σε κάθε πλήκτρο) —
+        εντάξει;</li>
+    </ol>
+  </div>
+
+</div>
+</body>
+</html>

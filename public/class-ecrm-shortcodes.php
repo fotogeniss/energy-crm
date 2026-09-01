@@ -878,7 +878,20 @@ class ECRM_Shortcodes {
 					// το ζητά ο πάροχος.
 					?>
 					<?php // Χωρίς guard: το orizon_mobile.json ζητά κι αυτό εγγύηση, όχι μόνο ρεύμα/αέριο. ?>
-					<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
+					<div class="ecrm-field-with-suggest">
+						<?php $ecrm_field( 'guarantee', 'Εγγύηση (€)', 'text', true ); ?>
+						<?php
+						// Πρόταση δίπλα στο πεδίο, ΠΟΤΕ αυτόματο γέμισμα -- ρητή απόφαση
+						// ιδιοκτήτη 01/09 (στάδιο 3 της μηχανής εγγυήσεων, CHANGELOG (212)).
+						// Άδειο μέχρι να απαντήσει το GET /guarantee/suggest (ecrm-form.js:
+						// refreshGuaranteeSuggestion()) -- hidden by default ώστε καμία
+						// αναλαμπή να μη φανεί πριν προλάβει η πρώτη κλήση.
+						?>
+						<div class="ecrm-guarantee-suggest" data-guarantee-suggest hidden>
+							<span data-guarantee-suggest-text></span>
+							<button type="button" class="ecrm-guarantee-suggest__btn" data-guarantee-suggest-use hidden>Χρήση</button>
+						</div>
+					</div>
 					<?php $ecrm_field( 'ar_koinoxristou', 'Αρ. Κοινόχρηστου Μετρητή', 'text', true, '', 'power,gas' ); ?>
 				</div>
 

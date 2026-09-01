@@ -600,6 +600,25 @@
 /* AI-filled pulse */
 .ecrm-field.is-ai .ecrm-input { background: var(--accent-wash); border-color: var(--amber); animation: ecrm-pulse 1.6s ease; }
 
+/* ---- Πρόταση εγγύησης (στάδιο 3, μηχανή εγγυήσεων, CHANGELOG (212)) ----
+ * Μακέτα εγκεκριμένη: docs/UI-GUARANTEE-SUGGESTION.html, 01/09/2026.
+ * Δίπλα στο πεδίο, ΠΟΤΕ μέσα του -- η κάρτα .ecrm-field μένει αναλλοίωτη,
+ * ο wrapper είναι απλώς το νέο grid cell (αντί για το ίδιο το .ecrm-field). */
+.ecrm-field-with-suggest { display: flex; flex-direction: column; }
+.ecrm-guarantee-suggest { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: var(--fs-12); flex-wrap: wrap; }
+.ecrm-guarantee-suggest[hidden] { display: none; }
+.ecrm-guarantee-suggest__amt { color: var(--accent-ink); font-weight: 700; }
+/* Η επιβεβαίωση μετά το «Χρήση» ζει στο ίδιο κουτί -- αλλάζει μόνο το
+ * κείμενο (βλ. ecrm-form.js), όχι το layout, ώστε να μη χοροπηδά η φόρμα. */
+.ecrm-guarantee-suggest.is-used { color: var(--accent-ink); font-weight: 600; }
+.ecrm-guarantee-suggest__btn {
+	border: 1px solid var(--p500); background: var(--accent-wash); color: var(--accent-ink);
+	padding: 3px 10px; border-radius: 999px; font-family: inherit; font-size: var(--fs-11-5);
+	font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.ecrm-guarantee-suggest__btn:hover { background: var(--accent-wash-2); }
+.ecrm-guarantee-suggest__btn[hidden] { display: none; }
+
 /* Μόνιμη ετικέτα «AI» -- ξεχωριστή από το is-ai (στιγμιαία αναλαμπή, πάνω).
    Μπαίνει στο ίδιο σημείο του setField() που βάζει το is-ai, φεύγει όταν ο
    συνεργάτης αγγίξει το ΙΔΙΟ πεδίο (ecrm-form.js, listener στο 'input'). */
