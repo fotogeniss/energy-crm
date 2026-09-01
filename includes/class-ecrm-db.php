@@ -14,6 +14,7 @@
  *   events         — audit/status-history log per contract
  *   assistant_messages — Λίτσα assistant conversation, per user (build queue 14)
  *   deletion_log   — μόνιμο αρχείο admin παράκαμψης διαγραφής υπογεγραμμένων (20/DB_VERSION)
+ *   guarantee_rules — κανόνες πρότασης εγγύησης ανά πάροχο/κλίμακα kVA (21/DB_VERSION)
  *
  * Designed so future sessions can bolt on: network/team, commissions, mail.
  *
@@ -27,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '20';
+	const DB_VERSION = '21';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -224,6 +225,30 @@ class ECRM_DB {
 			program_id   BIGINT UNSIGNED NULL,
 			energy_type  VARCHAR(8)  NULL,
 			category     VARCHAR(16) NULL,
+			amount       DECIMAL(10,2) NOT NULL DEFAULT 0,
+			active       TINYINT(1) NOT NULL DEFAULT 1,
+			created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY provider_id (provider_id)
+		) {$charset};" );
+
+		// --- guarantee rules ------------------------------------------------
+		// Ίδιο σχήμα με τους κανόνες προμήθειας, συν την κλίμακα ισχύος:
+		// kva_min/kva_max NULL σημαίνει «για κάθε ισχύ», και τα δύο όρια είναι
+		// συμπεριληπτικά (βλ. Domain\Guarantee\GuaranteeMatch).
+		//
+		// Ο πίνακας γεννιέται άδειος και αυτό ΔΕΝ είναι σφάλμα: άδειος = καμία
+		// πρόταση = η σημερινή συμπεριφορά, όπου ο πωλητής γράφει το ποσό μόνος
+		// του. Γι' αυτό, αντίθετα με το commission_rules, δεν μπαίνει έλεγχος
+		// υγείας που να κοκκινίζει όσο είναι άδειος — βλ. CHANGELOG (210).
+		dbDelta( "CREATE TABLE {$p}guarantee_rules (
+			id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			provider_id  BIGINT UNSIGNED NULL,
+			program_id   BIGINT UNSIGNED NULL,
+			energy_type  VARCHAR(8)  NULL,
+			category     VARCHAR(16) NULL,
+			kva_min      DECIMAL(8,2) NULL,
+			kva_max      DECIMAL(8,2) NULL,
 			amount       DECIMAL(10,2) NOT NULL DEFAULT 0,
 			active       TINYINT(1) NOT NULL DEFAULT 1,
 			created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
