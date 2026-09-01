@@ -55,3 +55,5 @@ _to_delete/
 # φάκελος υπάρχει ΜΟΝΟ γι' αυτόν τον λόγο -- τίποτα εδώ δεν προορίζεται
 # ποτέ για commit.
 docs/_measure/
+
+tools/.load-test-credentials.json
