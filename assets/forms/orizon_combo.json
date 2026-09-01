@@ -206,6 +206,18 @@
    "page": 7,
    "x": 60.7,
    "y": 67.6
+  },
+  "dieuthynsi_apostolis_etiketa": {
+   "page": 7,
+   "x": 10.2,
+   "y": 100.0,
+   "size": 8
+  },
+  "tropos_apostolis_logariasmou": {
+   "page": 7,
+   "x": 10.2,
+   "y": 109.0,
+   "size": 8
   }
  },
  "sigs": [
