@@ -565,7 +565,7 @@ class ECRM_FormFill {
 			$pdf->AddPage( $orient, [ $w, $h ] );
 			$pdf->Image( $dir . $key . '-' . $p . '.jpg', 0, 0, $w, $h );
 
-			$pdf->SetTextColor( 0, 0, 150 );
+			$pdf->SetTextColor( 0, 0, 0 );
 			foreach ( $map['fields'] as $field => $placements ) {
 				$val = $values[ $field ] ?? '';
 				if ( $val === '' ) { continue; }
