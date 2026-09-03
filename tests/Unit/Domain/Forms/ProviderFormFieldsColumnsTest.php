@@ -84,7 +84,29 @@ final class ProviderFormFieldsColumnsTest extends TestCase
 
         self::assertContains('afm', $inputs);
         self::assertContains('adt', $inputs);
-        self::assertLessThan(12, count($inputs), 'Orizon Family should stay a short form');
+        // (214) πρόσθεσε 'tropos_apostolis_logariasmou' (bill_delivery) στη
+        // σωστή δεξαμενή -- το φυσιολογικό πλήθος ανέβηκε από 8 σε 12. Το
+        // όριο εδώ είναι "σύντομη φόρμα", όχι μαγικός αριθμός· ανέβηκε στο 16
+        // για να μείνει η πρόθεση χωρίς να καρφώσει το ακριβές 12.
+        self::assertLessThan(16, count($inputs), 'Orizon Family should stay a short form');
+    }
+
+    /**
+     * Pin for (214): the three Orizon mobile templates print the mobile
+     * number(s) but COLUMN_INPUTS had no entry for any of the "Κινητή
+     * τηλεφωνία" fill keys, so this test would have stayed green -- afm/adt
+     * were still present -- while `mobile_msisdn` silently vanished behind
+     * «Περισσότερα» tagged "δεν τυπώνεται" even though the paper needs it.
+     */
+    public function testOrizonMobileTemplatesAskForTheMobileNumber(): void
+    {
+        foreach (['orizon_family', 'orizon_combo', 'orizon_mobile'] as $template) {
+            self::assertContains(
+                'mobile_msisdn',
+                ProviderFormFields::mainFormInputsForTemplate($template, self::formsDir()),
+                $template . ' should ask for the mobile number'
+            );
+        }
     }
 
     /** The largest energy template still lands far below the full form. */
