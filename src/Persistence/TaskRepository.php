@@ -114,6 +114,39 @@ final class TaskRepository
     }
 
     /**
+     * Σημαδεύει «είδε τη λίστα» τις εργασίες που μόλις επιστράφηκαν σε αυτόν
+     * τον χρήστη -- ό,τι έχει ήδη seen_at δεν ξαναγράφεται, οπότε η κλήση
+     * είναι φθηνή να γίνεται σε κάθε φόρτωση της οθόνης (214, βλ. TasksController).
+     *
+     * Μόνο IN (), ποτέ κατά scope: ο καλών έχει ήδη φιλτράρει τα ids σε
+     * `assigned_to === τον ίδιο` πριν φτάσει εδώ -- το seen_at είναι προσωπικό
+     * του καθενός badge, όχι κάτι που μοιράζεται μια ομάδα.
+     *
+     * @param list<int> $ids
+     */
+    public function markSeen(array $ids): void
+    {
+        global $wpdb;
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), fn ($id) => $id > 0)));
+
+        if ($ids === []) {
+            return;
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE %i SET seen_at = %s WHERE id IN ({$placeholders}) AND seen_at IS NULL",
+                [$this->table, current_time('mysql'), ...$ids]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+    }
+
+    /**
      * @param array<string, mixed> $data
      */
     public function create(array $data): int
