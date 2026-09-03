@@ -92,14 +92,33 @@ final class TasksController implements Controller
     public function index(WP_REST_Request $request): WP_REST_Response
     {
         $scope = $this->scopes->forCurrentUser();
+        $own   = $request['scope'] !== 'team';
 
-        if ($request['scope'] !== 'team') {
+        if ($own) {
             $scope = $scope->toSelfOnly();
+        }
+
+        $rows = $this->tasks->search($scope, (string) $request['filter']);
+
+        // «Είδε τη λίστα» (214): μόνο στη ΔΙΚΗ του λίστα, ποτέ όταν βλέπει
+        // ομάδας -- το seen_at είναι προσωπικό badge, δεν το καθαρίζει η
+        // προβολή κάποιου άλλου. Και μόνο τις εργασίες που ΤΟΥ έχουν
+        // ανατεθεί, όχι όσες απλώς δημιούργησε για άλλον (η `search()` φέρνει
+        // και τις δύο μέσω created_by, το due_count() μετράει μόνο τις δικές
+        // του assigned_to).
+        if ($own) {
+            $actor = $scope->actorId();
+            $ids   = array_column(
+                array_filter($rows, static fn (array $row): bool => (int) $row['assigned_to'] === $actor),
+                'id'
+            );
+
+            $this->tasks->markSeen($ids);
         }
 
         return new WP_REST_Response([
             'ok'       => true,
-            'rows'     => $this->tasks->search($scope, (string) $request['filter']),
+            'rows'     => $rows,
             'can_team' => $scope->isTeamWide() || $scope->isAdministrator(),
         ], 200);
     }

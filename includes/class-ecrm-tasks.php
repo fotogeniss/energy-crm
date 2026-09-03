@@ -151,12 +151,23 @@ class ECRM_Tasks {
 	public static function routes(): void {
 	}
 
-	/** Count of open tasks due today-or-earlier for a user (nav badge). */
+	/**
+	 * Count of open, ΑΔΕΙΤΕ tasks due today-or-earlier for a user (nav badge).
+	 *
+	 * «Αδίαβαστες» εδώ σημαίνει: δεν τις έχει ξαναδεί στη δική του λίστα
+	 * Εργασιών (214) -- `seen_at` γράφεται από το
+	 * `TaskRepository::markSeen()` κάθε φορά που το `TasksController::index()`
+	 * του επιστρέφει τη ΔΙΚΗ του λίστα. Πριν το (214) το badge έμενε
+	 * κολλημένο στον ίδιο αριθμό ακόμα κι αφού ο χρήστης είχε ήδη δει τις
+	 * εργασίες -- μετρούσε «ληξιπρόθεσμες», όχι «καινούργιες».
+	 */
 	public static function due_count( int $uid ): int {
 		global $wpdb;
 		$t = ECRM_DB::table( 'tasks' );
 		return (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM {$t} WHERE assigned_to = %d AND status = 'open' AND ( due_at IS NULL OR due_at <= %s )",
+			"SELECT COUNT(*) FROM {$t}
+			 WHERE assigned_to = %d AND status = 'open' AND seen_at IS NULL
+			   AND ( due_at IS NULL OR due_at <= %s )",
 			$uid, current_time( 'mysql' )
 		) );
 	}

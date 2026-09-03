@@ -180,6 +180,65 @@ final class TaskListPayloadTest extends IntegrationTestCase
         self::assertIsBool($this->getTasks()['rows'][0]['overdue']);
     }
 
+    /**
+     * Το άνοιγμα της ΔΙΚΗΣ του λίστας (214) σβήνει το badge για ό,τι μόλις
+     * είδε -- ίδιο μπαγκ με το πρώτο screenshot του ιδιοκτήτη 01/09: το
+     * badge έμενε στο 2 ενώ οι δύο εργασίες ήταν ήδη ανοιχτές στην οθόνη.
+     */
+    public function testFetchingTheListMarksOverdueTasksSeen(): void
+    {
+        $this->addTask('Άργησε', 0, gmdate('Y-m-d H:i:s', strtotime('-3 days')));
+
+        self::assertSame(1, \ECRM_Tasks::due_count($this->partner), 'Πριν το άνοιγμα, το badge πρέπει να δείχνει 1.');
+
+        $this->getTasks();
+
+        self::assertSame(0, \ECRM_Tasks::due_count($this->partner), 'Μετά το άνοιγμα, το badge πρέπει να καθαρίσει.');
+    }
+
+    /**
+     * Μια εργασία που δεν έχει ξαναφανεί καθόλου -- επειδή δημιουργήθηκε ΜΕΤΑ
+     * το τελευταίο άνοιγμα της λίστας -- πρέπει να ξαναανάψει το badge. Το
+     * seen_at είναι ανά ΕΡΓΑΣΙΑ, όχι ένα timestamp «τελευταία επίσκεψη».
+     */
+    public function testANewOverdueTaskReappearsInTheBadgeAfterASecondOneWasSeen(): void
+    {
+        $this->addTask('Άργησε πρώτη', 0, gmdate('Y-m-d H:i:s', strtotime('-3 days')));
+        $this->getTasks();
+
+        self::assertSame(0, \ECRM_Tasks::due_count($this->partner));
+
+        $this->addTask('Άργησε δεύτερη', 0, gmdate('Y-m-d H:i:s', strtotime('-1 day')));
+
+        self::assertSame(1, \ECRM_Tasks::due_count($this->partner), 'Η καινούργια δεν είναι seen ακόμα.');
+    }
+
+    /**
+     * Το seen_at είναι προσωπικό badge -- η προβολή της ομάδας (`scope=team`)
+     * ΔΕΝ πρέπει να καθαρίζει το δικό της badge ενός άλλου χρήστη.
+     */
+    public function testViewingTeamScopeDoesNotMarkAnyonesTasksSeen(): void
+    {
+        $owner = $this->makeCrmUser();
+        wp_set_current_user($owner);
+        $request = new WP_REST_Request('POST', self::ROUTE);
+        $request->set_param('title', 'Άργησε άλλου');
+        $request->set_param('due_at', gmdate('Y-m-d H:i:s', strtotime('-3 days')));
+        $request->set_param('assigned_to', $owner);
+        rest_do_request($request);
+
+        wp_set_current_user($this->partner);
+        $team = new WP_REST_Request('GET', self::ROUTE);
+        $team->set_param('scope', 'team');
+        rest_do_request($team);
+
+        self::assertSame(
+            1,
+            \ECRM_Tasks::due_count($owner),
+            'Η προβολή ομάδας από άλλον δεν πρέπει να καθαρίζει το badge του.'
+        );
+    }
+
     // --- Fixtures ----------------------------------------------------------
 
     /** @return array<string, mixed> */

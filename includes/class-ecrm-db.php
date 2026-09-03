@@ -15,6 +15,8 @@
  *   assistant_messages — Λίτσα assistant conversation, per user (build queue 14)
  *   deletion_log   — μόνιμο αρχείο admin παράκαμψης διαγραφής υπογεγραμμένων (20/DB_VERSION)
  *   guarantee_rules — κανόνες πρότασης εγγύησης ανά πάροχο/κλίμακα kVA (21/DB_VERSION)
+ *   tasks.seen_at  — πότε ο χρήστης είδε την ανοιχτή/ληξιπρόθεσμη εργασία στη
+ *                    δική του λίστα, για το badge του μενού (22/DB_VERSION)
  *
  * Designed so future sessions can bolt on: network/team, commissions, mail.
  *
@@ -28,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '21';
+	const DB_VERSION = '22';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -306,6 +308,7 @@ class ECRM_DB {
 			status       VARCHAR(16) NOT NULL DEFAULT 'open',
 			created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			done_at      DATETIME NULL,
+			seen_at      DATETIME NULL,
 			PRIMARY KEY (id),
 			KEY assigned_to (assigned_to),
 			KEY contract_id (contract_id),
