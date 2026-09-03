@@ -53,6 +53,16 @@ final class ProviderFormFields
         'diarkeia_aoristou', 'diarkeia_6_mines', 'diarkeia_12_mines',
         'diarkeia_18_mines', 'diarkeia_24_mines', 'diarkeia_36_mines',
         'ypovoli_ilektronika', 'ypovoli_taxydromika',
+
+        // Κινητή τηλεφωνία -- έλειπαν εντελώς από εδώ (214). Τα τρία έντυπα
+        // Orizon (family/combo/mobile) τα τυπώνουν ήδη μέσω του
+        // class-ecrm-formfill.php· το φίλτρο απλώς δεν το ήξερε.
+        'arithmos_kinitou', 'deuteros_arithmos_kinitou', 'arithmos_sim',
+        'typos_epidotisis', 'poso_eggiisis', 'tropos_apostolis_logariasmou',
+        'combo_arithmos_paroxis', 'combo_onoma_programmatos',
+        'energopoiisi_foritotita',
+        'programma_5gb', 'programma_10gb_5gb', 'programma_40gb', 'programma_unlimited',
+        'xristis_kyrios', 'xristis_defterevon',
     ];
 
     /**
@@ -224,6 +234,26 @@ final class ProviderFormFields
         'diarkeia_36_mines'              => [],
         'ypovoli_ilektronika'            => [],
         'ypovoli_taxydromika'            => [],
+
+        // Κινητή τηλεφωνία (214) -- ίδιο σχόλιο με το FROM_COLUMNS παραπάνω.
+        'arithmos_kinitou'               => ['mobile_msisdn'],
+        'deuteros_arithmos_kinitou'      => ['mobile_msisdn_2'],
+        'arithmos_sim'                   => ['sim_number'],
+        'typos_epidotisis'               => ['subsidy_type'],
+        'poso_eggiisis'                  => ['guarantee'],
+        'tropos_apostolis_logariasmou'   => ['bill_delivery'],
+        'combo_arithmos_paroxis'         => ['combo_supply_number'],
+        'combo_onoma_programmatos'       => ['combo_energy_program'],
+        // Παράγονται από το πρόγραμμα/τον ρόλο χρήστη που διαλέχτηκε στο
+        // βήμα 1, κανείς δεν τα πληκτρολογεί -- ίδια λογική με το
+        // 'onoma_programmatos' λίγο πιο πάνω.
+        'energopoiisi_foritotita'        => [],
+        'programma_5gb'                  => [],
+        'programma_10gb_5gb'             => [],
+        'programma_40gb'                 => [],
+        'programma_unlimited'            => [],
+        'xristis_kyrios'                 => [],
+        'xristis_defterevon'             => [],
     ];
 
     /**
