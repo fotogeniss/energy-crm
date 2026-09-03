@@ -1073,6 +1073,91 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			return (Math.round(n * 100) / 100).toFixed(2).replace('.', ',');
 		}
 
+		// ---- ΤΚ→πόλη/νομός: πρόταση δίπλα στο πεδίο, «Χρήση» μόνο -- ΠΟΤΕ
+		// αυτόματο γέμισμα. Μακέτα docs/UI-POSTAL-SUGGESTION.html, εγκεκριμένη
+		// 03/09/2026 (CHANGELOG (216)). Τρία ανεξάρτητα μπλοκ (κατοικία/παροχή/
+		// χρέωση) -- ίδιο keyed πρότυπο με το ADDR_PARTS/toggleAddr, γιατί το
+		// q()/qa() είναι scoped στο ΟΛΟ root, όχι σε υπο-container.
+		// nomos βρίσκεται σχεδόν πάντα (πλήρης πίνακας ΕΛ.ΤΑ., CHANGELOG (216))·
+		// city είναι best-effort (grpostcodes, μερική κάλυψη) -- μπορεί να λείπει
+		// χωρίς να λείπει ο νομός. «Χρήση» γεμίζει ό,τι βρέθηκε, ποτέ δεν μαντεύει.
+		var TK_PARTS = ['cust', 'supply', 'billing'];
+		var tkSuggestT = {};
+		var tkSuggestData = {};
+
+		function tkFieldPrefix(which) {
+			return which === 'cust' ? '' : which + '_';
+		}
+
+		function refreshPostalSuggestion(which) {
+			var box = root.querySelector('[data-tk-suggest="' + which + '"]');
+			var text = root.querySelector('[data-tk-suggest-text="' + which + '"]');
+			var btn = root.querySelector('[data-tk-suggest-use="' + which + '"]');
+			if (!box || !text || !btn) return;
+
+			var prefix = tkFieldPrefix(which);
+			var postalEl = root.querySelector('[name="' + prefix + 'postal_code"]');
+			var digits = (postalEl ? postalEl.value : '').replace(/\D+/g, '');
+
+			if (digits.length !== 5) {
+				box.hidden = true; box.classList.remove('is-used');
+				tkSuggestData[which] = null;
+				return;
+			}
+
+			clearTimeout(tkSuggestT[which]);
+			tkSuggestT[which] = setTimeout(function () {
+				fetch(api('/postal/suggest') + '?postal_code=' + encodeURIComponent(digits), { headers: headers() })
+					.then(function (r) { return r.json(); })
+					.then(function (d) {
+						box.classList.remove('is-used');
+						if (!d || !d.ok || (!d.city && !d.nomos)) {
+							box.hidden = true; tkSuggestData[which] = null; return;
+						}
+						tkSuggestData[which] = { city: d.city || null, nomos: d.nomos || null };
+						text.innerHTML = d.city
+							? 'Πρόταση: <span class="ecrm-postal-suggest__city">' + esc(d.city) + '</span>' + (d.nomos ? ', ' + esc(d.nomos) : '')
+							: 'Πρόταση: Νομός <span class="ecrm-postal-suggest__city">' + esc(d.nomos) + '</span>';
+						btn.hidden = false;
+						box.hidden = false;
+					})
+					.catch(function () { box.hidden = true; tkSuggestData[which] = null; });
+			}, 400);
+		}
+
+		// «Χρήση»: η ΜΟΝΗ πράξη που γράφει στα πεδία, ξεχωριστά ανά μπλοκ -- το
+		// ένα instance δεν αγγίζει ποτέ τα πεδία των άλλων δύο.
+		TK_PARTS.forEach(function (which) {
+			var btn = root.querySelector('[data-tk-suggest-use="' + which + '"]');
+			if (!btn) return;
+			btn.addEventListener('click', function () {
+				var d = tkSuggestData[which];
+				if (!d) return;
+				var prefix = tkFieldPrefix(which);
+				var box = root.querySelector('[data-tk-suggest="' + which + '"]');
+				var text = root.querySelector('[data-tk-suggest-text="' + which + '"]');
+				if (d.city) setField(prefix + 'city', d.city);
+				if (d.nomos) setField(prefix + 'region', d.nomos);
+				if (box && text) {
+					box.classList.add('is-used');
+					text.textContent = '✓ Χρησιμοποιήθηκε η πρόταση — μπορείς να την αλλάξεις';
+				}
+				btn.hidden = true;
+			});
+		});
+
+		// Wiring: κάθε ΤΚ πεδίο ξεχωριστά, δεμένο μία φορά στο initForm -- σε
+		// αντίθεση με την εγγύηση, η πρόταση ΤΚ δεν εξαρτάται από πάροχο/
+		// πρόγραμμα, άρα δεν χρειάζεται κλήσεις σε 7 σημεία.
+		TK_PARTS.forEach(function (which) {
+			var prefix = tkFieldPrefix(which);
+			var el = root.querySelector('[name="' + prefix + 'postal_code"]');
+			if (el) {
+				el.addEventListener('input', function () { refreshPostalSuggestion(which); });
+				el.addEventListener('change', function () { refreshPostalSuggestion(which); });
+			}
+		});
+
 		// ---- Duplicate check on ΑΦΜ / supply number ----
 		var dupT;
 		function checkDup() {
@@ -1245,6 +1330,11 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// which is the common case and matches the column defaults.
 			root.querySelectorAll('[data-addr-same]').forEach(function (cb) {
 				cb.checked = true; toggleAddr(cb);
+			});
+			TK_PARTS.forEach(function (which) {
+				var box = root.querySelector('[data-tk-suggest="' + which + '"]');
+				if (box) { box.hidden = true; box.classList.remove('is-used'); }
+				tkSuggestData[which] = null;
 			});
 			// Back to ticked for the next application, matching the markup —
 			// otherwise an agent who unticked it once carries that across every

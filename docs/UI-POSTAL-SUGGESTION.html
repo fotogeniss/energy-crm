@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Μακέτα: Πρόταση Πόλης/Νομού από ΤΚ</title>
+<style>
+  :root{
+    --p500:#8a7bd8; --accent-ink:#5b4fc4; --accent-wash:#f1eefb; --accent-wash-2:#e4ddf6;
+    --ink:#1f2430; --muted:#6b7280; --line:#e2e5ea; --bg:#f7f8fa; --card:#ffffff;
+    --fs-12:12px; --fs-11-5:11.5px; --fs-13:13px;
+  }
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:32px;}
+  h1{font-size:18px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 28px;}
+  .demo-row{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:36px;}
+  .demo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;width:300px;}
+  .demo h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:0 0 14px;font-weight:700;}
+  .ecrm-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .ecrm-field label{font-size:12px;color:var(--muted);}
+  .ecrm-field input{border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;font-family:inherit;}
+  .ecrm-field-with-suggest{display:flex;flex-direction:column;}
+
+  /* ---- Πρόταση ΤΚ→πόλη/νομός (CHANGELOG (216)) ----
+   * Ίδιο σχήμα με .ecrm-guarantee-suggest (στάδιο 3 μηχανή εγγυήσεων) --
+   * δίπλα στο πεδίο, ΠΟΤΕ μέσα του, κουμπί «Χρήση» μόνο. */
+  .ecrm-postal-suggest{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:var(--fs-12);flex-wrap:wrap;}
+  .ecrm-postal-suggest[hidden]{display:none;}
+  .ecrm-postal-suggest__city{color:var(--accent-ink);font-weight:700;}
+  .ecrm-postal-suggest.is-used{color:var(--accent-ink);font-weight:600;}
+  .ecrm-postal-suggest__btn{
+    border:1px solid var(--p500);background:var(--accent-wash);color:var(--accent-ink);
+    padding:3px 10px;border-radius:999px;font-family:inherit;font-size:var(--fs-11-5);
+    font-weight:700;cursor:pointer;white-space:nowrap;
+  }
+  .ecrm-postal-suggest__btn:hover{background:var(--accent-wash-2);}
+  .ecrm-postal-suggest__btn[hidden]{display:none;}
+
+  .note{background:#fff8e6;border:1px solid #f0dca0;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#6b5510;margin-bottom:28px;max-width:620px;}
+  .caption{font-size:11.5px;color:var(--muted);margin-top:8px;}
+</style>
+</head>
+<body>
+
+<h1>Μακέτα -- Πρόταση Πόλης/Νομού από ΤΚ</h1>
+<p class="sub">CHANGELOG (216) &middot; ίδιο πρότυπο με την πρόταση εγγύησης (στάδιο 3) &middot; τρία ανεξάρτητα demo καρτών δείχνουν τις 4 καταστάσεις</p>
+
+<div class="note">
+  <strong>Πάντα δίπλα στο πεδίο, ΠΟΤΕ αυτόματο γέμισμα.</strong> Ο νομός βρίσκεται πάντα (επίσημος πίνακας ΕΛ.ΤΑ., πλήρης κάλυψη 10-85). Η πόλη/περιοχή είναι best-effort (~1.250 ΤΚ, ΟΧΙ όλη η Ελλάδα) -- όταν δεν βρεθεί, δείχνουμε μόνο τον νομό. Το κουμπί «Χρήση» γεμίζει ό,τι βρέθηκε (πόλη + νομός, ή μόνο νομό) στα αντίστοιχα πεδία του ίδιου μπλοκ διεύθυνσης -- ποτέ δεν αγγίζει τα άλλα δύο μπλοκ (κατοικίας/παροχής/χρέωσης είναι ανεξάρτητα).
+</div>
+
+<div class="demo-row">
+
+  <div class="demo">
+    <h2>1. Πριν συμπληρωθεί ΤΚ (καμία πρόταση)</h2>
+    <div class="ecrm-field-with-suggest">
+      <div class="ecrm-field"><label>Ταχ. Κώδικας</label><input type="text" value="105" placeholder="ΤΚ"></div>
+      <div class="ecrm-postal-suggest" hidden></div>
+    </div>
+    <div class="ecrm-field"><label>Πόλη</label><input type="text" placeholder=""></div>
+    <div class="ecrm-field"><label>Νομός</label><input type="text" placeholder=""></div>
+    <p class="caption">Λιγότερα από 5 ψηφία -- το κουτί πρότασης μένει κρυφό.</p>
+  </div>
+
+  <div class="demo">
+    <h2>2. Πλήρης πρόταση (νομός + πόλη βρέθηκαν)</h2>
+    <div class="ecrm-field-with-suggest">
+      <div class="ecrm-field"><label>Ταχ. Κώδικας</label><input type="text" value="10431" placeholder="ΤΚ"></div>
+      <div class="ecrm-postal-suggest">
+        <span>Πρόταση: <span class="ecrm-postal-suggest__city">Πλατεία Ομόνοιας Αθήνα</span>, Αττικής</span>
+        <button type="button" class="ecrm-postal-suggest__btn">Χρήση</button>
+      </div>
+    </div>
+    <div class="ecrm-field"><label>Πόλη</label><input type="text" placeholder=""></div>
+    <div class="ecrm-field"><label>Νομός</label><input type="text" placeholder=""></div>
+    <p class="caption">ΤΚ 10431 -- βρέθηκε και στο grpostcodes και στον πίνακα ΕΛ.ΤΑ.</p>
+  </div>
+
+  <div class="demo">
+    <h2>3. Μερική πρόταση (μόνο νομός -- η πόλη δεν βρέθηκε)</h2>
+    <div class="ecrm-field-with-suggest">
+      <div class="ecrm-field"><label>Ταχ. Κώδικας</label><input type="text" value="74530" placeholder="ΤΚ"></div>
+      <div class="ecrm-postal-suggest">
+        <span>Πρόταση: Νομός <span class="ecrm-postal-suggest__city">Ρεθύμνης</span></span>
+        <button type="button" class="ecrm-postal-suggest__btn">Χρήση</button>
+      </div>
+    </div>
+    <div class="ecrm-field"><label>Πόλη</label><input type="text" placeholder=""></div>
+    <div class="ecrm-field"><label>Νομός</label><input type="text" placeholder=""></div>
+    <p class="caption">Ο νομός βρίσκεται πάντα (πλήρης πίνακας). Η πόλη λείπει από το grpostcodes για αυτό το ΤΚ -- δεν μαντεύουμε, το κουμπί γεμίζει μόνο τον νομό.</p>
+  </div>
+
+  <div class="demo">
+    <h2>4. Μετά το «Χρήση» (πεδία γεμάτα)</h2>
+    <div class="ecrm-field-with-suggest">
+      <div class="ecrm-field"><label>Ταχ. Κώδικας</label><input type="text" value="10431" placeholder="ΤΚ"></div>
+      <div class="ecrm-postal-suggest is-used">
+        <span>✓ Χρησιμοποιήθηκε</span>
+      </div>
+    </div>
+    <div class="ecrm-field"><label>Πόλη</label><input type="text" value="Πλατεία Ομόνοιας Αθήνα"></div>
+    <div class="ecrm-field"><label>Νομός</label><input type="text" value="Αττικής"></div>
+    <p class="caption">Το πεδίο παραμένει ελεύθερο κείμενο -- ο πωλητής μπορεί να το αλλάξει ελεύθερα μετά, όπως και πριν.</p>
+  </div>
+
+</div>
+
+<p class="caption">Το ίδιο ακριβώς μπλοκ (με ξεχωριστό «Χρήση» handler) εμφανίζεται 3 φορές στη φόρμα -- κατοικία, παροχή (αν όχι «ίδια με κατοικία»), χρέωση (αν όχι «ίδια με κατοικία») -- το καθένα δεμένο μόνο στα δικά του πεδία.</p>
+
+</body>
+</html>

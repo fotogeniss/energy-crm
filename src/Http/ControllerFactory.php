@@ -151,6 +151,7 @@ final class ControllerFactory
             new VatLookupController(),
             new QuoteController(),
             new GuaranteeSuggestController(new GuaranteeRuleRepository()),
+            new PostalSuggestController(),
         ];
     }
 }

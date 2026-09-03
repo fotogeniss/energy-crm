@@ -566,7 +566,13 @@ class ECRM_Shortcodes {
 					<?php $ecrm_field( 'street_no', 'Αριθμός' ); ?>
 					<?php // Τ.Κ μετακόμισε εδώ 25/08 (ζητήθηκε ρητά) — είναι
 					      // κομμάτι της διεύθυνσης, όχι της ταυτότητας του πελάτη. ?>
-					<?php $ecrm_field( 'postal_code', 'Τ.Κ', 'text', false, '', '', 'section-cust postal-code' ); ?>
+					<div class="ecrm-field-with-suggest">
+						<?php $ecrm_field( 'postal_code', 'Τ.Κ', 'text', false, '', '', 'section-cust postal-code' ); ?>
+						<div class="ecrm-postal-suggest" data-tk-suggest="cust" hidden>
+							<span data-tk-suggest-text="cust"></span>
+							<button type="button" class="ecrm-postal-suggest__btn" data-tk-suggest-use="cust" hidden>Χρήση</button>
+						</div>
+					</div>
 				</div>
 
 				<div class="ecrm-subhead">Επικοινωνία</div>
@@ -709,7 +715,13 @@ class ECRM_Shortcodes {
 				<div class="ecrm-grid" data-addr-fields="supply" hidden>
 					<?php $ecrm_field( 'supply_street', 'Οδός', 'text', false, '', '', 'section-supply shipping address-line1' ); ?>
 					<?php $ecrm_field( 'supply_street_no', 'Αριθμός' ); ?>
-					<?php $ecrm_field( 'supply_postal_code', 'Τ.Κ', 'text', false, '', '', 'section-supply shipping postal-code' ); ?>
+					<div class="ecrm-field-with-suggest">
+						<?php $ecrm_field( 'supply_postal_code', 'Τ.Κ', 'text', false, '', '', 'section-supply shipping postal-code' ); ?>
+						<div class="ecrm-postal-suggest" data-tk-suggest="supply" hidden>
+							<span data-tk-suggest-text="supply"></span>
+							<button type="button" class="ecrm-postal-suggest__btn" data-tk-suggest-use="supply" hidden>Χρήση</button>
+						</div>
+					</div>
 					<?php $ecrm_field( 'supply_city', 'Πόλη', 'text', false, '', '', 'section-supply shipping address-level2' ); ?>
 					<?php $ecrm_field( 'supply_region', 'Νομός', 'text', false, '', '', 'section-supply shipping address-level1' ); ?>
 				</div>
@@ -913,7 +925,13 @@ class ECRM_Shortcodes {
 				<div class="ecrm-grid" data-addr-fields="billing" hidden>
 					<?php $ecrm_field( 'billing_street', 'Οδός', 'text', false, '', '', 'section-bill billing address-line1' ); ?>
 					<?php $ecrm_field( 'billing_street_no', 'Αριθμός' ); ?>
-					<?php $ecrm_field( 'billing_postal_code', 'Τ.Κ', 'text', false, '', '', 'section-bill billing postal-code' ); ?>
+					<div class="ecrm-field-with-suggest">
+						<?php $ecrm_field( 'billing_postal_code', 'Τ.Κ', 'text', false, '', '', 'section-bill billing postal-code' ); ?>
+						<div class="ecrm-postal-suggest" data-tk-suggest="billing" hidden>
+							<span data-tk-suggest-text="billing"></span>
+							<button type="button" class="ecrm-postal-suggest__btn" data-tk-suggest-use="billing" hidden>Χρήση</button>
+						</div>
+					</div>
 					<?php $ecrm_field( 'billing_city', 'Πόλη', 'text', false, '', '', 'section-bill billing address-level2' ); ?>
 					<?php $ecrm_field( 'billing_region', 'Νομός', 'text', false, '', '', 'section-bill billing address-level1' ); ?>
 				</div>
