@@ -619,6 +619,23 @@
 .ecrm-guarantee-suggest__btn:hover { background: var(--accent-wash-2); }
 .ecrm-guarantee-suggest__btn[hidden] { display: none; }
 
+/* ---- Πρόταση ΤΚ→πόλη/νομός (CHANGELOG (216)) ----
+ * Μακέτα εγκεκριμένη: docs/UI-POSTAL-SUGGESTION.html, 03/09/2026.
+ * Ίδιο πρότυπο με .ecrm-guarantee-suggest -- δίπλα στο πεδίο, ΠΟΤΕ μέσα
+ * του. Τρία ανεξάρτητα instance (κατοικία/παροχή/χρέωση), keyed με
+ * data-tk-suggest="cust|supply|billing" -- δες ecrm-form.js. */
+.ecrm-postal-suggest { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: var(--fs-12); flex-wrap: wrap; }
+.ecrm-postal-suggest[hidden] { display: none; }
+.ecrm-postal-suggest__city { color: var(--accent-ink); font-weight: 700; }
+.ecrm-postal-suggest.is-used { color: var(--accent-ink); font-weight: 600; }
+.ecrm-postal-suggest__btn {
+	border: 1px solid var(--p500); background: var(--accent-wash); color: var(--accent-ink);
+	padding: 3px 10px; border-radius: 999px; font-family: inherit; font-size: var(--fs-11-5);
+	font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.ecrm-postal-suggest__btn:hover { background: var(--accent-wash-2); }
+.ecrm-postal-suggest__btn[hidden] { display: none; }
+
 /* Μόνιμη ετικέτα «AI» -- ξεχωριστή από το is-ai (στιγμιαία αναλαμπή, πάνω).
    Μπαίνει στο ίδιο σημείο του setField() που βάζει το is-ai, φεύγει όταν ο
    συνεργάτης αγγίξει το ΙΔΙΟ πεδίο (ecrm-form.js, listener στο 'input'). */

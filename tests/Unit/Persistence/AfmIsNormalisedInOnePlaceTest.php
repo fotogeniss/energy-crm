@@ -35,6 +35,11 @@ final class AfmIsNormalisedInOnePlaceTest extends TestCase
         'includes/class-ecrm-messaging.php' =>
             'normalize_phone(): τηλέφωνο, όχι ΑΦΜ. Άλλη έννοια, άλλοι κανόνες '
             . '(κωδικός χώρας, μήκος), και δεν μπαίνει σε blind index.',
+
+        'src/Domain/Address/PostalLookup.php' =>
+            'digits(): Ταχυδρομικός Κώδικας, όχι ΑΦΜ. Κόβει μη-ψηφία για να πάρει '
+            . 'το 5ψήφιο ΤΚ από ελεύθερο κείμενο (CHANGELOG (216)) -- δεν αγγίζει '
+            . 'afm_hash ούτε μπαίνει σε blind index.',
     ];
 
     /** Μια συμβολοσειρά που μοιάζει με regex και περιέχει \D. */
