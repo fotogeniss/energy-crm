@@ -87,6 +87,8 @@ final class DocumentProtection
      */
     public function onScheduledSweep(): void
     {
+        Heartbeat::mark(self::HOOK);
+
         $report = $this->sweep();
 
         if ($report['protected'] > 0) {

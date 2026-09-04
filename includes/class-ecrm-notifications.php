@@ -461,6 +461,8 @@ class ECRM_Notifications {
 
 	/** Daily digest: email each partner with open follow-ups. */
 	public static function run_digest(): void {
+		\EnergyCRM\Infrastructure\Heartbeat::mark( self::CRON_HOOK );
+
 		if ( class_exists( 'ECRM_Admin' ) && ! ECRM_Admin::get( 'notify_digest', '1' ) ) {
 			return;
 		}

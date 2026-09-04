@@ -69,6 +69,8 @@ final class Retention
      */
     public function onScheduledSweep(): void
     {
+        Heartbeat::mark(self::HOOK);
+
         $cleared = $this->sweep();
 
         if ($cleared > 0) {

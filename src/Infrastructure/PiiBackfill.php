@@ -197,6 +197,8 @@ final class PiiBackfill
      */
     public function onScheduledSweep(): void
     {
+        Heartbeat::mark(self::HOOK);
+
         $report = $this->sweep();
 
         if ($report['blocked'] !== null) {
