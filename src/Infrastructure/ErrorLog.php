@@ -143,6 +143,12 @@ final class ErrorLog
     /** @return string Ο κωδικός αναφοράς, π.χ. ECRM-7F32. */
     private function record(string $kind, string $message, string $file, int $line): string
     {
+        // Πριν από κάθε διακλάδωση: ο μετρητής της ημέρας μετράει ΣΥΜΒΑΝΤΑ, όχι
+        // κωδικούς. Ένα σφάλμα που επαναλαμβάνεται χίλιες φορές δεν φτιάχνει
+        // νέα εγγραφή εδώ (βλ. παρακάτω) -- στην τάση όμως πρέπει να φαίνεται
+        // ως χίλια, αλλιώς η χειρότερη μέρα μοιάζει με την ήσυχη.
+        Metrics::bump(Metrics::ERRORS);
+
         $entry = [
             'at'      => gmdate('Y-m-d H:i:s'),
             'kind'    => $kind,

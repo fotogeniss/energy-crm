@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<title>Παρακολούθηση — πρόταση οθόνης</title>
+<style>
+:root{
+	--n50:#111110; --n100:#1a1a18; --n150:#1f1f1c; --n200:#232320; --n300:#2a2926; --n400:#33322e;
+	--n500:#4d4b45; --n600:#8a887f; --n700:#a3a099; --n800:#c6c4bd; --n900:#dedcd7; --n950:#f1f1ee;
+	--p300:#6bdd6d; --p400:#16c217; --p500:#12a413; --p600:#0e8610;
+	--warn:#ffb682; --bad:#fb8a91; --info:#79afec; --ok:#8cc792;
+	--font:"Manrope","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#0b0b0a;color:var(--n900);font-family:var(--font);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:36px 24px 80px}
+.doc{max-width:900px;margin:0 auto 30px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--p400);margin-bottom:8px}
+h1{font-size:24px;margin:0 0 14px;letter-spacing:-.01em}
+h2.sec{font-size:15px;margin:34px 0 10px;color:var(--n950)}
+p{font-size:14px;line-height:1.65;color:var(--n800);margin:0 0 14px}
+code{background:var(--n200);border-radius:4px;padding:1px 5px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+b{color:var(--n950)}
+.note{background:var(--n150);border:1px solid var(--n300);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--n800);margin:0 0 14px;line-height:1.6}
+.note--warn{background:#231a14;border-color:#4a3520;color:var(--warn)}
+.note--ok{background:#132114;border-color:#25401f;color:var(--ok)}
+
+/* ---- το κέλυφος της οθόνης ---- */
+.screen{background:var(--n50);border:1px solid var(--n300);border-radius:16px;padding:22px;margin:0 0 30px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+.head__eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--n600)}
+.head__t{font-size:22px;font-weight:700;color:var(--n950);margin:4px 0 2px;letter-spacing:-.01em}
+.head__s{font-size:13px;color:var(--n700)}
+.range{display:flex;background:var(--n150);border:1px solid var(--n300);border-radius:999px;padding:3px}
+.range__b{font:inherit;font-size:12px;font-weight:600;color:var(--n700);background:none;border:0;border-radius:999px;padding:6px 14px;cursor:pointer}
+.range__b.is-on{background:var(--p400);color:#0b3d0c}
+
+.group{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--n600);margin:26px 0 12px;display:flex;align-items:center;gap:10px}
+.group:first-of-type{margin-top:6px}
+.group::after{content:"";flex:1;height:1px;background:var(--n300)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--n100);border:1px solid var(--n300);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--n500)}
+.stat.is-ok::before{background:var(--p400)}
+.stat.is-warn::before{background:var(--warn)}
+.stat.is-bad::before{background:var(--bad)}
+.stat__k{font-size:11.5px;font-weight:600;color:var(--n700);margin-bottom:6px}
+.stat__v{font-size:26px;font-weight:700;color:var(--n950);letter-spacing:-.02em;line-height:1.1}
+.stat__d{font-size:11px;color:var(--n600);margin-top:4px}
+.stat__d.up{color:var(--bad)}
+.stat__d.down{color:var(--ok)}
+
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+.card{background:var(--n100);border:1px solid var(--n300);border-radius:12px;padding:16px;margin-bottom:14px}
+.card__t{font-size:12px;font-weight:700;color:var(--n800);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.card__t span{text-transform:none;letter-spacing:0;font-weight:600;color:var(--n600);font-size:11.5px}
+
+/* ---- trend (ίδιο σχήμα με .ecrm-trend) ---- */
+.trend{display:flex;align-items:flex-end;gap:3px;height:120px}
+.trend__col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:6px}
+.trend__bar{background:var(--p500);border-radius:3px 3px 0 0;min-height:3px}
+.trend__bar.is-err{background:var(--bad)}
+.trend__bar.is-zero{background:var(--n400)}
+.axis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--n600);margin-top:8px}
+
+/* ---- heatmap cron ---- */
+.hm{display:grid;grid-template-columns:150px 1fr;gap:10px 12px;align-items:center}
+.hm__lbl{font-size:12px;color:var(--n800);font-weight:600}
+.hm__row{display:flex;gap:3px}
+.hm__c{flex:1;height:20px;border-radius:3px;background:var(--p500)}
+.hm__c.is-miss{background:var(--bad)}
+.hm__c.is-none{background:var(--n300)}
+.legend{display:flex;gap:16px;font-size:11.5px;color:var(--n700);margin-top:14px;align-items:center}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* ---- barlist (ίδιο σχήμα με .ecrm-barlist) ---- */
+.bar{display:grid;grid-template-columns:120px 1fr 44px;gap:10px;align-items:center;margin-bottom:8px}
+.bar__l{font-size:12.5px;color:var(--n800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar__t{height:8px;background:var(--n300);border-radius:999px;overflow:hidden}
+.bar__f{height:100%;background:var(--p400);border-radius:999px}
+.bar__v{font-size:12px;color:var(--n700);text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---- backup strip ---- */
+.strip{display:flex;gap:3px;align-items:flex-end;height:44px}
+.strip__d{flex:1;height:14px;border-radius:3px;background:var(--n300)}
+.strip__d.has{height:34px;background:var(--p400)}
+.strip__d.gap{background:var(--warn)}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--n600);padding:0 0 8px;font-weight:700}
+td{padding:8px 0;border-top:1px solid var(--n300);color:var(--n900)}
+td.r{text-align:right;font-variant-numeric:tabular-nums;color:var(--n700)}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
+.badge--ok{background:#173d1a;color:var(--p300)}
+.badge--bad{background:#3d1a1d;color:var(--bad)}
+.badge--warn{background:#3d2e1a;color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="doc">
+	<div class="eyebrow">Πρόταση οθόνης — §1.8, πριν γραφτεί κώδικας</div>
+	<h1>Energy CRM → Παρακολούθηση</h1>
+
+	<p>Η <b>Υγεία</b> απαντά «τι δεν πάει καλά <i>αυτή τη στιγμή</i>». Δεν απαντά
+	«πάει καλύτερα ή χειρότερα από την περασμένη εβδομάδα;» — και αυτή είναι
+	διαφορετική ερώτηση, με διαφορετική απάντηση: μια πράσινη Υγεία μπορεί να
+	κρύβει ένα cron που αστοχεί μία στις τρεις φορές, ή σφάλματα που τριπλασιάστηκαν
+	από τότε που άλλαξε κάτι.</p>
+
+	<div class="note note--warn"><b>Τι μετρήθηκε πριν προταθεί αυτό.</b>
+	Το <code>ErrorLog</code> κρατά μόνο την τελευταία εμφάνιση κάθε κωδικού με έναν
+	μετρητή — όχι <i>πότε</i>. Το <code>Heartbeat</code> (235) κρατά μόνο το τελευταίο
+	run κάθε hook. Το <code>BackupState</code> (233) μόνο το τελευταίο αντίγραφο. Το
+	rate-limit ζει σε transient που λήγει. <b>Πουθενά στο plugin δεν υπάρχει ιστορικό
+	λειτουργίας.</b> Άρα το πάνω μισό αυτής της οθόνης δεν μπορεί να χτιστεί από
+	υπάρχοντα δεδομένα — χρειάζεται νέα, μικρή αποθήκευση.</div>
+
+	<div class="note note--ok"><b>Τι ΔΕΝ χρειάζεται νέα αποθήκευση.</b>
+	Το κάτω μισό (πωλήσεις). Ο πίνακας <code>contracts</code> έχει ήδη
+	<code>created_at</code> και ιστορικό καταστάσεων στον <code>events</code>· το
+	<code>AnalyticsRepository</code> ήδη βγάζει μηνιαία σύνολα. Η διαφορά με την
+	υπάρχουσα οθόνη <b>Στατιστικά</b> είναι η σκοπιά: εκείνη δείχνει «δικά μου / της
+	ομάδας μου», αυτή δείχνει <b>όλο το site</b> και τη βλέπει μόνο ο διαχειριστής.
+	Καμία διπλή υλοποίηση: ίδιο repository, άλλο scope.</div>
+
+	<p><b>Γιατί μόνο τόσα γραφήματα.</b> Το <code>energy-crm-product-bottleneck.md</code>
+	λέει «μία ειδοποίηση αξίζει όσο δέκα νέα γραφήματα». Ισχύει — γι' αυτό κάθε
+	πλαίσιο εδώ απαντά σε ερώτηση που κάποιος <i>θα έκανε</i> («αστοχεί το cron;»,
+	«πότε ήταν το τελευταίο κενό στα backup;», «ανεβαίνουν τα σφάλματα;») και όχι σε
+	ερώτηση που δείχνει ωραία. Τέσσερα πλαίσια σύστημα, τρία πωλήσεις. Τίποτα με
+	πίτες, τίποτα με «engagement».</p>
+</div>
+
+<div class="screen">
+	<div class="head">
+		<div>
+			<div class="head__eyebrow">Διοίκηση</div>
+			<div class="head__t">Παρακολούθηση</div>
+			<div class="head__s">Τάσεις λειτουργίας και πωλήσεων σε όλο το site</div>
+		</div>
+		<div class="range">
+			<button class="range__b" type="button">7 ημ.</button>
+			<button class="range__b is-on" type="button">30 ημ.</button>
+			<button class="range__b" type="button">90 ημ.</button>
+		</div>
+	</div>
+
+	<div class="group">Σύστημα</div>
+
+	<div class="stats">
+		<div class="stat is-ok"><div class="stat__k">Σφάλματα (30 ημ.)</div><div class="stat__v">14</div><div class="stat__d down">−38% από την προηγούμενη περίοδο</div></div>
+		<div class="stat is-warn"><div class="stat__k">Επιτυχία cron</div><div class="stat__v">96,7%</div><div class="stat__d">4 αστοχίες στις 120 εκτελέσεις</div></div>
+		<div class="stat is-ok"><div class="stat__k">Τελευταίο backup</div><div class="stat__v">Χθες</div><div class="stat__d">28 από 30 ημέρες καλυμμένες</div></div>
+		<div class="stat is-ok"><div class="stat__k">Ημέρες χωρίς σφάλμα</div><div class="stat__v">6</div><div class="stat__d">τελευταίο: ECRM-7F32</div></div>
+	</div>
+
+	<div class="card">
+		<div class="card__t">Σφάλματα ανά ημέρα <span>κάθε καταγραφή του ErrorLog, όχι μόνο νέοι κωδικοί</span></div>
+		<div class="trend" id="t-err"></div>
+		<div class="axis"><span>6 Αυγ</span><span>13 Αυγ</span><span>20 Αυγ</span><span>27 Αυγ</span><span>4 Σεπ</span></div>
+	</div>
+
+	<div class="card">
+		<div class="card__t">Αξιοπιστία προγραμματισμένων εργασιών <span>μία στήλη ανά ημέρα</span></div>
+		<div class="hm">
+			<div class="hm__lbl">Διατήρηση</div><div class="hm__row" data-hm="0"></div>
+			<div class="hm__lbl">Προστασία αρχείων</div><div class="hm__row" data-hm="1"></div>
+			<div class="hm__lbl">Κρυπτογράφηση PII</div><div class="hm__row" data-hm="2"></div>
+			<div class="hm__lbl">Ημερήσια σύνοψη</div><div class="hm__row" data-hm="3"></div>
+		</div>
+		<div class="legend">
+			<span><i style="background:#12a413"></i>Έτρεξε</span>
+			<span><i style="background:#fb8a91"></i>Δεν έτρεξε</span>
+			<span><i style="background:#2a2926"></i>Χωρίς δεδομένα</span>
+		</div>
+	</div>
+
+	<div class="card">
+		<div class="card__t">Κάλυψη αντιγράφων ασφαλείας <span>μία στήλη ανά ημέρα· κίτρινο = κενό &gt; 1 ημέρας</span></div>
+		<div class="strip" id="t-bk"></div>
+		<div class="axis"><span>6 Αυγ</span><span>μεγαλύτερο κενό: 3 ημέρες (17–19 Αυγ)</span><span>4 Σεπ</span></div>
+	</div>
+	<div class="group">Πωλήσεις — όλο το site</div>
+
+	<div class="stats">
+		<div class="stat is-ok"><div class="stat__k">Νέες αιτήσεις (30 ημ.)</div><div class="stat__v">218</div><div class="stat__d down">+12% από την προηγούμενη περίοδο</div></div>
+		<div class="stat is-ok"><div class="stat__k">Conversion</div><div class="stat__v">41,3%</div><div class="stat__d">90 ενεργοποιήσεις</div></div>
+		<div class="stat is-warn"><div class="stat__k">Ακυρώσεις</div><div class="stat__v">11,0%</div><div class="stat__d up">+3,1 μονάδες</div></div>
+		<div class="stat is-ok"><div class="stat__k">Μέσος χρόνος ενεργοπ.</div><div class="stat__v">8,4 ημ.</div><div class="stat__d down">−1,2 ημέρες</div></div>
+	</div>
+
+	<div class="card">
+		<div class="card__t">Νέες αιτήσεις ανά ημέρα <span>όλοι οι συνεργάτες</span></div>
+		<div class="trend" id="t-app"></div>
+		<div class="axis"><span>6 Αυγ</span><span>13 Αυγ</span><span>20 Αυγ</span><span>27 Αυγ</span><span>4 Σεπ</span></div>
+	</div>
+
+	<div class="cols">
+		<div class="card" style="margin:0">
+			<div class="card__t">Ανά πάροχο <span>30 ημέρες</span></div>
+			<div class="bar"><div class="bar__l">Πρωτεργάτης</div><div class="bar__t"><div class="bar__f" style="width:100%"></div></div><div class="bar__v">86</div></div>
+			<div class="bar"><div class="bar__l">ΔΕΗ</div><div class="bar__t"><div class="bar__f" style="width:72%"></div></div><div class="bar__v">62</div></div>
+			<div class="bar"><div class="bar__l">Orizon</div><div class="bar__t"><div class="bar__f" style="width:44%"></div></div><div class="bar__v">38</div></div>
+			<div class="bar"><div class="bar__l">Ήρων</div><div class="bar__t"><div class="bar__f" style="width:22%"></div></div><div class="bar__v">19</div></div>
+			<div class="bar"><div class="bar__l">Λοιποί</div><div class="bar__t"><div class="bar__f" style="width:15%"></div></div><div class="bar__v">13</div></div>
+		</div>
+		<div class="card" style="margin:0">
+			<div class="card__t">Συνεργάτες χωρίς κίνηση <span>καμία αίτηση 30 ημέρες</span></div>
+			<table>
+				<thead><tr><th>Συνεργάτης</th><th>Ομάδα</th><th class="r">Τελευταία</th></tr></thead>
+				<tbody>
+					<tr><td>Γ. Παπαδόπουλος</td><td>Θεσσαλία</td><td class="r">41 ημ.</td></tr>
+					<tr><td>Μ. Ιωάννου</td><td>Αττική Β΄</td><td class="r">37 ημ.</td></tr>
+					<tr><td>Κ. Δήμου</td><td>Θεσσαλία</td><td class="r">33 ημ.</td></tr>
+					<tr><td>Α. Νικολάου</td><td>Αττική Α΄</td><td class="r">31 ημ.</td></tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<div class="doc">
+	<h2 class="sec">Πώς κρατιέται το ιστορικό (η μόνη αρχιτεκτονική απόφαση εδώ)</h2>
+
+	<p>Νέος πίνακας <code>{prefix}ecrm_metrics</code>, τρεις στήλες:
+	<code>day DATE</code>, <code>metric VARCHAR(40)</code>, <code>value INT</code>, με
+	<code>PRIMARY KEY (day, metric)</code>. Η εγγραφή γίνεται πάντα με ένα
+	<code>INSERT … ON DUPLICATE KEY UPDATE value = value + N</code> — <b>ατομική στη
+	MySQL</b>, χωρίς read-modify-write, άρα χωρίς την κούρσα που θα είχε ένα option με
+	πίνακα 90 ημερών μέσα του.</p>
+
+	<div class="note"><b>Γιατί όχι option.</b> Ένα <code>ecrm_metrics_history</code>
+	option θα χρειαζόταν διάβασμα-τροποποίηση-γράψιμο σε κάθε σφάλμα και σε κάθε cron·
+	δύο ταυτόχρονα requests θα έχαναν το ένα τη μέτρηση του άλλου, σιωπηλά. Και η
+	ερώτηση «πόσα σφάλματα την ημέρα Χ» θα γινόταν PHP loop πάνω σε ολόκληρο το
+	ιστορικό αντί για ένα <code>WHERE day BETWEEN</code>.</div>
+
+	<p><b>Όγκος:</b> ~6 metrics × 1 γραμμή/ημέρα = <b>~2.200 γραμμές/έτος</b>. Η
+	διατήρηση (180 ημέρες, φιλτραρίσιμο) μπαίνει στο ήδη υπάρχον ημερήσιο σάρωμα
+	<code>Retention</code> — καμία νέα cron εργασία.</p>
+
+	<p><b>Πού γράφεται (τρία σημεία, μία γραμμή το καθένα):</b>
+	<code>ErrorLog::record()</code> → <code>errors</code>·
+	<code>Heartbeat::mark()</code> → <code>cron:&lt;hook&gt;</code>·
+	<code>BackupState::record()</code> → <code>backup</code>. Καμία αλλαγή στη
+	συμπεριφορά τους — μόνο μία επιπλέον καταγραφή.</p>
+
+	<div class="note"><b>Καμία νέα κατηγορία δεδομένων για το GDPR.</b> Ο πίνακας
+	κρατά μόνο αριθμούς ανά ημέρα. Κανένα user_id, καμία διαδρομή, κανένα μήνυμα —
+	τίποτα που να συνδέεται με πρόσωπο, άρα τίποτα να εξαχθεί ή να διαγραφεί.</div>
+
+	<p><b>Πού ζει η οθόνη:</b> wp-admin, υπομενού δίπλα στην Υγεία,
+	<code>manage_options</code> — όπως η Υγεία. Το πάνω μισό είναι εσωτερικά του
+	συστήματος και δεν έχει λόγο να φαίνεται σε συνεργάτη· το κάτω μισό είναι
+	<i>όλο</i> το site, δηλαδή ούτως ή άλλως όψη ιδιοκτήτη.</p>
+
+	<h2 class="sec">Τι ΔΕΝ μπαίνει, και γιατί</h2>
+	<div class="note">
+	<b>Ζωντανό «τι τρέχει τώρα».</b> Θα ήθελε polling ή WebSocket για ερώτηση που η
+	Υγεία ήδη απαντά με ένα refresh.<br>
+	<b>Γραφήματα rate-limit.</b> Το rate-limit χτυπά όταν κάποιος κάνει κατάχρηση —
+	αυτό είναι <i>ειδοποίηση</i>, όχι γράφημα· ανήκει στη λογική του (234).<br>
+	<b>Πίτες κατανομών.</b> Οι κατανομές υπάρχουν ήδη στα Στατιστικά, ως μπάρες που
+	διαβάζονται. Δεύτερο αντίγραφο σε άλλο σχήμα δεν προσθέτει πληροφορία.<br>
+	<b>Εξαγωγή σε CSV.</b> Πριν ζητηθεί. Αν χρειαστεί, είναι μία διαδρομή REST πάνω
+	στον ίδιο πίνακα.
+	</div>
+</div>
+</div>
+
+<script>
+/* Δείγμα δεδομένων μόνο για το mockup — τίποτα από αυτά δεν είναι πραγματικό. */
+var errDays = [0,0,1,0,2,0,0,0,3,1,0,0,0,0,5,2,0,0,0,1,0,0,0,0,0,2,1,0,0,0];
+var appDays = [4,7,9,6,3,0,1,8,11,9,7,5,0,2,10,12,8,6,9,1,0,7,13,10,8,6,2,0,9,11];
+function bars(el, vals, cls){
+	var max = Math.max.apply(null, vals) || 1;
+	el.innerHTML = vals.map(function(v){
+		var h = Math.round(100 * v / max);
+		return '<div class="trend__col"><div class="trend__bar ' + (v ? cls : 'is-zero') +
+			'" style="height:' + Math.max(3, h) + '%"></div></div>';
+	}).join('');
+}
+bars(document.getElementById('t-err'), errDays, 'is-err');
+bars(document.getElementById('t-app'), appDays, '');
+
+/* cron: 4 σειρές × 30 ημέρες. Οι αστοχίες είναι σκόπιμες, για να φανεί το σχήμα. */
+var miss = {0:[11],1:[],2:[4,5,18],3:[]};
+document.querySelectorAll('[data-hm]').forEach(function(row){
+	var k = row.getAttribute('data-hm');
+	var out = '';
+	for (var d = 0; d < 30; d++) {
+		var cls = d < 3 ? 'is-none' : (miss[k].indexOf(d) > -1 ? 'is-miss' : '');
+		out += '<div class="hm__c ' + cls + '"></div>';
+	}
+	row.innerHTML = out;
+});
+
+/* backup: μία στήλη ανά ημέρα, με ένα κενό 3 ημερών */
+var bkGap = [11,12,13];
+var bk = '';
+for (var d = 0; d < 30; d++) {
+	bk += '<div class="strip__d ' + (bkGap.indexOf(d) > -1 ? 'gap' : 'has') + '"></div>';
+}
+document.getElementById('t-bk').innerHTML = bk;
+</script>
+</body>
+</html>
