@@ -20,6 +20,7 @@ use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Admin\FormCalibrator;
 use EnergyCRM\Admin\HealthPage;
+use EnergyCRM\Admin\MonitoringPage;
 use EnergyCRM\Admin\PrivacyTools;
 use EnergyCRM\Http\ControllerFactory;
 use EnergyCRM\Http\Router;
@@ -27,10 +28,12 @@ use EnergyCRM\Infrastructure\DocumentProtection;
 use EnergyCRM\Infrastructure\ErrorLog;
 use EnergyCRM\Infrastructure\HealthChecks;
 use EnergyCRM\Infrastructure\KeyFingerprint;
+use EnergyCRM\Infrastructure\MonitoringReport;
 use EnergyCRM\Infrastructure\PiiBackfill;
 use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 use EnergyCRM\Persistence\CustomerFields;
+use EnergyCRM\Persistence\MetricsRepository;
 use EnergyCRM\Persistence\PersonalDataEraser;
 use EnergyCRM\Persistence\PersonalDataExporter;
 use EnergyCRM\Persistence\PiiBackfillRepository;
@@ -159,6 +162,14 @@ final class Plugin
             // Tools → Export/Erase Personal Data. Admin-only, and admin-ajax
             // counts as admin, which is where WordPress actually runs them.
             (new HealthPage(new HealthChecks(), new ErrorLog()))->register();
+
+            // Αδελφή σελίδα της Υγείας: εκείνη λέει «τι δεν πάει καλά τώρα»,
+            // αυτή «σε σχέση με πριν». Ίδιο δικαίωμα, ίδιο κέλυφος.
+            (new MonitoringPage(new MonitoringReport(
+                new MetricsRepository(),
+                Services::analytics(),
+                Services::scopeResolver()
+            )))->register();
 
             (new PrivacyTools(
                 new PersonalDataExporter(),

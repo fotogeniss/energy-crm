@@ -148,3 +148,50 @@ html.wp-toolbar, #wpcontent, #wpbody, #wpbody-content { background: var(--bg); }
 	background: var(--surface); border-color: var(--line); color: var(--ink); box-shadow: none; text-shadow: none;
 }
 .ecrm-adminwrap .button:hover { border-color: var(--line-strong); color: var(--navy); }
+
+/* ── Παρακολούθηση ──────────────────────────────────────────────────────────
+ *
+ * Δύο σχήματα που δεν υπάρχουν αλλού στην εφαρμογή, γι' αυτό ζουν εδώ και όχι
+ * στο ecrm-app.css: η οθόνη είναι μόνο wp-admin (`manage_options`) και το
+ * frontend δεν έχει λόγο να κατεβάζει CSS που δεν χρησιμοποιεί ποτέ.
+ *
+ * Καμία νέα τιμή χρώματος -- τα ίδια tokens κατάστασης με τα badge, ώστε το
+ * πράσινο να σημαίνει το ίδιο πράγμα εδώ και στην Υγεία.
+ *
+ * Οι μπάρες τάσης (`.ecrm-trend`) και οι λίστες (`.ecrm-barlist`) είναι ήδη
+ * ορισμένες στο ecrm-app.css και επαναχρησιμοποιούνται όπως έχουν. */
+
+/* Θερμοχάρτης εργασιών: μία στήλη ανά ημέρα, μία γραμμή ανά εργασία. */
+.ecrm-hm { display: grid; grid-template-columns: 220px 1fr; gap: 8px 14px; align-items: center; }
+.ecrm-hm__lbl { font-size: var(--fs-12-5); font-weight: 600; color: var(--ink); }
+.ecrm-hm__row { display: flex; gap: 2px; }
+.ecrm-hm__c { flex: 1; height: 18px; border-radius: 3px; background: var(--st-active); }
+.ecrm-hm__c.is-miss { background: var(--st-cancel); }
+.ecrm-hm__c.is-none { background: var(--line); }
+
+/* Κάλυψη αντιγράφων: ψηλή στήλη = υπάρχει, χαμηλή = κενό. Δύο κανάλια
+ * (ύψος ΚΑΙ χρώμα), για τον ίδιο λόγο που τα badge έχουν και γλυφή. */
+.ecrm-strip { display: flex; gap: 2px; align-items: flex-end; height: 32px; }
+.ecrm-strip__d { flex: 1; height: 11px; border-radius: 3px; background: var(--line); }
+.ecrm-strip__d.has { height: 28px; background: var(--st-active); }
+
+.ecrm-legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px;
+	font-size: var(--fs-12); color: var(--muted); }
+.ecrm-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+	margin-right: 6px; vertical-align: -1px; }
+.ecrm-legend i.is-ok { background: var(--st-active); }
+.ecrm-legend i.is-miss { background: var(--st-cancel); }
+.ecrm-legend i.is-none { background: var(--line); }
+
+/* Αξονας κάτω από γράφημα: αριστερά η παλαιότερη ημέρα, δεξιά η σημερινή. */
+.ecrm-axisnote { display: flex; justify-content: space-between; gap: 12px;
+	margin-top: 10px; font-size: var(--fs-11); color: var(--muted); }
+
+/* Σφάλματα: το μόνο γράφημα όπου το ψηλό είναι κακό. */
+.ecrm-trend__bar.is-err { background: var(--st-cancel); }
+
+/* Χωρίστρα ενότητας μέσα στη σελίδα (Σύστημα / Πωλήσεις). */
+.ecrm-secline { display: flex; align-items: center; gap: 12px; margin: 26px 0 12px;
+	font-size: var(--fs-11); font-weight: 700; letter-spacing: .12em;
+	text-transform: uppercase; color: var(--muted); }
+.ecrm-secline::after { content: ""; flex: 1; height: 1px; background: var(--line); }
