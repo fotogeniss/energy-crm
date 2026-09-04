@@ -91,6 +91,19 @@ class ECRM_Providers {
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaHomePlans::all() as $code => $plan ) {
 						$starters[] = [ $plan['label'], $code, 'power', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'] ];
 					}
+				} elseif ( $row['slug'] === 'volton' ) {
+					// Η Volton δίνει 23 προγράμματα, σε ρεύμα ΚΑΙ σε αέριο, και σε
+					// τρεις κατηγορίες. Το γενικό «Σταθερό Οικιακό» δεν αντιστοιχεί
+					// σε κανένα τιμολόγιό της, και το γενικό μονοπάτι δεν φτιάχνει
+					// ποτέ γραμμή αερίου — άρα η μισή δουλειά της έμενε χωρίς
+					// επιλογή στο dropdown. Έβδομο στοιχείο η κατηγορία: μόνο αυτός
+					// ο κατάλογος έχει προγράμματα εκτός «home».
+					foreach ( \EnergyCRM\Domain\Forms\VoltonPlans::all() as $code => $plan ) {
+						$starters[] = [
+							$plan['label'], $code, $plan['energyType'], $plan['priceType'],
+							$plan['fixedCharge'], $plan['priceKwh'], $plan['category'],
+						];
+					}
 				} elseif ( str_contains( $row['energy_types'], 'power' ) ) {
 					$starters[] = [ 'Σταθερό Οικιακό', '', 'power' ];
 				}
@@ -115,7 +128,7 @@ class ECRM_Providers {
 							'name'         => $name,
 							'code'         => $code !== '' ? $code : null,
 							'energy_type'  => $energy,
-							'category'     => 'home',
+							'category'     => $starter[6] ?? 'home',
 							'price_type'   => $starter[3] ?? 'fixed',
 							'fixed_charge' => $starter[4] ?? null,
 							'price_kwh'    => $starter[5] ?? null,
