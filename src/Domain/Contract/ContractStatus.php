@@ -104,8 +104,16 @@ enum ContractStatus: string
                 self::Processing, self::Pending, self::Resolved, self::Routed,
                 self::PendingSignature, self::Cancelled,
             ],
+            // PendingSignature προστέθηκε 04/09: το Processing κάθεται ΑΝΑΜΕΣΑ
+            // στο Signed και στο Routed -- και τα δύο ήδη επιτρέπουν επιστροφή
+            // σε PendingSignature για δεύτερη υπογραφή (βλ. σχόλια εκεί). Μια
+            // COMBO αίτηση που προήχθη αυτόματα σε Processing (AutoProcess,
+            // 5 λεπτά μετά το Signed) μπορεί ακόμα γνήσια να χρειάζεται
+            // δεύτερη υπογραφή -- το ξέχασμα αυτής της μίας γραμμής ήταν
+            // ό,τι εμπόδιζε τον SignLinkController::create() να τη στείλει.
             self::Processing => [
                 self::Pending, self::Resolved, self::Routed, self::Active, self::Cancelled, self::Rejected,
+                self::PendingSignature,
             ],
             self::Pending => [
                 self::Processing, self::Resolved, self::Routed, self::Cancelled, self::Rejected,
