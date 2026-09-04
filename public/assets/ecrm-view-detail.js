@@ -262,10 +262,22 @@ function renderDetail(view, d) {
 	// ξεσυγχρονιστεί.
 	var checks = [
 		{ ok: !!(c.afm && c.adt),  txt: 'Στοιχεία ταυτότητας' },
-		{ ok: !!c.program_name,    txt: 'Πρόγραμμα' },
-		{ ok: !!c.signed_at,       txt: 'Υπογραφή πελάτη' },
-		{ ok: !!c.consent_at,      txt: 'Συναίνεση GDPR' }
+		{ ok: !!c.program_name,    txt: 'Πρόγραμμα' }
 	];
+	// COMBO με δύο πρόσωπα (3β-Γ, 04/09): δύο γραμμές αντί για μία, ΜΟΝΟ όταν
+	// το `signatures` φτάνει από τον server -- δηλαδή μόνο όταν χρειάζονται
+	// πράγματι δύο ρόλοι (βλ. ContractsReadController::show(), το πεδίο
+	// μπαίνει πάντα εκεί, ΟΧΙ υπό συνθήκη σαν στη λίστα). Κάθε άλλη αίτηση
+	// μένει με τη μία ιστορική γραμμή, byte-for-byte ίδια με πριν.
+	if (c.signatures && c.signatures.required && c.signatures.required.length > 1) {
+		checks.push(
+			{ ok: c.signatures.collected.indexOf('mobile') !== -1, txt: 'Υπογραφή πελάτη κινητής' },
+			{ ok: c.signatures.collected.indexOf('energy') !== -1, txt: 'Υπογραφή πελάτη ενέργειας' }
+		);
+	} else {
+		checks.push({ ok: !!c.signed_at, txt: 'Υπογραφή πελάτη' });
+	}
+	checks.push({ ok: !!c.consent_at, txt: 'Συναίνεση GDPR' });
 	// «Αριθμός παροχής» μπαίνει μόνο για ρεύμα/αέριο — 2026-08-24: καμία
 	// φόρμα Orizon δεν συλλέγει/τυπώνει supply_number (ίδιος λόγος με την
 	// απόκρυψη του πεδίου στην κάρτα «Διεύθυνση» παραπάνω, (112)). Χωρίς
@@ -289,7 +301,37 @@ function renderDetail(view, d) {
 	   κλήση: το `signed_at` και το `signed_ip` είναι στήλες του πίνακα
 	   (EnsureLegacyColumns), γράφονται από το `applyTransition()` μέσω του
 	   WritableColumns, και ταξιδεύουν ήδη με το `SELECT c.*` της findDetailed(). */
-	var auditCard = c.signed_at
+	// COMBO με δύο πρόσωπα (3β-Γ): η κάρτα δείχνει ΔΥΟ γραμμές, μία ανά ρόλο,
+	// αντί να περιμένει το `signed_at` της σύμβασης -- που πλέον σημαίνει
+	// «υπέγραψαν όλοι» (§ SignatureRoles::isComplete()) και θα έμενε σιωπηλός
+	// για όσο λείπει ο δεύτερος. Καμία ώρα/IP ανά πρόσωπο -- αποφασίστηκε
+	// ρητά 04/09: αρκεί το ✓/αναμονή, δεν ταξιδεύει ξεχωριστή ώρα ανά
+	// υπογραφή σήμερα (δες docs/UI-COMBO-SIGN-STATUS.html, ερώτημα 1).
+	var twoRoles = c.signatures && c.signatures.required && c.signatures.required.length > 1;
+	var sigRows = '';
+	if (twoRoles) {
+		var mobileName = c.company_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || 'Πελάτης κινητής';
+		var energyName = (c.extra && c.extra.combo_energy_name) || 'Πελάτης ενέργειας';
+		[
+			{ role: 'mobile', who: mobileName, sub: 'πελάτης κινητής' },
+			{ role: 'energy', who: energyName, sub: 'πελάτης ενέργειας' }
+		].forEach(function (p) {
+			var signed = c.signatures.collected.indexOf(p.role) !== -1;
+			sigRows += '<div class="ecrm-sigrow' + (signed ? ' is-ok' : ' is-wait') + '">' +
+				'<span class="ecrm-sigrow__m">' + (signed ? '✓' : '○') + '</span>' +
+				'<span class="ecrm-sigrow__who"><b>' + esc(p.who) + '</b><small>' + esc(p.sub) + '</small></span>' +
+				'</div>';
+		});
+	}
+
+	var auditCard = twoRoles
+		? '<div class="ecrm-card ecrm-rcard--audit">' +
+			'<div class="ecrm-step">Υπογραφές &nbsp;<b>' + c.signatures.collected.length + ' από ' + c.signatures.required.length + '</b></div>' +
+			sigRows +
+			'<div class="ecrm-rcard__status">Κατάσταση <span class="ecrm-badge ecrm-badge--' +
+			esc(c.status) + '">' + esc(statuses[c.status] || c.status) + '</span></div>' +
+			'</div>'
+		: c.signed_at
 		? '<div class="ecrm-card ecrm-rcard--audit">' +
 			'<div class="ecrm-step">Υπογραφή &nbsp;<b>\u2713</b></div>' +
 			kv('Ώρα', signStamp(c.signed_at)) +
@@ -538,7 +580,12 @@ function renderDetail(view, d) {
 	var WHY = {
 		no_provider: 'Δεν έχει ρυθμιστεί πάροχος — Ρυθμίσεις → Μηνύματα',
 		no_mobile:   'Ο πελάτης δεν έχει κινητό καταχωρημένο',
-		no_email:    'Ο πελάτης δεν έχει email καταχωρημένο'
+		no_email:    'Ο πελάτης δεν έχει email καταχωρημένο',
+		// 3β-Γ: ίδιος λόγος με το SignLinkController::reason() στο PHP --
+		// ένα σημείο κειμένου θα ήταν καλύτερο, αλλά αυτό το αρχείο δεν έχει
+		// σήμερα καμία διαδρομή να διαβάσει PHP σταθερές· ίδιο κείμενο,
+		// αντιγραμμένο ρητά, όχι εφευρημένο.
+		sms_energy_unsupported: 'Δεν υποστηρίζεται ακόμα για τον πελάτη ενέργειας — χρησιμοποίησε Email ή Σύνδεσμο'
 	};
 
 	/* Η μνήμη του διαλόγου: τι έφυγε την προηγούμενη φορά.
@@ -560,32 +607,75 @@ function renderDetail(view, d) {
 	var signBtn = view.querySelector('[data-sign]');
 	if (signBtn) signBtn.addEventListener('click', function () {
 		var b = this;
-		var comms = c.comms || { sms: { ok: false }, email: { ok: false }, link: { ok: true } };
 		var prev = lastSend();
 
-		/* Προεπιλογή: το καλύτερο διαθέσιμο — αλλά ΟΧΙ αυτό που μόλις δοκιμάστηκε.
-		   Αν το Viber δεν έπιασε δύο ώρες, το δεύτερο Viber δεν είναι η απάντηση. */
-		var order = ['sms', 'email', 'link'];
-		var chosen = '';
-		order.forEach(function (k) {
-			if (chosen) { return; }
-			if (!(comms[k] && comms[k].ok)) { return; }
-			if (prev && prev.channel === k && order.some(function (o) { return o !== k && comms[o] && comms[o].ok; })) { return; }
-			chosen = k;
-		});
-		if (!chosen) { chosen = 'link'; }
+		// 3β-Γ, 04/09: COMBO με δύο πρόσωπα δείχνει επιλογέα ρόλου -- κάθε
+		// άλλη αίτηση (η συντριπτική πλειοψηφία) δεν βλέπει καμία από τις
+		// γραμμές παρακάτω, `role` μένει πάντα 'mobile' και η συμπεριφορά
+		// είναι byte-for-byte ίδια με πριν. Δες docs/UI-COMBO-SIGN-STATUS.html.
+		var twoRoles = c.signatures && c.signatures.required && c.signatures.required.length > 1;
+		var mobileName = c.company_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || 'Πελάτης κινητής';
+		var energyName = (c.extra && c.extra.combo_energy_name) || 'Πελάτης ενέργειας';
+		var ROLES = twoRoles ? [
+			{ role: 'mobile', label: 'Πελάτης κινητής', who: mobileName, comms: c.comms || { sms: { ok: false }, email: { ok: false }, link: { ok: true } } },
+			{ role: 'energy', label: 'Πελάτης ενέργειας', who: energyName, comms: c.comms_energy || { sms: { ok: false, why: 'sms_energy_unsupported' }, email: { ok: false }, link: { ok: true } } }
+		] : [
+			{ role: 'mobile', label: '', who: '', comms: c.comms || { sms: { ok: false }, email: { ok: false }, link: { ok: true } } }
+		];
 
-		var rows = CHANNELS.map(function (ch) {
-			var st = comms[ch.key] || { ok: false };
-			var at = ch.at(c);
-			var sub = st.ok
-				? '<div class="ecrm-chan__s">' + (at ? esc(at) + ' · ' : '') + esc(ch.note) + '</div>'
-				: '<div class="ecrm-chan__s ecrm-chan__s--why">' + esc(WHY[st.why] || 'Δεν είναι διαθέσιμο') + '</div>';
-			return '<button type="button" class="ecrm-chan' + (st.ok ? '' : ' is-off') + (chosen === ch.key ? ' is-on' : '') + '"' +
-				(st.ok ? '' : ' disabled') + ' data-chan="' + esc(ch.key) + '">' +
-				'<span class="ecrm-chan__dot" aria-hidden="true"></span>' +
-				'<span class="ecrm-chan__b"><span class="ecrm-chan__t">' + esc(ch.title) + '</span>' + sub + '</span></button>';
-		}).join('');
+		// Προεπιλογή ρόλος: αυτός που ΛΕΙΠΕΙ ακόμα. Αν λείπουν και οι δύο ή
+		// έχουν υπογράψει και οι δύο, ο πελάτης κινητής -- απόφαση 04/09.
+		var collected = (c.signatures && c.signatures.collected) || [];
+		var role = 'mobile';
+		if (twoRoles) {
+			var missing = ROLES.filter(function (r) { return collected.indexOf(r.role) === -1; });
+			role = missing.length === 1 ? missing[0].role : 'mobile';
+		}
+
+		function roleOf(key) { return ROLES.filter(function (r) { return r.role === key; })[0]; }
+
+		/* Προεπιλογή κανάλι: το καλύτερο διαθέσιμο ΓΙΑ ΤΟΝ ΕΠΙΛΕΓΜΕΝΟ ρόλο —
+		   αλλά ΟΧΙ αυτό που μόλις δοκιμάστηκε. Αν το Viber δεν έπιασε δύο
+		   ώρες, το δεύτερο Viber δεν είναι η απάντηση. */
+		var order = ['sms', 'email', 'link'];
+		function chooseChannel(comms) {
+			var chosen = '';
+			order.forEach(function (k) {
+				if (chosen) { return; }
+				if (!(comms[k] && comms[k].ok)) { return; }
+				if (prev && prev.channel === k && order.some(function (o) { return o !== k && comms[o] && comms[o].ok; })) { return; }
+				chosen = k;
+			});
+			return chosen || 'link';
+		}
+
+		function channelRows(comms, chosen) {
+			return CHANNELS.map(function (ch) {
+				var st = comms[ch.key] || { ok: false };
+				var at = ch.at(c);
+				var sub = st.ok
+					? '<div class="ecrm-chan__s">' + (at ? esc(at) + ' · ' : '') + esc(ch.note) + '</div>'
+					: '<div class="ecrm-chan__s ecrm-chan__s--why">' + esc(WHY[st.why] || 'Δεν είναι διαθέσιμο') + '</div>';
+				return '<button type="button" class="ecrm-chan' + (st.ok ? '' : ' is-off') + (chosen === ch.key ? ' is-on' : '') + '"' +
+					(st.ok ? '' : ' disabled') + ' data-chan="' + esc(ch.key) + '">' +
+					'<span class="ecrm-chan__dot" aria-hidden="true"></span>' +
+					'<span class="ecrm-chan__b"><span class="ecrm-chan__t">' + esc(ch.title) + '</span>' + sub + '</span></button>';
+			}).join('');
+		}
+
+		var rows = channelRows(roleOf(role).comms, chooseChannel(roleOf(role).comms));
+
+		var whopick = '';
+		if (twoRoles) {
+			whopick = '<p class="ecrm-whopick__lbl">Σε ποιον από τους δύο;</p><div class="ecrm-whopick">' +
+				ROLES.map(function (r) {
+					var signed = collected.indexOf(r.role) !== -1;
+					return '<button type="button" class="ecrm-whopick__b' + (role === r.role ? ' is-on' : '') + '" data-role="' + esc(r.role) + '">' +
+						'<span class="ecrm-whopick__t">' + esc(r.label) + '</span>' +
+						'<span class="ecrm-whopick__s ' + (signed ? 'ecrm-whopick__s--ok' : 'ecrm-whopick__s--wait') + '">' + (signed ? '✓ υπέγραψε' : 'λείπει') + '</span>' +
+						'</button>';
+				}).join('') + '</div>';
+		}
 
 		/* Η λήξη τη ΛΕΕΙ Ο SERVER (`c.sign_expired`), δεν υπολογίζεται εδώ.
 		   Το `created_at` είναι ώρα βάσης και το ρολόι του browser είναι ώρα
@@ -608,8 +698,8 @@ function renderDetail(view, d) {
 		// σύνδεσμος που δεν κάνει τίποτα και δεν λέει γιατί.
 		var hasForm = !!view.querySelector('[data-printform]');
 
-		var body = memory +
-			'<div class="ecrm-chan-list">' + rows + '</div>' +
+		var body = memory + whopick +
+			'<div class="ecrm-chan-list" data-chan-wrap>' + rows + '</div>' +
 			(hasForm ? '<button type="button" class="ecrm-chan-doc" data-see-form>Δες το έντυπο παρόχου πριν στείλεις</button>' : '');
 
 		var dlg = openDialog({
@@ -622,6 +712,8 @@ function renderDetail(view, d) {
 				var pick = el.querySelector('.ecrm-chan.is-on');
 				if (!pick) { return; }
 				var channel = pick.getAttribute('data-chan');
+				var pickedRole = el.querySelector('.ecrm-whopick__b.is-on');
+				var sendRole = pickedRole ? pickedRole.getAttribute('data-role') : role;
 
 				go2.disabled = true;
 				b.disabled = true;
@@ -632,6 +724,10 @@ function renderDetail(view, d) {
 				// αίτηση (needs_confirm: true) — δες SignLinkController::create().
 				function send(confirmResend) {
 					var payload = { channel: channel };
+					// role μπαίνει ΜΟΝΟ όταν χρειάζονται δύο υπογραφές -- σε
+					// κάθε άλλη αίτηση ο server προεπιλέγει MOBILE μόνος του,
+					// ίδια συμπεριφορά με πριν το 3β-Γ.
+					if (twoRoles) { payload.role = sendRole; }
 					if (confirmResend) { payload.confirm_resend = true; }
 
 					fetch(api('/contracts/' + c.id + '/sign-link'), {
@@ -670,11 +766,27 @@ function renderDetail(view, d) {
 			},
 		});
 
-		dlg.el.querySelectorAll('.ecrm-chan').forEach(function (btn) {
+		function wireChanClicks() {
+			dlg.el.querySelectorAll('.ecrm-chan').forEach(function (btn) {
+				btn.addEventListener('click', function () {
+					if (btn.disabled) { return; }
+					dlg.el.querySelectorAll('.ecrm-chan').forEach(function (x) { x.classList.remove('is-on'); });
+					btn.classList.add('is-on');
+				});
+			});
+		}
+		wireChanClicks();
+
+		// Αλλαγή προσώπου: ξαναχτίζει ΜΟΝΟ τα κανάλια, με τα δικά του στοιχεία
+		// επικοινωνίας -- ο επιλογέας προσώπου μένει όπως είναι.
+		dlg.el.querySelectorAll('.ecrm-whopick__b').forEach(function (btn) {
 			btn.addEventListener('click', function () {
-				if (btn.disabled) { return; }
-				dlg.el.querySelectorAll('.ecrm-chan').forEach(function (x) { x.classList.remove('is-on'); });
+				dlg.el.querySelectorAll('.ecrm-whopick__b').forEach(function (x) { x.classList.remove('is-on'); });
 				btn.classList.add('is-on');
+				var r = roleOf(btn.getAttribute('data-role'));
+				var wrap = dlg.el.querySelector('[data-chan-wrap]');
+				wrap.innerHTML = channelRows(r.comms, chooseChannel(r.comms));
+				wireChanClicks();
 			});
 		});
 

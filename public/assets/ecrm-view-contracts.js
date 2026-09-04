@@ -283,7 +283,16 @@ function renderContracts(view, d) {
 			'<td><span class="ecrm-cell-prov">' + prov + person(r.provider_name, r.program_name) + '</span></td>' +
 			(showOwner ? '<td class="ecrm-col-sec"><span class="ecrm-cell-owner">' + esc(r.partner_name || '—') + '</span></td>' : '') +
 			'<td class="ecrm-col-sec">' + person(r.supply_number, r.invoice_code, 'ecrm-mono') + '</td>' +
-			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(stLabel) + '</span></td>' +
+			// 3β-Γ, 04/09: πλήθος «1/2» δίπλα στο status badge, ΜΟΝΟ όταν η
+			// αίτηση χρειάζεται δύο υπογραφές και ΔΕΝ έχουν ολοκληρωθεί --
+			// όταν ολοκληρωθούν, το status το λέει ήδη (π.χ. «Υπογράφηκε»),
+			// δεύτερη σήμανση θα ήταν διπλή πληροφορία. Κάθε άλλη σύμβαση
+			// (η συντριπτική πλειοψηφία) δεν βλέπει τίποτα νέο εδώ.
+			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(stLabel) + '</span>' +
+			(r.signatures && !r.signatures.complete
+				? '<span class="ecrm-sigpill" title="Υπογραφές: ' + r.signatures.collected.length + ' από ' + r.signatures.required.length + '">' + r.signatures.collected.length + '/' + r.signatures.required.length + '</span>'
+				: '') +
+			'</td>' +
 			'<td class="ecrm-cell-date ecrm-col-sec"><div>' + fmtDate(r.updated_at) + '</div><div class="ecrm-muted">' + timeAgo(r.updated_at) + '</div></td>' +
 			'<td class="ecrm-rowactcol"><button type="button" class="ecrm-rowact' + (act.quiet ? ' is-quiet' : '') + '">' + esc(act.txt) + '</button></td>' +
 			'</tr>' +

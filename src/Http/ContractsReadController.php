@@ -24,6 +24,8 @@ use ECRM_Tracking;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Domain\Contract\SignatureRoles;
+use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\EventRepository;
@@ -44,6 +46,7 @@ final class ContractsReadController implements Controller
         private readonly EventRepository $events,
         private readonly FileRepository $files,
         private readonly StatusDwellRepository $dwellRepository,
+        private readonly SignatureState $signatures,
     ) {
     }
 
@@ -92,7 +95,7 @@ final class ContractsReadController implements Controller
 
         return new WP_REST_Response([
             'ok'       => true,
-            'rows'     => $this->withOwnerNames($rows),
+            'rows'     => $this->withSignatureWait($this->withOwnerNames($rows)),
             'counts'   => $this->counts($scope),
             'statuses' => ECRM_DB::statuses(),
         ], 200);
@@ -135,6 +138,11 @@ final class ContractsReadController implements Controller
         $row['doc_expirable'] = ECRM_Docs::expirable_kinds();
         $row['doc_expired']   = ECRM_Docs::expired_docs($id);
         $row['comms']         = self::comms($row);
+        $row['signatures']    = $this->signatures->forContract($id, $row);
+
+        if (in_array(SignatureRoles::ENERGY, $row['signatures']['required'], true)) {
+            $row['comms_energy'] = self::commsForEnergy($row);
+        }
 
         // Το λέει ο SERVER, όχι ο browser. Ο διάλογος θα μπορούσε να το βγάλει
         // μόνος του από την ηλικία του γεγονότος — αλλά θα σύγκρινε ώρα βάσης
@@ -257,7 +265,7 @@ final class ContractsReadController implements Controller
      *
      * @param array<string, mixed> $row
      *
-     * @return array<string, array{ok: bool, why?: string}>
+     * @return array{sms: array{ok: bool, why?: string}, email: array{ok: bool, why?: string}, link: array{ok: bool}}
      */
     private static function comms(array $row): array
     {
@@ -296,6 +304,37 @@ final class ContractsReadController implements Controller
     }
 
     /**
+     * Ίδιο σχήμα με το `comms()`, για τον πελάτη ενέργειας — 3β-Γ,
+     * 04/09/2026. Πηγή: `combo_energy_mobile`/`combo_energy_email` (224), όχι
+     * τα `mobile`/`email` του κύριου πελάτη — είναι άλλος άνθρωπος.
+     *
+     * Το SMS/Viber είναι ΠΑΝΤΑ κλειστό εδώ, ανεξάρτητα από πάροχο ή αριθμό —
+     * `SignLinkController::deliver()` το αρνείται ήδη ρητά
+     * (`sms_energy_unsupported`) γιατί το `ECRM_Messaging::send_for_status()`
+     * διαβάζει μόνο το κινητό του κύριου πελάτη. Ο διάλογος πρέπει να το
+     * ΛΕΕΙ πριν πατηθεί το κουμπί, όχι να αφήσει τον πωλητή να ανακαλύψει
+     * αποτυχία μετά την αποστολή.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array{sms: array{ok: bool, why?: string}, email: array{ok: bool, why?: string}, link: array{ok: bool}}
+     */
+    private static function commsForEnergy(array $row): array
+    {
+        $email = ['ok' => is_email((string) ($row['combo_energy_email'] ?? '')) !== false];
+
+        if (! $email['ok']) {
+            $email['why'] = 'no_email';
+        }
+
+        return [
+            'sms'   => ['ok' => false, 'why' => 'sms_energy_unsupported'],
+            'email' => $email,
+            'link'  => ['ok' => true],
+        ];
+    }
+
+    /**
      * Owner names for the whole page in one query — a lookup per row would
      * reintroduce the N+1 removed in step 3.
      *
@@ -317,6 +356,43 @@ final class ContractsReadController implements Controller
 
         foreach ($rows as $index => $row) {
             $rows[$index]['partner_name'] = $names[(int) ($row['partner_user_id'] ?? 0)] ?? '—';
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Ποιες γραμμές της λίστας περιμένουν ακόμα δεύτερη υπογραφή -- 3β-Γ,
+     * 04/09/2026.
+     *
+     * Ένα ερώτημα συνολικά (`SignatureState::forMany()`), όχι ένα ανά γραμμή:
+     * ίδιος λόγος με το `withOwnerNames()` παραπάνω. Το πεδίο `signatures`
+     * μπαίνει ΜΟΝΟ όταν η αίτηση χρειάζεται πράγματι δύο ρόλους -- η
+     * συντριπτική πλειοψηφία των συμβάσεων δεν αλλάζει καθόλου το payload
+     * της, ίδιο σκεπτικό με το `stuck()`: η κάρτα/σήμανση μιλάει μόνο όταν
+     * έχει κάτι να πει.
+     *
+     * Το `extra_json` έφτασε ως εδώ ΜΟΝΟ για να το διαβάσει το
+     * `SignatureState` -- ποτέ δεν φεύγει προς τον browser. Θα ήταν 200
+     * γραμμές ωμού (ενδεχομένως κρυπτογραφημένου) περιεχομένου σε μια λίστα,
+     * χειρότερο από το `show()` που εκθέτει τη στήλη μίας μόνο σύμβασης.
+     *
+     * @param list<array<string, mixed>> $rows
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function withSignatureWait(array $rows): array
+    {
+        $state = $this->signatures->forMany($rows);
+
+        foreach ($rows as $index => $row) {
+            $id = (int) ($row['id'] ?? 0);
+
+            if (isset($state[$id]) && count($state[$id]['required']) > 1) {
+                $rows[$index]['signatures'] = $state[$id];
+            }
+
+            unset($rows[$index]['extra_json']);
         }
 
         return $rows;

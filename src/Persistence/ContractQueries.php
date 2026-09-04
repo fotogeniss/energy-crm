@@ -88,6 +88,7 @@ final class ContractQueries
             $wpdb->prepare(
                 "SELECT c.id, c.code, c.status, c.energy_type, c.category, c.invoice_code,
                         c.supply_number, c.created_at, c.updated_at, c.partner_user_id,
+                        c.signed_at, c.extra_json,
                         p.name AS provider_name, p.slug AS provider_slug,
                         p.logo_url AS provider_logo, g.name AS program_name,
                         cu.first_name, cu.last_name, cu.company_name, cu.afm, cu.phone

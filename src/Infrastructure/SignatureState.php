@@ -63,6 +63,97 @@ final class SignatureState
     }
 
     /**
+     * Ο κανόνας «ποιοι ρόλοι απαιτούνται», από τη γραμμή της σύμβασης.
+     *
+     * Το `mobile_offer`/`combo_energy_same` διαβάζονται απευθείας από το
+     * `extra_json`, χωρίς αποκρυπτογράφηση: δεν είναι προσωπικά πεδία (βλ.
+     * `ProviderFormFields::isPersonalInput()`) -- ίδιο μοτίβο με το `$xg()`
+     * του `includes/class-ecrm-formfill.php`.
+     *
+     * @param array<string, mixed> $contract Πρέπει να έχει `extra_json` (raw στήλη).
+     *
+     * @return list<string>
+     */
+    private static function requiredFrom(array $contract): array
+    {
+        $extra = json_decode((string) ($contract['extra_json'] ?? ''), true);
+        $extra = is_array($extra) ? $extra : [];
+
+        $offer = (string) ($extra['mobile_offer'] ?? '');
+        $raw   = (string) ($extra['combo_energy_same'] ?? '1');
+
+        // Κρυπτογραφημένη τιμή σημαίνει «γράφτηκε πριν τη διόρθωση του (226),
+        // με το ECRM_ENCRYPT_PII ανοιχτό» -- δεν ξέρουμε τι λέει, και το
+        // σκέτο `!== '0'` θα την έλεγε «ίδιο πρόσωπο» επειδή ακριβώς δεν
+        // μπορεί να τη διαβάσει. Αυτή η σιωπηλή απάντηση ΕΙΝΑΙ το bug: το
+        // έντυπο έφευγε στον πάροχο με μία υπογραφή σε δύο γραμμές.
+        //
+        // Ασύμμετρο ρίσκο, ασύμμετρη επιλογή: «δύο υπογραφές» σε αίτηση ενός
+        // προσώπου κολλάει ορατά και το αναφέρει ο πωλητής· «μία υπογραφή» σε
+        // αίτηση δύο προσώπων φεύγει και δεν το μαθαίνει κανείς. Όταν δεν
+        // ξέρουμε, ζητάμε τη δεύτερη -- ίδιο σκεπτικό με το
+        // `SignatureRoles::isComplete()`, που υπάρχει ακριβώς γι' αυτό.
+        $same = FieldCipher::isEncrypted($raw) ? false : $raw !== '0';
+
+        return SignatureRoles::requiredFor($offer, $same);
+    }
+
+    /**
+     * Το ίδιο, για ΠΟΛΛΕΣ συμβάσεις -- με ένα ερώτημα συνολικά.
+     *
+     * Η λίστα συμβάσεων χρειάζεται να ξέρει ποιες αιτήσεις περιμένουν ακόμα τη
+     * δεύτερη υπογραφή. Η προφανής γραφή -- `forContract()` μέσα σε βρόχο --
+     * είναι δύο ερωτήματα ανά γραμμή, δηλαδή 400 σε λίστα 200 γραμμών, και
+     * ακριβώς το N+1 που αφαιρέθηκε από αυτόν τον ίδιο controller στο βήμα 3.
+     * Ο κανόνας («ποιοι ρόλοι απαιτούνται») είναι ο ΙΔΙΟΣ κώδικας με την
+     * `forContract()` -- δες `requiredFrom()` -- ώστε οι δύο διαδρομές να μη
+     * μπορούν να διαφωνήσουν.
+     *
+     * @param list<array<string, mixed>> $contracts Γραμμές με `id` και `extra_json`.
+     *
+     * @return array<int, array{required: list<string>, collected: list<string>, complete: bool}>
+     */
+    public function forMany(array $contracts): array
+    {
+        $required = [];
+
+        foreach ($contracts as $contract) {
+            $id = (int) ($contract['id'] ?? 0);
+
+            if ($id > 0) {
+                $required[$id] = self::requiredFrom($contract);
+            }
+        }
+
+        if ($required === []) {
+            return [];
+        }
+
+        $kinds = array_values(SignatureRoles::kinds());
+        $found = $this->files->signatureKindsFor(array_keys($required), $kinds);
+
+        $state = [];
+
+        foreach ($required as $id => $roles) {
+            $collected = [];
+
+            foreach (SignatureRoles::kinds() as $role => $kind) {
+                if (in_array($role, $roles, true) && in_array($kind, $found[$id] ?? [], true)) {
+                    $collected[] = $role;
+                }
+            }
+
+            $state[$id] = [
+                'required'  => $roles,
+                'collected' => $collected,
+                'complete'  => SignatureRoles::isComplete($roles, $collected),
+            ];
+        }
+
+        return $state;
+    }
+
+    /**
      * Σβήνει την υπογραφή ΕΝΟΣ ρόλου -- το αρχείο της, με τα bytes του.
      *
      * Η υπογραφή του άλλου ρόλου (αν υπάρχει) δεν αγγίζεται. Ο καλών

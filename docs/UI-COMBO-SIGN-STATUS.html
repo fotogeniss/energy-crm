@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Μακέτα: Ποιος υπέγραψε — οθόνη σύμβασης COMBO με δύο πρόσωπα</title>
+<style>
+  :root{
+    --p500:#8a7bd8; --accent-ink:#5b4fc4; --accent-wash:#f1eefb; --accent-wash-2:#e4ddf6;
+    --ink:#1f2430; --muted:#6b7280; --line:#e2e5ea; --bg:#f7f8fa; --card:#ffffff;
+    --ok:#1d7a3a; --ok-bg:#eefaf0; --wait:#8a6300; --wait-bg:#fff6df; --off:#9aa1ac;
+  }
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:32px;}
+  h1{font-size:18px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 24px;}
+  h3{font-size:13px;margin:28px 0 12px;padding-top:20px;border-top:2px solid var(--line);}
+  h3 .n{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;
+    background:var(--accent-ink);color:#fff;font-size:11px;margin-right:7px;}
+  .demo-row{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:8px;align-items:flex-start;}
+  .demo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;width:330px;}
+  .demo--wide{width:390px;}
+  .demo h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:0 0 14px;font-weight:700;}
+  .demo h2 .tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:10px;letter-spacing:0;}
+  .tag-now{background:#eef0f3;color:#5a6270;}
+  .tag-new{background:var(--accent-wash);color:var(--accent-ink);}
+
+  /* checklist του rail */
+  .rcheck{list-style:none;margin:0;padding:0;font-size:12.5px;}
+  .rcheck li{display:flex;gap:8px;align-items:center;padding:5px 0;color:var(--muted);}
+  .rcheck li.is-ok{color:var(--ink);}
+  .rcheck .m{width:16px;text-align:center;color:var(--off);font-weight:700;}
+  .rcheck li.is-ok .m{color:var(--ok);}
+  .rcheck li.is-new{background:var(--accent-wash);border-radius:6px;padding:5px 8px;margin:0 -8px;}
+
+  /* κάρτα audit */
+  .rcard{border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .rcard .step{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:10px;}
+  .kv{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--muted);}
+  .kv b{color:var(--ink);font-weight:600;}
+  .sigrow{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .sigrow:last-of-type{border-bottom:none;}
+  .sigrow .who{flex:1;min-width:0;}
+  .sigrow .who b{display:block;font-weight:600;color:var(--ink);}
+  .sigrow .who small{color:var(--muted);font-size:11px;}
+  .mark{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;flex-shrink:0;}
+  .mark--ok{background:var(--ok-bg);color:var(--ok);}
+  .mark--wait{background:var(--wait-bg);color:var(--wait);}
+  .pill{font-size:10.5px;padding:2px 8px;border-radius:999px;font-weight:700;white-space:nowrap;}
+  .pill--ok{background:var(--ok-bg);color:var(--ok);}
+  .pill--wait{background:var(--wait-bg);color:var(--wait);}
+
+  /* διάλογος αποστολής */
+  .dlg{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0;overflow:hidden;width:330px;}
+  .dlg__h{padding:14px 16px 12px;border-bottom:1px solid var(--line);}
+  .dlg__eyebrow{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;}
+  .dlg__t{font-size:14px;font-weight:700;margin:3px 0 1px;}
+  .dlg__lead{font-size:12px;color:var(--muted);}
+  .dlg__b{padding:14px 16px;}
+  .dlg__f{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 13px;font-size:12.5px;
+    font-family:inherit;color:var(--ink);cursor:default;}
+  .btn--primary{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;font-weight:600;}
+
+  .whopick{display:flex;gap:8px;margin-bottom:14px;}
+  .whopick__b{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 10px;
+    text-align:left;font-family:inherit;cursor:default;min-width:0;}
+  .whopick__b.is-on{border-color:var(--p500);background:var(--accent-wash);box-shadow:0 0 0 1px var(--p500);}
+  .whopick__t{font-size:12px;font-weight:700;color:var(--ink);display:block;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;}
+  .whopick__s{font-size:10.5px;margin-top:3px;display:block;}
+  .whopick__s.ok{color:var(--ok);}
+  .whopick__s.wait{color:var(--wait);}
+  .whopick__lbl{font-size:11px;color:var(--muted);margin:0 0 7px;}
+
+  .chan{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);background:#fff;
+    border-radius:8px;padding:9px 11px;margin-bottom:7px;width:100%;text-align:left;font-family:inherit;}
+  .chan.is-on{border-color:var(--p500);background:var(--accent-wash);box-shadow:0 0 0 1px var(--p500);}
+  .chan.is-off{opacity:.55;}
+  .chan__dot{width:9px;height:9px;border-radius:50%;border:2px solid var(--off);margin-top:3px;flex-shrink:0;}
+  .chan.is-on .chan__dot{border-color:var(--accent-ink);background:var(--accent-ink);}
+  .chan__t{font-size:12.5px;font-weight:600;display:block;}
+  .chan__s{font-size:11px;color:var(--muted);margin-top:2px;display:block;}
+  .chan__s--why{color:#a1483f;}
+
+  .note{background:#fff8e6;border:1px solid #f0dca0;border-radius:8px;padding:12px 14px;font-size:12.5px;
+    color:#6b5510;margin-bottom:22px;max-width:900px;line-height:1.55;}
+  .ask{background:#eef4ff;border:1px solid #b9cdf0;border-radius:8px;padding:12px 14px;font-size:12.5px;
+    color:#20355c;margin:14px 0;max-width:900px;line-height:1.55;}
+  .ok-box{background:#eefaf0;border:1px solid #a8ddb5;border-radius:8px;padding:12px 14px;font-size:12.5px;
+    color:#1d4d2b;margin:14px 0;max-width:900px;line-height:1.55;}
+  .ask strong,.ok-box strong{display:block;margin-bottom:5px;}
+  .ask ol{margin:6px 0 0;padding-left:20px;}
+  .ask li{margin-bottom:9px;}
+  .caption{font-size:11.5px;color:var(--muted);margin:8px 0 0;line-height:1.5;max-width:760px;}
+  code{background:#eef0f3;padding:1px 5px;border-radius:4px;font-size:11.5px;}
+</style>
+</head>
+<body>
+
+<h1>Μακέτα — «Ποιος υπέγραψε» στη σύμβαση COMBO με δύο πρόσωπα</h1>
+<p class="sub">Στάδιο 3β-Γ &middot; οθόνη λεπτομέρειας σύμβασης &middot; <strong>μόνο</strong> όταν το COMBO έχει διαφορετικό πελάτη ενέργειας</p>
+
+<div class="note">
+  <strong>Τι λείπει σήμερα.</strong> Το 3β-Β (χθεσινό commit) έφτιαξε ολόκληρο τον μηχανισμό: δεύτερο token, δεύτερος σύνδεσμος, ξεχωριστή υπογραφή ανά πρόσωπο, ολοκλήρωση μόνο όταν υπογράψουν και οι δύο. <strong>Καμία οθόνη όμως δεν το βλέπει.</strong> Ο ρόλος <code>energy</code> είναι προσβάσιμος μόνο με απευθείας κλήση API — ο πωλητής δεν έχει κανένα κουμπί να στείλει τον δεύτερο σύνδεσμο. Και το checklist δείχνει ακόμα μία γραμμή «Υπογραφή πελάτη», που ανάβει μόνο όταν υπογράψουν <em>και οι δύο</em>: ο πωλητής βλέπει ○ και δεν μαθαίνει ποτέ ότι ο ένας από τους δύο έχει ήδη υπογράψει.
+</div>
+
+<h3><span class="n">1</span>Το checklist του rail</h3>
+
+<div class="demo-row">
+  <div class="demo">
+    <h2>Τώρα <span class="tag tag-now">σήμερα</span></h2>
+    <ul class="rcheck">
+      <li class="is-ok"><span class="m">✓</span>Στοιχεία ταυτότητας</li>
+      <li class="is-ok"><span class="m">✓</span>Πρόγραμμα</li>
+      <li><span class="m">○</span>Υπογραφή πελάτη</li>
+      <li class="is-ok"><span class="m">✓</span>Συναίνεση GDPR</li>
+    </ul>
+    <p class="caption">Ο πελάτης κινητής έχει ήδη υπογράψει — αλλά η γραμμή δείχνει ○, γιατί διαβάζει το <code>signed_at</code>, που πλέον σημαίνει «υπέγραψαν όλοι». Ο πωλητής δεν ξέρει αν λείπουν δύο υπογραφές ή μία.</p>
+  </div>
+
+  <div class="demo">
+    <h2>Πρόταση <span class="tag tag-new">νέο</span></h2>
+    <ul class="rcheck">
+      <li class="is-ok"><span class="m">✓</span>Στοιχεία ταυτότητας</li>
+      <li class="is-ok"><span class="m">✓</span>Πρόγραμμα</li>
+      <li class="is-ok is-new"><span class="m">✓</span>Υπογραφή πελάτη κινητής</li>
+      <li class="is-new"><span class="m">○</span>Υπογραφή πελάτη ενέργειας</li>
+      <li class="is-ok"><span class="m">✓</span>Συναίνεση GDPR</li>
+    </ul>
+    <p class="caption">Δύο γραμμές <strong>μόνο</strong> όταν χρειάζονται δύο υπογραφές. Σε κάθε άλλη αίτηση (μη-COMBO, ή COMBO με το ίδιο πρόσωπο) μένει <strong>μία γραμμή «Υπογραφή πελάτη», ακριβώς όπως σήμερα</strong> — καμία αλλαγή σε αίτηση που δεν το χρειάζεται.</p>
+  </div>
+</div>
+
+<h3><span class="n">2</span>Ο διάλογος «Στείλε για υπογραφή»</h3>
+
+<div class="demo-row">
+  <div class="dlg">
+    <div class="dlg__h">
+      <div class="dlg__eyebrow">Πώς να το στείλεις</div>
+      <div class="dlg__t">ORIZON-41027</div>
+      <div class="dlg__lead">Γεώργιος Παπαδόπουλος</div>
+    </div>
+    <div class="dlg__b">
+      <button class="chan is-on"><span class="chan__dot"></span><span><span class="chan__t">Viber / SMS</span><span class="chan__s">6944 123456 · φτάνει αμέσως</span></span></button>
+      <button class="chan"><span class="chan__dot"></span><span><span class="chan__t">Email</span><span class="chan__s">g.papado@…</span></span></button>
+      <button class="chan"><span class="chan__dot"></span><span><span class="chan__t">Σύνδεσμος</span><span class="chan__s">αντιγραφή στο πρόχειρο</span></span></button>
+    </div>
+    <div class="dlg__f"><button class="btn">Άκυρο</button><button class="btn btn--primary">Στείλε</button></div>
+    <div style="padding:0 16px 14px"><p class="caption" style="margin:0">Τώρα: μόνο κανάλι. Πάει <strong>πάντα</strong> στον πελάτη κινητής — ο δεύτερος σύνδεσμος δεν φεύγει από πουθενά.</p></div>
+  </div>
+
+  <div class="dlg">
+    <div class="dlg__h">
+      <div class="dlg__eyebrow">Πώς να το στείλεις</div>
+      <div class="dlg__t">ORIZON-41027</div>
+      <div class="dlg__lead">Γεώργιος Παπαδόπουλος</div>
+    </div>
+    <div class="dlg__b">
+      <p class="whopick__lbl">Σε ποιον από τους δύο;</p>
+      <div class="whopick">
+        <button class="whopick__b"><span class="whopick__t">Πελάτης κινητής</span><span class="whopick__s ok">✓ υπέγραψε</span></button>
+        <button class="whopick__b is-on"><span class="whopick__t">Πελάτης ενέργειας</span><span class="whopick__s wait">λείπει</span></button>
+      </div>
+      <button class="chan is-off"><span class="chan__dot"></span><span><span class="chan__t">Viber / SMS</span><span class="chan__s chan__s--why">Δεν υποστηρίζεται ακόμα για τον πελάτη ενέργειας</span></span></button>
+      <button class="chan is-on"><span class="chan__dot"></span><span><span class="chan__t">Email</span><span class="chan__s">m.ioannou@…</span></span></button>
+      <button class="chan"><span class="chan__dot"></span><span><span class="chan__t">Σύνδεσμος</span><span class="chan__s">αντιγραφή στο πρόχειρο</span></span></button>
+    </div>
+    <div class="dlg__f"><button class="btn">Άκυρο</button><button class="btn btn--primary">Στείλε</button></div>
+    <div style="padding:0 16px 14px"><p class="caption" style="margin:0">Πρόταση: επιλογέας προσώπου <strong>πάνω</strong> από τα κανάλια. Αλλάζοντας πρόσωπο, τα κανάλια ξαναχτίζονται με τα <em>δικά του</em> στοιχεία.</p></div>
+  </div>
+</div>
+
+<p class="caption" style="max-width:900px"><strong>Ο επιλογέας μπαίνει μόνο όταν χρειάζονται δύο υπογραφές.</strong> Σε κάθε άλλη αίτηση ο διάλογος μένει ακριβώς όπως είναι σήμερα — καμία νέα γραμμή, κανένα επιπλέον κλικ για δουλειά που δεν το χρειάζεται. Προεπιλογή: <strong>το πρόσωπο που λείπει</strong>· αν λείπουν και τα δύο ή έχουν υπογράψει και τα δύο, ο πελάτης κινητής.</p>
+
+<h3><span class="n">3</span>Η κάρτα υπογραφής στο rail</h3>
+
+<div class="demo-row">
+  <div class="demo">
+    <h2>Τώρα <span class="tag tag-now">σήμερα</span></h2>
+    <div class="rcard">
+      <div class="step">Υπογραφή &nbsp;✓</div>
+      <div class="kv"><span>Ώρα</span><b>04/09/2026 11:32</b></div>
+      <div class="kv"><span>IP πελάτη</span><b>2.86.xxx.xxx</b></div>
+    </div>
+    <p class="caption">Μπαίνει μόνο όταν υπάρχει <code>signed_at</code> — δηλαδή μόνο όταν έχουν υπογράψει <strong>και οι δύο</strong>. Ενδιάμεσα το rail δεν λέει τίποτα, κι ας έχει υπογράψει ο ένας.</p>
+  </div>
+
+  <div class="demo demo--wide">
+    <h2>Πρόταση <span class="tag tag-new">νέο</span></h2>
+    <div class="rcard">
+      <div class="step">Υπογραφές &nbsp;<span class="pill pill--wait">1 από 2</span></div>
+      <div class="sigrow">
+        <span class="mark mark--ok">✓</span>
+        <span class="who"><b>Γεώργιος Παπαδόπουλος</b><small>πελάτης κινητής · 04/09 11:32 · 2.86.xxx.xxx</small></span>
+      </div>
+      <div class="sigrow">
+        <span class="mark mark--wait">○</span>
+        <span class="who"><b>Μαρία Ιωάννου</b><small>πελάτης ενέργειας · στάλθηκε email πριν 20′</small></span>
+        <span class="pill pill--wait">αναμονή</span>
+      </div>
+    </div>
+    <p class="caption">Δύο γραμμές, μία ανά πρόσωπο, με όνομα — η οθόνη σήμερα δεν δείχνει πουθενά το όνομα του πελάτη ενέργειας. Όταν υπογράψουν και οι δύο, η κεφαλίδα γίνεται <span class="pill pill--ok">2 από 2</span> και οι δύο γραμμές ✓.</p>
+  </div>
+</div>
+
+<div class="ok-box">
+  <strong>Τι ΔΕΝ αλλάζει, επίτηδες.</strong>
+  Καμία αίτηση με έναν υπογράφοντα δεν βλέπει τίποτα καινούργιο — ούτε γραμμή, ούτε κουμπί, ούτε επιπλέον κλικ. Ο μηχανισμός υπογραφής (tokens, <code>rest_sign</code>, ολοκλήρωση) δεν αγγίζεται καθόλου: μπήκε χθες και δουλεύει· εδώ μπαίνει μόνο η οθόνη που τον δείχνει. Το SMS στον πελάτη ενέργειας παραμένει κλειστό — αλλά τώρα το <em>λέει</em> αντί να λείπει σιωπηλά.
+</div>
+
+<div class="ask">
+  <strong>Τρία ερωτήματα πριν γραφτεί κώδικας</strong>
+  <ol>
+    <li><strong>Ώρα και IP ανά πρόσωπο.</strong> Το <code>signed_at</code> είναι <em>μία</em> στήλη — η στιγμή που ολοκληρώθηκε η αίτηση, όχι η στιγμή που υπέγραψε ο καθένας. Η πραγματική ώρα κάθε υπογραφής υπάρχει (στο αρχείο της υπογραφής), αλλά δεν ταξιδεύει σήμερα ώς την οθόνη. <strong>Πρόταση:</strong> να τη φέρουμε, ώστε κάθε γραμμή να λέει τη δική της ώρα όπως στη μακέτα. Εναλλακτικά: μόνο ✓/αναμονή χωρίς ώρα, λιγότερη δουλειά. <em>Η IP ανά πρόσωπο δεν αποθηκεύεται σήμερα καθόλου — αν τη θες ανά υπογραφή, είναι δική της δουλειά.</em></li>
+    <li><strong>Το checklist: δύο γραμμές ή μία;</strong> Η μακέτα δείχνει δύο («Υπογραφή πελάτη κινητής» / «Υπογραφή πελάτη ενέργειας»). Η εναλλακτική είναι μία γραμμή «Υπογραφές (1/2)» — πιο συμπαγής, αλλά είναι νέο είδος στοιχείου σε μια λίστα που ώς τώρα είναι καθαρά ✓/○.</li>
+    <li><strong>Ο πίνακας συμβάσεων.</strong> Η μακέτα αφορά μόνο την οθόνη <em>μιας</em> σύμβασης. Θέλεις να φαίνεται και στη <strong>λίστα</strong> ότι μια αίτηση περιμένει τη δεύτερη υπογραφή (π.χ. σήμανση δίπλα στην κατάσταση), ή αρκεί μέσα στην αίτηση; <em>Αν το θες, είναι δεύτερη μακέτα — δεν το χώνω εδώ.</em></li>
+  </ol>
+</div>
+
+</body>
+</html>

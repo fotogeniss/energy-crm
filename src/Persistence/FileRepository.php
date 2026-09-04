@@ -328,6 +328,62 @@ final class FileRepository
     }
 
     /**
+     * Ποια είδη υπογραφής υπάρχουν, για ΠΟΛΛΕΣ συμβάσεις μαζί.
+     *
+     * Ένα ερώτημα, όσες συμβάσεις κι αν είναι. Υπάρχει ακριβώς γι' αυτό: η
+     * λίστα συμβάσεων θέλει να ξέρει ποιες αιτήσεις περιμένουν ακόμα τη
+     * δεύτερη υπογραφή, και η προφανής γραφή -- μια `latestPathOfKind()` ανά
+     * γραμμή ανά ρόλο -- είναι 400 ερωτήματα σε λίστα 200 γραμμών. Ίδιο
+     * μοτίβο batch με το `withOwnerNames()` του `ContractsReadController`,
+     * για τον ίδιο λόγο.
+     *
+     * Επιστρέφει ΜΟΝΟ τα είδη που ζητήθηκαν και μόνο για συμβάσεις που έχουν
+     * τουλάχιστον ένα: μια σύμβαση χωρίς καμία υπογραφή απλώς λείπει από τον
+     * πίνακα, δεν έχει άδεια γραμμή.
+     *
+     * @param list<int>    $contractIds
+     * @param list<string> $kinds
+     *
+     * @return array<int, list<string>> contract_id => τα doc_kind που υπάρχουν
+     */
+    public function signatureKindsFor(array $contractIds, array $kinds): array
+    {
+        global $wpdb;
+
+        $ids = array_values(array_unique(array_filter(
+            array_map(static fn ($id): int => (int) $id, $contractIds),
+            static fn (int $id): bool => $id > 0
+        )));
+
+        if ($ids === [] || $kinds === []) {
+            return [];
+        }
+
+        $idPlaceholders   = implode(',', array_fill(0, count($ids), '%d'));
+        $kindPlaceholders = implode(',', array_fill(0, count($kinds), '%s'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT DISTINCT contract_id, doc_kind
+                 FROM %i WHERE contract_id IN ({$idPlaceholders}) AND doc_kind IN ({$kindPlaceholders})",
+                [$this->table, ...$ids, ...$kinds]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        $found = [];
+
+        foreach ($rows as $row) {
+            $found[(int) $row['contract_id']][] = (string) $row['doc_kind'];
+        }
+
+        return $found;
+    }
+
+    /**
      * Remove the documents a build produced, bytes included.
      *
      * Which kinds count as generated is the caller's to say. Everything the

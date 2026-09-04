@@ -250,6 +250,12 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-rowact.is-quiet:hover { color: var(--ink); background: var(--surface-sunk); }
 
 .ecrm-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: var(--fs-11); font-weight: 700; white-space: nowrap; }
+/* 3β-Γ: το «1/2» δίπλα στο status badge, στη λίστα συμβάσεων -- ίδιο σχήμα
+   pill με το badge, ίδιο χρώμα «αναμονή υπογραφής» με το .ecrm-sigrow της
+   κάρτας audit (--st-psig), μικρότερο και χωρίς την τελεία -- δεν είναι
+   κατάσταση, είναι μέτρημα δίπλα σε μια κατάσταση. */
+.ecrm-sigpill { display: inline-flex; margin-left: 5px; padding: 1px 6px; border-radius: 999px;
+	font-size: var(--fs-10-5); font-weight: 800; background: var(--st-psig-bg); color: var(--st-psig); }
 /* Κύκλος αντί για τη γλυφή «●»: το μέγεθός της άλλαζε με τη γραμματοσειρά. */
 .ecrm-badge::before { content: ""; width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: currentColor; }
 /* Δεύτερο κανάλι για τα δύο που ΔΕΝ ξεχωρίζουν σε δυσχρωματοψία: κόκκινο και
@@ -341,6 +347,19 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-rcheck li.is-ok { color: var(--ink); }
 .ecrm-rcheck__m { width: 18px; flex: 0 0 18px; text-align: center; font-weight: 800; color: var(--line-strong); }
 .ecrm-rcheck li.is-ok .ecrm-rcheck__m { color: var(--accent-ink); }
+
+/* 3β-Γ: μία γραμμή ανά υπογράφοντα στην κάρτα audit, όταν το COMBO έχει δύο
+   πρόσωπα. Ίδια χρώματα με το badge κατάστασης «awaiting_signature»
+   (var(--st-psig)) για τη μη-υπογεγραμμένη γραμμή -- ίδια σημασία, ίδιο
+   χρώμα, όχι νέα παλέτα. */
+.ecrm-sigrow { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--fs-12-5); }
+.ecrm-sigrow:last-of-type { border-bottom: none; }
+.ecrm-sigrow__m { width: 18px; flex: 0 0 18px; text-align: center; font-weight: 800; border-radius: 50%; font-size: var(--fs-11); }
+.ecrm-sigrow.is-ok .ecrm-sigrow__m { color: var(--st-signed); }
+.ecrm-sigrow.is-wait .ecrm-sigrow__m { color: var(--st-psig); }
+.ecrm-sigrow__who { flex: 1; min-width: 0; }
+.ecrm-sigrow__who b { display: block; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ecrm-sigrow__who small { display: block; font-size: var(--fs-11); color: var(--muted); }
 
 @media (max-width: 1100px) {
 	.ecrm-detail2 { grid-template-columns: 1fr; }
@@ -1199,6 +1218,23 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 /* word-break: το email πελάτη μπορεί να είναι μακρύτερο από 390px οθόνη. */
 .ecrm-chan__s { display: block; font-size: var(--fs-12); color: var(--muted); margin-top: 2px; line-height: 1.45; word-break: break-word; }
 .ecrm-chan__s--why { color: var(--st-cancel); }
+
+/* 3β-Γ: επιλογέας «σε ποιον από τους δύο», ΠΑΝΩ από τα κανάλια -- ίδιο
+   γραφικό μοτίβο με το .ecrm-chan (πλαίσιο + accent border όταν επιλεγμένο),
+   δύο κουμπιά δίπλα-δίπλα αντί για στοίβα, γιατί εδώ δεν υπάρχει λόγος να
+   μη δουλέψουν. Μπαίνει ΜΟΝΟ όταν η αίτηση έχει δύο ρόλους. */
+.ecrm-whopick__lbl { font-size: var(--fs-12); color: var(--muted); margin: 0 0 7px; }
+.ecrm-whopick { display: flex; gap: 8px; margin-bottom: 12px; }
+.ecrm-whopick__b {
+	flex: 1; min-width: 0; text-align: left; font-family: inherit; cursor: pointer;
+	border: 1px solid var(--line-mid); border-radius: 10px; padding: 9px 10px; background: var(--surface);
+}
+.ecrm-whopick__b:hover { border-color: var(--line-strong); }
+.ecrm-whopick__b.is-on { border-color: var(--amber); background: var(--accent-wash); }
+.ecrm-whopick__t { display: block; font-size: var(--fs-12-5); font-weight: 800; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ecrm-whopick__s { display: block; font-size: var(--fs-11); margin-top: 3px; }
+.ecrm-whopick__s--ok { color: var(--st-signed); }
+.ecrm-whopick__s--wait { color: var(--st-psig); }
 
 /* Η μνήμη: τι έφυγε την προηγούμενη φορά. */
 .ecrm-chan-memo {
