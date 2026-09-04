@@ -58,35 +58,65 @@ class ECRM_Tracking {
 	 *
 	 * Χάθηκε η ιδιότητα «δεν αγγίζει τη βάση» — μία ανάγνωση με πρωτεύον
 	 * κλειδί. Είναι το τίμημα της ανάκλησης, και είναι το ζητούμενο.
+	 *
+	 * Από 04/09 (3β-Β) δέχεται και ρόλο -- στο SignatureRoles::MOBILE
+	 * (προεπιλογή) παράγει ΑΚΡΙΒΩΣ το ίδιο token με πριν, byte για byte:
+	 * κάθε σύνδεσμος που έχει ήδη σταλεί συνεχίζει να δουλεύει αναλλοίωτος.
+	 * Ο ρόλος ENERGY παίρνει διαφορετικό υλικό υπογραφής (και δεν θα
+	 * μπορούσε να μπερδευτεί με το MOBILE — δες verify()).
 	 */
-	public static function token( int $id ): string {
+	public static function token( int $id, string $role = \EnergyCRM\Domain\Contract\SignatureRoles::MOBILE ): string {
 		$key = self::key_for( $id );
-		return $key === '' ? '' : self::sign( $id, $key );
+		return $key === '' ? '' : self::sign( $id, $key, $role );
 	}
 
 	/**
-	 * Το id πίσω από ένα token, ή null.
+	 * Το id ΚΑΙ ο ρόλος πίσω από ένα token, ή null.
 	 *
 	 * **Ποτέ δεν παράγει κλειδί.** Η διαδρομή είναι ανώνυμη και δημόσια· αν
 	 * παρήγαγε, μια αίτηση σε τυχαίο id θα προκαλούσε εγγραφή στη βάση, δηλαδή
 	 * θα έδινε σε οποιονδήποτε τρόπο να γεμίσει τον πίνακα. Σύμβαση χωρίς
 	 * κλειδί δεν έχει έγκυρο σύνδεσμο, τελεία.
+	 *
+	 * Δύο μορφές: `{id}-{hmac}` (MOBILE, η ιστορική μορφή, αναλλοίωτη) και
+	 * `{id}-e-{hmac}` (ENERGY, νέα). Δεν υπάρχει σύγκρουση: το δεύτερο 'e'
+	 * σπάει τον πρώτο κανόνα (ακριβώς 20 hex ψηφία μετά την παύλα), οπότε ένα
+	 * MOBILE token δεν μπορεί ποτέ να διαβαστεί σαν ENERGY και αντίστροφα.
+	 *
+	 * @return array{id:int, role:string}|null
 	 */
-	public static function verify( string $token ): ?int {
-		if ( ! preg_match( '/^(\d+)-([a-f0-9]{20})$/', $token, $m ) ) {
-			return null;
-		}
-		$id  = (int) $m[1];
-		$key = self::stored_key( $id );
+	public static function verify( string $token ): ?array {
+		if ( preg_match( '/^(\d+)-([a-f0-9]{20})$/', $token, $m ) ) {
+			$id   = (int) $m[1];
+			$role = \EnergyCRM\Domain\Contract\SignatureRoles::MOBILE;
+			$key  = self::stored_key( $id );
 
-		return $key !== '' && hash_equals( self::sign( $id, $key ), $token ) ? $id : null;
+			return ( $key !== '' && hash_equals( self::sign( $id, $key, $role ), $token ) )
+				? [ 'id' => $id, 'role' => $role ]
+				: null;
+		}
+
+		if ( preg_match( '/^(\d+)-e-([a-f0-9]{20})$/', $token, $m ) ) {
+			$id   = (int) $m[1];
+			$role = \EnergyCRM\Domain\Contract\SignatureRoles::ENERGY;
+			$key  = self::stored_key( $id );
+
+			return ( $key !== '' && hash_equals( self::sign( $id, $key, $role ), $token ) )
+				? [ 'id' => $id, 'role' => $role ]
+				: null;
+		}
+
+		return null;
 	}
 
 	/**
 	 * Ακυρώνει τον σύνδεσμο μιας σύμβασης.
 	 *
 	 * Ο επόμενος που θα ζητήσει σύνδεσμο παίρνει καινούργιο· ο παλιός δεν
-	 * ξαναδουλεύει ποτέ.
+	 * ξαναδουλεύει ποτέ. Ακυρώνει ΚΑΙ ΤΑ ΔΥΟ token (MOBILE και ENERGY) μαζί
+	 * -- μοιράζονται το ίδιο track_key, οπότε δεν υπάρχει τρόπος να
+	 * ανακληθεί το ένα χωρίς το άλλο, ούτε λόγος: η ανάκληση σημαίνει «αυτός
+	 * ο σύνδεσμος διέρρευσε», κάτι που αφορά τη σύμβαση, όχι τον ρόλο.
 	 */
 	public static function revoke( int $id ): void {
 		global $wpdb;
@@ -98,7 +128,14 @@ class ECRM_Tracking {
 		$wpdb->query( $wpdb->prepare( "UPDATE {$ct} SET track_key = NULL WHERE id = %d", $id ) );
 	}
 
-	private static function sign( int $id, string $key ): string {
+	private static function sign( int $id, string $key, string $role = \EnergyCRM\Domain\Contract\SignatureRoles::MOBILE ): string {
+		if ( $role === \EnergyCRM\Domain\Contract\SignatureRoles::ENERGY ) {
+			$sig = substr( hash_hmac( 'sha256', 'ecrm_track_' . $id . '|' . $role . '|' . $key, wp_salt( 'auth' ) ), 0, 20 );
+			return $id . '-e-' . $sig;
+		}
+
+		// MOBILE: ΙΔΙΟ υλικό υπογραφής με πριν την ύπαρξη ρόλων -- δεν
+		// αλλάζει, ώστε κάθε ήδη σταλμένος σύνδεσμος να συνεχίσει να ισχύει.
 		$sig = substr( hash_hmac( 'sha256', 'ecrm_track_' . $id . '|' . $key, wp_salt( 'auth' ) ), 0, 20 );
 		return $id . '-' . $sig;
 	}
@@ -144,8 +181,8 @@ class ECRM_Tracking {
 		return self::stored_key( $id );
 	}
 
-	public static function url( int $id ): string {
-		$token = self::token( $id );
+	public static function url( int $id, string $role = \EnergyCRM\Domain\Contract\SignatureRoles::MOBILE ): string {
+		$token = self::token( $id, $role );
 		return $token === '' ? '' : add_query_arg( 'ecrm_track', $token, home_url( '/' ) );
 	}
 
@@ -251,22 +288,40 @@ class ECRM_Tracking {
 		return [ 'items' => $items, 'complete' => ! empty( $cl['complete'] ), 'can_upload' => $can ];
 	}
 
+	/**
+	 * Ποιοι ρόλοι πρέπει να υπογράψουν αυτή τη σύμβαση, και ποιοι το έχουν
+	 * ήδη κάνει -- μεσολαβεί το `EnergyCRM\Infrastructure\SignatureState`,
+	 * που είναι το ΜΟΝΟ σημείο που ενώνει το `SignatureRoles` (κανόνας) με
+	 * τα αρχεία (ποιος έχει ΉΔΗ υπογράψει). Ίδιο αντικείμενο χρησιμοποιεί
+	 * και το `SignLinkController` -- δες το docblock του `SignatureState`
+	 * για το γιατί δεν αντιγράφεται εδώ.
+	 *
+	 * @param array<string, mixed> $row Πρέπει να έχει `extra_json`.
+	 *
+	 * @return array{required:list<string>, collected:list<string>, complete:bool}
+	 */
+	private static function signature_state( int $id, array $row ): array {
+		return \EnergyCRM\Services::signatureState()->forContract( $id, $row );
+	}
+
 	// --- REST: tracking payload ---------------------------------------------
 
 	public static function rest_get( WP_REST_Request $req ): WP_REST_Response {
 		if ( class_exists( 'ECRM_RateLimit' ) && ! ECRM_RateLimit::allow( 'track', 60, 300 ) ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'too_many' ], 429 );
 		}
-		$id = self::verify( (string) $req['token'] );
-		if ( ! $id ) {
+		$v = self::verify( (string) $req['token'] );
+		if ( ! $v ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'invalid_token' ], 404 );
 		}
+		$id   = $v['id'];
+		$role = $v['role'];
 		global $wpdb;
 		$ct = ECRM_DB::table( 'contracts' );
 		$cu = ECRM_DB::table( 'customers' );
 		$pr = ECRM_DB::table( 'providers' );
 		$row = $wpdb->get_row( $wpdb->prepare(
-			"SELECT c.code, c.status, c.energy_type, c.activation_type, c.updated_at, c.created_at, c.signed_at,
+			"SELECT c.code, c.status, c.energy_type, c.activation_type, c.updated_at, c.created_at, c.signed_at, c.extra_json,
 			        p.name AS provider_name,
 			        cu.first_name, cu.last_name, cu.company_name
 			 FROM {$ct} c
@@ -283,6 +338,19 @@ class ECRM_Tracking {
 		$labels = ECRM_DB::statuses();
 		$name   = $row['company_name'] ?: trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) );
 
+		// Από 04/09 (3β-Β): «υπέγραψε» και «μπορεί να υπογράψει» είναι ανά
+		// ΡΟΛΟ, όχι ανά σύμβαση -- ένα COMBO με δύο πρόσωπα έχει δύο
+		// συνδέσμους, και ο καθένας βλέπει ΜΟΝΟ τη δική του κατάσταση. Για
+		// την κοινή περίπτωση (ένας μόνο απαιτούμενος ρόλος) αυτό συμπίπτει
+		// ΑΚΡΙΒΩΣ με το παλιό `! empty( $row['signed_at'] )`, γιατί τότε η
+		// σύμβαση ολοκληρώνεται τη στιγμή που υπογράφει ο μοναδικός ρόλος.
+		$state         = self::signature_state( $id, $row );
+		$role_required = in_array( $role, $state['required'], true );
+		$role_signed   = in_array( $role, $state['collected'], true );
+		$waiting_other = $role_signed && ! $state['complete'];
+		$signable      = in_array( $status, self::signable_statuses(), true );
+		$expired       = self::sign_expired( $id );
+
 		return new WP_REST_Response( [
 			'ok'           => true,
 			'code'         => $row['code'] ?: '—',
@@ -295,12 +363,17 @@ class ECRM_Tracking {
 			'stages'       => self::stages(),
 			'updated_at'   => $row['updated_at'],
 			'created_at'   => $row['created_at'],
-			'signed'       => ! empty( $row['signed_at'] ),
+			// «Υπέγραψα εγώ», όχι «υπέγραψαν όλοι» -- δες το σχόλιο πάνω.
+			'signed'            => $role_signed,
+			// Νέο: υπέγραψα, αλλά η αίτηση περιμένει ακόμα τον άλλο ρόλο.
+			// Μόνο η σελίδα το χρειάζεται (άλλο κείμενο από το απλό «✓»),
+			// η ολοκλήρωση της ΣΥΜΒΑΣΗΣ ήδη φαίνεται στο status_label.
+			'waiting_other'     => $waiting_other,
 			// Η λήξη είναι ΤΡΙΤΟΣ όρος, όχι νέα διαδρομή: η σελίδα ζωγραφίζει
 			// το πάνελ υπογραφής μόνο όταν αυτό είναι αληθές, οπότε το
 			// tracking μένει ανέπαφο — αυτό ήταν όλο το ζητούμενο.
-			'can_sign'     => ( in_array( $status, self::signable_statuses(), true ) && empty( $row['signed_at'] ) && ! self::sign_expired( $id ) ),
-			'sign_expired' => ( in_array( $status, self::signable_statuses(), true ) && empty( $row['signed_at'] ) && self::sign_expired( $id ) ),
+			'can_sign'     => ( $signable && $role_required && ! $role_signed && ! $expired ),
+			'sign_expired' => ( $signable && $role_required && ! $role_signed && $expired ),
 			'docs'         => self::docs_payload( $id, $status, $row['activation_type'] ?? '', $row['energy_type'] ?? '' ),
 			'company'      => class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '',
 		], 200 );
@@ -308,14 +381,17 @@ class ECRM_Tracking {
 
 	// --- REST: customer e-signature ----------------------------------------
 
+
 	public static function rest_sign( WP_REST_Request $req ): WP_REST_Response {
 		if ( class_exists( 'ECRM_RateLimit' ) && ! ECRM_RateLimit::allow( 'track_sign', 10, 600 ) ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Πολλές προσπάθειες. Δοκιμάστε αργότερα.' ], 429 );
 		}
-		$id = self::verify( (string) $req['token'] );
-		if ( ! $id ) {
+		$v = self::verify( (string) $req['token'] );
+		if ( ! $v ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη έγκυρος σύνδεσμος.' ], 404 );
 		}
+		$id   = $v['id'];
+		$role = $v['role'];
 
 		/*
 		 * ΠΡΙΝ από κάθε έλεγχο του φορτίου, και αυτό δεν είναι λεπτομέρεια.
@@ -368,25 +444,65 @@ class ECRM_Tracking {
 			return new WP_REST_Response( [ 'ok' => true, 'already' => true, 'message' => 'Η αίτηση δεν εκκρεμεί για υπογραφή ή έχει ήδη υπογραφεί.' ], 200 );
 		}
 
+		// Από 04/09 (3β-Β): ένα COMBO με δύο πρόσωπα έχει δύο ρόλους. Ο
+		// έλεγχος `signed_at` πάνω πιάνει μόνο τη σύμβαση ολοκληρωμένη ΚΑΙ
+		// ΤΙΣ ΔΥΟ φορές· εδώ πιάνεται η δεύτερη περίπτωση -- αυτός ο
+		// ΣΥΓΚΕΚΡΙΜΕΝΟΣ ρόλος έχει ήδη υπογράψει, η σύμβαση όμως όχι ακόμα
+		// (περιμένει τον άλλο).
+		$state = self::signature_state( $id, $row );
+		if ( ! in_array( $role, $state['required'], true ) ) {
+			return new WP_REST_Response( [ 'ok' => true, 'already' => true, 'message' => 'Δεν χρειάζεται υπογραφή από αυτόν τον σύνδεσμο.' ], 200 );
+		}
+		if ( in_array( $role, $state['collected'], true ) ) {
+			return new WP_REST_Response( [ 'ok' => true, 'already' => true, 'message' => 'Έχετε ήδη υπογράψει.' ], 200 );
+		}
+
 		$now = current_time( 'mysql' );
 		$ip  = \EnergyCRM\Infrastructure\RequestIp::current();
 
-		// Persist the signature image (protected).
+		// Persist the signature image (protected). Στο doc_kind ΤΟΥ ΡΟΛΟΥ --
+		// SignatureRoles::kindFor(): 'signature' για MOBILE (η ιστορική τιμή,
+		// αναλλοίωτη), 'signature_energy' για ENERGY.
 		$sig_path = '';
-		if ( class_exists( 'ECRM_Files' ) ) {
+		$kind     = \EnergyCRM\Domain\Contract\SignatureRoles::kindFor( $role );
+		if ( class_exists( 'ECRM_Files' ) && $kind !== '' ) {
 			$stored = ECRM_Files::put_bytes( $png, 'png', 'image/png', 'signature.png' );
 			if ( $stored ) {
 				$sig_path = $stored['path'];
 				// Μέσω FileRepository και όχι με σκέτο insert. Μια σύμβαση έχει ΜΙΑ
-				// υπογραφή, και η replaceKind() σβήνει πρώτα τα bytes της παλιάς·
-				// ένα insert εδώ θα άφηνε το προηγούμενο σχέδιο στον δίσκο χωρίς
-				// τίποτα να το δείχνει — ακριβώς η διαρροή για την οποία γράφτηκε
-				// ο FileRepository, και που ως τώρα την απέτρεπε μόνο ο έλεγχος
-				// signed_at δύο οθόνες πιο πάνω.
+				// υπογραφή ΑΝΑ ΡΟΛΟ, και η replaceKind() σβήνει πρώτα τα bytes της
+				// παλιάς· ένα insert εδώ θα άφηνε το προηγούμενο σχέδιο στον δίσκο
+				// χωρίς τίποτα να το δείχνει — ακριβώς η διαρροή για την οποία
+				// γράφτηκε ο FileRepository, και που ως τώρα την απέτρεπε μόνο ο
+				// έλεγχος signed_at δύο οθόνες πιο πάνω.
 				\EnergyCRM\Services::files()->replaceKind(
-					$id, 'signature', 'signature.png', 'image/png', $stored['path']
+					$id, $kind, 'signature.png', 'image/png', $stored['path']
 				);
 			}
+		}
+
+		// Ξαναχτίζει το συνημμένο έντυπο ΤΩΡΑ, ανεξάρτητα από το αν λείπει
+		// ακόμα ο άλλος ρόλος -- ώστε η αποθηκευμένη έκδοση να δείχνει πάντα
+		// τις υπογραφές που πράγματι υπάρχουν (ContractDocuments::store()
+		// διαβάζει signaturesByRole() και αφήνει κενή τη θέση όποιου δεν
+		// έχει υπογράψει ακόμα, δες CHANGELOG (221)).
+		\EnergyCRM\Services::contractDocuments()->store( $id );
+
+		$collected   = $state['collected'];
+		$collected[] = $role;
+		$complete    = \EnergyCRM\Domain\Contract\SignatureRoles::isComplete( $state['required'], $collected );
+
+		if ( ! $complete ) {
+			// Η αίτηση ΔΕΝ μετράει «υπογεγραμμένη» ώσπου να υπογράψουν όλοι
+			// οι απαιτούμενοι ρόλοι -- ρητή απόφαση ιδιοκτήτη 04/09
+			// (SignatureRoles::isComplete). Η σύμβαση μένει στην ίδια
+			// κατάσταση, χωρίς signed_at/signed_ip -- ο,τι απομένει
+			// παρακάτω (PDF υπογεγραμμένου, μετάβαση σε "signed", ειδοποίηση
+			// συνεργάτη) τρέχει ΜΟΝΟ όταν ολοκληρωθεί η τελευταία υπογραφή.
+			return new WP_REST_Response( [
+				'ok'      => true,
+				'message' => 'Ευχαριστούμε! Η υπογραφή σας καταχωρήθηκε. Περιμένουμε ακόμα την υπογραφή του δεύτερου προσώπου.',
+			], 200 );
 		}
 
 		// Build a signed contract PDF (full customer + application data + signature).
@@ -396,6 +512,12 @@ class ECRM_Tracking {
 		// selected the encrypted customer columns and handed them straight to the
 		// renderer, so with ECRM_ENCRYPT_PII on this document — the signed one —
 		// printed ciphertext where the ΑΦΜ belongs.
+		//
+		// Γνωστός περιορισμός, όχι αγγιγμένος εδώ: το ECRM_PDF::build() δέχεται
+		// ΜΙΑ υπογραφή ($sig_path -- αυτού που μόλις ολοκλήρωσε, εδώ). Σε ένα
+		// COMBO με δύο πρόσωπα, το "signed_pdf" θα δείξει μόνο τη ΤΕΛΕΥΤΑΙΑ
+		// υπογραφή· το σωστό, ανά-ρόλο αποτέλεσμα ζει ήδη στο συνημμένο έντυπο
+		// (contractDocuments()->store(), λίγο πιο πάνω, μέσω SignatureRoles).
 		if ( class_exists( 'ECRM_PDF' ) ) {
 			// Το fetch του $full μπήκε ΜΕΣΑ στο try 2026-08-24: ήταν έξω, οπότε
 			// το σχόλιο «PDF optional — signing still succeeds» ήταν ψέμα ακριβώς
@@ -436,8 +558,9 @@ class ECRM_Tracking {
 			'inapp'   => false, // The contractNotices() call below handles the in-app notification.
 		] );
 
-		// Rebuild the attached provider form, so the stored copy reflects the
-		// contract as it stands at the moment of signing.
+		// Ξαναχτίζεται ΚΑΙ εδώ (και όχι μόνο πιο πάνω): τώρα η κατάσταση της
+		// σύμβασης άλλαξε σε "signed", και ο,τιδήποτε διαβάζει το status από
+		// το ίδιο έγγραφο (π.χ. footer/badge) πρέπει να το δει ενημερωμένο.
 		\EnergyCRM\Services::contractDocuments()->store( $id );
 
 		\EnergyCRM\Services::contractNotices()->signed( $id, (string) ( $row['first_name'] ?? '' ) );
@@ -463,10 +586,13 @@ class ECRM_Tracking {
 		if ( class_exists( 'ECRM_RateLimit' ) && ! ECRM_RateLimit::allow( 'track_upload', 30, 600 ) ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Πολλές προσπάθειες. Δοκιμάστε αργότερα.' ], 429 );
 		}
-		$id = self::verify( (string) $req['token'] );
-		if ( ! $id ) {
+		// Ο ρόλος δεν έχει σημασία εδώ -- ένα ανεβασμένο έγγραφο (ταυτότητα,
+		// λογαριασμός) ανήκει στη ΣΥΜΒΑΣΗ, όχι σε συγκεκριμένο υπογράφοντα.
+		$v = self::verify( (string) $req['token'] );
+		if ( ! $v ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'invalid_token' ], 404 );
 		}
+		$id = $v['id'];
 
 		global $wpdb;
 		$ct  = ECRM_DB::table( 'contracts' );
@@ -879,6 +1005,17 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 					'Ζητήστε νέον από τον συνεργάτη σας — η αίτησή σας δεν χάθηκε, '+
 					'και η κατάσταση από πάνω εξακολουθεί να ενημερώνεται.</p>'+
 				'</div>';
+		} else if (d.signed && d.waiting_other) {
+			// Αυτός ο ρόλος υπέγραψε, αλλά η αίτηση χρειάζεται ΚΑΙ την υπογραφή
+			// του δεύτερου προσώπου (COMBO, διαφορετικός πελάτης ενέργειας).
+			// Το status_label από πάνω ήδη δείχνει ότι δεν έχει ολοκληρωθεί -- εδώ
+			// μόνο διευκρινίζουμε ότι ΤΟ ΔΙΚΟ ΤΟΥ κομμάτι έγινε, ώστε να μην
+			// νομίζει ότι κάτι πήγε στραβά ή ότι πρέπει να ξαναϋπογράψει.
+			tail += '<div class="signed-ok"><div class="v">✓</div>'+
+				'<p>Η υπογραφή σας καταχωρήθηκε</p>'+
+				'<p style="font-weight:400;font-size:13px;margin-top:6px">'+
+				'Περιμένουμε ακόμα την υπογραφή του δεύτερου προσώπου για να ολοκληρωθεί η αίτηση.</p>'+
+			'</div>';
 		} else if (d.signed) {
 			tail += '<div class="signed-ok"><div class="v">✓</div><p>Η σύμβαση υπεγράφη ηλεκτρονικά</p></div>';
 		}

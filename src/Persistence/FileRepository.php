@@ -291,6 +291,43 @@ final class FileRepository
     }
 
     /**
+     * Σβήνει όλα τα έγγραφα ενός `doc_kind`, bytes και σειρές -- χωρίς
+     * αντικατάσταση. Βγήκε από το `replaceKind()`: το «διάγραψε ό,τι υπάρχει
+     * για αυτό το kind» ήταν ήδη το πρώτο του μισό, εδώ απλώς δεν ακολουθεί
+     * `attach()`.
+     *
+     * Ο λόγος που υπάρχει: `SignLinkController` το χρειάζεται για να
+     * επιτρέψει σε ΈΝΑΝ ρόλο του COMBO να ξαναϋπογράψει (π.χ. λάθος που
+     * εντοπίστηκε αμέσως μετά) χωρίς να πειράξει την υπογραφή του άλλου
+     * ρόλου -- κάτι που το ήδη υπάρχον «ξαναστείλε» (SignLinkController::create,
+     * confirm_resend) κάνει σε επίπεδο ΣΥΜΒΑΣΗΣ (μηδενίζει `signed_at`), όχι
+     * σε επίπεδο ρόλου. Το `SignatureState::forContract()` διαβάζει "ποιος
+     * έχει υπογράψει" από την ύπαρξη αυτών ακριβώς των αρχείων, οπότε η
+     * διαγραφή είναι αρκετή -- καμία νέα στήλη/σημαία.
+     *
+     * @return int Πόσες σειρές διαγράφηκαν.
+     */
+    public function deleteKind(int $contractId, string $kind): int
+    {
+        global $wpdb;
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT id, path, attachment_id FROM %i WHERE contract_id = %d AND doc_kind = %s',
+                $this->table,
+                $contractId,
+                $kind
+            ),
+            ARRAY_A
+        );
+
+        $this->deleteBytes($rows);
+
+        return (int) $wpdb->delete($this->table, ['contract_id' => $contractId, 'doc_kind' => $kind]);
+    }
+
+    /**
      * Remove the documents a build produced, bytes included.
      *
      * Which kinds count as generated is the caller's to say. Everything the
