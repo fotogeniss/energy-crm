@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Persistence\GuaranteeRuleRepository;
 use EnergyCRM\Providers\Http\ProviderStatusMapController;
@@ -105,7 +106,14 @@ final class ControllerFactory
             // Signing. Ο σύνδεσμος ΕΙΝΑΙ το tracking URL — δεν υπάρχει δεύτερο
             // token να λήξει ή να διαρρεύσει, και ο SigningController που
             // εξυπηρετούσε το παλιό διαγράφηκε μαζί με τη σελίδα του.
-            new SignLinkController($scope, $details, Services::documents(), $lifecycle, Services::events()),
+            new SignLinkController(
+                $scope,
+                $details,
+                Services::documents(),
+                $lifecycle,
+                Services::events(),
+                Services::signatureState()
+            ),
 
             // People.
             new CustomersController($scope, Services::customers()),

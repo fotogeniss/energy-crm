@@ -38,6 +38,7 @@ use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Infrastructure\ProviderFormRenderer;
 use EnergyCRM\Infrastructure\SecretStore;
+use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Persistence\AnalyticsRepository;
 use EnergyCRM\Persistence\AssistantHistoryRepository;
 use EnergyCRM\Persistence\CommissionRepository;
@@ -74,6 +75,8 @@ final class Services
     private static ?NetworkRepository $network = null;
 
     private static ?FileRepository $files = null;
+
+    private static ?SignatureState $signatureState = null;
 
     private static ?UnprotectedDocuments $unprotectedDocuments = null;
 
@@ -150,6 +153,16 @@ final class Services
     public static function files(): FileRepository
     {
         return self::$files ??= new FileRepository(\ECRM_Files::dir());
+    }
+
+    /**
+     * Ποιοι ρόλοι απαιτούνται/έχουν υπογράψει, για μια σύμβαση. Δες
+     * `SignatureState` -- το μόνο σημείο που ενώνει το `SignatureRoles`
+     * (κανόνας) με το `FileRepository` (ποιος έχει ήδη υπογράψει).
+     */
+    public static function signatureState(): SignatureState
+    {
+        return self::$signatureState ??= new SignatureState(self::files());
     }
 
     /**

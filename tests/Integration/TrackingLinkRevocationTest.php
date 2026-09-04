@@ -23,6 +23,7 @@ namespace EnergyCRM\Tests\Integration;
 
 use ECRM_Tracking;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\SignatureRoles;
 use EnergyCRM\Persistence\ContractRepository;
 
 final class TrackingLinkRevocationTest extends IntegrationTestCase
@@ -44,7 +45,10 @@ final class TrackingLinkRevocationTest extends IntegrationTestCase
     {
         $contractId = $this->contract();
 
-        self::assertSame($contractId, ECRM_Tracking::verify(ECRM_Tracking::token($contractId)));
+        self::assertSame(
+            ['id' => $contractId, 'role' => SignatureRoles::MOBILE],
+            ECRM_Tracking::verify(ECRM_Tracking::token($contractId))
+        );
     }
 
     /** Και είναι σταθερός: δεύτερη κλήση δεν φτιάχνει δεύτερο κλειδί. */
@@ -77,7 +81,7 @@ final class TrackingLinkRevocationTest extends IntegrationTestCase
         $new = ECRM_Tracking::token($contractId);
 
         self::assertNotSame($old, $new);
-        self::assertSame($contractId, ECRM_Tracking::verify($new));
+        self::assertSame(['id' => $contractId, 'role' => SignatureRoles::MOBILE], ECRM_Tracking::verify($new));
     }
 
     /**
@@ -94,7 +98,7 @@ final class TrackingLinkRevocationTest extends IntegrationTestCase
 
         ECRM_Tracking::revoke($mine);
 
-        self::assertSame($theirs, ECRM_Tracking::verify($token));
+        self::assertSame(['id' => $theirs, 'role' => SignatureRoles::MOBILE], ECRM_Tracking::verify($token));
     }
 
     /**
