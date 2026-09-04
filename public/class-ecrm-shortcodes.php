@@ -810,8 +810,40 @@ class ECRM_Shortcodes {
 				// είναι ακριβώς το είδος πεδίου που δεν έχει θέση σε αίτηση κινητής.
 				?>
 				<div class="ecrm-grid" data-when-offer="combo" hidden>
+					<?php
+					// Άρθρο 1 του εντύπου («Δικαιούχοι -- Έναρξη ισχύος»),
+					// περιπτώσεις i/ii/iii: το combo δίνεται και σε πελάτη που
+					// είναι ΗΔΗ σε έναν από τους δύο παρόχους. Δεν τυπώνεται
+					// πουθενά -- το έντυπο δεν έχει κουτάκι, το λέει μόνο στους
+					// όρους. Ζει εδώ γιατί η έκπτωση ξεκινά όταν ενεργοποιηθούν
+					// ΚΑΙ ΟΙ ΔΥΟ υπηρεσίες, άρα το back office πρέπει να ξέρει
+					// ποια από τις δύο λείπει ακόμα.
+					?>
+					<label class="ecrm-field" data-for="combo_energy_relation">
+						<span class="ecrm-field__label">Τι έχει ήδη ο πελάτης</span>
+						<select name="combo_energy_relation" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="has_power">Έχει ήδη ρεύμα Volton — νέα κινητή Orizon</option>
+							<option value="has_mobile">Έχει ήδη κινητή Orizon — νέο ρεύμα Volton</option>
+							<option value="both_new">Νέος και στα δύο — ταυτόχρονη σύναψη</option>
+						</select>
+					</label>
 					<?php $ecrm_field( 'combo_supply_number', 'Αριθμός Παροχής / ΗΚΑΣΠ Ρεύματος', 'text', true ); ?>
-					<?php $ecrm_field( 'combo_energy_program', 'Πρόγραμμα Ρεύματος', 'text', true ); ?>
+					<?php
+					// Ήταν ελεύθερο κείμενο ώς 04/09/2026: ο πωλητής έγραφε ό,τι
+					// θυμόταν, με ό,τι ορθογραφία, και αυτό τυπωνόταν. Γίνεται
+					// λίστα από τα πραγματικά προγράμματα Volton (CHANGELOG 217)
+					// -- ΜΟΝΟ Volton, γιατί το combo είναι Volton+Orizon και το
+					// έντυπο φέρει τα στοιχεία της Volton· πρόγραμμα άλλου
+					// παρόχου δεν έχει θέση σε αυτό το χαρτί. Οι επιλογές
+					// γεμίζουν από το JS, που έχει ήδη όλο τον κατάλογο.
+					?>
+					<label class="ecrm-field" data-for="combo_energy_program">
+						<span class="ecrm-field__label">Πρόγραμμα Ρεύματος</span>
+						<select name="combo_energy_program" class="ecrm-input" data-extra="1" data-volton-programs>
+							<option value="">—</option>
+						</select>
+					</label>
 					<label class="ecrm-field" data-for="combo_user_role">
 						<span class="ecrm-field__label">Χρήστης Γραμμής</span>
 						<select name="combo_user_role" class="ecrm-input" data-extra="1">
@@ -820,6 +852,32 @@ class ECRM_Shortcodes {
 							<option value="secondary">Δευτερεύων Χρήστης</option>
 						</select>
 					</label>
+				</div>
+
+				<?php
+				// Το έντυπο έχει ΔΥΟ μπλοκ ταυτότητας -- «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ
+				// ΚΙΝΗΤΗΣ ΤΗΛΕΦΩΝΙΑΣ» και «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ ΕΝΕΡΓΕΙΑΣ» -- επειδή
+				// το άρθρο 4 προβλέπει ρητά ότι μπορεί να είναι δύο διαφορετικά
+				// πρόσωπα (η παροχή ρεύματος σε άλλο όνομα από τη γραμμή που
+				// εκπροσωπείται). Ώς τώρα η φόρμα είχε ένα μόνο σετ στοιχείων,
+				// οπότε το ΑΦΜ του δεύτερου προσώπου δεν είχε πού να μπει.
+				//
+				// Ίδιο μοτίβο με το «Ίδια με τη διεύθυνση του πελάτη» παραπάνω:
+				// τσεκαρισμένο εξαρχής, τα πεδία μαζεμένα. Η συνηθισμένη
+				// περίπτωση -- ένα πρόσωπο -- δεν πληρώνει τίποτα.
+				?>
+				<div data-when-offer="combo" hidden>
+					<div class="ecrm-subhead">Στοιχεία Πελάτη Ενέργειας</div>
+					<label class="ecrm-syncbar">
+						<input type="checkbox" name="combo_energy_same" value="1" data-energy-same="1" checked>
+						Ίδιο πρόσωπο με τον πελάτη κινητής
+					</label>
+					<div class="ecrm-grid" data-energy-fields hidden>
+						<?php $ecrm_field( 'combo_energy_name', 'Ονοματεπώνυμο', 'text', true ); ?>
+						<?php $ecrm_field( 'combo_energy_afm', 'Α.Φ.Μ.', 'text', true ); ?>
+						<?php $ecrm_field( 'combo_energy_adt', 'Αριθμός Εγγράφου Ταυτοπροσωπίας', 'text', true ); ?>
+						<?php $ecrm_field( 'combo_energy_doy', 'Δ.Ο.Υ.', 'text', true ); ?>
+					</div>
 				</div>
 
 				<?php

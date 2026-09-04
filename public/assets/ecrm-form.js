@@ -42,6 +42,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			wstep: 1, wmax: 1
 		};
 		var programsCache = [];
+		var providersCache = [];
 		var mobilePricing = {};
 		var providersLoaded = false;
 		var pendingProvider = null;
@@ -70,11 +71,65 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				var ok = el.getAttribute('data-when-offer').split(',').indexOf(offer) !== -1;
 				el.hidden = !ok;
 				if (!ok) {
-					el.querySelectorAll('input, select, textarea').forEach(function (f) { f.value = ''; });
+					// Τα checkbox επιστρέφουν στην ΠΡΟΕΠΙΛΟΓΗ τους αντί να
+					// αδειάζουν. Το «Ίδιο πρόσωπο» είναι τσεκαρισμένο εξαρχής και
+					// στέλνεται από το .checked -- ένα f.value='' θα του έσβηνε
+					// μόνο το value="1" αφήνοντας το checked ανέπαφο, δηλαδή θα
+					// άλλαζε τι φαίνεται χωρίς να αλλάξει τι στέλνεται.
+					el.querySelectorAll('input, select, textarea').forEach(function (f) {
+						if (f.type === 'checkbox') { f.checked = f.defaultChecked; return; }
+						f.value = '';
+					});
+					el.querySelectorAll('[data-energy-same]').forEach(function (cb) { toggleEnergyPerson(cb); });
 				}
 			});
 
 			updateMobilePricing();
+		}
+
+		// Η λίστα προγραμμάτων ρεύματος/αερίου του COMBO.
+		//
+		// Το programsCache κρατά ΟΛΩΝ των παρόχων τα προγράμματα (το /providers
+		// τα στέλνει αφιλτράριστα και το renderPrograms φιλτράρει τοπικά), οπότε
+		// δεν χρειάζεται δεύτερη κλήση: φιλτράρουμε εδώ για Volton. Η Volton
+		// βρίσκεται από slug και όχι από id, γιατί το id διαφέρει ανά εγκατάσταση.
+		//
+		// Η τιμή κάθε option είναι το ΟΝΟΜΑ, όχι το id: το combo_energy_program
+		// ταξιδεύει στο extra_json και τυπώνεται αυτούσιο πάνω στο έντυπο. Με id
+		// θα τυπωνόταν «24». Έτσι μένουν και διαβάσιμες οι παλιές αιτήσεις, που
+		// το πεδίο ήταν ελεύθερο κείμενο.
+		function renderVoltonPrograms() {
+			var sel = root.querySelector('[data-volton-programs]');
+			if (!sel) return;
+
+			var volton = providersCache.filter(function (p) { return p.slug === 'volton'; })[0];
+			var keep = sel.value;
+
+			sel.innerHTML = '<option value="">—</option>';
+			if (!volton) return;
+
+			programsCache.filter(function (pr) {
+				return parseInt(pr.provider_id, 10) === parseInt(volton.id, 10);
+			}).forEach(function (pr) {
+				var o = document.createElement('option');
+				o.value = pr.name;
+				o.textContent = pr.name;
+				sel.appendChild(o);
+			});
+
+			// Επεξεργασία αίτησης: ό,τι είχε επιλεγεί πρέπει να επιβιώσει του
+			// ξαναχτισίματος. Αν το αποθηκευμένο κείμενο δεν είναι πια στη λίστα
+			// (παλιά αίτηση με ελεύθερο κείμενο), το select μένει στο «—» αντί
+			// να δείξει σιωπηλά λάθος πρόγραμμα.
+			if (keep) sel.value = keep;
+		}
+
+		// «Ίδιο πρόσωπο με τον πελάτη κινητής»: τσεκαρισμένο σημαίνει ότι ο
+		// πελάτης ενέργειας είναι ο ίδιος, και τα τέσσερα πεδία μαζεύονται.
+		// Ίδιο ακριβώς σχήμα με το toggleAddr() των διευθύνσεων.
+		function toggleEnergyPerson(cb) {
+			var box = root.querySelector('[data-energy-fields]');
+			if (box) box.hidden = cb.checked;
 		}
 
 		// Στοιχεία Κινητής shows the plan's price as read-only text, not an
@@ -789,7 +844,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		fetch(api('/providers'), { headers: headers() })
 			.then(function (r) { return r.json(); })
 			.then(function (d) {
-				programsCache = d.programs || []; mobilePricing = d.mobile_pricing || {}; renderProviders(d.providers || []); providersLoaded = true;
+				programsCache = d.programs || []; providersCache = d.providers || []; mobilePricing = d.mobile_pricing || {}; renderProviders(d.providers || []); providersLoaded = true; renderVoltonPrograms();
 				// Επεξεργασία υπάρχουσας αίτησης: το applyEdit() καλεί selectProvider(c.provider_id)
 				// ΠΡΙΝ προλάβει να απαντήσει αυτό εδώ το fetch -- selectProvider() το βλέπει και
 				// απλώς αποθηκεύει pendingProvider, χωρίς state.provider_id/κλάση is-on ακόμα.
@@ -1259,6 +1314,18 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// its own combo fields hidden. Re-run now that the real value is in
 			// place; this also recomputes the read-only price boxes.
 			applyMobileOffer();
+			// Το setField() ψάχνει .ecrm-input και γράφει .value -- ένα checkbox
+			// δεν έχει ούτε το ένα ούτε νόημα το άλλο, οπότε χωρίς αυτό εδώ μια
+			// αίτηση με δεύτερο πρόσωπο θα ξανάνοιγε δηλώνοντας «ίδιο πρόσωπο»
+			// και με τα τέσσερα πεδία κρυμμένα, ενώ οι τιμές τους θα ήταν μέσα.
+			// Απούσα τιμή σημαίνει «ίδιο» -- ό,τι ίσχυε πριν υπάρξει το πεδίο.
+			var sameEl = root.querySelector('[data-energy-same]');
+			if (sameEl) {
+				var savedSame = c.extra ? c.extra.combo_energy_same : null;
+				sameEl.checked = savedSame == null || savedSame === '' || !!Number(savedSame);
+				toggleEnergyPerson(sameEl);
+			}
+			renderVoltonPrograms();
 			var modeEl = q('.ecrm-foot__mode strong'); if (modeEl) modeEl.textContent = 'Επεξεργασία #' + (c.code || c.id);
 			var titleEl = q('[data-form-title]'); if (titleEl) titleEl.textContent = 'Επεξεργασία Αίτησης';
 			/* Σε ΕΠΕΞΕΡΓΑΣΙΑ ξεκλειδώνουν και τα τέσσερα βήματα αμέσως: η αίτηση
@@ -1835,6 +1902,13 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			root.querySelectorAll('[data-addr-same]').forEach(function (cb) {
 				payload[cb.name] = cb.checked ? 1 : 0;
 			});
+			// Στο extra και όχι σε στήλη: ο πελάτης ενέργειας δεν είναι
+			// δεύτερη εγγραφή πελάτη, είναι στοιχεία που τυπώνονται. Και εδώ το
+			// άτσεκάριστο στέλνεται ως '0' αντί να παραλείπεται -- «δεν είναι ο
+			// ίδιος» είναι απάντηση, όχι κενό.
+			root.querySelectorAll('[data-energy-same]').forEach(function (cb) {
+				payload.extra[cb.name] = cb.checked ? '1' : '0';
+			});
 			var consentEl = q('[data-consent]');
 			payload.consent = consentEl && consentEl.checked ? 1 : 0;
 			return payload;
@@ -1911,6 +1985,11 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		root.querySelectorAll('[data-addr-same]').forEach(function (cb) {
 			cb.addEventListener('change', function () { toggleAddr(this); });
 			toggleAddr(cb);
+		});
+
+		root.querySelectorAll('[data-energy-same]').forEach(function (cb) {
+			cb.addEventListener('change', function () { toggleEnergyPerson(this); });
+			toggleEnergyPerson(cb);
 		});
 
 		// Το «Ημ. Έναρξης» έφυγε 2026-08-24 (κανένα έντυπο δεν το τυπώνει) —
