@@ -56,6 +56,10 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				el.style.display = ok ? '' : 'none';
 			});
 			applyEnergyType();
+			// Μαζί με το είδος παροχής, ώστε κάθε σημείο που ήδη καλεί
+			// applyCustomerType() (αρχικοποίηση, επεξεργασία αίτησης, reset)
+			// να συγχρονίζει και τα τιμολόγια χωρίς νέα κλήση σε τρία σημεία.
+			applyCategory();
 			applyMobileOffer();
 		}
 
@@ -166,11 +170,25 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// codes are electricity), and single options (Κοινόχρηστο is a meter in
 		// a stairwell; Φορητότητα only exists on a phone number).
 		function applyEnergyType() {
-			var e = state.energy_type || 'power';
+			applyChipScope('data-when-energy', state.energy_type || 'power');
+		}
+
+		// Η κατηγορία κρύβει ό,τι δεν της ανήκει, με τον ΙΔΙΟ μηχανισμό που
+		// χρησιμοποιεί από πάντα το είδος παροχής. Σήμερα αφορά μόνο τα
+		// Γ-τιμολόγια (Γ1 οικιακό, Γ21-23 επαγγελματικά), αλλά ο μηχανισμός
+		// είναι γενικός: ένα `data-when-category` σε οποιοδήποτε chip αρκεί.
+		function applyCategory() {
+			applyChipScope('data-when-category', state.category || 'home');
+		}
+
+		// Ό,τι έκανε το applyEnergyType(), για οποιοδήποτε πεδίο. Ένα δεύτερο
+		// αντίγραφο της ίδιας λογικής θα ήταν ένα δεύτερο σημείο να ξεχαστεί το
+		// «κρυμμένο αλλά ακόμα επιλεγμένο».
+		function applyChipScope(attr, value) {
 			var groups = [];
 
-			qa('[data-when-energy]').forEach(function (el) {
-				var ok = el.getAttribute('data-when-energy').split(',').indexOf(e) !== -1;
+			qa('[' + attr + ']').forEach(function (el) {
+				var ok = el.getAttribute(attr).split(',').indexOf(value) !== -1;
 				el.style.display = ok ? '' : 'none';
 
 				// A hidden option that stays selected is the dangerous case: it
@@ -385,7 +403,13 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				group.querySelectorAll('.ecrm-chip').forEach(function (b) { b.classList.remove('is-on'); });
 				btn.classList.add('is-on');
 				state[field] = btn.getAttribute('data-val');
-				if (field === 'energy_type') { renderPrograms(); applyEnergyType(); applyMobileOffer(); }
+				if (field === 'energy_type') { applyEnergyType(); applyMobileOffer(); }
+				// Κατηγορία: πρώτα κρύβονται τα τιμολόγια που δεν της ανήκουν
+				// (μπορεί να αλλάξει το state.invoice_code), και ΜΕΤΑ χτίζεται
+				// η λίστα -- η ανάποδη σειρά θα την έχτιζε με το τιμολόγιο που
+				// μόλις έπαψε να ισχύει.
+				if (field === 'category') { applyCategory(); }
+				if (field === 'energy_type' || field === 'category' || field === 'price_type') { renderPrograms(); }
 				if (field === 'energy_type' || field === 'category') refreshKbDocs();
 				refreshProviderFields();
 				refreshGuaranteeSuggestion();
@@ -968,14 +992,38 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			hideUsual();
 		}
 
-		function renderPrograms() {
-			var sel = q('[data-program]');
-			var opts = programsCache.filter(function (pr) {
+		// Ώς τις 04/09/2026 η λίστα φιλτραριζόταν ΜΟΝΟ με πάροχο και είδος
+		// παροχής: ο πωλητής διάλεγε «Οικιακό» και συνέχιζε να βλέπει
+		// κοινόχρηστα και επαγγελματικά προγράμματα δίπλα-δίπλα. Οι στήλες
+		// `category` και `price_type` υπήρχαν από πάντα στα προγράμματα και
+		// ταξίδευαν ήδη ώς εδώ -- απλώς κανείς δεν τις κοίταζε.
+		//
+		// Το `price_type` («Χρώμα») φιλτράρει ΜΟΝΟ σε ρεύμα/αέριο, όπως και το
+		// ίδιο το chip: στην κινητή δεν σημαίνει τίποτα, και τα τέσσερα πλάνα
+		// της Orizon είναι όλα «fixed» από το seed. Χωρίς αυτή τη συνθήκη, μια
+		// αίτηση κινητής θα φιλτραριζόταν από μια επιλογή που δεν βλέπει καν.
+		function programsMatching() {
+			var scoped = state.energy_type === 'power' || state.energy_type === 'gas';
+
+			return programsCache.filter(function (pr) {
 				if (state.provider_id && parseInt(pr.provider_id, 10) !== state.provider_id) return false;
 				if (state.energy_type && pr.energy_type !== state.energy_type) return false;
+				if (state.category && pr.category && pr.category !== state.category) return false;
+				if (scoped && state.price_type && pr.price_type && pr.price_type !== state.price_type) return false;
 				return true;
 			});
-			sel.innerHTML = '<option value="">—</option>';
+		}
+
+		function renderPrograms() {
+			var sel = q('[data-program]');
+			var opts = programsMatching();
+
+			// Άδεια λίστα σημαίνει «αυτός ο συνδυασμός δεν υπάρχει», και πρέπει
+			// να το λέει. Ένα σκέτο «—» διαβάζεται ως «δεν φόρτωσε ακόμα» και
+			// στέλνει τον πωλητή να περιμένει κάτι που δεν έρχεται.
+			sel.innerHTML = opts.length
+				? '<option value="">—</option>'
+				: '<option value="">— δεν υπάρχει πρόγραμμα για αυτόν τον συνδυασμό —</option>';
 			opts.forEach(function (pr) { var o = document.createElement('option'); o.value = pr.id; o.textContent = pr.name; sel.appendChild(o); });
 			sel.onchange = function () {
 				state.program_id = this.value ? parseInt(this.value, 10) : null;

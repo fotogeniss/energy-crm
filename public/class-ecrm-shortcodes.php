@@ -342,14 +342,27 @@ class ECRM_Shortcodes {
 					</div>
 				</div>
 
-				<?php // Τα Γ-τιμολόγια είναι κωδικοί ρεύματος. ?>
+				<?php
+				// Τα Γ-τιμολόγια είναι κωδικοί ρεύματος -- εξ ου το
+				// data-when-energy. Το data-when-category είναι δεύτερος
+				// φραγμός, από 04/09/2026: το Γ1 είναι το ΟΙΚΙΑΚΟ τιμολόγιο και
+				// τα Γ21/Γ22/Γ23 τα ΕΠΑΓΓΕΛΜΑΤΙΚΑ. Ώς τότε εμφανίζονταν και τα
+				// τέσσερα πάντα, οπότε ο πωλητής σε οικιακή αίτηση μπορούσε να
+				// διαλέξει Γ22 -- επιλογή που δεν αντιστοιχεί σε τίποτα.
+				//
+				// Το «Κοινόχρηστο» κρατά και τα τέσσερα ΕΠΙΤΗΔΕΣ: ο κοινόχρηστος
+				// μετρητής πολυκατοικίας δεν είναι ούτε οικιακός ούτε
+				// επαγγελματικός με τον ίδιο τρόπο, και δεν επιβεβαιώθηκε ποιο
+				// ισχύει. Ανοιχτό ερώτημα προς τον ιδιοκτήτη -- να δείχνει
+				// περισσότερα είναι ανεκτό, να κρύψει το σωστό δεν είναι.
+				?>
 				<div class="ecrm-row" data-when-energy="power">
 					<span class="ecrm-row__label">Τιμολόγιο</span>
 					<div class="ecrm-chips" data-field="invoice_code">
-						<button type="button" class="ecrm-chip" data-val="Γ1">Γ1</button>
-						<button type="button" class="ecrm-chip" data-val="Γ21">Γ21</button>
-						<button type="button" class="ecrm-chip" data-val="Γ22">Γ22</button>
-						<button type="button" class="ecrm-chip" data-val="Γ23">Γ23</button>
+						<button type="button" class="ecrm-chip" data-val="Γ1" data-when-category="home,communal">Γ1</button>
+						<button type="button" class="ecrm-chip" data-val="Γ21" data-when-category="business,communal">Γ21</button>
+						<button type="button" class="ecrm-chip" data-val="Γ22" data-when-category="business,communal">Γ22</button>
+						<button type="button" class="ecrm-chip" data-val="Γ23" data-when-category="business,communal">Γ23</button>
 					</div>
 				</div>
 
