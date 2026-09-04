@@ -360,6 +360,16 @@ final class ProviderFormFields
         'previous_provider', 'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method', 'bill_delivery',
         'subsidy_type', 'base_price', 'offer_price', 'price_after',
         'request_type', 'mobile_offer',
+        // «Ίδιο πρόσωπο με τον πελάτη κινητής;» -- δομικό στοιχείο της αίτησης,
+        // όχι προσωπικό δεδομένο: ένα ναι/όχι που δεν ταυτοποιεί κανέναν, ακριβώς
+        // όπως το `mobile_offer` δίπλα του. **Και πρέπει να μένει αναγνώσιμο:**
+        // καθορίζει ΠΟΣΕΣ υπογραφές χρειάζεται η αίτηση, και το διαβάζει και η
+        // δημόσια σελίδα υπογραφής (`ECRM_Tracking`), που δουλεύει με raw στήλη
+        // χωρίς αποκρυπτογράφηση. Ως «προσωπικό» γινόταν ciphertext με το
+        // ECRM_ENCRYPT_PII ανοιχτό, οπότε ο έλεγχος «!== '0'» έβγαινε πάντα
+        // αληθής και το COMBO δύο προσώπων ζητούσε σιωπηλά ΜΙΑ υπογραφή. Δες
+        // CHANGELOG (226).
+        'combo_energy_same',
     ];
 
     /**

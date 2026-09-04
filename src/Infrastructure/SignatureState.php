@@ -46,16 +46,7 @@ final class SignatureState
      */
     public function forContract(int $contractId, array $contract): array
     {
-        $extra = json_decode((string) ($contract['extra_json'] ?? ''), true);
-        $extra = is_array($extra) ? $extra : [];
-
-        $offer = (string) ($extra['mobile_offer'] ?? '');
-        // Προεπιλογή '1' -- ίδιο πρόσωπο -- ίδιο fallback με το formfill.php:
-        // μια σύμβαση χωρίς αυτό το κλειδί (πριν το COMBO καν υπάρξει) δεν
-        // πρέπει να διαβαστεί σαν να έχει δύο πρόσωπα.
-        $same = ((string) ($extra['combo_energy_same'] ?? '1')) !== '0';
-
-        $required = SignatureRoles::requiredFor($offer, $same);
+        $required = self::requiredFrom($contract);
 
         $collected = [];
         foreach (SignatureRoles::kinds() as $role => $kind) {
