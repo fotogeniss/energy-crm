@@ -271,17 +271,21 @@ class ECRM_FormFill {
 			'tk_apostolis'             => $addr->billing->postalCode,
 			'nomos_apostolis'          => $addr->billing->region,
 
-			// Ίδια δεδομένα με το 'dieuthynsi_apostolis' λίγο πιο πάνω, αλλά με
-			// τη δική της ενσωματωμένη ετικέτα: κανένα από τα τέσσερα έντυπα
-			// Ορίζον δεν έχει προτυπωμένο πεδίο "Διεύθυνση Αποστολής" πουθενά
-			// (grep σε assets/forms/orizon_*.json), οπότε ένα γυμνό
-			// 'dieuthynsi_apostolis' σε άδειο περιθώριο θα ήταν ασαφές -- ίδιο
-			// μάθημα με το 'deuteros_arithmos_kinitou' (208, πρώην 207).
-			'dieuthynsi_apostolis_etiketa' => (
-				$addr->billing->oneLine() !== ''
-					? 'ΔΙΕΥΘΥΝΣΗ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΟΥ: ' . $addr->billing->oneLine()
-					: ''
-			),
+			// 04/09 (δεύτερο εύρημα ίδιας μέρας): το 'dieuthynsi_apostolis_etiketa'
+			// που ζούσε εδώ γεννήθηκε από λάθος υπόθεση -- ότι "κανένα από τα
+			// τέσσερα έντυπα Ορίζον δεν έχει προτυπωμένο πεδίο" (το σχόλιο
+			// έλεγχε μόνο το JSON, όχι το ίδιο το PDF). Το orizon_mobile.json
+			// σελίδα 4 ΕΧΕΙ ήδη τυπωμένα κουτάκια «Ίδια/Διαφορετική» + κενή
+			// γραμμή διεύθυνσης -- κανείς δεν τα είχε συνδέσει ποτέ, κι έτσι η
+			// τιμή τυπωνόταν σκέτο κείμενο σε άδειο περιθώριο στην τελευταία
+			// σελίδα. Το `ContractAddresses::billingIsHome()` υπήρχε ήδη
+			// ακριβώς για αυτό το ζευγάρι κουτιών.
+			'idia_diefthynsi_apostolis'        => ( $addr->billingIsHome() ? 'X' : '' ),
+			'diaforetiki_diefthynsi_apostolis' => ( ! $addr->billingIsHome() ? 'X' : '' ),
+			// Η γραμμή τυπώνεται ΜΟΝΟ όταν είναι πράγματι διαφορετική -- όταν
+			// είναι ίδια, το κουτάκι από πάνω αρκεί, τυπόχαρτο κενό θα ήταν
+			// απλώς θόρυβος δίπλα στο τσεκαρισμένο «Ίδια».
+			'dieuthynsi_apostolis_diaforetiki' => ( $addr->billingIsHome() ? '' : $addr->billing->oneLine() ),
 			'kodikos_timologiou'       => (string) ( $c['invoice_code'] ?? '' ),
 			'onoma_programmatos'       => (string) ( $c['program_name'] ?? '' ),
 			'diarkeia_symvasis'        => $diarkeia,
@@ -325,17 +329,11 @@ class ECRM_FormFill {
 			'thesi_metriti_exoterikos' => ( $xg( 'meter_position' ) === 'outside' ? 'X' : '' ),
 			'pliromi_pagia_entoli'     => ( $xg( 'payment_method' ) === 'standing_order' ? 'X' : '' ),
 
-			// Ίδιο μοτίβο ετικέτας+τιμής με το 'dieuthynsi_apostolis_etiketa'
-			// λίγο πιο πάνω: το bill_delivery είχε ΜΗΔΕΝΙΚΟ print mapping σε
-			// όλα τα έντυπα μέχρι το (208) -- εδώ γράφεται μόνο η εκδοχή για
-			// έντυπα Ορίζον χωρίς προτυπωμένο πεδίο, με ελληνικό κείμενο αντί
-			// για την τιμή της βάσης (email/post/both).
-			'tropos_apostolis_logariasmou' => match ( $xg( 'bill_delivery' ) ) {
-				'email' => 'ΤΡΟΠΟΣ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΟΥ: Email',
-				'post'  => 'ΤΡΟΠΟΣ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΟΥ: Ταχυδρομικώς',
-				'both'  => 'ΤΡΟΠΟΣ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΟΥ: Email & Ταχυδρομικώς',
-				default => '',
-			},
+			// Ίδιο μάθημα με το 'idia_diefthynsi_apostolis' λίγο πιο πάνω: το
+			// orizon_mobile.json σελίδα 4 έχει ήδη τυπωμένα κουτάκια «Μέσω
+			// e-mail» / «Έντυπος» -- 'both' τσεκάρει και τα δύο.
+			'apostoli_logariasmou_email'  => ( in_array( $xg( 'bill_delivery' ), [ 'email', 'both' ], true ) ? 'X' : '' ),
+			'apostoli_logariasmou_entypo' => ( in_array( $xg( 'bill_delivery' ), [ 'post', 'both' ], true ) ? 'X' : '' ),
 
 			// Communication contact (Υπεύθυνος Επικοινωνίας).
 			'onomateponymo_epikoinonias' => $contact_name,
