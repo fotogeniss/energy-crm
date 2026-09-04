@@ -46,6 +46,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Infrastructure;
 
 use ECRM_Files;
+use EnergyCRM\Domain\Contract\SignatureRoles;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\FileRepository;
 
@@ -85,6 +86,31 @@ final class ContractDocuments
      *
      * @return bool True when at least the first sheet was stored.
      */
+    /**
+     * Η υπογραφή κάθε ρόλου, για όσους ρόλους έχουν πράγματι υπογράψει.
+     *
+     * Ρόλος που λείπει απλώς δεν μπαίνει στον χάρτη, και η θέση του στο έντυπο
+     * μένει κενή. Αυτό είναι το ζητούμενο: ώς τις 04/09/2026 η μία υπογραφή
+     * στάμπαρε **όλες** τις θέσεις, οπότε ένα COMBO με δύο πρόσωπα έβγαινε
+     * δείχνοντας τον έναν να έχει υπογράψει και στη γραμμή του άλλου.
+     *
+     * @return array<string, string>
+     */
+    private function signaturesByRole(int $contractId): array
+    {
+        $map = [];
+
+        foreach (SignatureRoles::kinds() as $role => $kind) {
+            $path = $this->files->latestPathOfKind($contractId, $kind);
+
+            if ($path !== null && $path !== '') {
+                $map[$role] = $path;
+            }
+        }
+
+        return $map;
+    }
+
     public function store(int $contractId): bool
     {
         $contract = $this->details->forDocument($contractId);
@@ -95,7 +121,8 @@ final class ContractDocuments
 
         $sheets = $this->renderer->render(
             $contract,
-            $this->files->latestPathOfKind($contractId, self::SIGNATURE_KIND)
+            $this->files->latestPathOfKind($contractId, self::SIGNATURE_KIND),
+            $this->signaturesByRole($contractId)
         );
 
         if ($sheets === []) {

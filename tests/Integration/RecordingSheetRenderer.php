@@ -21,7 +21,13 @@ use EnergyCRM\Infrastructure\SheetRenderer;
 
 final class RecordingSheetRenderer implements SheetRenderer
 {
-    /** @var list<array{contract: array<string, mixed>, signaturePath: string|null}> */
+    /**
+     * @var list<array{
+     *   contract: array<string, mixed>,
+     *   signaturePath: string|null,
+     *   signatureRoles: array<string, string>
+     * }>
+     */
     public array $calls = [];
 
     /**
@@ -29,9 +35,16 @@ final class RecordingSheetRenderer implements SheetRenderer
      * renderer that returns nothing makes store() give up early, and then the
      * test is measuring the wrong thing.
      */
-    public function render(array $contract, ?string $signaturePath): array
+    public function render(array $contract, ?string $signaturePath, array $signatureRoles = []): array
     {
-        $this->calls[] = ['contract' => $contract, 'signaturePath' => $signaturePath];
+        // Ο χάρτης ρόλων καταγράφεται μαζί με τα υπόλοιπα: το ερώτημα «πήρε ο
+        // renderer τη ΣΩΣΤΗ υπογραφή για κάθε γραμμή;» πρέπει να έχει απάντηση
+        // εδώ, όχι μέσα σε συμπιεσμένο PDF stream.
+        $this->calls[] = [
+            'contract'       => $contract,
+            'signaturePath'  => $signaturePath,
+            'signatureRoles' => $signatureRoles,
+        ];
 
         return [['key' => 'contract', 'bytes' => '%PDF-1.4 not really a document']];
     }

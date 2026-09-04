@@ -214,14 +214,16 @@
    "x": 62.0,
    "y": 243.2,
    "w": 28,
-   "h": 6.0
+   "h": 6.0,
+   "role": "mobile"
   },
   {
    "page": 6,
    "x": 68.0,
    "y": 249.9,
    "w": 28,
-   "h": 6.0
+   "h": 6.0,
+   "role": "energy"
   }
  ],
  "source_is_filled": false
