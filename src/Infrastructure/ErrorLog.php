@@ -178,7 +178,59 @@ final class ErrorLog
 
         update_option(self::OPTION, array_slice($log, 0, self::KEEP), false);
 
+        self::notifyAdmin($entry);
+
         return $entry['code'];
+    }
+
+    /**
+     * Email στο admin_email του site για ΚΑΘΕ νέο κωδικό σφάλματος -- όχι για
+     * επαναλήψεις ήδη γνωστού (αυτές μόνο ανεβάζουν το count στην ίδια
+     * εγγραφή, βλ. record()). Χωρίς αυτό, η μόνη ένδειξη ότι κάτι έσπασε είναι
+     * κάποιος να ανοίξει χειροκίνητα την Υγεία -- στο live αυτό σημαίνει
+     * μέρες.
+     *
+     * Throttled σε 1 email/ώρα συνολικά (όχι ανά κωδικό): ένας βρόχος που
+     * παράγει δεκάδες ΔΙΑΦΟΡΕΤΙΚΑ σφάλματα μέσα σε λίγα δευτερόλεπτα δεν
+     * πρέπει να γίνει βόμβα στο inbox. Η Υγεία δείχνει πάντα την πλήρη
+     * εικόνα -- το email είναι ειδοποίηση, όχι το αρχείο.
+     *
+     * @param array<string, mixed> $entry
+     */
+    private static function notifyAdmin(array $entry): void
+    {
+        $lock = 'ecrm_error_notify_lock';
+
+        if (get_transient($lock) !== false) {
+            return;
+        }
+
+        set_transient($lock, 1, HOUR_IN_SECONDS);
+
+        $to = get_option('admin_email');
+
+        if (! is_string($to) || $to === '') {
+            return;
+        }
+
+        $subject = sprintf('[Energy CRM] Σφάλμα %s', $entry['code']);
+
+        $body = sprintf(
+            "Νέο σφάλμα καταγράφηκε στο Energy CRM.\n\n"
+            . "Κωδικός: %s\nΤύπος: %s\nΔιαδρομή: %s\nΣημείο: %s\nΏρα (UTC): %s\n\n"
+            . "Μήνυμα: %s\n\n"
+            . "Πλήρη λεπτομέρεια στην Υγεία (Energy CRM → Υγεία). Αν συνέβησαν κι "
+            . "άλλα σφάλματα την ίδια ώρα, δεν στάλθηκε ξεχωριστό email γι' αυτά "
+            . "(το πολύ 1 email/ώρα) -- έλεγξε εκεί.",
+            $entry['code'],
+            $entry['kind'],
+            $entry['route'],
+            $entry['where'],
+            $entry['at'],
+            $entry['message']
+        );
+
+        wp_mail($to, $subject, $body);
     }
 
     /**
