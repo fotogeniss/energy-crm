@@ -37,6 +37,7 @@ use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
 use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
 use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaHomePlans;
+use EnergyCRM\Persistence\Schema\Migrations\SeedVoltonPlans;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
 use EnergyCRM\Persistence\Schema\Migrations\RetargetContractListIndexToUpdatedAt;
 use EnergyCRM\Persistence\Schema\Migrations\WidenEncryptedColumns;
@@ -79,6 +80,7 @@ final class MigrationList
             new RetargetContractListIndexToUpdatedAt(),
             new AddFileExpiryColumn(),
             new AddGuaranteeRuleForeignKeys(),
+            new SeedVoltonPlans(),
         ];
     }
 }
