@@ -349,20 +349,22 @@ final class HealthChecks
     private function scheduled(): array
     {
         $jobs = [
-            Retention::HOOK              => 'Διαγραφή παλιών δεδομένων εξαγωγής',
-            DocumentProtection::HOOK     => 'Μεταφορά ανασφάλιστων εγγράφων',
-            PiiBackfill::HOOK            => 'Κρυπτογράφηση παλιών γραμμών',
-            \ECRM_Notifications::CRON_HOOK => 'Ημερήσιες υπενθυμίσεις',
+            Retention::HOOK              => ['Διαγραφή παλιών δεδομένων εξαγωγής', DAY_IN_SECONDS],
+            DocumentProtection::HOOK     => ['Μεταφορά ανασφάλιστων εγγράφων', HOUR_IN_SECONDS],
+            PiiBackfill::HOOK            => ['Κρυπτογράφηση παλιών γραμμών', HOUR_IN_SECONDS],
+            \ECRM_Notifications::CRON_HOOK => ['Ημερήσιες υπενθυμίσεις', DAY_IN_SECONDS],
         ];
 
         $out = [];
 
-        foreach ($jobs as $hook => $label) {
+        foreach ($jobs as $hook => [$label, $interval]) {
             $next = wp_next_scheduled($hook);
 
             $out[] = self::row('Προγραμματισμένα', $label, $next !== false, $next !== false
                 ? 'Επόμενο: ' . gmdate('d/m/Y H:i', (int) $next) . ' UTC'
                 : 'ΔΕΝ ΕΙΝΑΙ ΠΡΟΓΡΑΜΜΑΤΙΣΜΕΝΟ. Απενεργοποίησε και ενεργοποίησε ξανά το plugin.');
+
+            $out[] = self::heartbeatRow($label, $hook, $interval);
         }
 
         if (defined('DISABLE_WP_CRON') && constant('DISABLE_WP_CRON') === true) {
@@ -376,6 +378,54 @@ final class HealthChecks
         }
 
         return $out;
+    }
+
+    /**
+     * «Προγραμματισμένο» δεν σημαίνει «τρέχει» -- το WP-Cron είναι ψευδο-cron,
+     * ενεργοποιείται από επισκέψεις. Σε site χωρίς επισκεψιμότητα ο παραπάνω
+     * έλεγχος μένει πράσινος επ' άπειρον ενώ καμία από τις τέσσερις εργασίες
+     * δεν εκτελείται ποτέ πραγματικά -- ΜΕΤΡΗΜΕΝΟ κενό, όχι εικασία: γραμμένο
+     * ρητά στο docs/AUDIT-OPERATIONS.md ως αυτό που «κρύβεται» τύπου εύρημα 3.
+     *
+     * Ανοχή διπλάσια του διαστήματος πριν γίνει κόκκινο -- η πρώτη ενεργοποίηση
+     * ενός site δεν πρέπει να δείξει αποτυχία απλώς επειδή δεν πέρασε ακόμα μία
+     * πλήρης ώρα/μέρα, και μια φυσιολογική καθυστέρηση WP-Cron δεν είναι βλάβη.
+     *
+     * @return array{group: string, label: string, ok: bool|null, detail: string}
+     */
+    private static function heartbeatRow(string $label, string $hook, int $interval): array
+    {
+        $last = Heartbeat::lastRun($hook);
+
+        if ($last === null) {
+            return self::row(
+                'Προγραμματισμένα',
+                $label . ' — τελευταία εκτέλεση',
+                null,
+                'Δεν έχει καταγραφεί ακόμη. Θα φανεί μετά το πρώτο πέρασμα.'
+            );
+        }
+
+        $age    = time() - $last;
+        $stale  = $age > ($interval * 2);
+        $hours  = (int) floor($age / HOUR_IN_SECONDS);
+
+        return self::row(
+            'Προγραμματισμένα',
+            $label . ' — τελευταία εκτέλεση',
+            ! $stale,
+            $stale
+                ? sprintf(
+                    'ΔΕΝ ΕΤΡΕΞΕ ΠΡΟΣΦΑΤΑ — πριν %d %s. Προγραμματισμένο δεν σημαίνει ότι τρέχει: '
+                    . 'πιθανό αίτιο μηδενική επισκεψιμότητα στο site, ή DISABLE_WP_CRON χωρίς '
+                    . 'πραγματικό cron από πίσω.',
+                    $hours,
+                    $hours === 1 ? 'ώρα' : 'ώρες'
+                )
+                : ($hours < 1
+                    ? 'Πριν λιγότερο από μία ώρα.'
+                    : sprintf('Πριν %d %s.', $hours, $hours === 1 ? 'ώρα' : 'ώρες'))
+        );
     }
 
     /**
