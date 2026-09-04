@@ -65,6 +65,8 @@ final class WritableColumns
         'signed_ip',
         'payout_id',
         'code',
+        'combo_energy_mobile',
+        'combo_energy_email',
     ];
 
     private function __construct()

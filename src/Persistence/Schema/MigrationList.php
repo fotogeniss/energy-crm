@@ -17,6 +17,7 @@ namespace EnergyCRM\Persistence\Schema;
 use EnergyCRM\Persistence\Schema\Migrations\AddContractAddresses;
 use EnergyCRM\Persistence\Schema\Migrations\AddContractListIndexes;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerAfmIndex;
+use EnergyCRM\Persistence\Schema\Migrations\AddComboEnergyContactColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerPhoneIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddGuaranteeRuleForeignKeys;
@@ -83,6 +84,7 @@ final class MigrationList
             new AddGuaranteeRuleForeignKeys(),
             new SeedVoltonPlans(),
             new DedupeProgramsByCode(),
+            new AddComboEnergyContactColumns(),
         ];
     }
 }

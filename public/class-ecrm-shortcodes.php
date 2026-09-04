@@ -890,6 +890,17 @@ class ECRM_Shortcodes {
 						<?php $ecrm_field( 'combo_energy_afm', 'Α.Φ.Μ.', 'text', true ); ?>
 						<?php $ecrm_field( 'combo_energy_adt', 'Αριθμός Εγγράφου Ταυτοπροσωπίας', 'text', true ); ?>
 						<?php $ecrm_field( 'combo_energy_doy', 'Δ.Ο.Υ.', 'text', true ); ?>
+						<?php
+						// Στοιχεία επικοινωνίας ΤΟΥ ΠΕΛΑΤΗ ΕΝΕΡΓΕΙΑΣ -- όχι του
+						// πελάτη κινητής. Δεν τυπώνονται πουθενά στο έντυπο· είναι
+						// για τον δεύτερο σύνδεσμο υπογραφής (3β-Β), όταν χρειάζεται
+						// δεύτερη υπογραφή γιατί είναι άλλο πρόσωπο. Γι' αυτό ΔΕΝ
+						// έχουν data-extra="1": στήλες, όχι extra_json (§1.17, βλ.
+						// AddComboEnergyContactColumns) -- ο σύνδεσμος υπογραφής τις
+						// διαβάζει απευθείας.
+						?>
+						<?php $ecrm_field( 'combo_energy_mobile', 'Κινητό', 'text', false, '69…' ); ?>
+						<?php $ecrm_field( 'combo_energy_email', 'Email', 'email', false ); ?>
 					</div>
 				</div>
 

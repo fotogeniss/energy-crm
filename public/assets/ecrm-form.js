@@ -1302,7 +1302,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		var ADDR_PARTS = ['supply', 'billing'];
 		var ADDR_FIELDS = ['street', 'street_no', 'postal_code', 'city', 'region'];
 
-		var CUST_FIELDS = ['afm','doy','postal_code','first_name','last_name','father_name','company_name','adt','birth_date','region','city','street','street_no','phone','mobile','email','supply_number','meter_number','term_months','end_date'];
+		var CUST_FIELDS = ['afm','doy','postal_code','first_name','last_name','father_name','company_name','adt','birth_date','region','city','street','street_no','phone','mobile','email','supply_number','meter_number','term_months','end_date','combo_energy_mobile','combo_energy_email'];
 
 		function applyEdit(c) {
 			if (!c) return;
