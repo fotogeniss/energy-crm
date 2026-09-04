@@ -40,6 +40,7 @@ final class HealthChecks
             $this->documents(),
             $this->schema(),
             $this->commissions(),
+            $this->backups(),
             $this->scheduled(),
             $this->platform()
         );
@@ -268,6 +269,78 @@ final class HealthChecks
                   . 'εκκαθάριση, σε κάθε βεβαίωση. Τίποτα δεν σπάει και κανείς δεν '
                   . 'πληρώνεται. Πρόσθεσε κανόνες στη σελίδα «Προμήθειες».'),
         ];
+    }
+
+    /**
+     * Το tools/backup.php δεν γράφεται από κανένα scheduled task -- είναι
+     * χειροκίνητο, όπως και όλα τα αντίγραφα στο go-live αυτού του site μέχρι
+     * σήμερα. Χωρίς αυτό, ένα site μπορεί να μείνει μήνες χωρίς αντίγραφο και
+     * κάθε άλλη ένδειξη εδώ να είναι πράσινη -- ίδιο σχήμα με τους κανόνες
+     * προμήθειας πιο πάνω.
+     *
+     * @return list<array{group: string, label: string, ok: bool|null, detail: string}>
+     */
+    private function backups(): array
+    {
+        $last = BackupState::last();
+
+        if ($last === null) {
+            return [
+                self::row(
+                    'Αντίγραφα',
+                    'Τελευταίο αντίγραφο',
+                    false,
+                    'ΚΑΝΕΝΑ αντίγραφο δεν έχει καταγραφεί ακόμη. '
+                    . 'php tools/backup.php <φάκελος-dump> <φάκελος-μυστικών> -- βλ. docs/BACKUP.md.'
+                ),
+            ];
+        }
+
+        $days = BackupState::daysSinceLast();
+
+        $threshold = max(1, (int) apply_filters('ecrm_backup_max_age_days', 7));
+
+        $keyMatches = $last['key_fingerprint'] === ''
+            ? null
+            : hash_equals($last['key_fingerprint'], KeyFingerprint::default()->current());
+
+        $out = [
+            self::row(
+                'Αντίγραφα',
+                'Τελευταίο αντίγραφο',
+                $days !== null && $days <= $threshold,
+                $days === null
+                    ? 'Ημερομηνία μη αναγνώσιμη στην καταγραφή.'
+                    : sprintf(
+                        'Πριν %d %s (%s).',
+                        $days,
+                        $days === 1 ? 'μέρα' : 'μέρες',
+                        $days <= $threshold ? 'εντός ορίου' : 'ΠΑΛΙΟ -- πάρε νέο'
+                    )
+            ),
+            self::row(
+                'Αντίγραφα',
+                'Κλειδί αντιγράφου',
+                $keyMatches,
+                match ($keyMatches) {
+                    null  => 'Χωρίς αποτύπωμα -- αντίγραφο από παλιά έκδοση του εργαλείου.',
+                    true  => 'Ταιριάζει με το τρέχον κλειδί. Η επαναφορά θα διαβάσει τα δεδομένα.',
+                    false => 'ΔΕΝ ΤΑΙΡΙΑΖΕΙ με το τρέχον κλειδί. Αυτό το αντίγραφο, αν επαναφερθεί, '
+                        . 'θα γράψει κενά πάνω σε ΑΦΜ/ΑΔΤ/διεύθυνση κατά την πρώτη αποθήκευση. Πάρε νέο.',
+                }
+            ),
+            self::row(
+                'Αντίγραφα',
+                'Έγγραφα στο αντίγραφο',
+                $last['uploads_included'] ? true : null,
+                $last['uploads_included']
+                    ? 'Περιλαμβάνονταν (--with-uploads).'
+                    : 'ΔΕΝ περιλαμβάνονταν. Χωρίς αυτά η επαναφορά δίνει συμβάσεις με σπασμένους '
+                      . 'συνδέσμους -- ταυτότητες, λογαριασμοί, υπογραφές. Δες docs/BACKUP.md.'
+            ),
+        ];
+
+        return $out;
     }
 
     /**

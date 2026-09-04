@@ -56,6 +56,7 @@ if (! is_readable($load)) {
 
 require_once $load;
 
+use EnergyCRM\Infrastructure\BackupState;
 use EnergyCRM\Infrastructure\KeyFingerprint;
 use EnergyCRM\Persistence\CustomerFields;
 use EnergyCRM\Persistence\Tables;
@@ -389,6 +390,11 @@ $payload = [
 file_put_contents($manifest, (string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
 echo "  [ΟΚ]  Manifest     → {$manifest}\n";
+
+// Ό,τι χρειάζεται η οθόνη Υγεία για να δείξει «τελευταίο αντίγραφο: πότε,
+// με ποιο κλειδί» -- ΧΩΡΙΣ διαδρομή δίσκου. Ξεχωριστό από το manifest πάνω:
+// αυτό ζει στο site, το manifest ζει εκτός site μαζί με το dump.
+BackupState::record($payload);
 
 // --- Σύνοψη ------------------------------------------------------------------
 
