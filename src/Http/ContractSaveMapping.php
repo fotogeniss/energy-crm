@@ -151,6 +151,20 @@ final class ContractSaveMapping
                 ? sanitize_text_field((string) $params['meter_number']) : null;
         }
 
+        // Το κινητό/email του πελάτη ενέργειας στο COMBO, όταν είναι άλλο
+        // πρόσωπο -- στήλη, όχι extra_json, γιατί χτίζει τον δεύτερο σύνδεσμο
+        // υπογραφής (§1.17, βλ. AddComboEnergyContactColumns). Ίδιο μοτίβο
+        // partial-update με το supply_number/meter_number από πάνω.
+        if (! $isUpdate || isset($params['combo_energy_mobile'])) {
+            $contract['combo_energy_mobile'] = isset($params['combo_energy_mobile'])
+                ? sanitize_text_field((string) $params['combo_energy_mobile']) : null;
+        }
+
+        if (! $isUpdate || isset($params['combo_energy_email'])) {
+            $contract['combo_energy_email'] = isset($params['combo_energy_email'])
+                ? sanitize_email((string) $params['combo_energy_email']) : null;
+        }
+
         if (! $isUpdate || isset($params['invoice_code'])) {
             $contract['invoice_code'] = isset($params['invoice_code'])
                 ? sanitize_text_field((string) $params['invoice_code']) : null;

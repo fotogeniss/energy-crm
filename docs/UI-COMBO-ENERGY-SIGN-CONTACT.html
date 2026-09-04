@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Μακέτα: Στοιχεία επικοινωνίας πελάτη ενέργειας (2η υπογραφή)</title>
+<style>
+  :root{
+    --p500:#8a7bd8; --accent-ink:#5b4fc4; --accent-wash:#f1eefb; --accent-wash-2:#e4ddf6;
+    --ink:#1f2430; --muted:#6b7280; --line:#e2e5ea; --bg:#f7f8fa; --card:#ffffff;
+    --fs-12:12px; --fs-11-5:11.5px; --fs-13:13px;
+  }
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:32px;}
+  h1{font-size:18px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 24px;}
+  .demo-row{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:32px;align-items:flex-start;}
+  .demo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;width:340px;}
+  .demo h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:0 0 14px;font-weight:700;}
+  .demo h2 .tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:10px;letter-spacing:0;}
+  .tag-now{background:#eef0f3;color:#5a6270;}
+  .tag-new{background:var(--accent-wash);color:var(--accent-ink);}
+
+  .ecrm-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .ecrm-field label,.ecrm-field .lbl{font-size:12px;color:var(--muted);}
+  .ecrm-field input,.ecrm-field select{border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);}
+  .ecrm-field .lbl .opt{color:#9aa1ac;font-weight:400;text-transform:none;letter-spacing:0;}
+
+  .group{margin:16px 0 10px;padding-top:14px;border-top:1px solid var(--line);}
+  .group__title{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--accent-ink);font-weight:700;margin:0 0 4px;}
+  .group__hint{font-size:11.5px;color:var(--muted);margin:0 0 12px;line-height:1.45;}
+
+  .toggle{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--ink);
+    background:var(--accent-wash);border:1px solid var(--p500);border-radius:8px;padding:10px 12px;margin-bottom:4px;}
+  .toggle input{margin-top:2px;}
+  .toggle span small{display:block;color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.45;}
+
+  .note{background:#fff8e6;border:1px solid #f0dca0;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#6b5510;margin-bottom:24px;max-width:860px;line-height:1.55;}
+  .ask{background:#eef4ff;border:1px solid #b9cdf0;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#20355c;margin-bottom:14px;max-width:860px;line-height:1.55;}
+  .ask strong{display:block;margin-bottom:4px;}
+  .ok{background:#eefaf0;border:1px solid #a8ddb5;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#1d4d2b;margin-bottom:14px;max-width:860px;line-height:1.55;}
+  .ok strong{display:block;margin-bottom:4px;}
+  .caption{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.45;}
+  code{background:#eef0f3;padding:1px 5px;border-radius:4px;font-size:11.5px;}
+  .new-mark{box-shadow:0 0 0 2px var(--accent-wash-2);border-radius:8px;padding:8px;margin:-8px -8px 6px;}
+
+  .sign-preview{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;max-width:420px;margin-bottom:8px;}
+  .sign-preview .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .sign-preview .row:last-child{border-bottom:none;}
+  .pill{font-size:10.5px;padding:2px 8px;border-radius:999px;font-weight:700;}
+  .pill--ok{background:#eefaf0;color:#1d7a3a;}
+  .pill--wait{background:#fff6df;color:#8a6300;}
+</style>
+</head>
+<body>
+
+<h1>Μακέτα — Κινητό &amp; Email πελάτη ενέργειας, στο COMBO</h1>
+<p class="sub">Στάδιο 3β-Β &middot; μπλοκ «Πελάτης Ενέργειας», μόνο όταν είναι <strong>άλλο πρόσωπο</strong> από τον πελάτη κινητής &middot; νέα πεδία, όχι νέο μπλοκ</p>
+
+<div class="note">
+  <strong>Το πρόβλημα που λύνει.</strong> Όταν ο πελάτης ενέργειας είναι άλλο πρόσωπο, η αίτηση χρειάζεται <em>δύο</em> υπογραφές — αποφασισμένο ήδη (04/09). Ο δεύτερος υπογράφων πρέπει να πάρει δικό του σύνδεσμο υπογραφής, στο <em>δικό του</em> κινητό ή email — όχι στο κινητό/email του πελάτη κινητής, που είναι άλλος άνθρωπος. Σήμερα το μπλοκ «Πελάτης Ενέργειας» έχει μόνο ονοματεπώνυμο/ΑΦΜ/ΑΔΤ/ΔΟΥ — στοιχεία που τυπώνονται στο χαρτί, όχι στοιχεία επικοινωνίας. Δεν υπάρχει πουθενά να σταλεί κάτι.
+</div>
+
+<div class="demo-row">
+
+  <div class="demo">
+    <h2>Πριν <span class="tag tag-now">σήμερα</span></h2>
+    <div class="group" style="margin-top:0;padding-top:0;border-top:none;">
+      <p class="group__title">Πελάτης Ενέργειας</p>
+      <label class="toggle">
+        <input type="checkbox">
+        <span>Ίδιο πρόσωπο με τον πελάτη κινητής</span>
+      </label>
+      <div class="ecrm-field"><label>Ονοματεπώνυμο</label><input type="text" value="ΠΑΠΑΔΟΠΟΥΛΟΥ ΜΑΡΙΑ"></div>
+      <div class="ecrm-field"><label>Α.Φ.Μ.</label><input type="text" value="123456789"></div>
+      <div class="ecrm-field"><label>Αριθμός Εγγράφου Ταυτοπροσωπίας</label><input type="text" value="ΑΒ 123456"></div>
+      <div class="ecrm-field"><label>Δ.Ο.Υ.</label><input type="text" value="Α΄ ΑΘΗΝΩΝ"></div>
+    </div>
+    <p class="caption">Τέσσερα πεδία ταυτότητας. Κανένα τρόπος επικοινωνίας μαζί της — η αίτηση δεν μπορεί να της στείλει σύνδεσμο υπογραφής.</p>
+  </div>
+
+  <div class="demo">
+    <h2>Μετά — άλλο πρόσωπο <span class="tag tag-new">νέο</span></h2>
+    <div class="group" style="margin-top:0;padding-top:0;border-top:none;">
+      <p class="group__title">Πελάτης Ενέργειας</p>
+      <label class="toggle">
+        <input type="checkbox">
+        <span>Ίδιο πρόσωπο με τον πελάτη κινητής</span>
+      </label>
+      <div class="ecrm-field"><label>Ονοματεπώνυμο</label><input type="text" value="ΠΑΠΑΔΟΠΟΥΛΟΥ ΜΑΡΙΑ"></div>
+      <div class="ecrm-field"><label>Α.Φ.Μ.</label><input type="text" value="123456789"></div>
+      <div class="ecrm-field"><label>Αριθμός Εγγράφου Ταυτοπροσωπίας</label><input type="text" value="ΑΒ 123456"></div>
+      <div class="ecrm-field"><label>Δ.Ο.Υ.</label><input type="text" value="Α΄ ΑΘΗΝΩΝ"></div>
+      <div class="new-mark">
+        <div class="ecrm-field"><label>Κινητό <span class="opt">(για τον σύνδεσμο υπογραφής)</span></label><input type="text" value="69… "></div>
+        <div class="ecrm-field"><label>Email <span class="opt">(προαιρετικό)</span></label><input type="text" value=""></div>
+      </div>
+    </div>
+    <p class="caption">Δύο πεδία παραπάνω, <strong>μόνο σε αυτό το κλαδί</strong> — όταν είναι ίδιο πρόσωπο (αριστερά) δεν εμφανίζονται καθόλου, γιατί ο σύνδεσμος πάει στο κινητό/email που ήδη υπάρχει στην αίτηση.</p>
+  </div>
+
+  <div class="demo">
+    <h2>Πώς φαίνεται στην αποστολή <span class="tag tag-new">νέο</span></h2>
+    <div class="sign-preview">
+      <div class="row"><span>Πελάτης Κινητής — Γιάννης Κ.</span><span class="pill pill--ok">Υπέγραψε</span></div>
+      <div class="row"><span>Πελάτης Ενέργειας — Μαρία Π.</span><span class="pill pill--wait">Εκκρεμεί</span></div>
+    </div>
+    <p class="caption">Η αίτηση μετράει «υπογεγραμμένη» μόνο όταν φύγουν <strong>και οι δύο</strong> γραμμές πράσινες (ήδη αποφασισμένο, <code>SignatureRoles::isComplete()</code>). Η ίδια η οθόνη «ποιος υπέγραψε» είναι ξεχωριστό βήμα (3β-Γ) — αυτή η μακέτα δείχνει μόνο <em>ότι</em> θα υπάρχουν πια δύο γραμμές, όχι το τελικό της σχέδιο.</p>
+  </div>
+
+</div>
+
+<h1 style="font-size:15px;margin-top:8px;">Οι αποφάσεις, όπως καταγράφηκαν</h1>
+
+<div class="ok">
+  <strong>Κλείστηκαν ήδη (04/09)</strong>
+  <strong style="display:inline;font-weight:700;">Δύο υπογραφές μόνο όταν είναι δύο πρόσωπα.</strong> Ίδιο πρόσωπο → μία υπογραφή, ίδια εικόνα και στις δύο θέσεις του εντύπου (ήδη υλοποιημένο).<br>
+  <strong style="display:inline;font-weight:700;">Ο δεύτερος παίρνει δικό του σύνδεσμο</strong>, στο δικό του κινητό/email — όχι στου πελάτη κινητής.<br>
+  <strong style="display:inline;font-weight:700;">«Υπογεγραμμένη» = και οι δύο.</strong> Όχι η πρώτη υπογραφή που φτάνει.
+</div>
+
+<div class="ask">
+  <strong>Τι θέλει το ΟΚ σου εδώ</strong>
+  <strong style="display:inline;font-weight:700;">1. Προαιρετικά και τα δύο πεδία, όπως το κινητό/email του κύριου πελάτη σήμερα.</strong> Αν μείνουν κενά, ο συνεργάτης δεν χάνει τη δυνατότητα να στείλει — υπάρχει πάντα το κανάλι «Μόνο σύνδεσμος» (το αντιγράφει και το στέλνει ο ίδιος με WhatsApp/Messenger, όπως γίνεται ήδη για τον πρώτο πελάτη). Δεν μπλοκάρω την αποθήκευση της αίτησης αν λείπουν.<br><br>
+  <strong style="display:inline;font-weight:700;">2. Κανονικές στήλες στη βάση, όχι <code>extra_json</code>.</strong> Θα χρησιμοποιηθούν για να χτιστεί ο σύνδεσμος υπογραφής — έχουν business-rule σημασία από την πρώτη μέρα, οπότε μπαίνουν κατευθείαν σωστά (§1.17). Νέο migration, δικό του commit.<br><br>
+  Ερώτημα: <strong>σε βολεύουν οι δύο ετικέτες όπως είναι</strong> («Κινητό» / «Email»), ή θες άλλη διατύπωση;
+</div>
+
+<p class="caption" style="max-width:860px;">
+  Τι <strong>δεν</strong> αλλάζει: η θέση και τα υπάρχοντα πεδία του μπλοκ «Πελάτης Ενέργειας», η συμπεριφορά όταν είναι ίδιο πρόσωπο, το έντυπο εκτύπωσης (τα δύο νέα πεδία δεν τυπώνονται πουθενά — είναι μόνο για την αποστολή). Backend μέρος (role-aware token, δεύτερος σύνδεσμος, μήνυμα «λείπει ο ένας») δεν είναι οπτική αλλαγή — δεν χρειάζεται δεύτερη μακέτα, φαίνεται στο CHANGELOG όταν μπει.
+</p>
+
+</body>
+</html>
