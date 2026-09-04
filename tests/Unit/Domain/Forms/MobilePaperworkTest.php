@@ -194,4 +194,75 @@ final class MobilePaperworkTest extends TestCase
     {
         self::assertArrayNotHasKey('orizon_100gb', MobilePlans::pricingTable());
     }
+
+    /**
+     * Και τα δύο κουτιά απαντώνται, όχι μόνο αυτό που θέλουμε τσεκαρισμένο --
+     * ίδιος λόγος με την connectionTicks(): κλειδί που λείπει είναι κλειδί που
+     * κρατά άλλος χάρτης, και το `+` δίνει προτεραιότητα μόνο σε όσα υπάρχουν.
+     */
+    public function testTheMobileBlockAnswersForBothBoxes(): void
+    {
+        $main = P::comboUserTicks(P::COMBO_USER_MAIN);
+
+        self::assertSame(['xristis_kyrios' => 'X', 'xristis_defterevon' => ''], $main);
+
+        $second = P::comboUserTicks(P::COMBO_USER_SECONDARY);
+
+        self::assertSame(['xristis_kyrios' => '', 'xristis_defterevon' => 'X'], $second);
+    }
+
+    /**
+     * Το έντυπο έχει δύο ζεύγη κουτιών, ένα ανά μπλοκ πελάτη, και το άρθρο 4
+     * τα ορίζει ως τους δύο ρόλους της ίδιας προσφοράς. Η φόρμα κρατά ένα πεδίο
+     * ρόλου· το δεύτερο ζεύγος βγαίνει ανεστραμμένο από αυτό.
+     */
+    public function testTheEnergyBlockMirrorsTheMobileOne(): void
+    {
+        self::assertSame(
+            ['xristis_kyrios_energeias' => '', 'xristis_defterevon_energeias' => 'X'],
+            P::energyUserTicks(P::COMBO_USER_MAIN)
+        );
+
+        self::assertSame(
+            ['xristis_kyrios_energeias' => 'X', 'xristis_defterevon_energeias' => ''],
+            P::energyUserTicks(P::COMBO_USER_SECONDARY)
+        );
+    }
+
+    /**
+     * Ο φύλακας του λάθους που διορθώθηκε: ώς τις 04/09/2026 τα ίδια δύο
+     * κλειδιά ήταν χαρτογραφημένα και στις δύο σελίδες, οπότε το έντυπο έβγαινε
+     * με δύο κύριους χρήστες -- κατάσταση που δεν υπάρχει.
+     */
+    public function testTheSamePersonIsNeverMainInBothBlocks(): void
+    {
+        foreach ([P::COMBO_USER_MAIN, P::COMBO_USER_SECONDARY] as $role) {
+            $mobile = P::comboUserTicks($role);
+            $energy = P::energyUserTicks($role);
+
+            self::assertNotSame(
+                $mobile['xristis_kyrios'],
+                $energy['xristis_kyrios_energeias'],
+                'Ο ρόλος «' . $role . '» βγήκε ίδιος και στα δύο μπλοκ'
+            );
+        }
+    }
+
+    /**
+     * Χωρίς δηλωμένο ρόλο δεν μαντεύεται κανένας -- αλλά τα κλειδιά ΕΠΙΣΤΡΕΦΟΝΤΑΙ
+     * κενά αντί να λείπουν. Άδειος πίνακας θα άφηνε τα δύο κουτιά σε όποιον
+     * άλλο χάρτη τα διεκδικεί· κενή τιμή τα σβήνει ρητά.
+     */
+    public function testAnUnsetRoleTicksNothingButStillAnswers(): void
+    {
+        self::assertSame(
+            ['xristis_kyrios' => '', 'xristis_defterevon' => ''],
+            P::comboUserTicks('')
+        );
+
+        self::assertSame(
+            ['xristis_kyrios_energeias' => '', 'xristis_defterevon_energeias' => ''],
+            P::energyUserTicks('')
+        );
+    }
 }

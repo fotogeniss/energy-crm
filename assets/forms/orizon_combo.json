@@ -56,83 +56,71 @@
     "y": 81.0
    }
   ],
-  "onomateponymo_pelati": [
-   {
-    "page": 1,
-    "x": 45.3,
-    "y": 84.6
-   },
-   {
-    "page": 3,
-    "x": 45.3,
-    "y": 63.8
-   }
-  ],
-  "adt_pelati": [
-   {
-    "page": 1,
-    "x": 79.5,
-    "y": 91.3
-   },
-   {
-    "page": 3,
-    "x": 79.5,
-    "y": 68.9
-   }
-  ],
-  "afm_pelati": [
-   {
-    "page": 1,
-    "x": 137.3,
-    "y": 91.3
-   },
-   {
-    "page": 3,
-    "x": 137.3,
-    "y": 68.9
-   }
-  ],
-  "doy_pelati": [
-   {
-    "page": 1,
-    "x": 184.4,
-    "y": 91.3,
-    "size": 7
-   },
-   {
-    "page": 3,
-    "x": 19.3,
-    "y": 74.0
-   }
-  ],
-  "xristis_kyrios": [
-   {
-    "page": 1,
-    "x": 67.2,
-    "y": 98.1,
-    "check": true
-   },
-   {
-    "page": 3,
-    "x": 67.2,
-    "y": 95.2,
-    "check": true
-   }
-  ],
-  "xristis_defterevon": [
-   {
-    "page": 1,
-    "x": 151.1,
-    "y": 98.1,
-    "check": true
-   },
-   {
-    "page": 3,
-    "x": 151.1,
-    "y": 95.2,
-    "check": true
-   }
-  ],
+  "onomateponymo_pelati": {
+   "page": 1,
+   "x": 45.3,
+   "y": 84.6
+  },
+  "onomateponymo_energeias": {
+   "page": 3,
+   "x": 45.3,
+   "y": 63.8
+  },
+  "adt_pelati": {
+   "page": 1,
+   "x": 79.5,
+   "y": 91.3
+  },
+  "adt_energeias": {
+   "page": 3,
+   "x": 79.5,
+   "y": 68.9
+  },
+  "afm_pelati": {
+   "page": 1,
+   "x": 137.3,
+   "y": 91.3
+  },
+  "afm_energeias": {
+   "page": 3,
+   "x": 137.3,
+   "y": 68.9
+  },
+  "doy_pelati": {
+   "page": 1,
+   "x": 184.4,
+   "y": 91.3,
+   "size": 7
+  },
+  "doy_energeias": {
+   "page": 3,
+   "x": 19.3,
+   "y": 74.0
+  },
+  "xristis_kyrios": {
+   "page": 1,
+   "x": 67.2,
+   "y": 98.1,
+   "check": true
+  },
+  "xristis_kyrios_energeias": {
+   "page": 3,
+   "x": 67.2,
+   "y": 95.2,
+   "check": true
+  },
+  "xristis_defterevon": {
+   "page": 1,
+   "x": 151.1,
+   "y": 98.1,
+   "check": true
+  },
+  "xristis_defterevon_energeias": {
+   "page": 3,
+   "x": 151.1,
+   "y": 95.2,
+   "check": true
+  },
   "arithmos_kinitou": {
    "page": 1,
    "x": 102.2,

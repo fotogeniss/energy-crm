@@ -63,6 +63,13 @@ final class ProviderFormFields
         'energopoiisi_foritotita',
         'programma_5gb', 'programma_10gb_5gb', 'programma_40gb', 'programma_unlimited',
         'xristis_kyrios', 'xristis_defterevon',
+
+        // Το δεύτερο μπλοκ ταυτότητας του COMBO (219/220): «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ
+        // ΕΝΕΡΓΕΙΑΣ», που μπορεί να είναι άλλο πρόσωπο από τον πελάτη κινητής.
+        // Εδώ μέσα σημαίνει «μη ζητηθεί ξανά στο "Πάνω στο έντυπο"» -- η φόρμα
+        // τα συλλέγει ήδη στην κάρτα Στοιχεία Κινητής.
+        'onomateponymo_energeias', 'adt_energeias', 'afm_energeias', 'doy_energeias',
+        'xristis_kyrios_energeias', 'xristis_defterevon_energeias',
     ];
 
     /**
@@ -254,6 +261,18 @@ final class ProviderFormFields
         'programma_unlimited'            => [],
         'xristis_kyrios'                 => [],
         'xristis_defterevon'             => [],
+
+        // Όταν ο πελάτης ενέργειας είναι ο ίδιος (η προεπιλογή), αυτά
+        // αντιγράφονται από τα στοιχεία του πελάτη κινητής και κανείς δεν
+        // πληκτρολογεί τίποτα. Τα inputs που δηλώνονται εδώ είναι η ΑΛΛΗ
+        // περίπτωση -- ο λόγος που τα κλειδιά υπάρχουν χωριστά.
+        'onomateponymo_energeias'        => ['combo_energy_name'],
+        'afm_energeias'                  => ['combo_energy_afm'],
+        'adt_energeias'                  => ['combo_energy_adt'],
+        'doy_energeias'                  => ['combo_energy_doy'],
+        // Ανεστραμμένα από το ένα πεδίο ρόλου -- βλ. MobilePaperwork::energyUserTicks().
+        'xristis_kyrios_energeias'       => [],
+        'xristis_defterevon_energeias'   => [],
     ];
 
     /**
@@ -295,6 +314,14 @@ final class ProviderFormFields
         'base_price'         => 'Αρχική Τιμή Παγίου (€)',
         'offer_price'        => 'Τιμή Προσφοράς ανά Μήνα (€)',
         'price_after'        => 'Πάγιο μετά τη Λήξη της Προσφοράς (€)',
+
+        // COMBO: τα στοιχεία του πελάτη ενέργειας, όταν είναι άλλο πρόσωπο από
+        // τον πελάτη κινητής. Ονομάζονται με το «Ενέργειας» μπροστά ώστε στη
+        // λίστα «Πάνω στο έντυπο» να μη μοιάζουν με δεύτερο ΑΦΜ του ίδιου.
+        'combo_energy_name'  => 'Ονοματεπώνυμο Πελάτη Ενέργειας',
+        'combo_energy_afm'   => 'ΑΦΜ Πελάτη Ενέργειας',
+        'combo_energy_adt'   => 'Αρ. Ταυτότητας Πελάτη Ενέργειας',
+        'combo_energy_doy'   => 'ΔΟΥ Πελάτη Ενέργειας',
 
         // Διατυπωμένες όπως τις θέτει ο συνεργάτης στον πελάτη, όχι όπως τις
         // γράφει το νομικό κείμενο του εντύπου.

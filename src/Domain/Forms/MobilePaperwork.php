@@ -160,20 +160,51 @@ final class MobilePaperwork
     }
 
     /**
-     * Which ΚΥΡΙΟΣ/ΔΕΥΤΕΡΕΥΩΝ ΧΡΗΣΤΗΣ box to tick on the COMBO form.
+     * Which ΚΥΡΙΟΣ/ΔΕΥΤΕΡΕΥΩΝ ΧΡΗΣΤΗΣ box to tick in the **mobile** block.
      *
-     * Only orizon_combo.json has these two fields, so this is a no-op for any
+     * Only orizon_combo.json has these fields, so this is a no-op for any
      * other template — the caller doesn't need to know that, it just merges
      * in whatever comes back.
      *
-     * @return array<string, string> fill key => 'X'
+     * Επιστρέφει **και τα δύο** κλειδιά, όχι μόνο αυτό που θέλει τσεκαρισμένο,
+     * για τον ίδιο λόγο που το κάνει η connectionTicks(): ένα κλειδί που
+     * λείπει από εδώ είναι κλειδί που το κρατά άλλος χάρτης, και οι δύο χάρτες
+     * ενώνονται με `+`, όπου η αριστερή πλευρά κερδίζει **μόνο για όσα κλειδιά
+     * περιέχει**. Σήμερα κανείς άλλος δεν τα γράφει και η παράλειψη ήταν
+     * ακίνδυνη· η ασυμμετρία όμως είναι ακριβώς το σχήμα που κόστισε εκεί.
+     *
+     * @return array<string, string> fill key => 'X' ή ''
      */
     public static function comboUserTicks(string $role): array
     {
-        return match ($role) {
-            self::COMBO_USER_MAIN      => ['xristis_kyrios' => 'X'],
-            self::COMBO_USER_SECONDARY => ['xristis_defterevon' => 'X'],
-            default                    => [],
-        };
+        return [
+            'xristis_kyrios'     => $role === self::COMBO_USER_MAIN ? 'X' : '',
+            'xristis_defterevon' => $role === self::COMBO_USER_SECONDARY ? 'X' : '',
+        ];
+    }
+
+    /**
+     * Τα ίδια κουτιά στο μπλοκ **ενέργειας** — ανεστραμμένα.
+     *
+     * Το έντυπο έχει ΔΥΟ ζεύγη «ΚΥΡΙΟΣ / ΔΕΥΤΕΡΕΥΩΝ ΧΡΗΣΤΗΣ ΠΡΟΣΦΟΡΑΣ», ένα σε
+     * κάθε μπλοκ πελάτη, και το άρθρο 4 τα ορίζει ως τους δύο ρόλους της ΙΔΙΑΣ
+     * προσφοράς: ο ένας υπογράφων είναι ο κύριος χρήστης, ο άλλος δηλώνει ότι
+     * συγκατατίθεται να οριστεί εκείνος. Δεν μπορούν να είναι και οι δύο το
+     * ίδιο πράγμα.
+     *
+     * Γι' αυτό η φόρμα κρατά **ένα** πεδίο ρόλου (ρητή απόφαση του ιδιοκτήτη,
+     * 04/09/2026) και το δεύτερο ζεύγος παράγεται αντίστροφα εδώ. Ώς τότε τα
+     * ίδια δύο κλειδιά ήταν χαρτογραφημένα και στις δύο σελίδες του
+     * orizon_combo.json, οπότε το έντυπο έβγαινε με τον ΙΔΙΟ ρόλο τσεκαρισμένο
+     * και στα δύο μπλοκ — δηλαδή δύο κύριους χρήστες, που δεν υπάρχει.
+     *
+     * @return array<string, string> fill key => 'X' ή ''
+     */
+    public static function energyUserTicks(string $role): array
+    {
+        return [
+            'xristis_kyrios_energeias'     => $role === self::COMBO_USER_SECONDARY ? 'X' : '',
+            'xristis_defterevon_energeias' => $role === self::COMBO_USER_MAIN ? 'X' : '',
+        ];
     }
 }

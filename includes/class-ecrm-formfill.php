@@ -186,6 +186,33 @@ class ECRM_FormFill {
 			$mobile   = \EnergyCRM\Domain\Forms\MobilePlans::fillValues( (string) ( $c['program_code'] ?? '' ), $combined )
 				+ \EnergyCRM\Domain\Forms\MobilePaperwork::connectionTicks( $xg( 'request_type' ) )
 				+ \EnergyCRM\Domain\Forms\MobilePaperwork::comboUserTicks( $xg( 'combo_user_role' ) );
+
+			// Το μπλοκ «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ ΕΝΕΡΓΕΙΑΣ» του COMBO (σελίδα 3).
+			//
+			// Ώς τις 04/09/2026 τα onomateponymo/afm/adt/doy_pelati ήταν
+			// χαρτογραφημένα ΚΑΙ στις δύο σελίδες του orizon_combo.json, οπότε
+			// έπαιρναν αναγκαστικά την ίδια τιμή. Όταν η παροχή ρεύματος ήταν σε
+			// άλλο όνομα -- περίπτωση που το άρθρο 4 του εντύπου προβλέπει ρητά
+			// -- το έντυπο δεν έβγαινε με κενό μπλοκ ενέργειας: έβγαινε με το
+			// ΛΑΘΟΣ ΑΦΜ, εκείνο του πελάτη κινητής. Το ανέφερε ο pilot της
+			// Orizon ως «δεν εμφανίζει το ΑΦΜ του πελάτη».
+			//
+			// Τα δύο μπλοκ έχουν πια δικά τους κλειδιά. Όταν ο πωλητής δηλώνει
+			// ότι είναι το ίδιο πρόσωπο (η προεπιλογή), αντιγράφονται εδώ τα
+			// στοιχεία του πελάτη κινητής -- το έντυπο θέλει και τα δύο μπλοκ
+			// συμπληρωμένα ακόμα κι όταν αφορούν τον ίδιο άνθρωπο.
+			if ( $xg( 'mobile_offer' ) === \EnergyCRM\Domain\Forms\MobilePaperwork::OFFER_COMBO ) {
+				// Απούσα τιμή σημαίνει «ίδιο πρόσωπο»: αιτήσεις γραμμένες πριν
+				// υπάρξει το πεδίο δεν είχαν τρόπο να πουν το αντίθετο.
+				$same_person = $xg( 'combo_energy_same' ) !== '0';
+
+				$mobile += [
+					'onomateponymo_energeias' => $same_person ? $name : $xg( 'combo_energy_name' ),
+					'afm_energeias'           => $same_person ? (string) ( $c['afm'] ?? '' ) : $xg( 'combo_energy_afm' ),
+					'adt_energeias'           => $same_person ? (string) ( $c['adt'] ?? '' ) : $xg( 'combo_energy_adt' ),
+					'doy_energeias'           => $same_person ? (string) ( $c['doy'] ?? '' ) : $xg( 'combo_energy_doy' ),
+				] + \EnergyCRM\Domain\Forms\MobilePaperwork::energyUserTicks( $xg( 'combo_user_role' ) );
+			}
 		}
 
 		return $mobile + [
