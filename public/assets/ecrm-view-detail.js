@@ -408,7 +408,12 @@ function renderDetail(view, d) {
 		// Δεν στέλνει σιωπηλά: ο SignLinkController απαντά needs_confirm και
 		// ο χρήστης επιβεβαιώνει πρώτα ότι σβήνει την παλιά υπογραφή.
 		// ΑΦΟΡΑ ΟΛΟΥΣ ΤΟΥΣ ΠΑΡΟΧΟΥΣ — καμία σχέση με energy_type/Orizon.
-		( [ 'draft', 'new', 'pending_signature', 'awaiting_signature', 'signed', 'routed' ].indexOf( c.status ) !== -1
+		//
+		// 'processing' προστέθηκε 04/09, ίδιο μοτίβο: κάθεται ανάμεσα σε
+		// 'signed' και 'routed' στο ContractStatus::allowedNext() -- μια
+		// COMBO αίτηση μπορεί να φτάσει εδώ αυτόματα (AutoProcess) ενώ
+		// γνήσια λείπει ακόμα η δεύτερη υπογραφή.
+		( [ 'draft', 'new', 'pending_signature', 'awaiting_signature', 'signed', 'processing', 'routed' ].indexOf( c.status ) !== -1
 			? '<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>'
 			: '' ) +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +
