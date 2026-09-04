@@ -39,14 +39,19 @@ final class ProviderFormRenderer implements SheetRenderer
      *
      * @return list<array{key: string, bytes: string}>
      */
-    public function render(array $contract, ?string $signaturePath): array
+    /**
+     * @param array<string, string> $signatureRoles ρόλος => διαδρομή εικόνας,
+     *        για έντυπα με περισσότερες από μία θέσεις υπογραφής που ανήκουν
+     *        σε διαφορετικούς ανθρώπους (σήμερα: μόνο το COMBO).
+     */
+    public function render(array $contract, ?string $signaturePath, array $signatureRoles = []): array
     {
         ini_set('memory_limit', self::MEMORY);
         TimeLimit::atLeast(self::SECONDS);
 
         $sheets = [];
 
-        foreach ($this->providerForms($contract, $signaturePath) as $sheet) {
+        foreach ($this->providerForms($contract, $signaturePath, $signatureRoles) as $sheet) {
             $bytes = self::fromPdfHeader((string) ($sheet['bytes'] ?? ''));
 
             // A sheet that failed is dropped rather than fatal: an agent who
@@ -69,11 +74,12 @@ final class ProviderFormRenderer implements SheetRenderer
     }
 
     /**
-     * @param array<string, mixed> $contract
+     * @param array<string, mixed>  $contract
+     * @param array<string, string> $signatureRoles
      *
      * @return list<array{key: string, ok: bool, error?: string, bytes?: string, filename?: string}>
      */
-    private function providerForms(array $contract, ?string $signaturePath): array
+    private function providerForms(array $contract, ?string $signaturePath, array $signatureRoles = []): array
     {
         if (! class_exists(ECRM_FormFill::class)) {
             return [];
@@ -83,7 +89,7 @@ final class ProviderFormRenderer implements SheetRenderer
         ob_start();
 
         try {
-            $sheets = ECRM_FormFill::fill_all($contract, $signaturePath);
+            $sheets = ECRM_FormFill::fill_all($contract, $signaturePath, $signatureRoles);
         } catch (Throwable) {
             $sheets = [];
         } finally {

@@ -466,13 +466,13 @@ class ECRM_FormFill {
 	 * @param string|null $sig_path Optional absolute path to a signature PNG.
 	 * @return array{ok:bool,error?:string,bytes?:string,filename?:string}
 	 */
-	public static function fill( array $c, ?string $sig_path = null ): array {
+	public static function fill( array $c, ?string $sig_path = null, array $sig_roles = [] ): array {
 		$keys = self::template_keys( $c );
 		if ( ! $keys ) {
 			return [ 'ok' => false, 'error' => 'Δεν υπάρχει ακόμη πρότυπο εντύπου για αυτόν τον πάροχο/τύπο παροχής.' ];
 		}
 
-		return self::render_merged( $keys, $c, $sig_path );
+		return self::render_merged( $keys, $c, $sig_path, $sig_roles );
 	}
 
 	/**
@@ -523,11 +523,11 @@ class ECRM_FormFill {
 	 *
 	 * @return list<array{key:string, ok:bool, error?:string, bytes?:string, filename?:string}>
 	 */
-	public static function fill_all( array $c, ?string $sig_path = null ): array {
+	public static function fill_all( array $c, ?string $sig_path = null, array $sig_roles = [] ): array {
 		$out = [];
 
 		foreach ( self::template_keys( $c ) as $key ) {
-			$out[] = [ 'key' => $key ] + self::render( $key, $c, $sig_path );
+			$out[] = [ 'key' => $key ] + self::render( $key, $c, $sig_path, $sig_roles );
 		}
 
 		return $out;
@@ -582,7 +582,12 @@ class ECRM_FormFill {
 	 * @param array<string, mixed> $map
 	 * @param array<string, mixed> $values
 	 */
-	private static function draw_pages( $pdf, string $dir, string $key, array $map, array $values, ?string $sig_path ): void {
+	/**
+	 * @param array<string, mixed>  $map
+	 * @param array<string, mixed>  $values
+	 * @param array<string, string> $sig_roles ρόλος => διαδρομή εικόνας
+	 */
+	private static function draw_pages( $pdf, string $dir, string $key, array $map, array $values, ?string $sig_path, array $sig_roles = [] ): void {
 		$w = (float) ( $map['page_w'] ?? 210 );
 		$h = (float) ( $map['page_h'] ?? 297 );
 		$orient = ( $w > $h ) ? 'L' : 'P';
@@ -614,16 +619,33 @@ class ECRM_FormFill {
 				}
 			}
 
-			if ( $sig_path && file_exists( $sig_path ) ) {
-				// Support multiple signature stamps per template (e.g. a customer
-				// signs in two places). Falls back to the single legacy "sig" key.
-				$sigs = ( ! empty( $map['sigs'] ) && is_array( $map['sigs'] ) )
-					? $map['sigs']
-					: ( ! empty( $map['sig'] ) ? [ $map['sig'] ] : [] );
-				foreach ( $sigs as $s ) {
-					if ( ! is_array( $s ) || (int) ( $s['page'] ?? 0 ) !== $p ) { continue; }
-					$pdf->Image( $sig_path, (float) $s['x'], (float) $s['y'], (float) ( $s['w'] ?? 40 ), (float) ( $s['h'] ?? 0 ) );
-				}
+			// Support multiple signature stamps per template (e.g. a customer
+			// signs in two places). Falls back to the single legacy "sig" key.
+			$sigs = ( ! empty( $map['sigs'] ) && is_array( $map['sigs'] ) )
+				? $map['sigs']
+				: ( ! empty( $map['sig'] ) ? [ $map['sig'] ] : [] );
+
+			foreach ( $sigs as $s ) {
+				if ( ! is_array( $s ) || (int) ( $s['page'] ?? 0 ) !== $p ) { continue; }
+
+				// Μια θέση ΧΩΡΙΣ ρόλο παίρνει τη μία υπογραφή της σύμβασης --
+				// η συμπεριφορά που είχαν πάντα όλα τα έντυπα, και είναι σωστή
+				// όταν ο ίδιος άνθρωπος υπογράφει σε τρία σημεία του ίδιου
+				// χαρτιού.
+				//
+				// Μια θέση ΜΕ ρόλο δέχεται μόνο τη δική της. Το COMBO έχει δύο
+				// γραμμές -- «ΥΠΟΓΡΑΦΗ ΠΕΛΑΤΗ ΚΙΝΗΤΗΣ» και «ΥΠΟΓΡΑΦΗ ΠΕΛΑΤΗΣ
+				// ΕΝΕΡΓΕΙΑΣ» -- και ώς τις 04/09/2026 η ίδια εικόνα στάμπαρε και
+				// τις δύο: όταν ήταν δύο διαφορετικά πρόσωπα, το χαρτί έδειχνε
+				// τον έναν να έχει υπογράψει στη θέση του άλλου. Αν λείπει η
+				// υπογραφή του ρόλου, η θέση μένει **κενή** -- κενό το βλέπει ο
+				// πωλητής και το κυνηγά, ψεύτικη υπογραφή δεν τη βλέπει κανείς.
+				$role = isset( $s['role'] ) ? (string) $s['role'] : '';
+				$img  = $role === '' ? $sig_path : ( $sig_roles[ $role ] ?? null );
+
+				if ( ! $img || ! file_exists( $img ) ) { continue; }
+
+				$pdf->Image( $img, (float) $s['x'], (float) $s['y'], (float) ( $s['w'] ?? 40 ), (float) ( $s['h'] ?? 0 ) );
 			}
 			$p++;
 		}
@@ -653,7 +675,7 @@ class ECRM_FormFill {
 	 *
 	 * @return array{ok:bool,error?:string,bytes?:string,filename?:string}
 	 */
-	private static function render( string $key, array $c, ?string $sig_path ): array {
+	private static function render( string $key, array $c, ?string $sig_path, array $sig_roles = [] ): array {
 		$dir = ECRM_DIR . 'assets/forms/';
 
 		// Each template page is bundled as a background image (assets/forms/{key}-{n}.jpg);
@@ -679,7 +701,7 @@ class ECRM_FormFill {
 			$pdf->AddFont( 'DejaVu', '', 'DejaVuSans.ttf', true );
 			$pdf->AddFont( 'DejaVu', 'B', 'DejaVuSans-Bold.ttf', true );
 
-			self::draw_pages( $pdf, $dir, $key, $map, self::values( $c ), $sig_path );
+			self::draw_pages( $pdf, $dir, $key, $map, self::values( $c ), $sig_path, $sig_roles );
 
 			$bytes = $pdf->Output( '', 'S' );
 			ob_end_clean();
@@ -714,7 +736,7 @@ class ECRM_FormFill {
 	 *
 	 * @return array{ok:bool,error?:string,bytes?:string,filename?:string}
 	 */
-	private static function render_merged( array $keys, array $c, ?string $sig_path ): array {
+	private static function render_merged( array $keys, array $c, ?string $sig_path, array $sig_roles = [] ): array {
 		$dir    = ECRM_DIR . 'assets/forms/';
 		$values = self::values( $c );
 
@@ -737,7 +759,7 @@ class ECRM_FormFill {
 
 			foreach ( $keys as $key ) {
 				$map = self::load_map( $dir, $key );
-				self::draw_pages( $pdf, $dir, $key, $map, $values, $sig_path );
+				self::draw_pages( $pdf, $dir, $key, $map, $values, $sig_path, $sig_roles );
 			}
 
 			$bytes = $pdf->Output( '', 'S' );

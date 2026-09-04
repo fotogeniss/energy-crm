@@ -31,11 +31,17 @@ interface SheetRenderer
      * leaves whatever is already stored alone, rather than replacing a working
      * document with nothing.
      *
-     * @param array<string, mixed> $contract      Joined contract row, decrypted.
-     * @param string|null          $signaturePath Absolute path to the signature
-     *                                            image, when one was collected.
+     * @param array<string, mixed>  $contract       Joined contract row, decrypted.
+     * @param string|null           $signaturePath  Absolute path to the signature
+     *                                              image, when one was collected.
+     * @param array<string, string> $signatureRoles ρόλος => διαδρομή εικόνας, για
+     *                                              έντυπα με θέσεις υπογραφής που
+     *                                              ανήκουν σε διαφορετικούς
+     *                                              ανθρώπους (σήμερα: το COMBO).
+     *                                              Κενός χάρτης = η σημερινή
+     *                                              συμπεριφορά για κάθε άλλο έντυπο.
      *
      * @return list<array{key: string, bytes: string}>
      */
-    public function render(array $contract, ?string $signaturePath): array;
+    public function render(array $contract, ?string $signaturePath, array $signatureRoles = []): array;
 }
