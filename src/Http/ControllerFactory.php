@@ -71,6 +71,7 @@ final class ControllerFactory
                 Services::events(),
                 Services::files(),
                 Services::statusDwell(),
+                Services::signatureState(),
             ),
             new ContractSaveController(
                 $scope,
