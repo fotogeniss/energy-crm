@@ -938,7 +938,7 @@ function renderDetail(view, d) {
 	});
 }
 function downloadBinary(path, btn, busy, idle) {
-	btn.disabled = true; var t = btn.textContent; btn.textContent = busy;
+	btn.disabled = true; var t = btn.innerHTML; btn.innerHTML = busy;
 	fetch(api(path), { headers: H() })
 		.then(function (r) {
 			return r.text().then(function (txt) {
@@ -956,5 +956,5 @@ function downloadBinary(path, btn, busy, idle) {
 			setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 		})
 		.catch(function (err) { toast((err && err.message) || 'Σφάλμα δικτύου.', false); })
-		.finally(function () { btn.disabled = false; btn.textContent = idle || t; });
+		.finally(function () { btn.disabled = false; btn.innerHTML = idle || t; });
 }
