@@ -52,6 +52,11 @@ final class BackupState
             'uploads_included' => is_array($uploads) ? (bool) ($uploads['included'] ?? false) : false,
             'rows'             => is_array($rows) ? $rows : [],
         ], false);
+
+        // Το option κρατά ΜΟΝΟ το τελευταίο αντίγραφο, οπότε δεν μπορεί να
+        // δείξει κενό: τρεις μέρες χωρίς backup και μετά ένα καθαρό δείχνουν
+        // ίδια με τριάντα συνεχόμενες μέρες. Ο μετρητής κρατά τις ημέρες.
+        Metrics::bump(Metrics::BACKUP);
     }
 
     /**

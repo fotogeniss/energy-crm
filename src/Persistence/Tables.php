@@ -26,6 +26,7 @@ final class Tables
     public const KB_ENTRIES         = 'kb_entries';
     public const KB_READ            = 'kb_read';
     public const LEADS              = 'leads';
+    public const METRICS            = 'metrics';
     public const NOTIFICATIONS      = 'notifications';
     public const PAYOUTS            = 'payouts';
     public const PROGRAMS           = 'programs';
@@ -66,6 +67,7 @@ final class Tables
             self::LEADS,
             self::KB_ENTRIES,
             self::KB_READ,
+            self::METRICS,
             self::NOTIFICATIONS,
             self::DELETION_LOG,
         ];

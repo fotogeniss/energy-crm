@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Infrastructure;
 
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\MetricsRepository;
 
 final class Retention
 {
@@ -76,6 +77,12 @@ final class Retention
         if ($cleared > 0) {
             error_log(sprintf('[Energy CRM] Καθαρίστηκαν δεδομένα εξαγωγής από %d συμβάσεις.', $cleared));
         }
+
+        // Το ιστορικό λειτουργίας κλαδεύεται εδώ και όχι σε δική του εργασία:
+        // είναι ημερήσιο σβήσιμο λίγων γραμμών, και μια πέμπτη cron εγγραφή
+        // θα ήταν ένα ακόμη πράγμα που μπορεί να μην τρέξει -- ακριβώς το
+        // πρόβλημα που μετράει ο ίδιος ο πίνακας.
+        (new MetricsRepository())->prune(Metrics::keepDays());
     }
 
     /**

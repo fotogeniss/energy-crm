@@ -17,6 +17,8 @@
  *   guarantee_rules — κανόνες πρότασης εγγύησης ανά πάροχο/κλίμακα kVA (21/DB_VERSION)
  *   tasks.seen_at  — πότε ο χρήστης είδε την ανοιχτή/ληξιπρόθεσμη εργασία στη
  *                    δική του λίστα, για το badge του μενού (22/DB_VERSION)
+ *   metrics        — ιστορικό λειτουργίας: (ημέρα, μετρητής, αριθμός), μόνο
+ *                    αριθμοί, καμία σύνδεση με πρόσωπο (23/DB_VERSION)
  *
  * Designed so future sessions can bolt on: network/team, commissions, mail.
  *
@@ -30,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '22';
+	const DB_VERSION = '23';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -460,6 +462,30 @@ class ECRM_DB {
 			deleted_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			KEY deleted_at (deleted_at)
+		) {$charset};" );
+
+		/* --- metrics (ιστορικό λειτουργίας) --------------------------------
+		 *
+		 * Μία γραμμή ανά (ημέρα, μετρητή). Το PRIMARY KEY στα δύο μαζί είναι
+		 * ΟΛΗ η δουλειά: επιτρέπει το `INSERT … ON DUPLICATE KEY UPDATE`, που
+		 * ανεβάζει τον σημερινό αριθμό ατομικά μέσα στη MySQL -- χωρίς
+		 * διάβασμα-τροποποίηση-γράψιμο, άρα χωρίς χαμένες μετρήσεις όταν δύο
+		 * requests μετρούν το ίδιο δευτερόλεπτο.
+		 *
+		 * Χωρίς AUTO_INCREMENT id: δεν υπάρχει τίποτα να δείξει κανείς σε μια
+		 * γραμμή μετρητή, και το ζευγάρι είναι ήδη το κλειδί.
+		 *
+		 * Όγκος: ~6 μετρητές × 1 γραμμή/ημέρα = ~2.200 γραμμές/έτος, με
+		 * διατήρηση 180 ημερών στο ημερήσιο σάρωμα του Retention.
+		 *
+		 * Μόνο αριθμοί: κανένα user_id, καμία διαδρομή, κανένα μήνυμα.
+		 */
+		dbDelta( "CREATE TABLE {$p}metrics (
+			day    DATE NOT NULL,
+			metric VARCHAR(40) NOT NULL,
+			value  BIGINT NOT NULL DEFAULT 0,
+			PRIMARY KEY (day, metric),
+			KEY metric_day (metric, day)
 		) {$charset};" );
 
 	}
