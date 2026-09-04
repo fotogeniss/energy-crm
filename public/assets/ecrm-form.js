@@ -39,7 +39,11 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			contract_id: 0, customer_id: 0, extracted_json: null, files: [],
 			// wizard: πού είμαστε, και ως πού έχει φτάσει ο agent. Το δεύτερο
 			// ξεκλειδώνει τα κουμπιά της μπάρας — πίσω πάντα, μπροστά ως εκεί.
-			wstep: 1, wmax: 1
+			wstep: 1, wmax: 1,
+			// 3β-Γ, 04/09/2026: ποιον από τους δύο στοχεύει η αποστολή/σύνδεσμος
+			// υπογραφής του Βήματος 4. Άσχετο εκτός COMBO δύο προσώπων --
+			// renderSignWho() το κρατά 'mobile' και κρυφό στην πράξη.
+			signatures: null, sendComms: null, sendNames: null, sendRole: 'mobile'
 		};
 		var programsCache = [];
 		var providersCache = [];
@@ -1403,6 +1407,22 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			state.wmax = WSTEPS; goStep(readField('afm') ? 3 : 1, false);
 			root.scrollIntoView ? root.scrollIntoView({ behavior: 'smooth', block: 'start' }) : window.scrollTo(0, 0);
 
+			// 3β-Γ, 04/09/2026, δεύτερο σημείο: το ίδιο `c` που φέρνει η
+			// καρτέλα/λίστα (ContractsReadController::show()/index()) κουβαλάει
+			// πια signatures/comms_energy όταν χρειάζεται -- εδώ μόνο τα
+			// κρατάμε και δείχνουμε τον επιλογέα, ίδιο μοτίβο με το dialog της
+			// καρτέλας (ecrm-view-detail.js).
+			state.signatures = c.signatures || null;
+			state.sendComms = {
+				mobile: c.comms || { sms: { ok: false }, email: { ok: false }, link: { ok: true } },
+				energy: c.comms_energy || { sms: { ok: false, why: 'sms_energy_unsupported' }, email: { ok: false }, link: { ok: true } }
+			};
+			state.sendNames = {
+				mobile: c.company_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || 'Πελάτης κινητής',
+				energy: (c.extra && c.extra.combo_energy_name) || 'Πελάτης ενέργειας'
+			};
+			renderSignWho();
+
 			/* Αυτόματη ανάγνωση των εγγράφων που έστειλε ο ΠΕΛΑΤΗΣ.
 			 *
 			 * Στη δημόσια υποβολή το AI δεν τρέχει ποτέ -- ανώνυμος δεν ξοδεύει
@@ -1473,6 +1493,9 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// Last, because it reads state.contract_id, which the first line
 			// of this function has just cleared.
 			setStage('');
+			// Νέα αίτηση: καμία υπογραφή ακόμα, ο επιλογέας ρόλου κρύβεται.
+			state.signatures = null; state.sendComms = null; state.sendNames = null; state.sendRole = 'mobile';
+			renderSignWho();
 			// Νέα αίτηση: πίσω στο πρώτο βήμα, και τα υπόλοιπα ξανακλειδώνουν.
 			state.wmax = 1; goStep(1, false);
 		}
@@ -2311,10 +2334,54 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				.catch(function (e) { if (win) { try { win.close(); } catch (er) {} } toast((e && e.message) || 'Αποτυχία δημιουργίας εντύπου.', false); btn.style.opacity = ''; });
 		}
 
+		// 3β-Γ, 04/09/2026: εμφανίζει/κρύβει τον επιλογέα ρόλου πάνω από τα
+		// κουμπιά αποστολής του Βήματος 4, ίδιο μοτίβο με το dialog της
+		// καρτέλας σύμβασης. Byte-for-byte χωρίς αλλαγή για κάθε άλλη αίτηση:
+		// state.signatures μένει null, twoRoles false, το block μένει hidden
+		// και το payload δεν αποκτά ποτέ `role`.
+		function renderSignWho() {
+			var wrap = q('[data-signwho]'), btnsEl = q('[data-signwho-btns]');
+			if (!wrap || !btnsEl) return;
+
+			var sig = state.signatures;
+			var twoRoles = !!(sig && sig.required && sig.required.length > 1);
+			wrap.hidden = !twoRoles;
+			if (!twoRoles) { state.sendRole = 'mobile'; return; }
+
+			var collected = sig.collected || [];
+			var ROLES = [
+				{ role: 'mobile', label: 'Πελάτης κινητής' },
+				{ role: 'energy', label: 'Πελάτης ενέργειας' }
+			];
+			// Προεπιλογή: αυτός που λείπει. Αν λείπουν και οι δύο ή υπέγραψαν
+			// και οι δύο, ο πελάτης κινητής -- ίδια απόφαση 04/09 με το dialog.
+			var missing = ROLES.filter(function (r) { return collected.indexOf(r.role) === -1; });
+			state.sendRole = missing.length === 1 ? missing[0].role : 'mobile';
+
+			btnsEl.innerHTML = ROLES.map(function (r) {
+				var signed = collected.indexOf(r.role) !== -1;
+				return '<button type="button" class="ecrm-whopick__b' + (state.sendRole === r.role ? ' is-on' : '') + '" data-signwho-role="' + esc(r.role) + '">' +
+					'<span class="ecrm-whopick__t">' + esc(r.label) + '</span>' +
+					'<span class="ecrm-whopick__s ' + (signed ? 'ecrm-whopick__s--ok' : 'ecrm-whopick__s--wait') + '">' + (signed ? '✓ υπέγραψε' : 'λείπει') + '</span>' +
+					'</button>';
+			}).join('');
+
+			btnsEl.querySelectorAll('[data-signwho-role]').forEach(function (b) {
+				b.addEventListener('click', function () {
+					state.sendRole = this.getAttribute('data-signwho-role');
+					btnsEl.querySelectorAll('[data-signwho-role]').forEach(function (x) { x.classList.remove('is-on'); });
+					this.classList.add('is-on');
+				});
+			});
+		}
+
 		function sendSignEmail(btn) {
 			var id = state.contract_id;
+			var twoRoles = !!(state.signatures && state.signatures.required && state.signatures.required.length > 1);
+			var payload = { email: true };
+			if (twoRoles) { payload.role = state.sendRole; }
 			btn.style.opacity = '.6';
-			fetch(api('/contracts/' + id + '/sign-link'), { method: 'POST', headers: headers(true), body: JSON.stringify({ email: true }) })
+			fetch(api('/contracts/' + id + '/sign-link'), { method: 'POST', headers: headers(true), body: JSON.stringify(payload) })
 				.then(function (r) { return r.json(); })
 				.then(function (d) { btn.style.opacity = ''; if (d && d.ok && d.emailed) toast('Στάλθηκε email υπογραφής στον πελάτη.'); else if (d && d.ok) toast('Ο πελάτης δεν έχει καταχωρημένο email.', false); else toast((d && d.error) || 'Αποτυχία αποστολής.', false); })
 				.catch(function () { btn.style.opacity = ''; toast('Σφάλμα δικτύου.', false); });
@@ -2322,8 +2389,11 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 
 		function makeLiveLink(btn) {
 			var id = state.contract_id;
+			var twoRoles = !!(state.signatures && state.signatures.required && state.signatures.required.length > 1);
+			var payload = { email: false };
+			if (twoRoles) { payload.role = state.sendRole; }
 			btn.style.opacity = '.6';
-			fetch(api('/contracts/' + id + '/sign-link'), { method: 'POST', headers: headers(true), body: JSON.stringify({ email: false }) })
+			fetch(api('/contracts/' + id + '/sign-link'), { method: 'POST', headers: headers(true), body: JSON.stringify(payload) })
 				.then(function (r) { return r.json(); })
 				.then(function (d) {
 					btn.style.opacity = '';

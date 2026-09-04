@@ -1084,6 +1084,20 @@ class ECRM_Shortcodes {
 			<div class="ecrm-wstep" data-wstep="4" hidden>
 
 			<!-- Ενέργειες σύμβασης -->
+			<?php
+			// Επιλογέας ρόλου, ΜΟΝΟ όταν η αίτηση είναι COMBO με δύο πρόσωπα --
+			// 3β-Γ, 04/09/2026, δεύτερο σημείο. Το ίδιο dialog της καρτέλας
+			// σύμβασης (ecrm-view-detail.js) το έχει ήδη· αυτό εδώ είναι η
+			// δεύτερη, παλιότερη διαδρομή αποστολής (Βήμα 4 της ίδιας της
+			// φόρμας) που έμενε αγνοώντας ρόλους -- ο πωλητής δεν είχε τρόπο να
+			// στοχεύσει τον πελάτη ενέργειας από εδώ, μόνο τον κινητής (δες
+			// docs/CHANGELOG.md, εγγραφή για το εύρημα). Κρυμμένο εξαρχής,
+			// το γεμίζει/δείχνει η renderSignWho() στο ecrm-form.js.
+			?>
+			<div class="ecrm-whopick-wrap" data-signwho hidden>
+				<p class="ecrm-whopick__lbl">Σε ποιον από τους δύο;</p>
+				<div class="ecrm-whopick" data-signwho-btns></div>
+			</div>
 			<div class="ecrm-actbanners">
 				<button type="button" class="ecrm-actbanner ecrm-actbanner--primary" data-act="pdf">
 					<span class="ecrm-actbanner__ic"><svg class="ecrm-i ecrm-i--banner" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg></span>
