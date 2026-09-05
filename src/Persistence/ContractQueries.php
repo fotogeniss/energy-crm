@@ -109,6 +109,53 @@ final class ContractQueries
     }
 
     /**
+     * Συμβάσεις που έχουν τουλάχιστον ένα ανεβασμένο έγγραφο -- για την οθόνη
+     * «Έγγραφα» (243), που δείχνει ΤΙ έχει ανέβει και τι έχει διαβαστεί, όχι
+     * μόνο τι λείπει (αυτό το κάνει ήδη το ECRM_Notifications::missing_docs_for()).
+     *
+     * Κανένα φίλτρο κατάστασης σκόπιμα: ο ιδιοκτήτης ζήτησε ρητά έλεγχο "σε
+     * ό,τι αίτηση υπάρχει" -- μια ολοκληρωμένη σύμβαση κρατά τα χαρτιά της
+     * και αξίζει τον ίδιο έλεγχο με μια ξεχασμένη routed. Τα φίλτρα-chips της
+     * ίδιας οθόνης καλύπτουν "μόνο ελλιπή"/"μόνο εκκρεμή AI" πάνω σε αυτή τη
+     * λίστα -- εδώ φεύγει μόνο ό,τι δεν έχει ΚΑΝΕΝΑ αρχείο.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function withDocuments(UserScope $scope, int $limit = 200): array
+    {
+        global $wpdb;
+
+        [$clause, $scopeParams] = ScopeClause::forScope($scope, 'c');
+
+        $params = [
+            $this->table,
+            Tables::name(Tables::CUSTOMERS),
+            ...$scopeParams,
+            Tables::name(Tables::FILES),
+        ];
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.id, c.code, c.status, c.activation_type, c.energy_type, c.updated_at,
+                        cu.first_name, cu.last_name, cu.company_name
+                 FROM %i c
+                 LEFT JOIN %i cu ON cu.id = c.customer_id
+                 WHERE 1 = 1{$clause}
+                   AND EXISTS (SELECT 1 FROM %i f WHERE f.contract_id = c.id)
+                 ORDER BY c.updated_at DESC
+                 LIMIT " . max(1, $limit),
+                $params
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
      * The top bar's global search: a few best matches across code, supply
      * number, customer name, ΑΦΜ and mobile.
      *

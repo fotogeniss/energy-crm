@@ -27,6 +27,7 @@ use EnergyCRM\Http\ControllerFactory;
 use EnergyCRM\Http\Router;
 use EnergyCRM\Infrastructure\DocumentExposureCheck;
 use EnergyCRM\Infrastructure\DocumentProtection;
+use EnergyCRM\Infrastructure\DocumentsSweep;
 use EnergyCRM\Infrastructure\ErrorLog;
 use EnergyCRM\Infrastructure\HealthChecks;
 use EnergyCRM\Infrastructure\KeyFingerprint;
@@ -132,6 +133,10 @@ final class Plugin
         // μονη της -- ωστε ενα ξεχασμενο nginx να μην περιμενει καποιον να ανοιξει
         // τη σελιδα για να το μαθει.
         (new DocumentExposureCheck())->register();
+
+        // Η ανάγνωση εγγράφων (242) για παλιές αιτήσεις που κανείς δεν
+        // ξανανοίγει -- δες το docblock της DocumentsSweep.
+        (new DocumentsSweep(Services::files(), Services::documentKindReview()))->register();
 
         // Record which key this site's data belongs to, once. Only while
         // encryption is on: stamping a site that has never encrypted anything
