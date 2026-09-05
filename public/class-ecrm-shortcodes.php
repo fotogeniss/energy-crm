@@ -307,6 +307,62 @@ class ECRM_Shortcodes {
 				<button type="button" class="ecrm-wstep__b" data-wgo="4"><strong>Βήμα 4</strong>Έλεγχος &amp; υπογραφή</button>
 			</nav>
 
+			<?php
+			// ΠΡΟΣΟΧΗ ΣΤΗ ΘΕΣΗ: οι δυο closures οριζονται ΠΡΙΝ απο το πρωτο
+			// βημα, οχι πριν απο το τριτο. Ζουσαν ακριβως πριν το wstep=3
+			// οσο ολα τα πεδια τους ηταν εκει· απο τις 05/09/2026 τις
+			// χρησιμοποιει και η καρτα «2β Συνδυαστικη Προσφορα» στο
+			// wstep=1, και μια closure δεν υπαρχει πριν την ορισει καποιος:
+			// η σελιδα πεθαινε με fatal στη μεση της αποδοσης, και μαζι της
+			// εχανε ΚΑΙ τα δυο stylesheets (το ecrm-app εξαρταται απο το
+			// ecrm-form, και το footer δεν εφτανε ποτε να τυπωθει).
+			?>
+			<?php
+			// Helper to print a field. $extra=true marks it for the extra_json bag.
+			// $energy_when, when non-empty, adds data-when-energy so a field can be
+			// scoped to power/gas or mobile without a wrapper element around it.
+			// $ac is the autocomplete token: 'off' by default, since most of these
+			// fields (ΑΦΜ, ΑΔΤ, αριθμός παροχής, μετρητή) have no browser-known
+			// shape and a wrong guess is worse than none. Fields that DO map to a
+			// standard token (name/address/phone/email) pass it explicitly below,
+			// each scoped to its own section (section-cust/rep/contact/supply/
+			// bill) so the browser doesn't offer the customer's mobile for the
+			// legal representative's, or the shipping address for the billing one.
+			// $when προστέθηκε 25/08 (αίτημα ιδιοκτήτη, αναδιάταξη Στοιχείων
+			// Πελάτη): ίδιο νόημα με το data-when ενός ολόκληρου .ecrm-grid
+			// wrapper, αλλά ΣΤΟ ΙΔΙΟ το πεδίο — ώστε ένα πεδίο μόνο για
+			// φυσικά πρόσωπα (π.χ. ΑΔΤ) να μπορεί να μπει ΔΙΠΛΑ σε ένα κοινό
+			// πεδίο (π.χ. ΑΦΜ) μέσα στο ίδιο .ecrm-grid, χωρίς να χρειαστεί
+			// δύο ξεχωριστά grid. Το applyCustomerType() στο ecrm-form.js
+			// ήδη διαβάζει ΚΑΘΕ [data-when] στη σελίδα (qa('[data-when]')),
+			// όχι μόνο div wrappers — μηδέν αλλαγή JS χρειάστηκε.
+			$ecrm_field = function ( $name, $label, $type = 'text', $extra = false, $ph = '', $energy_when = '', $ac = 'off', $when = '' ) {
+				printf(
+					'<label class="ecrm-field" data-for="%1$s"%6$s%8$s><span class="ecrm-field__label">%2$s</span><input type="%3$s" name="%1$s" class="ecrm-input"%4$s autocomplete="%7$s" placeholder="%5$s"></label>',
+					esc_attr( $name ), esc_html( $label ), esc_attr( $type ),
+					$extra ? ' data-extra="1"' : '', esc_attr( $ph ),
+					$energy_when !== '' ? ' data-when-energy="' . esc_attr( $energy_when ) . '"' : '',
+					esc_attr( $ac ),
+					$when !== '' ? ' data-when="' . esc_attr( $when ) . '"' : ''
+				);
+			};
+
+			// Yes/No select, used by the customer-facing questions in Στοιχεία
+			// Τιμολόγησης. Defined here (not inline where it's used) because it
+			// used to live inside the mobile section and moved out with the
+			// fields it belongs to — see ORIZON-TODO.md #3.
+			$ecrm_yesno = function ( $name, $label ) {
+				printf(
+					'<label class="ecrm-field" data-for="%1$s"><span class="ecrm-field__label">%2$s</span>'
+					. '<select name="%1$s" class="ecrm-input" data-extra="1">'
+					. '<option value="">—</option><option value="yes">Ναι</option><option value="no">Όχι</option>'
+					. '</select></label>',
+					esc_attr( $name ),
+					esc_html( $label )
+				);
+			};
+			?>
+
 			<div class="ecrm-wstep" data-wstep="1">
 
 			<section class="ecrm-card">
@@ -413,6 +469,256 @@ class ECRM_Shortcodes {
 				</div>
 			</section>
 
+			<?php
+			// Ο ΚΑΘΡΕΦΤΗΣ της «2β» της Volton, για την αιτηση ORIZON -- ιδια
+			// αποφαση, ιδια θεση (05/09/2026, docs/UI-COMBO-PLACEMENT.html,
+			// εγκεκριμενη). Ζουσε ολοκληρη μεσα στο «6β Στοιχεια Κινητης» του
+			// Βηματος 3. Η καρτα εκεινη κρατουσε ΤΕΣΣΕΡΑ διαφορετικα πραγματα
+			// μαζι: μια αποφαση ΠΡΟΪΟΝΤΟΣ (ποια προσφορα), στοιχεια ΓΡΑΜΜΗΣ
+			// (αριθμος, SIM, επιδοτηση), τα πεδια που ενεργοποιει η προσφορα,
+			// και τις τιμες. Η ραφη περναει αναμεσα στο πρωτο-τριτο και στο
+			// δευτερο-τεταρτο: η προσφορα ανεβαινει, η γραμμη μενει κατω.
+			//
+			// Εδω το επιχειρημα ειναι ισχυροτερο απο τη μερια της Volton: στο
+			// Βημα 1-2 υπαρχει ΗΔΗ το ΠΡΟΓΡΑΜΜΑ, και η συνδυαστικη εκπτωση ειναι
+			// τροποποιητης ακριβως αυτου του προγραμματος και της τιμης του.
+			//
+			// Τα ονοματα πεδιων ΔΕΝ αλλαζουν -- ιδιο extra_json, ιδιο values(),
+			// ιδιο εντυπο. Αλλαζει μονο πού τα βλεπει ο συνεργατης.
+			?>
+			<section class="ecrm-card" data-when-energy="mobile" data-no-template-filter>
+				<div class="ecrm-step"><span class="ecrm-step__n">2β</span> Συνδυαστική Προσφορά</div>
+				<div class="ecrm-grid">
+					<?php
+					// Μία επιλογή και όχι δύο διακόπτες: οι δύο προσφορές δίνουν
+					// την ίδια τιμή για διαφορετικό λόγο — η συνδυαστική δένει
+					// κινητή με κινητή, το COMBO κινητή με ρεύμα — και δεν
+					// συνδυάζονται. Δύο ανεξάρτητα κουτάκια θα επέτρεπαν να
+					// τσεκαριστούν και τα δύο.
+					?>
+					<label class="ecrm-field" data-for="mobile_offer">
+						<span class="ecrm-field__label">Συνδυαστική Έκπτωση</span>
+						<select name="mobile_offer" class="ecrm-input" data-extra="1">
+							<option value="">Καμία</option>
+							<option value="family">Συνδυαστική Προσφορά (κινητή + κινητή)</option>
+							<option value="combo">COMBO Έκπτωση Ρεύματος (κινητή + ρεύμα)</option>
+						</select>
+					</label>
+
+				</div>
+
+				<?php
+				// Το COMBO είναι το μόνο σημείο όπου η κινητή αγγίζει το ρεύμα:
+				// το έντυπό του ζητά την παροχή και το πρόγραμμα ενέργειας του
+				// ίδιου πελάτη, και ποιος από τους δύο είναι ο κύριος χρήστης
+				// της γραμμής (orizon_combo.json: xristis_kyrios/xristis_defterevon).
+				// Εμφανίζεται μόνο όταν επιλεγεί, γιατί σε κάθε άλλη περίπτωση
+				// είναι ακριβώς το είδος πεδίου που δεν έχει θέση σε αίτηση κινητής.
+				?>
+				<div class="ecrm-grid" data-when-offer="combo" hidden>
+					<?php
+					// Άρθρο 1 του εντύπου («Δικαιούχοι -- Έναρξη ισχύος»),
+					// περιπτώσεις i/ii/iii: το combo δίνεται και σε πελάτη που
+					// είναι ΗΔΗ σε έναν από τους δύο παρόχους. Δεν τυπώνεται
+					// πουθενά -- το έντυπο δεν έχει κουτάκι, το λέει μόνο στους
+					// όρους. Ζει εδώ γιατί η έκπτωση ξεκινά όταν ενεργοποιηθούν
+					// ΚΑΙ ΟΙ ΔΥΟ υπηρεσίες, άρα το back office πρέπει να ξέρει
+					// ποια από τις δύο λείπει ακόμα.
+					?>
+					<label class="ecrm-field" data-for="combo_energy_relation">
+						<span class="ecrm-field__label">Τι έχει ήδη ο πελάτης</span>
+						<select name="combo_energy_relation" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="has_power">Έχει ήδη ρεύμα Volton — νέα κινητή Orizon</option>
+							<option value="has_mobile">Έχει ήδη κινητή Orizon — νέο ρεύμα Volton</option>
+							<option value="both_new">Νέος και στα δύο — ταυτόχρονη σύναψη</option>
+						</select>
+					</label>
+					<?php $ecrm_field( 'combo_supply_number', 'Αριθμός Παροχής / ΗΚΑΣΠ Ρεύματος', 'text', true ); ?>
+					<?php
+					// Ήταν ελεύθερο κείμενο ώς 04/09/2026: ο πωλητής έγραφε ό,τι
+					// θυμόταν, με ό,τι ορθογραφία, και αυτό τυπωνόταν. Γίνεται
+					// λίστα από τα πραγματικά προγράμματα Volton (CHANGELOG 217)
+					// -- ΜΟΝΟ Volton, γιατί το combo είναι Volton+Orizon και το
+					// έντυπο φέρει τα στοιχεία της Volton· πρόγραμμα άλλου
+					// παρόχου δεν έχει θέση σε αυτό το χαρτί. Οι επιλογές
+					// γεμίζουν από το JS, που έχει ήδη όλο τον κατάλογο.
+					?>
+					<label class="ecrm-field" data-for="combo_energy_program">
+						<span class="ecrm-field__label">Πρόγραμμα Ρεύματος</span>
+						<select name="combo_energy_program" class="ecrm-input" data-extra="1" data-volton-programs>
+							<option value="">—</option>
+						</select>
+					</label>
+					<label class="ecrm-field" data-for="combo_user_role">
+						<span class="ecrm-field__label">Χρήστης Γραμμής</span>
+						<select name="combo_user_role" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="main">Κύριος Χρήστης</option>
+							<option value="secondary">Δευτερεύων Χρήστης</option>
+						</select>
+					</label>
+				</div>
+
+				<?php
+				// Το έντυπο έχει ΔΥΟ μπλοκ ταυτότητας -- «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ
+				// ΚΙΝΗΤΗΣ ΤΗΛΕΦΩΝΙΑΣ» και «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ ΕΝΕΡΓΕΙΑΣ» -- επειδή
+				// το άρθρο 4 προβλέπει ρητά ότι μπορεί να είναι δύο διαφορετικά
+				// πρόσωπα (η παροχή ρεύματος σε άλλο όνομα από τη γραμμή που
+				// εκπροσωπείται). Ώς τώρα η φόρμα είχε ένα μόνο σετ στοιχείων,
+				// οπότε το ΑΦΜ του δεύτερου προσώπου δεν είχε πού να μπει.
+				//
+				// Ίδιο μοτίβο με το «Ίδια με τη διεύθυνση του πελάτη» παραπάνω:
+				// τσεκαρισμένο εξαρχής, τα πεδία μαζεμένα. Η συνηθισμένη
+				// περίπτωση -- ένα πρόσωπο -- δεν πληρώνει τίποτα.
+				?>
+				<div data-when-offer="combo" hidden>
+					<div class="ecrm-subhead">Στοιχεία Πελάτη Ενέργειας</div>
+					<label class="ecrm-syncbar">
+						<input type="checkbox" name="combo_energy_same" value="1" data-energy-same="1" checked>
+						Ίδιο πρόσωπο με τον πελάτη κινητής
+					</label>
+					<div class="ecrm-grid" data-energy-fields hidden>
+						<?php $ecrm_field( 'combo_energy_name', 'Ονοματεπώνυμο', 'text', true ); ?>
+						<?php $ecrm_field( 'combo_energy_afm', 'Α.Φ.Μ.', 'text', true ); ?>
+						<?php $ecrm_field( 'combo_energy_adt', 'Αριθμός Εγγράφου Ταυτοπροσωπίας', 'text', true ); ?>
+						<?php $ecrm_field( 'combo_energy_doy', 'Δ.Ο.Υ.', 'text', true ); ?>
+						<?php
+						// Στοιχεία επικοινωνίας ΤΟΥ ΠΕΛΑΤΗ ΕΝΕΡΓΕΙΑΣ -- όχι του
+						// πελάτη κινητής. Δεν τυπώνονται πουθενά στο έντυπο· είναι
+						// για τον δεύτερο σύνδεσμο υπογραφής (3β-Β), όταν χρειάζεται
+						// δεύτερη υπογραφή γιατί είναι άλλο πρόσωπο. Γι' αυτό ΔΕΝ
+						// έχουν data-extra="1": στήλες, όχι extra_json (§1.17, βλ.
+						// AddComboEnergyContactColumns) -- ο σύνδεσμος υπογραφής τις
+						// διαβάζει απευθείας.
+						?>
+						<?php $ecrm_field( 'combo_energy_mobile', 'Κινητό', 'text', false, '69…' ); ?>
+						<?php $ecrm_field( 'combo_energy_email', 'Email', 'email', false ); ?>
+					</div>
+				</div>
+
+				<?php
+				// Η Συνδυαστική δένει δύο γραμμές κινητής κάτω από το ίδιο ΑΦΜ
+				// (§ΓΕΝ.ΟΡΟΙ Ορίζον, «τουλάχιστον δύο (2) + συνδέσεις κινητής»).
+				// Μέχρι 2026-09-01 η αίτηση έπαιρνε μόνο ΕΝΑΝ αριθμό κινητού
+				// (mobile_msisdn), οπότε το έντυπο τυπωνόταν με τη 2η γραμμή
+				// κενή -- ζητήθηκε ρητά από τον πελάτη. Ίδιο μοτίβο με το
+				// COMBO ακριβώς από πάνω: εμφανίζεται μόνο για mobile_offer=
+				// family, γιατί δεν έχει νόημα σε απλή αίτηση ή σε COMBO.
+				?>
+				<div class="ecrm-grid" data-when-offer="family" hidden>
+					<?php $ecrm_field( 'mobile_msisdn_2', 'Αριθμός Κινητού (2ο, Συνδυαστικού)', 'text', true, '69…' ); ?>
+				</div>
+
+			</section>
+
+			<?php
+			// COMBO Volton+Orizon και από αίτηση ΡΕΥΜΑΤΟΣ -- Στάδιο 4,
+			// 05/09/2026 (καθρέφτισμα του «6β» του Βήματος 3, ζητήθηκε ρητά
+			// 04/09/2026: docs/UI-COMBO-FROM-VOLTON.html, εγκεκριμένη). Μόνο
+			// Volton + ρεύμα -- το combo είναι Volton ρεύμα + Orizon κινητή
+			// και τίποτα άλλο, δεν έχει θέση σε αίτηση αερίου ή άλλου
+			// παρόχου. `data-when-combo-volton` είναι νέο, δικό του attribute
+			// (`applyComboFromVolton()` στο ecrm-form.js) -- ΟΧΙ δύο
+			// ανεξάρτητα data-when-energy/data-when-provider πάνω στο ίδιο
+			// στοιχείο, που θα συγκρούονταν (βλ. σχόλιο εκεί).
+			//
+			// ΓΙΑΤΙ ΕΔΩ, στο Βήμα 1-2 και όχι στο 3 (05/09/2026,
+			// docs/UI-COMBO-PLACEMENT.html, εγκεκριμένη): η φόρμα χωρίζεται
+			// ήδη σε «τι πουλάμε» (Βήματα 1-2: πάροχος, πρόγραμμα, είδος,
+			// κατηγορία, χρώμα) και «σε ποιον» (Βήμα 3 και μετά). Η
+			// συνδυαστική προσφορά είναι απόφαση ΠΡΟΪΟΝΤΟΣ, όχι πεδίο
+			// στοιχείων. Οσο ζούσε στο Βήμα 3 ως «6γ», ο συνεργάτης τη
+			// συναντούσε αφού είχε συμπληρώσει ταυτότητα, διεύθυνση και
+			// μετρητή -- δηλαδή αφού η κουβέντα για προσφορά με τον πελάτη
+			// είχε ήδη τελειώσει. Και η ίδια η ετικέτα «6γ» τη δήλωνε
+			// υποσύνολο του «6 Στοιχεία Μετρητή», με το οποίο δεν έχει καμία
+			// σχέση.
+			?>
+			<section class="ecrm-card" data-when-combo-volton data-no-template-filter hidden>
+				<div class="ecrm-step"><span class="ecrm-step__n">2β</span> Συνδυαστική Προσφορά</div>
+				<div class="ecrm-grid">
+					<label class="ecrm-field" data-for="combo_mobile_offer">
+						<span class="ecrm-field__label">Συνδυαστική Έκπτωση</span>
+						<select name="combo_mobile_offer" class="ecrm-input" data-extra="1">
+							<option value="">Καμία</option>
+							<option value="combo">COMBO με κινητή Orizon</option>
+						</select>
+					</label>
+				</div>
+
+				<?php
+				// Ιδιο ΝΟΗΜΑ με το `combo_energy_relation` της καρτας «6β»,
+				// αλλα ΔΙΚΟ ΤΟΥ ονομα: δυο input με το ιδιο name ζουν
+				// ταυτοχρονα στο DOM (η μια καρτα ειναι απλως κρυμμενη) και
+				// το setField()/collect() πιανουν το ΠΡΩΤΟ στη σειρα DOM --
+				// δηλαδη παντα αυτης της καρτας. Κοινο ονομα θα σημαινε οτι
+				// το ανοιγμα αποθηκευμενης αιτησης Orizon εγραφε την τιμη σε
+				// ΑΥΤΟ το πεδιο και την εχανε. Ιδιος λογος με το
+				// `combo_mobile_same` πιο κατω. Οι δυο τιμες ζουν σε
+				// ξεχωριστα κλειδια του extra_json.
+				?>
+				<div class="ecrm-grid" data-when-combo-offer="combo" hidden>
+					<label class="ecrm-field" data-for="combo_mobile_relation">
+						<span class="ecrm-field__label">Τι έχει ήδη ο πελάτης</span>
+						<select name="combo_mobile_relation" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="has_power">Έχει ήδη ρεύμα Volton — νέα κινητή Orizon</option>
+							<option value="has_mobile">Έχει ήδη κινητή Orizon — νέο ρεύμα Volton</option>
+							<option value="both_new">Νέος και στα δύο — ταυτόχρονη σύναψη</option>
+						</select>
+					</label>
+					<?php $ecrm_field( 'combo_mobile_msisdn', 'Αριθμός Κινητού Orizon', 'text', true, '69…' ); ?>
+					<label class="ecrm-field" data-for="combo_mobile_plan">
+						<span class="ecrm-field__label">Πρόγραμμα Orizon</span>
+						<select name="combo_mobile_plan" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<?php foreach ( \EnergyCRM\Domain\Forms\MobilePlans::options() as $plan_code => $plan_label ) : ?>
+								<option value="<?php echo esc_attr( $plan_code ); ?>"><?php echo esc_html( $plan_label ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</label>
+					<label class="ecrm-field" data-for="combo_mobile_user_role">
+						<span class="ecrm-field__label">Χρήστης Γραμμής</span>
+						<select name="combo_mobile_user_role" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="main">Κύριος Χρήστης</option>
+							<option value="secondary">Δευτερεύων Χρήστης</option>
+						</select>
+					</label>
+				</div>
+
+				<?php
+				// Ο κύριος πελάτης εδώ ΕΙΝΑΙ ο πελάτης ενέργειας (η ίδια η
+				// αίτηση Volton) -- ανεστραμμένο από την κάρτα «6β», όπου ο
+				// κύριος πελάτης είναι ο πελάτης κινητής. Ίδιο checkbox-μοτίβο,
+				// ΔΙΚΟ ΤΟΥ όνομα (`combo_mobile_same`, όχι `combo_energy_same`)
+				// -- τα δύο ζουν σε διαφορετικές κάρτες, ποτέ ταυτόχρονα
+				// ορατές, και ένα κοινό όνομα θα σήμαινε δύο τιμές στο ίδιο
+				// πεδίο του extra_json.
+				?>
+				<div data-when-combo-offer="combo" hidden>
+					<label class="ecrm-syncbar">
+						<input type="checkbox" name="combo_mobile_same" value="1" data-energy-same="1" checked>
+						Ίδιο πρόσωπο και στις δύο συμβάσεις
+					</label>
+					<div class="ecrm-grid" data-mobile-fields hidden>
+						<?php $ecrm_field( 'combo_mobile_name', 'Ονοματεπώνυμο', 'text', true ); ?>
+						<?php $ecrm_field( 'combo_mobile_afm', 'Α.Φ.Μ.', 'text', true ); ?>
+						<?php $ecrm_field( 'combo_mobile_adt', 'Αριθμός Εγγράφου Ταυτοπροσωπίας', 'text', true ); ?>
+						<?php $ecrm_field( 'combo_mobile_doy', 'Δ.Ο.Υ.', 'text', true ); ?>
+						<?php
+						// Για τον δεύτερο σύνδεσμο υπογραφής -- δεν τυπώνονται
+						// πουθενά. Στήλες, όχι extra_json (§1.17, βλ.
+						// AddComboMobileContactColumns) -- τις διαβάζει
+						// απευθείας ο SignLinkController.
+						?>
+						<?php $ecrm_field( 'combo_mobile_mobile', 'Κινητό', 'text', false, '69…' ); ?>
+						<?php $ecrm_field( 'combo_mobile_email', 'Email', 'email', false ); ?>
+					</div>
+				</div>
+			</section>
+
 			</div>
 
 			<div class="ecrm-wstep" data-wstep="2" hidden>
@@ -463,51 +769,6 @@ class ECRM_Shortcodes {
 
 			</div>
 
-			<?php
-			// Helper to print a field. $extra=true marks it for the extra_json bag.
-			// $energy_when, when non-empty, adds data-when-energy so a field can be
-			// scoped to power/gas or mobile without a wrapper element around it.
-			// $ac is the autocomplete token: 'off' by default, since most of these
-			// fields (ΑΦΜ, ΑΔΤ, αριθμός παροχής, μετρητή) have no browser-known
-			// shape and a wrong guess is worse than none. Fields that DO map to a
-			// standard token (name/address/phone/email) pass it explicitly below,
-			// each scoped to its own section (section-cust/rep/contact/supply/
-			// bill) so the browser doesn't offer the customer's mobile for the
-			// legal representative's, or the shipping address for the billing one.
-			// $when προστέθηκε 25/08 (αίτημα ιδιοκτήτη, αναδιάταξη Στοιχείων
-			// Πελάτη): ίδιο νόημα με το data-when ενός ολόκληρου .ecrm-grid
-			// wrapper, αλλά ΣΤΟ ΙΔΙΟ το πεδίο — ώστε ένα πεδίο μόνο για
-			// φυσικά πρόσωπα (π.χ. ΑΔΤ) να μπορεί να μπει ΔΙΠΛΑ σε ένα κοινό
-			// πεδίο (π.χ. ΑΦΜ) μέσα στο ίδιο .ecrm-grid, χωρίς να χρειαστεί
-			// δύο ξεχωριστά grid. Το applyCustomerType() στο ecrm-form.js
-			// ήδη διαβάζει ΚΑΘΕ [data-when] στη σελίδα (qa('[data-when]')),
-			// όχι μόνο div wrappers — μηδέν αλλαγή JS χρειάστηκε.
-			$ecrm_field = function ( $name, $label, $type = 'text', $extra = false, $ph = '', $energy_when = '', $ac = 'off', $when = '' ) {
-				printf(
-					'<label class="ecrm-field" data-for="%1$s"%6$s%8$s><span class="ecrm-field__label">%2$s</span><input type="%3$s" name="%1$s" class="ecrm-input"%4$s autocomplete="%7$s" placeholder="%5$s"></label>',
-					esc_attr( $name ), esc_html( $label ), esc_attr( $type ),
-					$extra ? ' data-extra="1"' : '', esc_attr( $ph ),
-					$energy_when !== '' ? ' data-when-energy="' . esc_attr( $energy_when ) . '"' : '',
-					esc_attr( $ac ),
-					$when !== '' ? ' data-when="' . esc_attr( $when ) . '"' : ''
-				);
-			};
-
-			// Yes/No select, used by the customer-facing questions in Στοιχεία
-			// Τιμολόγησης. Defined here (not inline where it's used) because it
-			// used to live inside the mobile section and moved out with the
-			// fields it belongs to — see ORIZON-TODO.md #3.
-			$ecrm_yesno = function ( $name, $label ) {
-				printf(
-					'<label class="ecrm-field" data-for="%1$s"><span class="ecrm-field__label">%2$s</span>'
-					. '<select name="%1$s" class="ecrm-input" data-extra="1">'
-					. '<option value="">—</option><option value="yes">Ναι</option><option value="no">Όχι</option>'
-					. '</select></label>',
-					esc_attr( $name ),
-					esc_html( $label )
-				);
-			};
-			?>
 
 			<div class="ecrm-wstep" data-wstep="3" hidden>
 
@@ -749,100 +1010,6 @@ class ECRM_Shortcodes {
 				</div>
 			</section>
 
-			<?php
-			// COMBO Volton+Orizon και από αίτηση ΡΕΥΜΑΤΟΣ -- Στάδιο 4,
-			// 05/09/2026 (καθρέφτισμα του «6β» παρακάτω, ζητήθηκε ρητά
-			// 04/09/2026: docs/UI-COMBO-FROM-VOLTON.html, εγκεκριμένη). Μόνο
-			// Volton + ρεύμα -- το combo είναι Volton ρεύμα + Orizon κινητή
-			// και τίποτα άλλο, δεν έχει θέση σε αίτηση αερίου ή άλλου
-			// παρόχου. `data-when-combo-volton` είναι νέο, δικό του attribute
-			// (`applyComboFromVolton()` στο ecrm-form.js) -- ΟΧΙ δύο
-			// ανεξάρτητα data-when-energy/data-when-provider πάνω στο ίδιο
-			// στοιχείο, που θα συγκρούονταν (βλ. σχόλιο εκεί).
-			?>
-			<section class="ecrm-card" data-when-combo-volton hidden>
-				<div class="ecrm-step"><span class="ecrm-step__n">6γ</span> Συνδυαστική Προσφορά</div>
-				<div class="ecrm-grid">
-					<label class="ecrm-field" data-for="combo_mobile_offer">
-						<span class="ecrm-field__label">Συνδυαστική Έκπτωση</span>
-						<select name="combo_mobile_offer" class="ecrm-input" data-extra="1">
-							<option value="">Καμία</option>
-							<option value="combo">COMBO με κινητή Orizon</option>
-						</select>
-					</label>
-				</div>
-
-				<?php
-				// Ιδιο ΝΟΗΜΑ με το `combo_energy_relation` της καρτας «6β»,
-				// αλλα ΔΙΚΟ ΤΟΥ ονομα: δυο input με το ιδιο name ζουν
-				// ταυτοχρονα στο DOM (η μια καρτα ειναι απλως κρυμμενη) και
-				// το setField()/collect() πιανουν το ΠΡΩΤΟ στη σειρα DOM --
-				// δηλαδη παντα αυτης της καρτας. Κοινο ονομα θα σημαινε οτι
-				// το ανοιγμα αποθηκευμενης αιτησης Orizon εγραφε την τιμη σε
-				// ΑΥΤΟ το πεδιο και την εχανε. Ιδιος λογος με το
-				// `combo_mobile_same` πιο κατω. Οι δυο τιμες ζουν σε
-				// ξεχωριστα κλειδια του extra_json.
-				?>
-				<div class="ecrm-grid" data-when-combo-offer="combo" hidden>
-					<label class="ecrm-field" data-for="combo_mobile_relation">
-						<span class="ecrm-field__label">Τι έχει ήδη ο πελάτης</span>
-						<select name="combo_mobile_relation" class="ecrm-input" data-extra="1">
-							<option value="">—</option>
-							<option value="has_power">Έχει ήδη ρεύμα Volton — νέα κινητή Orizon</option>
-							<option value="has_mobile">Έχει ήδη κινητή Orizon — νέο ρεύμα Volton</option>
-							<option value="both_new">Νέος και στα δύο — ταυτόχρονη σύναψη</option>
-						</select>
-					</label>
-					<?php $ecrm_field( 'combo_mobile_msisdn', 'Αριθμός Κινητού Orizon', 'text', true, '69…' ); ?>
-					<label class="ecrm-field" data-for="combo_mobile_plan">
-						<span class="ecrm-field__label">Πρόγραμμα Orizon</span>
-						<select name="combo_mobile_plan" class="ecrm-input" data-extra="1">
-							<option value="">—</option>
-							<?php foreach ( \EnergyCRM\Domain\Forms\MobilePlans::options() as $plan_code => $plan_label ) : ?>
-								<option value="<?php echo esc_attr( $plan_code ); ?>"><?php echo esc_html( $plan_label ); ?></option>
-							<?php endforeach; ?>
-						</select>
-					</label>
-					<label class="ecrm-field" data-for="combo_mobile_user_role">
-						<span class="ecrm-field__label">Χρήστης Γραμμής</span>
-						<select name="combo_mobile_user_role" class="ecrm-input" data-extra="1">
-							<option value="">—</option>
-							<option value="main">Κύριος Χρήστης</option>
-							<option value="secondary">Δευτερεύων Χρήστης</option>
-						</select>
-					</label>
-				</div>
-
-				<?php
-				// Ο κύριος πελάτης εδώ ΕΙΝΑΙ ο πελάτης ενέργειας (η ίδια η
-				// αίτηση Volton) -- ανεστραμμένο από την κάρτα «6β», όπου ο
-				// κύριος πελάτης είναι ο πελάτης κινητής. Ίδιο checkbox-μοτίβο,
-				// ΔΙΚΟ ΤΟΥ όνομα (`combo_mobile_same`, όχι `combo_energy_same`)
-				// -- τα δύο ζουν σε διαφορετικές κάρτες, ποτέ ταυτόχρονα
-				// ορατές, και ένα κοινό όνομα θα σήμαινε δύο τιμές στο ίδιο
-				// πεδίο του extra_json.
-				?>
-				<div data-when-combo-offer="combo" hidden>
-					<label class="ecrm-syncbar">
-						<input type="checkbox" name="combo_mobile_same" value="1" data-energy-same="1" checked>
-						Ίδιο πρόσωπο και στις δύο συμβάσεις
-					</label>
-					<div class="ecrm-grid" data-mobile-fields hidden>
-						<?php $ecrm_field( 'combo_mobile_name', 'Ονοματεπώνυμο', 'text', true ); ?>
-						<?php $ecrm_field( 'combo_mobile_afm', 'Α.Φ.Μ.', 'text', true ); ?>
-						<?php $ecrm_field( 'combo_mobile_adt', 'Αριθμός Εγγράφου Ταυτοπροσωπίας', 'text', true ); ?>
-						<?php $ecrm_field( 'combo_mobile_doy', 'Δ.Ο.Υ.', 'text', true ); ?>
-						<?php
-						// Για τον δεύτερο σύνδεσμο υπογραφής -- δεν τυπώνονται
-						// πουθενά. Στήλες, όχι extra_json (§1.17, βλ.
-						// AddComboMobileContactColumns) -- τις διαβάζει
-						// απευθείας ο SignLinkController.
-						?>
-						<?php $ecrm_field( 'combo_mobile_mobile', 'Κινητό', 'text', false, '69…' ); ?>
-						<?php $ecrm_field( 'combo_mobile_email', 'Email', 'email', false ); ?>
-					</div>
-				</div>
-			</section>
 
 			<?php
 			// Κινητή τηλεφωνία. Ένα δικό της τμήμα και όχι πεδία σκορπισμένα
@@ -866,22 +1033,6 @@ class ECRM_Shortcodes {
 					// τιμές) — μία επιλογή στην οθόνη, όχι δύο συγχρονισμένα
 					// πεδία.
 					?>
-
-					<?php
-					// Μία επιλογή και όχι δύο διακόπτες: οι δύο προσφορές δίνουν
-					// την ίδια τιμή για διαφορετικό λόγο — η συνδυαστική δένει
-					// κινητή με κινητή, το COMBO κινητή με ρεύμα — και δεν
-					// συνδυάζονται. Δύο ανεξάρτητα κουτάκια θα επέτρεπαν να
-					// τσεκαριστούν και τα δύο.
-					?>
-					<label class="ecrm-field" data-for="mobile_offer">
-						<span class="ecrm-field__label">Συνδυαστική Έκπτωση</span>
-						<select name="mobile_offer" class="ecrm-input" data-extra="1">
-							<option value="">Καμία</option>
-							<option value="family">Συνδυαστική Προσφορά (κινητή + κινητή)</option>
-							<option value="combo">COMBO Έκπτωση Ρεύματος (κινητή + ρεύμα)</option>
-						</select>
-					</label>
 
 					<?php $ecrm_field( 'mobile_msisdn', 'Αριθμός Κινητού', 'text', true, '69…' ); ?>
 					<?php
@@ -917,109 +1068,6 @@ class ECRM_Shortcodes {
 				 */
 				?>
 				<input type="file" data-scan-camera accept="image/*" capture="environment" hidden>
-
-				<?php
-				// Το COMBO είναι το μόνο σημείο όπου η κινητή αγγίζει το ρεύμα:
-				// το έντυπό του ζητά την παροχή και το πρόγραμμα ενέργειας του
-				// ίδιου πελάτη, και ποιος από τους δύο είναι ο κύριος χρήστης
-				// της γραμμής (orizon_combo.json: xristis_kyrios/xristis_defterevon).
-				// Εμφανίζεται μόνο όταν επιλεγεί, γιατί σε κάθε άλλη περίπτωση
-				// είναι ακριβώς το είδος πεδίου που δεν έχει θέση σε αίτηση κινητής.
-				?>
-				<div class="ecrm-grid" data-when-offer="combo" hidden>
-					<?php
-					// Άρθρο 1 του εντύπου («Δικαιούχοι -- Έναρξη ισχύος»),
-					// περιπτώσεις i/ii/iii: το combo δίνεται και σε πελάτη που
-					// είναι ΗΔΗ σε έναν από τους δύο παρόχους. Δεν τυπώνεται
-					// πουθενά -- το έντυπο δεν έχει κουτάκι, το λέει μόνο στους
-					// όρους. Ζει εδώ γιατί η έκπτωση ξεκινά όταν ενεργοποιηθούν
-					// ΚΑΙ ΟΙ ΔΥΟ υπηρεσίες, άρα το back office πρέπει να ξέρει
-					// ποια από τις δύο λείπει ακόμα.
-					?>
-					<label class="ecrm-field" data-for="combo_energy_relation">
-						<span class="ecrm-field__label">Τι έχει ήδη ο πελάτης</span>
-						<select name="combo_energy_relation" class="ecrm-input" data-extra="1">
-							<option value="">—</option>
-							<option value="has_power">Έχει ήδη ρεύμα Volton — νέα κινητή Orizon</option>
-							<option value="has_mobile">Έχει ήδη κινητή Orizon — νέο ρεύμα Volton</option>
-							<option value="both_new">Νέος και στα δύο — ταυτόχρονη σύναψη</option>
-						</select>
-					</label>
-					<?php $ecrm_field( 'combo_supply_number', 'Αριθμός Παροχής / ΗΚΑΣΠ Ρεύματος', 'text', true ); ?>
-					<?php
-					// Ήταν ελεύθερο κείμενο ώς 04/09/2026: ο πωλητής έγραφε ό,τι
-					// θυμόταν, με ό,τι ορθογραφία, και αυτό τυπωνόταν. Γίνεται
-					// λίστα από τα πραγματικά προγράμματα Volton (CHANGELOG 217)
-					// -- ΜΟΝΟ Volton, γιατί το combo είναι Volton+Orizon και το
-					// έντυπο φέρει τα στοιχεία της Volton· πρόγραμμα άλλου
-					// παρόχου δεν έχει θέση σε αυτό το χαρτί. Οι επιλογές
-					// γεμίζουν από το JS, που έχει ήδη όλο τον κατάλογο.
-					?>
-					<label class="ecrm-field" data-for="combo_energy_program">
-						<span class="ecrm-field__label">Πρόγραμμα Ρεύματος</span>
-						<select name="combo_energy_program" class="ecrm-input" data-extra="1" data-volton-programs>
-							<option value="">—</option>
-						</select>
-					</label>
-					<label class="ecrm-field" data-for="combo_user_role">
-						<span class="ecrm-field__label">Χρήστης Γραμμής</span>
-						<select name="combo_user_role" class="ecrm-input" data-extra="1">
-							<option value="">—</option>
-							<option value="main">Κύριος Χρήστης</option>
-							<option value="secondary">Δευτερεύων Χρήστης</option>
-						</select>
-					</label>
-				</div>
-
-				<?php
-				// Το έντυπο έχει ΔΥΟ μπλοκ ταυτότητας -- «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ
-				// ΚΙΝΗΤΗΣ ΤΗΛΕΦΩΝΙΑΣ» και «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ ΕΝΕΡΓΕΙΑΣ» -- επειδή
-				// το άρθρο 4 προβλέπει ρητά ότι μπορεί να είναι δύο διαφορετικά
-				// πρόσωπα (η παροχή ρεύματος σε άλλο όνομα από τη γραμμή που
-				// εκπροσωπείται). Ώς τώρα η φόρμα είχε ένα μόνο σετ στοιχείων,
-				// οπότε το ΑΦΜ του δεύτερου προσώπου δεν είχε πού να μπει.
-				//
-				// Ίδιο μοτίβο με το «Ίδια με τη διεύθυνση του πελάτη» παραπάνω:
-				// τσεκαρισμένο εξαρχής, τα πεδία μαζεμένα. Η συνηθισμένη
-				// περίπτωση -- ένα πρόσωπο -- δεν πληρώνει τίποτα.
-				?>
-				<div data-when-offer="combo" hidden>
-					<div class="ecrm-subhead">Στοιχεία Πελάτη Ενέργειας</div>
-					<label class="ecrm-syncbar">
-						<input type="checkbox" name="combo_energy_same" value="1" data-energy-same="1" checked>
-						Ίδιο πρόσωπο με τον πελάτη κινητής
-					</label>
-					<div class="ecrm-grid" data-energy-fields hidden>
-						<?php $ecrm_field( 'combo_energy_name', 'Ονοματεπώνυμο', 'text', true ); ?>
-						<?php $ecrm_field( 'combo_energy_afm', 'Α.Φ.Μ.', 'text', true ); ?>
-						<?php $ecrm_field( 'combo_energy_adt', 'Αριθμός Εγγράφου Ταυτοπροσωπίας', 'text', true ); ?>
-						<?php $ecrm_field( 'combo_energy_doy', 'Δ.Ο.Υ.', 'text', true ); ?>
-						<?php
-						// Στοιχεία επικοινωνίας ΤΟΥ ΠΕΛΑΤΗ ΕΝΕΡΓΕΙΑΣ -- όχι του
-						// πελάτη κινητής. Δεν τυπώνονται πουθενά στο έντυπο· είναι
-						// για τον δεύτερο σύνδεσμο υπογραφής (3β-Β), όταν χρειάζεται
-						// δεύτερη υπογραφή γιατί είναι άλλο πρόσωπο. Γι' αυτό ΔΕΝ
-						// έχουν data-extra="1": στήλες, όχι extra_json (§1.17, βλ.
-						// AddComboEnergyContactColumns) -- ο σύνδεσμος υπογραφής τις
-						// διαβάζει απευθείας.
-						?>
-						<?php $ecrm_field( 'combo_energy_mobile', 'Κινητό', 'text', false, '69…' ); ?>
-						<?php $ecrm_field( 'combo_energy_email', 'Email', 'email', false ); ?>
-					</div>
-				</div>
-
-				<?php
-				// Η Συνδυαστική δένει δύο γραμμές κινητής κάτω από το ίδιο ΑΦΜ
-				// (§ΓΕΝ.ΟΡΟΙ Ορίζον, «τουλάχιστον δύο (2) + συνδέσεις κινητής»).
-				// Μέχρι 2026-09-01 η αίτηση έπαιρνε μόνο ΕΝΑΝ αριθμό κινητού
-				// (mobile_msisdn), οπότε το έντυπο τυπωνόταν με τη 2η γραμμή
-				// κενή -- ζητήθηκε ρητά από τον πελάτη. Ίδιο μοτίβο με το
-				// COMBO ακριβώς από πάνω: εμφανίζεται μόνο για mobile_offer=
-				// family, γιατί δεν έχει νόημα σε απλή αίτηση ή σε COMBO.
-				?>
-				<div class="ecrm-grid" data-when-offer="family" hidden>
-					<?php $ecrm_field( 'mobile_msisdn_2', 'Αριθμός Κινητού (2ο, Συνδυαστικού)', 'text', true, '69…' ); ?>
-				</div>
 
 				<?php
 				// Τρεις τιμές, γιατί η προσφορά αλλάζει δύο φορές: τι κοστίζει

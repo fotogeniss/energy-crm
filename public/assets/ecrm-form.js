@@ -137,11 +137,12 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// πελάτης ενέργειας είναι ο ίδιος, και τα τέσσερα πεδία μαζεύονται.
 		// Ίδιο ακριβώς σχήμα με το toggleAddr() των διευθύνσεων.
 		function toggleEnergyPerson(cb) {
-			// Δύο πιθανά κουτιά -- `data-energy-fields` (κάρτα 6β, ο πελάτης
-			// ενέργειας είναι «ο άλλος») ή `data-mobile-fields` (κάρτα 6γ,
-			// Στάδιο 4, ο πελάτης κινητής είναι «ο άλλος») -- ποτέ και τα
-			// δύο μαζί, το καθένα ζει στη δική του κάρτα. `cb` είναι το
-			// checkbox που πάτησε ο χρήστης, όποιο κι αν είναι.
+			// Δύο πιθανά κουτιά -- `data-energy-fields` (αίτηση Orizon: «ο
+			// άλλος» είναι ο πελάτης ενέργειας) ή `data-mobile-fields`
+			// (αίτηση Volton: «ο άλλος» είναι ο πελάτης κινητής). Ζουν σε
+			// δύο ξεχωριστές κάρτες «2β», ποτέ ταυτόχρονα ορατές -- γι' αυτό
+			// και το `closest('.ecrm-card')`. `cb` είναι το checkbox που
+			// πάτησε ο χρήστης, όποιο κι αν είναι.
 			var box = cb.closest('.ecrm-card').querySelector('[data-energy-fields], [data-mobile-fields]');
 			if (box) box.hidden = cb.checked;
 		}
@@ -563,7 +564,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// δεν φεύγει από το DOM: το collect() διαβάζει κάθε .ecrm-input με τιμή,
 		// κρυμμένο ή όχι, οπότε τίποτα δεν χάνεται στην αποθήκευση.
 		//
-		// Τέσσερις κανόνες, και οι τρεις τελευταίοι είναι εκεί για να μη
+		// Πέντε κανόνες, και οι τέσσερις τελευταίοι είναι εκεί για να μη
 		// κρυφτεί ποτέ κάτι που έχει σημασία:
 		//
 		//   1. Κενή λίστα σημαίνει «δεν ξέρω ποιο έντυπο» → δείξε τα πάντα.
@@ -572,6 +573,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		//   3. Δανεισμένο πεδίο (είναι στην ★ ενότητα) δεν κρύβεται ποτέ.
 		//   4. Το φίλτρο δεν ΔΕΙΧΝΕΙ τίποτα — μόνο κρύβει. Ό,τι έχει ήδη κρύψει
 		//      το data-when μένει κρυφό.
+		//   5. Κάρτα με `data-no-template-filter` εξαιρείται ολόκληρη.
 		var offFormActive = false;
 
 		function fieldName(el) { return el.getAttribute('data-for') || ''; }
@@ -587,7 +589,18 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				var input = f.querySelector('.ecrm-input');
 				var filled = !!(input && String(input.value || '').trim());
 				var borrowedNow = !!f.closest('[data-provider-fields]');
-				var off = have && !wanted[fieldName(f)] && !filled && !borrowedNow;
+				// 5. Η καρτα της προσφορας δεν περναει ΠΟΤΕ απο το φιλτρο.
+				//    Το φιλτρο απανταει «τυπωνεται αυτο το πεδιο στο εντυπο;»
+				//    -- ερωτηση χωρις νοημα εδω: η επιλογη προσφορας δεν ειναι
+				//    πεδιο του εντυπου, ειναι η αποφαση που κρινει ΠΟΙΑ εντυπα
+				//    θα τυπωθουν (MobilePaperwork::forApplication /
+				//    comboAttachmentFor). Κρυμμενη πισω απο «Περισσοτερα», ο
+				//    συνεργατης δεν εβλεπε καν οτι υπαρχει προσφορα να
+				//    προτεινει -- ρητο αιτημα ιδιοκτητη, 05/09/2026. Τα πεδια
+				//    που ανοιγει η προσφορα εχουν ηδη καλυτερο φραχτη απο το
+				//    φιλτρο: το `data-when-offer`.
+				var exempt = !!f.closest('[data-no-template-filter]');
+				var off = have && !wanted[fieldName(f)] && !filled && !borrowedNow && !exempt;
 				f.classList.toggle('is-offform', off);
 			});
 
@@ -621,6 +634,12 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			root.querySelectorAll('.ecrm-card').forEach(function (card) {
 				var fields = card.querySelectorAll('.ecrm-field[data-for]');
 				if (!fields.length) return;
+
+				// Εξαιρεμενη καρτα: ουτε κουμπι, ουτε «αδεια για αυτο το
+				// εντυπο». Βλ. applyTemplateFilter() -- κανενα πεδιο της δεν
+				// γινεται ποτε is-offform, οποτε ενα «Περισσοτερα (0)» θα ηταν
+				// κουμπι που δεν αποκαλυπτει τιποτα.
+				if (card.hasAttribute('data-no-template-filter')) return;
 
 				var hidden = card.querySelectorAll('.ecrm-field.is-offform').length;
 				var visible = 0;
