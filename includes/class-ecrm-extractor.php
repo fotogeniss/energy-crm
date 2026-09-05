@@ -137,6 +137,154 @@ class ECRM_Extractor {
 		return [ 'ok' => true, 'data' => self::normalize( $data ), 'raw' => $text ];
 	}
 
+	/**
+	 * Τι ΕΙΝΑΙ το κάθε αρχείο -- όχι τι γράφει μέσα.
+	 *
+	 * Ξεχωριστή μέθοδος από την extract(), όχι επιπλέον κλειδί στο fields():
+	 * ο ExtractionController κάνει loop πάνω στο fields() για να γράψει σε
+	 * στήλες πελάτη και σύμβασης, οπότε ένα «τι είδους έγγραφο» εκεί μέσα θα
+	 * προσπαθούσε να γραφτεί ως πεδίο του πελάτη. Δύο ερωτήματα, δύο μέθοδοι.
+	 *
+	 * Το prompt είναι σκόπιμα μικρό και η απάντηση επίσης: δεν ζητά τιμές
+	 * πεδίων, μόνο κατηγορία και βεβαιότητα. Μια αίτηση με δέκα έγγραφα
+	 * κοστίζει κλάσμα αυτού που κοστίζει μία πλήρης εξαγωγή.
+	 *
+	 * Η βεβαιότητα ζητείται ρητά επειδή ΧΩΡΙΣ αυτήν το μοντέλο θα έδινε πάντα
+	 * μια απάντηση, και μια αβέβαιη απάντηση εδώ αλλάζει ετικέτα σε φάκελο με
+	 * δικαιολογητικά. Ποιο κατώφλι μετράει το αποφασίζει το
+	 * Domain\Document\KindVerdict, όχι αυτή η μέθοδος.
+	 *
+	 * @param array $files Each: ['path'=>abs path, 'mime'=>mime]
+	 * @return array{ok:bool, kinds?:array<int,array{kind:?string,confidence:?string}>, raw?:string, error?:string}
+	 */
+	public static function classify( array $files ): array {
+		$api_key = self::api_key();
+		if ( empty( $api_key ) ) {
+			return [ 'ok' => false, 'error' => 'Δεν έχει οριστεί Claude API key.' ];
+		}
+		if ( empty( $files ) ) {
+			return [ 'ok' => false, 'error' => 'Δεν δόθηκαν αρχεία.' ];
+		}
+
+		$content = [ [ 'type' => 'text', 'text' => self::classify_prompt() ] ];
+		$slots   = [];
+
+		foreach ( array_values( $files ) as $i => $f ) {
+			$block = self::file_to_block( $f );
+			if ( ! $block ) {
+				continue;
+			}
+			// Αριθμημένη ετικέτα: η σειρά της απάντησης δεν αφήνεται στην τύχη,
+			// γιατί μια μετατοπισμένη σειρά θα έδινε σε κάθε αρχείο την ετικέτα
+			// του διπλανού του.
+			$content[] = [ 'type' => 'text', 'text' => 'ΑΡΧΕΙΟ ' . ( count( $slots ) + 1 ) ];
+			$content[] = $block;
+			$slots[]   = $i;
+		}
+
+		if ( ! $slots ) {
+			return [ 'ok' => false, 'error' => 'Τα αρχεία δεν διαβάστηκαν (μη υποστηριζόμενος τύπος).' ];
+		}
+
+		$resp = wp_remote_post( self::API_URL, [
+			'timeout' => 30,
+			'headers' => [
+				'content-type'      => 'application/json',
+				'x-api-key'         => $api_key,
+				'anthropic-version' => self::API_VER,
+			],
+			'body'    => wp_json_encode( [
+				'model'      => self::model(),
+				'max_tokens' => 400,
+				'messages'   => [ [ 'role' => 'user', 'content' => $content ] ],
+			] ),
+		] );
+
+		if ( is_wp_error( $resp ) ) {
+			return [ 'ok' => false, 'error' => 'Σφάλμα σύνδεσης: ' . $resp->get_error_message() ];
+		}
+
+		$code = wp_remote_retrieve_response_code( $resp );
+		$json = json_decode( wp_remote_retrieve_body( $resp ), true );
+
+		if ( 200 !== $code ) {
+			$msg = $json['error']['message'] ?? ( 'HTTP ' . $code );
+			return [ 'ok' => false, 'error' => 'Claude API: ' . $msg ];
+		}
+
+		$text = '';
+		foreach ( ( $json['content'] ?? [] ) as $blk ) {
+			if ( 'text' === ( $blk['type'] ?? '' ) ) {
+				$text .= $blk['text'];
+			}
+		}
+
+		$data = self::parse_json( $text );
+		if ( null === $data ) {
+			return [ 'ok' => false, 'error' => 'Δεν επιστράφηκε έγκυρο JSON.', 'raw' => $text ];
+		}
+
+		return [ 'ok' => true, 'kinds' => self::classify_slots( $data, $slots ), 'raw' => $text ];
+	}
+
+	/**
+	 * Η απάντηση του μοντέλου, γυρισμένη στους δείκτες των ΑΡΧΙΚΩΝ αρχείων.
+	 *
+	 * Το μοντέλο μετράει τα αρχεία που του δόθηκαν (1..ν)· ο καλών μετράει τα
+	 * αρχεία που έστειλε -- και τα δύο σύνολα διαφέρουν μόλις ένα αρχείο δεν
+	 * διαβαστεί. Το $slots κρατά την αντιστοιχία, ώστε μια απάντηση να μη
+	 * χρεωθεί ποτέ σε λάθος έγγραφο.
+	 *
+	 * @param array $data  Το JSON του μοντέλου.
+	 * @param array $slots Θέση στο prompt => δείκτης στα αρχεία του καλούντος.
+	 * @return array<int,array{kind:?string,confidence:?string}>
+	 */
+	private static function classify_slots( array $data, array $slots ): array {
+		$rows = $data['files'] ?? $data;
+		$out  = [];
+
+		if ( ! is_array( $rows ) ) {
+			return $out;
+		}
+
+		foreach ( array_values( $rows ) as $pos => $row ) {
+			if ( ! is_array( $row ) || ! isset( $slots[ $pos ] ) ) {
+				continue;
+			}
+
+			$kind = $row['kind'] ?? null;
+			$conf = $row['confidence'] ?? null;
+
+			$out[ $slots[ $pos ] ] = [
+				'kind'       => is_string( $kind ) ? sanitize_key( $kind ) : null,
+				'confidence' => is_string( $conf ) ? sanitize_key( $conf ) : null,
+			];
+		}
+
+		return $out;
+	}
+
+	/** Το prompt της αναγνώρισης -- κατηγορία και βεβαιότητα, τίποτα άλλο. */
+	private static function classify_prompt(): string {
+		return <<<PROMPT
+Θα σου δοθούν φωτογραφίες/PDF εγγράφων από ελληνικό φάκελο συμβολαίου ενέργειας ή κινητής, αριθμημένα ΑΡΧΕΙΟ 1, ΑΡΧΕΙΟ 2 κ.ο.κ. Πες μου ΜΟΝΟ τι είδος έγγραφο είναι το καθένα.
+
+Επέστρεψε ΜΟΝΟ ένα JSON object, χωρίς markdown και χωρίς κείμενο πριν ή μετά, με αυτή ακριβώς τη μορφή:
+{"files":[{"kind":"id_card","confidence":"high"},{"kind":"provider_bill","confidence":"low"}]}
+
+Ενα αντικείμενο ΑΝΑ αρχείο, με την ΙΔΙΑ σειρά που σου δόθηκαν.
+
+Επιτρεπτές τιμές του kind:
+- "id_card" — ελληνική αστυνομική ταυτότητα ή διαβατήριο (μπρος ή πίσω όψη).
+- "provider_bill" — λογαριασμός ρεύματος ή αερίου από πάροχο (ΔΕΗ, Protergia, Ήρων, ΦΥΣΙΚΟ ΑΕΡΙΟ κ.λπ.), με αριθμό παροχής ή κατανάλωση.
+- "sim_card" — φωτογραφία της πλαστικής βάσης κάρτας SIM, με ICCID/barcode.
+- "other" — ΟΤΙΔΗΠΟΤΕ άλλο: εξουσιοδότηση, Ε9, πιστοποιητικό, συμπληρωμένο έντυπο παρόχου, άσχετη φωτογραφία.
+
+Επιτρεπτές τιμές του confidence: "high", "medium", "low".
+Δώσε "high" ΜΟΝΟ αν αναγνωρίζεις καθαρά το έγγραφο από τη μορφή και το περιεχόμενό του. Αν το χαρτί είναι θολό, κομμένο, μισοφωτισμένο ή απλά δεν είσαι σίγουρος, δώσε "low" ή "medium" — μια λάθος βέβαιη απάντηση αλλάζει την κατάταξη ενός δικαιολογητικού και μπλοκάρει ή ξεμπλοκάρει αίτηση.
+PROMPT;
+	}
+
 	// ---------------------------------------------------------------------
 	// Prompt
 	// ---------------------------------------------------------------------

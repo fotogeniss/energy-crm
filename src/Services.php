@@ -35,6 +35,7 @@ use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\RejectionFollowUp;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
+use EnergyCRM\Infrastructure\DocumentKindReview;
 use EnergyCRM\Infrastructure\ExtractionGate;
 use EnergyCRM\Infrastructure\ProviderFormRenderer;
 use EnergyCRM\Infrastructure\SecretStore;
@@ -124,6 +125,8 @@ final class Services
 
     private static ?ExtractionGate $extractionGate = null;
 
+    private static ?DocumentKindReview $documentKindReview = null;
+
     private static ?DraftExitGate $draftExitGate = null;
 
     private static ?CancellationGate $cancellationGate = null;
@@ -182,6 +185,15 @@ final class Services
     public static function extractionGate(): ExtractionGate
     {
         return self::$extractionGate ??= new ExtractionGate();
+    }
+
+    public static function documentKindReview(): DocumentKindReview
+    {
+        return self::$documentKindReview ??= new DocumentKindReview(
+            self::files(),
+            self::extractionGate(),
+            self::events()
+        );
     }
 
     public static function draftExitGate(): DraftExitGate

@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ανέβασμα εγγράφων — είδος ανά αρχείο + αναγνώριση AI</title>
+<style>
+:root{
+	--fs-18:18px; --fs-15:15px; --fs-14:14px; --fs-13-5:13.5px; --fs-13:13px;
+	--fs-12-5:12.5px; --fs-12:12px; --fs-11:11px;
+	--page-canvas:#f8f8f6;
+	--n0:#ffffff; --n50:var(--page-canvas); --n100:#f1f1ee; --n200:#dedcd7;
+	--n500:#6e6c66; --n700:#42413d; --n800:#2a2926; --n900:#1a1a18;
+	--p50:#eafaea; --p200:#a5eba7; --p500:#12a413; --p600:#0e8610; --p700:#0b690c;
+	--st-pending:#ab5506; --st-pending-bg:#fcf2ec;
+	--st-routed:#006926; --st-routed-bg:#e6f4e7;
+	--st-active:#00531e; --st-active-bg:#e3f0e4;
+	--st-cancel:#c32b47; --st-cancel-bg:#fdeaea;
+	--ink:var(--n800); --muted:var(--n500); --line:var(--n200);
+	--bg:var(--n50); --surface:var(--n0); --navy:var(--n900); --navy-soft:var(--n700);
+	--accent:var(--p600); --accent-wash:var(--p50); --accent-soft:var(--p200); --accent-ink:var(--p700);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+	font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+	font-size:var(--fs-14);line-height:1.5;padding:24px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:var(--fs-13);margin:0 0 6px}
+.rule{font-size:var(--fs-12);color:var(--muted);background:var(--n100);border:1px solid var(--line);
+	border-radius:8px;padding:8px 12px;margin:12px 0 22px;display:inline-block}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;max-width:1180px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+.col > h2{font-size:var(--fs-15);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px;
+	color:var(--muted);font-weight:800}
+.col.before > h2{color:var(--st-cancel)}
+.col.after  > h2{color:var(--accent-ink)}
+.stepno{font-size:var(--fs-12);font-weight:800;color:var(--muted);margin:18px 0 8px;
+	text-transform:uppercase;letter-spacing:.05em}
+.stepno:first-of-type{margin-top:0}
+
+.ecrm-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.ecrm-step{font-size:var(--fs-12);font-weight:800;text-transform:uppercase;letter-spacing:.05em;
+	color:var(--muted);margin:14px 0 8px}
+.ecrm-step:first-child{margin-top:0}
+
+.ecrm-checklist{list-style:none;margin:6px 0 10px;padding:0;display:flex;flex-direction:column;gap:6px}
+.ecrm-check{display:flex;align-items:center;gap:10px;font-size:var(--fs-14)}
+.ecrm-check__mark{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+	font-weight:800;font-size:var(--fs-13);flex:0 0 22px}
+.ecrm-check.is-ok .ecrm-check__mark{background:var(--st-active-bg);color:var(--st-active)}
+.ecrm-check.is-missing .ecrm-check__mark{background:var(--st-cancel-bg);color:var(--st-cancel)}
+.ecrm-check.is-missing{color:var(--muted)}
+.ecrm-check__note{font-size:var(--fs-13);font-weight:600;padding:8px 12px;border-radius:10px;margin-bottom:12px}
+.ecrm-check__note.is-ok{background:var(--st-routed-bg);color:var(--st-routed)}
+.ecrm-check__note.is-missing{background:var(--st-pending-bg);color:var(--st-pending)}
+
+.ecrm-files{display:flex;flex-direction:column;gap:8px}
+.ecrm-file{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);
+	border-radius:10px;text-decoration:none;background:var(--surface)}
+.ecrm-file__thumb{width:44px;height:44px;flex:0 0 44px;border-radius:8px;background:var(--bg);
+	display:grid;place-items:center}
+.ecrm-file__ext{font-size:var(--fs-11);font-weight:800;color:var(--st-pending)}
+.ecrm-file__meta{min-width:0;flex:1}
+.ecrm-file__name{display:block;font-size:var(--fs-13);font-weight:600;color:var(--ink)}
+.ecrm-file__kind{display:block;font-size:var(--fs-11);color:var(--muted)}
+.ecrm-file__kind.is-wrong{color:var(--st-cancel);font-weight:700}
+
+/* Η γραμμή «η AI το διόρθωσε», κρεμασμένη στο ΑΝΕΒΑΣΜΕΝΟ αρχείο */
+.ecrm-file--fixed{border-color:var(--accent-soft);background:var(--accent-wash);flex-wrap:wrap}
+.ecrm-aiflag{flex:1 0 100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+	margin-top:8px;padding-top:8px;border-top:1px dashed var(--accent-soft)}
+.ecrm-aiflag__txt{font-size:var(--fs-12-5);color:var(--accent-ink);font-weight:600}
+.ecrm-file--undone{border-color:#f0cba8;background:var(--st-pending-bg);flex-wrap:wrap}
+.ecrm-file--undone .ecrm-aiflag{border-top-color:#e0b58c}
+.ecrm-file--undone .ecrm-aiflag__txt{color:var(--st-pending)}
+
+.ecrm-input{font:inherit;font-size:var(--fs-13);padding:7px 9px;border:1px solid var(--line);
+	border-radius:8px;background:var(--surface);color:var(--ink)}
+.ecrm-btn{font:inherit;font-size:var(--fs-13);font-weight:700;padding:7px 14px;border-radius:8px;
+	border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:default}
+.ecrm-btn--ghost{background:transparent}
+.ecrm-btn--xs{font-size:var(--fs-12);padding:4px 9px}
+.ecrm-btn--go{background:var(--navy);border-color:var(--navy);color:#fff}
+
+.ecrm-docup{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;padding-top:12px;
+	border-top:1px dashed var(--line)}
+.ecrm-docup__kind{max-width:220px}
+.ecrm-docup__msg{font-size:var(--fs-13);color:var(--muted)}
+.filefake{font-size:var(--fs-12-5);color:var(--muted);border:1px dashed var(--line);border-radius:8px;
+	padding:6px 10px;background:var(--bg)}
+
+/* λίστα ανά αρχείο, ΠΡΙΝ το ανέβασμα */
+.docup-rows{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:10px}
+.docup-row{display:grid;grid-template-columns:34px minmax(0,1fr) 190px;gap:10px;align-items:center;
+	padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.docup-row__thumb{width:34px;height:34px;border-radius:6px;background:var(--n100);display:grid;
+	place-items:center;font-size:var(--fs-11);font-weight:800;color:var(--st-pending)}
+.docup-row__name{font-size:var(--fs-13);font-weight:600;white-space:nowrap;overflow:hidden;
+	text-overflow:ellipsis;display:block}
+.docup-row select{width:100%}
+.docup-expiry-row{grid-column:1 / -1;display:flex;align-items:center;gap:8px;font-size:var(--fs-12);
+	color:var(--muted);padding-left:44px}
+
+.spin{width:11px;height:11px;border:2px solid var(--n200);border-top-color:var(--muted);
+	border-radius:50%;display:inline-block;animation:sp .8s linear infinite;vertical-align:-1px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.note{max-width:1180px;margin:26px 0 0;padding:16px 18px;border:1px solid var(--line);
+	border-radius:12px;background:var(--surface)}
+.note h3{margin:0 0 8px;font-size:var(--fs-15)}
+.note ul{margin:0;padding-left:20px}
+.note li{margin:5px 0;font-size:var(--fs-13-5)}
+.note li b{color:var(--accent-ink)}
+.tag{display:inline-block;font-size:var(--fs-11);font-weight:800;padding:2px 8px;border-radius:6px;
+	background:var(--st-cancel-bg);color:var(--st-cancel);margin-left:6px}
+.tag.ok{background:var(--st-active-bg);color:var(--st-active)}
+.arrow{font-size:var(--fs-12);color:var(--muted);margin:8px 0 2px;padding-left:2px}
+</style>
+</head>
+<body>
+
+<h1>Ανέβασμα εγγράφων — είδος ανά αρχείο + αναγνώριση AI</h1>
+<p class="sub">Καρτέλα αίτησης → κάρτα «Έγγραφα». Σενάριο: ο συνεργάτης ανεβάζει <b>ταυτότητα ΚΑΙ λογαριασμό ρεύματος μαζί</b>.</p>
+<div class="rule">Μακέτα §1.8 &nbsp;·&nbsp; η AI ΔΙΟΡΘΩΝΕΙ μόνη της όταν είναι σίγουρη, το λέει καθαρά, και η αναίρεση είναι ένα κλικ.</div>
+
+<div class="grid">
+
+	<!-- ================= ΠΡΙΝ ================= -->
+	<div class="col before">
+		<h2>Πριν — σήμερα</h2>
+
+		<div class="ecrm-card">
+			<div class="ecrm-step">Απαιτούμενα δικαιολογητικά</div>
+			<ul class="ecrm-checklist">
+				<li class="ecrm-check is-ok"><span class="ecrm-check__mark">✓</span><span>Ταυτότητα/Διαβατήριο</span></li>
+				<li class="ecrm-check is-missing"><span class="ecrm-check__mark">○</span><span>Λογαριασμός παρόχου</span></li>
+			</ul>
+			<div class="ecrm-check__note is-missing">Λείπουν δικαιολογητικά — δεν μπορεί να δρομολογηθεί/ενεργοποιηθεί.</div>
+
+			<div class="ecrm-step">Έγγραφα</div>
+			<div class="ecrm-files">
+				<div class="ecrm-file">
+					<span class="ecrm-file__thumb"><span class="ecrm-file__ext">JPG</span></span>
+					<span class="ecrm-file__meta">
+						<span class="ecrm-file__name">tautotita_mprosta.jpg</span>
+						<span class="ecrm-file__kind">Ταυτότητα/Διαβατήριο</span>
+					</span>
+				</div>
+				<div class="ecrm-file">
+					<span class="ecrm-file__thumb"><span class="ecrm-file__ext">PDF</span></span>
+					<span class="ecrm-file__meta">
+						<span class="ecrm-file__name">logariasmos_deh.pdf</span>
+						<span class="ecrm-file__kind is-wrong">Ταυτότητα/Διαβατήριο &nbsp;←&nbsp; λάθος ετικέτα, κανείς δεν το λέει</span>
+					</span>
+				</div>
+			</div>
+
+			<div class="ecrm-docup">
+				<select class="ecrm-input ecrm-docup__kind">
+					<option>Ταυτότητα/Διαβατήριο</option>
+					<option>Λογαριασμός παρόχου</option>
+					<option>Κάρτα SIM</option>
+					<option>Εξουσιοδότηση</option>
+				</select>
+				<span class="filefake">Επιλογή αρχείων — 2 αρχεία</span>
+				<button class="ecrm-btn ecrm-btn--ghost">Προσθήκη</button>
+			</div>
+		</div>
+
+		<div class="arrow">Ενα dropdown για ΟΛΟ το batch → και τα δύο αρχεία πήραν την ίδια ετικέτα.
+		Ο λογαριασμός ανέβηκε κανονικά, αλλά καταγράφηκε ως ταυτότητα, άρα το σύστημα λέει ότι λείπει
+		— και τίποτα στην οθόνη δεν εξηγεί γιατί.</div>
+	</div>
+
+	<!-- ================= ΜΕΤΑ ================= -->
+	<div class="col after">
+		<h2>Μετά — πρόταση</h2>
+
+		<div class="stepno">1 · Επιλογή αρχείων — είδος ανά αρχείο</div>
+		<div class="ecrm-card">
+			<div class="ecrm-step">Έγγραφα</div>
+			<div class="ecrm-docup">
+				<span class="filefake">Επιλογή αρχείων — 3 αρχεία</span>
+				<button class="ecrm-btn ecrm-btn--go">Προσθήκη 3 αρχείων</button>
+
+				<div class="docup-rows">
+					<div class="docup-row">
+						<span class="docup-row__thumb">JPG</span>
+						<span><span class="docup-row__name">tautotita_mprosta.jpg</span></span>
+						<select class="ecrm-input">
+							<option selected>Ταυτότητα/Διαβατήριο</option>
+							<option>Λογαριασμός παρόχου</option>
+							<option>Κάρτα SIM</option>
+						</select>
+						<div class="docup-expiry-row">
+							Λήξη εγγράφου
+							<input class="ecrm-input" type="date" value="2031-04-12" style="font-size:12px;padding:4px 7px">
+						</div>
+					</div>
+
+					<div class="docup-row">
+						<span class="docup-row__thumb">PDF</span>
+						<span><span class="docup-row__name">logariasmos_deh.pdf</span></span>
+						<select class="ecrm-input">
+							<option selected>Ταυτότητα/Διαβατήριο</option>
+							<option>Λογαριασμός παρόχου</option>
+							<option>Κάρτα SIM</option>
+						</select>
+					</div>
+
+					<div class="docup-row">
+						<span class="docup-row__thumb">PDF</span>
+						<span><span class="docup-row__name">eksousiodotisi.pdf</span></span>
+						<select class="ecrm-input">
+							<option selected>Εξουσιοδότηση</option>
+							<option>Ταυτότητα/Διαβατήριο</option>
+							<option>Λογαριασμός παρόχου</option>
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="arrow">Ενα dropdown ΑΝΑ αρχείο. Αυτό μόνο του λύνει την αιτία του bug — εδώ ο
+		συνεργάτης έβαλε κατά λάθος «Ταυτότητα» και στα δύο πρώτα.</div>
+
+		<div class="stepno">2 · Μετά το ανέβασμα — η AI διάβασε και διόρθωσε</div>
+		<div class="ecrm-card">
+			<div class="ecrm-step">Απαιτούμενα δικαιολογητικά</div>
+			<ul class="ecrm-checklist">
+				<li class="ecrm-check is-ok"><span class="ecrm-check__mark">✓</span><span>Ταυτότητα/Διαβατήριο</span></li>
+				<li class="ecrm-check is-ok"><span class="ecrm-check__mark">✓</span><span>Λογαριασμός παρόχου</span></li>
+			</ul>
+			<div class="ecrm-check__note is-ok">Ολα τα δικαιολογητικά παρόντα.</div>
+
+			<div class="ecrm-step">Έγγραφα</div>
+			<div class="ecrm-files">
+				<div class="ecrm-file">
+					<span class="ecrm-file__thumb"><span class="ecrm-file__ext">JPG</span></span>
+					<span class="ecrm-file__meta">
+						<span class="ecrm-file__name">tautotita_mprosta.jpg</span>
+						<span class="ecrm-file__kind">Ταυτότητα/Διαβατήριο</span>
+					</span>
+				</div>
+
+				<div class="ecrm-file ecrm-file--fixed">
+					<span class="ecrm-file__thumb"><span class="ecrm-file__ext">PDF</span></span>
+					<span class="ecrm-file__meta">
+						<span class="ecrm-file__name">logariasmos_deh.pdf</span>
+						<span class="ecrm-file__kind">Λογαριασμός παρόχου</span>
+					</span>
+					<span class="ecrm-aiflag">
+						<span class="ecrm-aiflag__txt">Η AI το διάβασε και το άλλαξε από «Ταυτότητα/Διαβατήριο»</span>
+						<button class="ecrm-btn ecrm-btn--ghost ecrm-btn--xs">Αναίρεση</button>
+					</span>
+				</div>
+
+				<div class="ecrm-file">
+					<span class="ecrm-file__thumb"><span class="ecrm-file__ext">PDF</span></span>
+					<span class="ecrm-file__meta">
+						<span class="ecrm-file__name">eksousiodotisi.pdf</span>
+						<span class="ecrm-file__kind">Εξουσιοδότηση &nbsp;·&nbsp; <span class="spin"></span> η AI διαβάζει…</span>
+					</span>
+				</div>
+			</div>
+		</div>
+		<div class="arrow">Η ετικέτα διορθώθηκε μόνη της, το checklist ξαναμέτρησε, η αίτηση ξεμπλόκαρε
+		— χωρίς να χρειαστεί να πατήσει τίποτα ο συνεργάτης. Αν δεν κοιτάξει καθόλου την οθόνη, το
+		σωστό έχει ήδη γίνει.</div>
+
+		<div class="stepno">3 · Αν πατήσει «Αναίρεση» — η AI δεν επιμένει</div>
+		<div class="ecrm-card">
+			<div class="ecrm-step">Απαιτούμενα δικαιολογητικά</div>
+			<ul class="ecrm-checklist">
+				<li class="ecrm-check is-ok"><span class="ecrm-check__mark">✓</span><span>Ταυτότητα/Διαβατήριο</span></li>
+				<li class="ecrm-check is-missing"><span class="ecrm-check__mark">○</span><span>Λογαριασμός παρόχου</span></li>
+			</ul>
+			<div class="ecrm-check__note is-missing">Λείπουν δικαιολογητικά — δεν μπορεί να δρομολογηθεί/ενεργοποιηθεί.</div>
+
+			<div class="ecrm-step">Έγγραφα</div>
+			<div class="ecrm-files">
+				<div class="ecrm-file">
+					<span class="ecrm-file__thumb"><span class="ecrm-file__ext">JPG</span></span>
+					<span class="ecrm-file__meta">
+						<span class="ecrm-file__name">tautotita_mprosta.jpg</span>
+						<span class="ecrm-file__kind">Ταυτότητα/Διαβατήριο</span>
+					</span>
+				</div>
+				<div class="ecrm-file ecrm-file--undone">
+					<span class="ecrm-file__thumb"><span class="ecrm-file__ext">PDF</span></span>
+					<span class="ecrm-file__meta">
+						<span class="ecrm-file__name">logariasmos_deh.pdf</span>
+						<span class="ecrm-file__kind">Ταυτότητα/Διαβατήριο</span>
+					</span>
+					<span class="ecrm-aiflag">
+						<span class="ecrm-aiflag__txt">Επανήλθε η επιλογή σου. Η AI δεν θα το ξαναπροτείνει.</span>
+					</span>
+				</div>
+			</div>
+		</div>
+		<div class="arrow">Η αναίρεση γράφεται κι αυτή — το αρχείο σημειώνεται ως «ο άνθρωπος αποφάσισε»
+		και δεν ξαναδιορθώνεται ποτέ αυτόματα.</div>
+	</div>
+</div>
+
+<div class="note">
+	<h3>Τι αλλάζει, ακριβώς</h3>
+	<ul>
+		<li><b>Ενα dropdown ανά αρχείο</b> αντί για ένα κοινό. Αυτή είναι η αιτία του bug: σήμερα η
+			ίδια τιμή στέλνεται για κάθε αρχείο του batch (<code>kinds[]</code> μέσα σε loop πάνω στα
+			επιλεγμένα αρχεία).<span class="tag ok">λύνει το bug χωρίς καθόλου AI</span></li>
+		<li><b>Το πεδίο λήξης ακολουθεί τη γραμμή του</b>, όχι όλο το widget — φαίνεται μόνο στα είδη
+			που λήγουν (ταυτότητα), όπως ακριβώς και σήμερα αλλά ανά αρχείο.</li>
+		<li><b>Η AI τρέχει ΜΕΤΑ το ανέβασμα, στον server</b> — τα bytes περνούν μία φορά και ο
+			συνεργάτης δεν περιμένει. Τα αρχεία μπαίνουν αμέσως· η διόρθωση έρχεται σε δεύτερο χρόνο.</li>
+		<li><b>Οταν η AI είναι σίγουρη, αλλάζει την ετικέτα μόνη της</b> και το γράφει καθαρά πάνω στο
+			αρχείο, με «Αναίρεση» ένα κλικ μακριά. Αυτό είναι το ζητούμενο: το «λείπουν έγγραφα» δεν
+			ξαναεμφανίζεται λανθασμένα ακόμα κι αν κανείς δεν κοιτάξει την οθόνη.</li>
+		<li><b>Οταν η AI ΔΕΝ είναι σίγουρη, δεν αγγίζει τίποτα</b> — καμία αλλαγή, καμία ένδειξη,
+			στέκει η επιλογή του συνεργάτη.</li>
+		<li><b>Η αναίρεση είναι τελεσίδικη</b>: το αρχείο σημειώνεται ως «ο άνθρωπος αποφάσισε» και
+			δεν ξαναδιορθώνεται αυτόματα ποτέ.</li>
+		<li><b>Κάθε αυτόματη αλλαγή γράφεται στο AUDIT</b> — ποιο αρχείο, από τι σε τι, από την AI και
+			όχι από χρήστη. Χωρίς αυτό, μια ετικέτα θα άλλαζε χωρίς να ξέρει κανείς ποιος την άλλαξε.</li>
+		<li><b>Επεκτείνεται ο υπάρχων <code>ECRM_Extractor</code></b> (ήδη διαβάζει ταυτότητες και
+			λογαριασμούς με Claude vision) ώστε να αναγνωρίζει και το ΕΙΔΟΣ του εγγράφου, όχι μόνο τις
+			τιμές των πεδίων. Δεν μπαίνει δεύτερη AI ενσωμάτωση.</li>
+	</ul>
+
+	<h3 style="margin-top:16px">Τι ΔΕΝ αλλάζει</h3>
+	<ul>
+		<li>Η ροή εισαγωγής (<code>/extract</code>, γέμισμα φόρμας από ταυτότητα+λογαριασμό) μένει
+			ακριβώς όπως είναι.</li>
+		<li>Τα όρια αρχείων, οι επιτρεπτοί τύποι, ο έλεγχος εμβέλειας και το σερβίρισμα με υπογεγραμμένο
+			token δεν αγγίζονται.</li>
+		<li>Το checklist «Απαιτούμενα δικαιολογητικά» κρατά την ίδια λογική — μετράει ό,τι είναι
+			καταγεγραμμένο, ούτε λιγότερο ούτε περισσότερο.</li>
+	</ul>
+
+	<h3 style="margin-top:16px">Το κόστος, καθαρά</h3>
+	<ul>
+		<li>Μία κλήση Claude ανά ανέβασμα σε υπάρχουσα αίτηση (σήμερα: μηδέν εκεί). Μικρό prompt, λίγα
+			tokens απάντησης — ζητάει μόνο το είδος, όχι πεδία.</li>
+		<li>Μπαίνει πίσω από το υπάρχον <code>ExtractionGate</code> + rate limiter: αν το σύστημα είναι
+			φορτωμένο ή δεν υπάρχει API key, το ανέβασμα ΔΕΝ μπλοκάρει — απλώς δεν γίνεται διόρθωση.</li>
+		<li>Διακόπτης on/off στις Ρυθμίσεις, ώστε να κλείνει χωρίς αλλαγή κώδικα.</li>
+	</ul>
+</div>
+
+</body>
+</html>
