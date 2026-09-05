@@ -16,6 +16,7 @@ namespace EnergyCRM;
 
 use EnergyCRM\Access\DepartingUser;
 use EnergyCRM\Access\DisabledAccounts;
+use EnergyCRM\Access\LoginThrottle;
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Admin\FormCalibrator;
@@ -24,6 +25,7 @@ use EnergyCRM\Admin\MonitoringPage;
 use EnergyCRM\Admin\PrivacyTools;
 use EnergyCRM\Http\ControllerFactory;
 use EnergyCRM\Http\Router;
+use EnergyCRM\Infrastructure\DocumentExposureCheck;
 use EnergyCRM\Infrastructure\DocumentProtection;
 use EnergyCRM\Infrastructure\ErrorLog;
 use EnergyCRM\Infrastructure\HealthChecks;
@@ -105,6 +107,10 @@ final class Plugin
         // Πρώτο απ' όλα: αν σκάσει κάτι παρακάτω, θέλουμε να έχει καταγραφεί.
         (new ErrorLog())->register();
 
+        // Πριν από κάθε έλεγχο κωδικού: μια σειρά αποτυχιών σταματάει να
+        // δέχεται προσπάθειες, αντί να τις πληρώνει ο server μία-μία.
+        (new LoginThrottle())->register();
+
         // Πριν από οτιδήποτε αγγίζει δικαιώματα: όσο ο λογαριασμός είναι
         // απενεργοποιημένος, κανένα ecrm_* δικαίωμα δεν ισχύει πουθενά.
         (new DisabledAccounts(Services::team()))->register();
@@ -121,6 +127,11 @@ final class Plugin
         ))->register();
         (new Retention(Services::contracts()))->register();
         (new DocumentProtection(Services::unprotectedDocuments()))->register();
+
+        // Η ιδια δοκιμη που τρεχει η Υγεια κατ' αιτημα, τωρα και ημερησια απο
+        // μονη της -- ωστε ενα ξεχασμενο nginx να μην περιμενει καποιον να ανοιξει
+        // τη σελιδα για να το μαθει.
+        (new DocumentExposureCheck())->register();
 
         // Record which key this site's data belongs to, once. Only while
         // encryption is on: stamping a site that has never encrypted anything
