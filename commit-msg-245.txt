@@ -1,0 +1,26 @@
+(245) Διόρθωση: όλη η εφαρμογή έμενε στο «Φόρτωση…»
+
+Το (243) πρόσθεσε το ecrm-view-documents.js και ένα import προς αυτό στο
+ecrm-app.js, αλλά ξέχασε να καταχωρήσει το '@energy-crm/view-documents'
+στον πίνακα MODULES του class-ecrm-shortcodes.php -- το μόνο σημείο που
+το μετατρέπει σε πραγματικό URL μέσω wp_register_script_module().
+
+Ο browser δεν λύνει bare specifier χωρίς import map, οπότε δεν απέρριψε
+μόνο αυτό το import: απέρριψε ΟΛΟΚΛΗΡΟ το ecrm-app.js. Και επειδή αυτό
+γεμίζει κάθε οθόνη, κάθε μενού έμενε στο «Φόρτωση…».
+
+  Uncaught TypeError: Failed to resolve module specifier
+  "@energy-crm/view-documents".
+
+Η καταχώρηση είναι τρεις γραμμές. Το ουσιαστικό μισό είναι ο νέος
+ModuleMapMatchesRealImportsTest: συγκρίνει τα πραγματικά import κάθε
+public/assets/*.js με τους δύο πίνακες και απαιτεί να συμφωνούν ακριβώς.
+Ολη η σουίτα ήταν πράσινη όταν έφυγε το σφάλμα -- κανείς δεν κοίταζε
+αυτόν τον χάρτη.
+
+Ο έλεγχος έβγαλε άλλες οκτώ αποκλίσεις στο MODULE_DEPS (τέσσερα αρχεία
+δήλωναν λιγότερα απ' όσα εισάγουν, τέσσερα περισσότερα). Καμία δεν
+έσπαγε κάτι· ο πίνακας ξαναγράφτηκε από τα ίδια τα αρχεία.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WTsKY6bJMV987pzmGYsFVo
