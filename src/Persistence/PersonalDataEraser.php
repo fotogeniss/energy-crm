@@ -68,14 +68,15 @@ final class PersonalDataEraser
         $contractIds = $this->contractIdsFor($customerId);
 
         $report = [
-            'files'         => 0,
-            'contracts'     => 0,
-            'signatures'    => 0,
-            'events'        => 0,
-            'notifications' => 0,
-            'leads'         => 0,
-            'tasks'         => 0,
-            'customer'      => 0,
+            'files'          => 0,
+            'contracts'      => 0,
+            'signatures'     => 0,
+            'events'         => 0,
+            'notifications'  => 0,
+            'leads'          => 0,
+            'tasks'          => 0,
+            'customer_notes' => 0,
+            'customer'       => 0,
         ];
 
         if ($contractIds !== []) {
@@ -87,8 +88,13 @@ final class PersonalDataEraser
             $report['leads']         = $this->eraseLeads($contractIds);
         }
 
-        $report['tasks']    = $this->eraseTasks($customerId, $contractIds);
-        $report['customer'] = $this->eraseCustomer($customerId);
+        $report['tasks']          = $this->eraseTasks($customerId, $contractIds);
+        // customer_id απευθείας, ίδια κατηγορία ακμής με το tasks.customer_id
+        // -- η σημείωση δεν έχει τίποτα ΑΞΙΟ ΝΑ ΜΕΙΝΕΙ (ολόκληρη είναι
+        // ελεύθερο κείμενο τρίτου), οπότε σβήνεται εξολοκλήρου, δεν
+        // ανωνυμοποιείται όπως τα contracts/tasks/leads.
+        $report['customer_notes'] = $this->eraseCustomerNotes($customerId);
+        $report['customer']       = $this->eraseCustomer($customerId);
 
         return $report;
     }
@@ -281,6 +287,34 @@ final class PersonalDataEraser
     }
 
     /**
+     * Ολόκληρη η γραμμή είναι ελεύθερο κείμενο για έναν πελάτη -- τίποτα εδώ
+     * δεν έχει νόημα να επιβιώσει ανωνυμοποιημένο, σε αντίθεση με ένα
+     * contract ή ένα task. Γι' αυτό DELETE, όχι redactRows().
+     */
+    private function eraseCustomerNotes(int $customerId): int
+    {
+        global $wpdb;
+
+        // Ιδιο όνομα στήλης-κλειδί με το eraseTasks() παραπάνω ('customer_id'),
+        // γραμμένο ρητά και όχι μόνο μέσα στο SQL κείμενο -- το
+        // PersonalDataCoverageTest διαβάζει αυτό το αρχείο σαν κείμενο και
+        // ψάχνει ακριβώς αυτό το literal για να επιβεβαιώσει τον χειρισμό.
+        $keyColumn = 'customer_id';
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $deleted = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM %i WHERE {$keyColumn} = %d",
+                Tables::name(Tables::CUSTOMER_NOTES),
+                $customerId
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $deleted === false ? 0 : (int) $deleted;
+    }
+
+    /**
      * The customer row keeps its id and region: the id so contracts still join
      * to something, the region because a county is not a person.
      */
@@ -307,6 +341,7 @@ final class PersonalDataEraser
                 'email'        => null,
                 'phone'        => null,
                 'mobile'       => null,
+                'contact_phone' => null,
                 'street'       => null,
                 'street_no'    => null,
                 'postal_code'  => null,

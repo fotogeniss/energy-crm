@@ -19,6 +19,7 @@ namespace EnergyCRM\Tests\Integration;
 use EnergyCRM\Persistence\CustomerFields;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\PersonalDataEraser;
+use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\Tables;
 use EnergyCRM\Services;
 
@@ -87,6 +88,19 @@ final class PersonalDataErasureTest extends IntegrationTestCase
             'note'        => 'Τηλέφωνο 6900000000',
         ]);
 
+        // 247, Στάδιο 2: μόνη ακμή που κρέμεται ΜΟΝΟ από πελάτη, ποτέ σύμβαση.
+        $wpdb->insert(Tables::name(Tables::CUSTOMER_NOTES), [
+            'customer_id'     => $this->customerId,
+            'partner_user_id' => $partner,
+            'body'            => 'Καλεί μετά τις 17:00, Γιώργος Παπαδόπουλος.',
+        ]);
+
+        (new CustomerRepository())->update(
+            $this->customerId,
+            UserScope::forSelf($partner),
+            ['contact_phone' => '6944111222']
+        );
+
         (new PersonalDataEraser(Services::files()))->erase($this->customerId);
     }
 
@@ -94,11 +108,31 @@ final class PersonalDataErasureTest extends IntegrationTestCase
     {
         $customer = $this->storedRow(Tables::CUSTOMERS, $this->customerId);
 
-        foreach (['afm', 'adt', 'birth_date', 'email', 'phone', 'street', 'postal_code'] as $column) {
+        foreach (['afm', 'adt', 'birth_date', 'email', 'phone', 'street', 'postal_code', 'contact_phone'] as $column) {
             self::assertNull($customer[$column], "{$column} survived erasure.");
         }
 
         self::assertSame('ΔΙΑΓΡΑΦΗ', $customer['last_name']);
+    }
+
+    /**
+     * 247, Στάδιο 2: η σημείωση δεν ανωνυμοποιείται όπως ένα contract -- δεν
+     * μένει καθόλου γραμμή, γιατί δεν υπάρχει τίποτα μέσα της που αξίζει να
+     * επιβιώσει (ολόκληρη είναι ελεύθερο κείμενο για τρίτο πρόσωπο).
+     */
+    public function testCustomerNotesAreGoneEntirely(): void
+    {
+        global $wpdb;
+
+        $count = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE customer_id = %d',
+                Tables::name(Tables::CUSTOMER_NOTES),
+                $this->customerId
+            )
+        );
+
+        self::assertSame(0, $count);
     }
 
     /**

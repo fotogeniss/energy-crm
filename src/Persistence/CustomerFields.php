@@ -64,7 +64,7 @@ final class CustomerFields
      *
      * @var list<string>
      */
-    private const ENCRYPTED = ['afm', 'adt', 'street', 'street_no', 'postal_code', 'phone'];
+    private const ENCRYPTED = ['afm', 'adt', 'street', 'street_no', 'postal_code', 'phone', 'contact_phone'];
 
     /** The column whose blind index makes exact lookup possible. */
     public const INDEXED = 'afm';
