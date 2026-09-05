@@ -29,6 +29,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddProviderStatusMapColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddSupplyNumberIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddEventStatusIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddFileExpiryColumn;
+use EnergyCRM\Persistence\Schema\Migrations\AddFileKindSourceColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddTrackKeyColumn;
 use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
@@ -85,6 +86,7 @@ final class MigrationList
             new SeedVoltonPlans(),
             new DedupeProgramsByCode(),
             new AddComboEnergyContactColumns(),
+            new AddFileKindSourceColumns(),
         ];
     }
 }

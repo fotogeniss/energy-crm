@@ -205,7 +205,7 @@ class ECRM_DB {
 		 * lead_id ΜΕΝΕΙ -- η προέλευση δεν σβήνεται: φαίνεται ποια έγγραφα τα
 		 * έφερε ο ίδιος ο πελάτης και ποια ο πωλητής.
 		 *
-		 * Δεν χρειάστηκε να γίνει nullable το contract_id. Ήταν ήδη.
+		 * Δεν χρειάστηκε να γίνει nullable το contract_id. Ηταν ήδη.
 		 */
 		dbDelta( "CREATE TABLE {$p}files (
 			id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -213,6 +213,8 @@ class ECRM_DB {
 			lead_id     BIGINT UNSIGNED NULL,
 			attachment_id BIGINT UNSIGNED NULL,
 			doc_kind    VARCHAR(24) NOT NULL DEFAULT 'other',
+			kind_source VARCHAR(16) NULL,
+			kind_before VARCHAR(24) NULL,
 			filename    VARCHAR(255) NULL,
 			mime        VARCHAR(80)  NULL,
 			path        VARCHAR(500) NULL,
@@ -237,7 +239,7 @@ class ECRM_DB {
 		) {$charset};" );
 
 		// --- guarantee rules ------------------------------------------------
-		// Ίδιο σχήμα με τους κανόνες προμήθειας, συν την κλίμακα ισχύος:
+		// Ιδιο σχήμα με τους κανόνες προμήθειας, συν την κλίμακα ισχύος:
 		// kva_min/kva_max NULL σημαίνει «για κάθε ισχύ», και τα δύο όρια είναι
 		// συμπεριληπτικά (βλ. Domain\Guarantee\GuaranteeMatch).
 		//
@@ -326,7 +328,7 @@ class ECRM_DB {
 		 * consent_at / consent_ip: μόνο για υποψηφίους που ήρθαν από τον
 		 * δημόσιο «σύνδεσμό μου». Ιδιώτης στέλνει ταυτότητα μέσα από δημόσια
 		 * σελίδα -- η συναίνεση είναι νομικό τεκμήριο, όχι checkbox, οπότε
-		 * παίρνει δικές της στήλες αντί να χωθεί στο notes. Ίδιο σκεπτικό με
+		 * παίρνει δικές της στήλες αντί να χωθεί στο notes. Ιδιο σκεπτικό με
 		 * τα signed_at/signed_ip της σύμβασης.
 		 */
 		dbDelta( "CREATE TABLE {$p}leads (
@@ -410,7 +412,7 @@ class ECRM_DB {
 		// --- assistant_messages -----------------------------------------------
 		// role: user|assistant. Η ιστορία της Λίτσα, ένας χρήστης τη φορά --
 		// ζούσε ως τώρα μόνο σε localStorage του browser, σε καθαρό κείμενο
-		// (build queue 14, docs/CHANGELOG.md). Ίδιο όριο διατήρησης με πριν:
+		// (build queue 14, docs/CHANGELOG.md). Ιδιο όριο διατήρησης με πριν:
 		// οι τελευταίες 40 γραμμές ανά χρήστη -- βλ. AssistantHistoryRepository.
 		dbDelta( "CREATE TABLE {$p}assistant_messages (
 			id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -475,7 +477,7 @@ class ECRM_DB {
 		 * Χωρίς AUTO_INCREMENT id: δεν υπάρχει τίποτα να δείξει κανείς σε μια
 		 * γραμμή μετρητή, και το ζευγάρι είναι ήδη το κλειδί.
 		 *
-		 * Όγκος: ~6 μετρητές × 1 γραμμή/ημέρα = ~2.200 γραμμές/έτος, με
+		 * Ογκος: ~6 μετρητές × 1 γραμμή/ημέρα = ~2.200 γραμμές/έτος, με
 		 * διατήρηση 180 ημερών στο ημερήσιο σάρωμα του Retention.
 		 *
 		 * Μόνο αριθμοί: κανένα user_id, καμία διαδρομή, κανένα μήνυμα.
@@ -572,7 +574,7 @@ class ECRM_DB {
 		$resolver = \EnergyCRM\Services::scopeResolver();
 
 		// Η επέκταση του «χωρίς περιορισμό» σε πραγματική λίστα ζούσε εδώ για
-		// μισή μέρα. Έχει πλέον σπίτι στον resolver, μαζί με την εξήγηση γιατί
+		// μισή μέρα. Εχει πλέον σπίτι στον resolver, μαζί με την εξήγηση γιατί
 		// το UserScope::userIds() δεν αρκεί.
 		return $resolver->visibleUserIds( $resolver->forUser( $user_id ) );
 	}

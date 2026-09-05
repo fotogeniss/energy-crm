@@ -844,6 +844,28 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-docup__msg { font-size:var(--fs-13); color:var(--muted); }
 .ecrm-docup__msg.is-err { color:var(--st-cancel); }
 
+/* Μία γραμμή ανά επιλεγμένο αρχείο -- ένα είδος για κάθε χαρτί, όχι ένα για
+   όλο το batch. Κενή όσο δεν έχει επιλεγεί τίποτα, γι' αυτό δεν παίρνει
+   περιθώριο από μόνη της. */
+.ecrm-docup__rows { flex:1 0 100%; display:flex; flex-direction:column; gap:8px; }
+.ecrm-docup__rows:empty { display:none; }
+.ecrm-docup__row { display:grid; grid-template-columns:38px minmax(0,1fr) 190px; gap:10px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--bg); }
+.ecrm-docup__ext { font-size:var(--fs-11); font-weight:800; color:var(--st-pending); text-align:center; }
+.ecrm-docup__name { font-size:var(--fs-13); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ecrm-docup__row .ecrm-docup__kind { max-width:none; width:100%; }
+.ecrm-docup__expiry { grid-column:2 / -1; }
+@media (max-width:560px) {
+	.ecrm-docup__row { grid-template-columns:38px minmax(0,1fr); }
+	.ecrm-docup__row .ecrm-docup__kind, .ecrm-docup__expiry { grid-column:2 / -1; }
+}
+
+/* Το έγγραφο που άλλαξε ετικέτα μόνο του. Μόνο εδώ η γραμμή είναι <div> και όχι
+   <a>: το κουμπί αναίρεσης δεν μπορεί να ζήσει μέσα σε σύνδεσμο. */
+.ecrm-file--fixed { flex-wrap:wrap; border-color:var(--accent-soft); background:var(--accent-wash); }
+.ecrm-file__link { display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-decoration:none; }
+.ecrm-aiflag { flex:1 0 100%; display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; padding-top:8px; border-top:1px dashed var(--accent-soft); }
+.ecrm-aiflag__txt { font-size:var(--fs-12-5); color:var(--accent-ink); font-weight:600; }
+
 /* --- Tasks / callbacks --- */
 .ecrm-taskform { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
 .ecrm-taskform .ecrm-input { flex:1 1 180px; min-width:0; }

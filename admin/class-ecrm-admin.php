@@ -122,6 +122,7 @@ class ECRM_Admin {
 			'sanitize_callback' => [ __CLASS__, 'sanitize_api_key' ],
 		] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'claude_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
+		register_setting( 'ecrm_settings', ECRM_PREFIX . 'doc_kind_ai', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'company_name', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'company_info', [ 'sanitize_callback' => 'sanitize_textarea_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'company_logo', [ 'sanitize_callback' => 'esc_url_raw' ] );
@@ -248,6 +249,13 @@ class ECRM_Admin {
 							<input type="text" id="ecrm_model" name="<?php echo esc_attr( ECRM_PREFIX . 'claude_model' ); ?>"
 								value="<?php echo esc_attr( $model ); ?>" class="regular-text" placeholder="<?php echo esc_attr( ECRM_Extractor::DEFAULT_MODEL ); ?>">
 							<p class="description">Προεπιλογή: <code><?php echo esc_html( ECRM_Extractor::DEFAULT_MODEL ); ?></code></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">Αναγνώριση εγγράφων</th>
+						<td>
+							<label><input type="checkbox" name="<?php echo esc_attr( ECRM_PREFIX . 'doc_kind_ai' ); ?>" value="1" <?php checked( (string) self::get( 'doc_kind_ai', '1' ), '1' ); ?>> Διάβασε τα έγγραφα που ανεβαίνουν και διόρθωσε το είδος τους αν είναι λάθος</label>
+							<p class="description">Μία ανάγνωση ανά έγγραφο, μία φορά. Η διόρθωση γράφεται στο ιστορικό της αίτησης και ο συνεργάτης μπορεί να την αναιρέσει.</p>
 						</td>
 					</tr>
 				</table>

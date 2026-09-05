@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Persistence;
 
+use EnergyCRM\Domain\Document\KindVerdict;
+
 final class FileRepository
 {
     private string $table;
@@ -54,7 +56,8 @@ final class FileRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT id, doc_kind, filename, mime, attachment_id, path, protected, expires_at
+                'SELECT id, doc_kind, kind_source, kind_before, filename, mime,
+                        attachment_id, path, protected, expires_at
                  FROM %i WHERE contract_id = %d ORDER BY id',
                 $this->table,
                 $contractId
@@ -198,6 +201,139 @@ final class FileRepository
         }
 
         return $documents;
+    }
+
+    /**
+     * Τα έγγραφα μιας αίτησης που δεν έχει κρίνει ποτέ κανείς.
+     *
+     * `kind_source IS NULL` σημαίνει ακριβώς αυτό: ούτε ανάγνωση τα κοίταξε,
+     * ούτε άνθρωπος κλείδωσε την ετικέτα τους. Ο,τι έχει ήδη κριθεί μένει έξω,
+     * και αυτός είναι ο λόγος που η αναγνώριση δεν ξαναπληρώνεται σε κάθε
+     * άνοιγμα της καρτέλας.
+     *
+     * Η εμβέλεια ΔΕΝ ελέγχεται εδώ -- ευθύνη του καλούντος, όπως και στις
+     * υπόλοιπες μεθόδους ανάγνωσης αυτής της κλάσης.
+     *
+     * @param list<string> $mimes
+     *
+     * @return list<array{id: int, path: string, mime: string, doc_kind: string}>
+     */
+    public function pendingKindReview(int $contractId, array $mimes): array
+    {
+        $pending = [];
+
+        foreach ($this->forContract($contractId) as $row) {
+            if (($row['kind_source'] ?? null) !== null) {
+                continue;
+            }
+
+            $path = (string) ($row['path'] ?? '');
+            $mime = (string) ($row['mime'] ?? '');
+
+            if ($path === '' || ! in_array($mime, $mimes, true)) {
+                continue;
+            }
+
+            // Ιδιος έλεγχος περιορισμού με το extractableFrom(): καμία διαδρομή
+            // δεν διαβάζεται αν δεν είναι μέσα στον ασφαλή φάκελο.
+            if (! $this->storage->contains($path) || ! is_readable($path)) {
+                continue;
+            }
+
+            $pending[] = [
+                'id'       => (int) $row['id'],
+                'path'     => $path,
+                'mime'     => $mime,
+                'doc_kind' => (string) ($row['doc_kind'] ?? ''),
+            ];
+        }
+
+        return $pending;
+    }
+
+    /**
+     * Σημείωσε ότι ένα αρχείο διαβάστηκε -- και άλλαξε την ετικέτα αν χρειάζεται.
+     *
+     * Το `$correction` είναι null όταν η ανάγνωση συμφώνησε. Και τότε η γραμμή
+     * γράφεται: το `kind_source` είναι που λέει «μη ξανακοιτάς», και χωρίς αυτό
+     * η επόμενη επίσκεψη θα ξεκινούσε την ίδια ανάγνωση από την αρχή.
+     *
+     * Το `kind_before` γεμίζει ΜΟΝΟ σε πραγματική αλλαγή -- είναι η τιμή που
+     * επαναφέρει η αναίρεση, και μια εγγραφή χωρίς αλλαγή δεν έχει τι να
+     * επαναφέρει.
+     *
+     * Το `contract_id` μπαίνει στο WHERE μαζί με το id του αρχείου: ο καλών
+     * έχει ήδη ελέγξει την εμβέλεια πάνω στη σύμβαση, και αυτό το κρατά αληθινό
+     * και εδώ κάτω.
+     */
+    public function markKindReviewed(
+        int $fileId,
+        int $contractId,
+        string $source,
+        ?string $correction,
+        string $declared
+    ): bool {
+        global $wpdb;
+
+        if ($fileId <= 0 || $contractId <= 0) {
+            return false;
+        }
+
+        $data = ['kind_source' => $source];
+
+        if ($correction !== null) {
+            $data['doc_kind']    = $correction;
+            $data['kind_before'] = $declared;
+        }
+
+        return false !== $wpdb->update(
+            $this->table,
+            $data,
+            ['id' => $fileId, 'contract_id' => $contractId]
+        );
+    }
+
+    /**
+     * Ανέτρεψε μια αυτόματη διόρθωση και κλείδωσε την ετικέτα.
+     *
+     * Επιστρέφει το είδος που επανήλθε, ή null όταν δεν υπάρχει τι να
+     * αναιρεθεί -- το αρχείο δεν υπάρχει, δεν ανήκει σε αυτή τη σύμβαση, ή
+     * καμία ανάγνωση δεν το άλλαξε ποτέ.
+     *
+     * Το `kind_source` γίνεται 'human' και το `kind_before` αδειάζει: η
+     * αναίρεση είναι τελεσίδικη. Χωρίς αυτό, η επόμενη ανάγνωση θα ξανα-άλλαζε
+     * ακριβώς ό,τι μόλις ανέτρεψε ο συνεργάτης.
+     */
+    public function revertKind(int $fileId, int $contractId): ?string
+    {
+        global $wpdb;
+
+        if ($fileId <= 0 || $contractId <= 0) {
+            return null;
+        }
+
+        /** @var string|null $before */
+        $before = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT kind_before FROM %i WHERE id = %d AND contract_id = %d AND kind_source = %s',
+                $this->table,
+                $fileId,
+                $contractId,
+                KindVerdict::SOURCE_AI
+            )
+        );
+
+        if ($before === null || $before === '') {
+            return null;
+        }
+
+        $wpdb->update(
+            $this->table,
+            ['doc_kind' => $before, 'kind_source' => KindVerdict::SOURCE_HUMAN, 'kind_before' => null],
+            ['id' => $fileId, 'contract_id' => $contractId]
+        );
+
+        return $before;
     }
 
     public function latestPathOfKind(int $contractId, string $kind): ?string

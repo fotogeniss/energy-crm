@@ -84,10 +84,26 @@ function filesCard(c) {
 		list = '<div class="ecrm-files">' + files.map(function (f) {
 			var thumb = f.is_image && f.url ? '<img src="' + esc(f.url) + '" alt="">' : '<span class="ecrm-file__ext">' + (f.mime === 'application/pdf' ? 'PDF' : 'DOC') + '</span>';
 			var expiryTag = f.expires_at ? '<span class="ecrm-file__kind">λήξη ' + esc(fmtDate(f.expires_at)) + '</span>' : '';
-			return '<a class="ecrm-file" href="' + esc(f.url || '#') + '" target="_blank" rel="noopener">' +
-				'<span class="ecrm-file__thumb">' + thumb + '</span>' +
+			var body = '<span class="ecrm-file__thumb">' + thumb + '</span>' +
 				'<span class="ecrm-file__meta"><span class="ecrm-file__name">' + esc(f.filename || 'έγγραφο') + '</span>' +
-				'<span class="ecrm-file__kind">' + esc(kindLabel[f.doc_kind] || 'Έγγραφο') + '</span>' + expiryTag + '</span></a>';
+				'<span class="ecrm-file__kind">' + esc(kindLabel[f.doc_kind] || 'Έγγραφο') + '</span>' + expiryTag + '</span>';
+
+			/* Το αρχείο που άλλαξε ετικέτα μόνο του το λέει, και δίνει τρόπο να
+			   αναιρεθεί. Το κουμπί ΔΕΝ μπορεί να ζήσει μέσα στο <a> της λήψης —
+			   κουμπί μέσα σε σύνδεσμο είναι άκυρο HTML και ο browser το χειρίζεται
+			   όπως θέλει. Οποτε μόνο σε αυτή την περίπτωση η γραμμή γίνεται <div>
+			   με τον σύνδεσμο μέσα της. */
+			if (f.kind_source !== 'ai' || !f.kind_before) {
+				return '<a class="ecrm-file" href="' + esc(f.url || '#') + '" target="_blank" rel="noopener">' + body + '</a>';
+			}
+
+			return '<div class="ecrm-file ecrm-file--fixed">' +
+				'<a class="ecrm-file__link" href="' + esc(f.url || '#') + '" target="_blank" rel="noopener">' + body + '</a>' +
+				'<span class="ecrm-aiflag">' +
+					'<span class="ecrm-aiflag__txt">Η AI το διάβασε και το άλλαξε από «' +
+						esc(kindLabel[f.kind_before] || 'Έγγραφο') + '»</span>' +
+					'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-unkind="' + esc(String(f.id)) + '">Αναίρεση</button>' +
+				'</span></div>';
 		}).join('') + '</div>';
 	}
 
@@ -96,12 +112,18 @@ function filesCard(c) {
 		return '<option value="' + esc(k) + '">' + esc(kindLabel[k]) + '</option>';
 	}).join('');
 	var expirable = c.doc_expirable || [];
-	var upload = '<div class="ecrm-docup" data-docup="' + c.id + '" data-docup-expirable="' + esc(JSON.stringify(expirable)) + '">' +
-		'<select class="ecrm-input ecrm-docup__kind" data-docup-kind>' + kindOpts + '</select>' +
+	/* Ενα είδος ΑΝΑ ΑΡΧΕΙΟ, όχι ένα για όλο το batch.
+	 *
+	 * Μέχρι σήμερα υπήρχε ένα κοινό dropdown και η τιμή του στελνόταν για κάθε
+	 * αρχείο της επιλογής. Οποιος ανέβαζε ταυτότητα και λογαριασμό μαζί —
+	 * δηλαδή η συνηθισμένη περίπτωση — έπαιρνε το ένα από τα δύο με λάθος
+	 * ετικέτα, και μετά η καρτέλα έλεγε «λείπουν δικαιολογητικά» για χαρτί που
+	 * ήταν ήδη εκεί. Οι γραμμές γεμίζουν όταν επιλεγούν αρχεία (renderDocupRows). */
+	var upload = '<div class="ecrm-docup" data-docup="' + c.id + '" data-docup-expirable="' + esc(JSON.stringify(expirable)) + '" data-docup-kinds="' + esc(kindOpts) + '">' +
 		'<input type="file" multiple accept="image/*,application/pdf" data-docup-file>' +
-		'<input type="date" class="ecrm-input ecrm-docup__expiry" data-docup-expiry title="Ημερομηνία λήξης (αν υπάρχει πάνω στο έγγραφο)" hidden>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-docup-go>Προσθήκη</button>' +
-		'<span class="ecrm-docup__msg" data-docup-msg></span></div>';
+		'<span class="ecrm-docup__msg" data-docup-msg></span>' +
+		'<div class="ecrm-docup__rows" data-docup-rows></div></div>';
 
 	return '<div class="ecrm-card">' + checklist + expiredNote + '<div class="ecrm-step">Έγγραφα</div>' + list + upload + '</div>';
 }
@@ -889,32 +911,127 @@ function renderDetail(view, d) {
 	});
 
 	var docupWrap = view.querySelector('[data-docup]');
-	var docupKindSel = docupWrap ? docupWrap.querySelector('[data-docup-kind]') : null;
-	var docupExpiry = docupWrap ? docupWrap.querySelector('[data-docup-expiry]') : null;
-	// Το πεδίο λήξης φαίνεται μόνο για είδη που πραγματικά λήγουν (σήμερα:
-	// ταυτότητα/διαβατήριο) — η λίστα έρχεται από τον server
-	// (ECRM_Docs::expirable_kinds()), δεν είναι κωδικοποιημένη εδώ.
-	function syncExpiryVisibility() {
-		if (!docupWrap || !docupKindSel || !docupExpiry) return;
-		var expirable = [];
-		try { expirable = JSON.parse(docupWrap.getAttribute('data-docup-expirable') || '[]'); } catch (e) { expirable = []; }
-		var show = expirable.indexOf(docupKindSel.value) !== -1;
-		docupExpiry.hidden = !show;
-		if (!show) docupExpiry.value = '';
+	var docupRows = docupWrap ? docupWrap.querySelector('[data-docup-rows]') : null;
+	var docupFile = docupWrap ? docupWrap.querySelector('[data-docup-file]') : null;
+
+	function expirableKinds() {
+		if (!docupWrap) return [];
+		try { return JSON.parse(docupWrap.getAttribute('data-docup-expirable') || '[]'); } catch (e) { return []; }
 	}
-	if (docupKindSel) { docupKindSel.addEventListener('change', syncExpiryVisibility); syncExpiryVisibility(); }
+
+	/* Μία γραμμή ανά επιλεγμένο αρχείο: όνομα, είδος, και λήξη όπου έχει νόημα.
+	 *
+	 * Το πεδίο λήξης φαίνεται μόνο για είδη που πραγματικά λήγουν (σήμερα:
+	 * ταυτότητα/διαβατήριο) — η λίστα έρχεται από τον server
+	 * (ECRM_Docs::expirable_kinds()), δεν είναι κωδικοποιημένη εδώ. Πριν ήταν
+	 * ένα πεδίο για όλο το widget· τώρα ακολουθεί τη γραμμή του, γιατί δύο
+	 * αρχεία του ίδιου batch μπορεί να θέλουν διαφορετική απάντηση. */
+	function renderDocupRows() {
+		if (!docupRows || !docupFile) return;
+		var kindOpts = docupWrap.getAttribute('data-docup-kinds') || '';
+		var files = docupFile.files || [];
+		var out = '';
+
+		for (var i = 0; i < files.length; i++) {
+			var name = files[i].name || 'αρχείο';
+			var ext = (name.split('.').pop() || '').toUpperCase().slice(0, 4);
+			out += '<div class="ecrm-docup__row" data-docup-row="' + i + '">' +
+				'<span class="ecrm-docup__ext">' + esc(ext) + '</span>' +
+				'<span class="ecrm-docup__name" title="' + esc(name) + '">' + esc(name) + '</span>' +
+				'<select class="ecrm-input ecrm-docup__kind" data-docup-kind>' + kindOpts + '</select>' +
+				'<input type="date" class="ecrm-input ecrm-docup__expiry" data-docup-expiry title="Ημερομηνία λήξης (αν υπάρχει πάνω στο έγγραφο)" hidden>' +
+				'</div>';
+		}
+
+		docupRows.innerHTML = out;
+		var rows = docupRows.querySelectorAll('[data-docup-row]');
+		for (var r = 0; r < rows.length; r++) { syncRowExpiry(rows[r]); bindRowExpiry(rows[r]); }
+	}
+
+	function syncRowExpiry(row) {
+		var sel = row.querySelector('[data-docup-kind]');
+		var exp = row.querySelector('[data-docup-expiry]');
+		if (!sel || !exp) return;
+		var show = expirableKinds().indexOf(sel.value) !== -1;
+		exp.hidden = !show;
+		if (!show) exp.value = '';
+	}
+
+	function bindRowExpiry(row) {
+		var sel = row.querySelector('[data-docup-kind]');
+		if (sel) sel.addEventListener('change', function () { syncRowExpiry(row); });
+	}
+
+	if (docupFile) docupFile.addEventListener('change', renderDocupRows);
+
+	/* Η ανάγνωση των εγγράφων, αφού έχουν ήδη μπει.
+	 *
+	 * Ξεχωριστή κλήση από το ανέβασμα, με πρόθεση: τα αρχεία είναι ήδη σωσμένα
+	 * όταν ξεκινά, οπότε αν αργήσει, αποτύχει ή δεν απαντήσει ποτέ, το μόνο που
+	 * χάνεται είναι η διόρθωση της ετικέτας — ποτέ το ίδιο το ανέβασμα. */
+	function reviewKinds(silent) {
+		var msg = docupWrap ? docupWrap.querySelector('[data-docup-msg]') : null;
+		if (msg && !silent) { msg.textContent = 'Η AI διαβάζει τα έγγραφα…'; msg.className = 'ecrm-docup__msg'; }
+
+		return fetch(api('/contracts/' + c.id + '/files/review'), { method: 'POST', headers: H() })
+			.then(function (r) { return r.json(); })
+			.then(function (d) {
+				if (!d || !d.ok || !d.fixed || !d.fixed.length) return false;
+				var first = d.fixed[0];
+				toast(d.fixed.length === 1
+					? 'Η AI διόρθωσε ένα έγγραφο σε «' + first.to_label + '».'
+					: 'Η AI διόρθωσε ' + d.fixed.length + ' έγγραφα.');
+				return true;
+			})
+			.catch(function () { return false; });
+	}
+
+	/* Παλιά έγγραφα, ή έγγραφα που η ανάγνωσή τους δεν πρόλαβε: διαβάζονται την
+	 * πρώτη φορά που ανοίγει η καρτέλα τους. Ο,τι έχει ήδη κριθεί δεν
+	 * ξαναδιαβάζεται — ο server το ξέρει από το kind_source, εδώ απλά δεν
+	 * ενοχλούμε τον χρήστη με μήνυμα. */
+	var unread = (c.files || []).filter(function (f) { return !f.kind_source; });
+	if (unread.length) {
+		reviewKinds(true).then(function (changed) { if (changed) openDetail(c.id); });
+	}
+
+	/* Αναίρεση μιας αυτόματης διόρθωσης. Ο άνθρωπος έχει τον τελευταίο λόγο, και
+	   αφού τον πει, η ανάγνωση δεν ξαναπροσπαθεί σε αυτό το αρχείο. */
+	var unkinds = view.querySelectorAll('[data-unkind]');
+	for (var u = 0; u < unkinds.length; u++) {
+		unkinds[u].addEventListener('click', function () {
+			var fileId = this.getAttribute('data-unkind');
+			var btn = this;
+			btn.disabled = true;
+			fetch(api('/contracts/' + c.id + '/files/' + fileId + '/unkind'), { method: 'POST', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (!d || !d.ok) { btn.disabled = false; toast((d && d.error) || 'Αποτυχία.', false); return; }
+					toast('Επανήλθε: ' + d.label + '.');
+					openDetail(c.id);
+				})
+				.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
+	}
 
 	var docGo = view.querySelector('[data-docup-go]');
 	if (docGo) docGo.addEventListener('click', function () {
 		var wrap = view.querySelector('[data-docup]');
 		var input = wrap.querySelector('[data-docup-file]');
-		var kind = wrap.querySelector('[data-docup-kind]').value;
-		var expiryEl = wrap.querySelector('[data-docup-expiry]');
-		var expiry = expiryEl && !expiryEl.hidden ? expiryEl.value : '';
 		var msg = wrap.querySelector('[data-docup-msg]');
 		if (!input.files || !input.files.length) { msg.textContent = 'Επίλεξε αρχείο.'; msg.className = 'ecrm-docup__msg is-err'; return; }
+
+		var rows = wrap.querySelectorAll('[data-docup-row]');
 		var fd = new FormData();
-		for (var i = 0; i < input.files.length; i++) { fd.append('files[]', input.files[i]); fd.append('kinds[]', kind); fd.append('expires_at[]', expiry); }
+		for (var i = 0; i < input.files.length; i++) {
+			var row = rows[i];
+			var sel = row ? row.querySelector('[data-docup-kind]') : null;
+			var exp = row ? row.querySelector('[data-docup-expiry]') : null;
+			fd.append('files[]', input.files[i]);
+			fd.append('kinds[]', sel ? sel.value : 'other');
+			fd.append('expires_at[]', exp && !exp.hidden ? exp.value : '');
+		}
+
 		var b = this; b.disabled = true; msg.textContent = 'Ανέβασμα…'; msg.className = 'ecrm-docup__msg';
 		fetch(api('/contracts/' + c.id + '/files'), { method: 'POST', headers: H(), body: fd })
 			.then(function (r) { return r.json(); })
@@ -932,7 +1049,9 @@ function renderDetail(view, d) {
 					return;
 				}
 				toast('Προστέθηκαν ' + d.saved + ' έγγραφα.' + (note ? ' ' + note : ''), !note);
-				openDetail(c.id);
+				// Η ανάγνωση τρέχει ΠΡΙΝ το ξαναχτίσιμο, ώστε η καρτέλα να έρθει
+				// ήδη με τις διορθωμένες ετικέτες και το checklist σωστό.
+				reviewKinds(false).then(function () { openDetail(c.id); });
 			})
 			.catch(function () { msg.textContent = 'Σφάλμα δικτύου.'; msg.className = 'ecrm-docup__msg is-err'; b.disabled = false; });
 	});

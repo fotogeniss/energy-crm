@@ -101,6 +101,12 @@ final class ControllerFactory
             ),
             new ContractDocumentsController($scope, $details, Services::files(), Services::contractDocuments()),
             new DocumentsController($scope, Services::contracts(), Services::files()),
+            new DocumentKindController(
+                $scope,
+                Services::contracts(),
+                Services::files(),
+                Services::documentKindReview()
+            ),
             new DuplicateCheckController($scope, $queries),
             new RenewalsController($scope, Services::contracts(), $queries, Services::events()),
 

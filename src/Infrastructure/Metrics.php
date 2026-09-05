@@ -39,6 +39,9 @@ final class Metrics
     /** Ο ημερήσιος έλεγχος βρήκε τον φάκελο εγγράφων δημόσια προσβάσιμο. */
     public const DOCS_EXPOSED = 'docs_exposed';
 
+    /** Ετικέτα εγγράφου που διορθώθηκε από αυτόματη αναγνώριση. */
+    public const DOC_KIND_FIXED = 'doc_kind_fixed';
+
     /** Πόσες ημέρες πίσω κρατιέται το ιστορικό, πριν το φίλτρο. */
     public const KEEP_DAYS = 180;
 
