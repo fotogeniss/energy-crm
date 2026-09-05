@@ -185,7 +185,18 @@ class ECRM_FormFill {
 			$combined = in_array( $xg( 'mobile_offer' ), [ 'family', 'combo' ], true );
 			$mobile   = \EnergyCRM\Domain\Forms\MobilePlans::fillValues( (string) ( $c['program_code'] ?? '' ), $combined )
 				+ \EnergyCRM\Domain\Forms\MobilePaperwork::connectionTicks( $xg( 'request_type' ) )
-				+ \EnergyCRM\Domain\Forms\MobilePaperwork::comboUserTicks( $xg( 'combo_user_role' ) );
+				+ \EnergyCRM\Domain\Forms\MobilePaperwork::comboUserTicks( $xg( 'combo_user_role' ) )
+				// Σελ.1 του orizon_combo.json με τα ΔΙΚΑ ΤΗΣ κλειδιά
+				// (onomateponymo_kinitou κ.λπ., όχι onomateponymo_pelati) --
+				// Στάδιο 4, 05/09/2026. Εδώ ο πελάτης κινητής ΕΙΝΑΙ ο κύριος
+				// πελάτης της σύμβασης, χωρίς διάκριση ίδιο/άλλο πρόσωπο --
+				// αυτή η διάκριση αφορά μόνο τη σελ.3 (ενέργεια), από κάτω.
+				+ [
+					'onomateponymo_kinitou' => $name,
+					'afm_kinitou'           => (string) ( $c['afm'] ?? '' ),
+					'adt_kinitou'           => (string) ( $c['adt'] ?? '' ),
+					'doy_kinitou'           => (string) ( $c['doy'] ?? '' ),
+				];
 
 			// Το μπλοκ «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ ΕΝΕΡΓΕΙΑΣ» του COMBO (σελίδα 3).
 			//
@@ -212,6 +223,49 @@ class ECRM_FormFill {
 					'adt_energeias'           => $same_person ? (string) ( $c['adt'] ?? '' ) : $xg( 'combo_energy_adt' ),
 					'doy_energeias'           => $same_person ? (string) ( $c['doy'] ?? '' ) : $xg( 'combo_energy_doy' ),
 				] + \EnergyCRM\Domain\Forms\MobilePaperwork::energyUserTicks( $xg( 'combo_user_role' ) );
+			}
+		} elseif ( $xg( 'combo_mobile_offer' ) === \EnergyCRM\Domain\Forms\MobilePaperwork::OFFER_COMBO ) {
+			// COMBO από αίτηση Volton -- Στάδιο 4, 05/09/2026. Ανεστραμμένο
+			// καθρέφτισμα του κλάδου από πάνω: εδώ ο πελάτης ΕΝΕΡΓΕΙΑΣ είναι ο
+			// κύριος πελάτης της σύμβασης (σελ.3, χωρίς διάκριση ίδιο/άλλο
+			// πρόσωπο -- είναι πάντα αυτός), και ο πελάτης ΚΙΝΗΤΗΣ (σελ.1)
+			// είναι «ο άλλος», με δικά του νέα πεδία `combo_mobile_*` -- ΟΧΙ
+			// `combo_energy_*` με αντεστραμμένη σημασία, ίδιο σχήμα με το bug
+			// του (220) αν το ίδιο κλειδί σήμαινε δύο πράγματα.
+			//
+			// Ο αριθμός κινητού/το πρόγραμμα Orizon είναι πάντα τυπωμένα εδώ
+			// -- ΔΕΝ διαβάζονται από τη σύμβαση (που είναι Volton) ούτε
+			// κλαδεύονται σε ίδιο/άλλο πρόσωπο, ίδιο μοτίβο με το
+			// `mobile_msisdn` του Orizon-origin κλάδου, που είναι επίσης πάντα
+			// τυπωμένο ανεξάρτητα από το ποιος είναι ο πελάτης ενέργειας.
+			$same_person = $xg( 'combo_mobile_same' ) !== '0';
+
+			$mobile = [
+				'onomateponymo_kinitou' => $same_person ? $name : $xg( 'combo_mobile_name' ),
+				'afm_kinitou'           => $same_person ? (string) ( $c['afm'] ?? '' ) : $xg( 'combo_mobile_afm' ),
+				'adt_kinitou'           => $same_person ? (string) ( $c['adt'] ?? '' ) : $xg( 'combo_mobile_adt' ),
+				'doy_kinitou'           => $same_person ? (string) ( $c['doy'] ?? '' ) : $xg( 'combo_mobile_doy' ),
+				'arithmos_kinitou'      => $xg( 'combo_mobile_msisdn' ),
+
+				// Σελ.3: πάντα ο κύριος πελάτης της σύμβασης -- δεν υπάρχει
+				// περίπτωση «άλλος πελάτης ενέργειας» εδώ, το ρεύμα ΕΙΝΑΙ αυτή
+				// η σύμβαση.
+				'onomateponymo_energeias' => $name,
+				'afm_energeias'           => (string) ( $c['afm'] ?? '' ),
+				'adt_energeias'           => (string) ( $c['adt'] ?? '' ),
+				'doy_energeias'           => (string) ( $c['doy'] ?? '' ),
+
+				// Δεν πληκτρολογούνται -- η ίδια η αίτηση τα έχει ήδη
+				// («δεν ξαναγράφονται», UI-COMBO-FROM-VOLTON.html).
+				'combo_arithmos_paroxis'   => (string) ( $c['supply_number'] ?? '' ),
+				'combo_onoma_programmatos' => (string) ( $c['program_name'] ?? '' ),
+			]
+				+ \EnergyCRM\Domain\Forms\MobilePaperwork::comboUserTicks( $xg( 'combo_mobile_user_role' ) )
+				+ \EnergyCRM\Domain\Forms\MobilePaperwork::energyUserTicks( $xg( 'combo_mobile_user_role' ) );
+
+			$tick = \EnergyCRM\Domain\Forms\MobilePlans::tickField( $xg( 'combo_mobile_plan' ) );
+			if ( $tick !== '' ) {
+				$mobile[ $tick ] = 'X';
 			}
 		}
 
@@ -499,6 +553,22 @@ class ECRM_FormFill {
 		}
 
 		if ( $key !== \EnergyCRM\Domain\Forms\MobilePaperwork::CONTRACT ) {
+			// Στάδιο 4 (05/09/2026): το COMBO Volton+Orizon μπορεί να ξεκινήσει
+			// και από εδώ -- ρητά μόνο volton_he (ρεύμα), όχι volton_fa ή
+			// κανένας άλλος πάροχος, γιατί το combo είναι Volton ρεύμα +
+			// Orizon κινητή και τίποτα άλλο (ίδιος κανόνας με το class-ecrm-
+			// shortcodes.php, κάρτα «6γ»). Ποτέ δεν προσθέτει το πραγματικό
+			// orizon_mobile -- ρητή απόφαση του ιδιοκτήτη, η σύμβαση κινητής
+			// Orizon ανοίγει ως ξεχωριστή αίτηση.
+			if ( $key === 'volton_he' ) {
+				$x = self::extras( $c );
+
+				return array_merge(
+					[ $key ],
+					\EnergyCRM\Domain\Forms\MobilePaperwork::comboAttachmentFor( (string) ( $x['combo_mobile_offer'] ?? '' ) )
+				);
+			}
+
 			return [ $key ];
 		}
 

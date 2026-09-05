@@ -97,6 +97,18 @@ final class MobilePlans
     }
 
     /**
+     * The tick field this plan's box lives under, for a template that only
+     * prints "which one" and never the name/price -- orizon_combo's own
+     * page 1 has no label field at all, only the four checkboxes (measured
+     * against assets/forms/orizon_combo.json, Στάδιο 4, 05/09/2026). Empty
+     * for an unknown plan, same "don't guess" rule as fillValues().
+     */
+    public static function tickField(string $plan): string
+    {
+        return self::PLANS[$plan]['tick'] ?? '';
+    }
+
+    /**
      * The values the forms print for this plan.
      *
      * @param bool $combined Whether a Συνδυαστική or COMBO offer applies.

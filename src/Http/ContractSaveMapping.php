@@ -165,6 +165,19 @@ final class ContractSaveMapping
                 ? sanitize_email((string) $params['combo_energy_email']) : null;
         }
 
+        // Το κινητό/email του πελάτη ΚΙΝΗΤΗΣ, όταν το COMBO ξεκινά από αίτηση
+        // Volton και είναι άλλο πρόσωπο -- Στάδιο 4, ίδιο μοτίβο ανεστραμμένο
+        // (βλ. AddComboMobileContactColumns).
+        if (! $isUpdate || isset($params['combo_mobile_mobile'])) {
+            $contract['combo_mobile_mobile'] = isset($params['combo_mobile_mobile'])
+                ? sanitize_text_field((string) $params['combo_mobile_mobile']) : null;
+        }
+
+        if (! $isUpdate || isset($params['combo_mobile_email'])) {
+            $contract['combo_mobile_email'] = isset($params['combo_mobile_email'])
+                ? sanitize_email((string) $params['combo_mobile_email']) : null;
+        }
+
         if (! $isUpdate || isset($params['invoice_code'])) {
             $contract['invoice_code'] = isset($params['invoice_code'])
                 ? sanitize_text_field((string) $params['invoice_code']) : null;

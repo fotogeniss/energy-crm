@@ -137,11 +137,27 @@ final class ContractsReadController implements Controller
         $row['doc_kinds']     = ECRM_Docs::kinds();
         $row['doc_expirable'] = ECRM_Docs::expirable_kinds();
         $row['doc_expired']   = ECRM_Docs::expired_docs($id);
-        $row['comms']         = self::comms($row);
         $row['signatures']    = $this->signatures->forContract($id, $row);
 
+        // Στάδιο 4 (05/09/2026): ο ΚΥΡΙΟΣ πελάτης της σύμβασης δεν είναι πάντα
+        // ο πελάτης κινητής -- σε COMBO από αίτηση Volton είναι ο πελάτης
+        // ενέργειας (SignatureRoles::primaryRoleFor()). Το `comms` (πάντα
+        // παρόν, ρόλος MOBILE) και το `comms_energy` (μόνο όταν χρειάζεται
+        // δεύτερη υπογραφή, ρόλος ENERGY) έμεναν πριν καρφωμένα στο "ο κύριος
+        // είναι πάντα ο MOBILE" -- σωστό μόνο για Orizon-origin.
+        $primaryRole = SignatureRoles::primaryRoleFor(
+            (string) ($row['energy_type'] ?? ''),
+            $row['signatures']['required']
+        );
+
+        $row['comms'] = SignatureRoles::MOBILE === $primaryRole
+            ? self::comms($row)
+            : self::commsForSecondary(SignatureRoles::MOBILE, $row);
+
         if (in_array(SignatureRoles::ENERGY, $row['signatures']['required'], true)) {
-            $row['comms_energy'] = self::commsForEnergy($row);
+            $row['comms_energy'] = SignatureRoles::ENERGY === $primaryRole
+                ? self::comms($row)
+                : self::commsForSecondary(SignatureRoles::ENERGY, $row);
         }
 
         // Το λέει ο SERVER, όχι ο browser. Ο διάλογος θα μπορούσε να το βγάλει
@@ -304,24 +320,32 @@ final class ContractsReadController implements Controller
     }
 
     /**
-     * Ίδιο σχήμα με το `comms()`, για τον πελάτη ενέργειας — 3β-Γ,
-     * 04/09/2026. Πηγή: `combo_energy_mobile`/`combo_energy_email` (224), όχι
-     * τα `mobile`/`email` του κύριου πελάτη — είναι άλλος άνθρωπος.
+     * Ίδιο σχήμα με το `comms()`, για τον ΔΕΥΤΕΡΕΥΟΝΤΑ ρόλο -- αρχικά μόνο
+     * για τον πελάτη ενέργειας (3β-Γ, 04/09/2026), γενικεύτηκε στο Στάδιο 4
+     * (05/09/2026) για να καλύψει και τον πελάτη κινητής, όταν η αίτηση
+     * ξεκινά από Volton και ο κύριος πελάτης είναι πλέον ο πελάτης ενέργειας
+     * -- βλ. SignatureRoles::primaryRoleFor(). Πηγή: η στήλη επαφής ΤΟΥ ΑΛΛΟΥ
+     * -- `combo_energy_mobile/email` (224) ή `combo_mobile_mobile/email`
+     * (Στάδιο 4) -- ποτέ τα `mobile`/`email` του κύριου πελάτη, που είναι
+     * άλλος άνθρωπος.
      *
      * Το SMS/Viber είναι ΠΑΝΤΑ κλειστό εδώ, ανεξάρτητα από πάροχο ή αριθμό —
-     * `SignLinkController::deliver()` το αρνείται ήδη ρητά
-     * (`sms_energy_unsupported`) γιατί το `ECRM_Messaging::send_for_status()`
-     * διαβάζει μόνο το κινητό του κύριου πελάτη. Ο διάλογος πρέπει να το
-     * ΛΕΕΙ πριν πατηθεί το κουμπί, όχι να αφήσει τον πωλητή να ανακαλύψει
-     * αποτυχία μετά την αποστολή.
+     * `SignLinkController::deliver()` το αρνείται ήδη ρητά για κάθε ρόλο που
+     * δεν είναι ο κύριος (`sms_energy_unsupported` -- όνομα κωδικού από πριν
+     * το Στάδιο 4, το κρατά το `ecrm-view-detail.js` ως γενικό «δεν
+     * υποστηρίζεται εδώ»· βλ. σχόλιο στο deliver()) γιατί το
+     * `ECRM_Messaging::send_for_status()` διαβάζει μόνο το κινητό του κύριου
+     * πελάτη. Ο διάλογος πρέπει να το ΛΕΕΙ πριν πατηθεί το κουμπί, όχι να
+     * αφήσει τον πωλητή να ανακαλύψει αποτυχία μετά την αποστολή.
      *
      * @param array<string, mixed> $row
      *
      * @return array{sms: array{ok: bool, why?: string}, email: array{ok: bool, why?: string}, link: array{ok: bool}}
      */
-    private static function commsForEnergy(array $row): array
+    private static function commsForSecondary(string $role, array $row): array
     {
-        $email = ['ok' => is_email((string) ($row['combo_energy_email'] ?? '')) !== false];
+        $column = $role === SignatureRoles::ENERGY ? 'combo_energy_email' : 'combo_mobile_email';
+        $email  = ['ok' => is_email((string) ($row[$column] ?? '')) !== false];
 
         if (! $email['ok']) {
             $email['why'] = 'no_email';

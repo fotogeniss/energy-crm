@@ -220,7 +220,7 @@ final class SignLinkController implements Controller
         $url     = ECRM_Tracking::url($id, $role);
         $channel = $this->resolveChannel($request);
 
-        $delivery = $this->deliver($channel, $id, $contract, $url, $role);
+        $delivery = $this->deliver($channel, $id, $contract, $url, $role, $state['required']);
 
         // Καταγράφεται ΠΑΝΤΑ, και για τα τρία κανάλια — ακόμη και για το
         // «μόνο ο σύνδεσμος», που είναι κι αυτό απόφαση: κάποιος είπε «θα τον
@@ -322,20 +322,43 @@ final class SignLinkController implements Controller
      * τον αντιγράφει και τον στέλνει ο ίδιος. Το να επιστρέφει `false` θα
      * έγραφε «απέτυχε» για κάτι που πήγε ακριβώς όπως ζητήθηκε.
      *
-     * SMS/Viber για τον ρόλο ENERGY δεν υποστηρίζεται ακόμα -- το
+     * SMS/Viber για τον ΔΕΥΤΕΡΕΥΟΝΤΑ ρόλο δεν υποστηρίζεται ακόμα -- το
      * `ECRM_Messaging::send_for_status()` διαβάζει πάντα το κινητό του
-     * ΚΥΡΙΟΥ πελάτη (`customers.mobile`), όχι το `combo_energy_mobile`, και
-     * δεν είναι σωστό να το ξαναγράψω χωρίς να το δω πρώτα ολόκληρο (§6).
+     * ΚΥΡΙΟΥ πελάτη (`customers.mobile`), ποτέ τη στήλη επαφής "του άλλου"
+     * (combo_energy_mobile ή combo_mobile_mobile, ανάλογα ποιος είναι ο
+     * δευτερεύων -- βλ. SignatureRoles::primaryRoleFor()), και δεν είναι
+     * σωστό να το ξαναγράψω χωρίς να το δω πρώτα ολόκληρο (§6).
      * Email και «μόνο σύνδεσμος» δουλεύουν κανονικά και για τους δύο ρόλους.
      *
      * @param array<string, mixed> $contract
+     * @param list<string>         $required Τι επεστρεψε το `SignatureState`
+     *                                       -- κρινει ποιος ειναι ο κυριος.
      *
      * @return array{ok:bool, error?:string, channel?:string, to?:string}
      */
-    private function deliver(string $channel, int $id, array $contract, string $url, string $role): array
-    {
+    private function deliver(
+        string $channel,
+        int $id,
+        array $contract,
+        string $url,
+        string $role,
+        array $required
+    ): array {
+        // Στάδιο 4 (05/09/2026): ο ΚΥΡΙΟΣ πελάτης της σύμβασης δεν είναι πάντα
+        // ο πελάτης κινητής -- σε COMBO από αίτηση Volton είναι ο πελάτης
+        // ενέργειας. Βλ. SignatureRoles::primaryRoleFor(). Πριν από αυτό εδώ
+        // ήταν καρφωμένο `$role === ENERGY`, σωστό μόνο επειδή η αίτηση
+        // ξεκινούσε πάντα από Orizon.
+        $primaryRole = SignatureRoles::primaryRoleFor(
+            (string) ($contract['energy_type'] ?? ''),
+            $required
+        );
+
         if ($channel === self::CHANNEL_SMS) {
-            if ($role === SignatureRoles::ENERGY) {
+            if ($role !== $primaryRole) {
+                // Ίδιος κωδικός σφάλματος και για τους δύο δευτερεύοντες
+                // ρόλους -- το `ecrm-view-detail.js` τον ξέρει ήδη ως γενικό
+                // «δεν υποστηρίζεται εδώ», όχι ειδικά για το "ενέργειας".
                 return ['ok' => false, 'error' => 'sms_energy_unsupported'];
             }
 
@@ -347,9 +370,16 @@ final class SignLinkController implements Controller
         }
 
         if ($channel === self::CHANNEL_EMAIL) {
-            $to = $role === SignatureRoles::ENERGY
-                ? (string) ($contract['combo_energy_email'] ?? '')
-                : (string) ($contract['email'] ?? '');
+            if ($role === $primaryRole) {
+                $to = (string) ($contract['email'] ?? '');
+            } else {
+                // Ο δευτερεύων ρόλος διαβάζει τη ΔΙΚΗ ΤΟΥ στήλη επαφής --
+                // combo_energy_* όταν δευτερεύων είναι ο ENERGY (Orizon-origin,
+                // όπως πάντα), combo_mobile_* όταν δευτερεύων είναι ο MOBILE
+                // (Volton-origin, νέο).
+                $column = $role === SignatureRoles::ENERGY ? 'combo_energy_email' : 'combo_mobile_email';
+                $to     = (string) ($contract[$column] ?? '');
+            }
 
             if (! is_email($to)) {
                 return ['ok' => false, 'error' => 'no_email'];

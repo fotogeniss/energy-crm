@@ -65,9 +65,13 @@ final class ComboSignatureRolesTest extends IntegrationTestCase
      * ενδιαφέρουσα περίπτωση (ciphertext) δεν παράγεται καν όσο η
      * κρυπτογράφηση είναι κλειστή στο περιβάλλον δοκιμών.
      *
+     * Το `energy_type` ειναι παραμετρος απο το Σταδιο 4 (05/09/2026): κρινει
+     * ΠΟΙΑ κλειδια του σακου ισχυουν, γιατι το COMBO ξεκιναει πλεον και απο
+     * αιτηση ρευματος. 'mobile' = αιτηση Orizon, οτι ισχυε ως τωρα.
+     *
      * @param array<string, string> $extra
      */
-    private function contractWithExtra(array $extra): int
+    private function contractWithExtra(array $extra, string $energyType = 'mobile'): int
     {
         global $wpdb;
 
@@ -75,7 +79,7 @@ final class ComboSignatureRolesTest extends IntegrationTestCase
             'partner_user_id' => $this->seller,
             'status'          => 'new',
             'code'            => 'ΕΝ-COMBO-' . wp_rand(1000, 9999),
-            'energy_type'     => 'mobile',
+            'energy_type'     => $energyType,
             'extra_json'      => (string) wp_json_encode($extra),
         ]);
 
@@ -89,7 +93,7 @@ final class ComboSignatureRolesTest extends IntegrationTestCase
 
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                'SELECT extra_json FROM %i WHERE id = %d',
+                'SELECT energy_type, extra_json FROM %i WHERE id = %d',
                 Tables::name(Tables::CONTRACTS),
                 $contractId
             ),
@@ -174,21 +178,95 @@ final class ComboSignatureRolesTest extends IntegrationTestCase
         );
     }
 
+    // ── Σταδιο 4: το ιδιο COMBO, απο την αλλη πλευρα ─────────────────────
+
+    /**
+     * Το COMBO ξεκινα πλεον και απο αιτηση ΡΕΥΜΑΤΟΣ (Volton), οπου ο κυριος
+     * πελατης της συμβασης ειναι ο πελατης ενεργειας και «ο αλλος» -- αν
+     * υπαρχει -- ειναι ο πελατης κινητης. Η καρτα που το ρωταει εκει εχει
+     * ΔΙΚΑ ΤΗΣ ονοματα πεδιων (`combo_mobile_offer`/`combo_mobile_same`),
+     * γιατι οι δυο καρτες ζουν ταυτοχρονα στο DOM και κοινο `name` θα
+     * σημαινε μια τιμη για δυο ερωτησεις.
+     *
+     * Οι ΡΟΛΟΙ ομως ειναι οι ιδιοι δυο: ποιος υπογραφει πού στο χαρτι δεν
+     * αλλαζει επειδη αλλαξε απο πού ξεκινησε η αιτηση.
+     */
+    public function testAComboStartedFromTheEnergySideAlsoNeedsBothSignatures(): void
+    {
+        $id = $this->contractWithExtra(
+            ['combo_mobile_offer' => 'combo', 'combo_mobile_same' => '0'],
+            'power'
+        );
+
+        self::assertSame([SignatureRoles::MOBILE, SignatureRoles::ENERGY], $this->requiredFor($id));
+    }
+
+    public function testAComboStartedFromTheEnergySideWithOnePersonNeedsOneSignature(): void
+    {
+        $id = $this->contractWithExtra(
+            ['combo_mobile_offer' => 'combo', 'combo_mobile_same' => '1'],
+            'power'
+        );
+
+        self::assertSame([SignatureRoles::MOBILE], $this->requiredFor($id));
+    }
+
+    /**
+     * **Ο λογος που τα δυο ζευγη κλειδιων δεν ειναι υπερβολη.**
+     *
+     * Μια αιτηση ΡΕΥΜΑΤΟΣ που κουβαλαει -- απο μια προηγουμενη επεξεργασια,
+     * οσο ηταν ακομα αιτηση κινητης -- ενα ξεχασμενο `mobile_offer` στον
+     * σακο, ΔΕΝ ειναι COMBO. Με κοινο κλειδι θα ζητουσε δευτερη υπογραφη απο
+     * προσωπο που δεν υπαρχει, και η αιτηση δεν θα εκλεινε ποτε.
+     */
+    public function testALeftoverMobileOfferDoesNotMakeAnEnergyApplicationCombo(): void
+    {
+        $id = $this->contractWithExtra(
+            ['mobile_offer' => 'combo', 'combo_energy_same' => '0'],
+            'power'
+        );
+
+        self::assertSame([SignatureRoles::MOBILE], $this->requiredFor($id));
+    }
+
     // ── Οι δύο διαδρομές πρέπει να συμφωνούν ─────────────────────────────
 
     /**
      * Το `SignLinkController` διαβάζει αποκρυπτογραφημένα, η δημόσια σελίδα
      * υπογραφής ωμά. Αν οι δύο διαφωνήσουν, ο πωλητής στέλνει δύο συνδέσμους
      * και ο πρώτος υπογράφων κλείνει την αίτηση. Ίδια είσοδος, ίδια απάντηση.
+     *
+     * «Ιδια εισοδος» σημαινει ΚΑΙ το `energy_type` απο το Σταδιο 4 (05/09/2026):
+     * η προελευση της αιτησης κρινει ποια κλειδια του σακου ισχυουν, οποτε μια
+     * γραμμη χωρις αυτο δεν ειναι η ιδια εισοδος -- ειναι αλλη ερωτηση. Ολες
+     * οι πραγματικες διαδρομες το φερνουν (ελεγχθηκε: SignLinkController,
+     * ContractsReadController::show(), το batch `forMany()`, και οι δυο
+     * κλησεις της δημοσιας σελιδας υπογραφης).
      */
     public function testTheDecryptedAndRawPathsAgree(): void
     {
         $extra = ['mobile_offer' => 'combo', 'combo_energy_same' => '0'];
         $id    = $this->contractWithExtra($extra);
 
+        $row = ['energy_type' => 'mobile', 'extra_json' => (string) wp_json_encode($extra)];
+
         $raw       = $this->requiredFor($id);
-        $decrypted = $this->state->forContract($id, ['extra_json' => (string) wp_json_encode($extra)])['required'];
+        $decrypted = $this->state->forContract($id, $row)['required'];
 
         self::assertSame($raw, $decrypted);
+    }
+
+    /**
+     * Το ιδιο, για τη ΝΕΑ κατευθυνση -- ωστε η συμφωνια των δυο διαδρομων να
+     * μην ελεγχεται μονο εκει που ισχυε και πριν.
+     */
+    public function testTheTwoPathsAlsoAgreeForAComboStartedFromTheEnergySide(): void
+    {
+        $extra = ['combo_mobile_offer' => 'combo', 'combo_mobile_same' => '0'];
+        $id    = $this->contractWithExtra($extra, 'power');
+
+        $row = ['energy_type' => 'power', 'extra_json' => (string) wp_json_encode($extra)];
+
+        self::assertSame($this->requiredFor($id), $this->state->forContract($id, $row)['required']);
     }
 }

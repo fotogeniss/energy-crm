@@ -35,12 +35,15 @@ final class SignatureState
      * Ποιοι ρόλοι απαιτούνται, ποιοι έχουν ήδη υπογράψει, και αν είναι
      * ολοκληρωμένη -- για μια συγκεκριμένη σύμβαση.
      *
-     * Το `mobile_offer`/`combo_energy_same` διαβάζονται απευθείας από το
-     * `extra_json`, χωρίς αποκρυπτογράφηση: δεν είναι προσωπικά πεδία (βλ.
+     * Τα πεδία της προσφοράς διαβάζονται απευθείας από το `extra_json`,
+     * χωρίς αποκρυπτογράφηση: δεν είναι προσωπικά πεδία (βλ.
      * `ProviderFormFields::isPersonalInput()`) -- ίδιο μοτίβο με το `$xg()`
      * του `includes/class-ecrm-formfill.php`.
      *
-     * @param array<string, mixed> $contract Πρέπει να έχει `extra_json` (raw στήλη).
+     * @param array<string, mixed> $contract Πρέπει να έχει `extra_json` (raw
+     *                                       στήλη) ΚΑΙ `energy_type`: από το
+     *                                       Στάδιο 4 το δεύτερο κρίνει ΠΟΙΑ
+     *                                       κλειδιά του σάκου ισχύουν.
      *
      * @return array{required: list<string>, collected: list<string>, complete: bool}
      */
@@ -65,12 +68,15 @@ final class SignatureState
     /**
      * Ο κανόνας «ποιοι ρόλοι απαιτούνται», από τη γραμμή της σύμβασης.
      *
-     * Το `mobile_offer`/`combo_energy_same` διαβάζονται απευθείας από το
-     * `extra_json`, χωρίς αποκρυπτογράφηση: δεν είναι προσωπικά πεδία (βλ.
+     * Τα πεδία της προσφοράς διαβάζονται απευθείας από το `extra_json`,
+     * χωρίς αποκρυπτογράφηση: δεν είναι προσωπικά πεδία (βλ.
      * `ProviderFormFields::isPersonalInput()`) -- ίδιο μοτίβο με το `$xg()`
      * του `includes/class-ecrm-formfill.php`.
      *
-     * @param array<string, mixed> $contract Πρέπει να έχει `extra_json` (raw στήλη).
+     * @param array<string, mixed> $contract Πρέπει να έχει `extra_json` (raw
+     *                                       στήλη) ΚΑΙ `energy_type`: από το
+     *                                       Στάδιο 4 το δεύτερο κρίνει ΠΟΙΑ
+     *                                       κλειδιά του σάκου ισχύουν.
      *
      * @return list<string>
      */
@@ -79,8 +85,22 @@ final class SignatureState
         $extra = json_decode((string) ($contract['extra_json'] ?? ''), true);
         $extra = is_array($extra) ? $extra : [];
 
-        $offer = (string) ($extra['mobile_offer'] ?? '');
-        $raw   = (string) ($extra['combo_energy_same'] ?? '1');
+        // Σταδιο 4 (05/09/2026): το COMBO ξεκινα πλεον και απο αιτηση Volton,
+        // και η καρτα «6γ» που το ρωταει εκει εχει ΔΙΚΑ ΤΗΣ ονοματα πεδιων --
+        // `combo_mobile_offer`/`combo_mobile_same` -- ξεχωριστα απο τα
+        // `mobile_offer`/`combo_energy_same` της Orizon-origin καρτας «6β».
+        //
+        // Οχι για καθαροτητα: οι δυο καρτες ζουν ΤΑΥΤΟΧΡΟΝΑ στο DOM (η μια
+        // απλως κρυμμενη), οποτε κοινο `name` θα σημαινε δυο input με το ιδιο
+        // ονομα, μια τιμη στο extra_json, και το setField() της επεξεργασιας
+        // να γραφει παντα στο πρωτο κατα σειρα DOM -- δηλαδη στη λαθος καρτα.
+        //
+        // Ποιο ζευγος ισχυει το κρινει η ΠΡΟΕΛΕΥΣΗ της αιτησης, οχι η τιμη:
+        // energy_type 'mobile' σημαινει αιτηση Orizon.
+        $fromMobile = ((string) ($contract['energy_type'] ?? '')) === 'mobile';
+
+        $offer = (string) ($extra[$fromMobile ? 'mobile_offer' : 'combo_mobile_offer'] ?? '');
+        $raw   = (string) ($extra[$fromMobile ? 'combo_energy_same' : 'combo_mobile_same'] ?? '1');
 
         // Κρυπτογραφημένη τιμή σημαίνει «γράφτηκε πριν τη διόρθωση του (226),
         // με το ECRM_ENCRYPT_PII ανοιχτό» -- δεν ξέρουμε τι λέει, και το

@@ -67,6 +67,8 @@ final class WritableColumns
         'code',
         'combo_energy_mobile',
         'combo_energy_email',
+        'combo_mobile_mobile',
+        'combo_mobile_email',
     ];
 
     private function __construct()

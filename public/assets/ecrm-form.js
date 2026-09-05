@@ -60,6 +60,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				el.style.display = ok ? '' : 'none';
 			});
 			applyEnergyType();
+			applyComboMobileOffer();
 			// Μαζί με το είδος παροχής, ώστε κάθε σημείο που ήδη καλεί
 			// applyCustomerType() (αρχικοποίηση, επεξεργασία αίτησης, reset)
 			// να συγχρονίζει και τα τιμολόγια χωρίς νέα κλήση σε τρία σημεία.
@@ -136,7 +137,12 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// πελάτης ενέργειας είναι ο ίδιος, και τα τέσσερα πεδία μαζεύονται.
 		// Ίδιο ακριβώς σχήμα με το toggleAddr() των διευθύνσεων.
 		function toggleEnergyPerson(cb) {
-			var box = root.querySelector('[data-energy-fields]');
+			// Δύο πιθανά κουτιά -- `data-energy-fields` (κάρτα 6β, ο πελάτης
+			// ενέργειας είναι «ο άλλος») ή `data-mobile-fields` (κάρτα 6γ,
+			// Στάδιο 4, ο πελάτης κινητής είναι «ο άλλος») -- ποτέ και τα
+			// δύο μαζί, το καθένα ζει στη δική του κάρτα. `cb` είναι το
+			// checkbox που πάτησε ο χρήστης, όποιο κι αν είναι.
+			var box = cb.closest('.ecrm-card').querySelector('[data-energy-fields], [data-mobile-fields]');
 			if (box) box.hidden = cb.checked;
 		}
 
@@ -165,8 +171,36 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			after.value = combined ? pricing.afterCombined : pricing.after;
 		}
 
+		// Το ιδιο ακριβως που κανει η applyMobileOffer() για την καρτα «6β»,
+		// για την καρτα «6γ» (COMBO απο αιτηση Volton, Σταδιο 4, 05/09/2026).
+		// ΔΕΝ ειναι η ιδια συναρτηση με αλλο selector: οι δυο καρτες ζουν
+		// ΤΑΥΤΟΧΡΟΝΑ στο DOM (η μια απλως κρυμμενη) και καθε πεδιο τους εχει
+		// δικο του ονομα -- κοινο ονομα θα σημαινε οτι το setField() και το
+		// collect() πιανουν παντα το πρωτο στη σειρα DOM, δηλαδη λαθος καρτα.
+		// Γι' αυτο και δικο της attribute (`data-when-combo-offer`).
+		function applyComboMobileOffer() {
+			var sel = root.querySelector('[name="combo_mobile_offer"]');
+			var offer = sel ? sel.value : '';
+
+			qa('[data-when-combo-offer]').forEach(function (el) {
+				var ok = el.getAttribute('data-when-combo-offer').split(',').indexOf(offer) !== -1;
+				el.hidden = !ok;
+				if (!ok) {
+					// Ιδιο σκεπτικο με την applyMobileOffer(): το checkbox
+					// επιστρεφει στην ΠΡΟΕΠΙΛΟΓΗ του, οχι σε κενο.
+					el.querySelectorAll('input, select, textarea').forEach(function (f) {
+						if (f.type === 'checkbox') { f.checked = f.defaultChecked; return; }
+						f.value = '';
+					});
+					el.querySelectorAll('[data-energy-same]').forEach(function (cb) { toggleEnergyPerson(cb); });
+				}
+			});
+		}
+
 		root.addEventListener('change', function (ev) {
-			if (ev.target && ev.target.name === 'mobile_offer') applyMobileOffer();
+			if (!ev.target) return;
+			if (ev.target.name === 'mobile_offer') applyMobileOffer();
+			if (ev.target.name === 'combo_mobile_offer') applyComboMobileOffer();
 		});
 
 		// Anything that only makes sense for one kind of supply: whole sections
@@ -175,6 +209,33 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// a stairwell; Φορητότητα only exists on a phone number).
 		function applyEnergyType() {
 			applyChipScope('data-when-energy', state.energy_type || 'power');
+			applyComboFromVolton();
+		}
+
+		// Η κάρτα «6γ» (COMBO Volton+Orizon από αίτηση ρεύματος, Στάδιο 4,
+		// 05/09/2026) χρειάζεται ΔΥΟ συνθήκες μαζί -- energy_type==='power'
+		// ΚΑΙ πάροχος Volton -- και το data-when-energy/applyChipScope ξέρει
+		// μόνο τη μία. Δύο ανεξάρτητα scope σε ΤΟ ΙΔΙΟ στοιχείο θα
+		// συγκρούονταν (όποιο τρέξει τελευταίο θα κέρδιζε το style.display,
+		// αγνοώντας το άλλο) -- γι' αυτό δικό της attribute
+		// (`data-when-combo-volton`) και δική της συνάρτηση, καλείται και από
+		// τις δύο πλευρές της απόφασης: εδώ (αλλαγή είδους παροχής) και από
+		// το refreshProviderFields() (αλλαγή παρόχου).
+		function applyComboFromVolton() {
+			var isVoltonPower = (state.energy_type || 'power') === 'power' && isVoltonProvider();
+
+			// `hidden` και οχι style.display: η καρτα γεννιεται hidden στο
+			// markup ωστε να μη «σκαει» για ενα καρε πριν τρεξει η JS, και ενα
+			// style.display='' ΔΕΝ θα νικουσε το [hidden]{display:none} του
+			// browser -- η καρτα δεν θα εμφανιζοταν ΠΟΤΕ. Κανενας αλλος
+			// μηχανισμος δεν αγγιζει αυτο το στοιχειο, οποτε δεν συγκρουεται.
+			qa('[data-when-combo-volton]').forEach(function (el) {
+				el.hidden = !isVoltonPower;
+			});
+		}
+
+		function isVoltonProvider() {
+			return providerName().toLowerCase().indexOf('volton') !== -1;
 		}
 
 		// Η κατηγορία κρύβει ό,τι δεν της ανήκει, με τον ΙΔΙΟ μηχανισμό που
@@ -447,6 +508,8 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		}
 
 		function refreshProviderFields() {
+			applyComboFromVolton();
+
 			var card = root.querySelector('[data-provider-fields]');
 			if (!card) return;
 
@@ -1306,7 +1369,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		var ADDR_PARTS = ['supply', 'billing'];
 		var ADDR_FIELDS = ['street', 'street_no', 'postal_code', 'city', 'region'];
 
-		var CUST_FIELDS = ['afm','doy','postal_code','first_name','last_name','father_name','company_name','adt','birth_date','region','city','street','street_no','phone','mobile','email','supply_number','meter_number','term_months','end_date','combo_energy_mobile','combo_energy_email'];
+		var CUST_FIELDS = ['afm','doy','postal_code','first_name','last_name','father_name','company_name','adt','birth_date','region','city','street','street_no','phone','mobile','email','supply_number','meter_number','term_months','end_date','combo_energy_mobile','combo_energy_email','combo_mobile_mobile','combo_mobile_email'];
 
 		function applyEdit(c) {
 			if (!c) return;
@@ -1366,17 +1429,21 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// its own combo fields hidden. Re-run now that the real value is in
 			// place; this also recomputes the read-only price boxes.
 			applyMobileOffer();
+			applyComboMobileOffer();
 			// Το setField() ψάχνει .ecrm-input και γράφει .value -- ένα checkbox
 			// δεν έχει ούτε το ένα ούτε νόημα το άλλο, οπότε χωρίς αυτό εδώ μια
 			// αίτηση με δεύτερο πρόσωπο θα ξανάνοιγε δηλώνοντας «ίδιο πρόσωπο»
 			// και με τα τέσσερα πεδία κρυμμένα, ενώ οι τιμές τους θα ήταν μέσα.
 			// Απούσα τιμή σημαίνει «ίδιο» -- ό,τι ίσχυε πριν υπάρξει το πεδίο.
-			var sameEl = root.querySelector('[data-energy-same]');
-			if (sameEl) {
-				var savedSame = c.extra ? c.extra.combo_energy_same : null;
+			// Στάδιο 4 (05/09/2026): υπάρχουν πλέον ΔΥΟ τέτοια checkbox
+			// (combo_energy_same στην κάρτα 6β, combo_mobile_same στην 6γ) --
+			// διάβασε το καθένα από το ΔΙΚΟ ΤΟΥ όνομα, όχι καρφωμένο
+			// 'combo_energy_same', ώστε και τα δύο να επαναφέρονται σωστά.
+			root.querySelectorAll('[data-energy-same]').forEach(function (sameEl) {
+				var savedSame = c.extra ? c.extra[sameEl.name] : null;
 				sameEl.checked = savedSame == null || savedSame === '' || !!Number(savedSame);
 				toggleEnergyPerson(sameEl);
-			}
+			});
 			renderVoltonPrograms();
 			var modeEl = q('.ecrm-foot__mode strong'); if (modeEl) modeEl.textContent = 'Επεξεργασία #' + (c.code || c.id);
 			var titleEl = q('[data-form-title]'); if (titleEl) titleEl.textContent = 'Επεξεργασία Αίτησης';
