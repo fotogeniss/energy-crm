@@ -259,9 +259,12 @@ function renderCard(view, id, d) {
 					.then(function (res) {
 						if (res && res.ok) {
 							close();
-							d.notes = res.notes;
-							renderCard(view, id, d);
 							toast('Προστέθηκε η σημείωση.');
+							// Ξαναμπαίνει από το openCustomerCard() -- ίδιο μονοπάτι με το
+							// αρχικό άνοιγμα της κάρτας -- αντί να ξαναχτίζει την όψη από το
+							// ήδη κρατημένο `d` -- ξαναβεβαιώνει και το go('customer-detail')
+							// στον router αντί να υποθέτει ότι η όψη έμεινε ενεργή.
+							openCustomerCard(id);
 						} else {
 							btn.disabled = false;
 							toast((res && res.error) || 'Αποτυχία.', false);
@@ -299,9 +302,10 @@ function renderCard(view, id, d) {
 					.then(function (res) {
 						if (res && res.ok) {
 							close();
-							c.contact_phone = res.contact_phone;
-							renderCard(view, id, d);
 							toast('Ενημερώθηκε.');
+							// Ιδιο σκεπτικό με το addNote() παραπάνω -- re-entry από το
+							// openCustomerCard() αντί για χειροκίνητο ξαναχτίσιμο της όψης.
+							openCustomerCard(id);
 						} else {
 							btn.disabled = false;
 							toast((res && res.error) || 'Αποτυχία.', false);
