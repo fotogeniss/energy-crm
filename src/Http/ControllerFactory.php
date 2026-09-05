@@ -129,7 +129,13 @@ final class ControllerFactory
             ),
 
             // People.
-            new CustomersController($scope, Services::customers(), $queries, Services::files()),
+            new CustomersController(
+                $scope,
+                Services::customers(),
+                $queries,
+                Services::files(),
+                Services::customerNotes()
+            ),
             new LeadsController($scope, Services::leads(), Services::contracts(), Services::customers()),
             new TeamController(
                 $scope,

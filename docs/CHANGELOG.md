@@ -7,6 +7,117 @@
 
 ---
 
+### (248) Καρτέλα πελάτη — Στάδιο 2: σημειώσεις + τηλέφωνο επικοινωνίας
+
+**Το αίτημα.** Μετά την επιβεβαίωση στο (247) ότι η καρτέλα πελάτη δουλεύει
+στην πράξη, συνέχεια στο δεύτερο από τα τρία στάδια της εγκεκριμένης μακέτας
+(`docs/UI-CUSTOMER-CARD.html`, §1.8): τα δύο πεδία σημειωμένα `ΝΕΟ` -- ελεύθερες
+σημειώσεις για τον πελάτη, και ένα τηλέφωνο επικοινωνίας για εσωτερική χρήση.
+Και τα δύο επιλέχθηκαν επίτηδες γιατί **δεν τυπώνονται πουθενά** -- τίποτα εδώ
+δεν μπορεί να χαλάσει ένα χαρτί που έχει ήδη φύγει στον πάροχο, σε αντίθεση με
+το Στάδιο 3 (πλήρης επεξεργασία ονόματος/ΑΦΜ/διεύθυνσης) που μένει τελευταίο.
+
+**`customers.contact_phone`, κρυπτογραφημένο.** Προσωπικό δεδομένο τρίτου
+προσώπου, ίδια μεταχείριση με το ήδη υπάρχον `mobile`/`phone` του πελάτη --
+μπαίνει στο `CustomerFields::ENCRYPTED`. Χωρίς blind index (`*_hash`): σε
+αντίθεση με το ΑΦΜ ή το κινητό, αυτό το πεδίο δεν αναζητείται ποτέ και δεν
+ελέγχεται για διπλοεγγραφή, άρα δεν χρειάζεται exact-match lookup σε
+κρυπτογραφημένη στήλη. Νέα μετανάστευση `0033_add_customer_contact_phone_column`
+-- και, επιπλέον της καθιερωμένης πρακτικής για μεμονωμένες στήλες, προστέθηκε
+και στο `ECRM_DB::install()` ώστε μια φρέσκια εγκατάσταση να μην περιμένει
+κύκλο `maybeUpgrade()` για κάτι τόσο φτηνό.
+
+**`customer_notes`, νέος πίνακας.** Πολλές σημειώσεις ανά πελάτη, με
+`partner_user_id` και `created_at` -- σε μία στήλη `TEXT` θα χανόταν το «ποιος
+είπε τι και πότε», και δύο συνεργάτες θα έγραφαν ο ένας πάνω στον άλλο.
+`CustomerNoteRepository`, ίδιο σχήμα append-only με το `EventRepository`:
+`forCustomer()`/`create()`, καμία επεξεργασία ή διαγραφή -- μια σημείωση που
+γράφτηκε λάθος διορθώνεται με νέα, όχι με επεξεργασία της παλιάς. Νέα
+μετανάστευση `0034_create_customer_notes_table`, ΚΑΙ στο `ECRM_DB::install()`
+-- εδώ υποχρεωτικά και στα δύο, γιατί ένας ολοκαίνουριος πίνακας απών από το
+dbDelta θα ήταν αόρατος σε φρέσκια εγκατάσταση (κενό ήδη υπαρκτό στον κώδικα
+για στήλες-μόνο-μετανάστευσης, δεν αξίζει να μεγαλώσει με νέο πίνακα).
+
+**GDPR, και τα δύο νέα κομμάτια.** Το `contact_phone` ακολουθεί το ίδιο
+μονοπάτι με τα υπόλοιπα κρυπτογραφημένα πεδία πελάτη μέσα στο
+`PersonalDataExporter`/`PersonalDataEraser` (εξάγεται, μηδενίζεται στη
+διαγραφή). Το `customer_notes` είναι πίνακας κλειδωμένος με `customer_id`
+απευθείας, όχι με `contract_id` -- άρα δεν καλύπτεται αυτόματα από το
+`PersonalDataTables::linkedToContracts()` και χρειάστηκε χειροκίνητο χειρισμό
+σε εξαγωγή (`rowsFor(Tables::CUSTOMER_NOTES, 'customer_id', …)`, ίδιο πρότυπο
+με το `tasks.customer_id`) και διαγραφή (πλήρες `DELETE`, όχι redaction -- μια
+σημείωση χωρίς κείμενο δεν έχει λόγο ύπαρξης), με δήλωση στο
+`PersonalDataCoverageTest::HANDLED_INLINE` ώστε το σάρωμα σχήματος του test να
+μην το προσπεράσει σιωπηλά αν κάποιος ξεχάσει έναν από τους δύο καταναλωτές.
+
+**Δύο νέα routes, ένα κάθε φορά.** `POST /customers/{id}/notes` και
+`PATCH /customers/{id}/contact-phone` -- ξεχωριστά, όχι ένα γενικό `PATCH
+/customers/{id}` με ελεύθερο σώμα. Το contact-phone route περνά ΜΟΝΟ το ένα
+κλειδί στο ήδη υπάρχον `CustomerRepository::update()` (το `WRITABLE` allowlist
+του γνωρίζει τώρα το `contact_phone`) -- ποτέ ολόκληρο το request body, γιατί
+το `filterWritable()` θα επέτρεπε ό,τι άλλο έστελνε ο client και αυτό το route
+δεν είναι το Στάδιο 3. Και τα δύο routes ελέγχουν πρώτα `isReachable()`/
+`update()` scope, ίδιο σκεπτικό με το `/card`: κανένα γράψιμο σε πελάτη που ο
+συνεργάτης δεν βλέπει καν, ακόμα κι αν μαντέψει σωστά το id.
+
+**Η οθόνη.** `ecrm-view-customer-card.js`: νέο μπλοκ «Σημειώσεις» στην κύρια
+στήλη, ίδιο οπτικό πρότυπο `.ecrm-timeline` με το ιστορικό σύμβασης του
+`ecrm-view-detail.js` -- ο συνεργάτης δεν μαθαίνει τρίτη γλώσσα για «ποιος
+έγραψε τι και πότε». Στο μπλοκ «Επικοινωνία», νέα γραμμή για το τηλ.
+επικοινωνίας με ένδειξη `ΝΕΟ` και υπόμνημα ότι δεν τυπώνεται. Και τα δύο
+γραψίματα ανοίγουν το ήδη υπάρχον `openDialog()` (`@energy-crm/dialog`, νέο
+dependency για το module) αντί για inline-edit μέσα στην ίδια οθόνη -- ίδιο
+πρότυπο με τη «Νέα εργασία» του `ecrm-view-detail.js`. Μετά από επιτυχή
+αποθήκευση, ολόκληρη η κάρτα ξαναφτιάχνεται από το ίδιο `d` (η απάντηση φέρνει
+έτοιμη τη νέα λίστα σημειώσεων/το νέο τηλέφωνο) -- ένα σημείο αλήθειας, όχι
+δεύτερος υπολογισμός στο DOM.
+
+**Τι ΔΕΝ αλλάζει.** Καμία επεξεργασία ονόματος/ΑΦΜ/διεύθυνσης -- αυτό μένει
+για το Στάδιο 3, με τα δικά του μέτρα (hash, διπλοεγγραφή, ιστορικό αλλαγών).
+Το `DB_VERSION` δεν αλλάζει, ίδια πρακτική με το (247) και πριν -- στοχευμένη
+μετανάστευση, όχι πλήρες ξαναπέρασμα dbDelta.
+
+**Αρχεία:** `includes/class-ecrm-db.php` (`contact_phone` στο `customers`,
+νέος πίνακας `customer_notes`), `src/Persistence/Tables.php`
+(`CUSTOMER_NOTES`), `src/Persistence/Schema/Migrations/
+AddCustomerContactPhoneColumn.php` (νέο), `src/Persistence/Schema/Migrations/
+CreateCustomerNotesTable.php` (νέο), `src/Persistence/Schema/MigrationList.php`
+(wiring), `src/Persistence/CustomerFields.php` (`ENCRYPTED`),
+`src/Persistence/CustomerRepository.php` (`WRITABLE`),
+`src/Persistence/CustomerNoteRepository.php` (νέο), `src/Services.php`
+(`customerNotes()`), `src/Persistence/PersonalDataExporter.php`,
+`src/Persistence/PersonalDataEraser.php`,
+`tests/Unit/Persistence/PersonalDataCoverageTest.php` (`HANDLED_INLINE`),
+`tests/Integration/PersonalDataErasureTest.php` (νέα δοκιμή για τα
+`customer_notes`, έλεγχος `contact_phone` στο μηδενισμό),
+`src/Http/CustomersController.php` (δύο νέα routes, `addNote()`,
+`updateContactPhone()`, `withAuthorNames()`, το `card()` πλέον στέλνει
+`notes`), `src/Http/ControllerFactory.php` (wiring),
+`tests/Integration/CustomerRestAccessTest.php` (τέσσερις νέες δοκιμές scope,
+νέο `send()` helper), `public/assets/ecrm-view-customer-card.js` (μπλοκ
+«Σημειώσεις», γραμμή+διάλογος τηλ. επικοινωνίας),
+`public/class-ecrm-shortcodes.php` (`@energy-crm/dialog` στο
+`MODULE_DEPS` του `view-customer-card`).
+
+**Μακέτα.** `docs/UI-CUSTOMER-CARD.html`, ήδη εγκεκριμένη (§1.8) -- το
+Στάδιο 2 ήταν ήδη σχεδιασμένο εκεί, καμία νέα μακέτα.
+
+**Πρόβλεψη πλήθους.** Τρία νέα αρχεία `src`
+(`CustomerNoteRepository.php` + δύο migrations): phpcs 382 -> 385, phpstan
+198 -> 201. unit 1208 -> 1208 (καμία νέα δοκιμή unit -- το
+`PersonalDataCoverageTest` ήδη υπάρχει, μόνο νέα εγγραφή στο
+`HANDLED_INLINE`). integration 604 -> 609, οι πέντε νέες (μία στο
+`PersonalDataErasureTest`, τέσσερις στο `CustomerRestAccessTest`).
+wizard-smoke αμετάβλητο στο 31/31.
+
+**Laravel-ready; μερικώς.** `CustomerNoteRepository` είναι καθαρή πρόσβαση
+βάσης, ίδιο επίπεδο με το `EventRepository`. Το `withAuthorNames()` ζει
+προς το παρόν μέσα στο `CustomersController` (Http) σαν αντιγραφή του ήδη
+υπάρχοντος `ContractsReadController::withActorNames()` -- ίδια συνειδητή
+συντόμευση με το (247): αν εμφανιστεί τρίτος καταναλωτής της ίδιας ανάγκης
+(«ονόματα από partner_user_id, μαζικά»), αξίζει να βγει σε κοινή θέση αντί
+να αντιγραφεί τέταρτη φορά.
+
 ### (247) Καρτέλα πελάτη — Στάδιο 1: η οθόνη που έλειπε, μόνο για ανάγνωση
 
 **Το αίτημα.** Μετά τον πλήρη έλεγχο λογικών λαθών στο CRM (ίδια οικογένεια

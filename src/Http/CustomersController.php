@@ -17,6 +17,7 @@ use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractQueries;
+use EnergyCRM\Persistence\CustomerNoteRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\FileRepository;
 use WP_REST_Request;
@@ -34,6 +35,7 @@ final class CustomersController implements Controller
         private readonly CustomerRepository $customers,
         private readonly ContractQueries $queries,
         private readonly FileRepository $files,
+        private readonly CustomerNoteRepository $notes,
     ) {
     }
 
@@ -97,6 +99,40 @@ final class CustomersController implements Controller
             'callback'            => [$this, 'card'],
             'permission_callback' => Guards::crmUser(),
             'args'                => ['id' => ['type' => 'integer', 'required' => true]],
+        ]);
+
+        // 247, Στάδιο 2: σημειώσεις -- ελεύθερο κείμενο για τον πελάτη, εκτός
+        // τυπωμένων εντύπων. Append-only σκόπιμα: δες CustomerNoteRepository.
+        register_rest_route(Router::NAMESPACE, '/customers/(?P<id>\d+)/notes', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'addNote'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => [
+                'id'   => ['type' => 'integer', 'required' => true],
+                'body' => [
+                    'type'              => 'string',
+                    'required'          => true,
+                    'sanitize_callback' => 'sanitize_textarea_field',
+                ],
+            ],
+        ]);
+
+        // 247, Στάδιο 2: το ΜΟΝΟ εγγράψιμο πεδίο πελάτη προς το παρόν --
+        // εσωτερικής χρήσης, δεν τυπώνεται πουθενά. Η πλήρης επεξεργασία
+        // στοιχείων (όνομα, ΑΦΜ κλπ) μένει για το Στάδιο 3, με τα δικά της
+        // μέτρα ασφαλείας (hash, έλεγχος διπλοεγγραφής, ιστορικό αλλαγών).
+        register_rest_route(Router::NAMESPACE, '/customers/(?P<id>\d+)/contact-phone', [
+            'methods'             => 'PATCH',
+            'callback'            => [$this, 'updateContactPhone'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => [
+                'id'            => ['type' => 'integer', 'required' => true],
+                'contact_phone' => [
+                    'type'              => 'string',
+                    'default'           => '',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
         ]);
     }
 
@@ -191,6 +227,7 @@ final class CustomersController implements Controller
             'customer'  => $customer,
             'contracts' => $contracts,
             'documents' => $documents,
+            'notes'     => $this->withAuthorNames($this->notes->forCustomer($customerId)),
             'doc_kinds' => ECRM_Docs::kinds(),
             'statuses'  => ContractStatus::labels(),
             'kpi'       => [
@@ -200,6 +237,83 @@ final class CustomersController implements Controller
                 'last_active'     => $lastActive,
             ],
         ], 200);
+    }
+
+    /**
+     * Προσθήκη σημείωσης στην καρτέλα ενός πελάτη (247, Στάδιο 2).
+     *
+     * Ελέγχει reachability με το ίδιο find() που ήδη χρησιμοποιεί το card() --
+     * δεν γράφει σε πελάτη που ο συνεργάτης δεν βλέπει καν, ακόμα κι αν
+     * μαντέψει σωστά το id.
+     */
+    public function addNote(WP_REST_Request $request): WP_REST_Response
+    {
+        $scope      = $this->scopes->forCurrentUser();
+        $customerId = (int) $request['id'];
+
+        if (! $this->customers->isReachable($customerId, $scope)) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.'], 404);
+        }
+
+        $noteId = $this->notes->create($customerId, $scope->actorId(), (string) $request['body']);
+
+        if ($noteId <= 0) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Κενή σημείωση.'], 400);
+        }
+
+        return new WP_REST_Response(
+            ['ok' => true, 'notes' => $this->withAuthorNames($this->notes->forCustomer($customerId))],
+            200
+        );
+    }
+
+    /**
+     * Το ΜΟΝΟ σήμερα εγγράψιμο πεδίο πελάτη -- βλ. σχόλιο στο routes().
+     * Περνά ΜΟΝΟ αυτό το ένα κλειδί στο CustomerRepository::update(), ποτέ
+     * ολόκληρο σώμα αιτήματος: το `filterWritable()` θα επέτρεπε κι άλλα αν
+     * τα στέλνε ο client, και αυτό το route δεν είναι το Στάδιο 3.
+     */
+    public function updateContactPhone(WP_REST_Request $request): WP_REST_Response
+    {
+        $scope      = $this->scopes->forCurrentUser();
+        $customerId = (int) $request['id'];
+        $phone      = trim((string) $request['contact_phone']);
+
+        $updated = $this->customers->update($customerId, $scope, ['contact_phone' => $phone !== '' ? $phone : null]);
+
+        if (! $updated) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.'], 404);
+        }
+
+        return new WP_REST_Response(['ok' => true, 'contact_phone' => $phone], 200);
+    }
+
+    /**
+     * Ιδιο πρότυπο με το ContractsReadController::withActorNames() -- ένα
+     * μαζικό get_users() αντί για N επερωτήσεις, ένα όνομα ανά partner_user_id.
+     *
+     * @param list<array<string, mixed>> $notes
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function withAuthorNames(array $notes): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map(static fn (array $n): int => (int) ($n['partner_user_id'] ?? 0), $notes)
+        )));
+
+        $names = [];
+
+        foreach ($ids === [] ? [] : get_users(['include' => $ids, 'fields' => ['ID', 'display_name']]) as $user) {
+            $names[(int) $user->ID] = $user->display_name;
+        }
+
+        foreach ($notes as $index => $note) {
+            $uid = (int) ($note['partner_user_id'] ?? 0);
+            $notes[$index]['author'] = $uid > 0 ? ($names[$uid] ?? '—') : '—';
+        }
+
+        return $notes;
     }
 
     public function index(WP_REST_Request $request): WP_REST_Response

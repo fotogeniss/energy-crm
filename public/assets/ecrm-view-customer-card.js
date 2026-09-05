@@ -14,9 +14,10 @@
  * τη λίστα «Συμβάσεις» -- ο συνεργάτης δεν μαθαίνει δεύτερη γλώσσα χρωμάτων.
  */
 
-import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
-import { fmtDate, initials, tint } from '@energy-crm/format';
+import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { fmtDate, initials, timeAgo, tint } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
+import { openDialog } from '@energy-crm/dialog';
 
 var TYPE_LABEL = { individual: 'ΙΔΙΩΤΗΣ', company: 'ΕΤΑΙΡΕΙΑ', sole_prop: 'ΑΤΟΜΙΚΗ' };
 
@@ -115,6 +116,26 @@ function documentsList(documents, docKinds, contracts) {
 	}).join('') + '</div>';
 }
 
+/* 247, Στάδιο 2 (docs/UI-CUSTOMER-CARD.html): ελεύθερο κείμενο για τον
+ * πελάτη, εκτός τυπωμένων εντύπων. Ιδιο οπτικό πρότυπο (.ecrm-timeline) με
+ * το ιστορικό σύμβασης στο ecrm-view-detail.js -- ο συνεργάτης δεν μαθαίνει
+ * τρίτη γλώσσα για "ποιος έγραψε τι και πότε". Χωρίς επεξεργασία/διαγραφή:
+ * append-only, ίδιο σκεπτικό με το CustomerNoteRepository στο backend.
+ */
+function notesBlock(notes) {
+	var list = (notes && notes.length)
+		? '<ul class="ecrm-timeline">' + notes.map(function (n) {
+			return '<li><span class="ecrm-timeline__dot"></span><div>' +
+				'<div class="ecrm-timeline__txt">' + esc(n.body || '') + '</div>' +
+				'<div class="ecrm-timeline__time">' + timeAgo(n.created_at) + '</div>' +
+				'<div class="ecrm-timeline__who"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(n.author || '') + '">' + esc(initials(n.author || '')) + '</span><span class="ecrm-timeline__whoname">' + esc(n.author || '—') + '</span></div>' +
+				'</div></li>';
+		}).join('') + '</ul>'
+		: '<div class="ecrm-empty">Καμία σημείωση ακόμη.</div>';
+
+	return list + '<div style="margin-top:10px"><button type="button" class="ecrm-btn ecrm-btn--sm" data-note-new>+ Σημείωση</button></div>';
+}
+
 function kpiBlock(kpi) {
 	var next = kpi.next_expiry;
 	var nextLabel = '—';
@@ -130,6 +151,18 @@ function kpiBlock(kpi) {
 		'<div class="ecrm-kpi"><div class="ecrm-kpi__k">Επόμενη λήξη</div><div class="ecrm-kpi__v">' + esc(nextLabel) + '</div><div class="ecrm-kpi__f">' + esc(nextFoot) + '</div></div>' +
 		'<div class="ecrm-kpi"><div class="ecrm-kpi__k">Τελευταία κίνηση</div><div class="ecrm-kpi__v">' + (kpi.last_active ? fmtDate(kpi.last_active) : '—') + '</div><div class="ecrm-kpi__f"></div></div>' +
 		'</div>';
+}
+
+/* 247, Στάδιο 2: το ΜΟΝΟ σήμερα εγγράψιμο πεδίο πελάτη -- εσωτερικής χρήσης,
+ * δεν τυπώνεται πουθενά (docs/UI-CUSTOMER-CARD.html). Ιδια σύμβαση με τα
+ * kv() γύρω του, με ένα κουμπί επεξεργασίας από κάτω αντί για δεύτερη
+ * γλώσσα inline-edit -- η οθόνη ήδη έχει openDialog() για ακριβώς αυτό.
+ */
+function contactPhoneBlock(phone) {
+	return '<div class="ecrm-kv"><b>' + (phone ? esc(phone) : '<span class="ecrm-muted">—</span>') +
+		'</b><span>Τηλ. επικοινωνίας <span class="ecrm-badge ecrm-badge--new" style="font-size:9px;padding:0 6px;vertical-align:1px;">ΝΕΟ</span></span></div>' +
+		'<p class="ecrm-hint" style="margin:4px 0 8px;">Για δική σου χρήση -- δεν τυπώνεται σε κανένα έντυπο.</p>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-phone-edit>Επεξεργασία</button>';
 }
 
 function renderCard(view, id, d) {
@@ -167,12 +200,14 @@ function renderCard(view, id, d) {
 		'</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Επικοινωνία</div>' +
 		kv('Τηλέφωνο', c.phone) + kv('Κινητό', c.mobile) + kv('Email', c.email) +
+		contactPhoneBlock(c.contact_phone) +
 		'</div>' +
 		'</div>' +
 
 		'<div class="ecrm-pgrid__main">' +
 		'<div class="ecrm-card"><div class="ecrm-step">Συμβάσεις</div>' + contractsTable(contracts, statuses) + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Λήξεις &amp; ανανεώσεις</div>' + expiringRows(contracts) + '</div>' +
+		'<div class="ecrm-card"><div class="ecrm-step">Σημειώσεις</div>' + notesBlock(d.notes) + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Έγγραφα όλων των συμβάσεων</div>' + documentsList(documents, d.doc_kinds, contracts) + '</div>' +
 		'</div>' +
 		'</div>';
@@ -182,5 +217,98 @@ function renderCard(view, id, d) {
 
 	view.querySelectorAll('[data-open]').forEach(function (row) {
 		row.addEventListener('click', function () { openDetail(this.getAttribute('data-open')); });
+	});
+
+	/* 247, Στάδιο 2 -- προσθήκη σημείωσης. Ξαναφτιάχνει ολόκληρη την κάρτα
+	 * από το ίδιο `d` που ήδη έχουμε (η απάντηση του POST φέρνει τη νέα λίστα
+	 * σημειώσεων έτοιμη με ονόματα συντακτών) αντί να χτίζει τη νέα γραμμή
+	 * ξεχωριστά εδώ -- ένα σημείο αλήθειας για το πώς μοιάζει μια σημείωση. */
+	var noteBtn = view.querySelector('[data-note-new]');
+	if (noteBtn) noteBtn.addEventListener('click', function () {
+		openDialog({
+			eyebrow: 'Σημείωση',
+			title: 'Νέα σημείωση για ' + name,
+			body: '<div class="ecrm-modal__card ecrm-modal__stack">' +
+				'<label class="ecrm-field ecrm-field--wide"><span class="ecrm-field__label">Κείμενο</span>' +
+				'<textarea class="ecrm-textarea" data-note-body rows="3" placeholder="π.χ. καλεί μετά τις 17:00…"></textarea>' +
+				'<span class="ecrm-field__err" data-note-err hidden>Η σημείωση δεν μπορεί να είναι κενή.</span></label>' +
+				'</div>',
+			confirm: 'Προσθήκη',
+			onConfirm: function (el, close, btn) {
+				var field = el.querySelector('[data-note-body]');
+				var err = el.querySelector('[data-note-err]');
+				var body = (field.value || '').trim();
+
+				if (!body) {
+					field.classList.add('is-err');
+					err.hidden = false;
+					field.focus();
+					return;
+				}
+
+				field.classList.remove('is-err');
+				err.hidden = true;
+
+				btn.disabled = true;
+				fetch(api('/customers/' + id + '/notes'), {
+					method: 'POST',
+					headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+					body: JSON.stringify({ body: body }),
+				})
+					.then(function (r) { return r.json(); })
+					.then(function (res) {
+						if (res && res.ok) {
+							close();
+							d.notes = res.notes;
+							renderCard(view, id, d);
+							toast('Προστέθηκε η σημείωση.');
+						} else {
+							btn.disabled = false;
+							toast((res && res.error) || 'Αποτυχία.', false);
+						}
+					})
+					.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+			},
+		});
+	});
+
+	/* 247, Στάδιο 2 -- επεξεργασία τηλ. επικοινωνίας. Στέλνει ΜΟΝΟ αυτό το
+	 * ένα πεδίο (CustomersController::updateContactPhone() δεν δέχεται
+	 * τίποτα άλλο) -- η πλήρης επεξεργασία στοιχείων μένει για το Στάδιο 3. */
+	var phoneBtn = view.querySelector('[data-phone-edit]');
+	if (phoneBtn) phoneBtn.addEventListener('click', function () {
+		openDialog({
+			eyebrow: 'Τηλ. επικοινωνίας',
+			title: 'Επεξεργασία για ' + name,
+			lead: 'Για δική σου χρήση -- δεν τυπώνεται σε κανένα έντυπο.',
+			body: '<div class="ecrm-modal__card ecrm-modal__stack">' +
+				'<label class="ecrm-field"><span class="ecrm-field__label">Τηλέφωνο</span>' +
+				'<input class="ecrm-input" data-phone-value value="' + esc(c.contact_phone || '') + '"></label>' +
+				'</div>',
+			confirm: 'Αποθήκευση',
+			onConfirm: function (el, close, btn) {
+				var value = (el.querySelector('[data-phone-value]').value || '').trim();
+
+				btn.disabled = true;
+				fetch(api('/customers/' + id + '/contact-phone'), {
+					method: 'PATCH',
+					headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+					body: JSON.stringify({ contact_phone: value }),
+				})
+					.then(function (r) { return r.json(); })
+					.then(function (res) {
+						if (res && res.ok) {
+							close();
+							c.contact_phone = res.contact_phone;
+							renderCard(view, id, d);
+							toast('Ενημερώθηκε.');
+						} else {
+							btn.disabled = false;
+							toast((res && res.error) || 'Αποτυχία.', false);
+						}
+					})
+					.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+			},
+		});
 	});
 }

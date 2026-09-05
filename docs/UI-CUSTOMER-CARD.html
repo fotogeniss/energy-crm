@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Μακέτα: Καρτέλα Πελάτη</title>
+<style>
+  :root{
+    --p500:#8a7bd8; --accent-ink:#5b4fc4; --accent-wash:#f1eefb; --accent-wash-2:#e4ddf6;
+    --ink:#1f2430; --muted:#6b7280; --line:#e2e5ea; --bg:#f7f8fa; --card:#ffffff;
+    --ok:#1d8a4e; --ok-wash:#eefaf0; --warn:#a8760a; --warn-wash:#fff8e6; --danger:#a33;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:28px;margin:0;line-height:1.5;}
+  h1{font-size:19px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 20px;max-width:960px;}
+  h2.sec{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+    margin:30px 0 12px;font-weight:700;border-top:1px solid var(--line);padding-top:16px;}
+  .note,.ask,.ok{border-radius:8px;padding:11px 13px;font-size:12.5px;margin-bottom:16px;max-width:1000px;line-height:1.55;}
+  .note{background:var(--warn-wash);border:1px solid #f0dca0;color:#6b5510;}
+  .ask{background:#eef4ff;border:1px solid #b9cdf0;color:#20355c;}
+  .ok{background:var(--ok-wash);border:1px solid #a8ddb5;color:#1d4d2b;}
+  .note strong,.ask strong,.ok strong{display:block;margin-bottom:3px;}
+  .caption{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.45;max-width:1000px;}
+  code{background:#eef0f3;padding:1px 5px;border-radius:4px;font-size:11.5px;}
+
+  /* ── Το κέλυφος της οθόνης ── */
+  .screen{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;max-width:1000px;}
+  .crumb{padding:10px 18px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);background:#fbfbfc;}
+  .crumb a{color:var(--accent-ink);text-decoration:none;}
+
+  .chead{display:flex;gap:16px;padding:18px;border-bottom:1px solid var(--line);align-items:flex-start;}
+  .avatar{width:52px;height:52px;border-radius:12px;background:var(--accent-wash);color:var(--accent-ink);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex:0 0 auto;}
+  .cname{font-size:17px;font-weight:700;margin:0 0 3px;}
+  .cmeta{font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;}
+  .badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:10.5px;font-weight:700;
+    background:var(--accent-wash);color:var(--accent-ink);letter-spacing:.02em;}
+  .hactions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 13px;font-size:12.5px;
+    font-family:inherit;color:var(--ink);cursor:default;white-space:nowrap;}
+  .btn--primary{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;font-weight:600;}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);}
+  .kpi{padding:13px 18px;border-right:1px solid var(--line);}
+  .kpi:last-child{border-right:0;}
+  .kpi .n{font-size:19px;font-weight:700;}
+  .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+  .kpi .n.warn{color:var(--warn);}
+
+  .body{display:grid;grid-template-columns:300px 1fr;}
+  .side{border-right:1px solid var(--line);padding:16px 18px;}
+  .main{padding:16px 18px;}
+
+  .blk{margin-bottom:20px;}
+  .blk h3{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+    margin:0 0 9px;font-weight:700;display:flex;align-items:center;gap:7px;}
+  .blk h3 .edit{margin-left:auto;font-size:11px;color:var(--accent-ink);font-weight:600;text-transform:none;letter-spacing:0;}
+  .kv{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:4px 0;border-bottom:1px dashed #eef0f3;}
+  .kv:last-child{border-bottom:0;}
+  .kv .k{color:var(--muted);flex:0 0 auto;}
+  .kv .v{text-align:right;}
+  .kv .v.empty{color:#b6bcc6;font-style:italic;}
+  .kv.new{background:var(--accent-wash);margin:0 -8px;padding:5px 8px;border-radius:6px;border-bottom:0;}
+  .tag-new{display:inline-block;padding:0 6px;border-radius:999px;font-size:9.5px;font-weight:700;
+    background:var(--p500);color:#fff;vertical-align:1px;margin-left:5px;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);
+    font-weight:700;padding:6px 8px;border-bottom:1px solid var(--line);}
+  td{padding:8px;border-bottom:1px solid #f1f2f5;}
+  .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:10.5px;font-weight:700;}
+  .pill--ok{background:var(--ok-wash);color:var(--ok);}
+  .pill--wait{background:var(--warn-wash);color:var(--warn);}
+  .pill--draft{background:#eef0f3;color:#5a6270;}
+
+  .noteitem{background:#fbfbfc;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12.5px;margin-bottom:8px;}
+  .noteitem .who{font-size:11px;color:var(--muted);margin-top:5px;}
+  .noteinput{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;font-size:12.5px;color:#b6bcc6;font-style:italic;}
+
+  .audit{font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding:10px 18px;background:#fbfbfc;}
+  .audit b{color:var(--ink);}
+
+  .doc{display:flex;align-items:center;gap:9px;font-size:12.5px;padding:7px 0;border-bottom:1px solid #f1f2f5;}
+  .doc .ic{width:26px;height:26px;border-radius:6px;background:#eef0f3;display:flex;align-items:center;justify-content:center;font-size:11px;color:#5a6270;}
+  .doc .from{margin-left:auto;font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<h1>Καρτέλα Πελάτη</h1>
+<p class="sub">Μακέτα προς έγκριση. Οι «Πελάτες» είναι σήμερα λίστα μόνο για ανάγνωση, χωρίς άνοιγμα. Αυτή είναι η οθόνη που λείπει. <b>Ολα τα δεδομένα που φαίνονται υπάρχουν ήδη στο σύστημα</b> — εκτός από τα δύο σημειωμένα με <span class="tag-new">ΝΕΟ</span>.</p>
+
+<div class="screen">
+  <div class="crumb"><a>Πελάτες</a> › Παπαδόπουλος Γεώργιος</div>
+
+  <div class="chead">
+    <div class="avatar">ΠΓ</div>
+    <div>
+      <div class="cname">Παπαδόπουλος Γεώργιος</div>
+      <div class="cmeta">
+        <span class="badge">ΙΔΙΩΤΗΣ</span>
+        <span>ΑΦΜ 123456789</span>
+        <span>Πελάτης από 12/03/2025</span>
+      </div>
+    </div>
+    <div class="hactions">
+      <button class="btn">Επεξεργασία</button>
+      <button class="btn btn--primary">Νέα αίτηση</button>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="n">4</div><div class="l">Συμβάσεις</div></div>
+    <div class="kpi"><div class="n">3</div><div class="l">Ενεργές</div></div>
+    <div class="kpi"><div class="n warn">σε 41 ημ.</div><div class="l">Επόμενη λήξη</div></div>
+    <div class="kpi"><div class="n">02/09</div><div class="l">Τελευταία κίνηση</div></div>
+  </div>
+
+  <div class="body">
+    <div class="side">
+
+      <div class="blk">
+        <h3>Ταυτότητα <span class="edit">Επεξεργασία</span></h3>
+        <div class="kv"><span class="k">Ονομα</span><span class="v">Γεώργιος</span></div>
+        <div class="kv"><span class="k">Επώνυμο</span><span class="v">Παπαδόπουλος</span></div>
+        <div class="kv"><span class="k">Πατρώνυμο</span><span class="v">Ιωάννης</span></div>
+        <div class="kv"><span class="k">Α.Φ.Μ.</span><span class="v">123456789</span></div>
+        <div class="kv"><span class="k">Δ.Ο.Υ.</span><span class="v">Α΄ Θεσσαλονίκης</span></div>
+        <div class="kv"><span class="k">Α.Δ.Τ.</span><span class="v">ΑΒ 123456</span></div>
+        <div class="kv"><span class="k">Ημ. Γέννησης</span><span class="v empty">—</span></div>
+      </div>
+
+      <div class="blk">
+        <h3>Διεύθυνση <span class="edit">Επεξεργασία</span></h3>
+        <div class="kv"><span class="k">Οδός</span><span class="v">Τσιμισκή 45</span></div>
+        <div class="kv"><span class="k">Πόλη</span><span class="v">Θεσσαλονίκη</span></div>
+        <div class="kv"><span class="k">Τ.Κ.</span><span class="v">54623</span></div>
+        <div class="kv"><span class="k">Νομός</span><span class="v">Θεσσαλονίκης</span></div>
+      </div>
+
+      <div class="blk">
+        <h3>Επικοινωνία <span class="edit">Επεξεργασία</span></h3>
+        <div class="kv"><span class="k">Τηλέφωνο</span><span class="v">2310 123456</span></div>
+        <div class="kv"><span class="k">Κινητό</span><span class="v">6971 234567</span></div>
+        <div class="kv"><span class="k">Email</span><span class="v">g.papadopoulos@…</span></div>
+        <div class="kv new">
+          <span class="k">Τηλ. επικοινωνίας<span class="tag-new">ΝΕΟ</span></span>
+          <span class="v">6944 111222</span>
+        </div>
+        <p class="caption" style="margin-top:7px;">Το «Τηλ. επικοινωνίας» είναι για δική σου χρήση — <b>δεν τυπώνεται σε κανένα έντυπο</b>.</p>
+      </div>
+
+    </div>
+
+    <div class="main">
+
+      <div class="blk">
+        <h3>Συμβάσεις</h3>
+        <table>
+          <tr><th>Κωδικός</th><th>Πάροχος</th><th>Πρόγραμμα</th><th>Κατάσταση</th><th>Λήξη</th></tr>
+          <tr><td>ΕΝ-40218</td><td>Volton</td><td>Volton Home 12</td><td><span class="pill pill--ok">Ενεργή</span></td><td>14/10/2026</td></tr>
+          <tr><td>ΟΡΙΖΟΝ-39218</td><td>Orizon</td><td>orizon 10GB + 5GB</td><td><span class="pill pill--ok">Ενεργή</span></td><td>—</td></tr>
+          <tr><td>ΕΝ-38104</td><td>Protergia</td><td>Sure 12</td><td><span class="pill pill--wait">Εκκρεμεί υπογραφή</span></td><td>—</td></tr>
+          <tr><td>ΕΝ-31877</td><td>ΔΕΗ</td><td>—</td><td><span class="pill pill--draft">Ολοκληρωμένη</span></td><td>03/04/2025</td></tr>
+        </table>
+        <p class="caption">Κλικ σε γραμμή ανοίγει τη σύμβαση. Ιδια χρώματα κατάστασης με τη λίστα «Συμβάσεις» — ο συνεργάτης δεν μαθαίνει δεύτερη γλώσσα.</p>
+      </div>
+
+      <div class="blk">
+        <h3>Λήξεις &amp; ανανεώσεις</h3>
+        <table>
+          <tr><th>Σύμβαση</th><th>Λήγει</th><th>Σε</th><th></th></tr>
+          <tr><td>ΕΝ-40218 · Volton Home 12</td><td>14/10/2026</td><td><b style="color:var(--warn);">41 ημέρες</b></td><td><button class="btn">Ανανέωση</button></td></tr>
+        </table>
+        <p class="caption">Ιδιο κριτήριο με την οθόνη «Λήξεις» — ένα σημείο αλήθειας, όχι δεύτερος υπολογισμός.</p>
+      </div>
+
+      <div class="blk">
+        <h3>Σημειώσεις <span class="tag-new">ΝΕΟ</span></h3>
+        <div class="noteitem">
+          Καλεί μετά τις 17:00. Τα χαρτιά τα χειρίζεται ο γιος του, Νίκος.
+          <div class="who">Κώστας Α. · 02/09/2026 14:22</div>
+        </div>
+        <div class="noteinput">Γράψε σημείωση για τον πελάτη…</div>
+        <p class="caption">Ελεύθερο κείμενο, με ποιος και πότε. <b>Οχι</b> προσωπικά δεδομένα τρίτων που δεν χρειάζονται — ό,τι γράφεται εδώ εξάγεται και σβήνεται μαζί με τον πελάτη (GDPR).</p>
+      </div>
+
+      <div class="blk">
+        <h3>Εγγραφα όλων των συμβάσεων</h3>
+        <div class="doc"><span class="ic">ΤΑΥ</span> <span>Ταυτότητα (όψη &amp; πίσω)</span> <span class="from">ΕΝ-40218 · 12/08/2026</span></div>
+        <div class="doc"><span class="ic">ΛΟΓ</span> <span>Λογαριασμός ρεύματος</span> <span class="from">ΕΝ-40218 · 12/08/2026</span></div>
+        <div class="doc"><span class="ic">ΥΠΟ</span> <span>Υπογραφή πελάτη</span> <span class="from">ΟΡΙΖΟΝ-39218 · 04/09/2026</span></div>
+        <p class="caption">Μαζεμένα από όλες τις συμβάσεις του πελάτη, με ένδειξη από ποια. Ιδιοι κανόνες πρόσβασης με την καρτέλα σύμβασης — τίποτα δεν γίνεται ορατό εδώ που δεν είναι ήδη ορατό εκεί.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="audit">
+    Τελευταία αλλαγή στοιχείων: <b>Κώστας Α.</b> · 02/09/2026 14:20 · άλλαξε <b>Κινητό</b> από 6971 000000 σε 6971 234567 &nbsp;·&nbsp; <a style="color:var(--accent-ink);">όλο το ιστορικό</a>
+  </div>
+</div>
+
+<h2 class="sec">Τι είναι νέο στη βάση</h2>
+
+<table style="max-width:1000px;background:#fff;border:1px solid var(--line);">
+  <tr><th>Τι</th><th>Πού</th><th>Γιατί έτσι</th></tr>
+  <tr>
+    <td><code>customers.contact_phone</code></td>
+    <td>Νέα στήλη, κρυπτογραφημένη</td>
+    <td>Προσωπικό δεδομένο τρίτου προσώπου — ίδια μεταχείριση με το κινητό του πελάτη. Στήλη και όχι σάκος: ο <code>customers</code> δεν έχει καν <code>extra_json</code>, και το πεδίο έχει προφανή σημασία αναζήτησης (§1.17).</td>
+  </tr>
+  <tr>
+    <td>Σημειώσεις πελάτη</td>
+    <td>Νέος πίνακας <code>customer_notes</code></td>
+    <td>Πολλές ανά πελάτη, με συντάκτη και χρόνο. Σε στήλη <code>TEXT</code> θα χανόταν το «ποιος και πότε», και δύο συνεργάτες θα έσβηναν ο ένας τον άλλο.</td>
+  </tr>
+  <tr>
+    <td>Ιστορικό αλλαγών</td>
+    <td>Νέος πίνακας <code>customer_events</code></td>
+    <td><b>Απαραίτητο, όχι προαιρετικό.</b> Οι συμβάσεις έχουν ημερολόγιο· ο πελάτης δεν έχει τίποτα. Επεξεργασία προσωπικών δεδομένων χωρίς «ποιος άλλαξε τι και πότε» είναι κενό GDPR.</td>
+  </tr>
+</table>
+
+<h2 class="sec">Τρία που πρέπει να αποφασιστούν πριν γραφτεί κώδικας</h2>
+
+<div class="note">
+  <strong>1. Ποιος επιτρέπεται να επεξεργαστεί;</strong>
+  Ενας πελάτης μπορεί να εξυπηρετείται από <b>δύο συνεργάτες</b> του δικτύου. Αν ο ένας αλλάξει το τηλέφωνο, το αλλάζει και για τον άλλο. Τρεις στάσεις: (α) όποιος τον βλέπει, τον αλλάζει· (β) μόνο ο συνεργάτης που τον έφερε· (γ) όποιος τον βλέπει, αλλά η αλλαγή φαίνεται σε όλους στο ιστορικό. Η μακέτα δείχνει το <b>(γ)</b>.
+</div>
+
+<div class="note">
+  <strong>2. Αλλαγή ΑΦΜ — το πιο επικίνδυνο πεδίο της οθόνης</strong>
+  Το ΑΦΜ αποθηκεύεται κρυπτογραφημένο με <code>afm_hash</code> δίπλα, ώστε να δουλεύει η αναζήτηση και ο έλεγχος διπλοεγγραφής. Αλλαγή του <b>πρέπει</b> να ξαναγράψει το hash, αλλιώς ο πελάτης γίνεται αόρατος στην αναζήτηση σιωπηλά. Και δεύτερο: αν το νέο ΑΦΜ ανήκει ήδη σε άλλον πελάτη, φτιάξαμε διπλοεγγραφή. Πρόταση: <b>ο ίδιος έλεγχος διπλοεγγραφής που τρέχει ήδη στη φόρμα</b>, με προειδοποίηση πριν την αποθήκευση.
+</div>
+
+<div class="note">
+  <strong>3. Τι γίνεται με τις υπάρχουσες συμβάσεις</strong>
+  Αλλάζοντας το ΑΦΜ ή το όνομα στην καρτέλα, αλλάζει και σε <b>κάθε ήδη κατατεθειμένη αίτηση</b> του πελάτη — γιατί οι συμβάσεις δείχνουν στον ίδιο πελάτη. Αν έχει φύγει χαρτί στον πάροχο με το παλιό όνομα, τα δύο πλέον διαφωνούν. Πρόταση: η οθόνη το <b>λέει</b> πριν αποθηκεύσει («αυτό αφορά 4 συμβάσεις, οι 3 ενεργές»), και δεν το εμποδίζει.
+</div>
+
+<h2 class="sec">Πρόταση σταδίων — όχι όλα σε ένα commit</h2>
+
+<div class="ok">
+  <strong>Στάδιο 1 — η οθόνη, μόνο για ανάγνωση</strong>
+  Νέα καρτέλα με κεφαλίδα, KPIs, συμβάσεις, λήξεις, έγγραφα. Μηδέν νέες στήλες, μηδέν επεξεργασία, μηδέν ρίσκο. Ο συνεργάτης κερδίζει αμέσως το «τα βλέπω όλα σε ένα σημείο».
+</div>
+
+<div class="ok">
+  <strong>Στάδιο 2 — σημειώσεις + τηλ. επικοινωνίας</strong>
+  Τα δύο <span class="tag-new">ΝΕΟ</span>. Γράψιμο, αλλά <b>μόνο σε δεδομένα που δεν τυπώνονται</b> — δηλαδή τίποτα δεν μπορεί να χαλάσει σε ένα χαρτί που έφυγε στον πάροχο.
+</div>
+
+<div class="ok">
+  <strong>Στάδιο 3 — πλήρης επεξεργασία στοιχείων</strong>
+  Το δύσκολο: κρυπτογράφηση, blind indexes, έλεγχος διπλοεγγραφής, ιστορικό αλλαγών, προειδοποίηση για τις υπάρχουσες συμβάσεις. Δικό του commit, με τα δικά του tests.
+</div>
+
+<p class="caption">Η σειρά δεν είναι διοικητική ευκολία: τα Στάδια 1 και 2 δεν μπορούν να χαλάσουν δεδομένα που έχουν ήδη τυπωθεί και σταλεί. Το Στάδιο 3 μπορεί — γι' αυτό μπαίνει τελευταίο, όταν η οθόνη έχει ήδη δοκιμαστεί στην πράξη.</p>
+
+</body>
+</html>

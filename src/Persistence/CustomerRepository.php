@@ -39,6 +39,11 @@ final class CustomerRepository
         'phone',
         'mobile',
         'email',
+        // 247, Στάδιο 2: εσωτερικής χρήσης, δεν τυπώνεται πουθενά -- βλ.
+        // CustomersController::updateContactPhone(). Ο μόνος καλών σήμερα
+        // περνά ΜΟΝΟ αυτό το ένα κλειδί, ποτέ ολόκληρο customer patch, οπότε
+        // η προσθήκη εδώ δεν ανοίγει γενική επεξεργασία (Στάδιο 3).
+        'contact_phone',
     ];
 
     private string $table;

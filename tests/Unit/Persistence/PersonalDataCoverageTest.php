@@ -59,6 +59,11 @@ final class PersonalDataCoverageTest extends TestCase
         'tasks.customer_id' =>
             'Ο χάρτης είναι κλειδωμένος ανά πίνακα και το tasks έχει δύο ακμές. '
             . 'Exporter::export() συγχωνεύει, Eraser::eraseTasks() σβήνει και με τα δύο.',
+        'customer_notes.customer_id' =>
+            'Μοναδική ακμή του customer_notes -- κρέμεται μόνο από πελάτη, ποτέ από '
+            . 'σύμβαση. Exporter::customerNotes() διαβάζει με Tables::CUSTOMER_NOTES, '
+            . "Eraser::eraseCustomerNotes() σβήνει (DELETE, όχι redact -- η γραμμή "
+            . 'ολόκληρη είναι ελεύθερο κείμενο).',
     ];
 
     /** Ο πίνακας που ΕΙΝΑΙ το υποκείμενο, όχι κάτι κρεμασμένο από αυτό. */

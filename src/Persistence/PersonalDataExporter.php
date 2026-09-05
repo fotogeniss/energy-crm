@@ -59,6 +59,12 @@ final class PersonalDataExporter
 
         $subject = ['customer' => $customer, 'contracts' => $contracts];
 
+        // customer_notes.customer_id δεν χωράει στο linkedToContracts() (εκείνο
+        // είναι κλειδωμένο σε contract_id) -- ίδια κατηγορία ακμής με το
+        // tasks.customer_id λίγο πιο κάτω, δηλωμένη στο
+        // PersonalDataCoverageTest::HANDLED_INLINE.
+        $subject[Tables::CUSTOMER_NOTES] = $this->rowsFor(Tables::CUSTOMER_NOTES, 'customer_id', [$customerId]);
+
         foreach (PersonalDataTables::linkedToContracts() as $table => $keyColumn) {
             $rows = $this->rowsFor($table, $keyColumn, $contractIds);
 

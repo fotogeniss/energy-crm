@@ -128,6 +128,63 @@ final class CustomerRestAccessTest extends IntegrationTestCase
         self::assertCount(1, $data['contracts'] ?? []);
     }
 
+    /**
+     * 247, Στάδιο 2: ένας ξένος συνεργάτης δεν πρέπει να μπορεί να γράψει
+     * σημείωση σε πελάτη που δεν βλέπει καν -- ακόμα κι αν μαντέψει σωστά
+     * το id.
+     */
+    public function testAnotherPartnerCannotAddANoteToTheCustomer(): void
+    {
+        wp_set_current_user($this->bob);
+
+        $response = $this->send('POST', '/ecrm/v1/customers/' . $this->customerId . '/notes', [
+            'body' => 'Δοκιμή εισβολής.',
+        ]);
+
+        self::assertSame(404, $response->get_status());
+    }
+
+    /** Ο ιδιοκτήτης προσθέτει σημείωση και τη βλέπει αμέσως πίσω. */
+    public function testTheOwningPartnerCanAddANote(): void
+    {
+        wp_set_current_user($this->alice);
+
+        $response = $this->send('POST', '/ecrm/v1/customers/' . $this->customerId . '/notes', [
+            'body' => 'Καλεί μετά τις 17:00.',
+        ]);
+
+        self::assertSame(200, $response->get_status());
+        self::assertSame('Καλεί μετά τις 17:00.', $response->get_data()['notes'][0]['body'] ?? null);
+    }
+
+    /**
+     * 247, Στάδιο 2: ίδιος κίνδυνος με τη σημείωση -- ένας ξένος συνεργάτης
+     * δεν πρέπει να αλλάζει το τηλέφωνο επικοινωνίας πελάτη που δεν βλέπει.
+     */
+    public function testAnotherPartnerCannotChangeTheContactPhone(): void
+    {
+        wp_set_current_user($this->bob);
+
+        $response = $this->send('PATCH', '/ecrm/v1/customers/' . $this->customerId . '/contact-phone', [
+            'contact_phone' => '6944111222',
+        ]);
+
+        self::assertSame(404, $response->get_status());
+    }
+
+    /** Ο ιδιοκτήτης αλλάζει το τηλέφωνο επικοινωνίας και το βλέπει στην απάντηση. */
+    public function testTheOwningPartnerCanSetTheContactPhone(): void
+    {
+        wp_set_current_user($this->alice);
+
+        $response = $this->send('PATCH', '/ecrm/v1/customers/' . $this->customerId . '/contact-phone', [
+            'contact_phone' => '6944111222',
+        ]);
+
+        self::assertSame(200, $response->get_status());
+        self::assertSame('6944111222', $response->get_data()['contact_phone'] ?? null);
+    }
+
     /** The customer book is a list of one partner's rows, not the whole table. */
     public function testAnotherPartnersCustomerIsAbsentFromTheList(): void
     {
@@ -234,6 +291,20 @@ final class CustomerRestAccessTest extends IntegrationTestCase
         $request = new WP_REST_Request('GET', $path);
 
         foreach ($query as $key => $value) {
+            $request->set_param($key, $value);
+        }
+
+        return rest_do_request($request);
+    }
+
+    /**
+     * @param array<string, string> $params
+     */
+    private function send(string $method, string $path, array $params = []): WP_REST_Response
+    {
+        $request = new WP_REST_Request($method, $path);
+
+        foreach ($params as $key => $value) {
             $request->set_param($key, $value);
         }
 

@@ -110,6 +110,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/util',
 			'@energy-crm/format',
 			'@energy-crm/navigate',
+			'@energy-crm/dialog',
 		],
 		'@energy-crm/view-dashboard'   => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-import'      => [ '@energy-crm/util' ],

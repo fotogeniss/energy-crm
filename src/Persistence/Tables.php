@@ -20,6 +20,7 @@ final class Tables
     public const DELETION_LOG       = 'deletion_log';
     public const CONTRACTS          = 'contracts';
     public const CUSTOMERS          = 'customers';
+    public const CUSTOMER_NOTES     = 'customer_notes';
     public const EVENTS             = 'events';
     public const FILES              = 'files';
     public const GUARANTEE_RULES    = 'guarantee_rules';
@@ -56,6 +57,7 @@ final class Tables
             self::PROVIDERS,
             self::PROGRAMS,
             self::CUSTOMERS,
+            self::CUSTOMER_NOTES,
             self::CONTRACTS,
             self::FILES,
             self::EVENTS,

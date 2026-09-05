@@ -144,6 +144,7 @@ class ECRM_DB {
 			phone_hash    CHAR(64)     NULL,
 			mobile        VARCHAR(40)  NULL,
 			email         VARCHAR(160) NULL,
+			contact_phone VARCHAR(255) NULL,
 			created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
@@ -151,6 +152,21 @@ class ECRM_DB {
 			KEY afm_hash (afm_hash),
 			KEY phone_hash (phone_hash),
 			KEY last_name (last_name)
+		) {$charset};" );
+
+		// --- customer_notes (247, Στάδιο 2) ---------------------------------
+		// Ελεύθερο κείμενο ΓΙΑ έναν πελάτη, όχι πεδίο αίτησης -- δεν τυπώνεται
+		// πουθενά. customer_id, ΟΧΙ contract_id: μια σημείωση αφορά τον
+		// άνθρωπο, όχι μία συγκεκριμένη σύμβασή του (βλ. PersonalDataTables,
+		// HANDLED_INLINE -- ίδια ακμή-δύο με το tasks.customer_id, εδώ μόνη).
+		dbDelta( "CREATE TABLE {$p}customer_notes (
+			id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			customer_id     BIGINT UNSIGNED NOT NULL,
+			partner_user_id BIGINT UNSIGNED NULL,
+			body            TEXT NOT NULL,
+			created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY customer_id (customer_id)
 		) {$charset};" );
 
 		// --- contracts (applications) --------------------------------------
