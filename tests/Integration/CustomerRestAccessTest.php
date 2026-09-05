@@ -93,6 +93,41 @@ final class CustomerRestAccessTest extends IntegrationTestCase
         self::assertSame('123456789', $response->get_data()['customer']['afm'] ?? null);
     }
 
+    /**
+     * Καρτέλα πελάτη (247, Στάδιο 1) -- ξεχωριστό route από το show(), ίδιος
+     * κίνδυνος: επιστρέφει ΑΦΜ, διεύθυνση, τηλέφωνα. Ιδια πειθαρχία με το
+     * παραπάνω: 404, όχι 403, ώστε ένα ξένο ΑΦΜ να μη διαφέρει από ένα id που
+     * δεν υπάρχει καθόλου.
+     */
+    public function testAnotherPartnerCannotTellTheCustomerCardApartFromOneThatDoesNotExist(): void
+    {
+        wp_set_current_user($this->bob);
+
+        $somebodyElses = $this->get('/ecrm/v1/customers/' . $this->customerId . '/card');
+        $neverExisted  = $this->get('/ecrm/v1/customers/999999999/card');
+
+        self::assertSame(404, $somebodyElses->get_status());
+        self::assertSame($neverExisted->get_status(), $somebodyElses->get_status());
+        self::assertSame($neverExisted->get_data(), $somebodyElses->get_data());
+    }
+
+    /**
+     * Ο ιδιοκτήτης βλέπει την καρτέλα του, με τη σύμβαση που του φτιάξαμε
+     * στο setUp() να εμφανίζεται μέσα στο /card -- όχι μόνο τον πελάτη.
+     */
+    public function testTheOwningPartnerCanReadTheCustomerCard(): void
+    {
+        wp_set_current_user($this->alice);
+
+        $response = $this->get('/ecrm/v1/customers/' . $this->customerId . '/card');
+        $data     = $response->get_data();
+
+        self::assertSame(200, $response->get_status());
+        self::assertSame('123456789', $data['customer']['afm'] ?? null);
+        self::assertSame(1, $data['kpi']['contracts_count'] ?? null);
+        self::assertCount(1, $data['contracts'] ?? []);
+    }
+
     /** The customer book is a list of one partner's rows, not the whole table. */
     public function testAnotherPartnersCustomerIsAbsentFromTheList(): void
     {

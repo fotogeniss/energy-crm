@@ -293,6 +293,10 @@ class ECRM_App {
 
 					<!-- Customers -->
 					<section class="ecrm-view" data-view="customers"><div class="ecrm-loading">Φόρτωση…</div></section>
+					<?php // Καρτέλα ενός πελάτη (247). Οπως το partner/contract-detail,
+					// δεν είναι στοιχείο του μενού: ανοίγει από τη λίστα «Πελάτες»
+					// και γυρίζει πίσω σε αυτήν. ?>
+					<section class="ecrm-view" data-view="customer-detail"></section>
 
 					<!-- Λήξεις -->
 					<section class="ecrm-view" data-view="renewals"><div class="ecrm-loading">Φόρτωση…</div></section>

@@ -2,6 +2,7 @@
 
 import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, tint } from '@energy-crm/format';
+import { openCustomerCard } from '@energy-crm/navigate';
 
 var customersState = { q: '', scope: 'own' };
 export function loadCustomers() {
@@ -11,7 +12,7 @@ export function loadCustomers() {
 		.then(function (d) {
 			if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
 			var rows = (d.rows || []).map(function (c) {
-				return '<tr>' +
+				return '<tr class="ecrm-rowlink" data-open-customer="' + c.id + '">' +
 					'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(c.name) + '">' + esc(initials(c.name)) + '</span><span>' + esc(c.name) + '</span></span></td>' +
 					'<td class="ecrm-mono ecrm-col-sec">' + esc(c.afm || '—') + '</td>' +
 					'<td>' + esc(c.phone || '—') + '</td>' +
@@ -32,6 +33,9 @@ export function loadCustomers() {
 			var se = view.querySelector('[data-cusearch]');
 			if (se) { var t; se.addEventListener('input', function () { clearTimeout(t); var v = this.value; t = setTimeout(function () { customersState.q = v; loadCustomers(); }, 350); }); }
 			view.querySelectorAll('[data-cuscope]').forEach(function (b) { b.addEventListener('click', function () { customersState.scope = this.getAttribute('data-cuscope'); loadCustomers(); }); });
+			view.querySelectorAll('[data-open-customer]').forEach(function (row) {
+				row.addEventListener('click', function () { openCustomerCard(this.getAttribute('data-open-customer')); });
+			});
 		})
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
 }

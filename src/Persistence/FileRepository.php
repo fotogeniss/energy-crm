@@ -69,6 +69,46 @@ final class FileRepository
     }
 
     /**
+     * Ιδιο σχήμα με την forContract(), για πολλές συμβάσεις μαζί -- η
+     * καρτέλα πελάτη (247) θέλει "όλα τα έγγραφα του πελάτη", που είναι τα
+     * έγγραφα όλων των συμβάσεών του ενωμένα, με ένδειξη από ποια ήρθε το
+     * καθένα. contract_id μπαίνει στη SELECT εδώ (η forContract() δεν το
+     * χρειάζεται -- ήδη ξέρει τη σύμβαση) ακριβώς για αυτή την ένδειξη.
+     *
+     * @param list<int> $contractIds
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function forContracts(array $contractIds): array
+    {
+        global $wpdb;
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', $contractIds))));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT id, contract_id, doc_kind, kind_source, kind_before, filename, mime,
+                        attachment_id, path, protected, expires_at
+                 FROM {$this->table} WHERE contract_id IN ({$placeholders})
+                 ORDER BY contract_id, id",
+                $ids
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
      * Έγγραφα κρεμασμένα σε ένα lead — ό,τι έστειλε ο πελάτης από τον σύνδεσμο.
      *
      * Ίδιο σχήμα με την `forContract()`, άλλη στήλη. Χωριστή μέθοδος και όχι
