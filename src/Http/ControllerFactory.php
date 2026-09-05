@@ -107,6 +107,12 @@ final class ControllerFactory
                 Services::files(),
                 Services::documentKindReview()
             ),
+            new DocumentsOverviewController(
+                $scope,
+                Services::contractQueries(),
+                Services::files(),
+                Services::documentKindReview()
+            ),
             new DuplicateCheckController($scope, $queries),
             new RenewalsController($scope, Services::contracts(), $queries, Services::events()),
 

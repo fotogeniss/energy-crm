@@ -97,6 +97,7 @@ class ECRM_App {
 		];
 		$navMore = [
 			[ 'view' => 'pending', 'label' => 'Εκκρεμότητες', 'icon' => 'pending', 'badge' => $pending_ct ],
+			[ 'view' => 'documents', 'label' => 'Έγγραφα', 'icon' => 'documents' ],
 			[ 'view' => 'renewals',     'label' => 'Λήξεις',         'icon' => 'renew' ],
 			[ 'view' => 'network',      'label' => 'Το δίκτυό μου',  'icon' => 'network' ],
 			[ 'view' => 'team',         'label' => 'Η ομάδα μου',    'icon' => 'team' ],
@@ -284,6 +285,9 @@ class ECRM_App {
 					<!-- Εκκρεμότητες -->
 					<section class="ecrm-view" data-view="pending"><div class="ecrm-loading">Φόρτωση…</div></section>
 
+					<!-- Έγγραφα -->
+					<section class="ecrm-view" data-view="documents"><div class="ecrm-loading">Φόρτωση…</div></section>
+
 					<!-- Εργασίες -->
 					<section class="ecrm-view" data-view="tasks"><div class="ecrm-loading">Φόρτωση…</div></section>
 
@@ -378,6 +382,7 @@ class ECRM_App {
 			'dashboard' => '<path d="M3 13a9 9 0 0 1 18 0"/><path d="M12 13l4-3"/><circle cx="12" cy="13" r="1.4"/>',
 			'new'       => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v5"/><path d="M9.5 14.5h5"/>',
 			'contracts' => '<path d="M8 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="8" y="2.5" width="8" height="4" rx="1.2"/><path d="M8.5 11h7"/><path d="M8.5 15h5"/>',
+			'documents' => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
 			'network'   => '<circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.2 10.8 15.8 7.2"/><path d="M8.2 13.2 15.8 16.8"/>',
 			'pending'   => '<path d="M12 8v5"/><circle cx="12" cy="16.5" r=".4"/><path d="M10.3 3.8 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/>',
 			'renew'     => '<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>',

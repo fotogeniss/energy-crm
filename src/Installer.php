@@ -20,6 +20,7 @@ use ECRM_Notifications;
 use ECRM_Providers;
 use EnergyCRM\Domain\Contract\AutoProcess;
 use EnergyCRM\Infrastructure\DocumentProtection;
+use EnergyCRM\Infrastructure\DocumentsSweep;
 use EnergyCRM\Infrastructure\PiiBackfill;
 use EnergyCRM\Infrastructure\Retention;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
@@ -59,6 +60,7 @@ final class Installer
         ECRM_Notifications::unschedule();
         Retention::unschedule();
         DocumentProtection::unschedule();
+        DocumentsSweep::unschedule();
         PiiBackfill::unschedule();
         AutoProcess::unschedule();
         flush_rewrite_rules();

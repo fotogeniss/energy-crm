@@ -336,6 +336,99 @@ final class FileRepository
         return $before;
     }
 
+    /**
+     * Doc_kind/kind_source/mime για ΠΟΛΛΕΣ συμβάσεις μαζί -- ίδιο σχήμα batch
+     * με το signatureKindsFor(), για τον ίδιο λόγο: η οθόνη «Έγγραφα» (243)
+     * δείχνει τι έχει ανέβει σε ΟΛΗ τη λίστα μιας φοράς, όχι ένα forContract()
+     * ανά γραμμή.
+     *
+     * @param list<int> $contractIds
+     *
+     * @return array<int, list<array{doc_kind: string, kind_source: ?string, mime: string}>>
+     */
+    public function kindsForContracts(array $contractIds): array
+    {
+        global $wpdb;
+
+        $ids = array_values(array_unique(array_filter(
+            array_map(static fn ($id): int => (int) $id, $contractIds),
+            static fn (int $id): bool => $id > 0
+        )));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT contract_id, doc_kind, kind_source, mime
+                 FROM %i WHERE contract_id IN ({$placeholders})
+                 ORDER BY id",
+                [$this->table, ...$ids]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        $out = [];
+
+        foreach ($rows as $row) {
+            $out[(int) $row['contract_id']][] = [
+                'doc_kind'    => (string) $row['doc_kind'],
+                'kind_source' => $row['kind_source'] !== null ? (string) $row['kind_source'] : null,
+                'mime'        => (string) $row['mime'],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Συμβάσεις -- ΟΛΟΥ του συστήματος, όχι μιας εμβέλειας -- που έχουν
+     * τουλάχιστον ένα αρχείο που κανείς δεν έχει κρίνει ακόμα. Υπάρχει ΜΟΝΟ
+     * για το background sweep (`DocumentsSweep`, 243): οι παλιές αιτήσεις που
+     * κανείς δεν ξανανοίγει δεν θα περνούσαν ΠΟΤΕ από το pendingKindReview()
+     * -- εκείνο θέλει μια συγκεκριμένη σύμβαση, το sweep δεν ξέρει ποιες
+     * υπάρχουν παρά μόνο ρωτώντας τη βάση.
+     *
+     * Χωρίς εμβέλεια σκόπιμα, όπως το purgeOrphans(): το sweep δεν ανήκει σε
+     * κανέναν συνεργάτη, τρέχει για όλους.
+     *
+     * @param list<string> $mimes
+     *
+     * @return list<int>
+     */
+    public function contractsPendingKindReview(array $mimes, int $limit): array
+    {
+        global $wpdb;
+
+        if ($mimes === []) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($mimes), '%s'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<string> $ids */
+        $ids = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT DISTINCT contract_id FROM {$this->table}
+                 WHERE kind_source IS NULL AND mime IN ({$placeholders})
+                   AND path != '' AND contract_id IS NOT NULL
+                 ORDER BY contract_id ASC
+                 LIMIT " . max(1, $limit),
+                $mimes
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return array_map('intval', $ids);
+    }
+
     public function latestPathOfKind(int $contractId, string $kind): ?string
     {
         global $wpdb;

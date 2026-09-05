@@ -3,6 +3,7 @@ import { wire } from '@energy-crm/navigate';
 import { openDetail } from '@energy-crm/view-detail';
 import { loadContracts, setContractsFilter } from '@energy-crm/view-contracts';
 import { loadPending } from '@energy-crm/view-pending';
+import { loadDocuments } from '@energy-crm/view-documents';
 import { loadCommissions } from '@energy-crm/view-commissions';
 import { loadAnalytics } from '@energy-crm/view-analytics';
 import { loadLeads } from '@energy-crm/view-leads';
@@ -43,7 +44,7 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 
 	// ---- routing ----------------------------------------------------------
 	var loaded = {};
-	var VIEWS = ['dashboard','new-contract','leads','contracts','pending','tasks','customers','renewals','network','team','commissions','calc','kb','teamlive','escalations','analytics','import'];
+	var VIEWS = ['dashboard','new-contract','leads','contracts','pending','documents','tasks','customers','renewals','network','team','commissions','calc','kb','teamlive','escalations','analytics','import'];
 	var suppressHash = false;
 	function go(view) {
 		app.setAttribute('data-view', view);
@@ -69,6 +70,7 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		if (view === 'leads') loadLeads();
 		if (view === 'customers') loadCustomers();
 		if (view === 'pending') loadPending();
+		if (view === 'documents') loadDocuments();
 		if (view === 'tasks') loadTasks();
 		if (view === 'renewals') loadRenewals();
 		if (view === 'new-contract' && !loaded.form) {

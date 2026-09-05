@@ -1632,3 +1632,26 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	.ecrm-attn__s { flex: 0 0 auto; }
 	.ecrm-attn__a { margin-left: auto; }
 }
+
+/* Έγγραφα (243) — toolbar, φίλτρα-chips, ετικέτες εγγράφου ανά αίτηση. */
+.ecrm-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.ecrm-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.ecrm-filterchip { font: inherit; font-size: var(--fs-12-5); font-weight: 700; padding: 6px 13px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--navy-soft); cursor: pointer; }
+.ecrm-filterchip.is-on { background: var(--accent-wash); border-color: var(--accent-soft); color: var(--accent-ink); }
+.ecrm-filterchip__ct { opacity: .65; }
+
+.ecrm-docchips { display: flex; gap: 5px; flex-wrap: wrap; max-width: 280px; }
+.ecrm-dchip { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-11); font-weight: 700; padding: 3px 9px; border-radius: 8px; background: var(--n100); color: var(--navy-soft); }
+.ecrm-dchip.is-ai { background: var(--accent-wash); color: var(--accent-ink); }
+.ecrm-dchip.is-wait { background: var(--st-pending-bg); color: var(--st-pending); }
+.ecrm-dchip__dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+
+.ecrm-reqcell { font-size: var(--fs-12-5); }
+.ecrm-reqcell.is-ok { color: var(--st-active); font-weight: 700; }
+.ecrm-reqcell.is-missing { color: var(--st-cancel); font-weight: 700; }
+
+.ecrm-rowbtn { font-size: var(--fs-11); font-weight: 700; padding: 4px 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--navy-soft); white-space: nowrap; cursor: pointer; }
+.ecrm-rowbtn:hover { border-color: var(--amber); }
+
+.ecrm-spin { width: 11px; height: 11px; border: 2px solid var(--n200); border-top-color: var(--muted); border-radius: 50%; display: inline-block; animation: ecrm-spin-turn .8s linear infinite; vertical-align: -1px; }
+@keyframes ecrm-spin-turn { to { transform: rotate(360deg); } }
