@@ -109,6 +109,59 @@ final class ContractQueries
     }
 
     /**
+     * Οι συμβάσεις ενός συγκεκριμένου πελάτη, με τα ίδια joined ονόματα με
+     * το search() -- για την καρτέλα πελάτη (247). Ιδιο σχήμα γραμμής,
+     * ένα ακόμα WHERE: δεν είναι δεύτερος υπολογισμός του "πώς δείχνουμε
+     * μια σύμβαση", είναι το ίδιο ερώτημα φιλτραρισμένο σε έναν πελάτη.
+     *
+     * end_date/term_months μπαίνουν εδώ (το search() δεν τα έχει) γιατί η
+     * καρτέλα τα χρειάζεται και για τον πίνακα συμβάσεων και για το μπλοκ
+     * "Λήξεις" -- ένα ερώτημα, όχι δύο, ώστε να μη διαφωνήσουν ποτέ.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function forCustomer(UserScope $scope, int $customerId, int $limit = 100): array
+    {
+        global $wpdb;
+
+        if ($customerId <= 0) {
+            return [];
+        }
+
+        [$clause, $scopeParams] = ScopeClause::forScope($scope, 'c');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.id, c.code, c.status, c.energy_type, c.category, c.invoice_code,
+                        c.supply_number, c.end_date, c.term_months, c.created_at, c.updated_at,
+                        c.signed_at, c.partner_user_id,
+                        DATEDIFF(c.end_date, NOW()) AS days_left,
+                        p.name AS provider_name, p.slug AS provider_slug, p.logo_url AS provider_logo,
+                        g.name AS program_name
+                 FROM %i c
+                 LEFT JOIN %i p ON p.id = c.provider_id
+                 LEFT JOIN %i g ON g.id = c.program_id
+                 WHERE c.customer_id = %d{$clause}
+                 ORDER BY c.updated_at DESC
+                 LIMIT " . max(1, $limit),
+                [
+                    $this->table,
+                    Tables::name(Tables::PROVIDERS),
+                    Tables::name(Tables::PROGRAMS),
+                    $customerId,
+                    ...$scopeParams,
+                ]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
      * Συμβάσεις που έχουν τουλάχιστον ένα ανεβασμένο έγγραφο -- για την οθόνη
      * «Έγγραφα» (243), που δείχνει ΤΙ έχει ανέβει και τι έχει διαβαστεί, όχι
      * μόνο τι λείπει (αυτό το κάνει ήδη το ECRM_Notifications::missing_docs_for()).

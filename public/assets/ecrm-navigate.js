@@ -17,7 +17,7 @@
  */
 
 /**
- * @type {{ go?: Function, openDetail?: Function, openEdit?: Function, openPartner?: Function }}
+ * @type {{ go?: Function, openDetail?: Function, openEdit?: Function, openPartner?: Function, openCustomerCard?: Function }}
  */
 var handlers = {};
 
@@ -56,6 +56,18 @@ export function openDetail(contractId) {
 export function openPartner(memberId) {
 	if (typeof handlers.openPartner === 'function') {
 		handlers.openPartner(memberId);
+	}
+}
+
+/**
+ * Open one customer's card (247, Στάδιο 1).
+ *
+ * Ιδιος λόγος με το openPartner: η λίστα «Πελάτες» δεν εισάγει απευθείας
+ * την όψη της καρτέλας, περνά από εδώ, ώστε το import να μείνει μονόδρομο.
+ */
+export function openCustomerCard(customerId) {
+	if (typeof handlers.openCustomerCard === 'function') {
+		handlers.openCustomerCard(customerId);
 	}
 }
 

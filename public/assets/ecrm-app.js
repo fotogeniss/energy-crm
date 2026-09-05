@@ -18,6 +18,7 @@ import { loadTraining } from '@energy-crm/view-training';
 import { loadNetwork } from '@energy-crm/view-network';
 import { loadTeam } from '@energy-crm/view-team';
 import { openPartner } from '@energy-crm/view-partner';
+import { openCustomerCard } from '@energy-crm/view-customer-card';
 import { loadTeamLive } from '@energy-crm/view-team-live';
 import { loadEscalations } from '@energy-crm/view-escalations';
 
@@ -313,9 +314,13 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 	// direction of the dependency is decided — see ecrm-navigate.js.
 	wire({
 		go: go, openDetail: openDetail, openEdit: openEdit, openPartner: openPartner,
-		// Build queue 08, 25/08 — δες το docblock του openCustomerContracts()
-		// στο navigate.js: καμία ξεχωριστή οθόνη φακέλου πελάτη δεν υπάρχει,
-		// οπότε «άνοιξέ τον» σημαίνει η λίστα συμβάσεων φιλτραρισμένη στο ΑΦΜ.
+		openCustomerCard: openCustomerCard,
+		// Build queue 08, 25/08 — παραμένει για το "match card" της φόρμας
+		// (βλ. ContractSaveController): εκεί δεν υπάρχει customer id έτοιμο
+		// πριν την αποθήκευση, μόνο το ΑΦΜ, οπότε η φόρμα ανοίγει τη λίστα
+		// συμβάσεων φιλτραρισμένη σε αυτό. Build queue 09, 05/09 πρόσθεσε την
+		// ίδια την καρτέλα πελάτη (openCustomerCard) -- τη χρησιμοποιεί η
+		// λίστα «Πελάτες», που έχει customer id σε κάθε γραμμή.
 		openCustomerContracts: function (q) { setContractsFilter('', q); go('contracts'); },
 	});
 
