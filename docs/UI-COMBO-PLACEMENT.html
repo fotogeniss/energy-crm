@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Μακέτα: πού ανήκει η Συνδυαστική Προσφορά</title>
+<style>
+  :root{
+    --p500:#8a7bd8; --accent-ink:#5b4fc4; --accent-wash:#f1eefb; --accent-wash-2:#e4ddf6;
+    --ink:#1f2430; --muted:#6b7280; --line:#e2e5ea; --bg:#f7f8fa; --card:#ffffff;
+    --warn-bg:#fff8e6; --warn-line:#f0dca0; --warn-ink:#6b5510;
+    --ok-bg:#eefaf0; --ok-line:#a8ddb5; --ok-ink:#1d4d2b;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:32px;margin:0;line-height:1.5;}
+  h1{font-size:19px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 22px;max-width:900px;}
+  h2.sec{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+    margin:34px 0 14px;font-weight:700;border-top:1px solid var(--line);padding-top:18px;}
+
+  .note,.ask,.ok{border-radius:8px;padding:12px 14px;font-size:12.5px;margin-bottom:18px;max-width:940px;line-height:1.55;}
+  .note{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn-ink);}
+  .ask{background:#eef4ff;border:1px solid #b9cdf0;color:#20355c;}
+  .ok{background:var(--ok-bg);border:1px solid var(--ok-line);color:var(--ok-ink);}
+  .note strong,.ask strong,.ok strong{display:block;margin-bottom:4px;}
+
+  .cols{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;}
+  .col{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;width:262px;}
+  .col.pick{border-color:var(--p500);box-shadow:0 0 0 3px var(--accent-wash);}
+  .col h3{font-size:12px;text-transform:uppercase;letter-spacing:.03em;margin:0 0 3px;font-weight:700;}
+  .col .who{font-size:11.5px;color:var(--muted);margin:0 0 13px;min-height:32px;}
+  .tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:10px;
+    letter-spacing:0;text-transform:none;vertical-align:1px;}
+  .tag-now{background:#eef0f3;color:#5a6270;}
+  .tag-new{background:var(--accent-wash);color:var(--accent-ink);}
+
+  /* Η στοίβα των καρτών ενός βήματος */
+  .stack{display:flex;flex-direction:column;gap:5px;}
+  .row{display:flex;align-items:center;gap:7px;font-size:12px;border:1px solid var(--line);
+    border-radius:6px;padding:6px 8px;background:#fbfbfc;}
+  .row .n{background:#e7e9ee;color:#4a5160;border-radius:4px;padding:0 5px;font-size:10.5px;font-weight:700;min-width:18px;text-align:center;}
+  .row.combo{background:var(--accent-wash);border-color:var(--p500);font-weight:600;}
+  .row.combo .n{background:var(--p500);color:#fff;}
+  .row.cond{background:#fff;border-style:dashed;color:var(--muted);}
+  .row.cond .n{background:transparent;color:var(--muted);}
+  .steplabel{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+    font-weight:700;margin:11px 0 5px;}
+  .steplabel:first-child{margin-top:0;}
+  .scrollhint{font-size:10.5px;color:var(--muted);text-align:center;padding:3px 0;font-style:italic;}
+
+  .verdict{font-size:11.5px;line-height:1.5;margin-top:13px;padding-top:11px;border-top:1px solid var(--line);}
+  .verdict b{display:block;margin-bottom:3px;}
+  .plus{color:var(--ok-ink);}
+  .minus{color:#8a3b3b;}
+
+  /* Λεπτομέρεια κάρτας */
+  .demo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;width:360px;}
+  .card-head{font-size:12px;font-weight:700;background:#f3f4f7;border:1px solid var(--line);
+    border-radius:6px;padding:6px 10px;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+  .card-head .n{background:var(--p500);color:#fff;border-radius:5px;padding:1px 6px;font-size:11px;}
+  .ecrm-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .ecrm-field .lbl{font-size:12px;color:var(--muted);}
+  .ecrm-field input,.ecrm-field select{border:1px solid var(--line);border-radius:6px;padding:7px 9px;
+    font-size:13px;font-family:inherit;background:#fff;color:var(--ink);}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12px;background:#fff;color:var(--muted);}
+  .chip.on{border-color:var(--p500);background:var(--accent-wash);color:var(--accent-ink);font-weight:600;}
+  .caption{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.45;max-width:360px;}
+
+  table{border-collapse:collapse;font-size:12.5px;max-width:940px;background:#fff;margin-bottom:8px;}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top;}
+  th{background:#f3f4f7;font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:#4a5160;}
+  code{background:#eef0f3;padding:1px 5px;border-radius:4px;font-size:11.5px;}
+</style>
+</head>
+<body>
+
+<h1>Πού ανήκει η «Συνδυαστική Προσφορά»</h1>
+<p class="sub">Μακέτα προς συζήτηση — καμία απόφαση δεν έχει παρθεί. Τρεις εναλλακτικές δίπλα-δίπλα, με ό,τι κερδίζει και ό,τι χάνει η καθεμιά.</p>
+
+<div class="note">
+  <strong>Το πρόβλημα, μετρημένο</strong>
+  Η σημερινή σειρά μέσα στο Βήμα 3 βάζει τη Συνδυαστική Προσφορά ανάμεσα στα «Στοιχεία Μετρητή» και στα «Στοιχεία Κινητής», με ετικέτα <code>6γ</code>. Δύο συνέπειες: (α) η αρίθμηση τη δηλώνει υποσύνολο του «6 Στοιχεία Μετρητή», που δεν είναι — δεν έχει καμία σχέση με μετρητή· (β) ο συνεργάτης τη συναντά αφού έχει ήδη συμπληρώσει ταυτότητα, διεύθυνση και μετρητή, δηλαδή αφού η κουβέντα για προσφορά με τον πελάτη έχει τελειώσει.
+</div>
+
+<h2 class="sec">Οι τρεις εναλλακτικές, δίπλα-δίπλα</h2>
+
+<div class="cols">
+
+  <!-- ΣΗΜΕΡΑ -->
+  <div class="col">
+    <h3>Σήμερα <span class="tag tag-now">τώρα</span></h3>
+    <p class="who">Οπως είναι μετά το (244).</p>
+
+    <div class="steplabel">Βήμα 1-2</div>
+    <div class="stack">
+      <div class="row"><span class="n">1</span> Επιλογή Παρόχου</div>
+      <div class="row"><span class="n">2</span> Είδος &amp; κατηγορία</div>
+    </div>
+
+    <div class="steplabel">Βήμα 3</div>
+    <div class="stack">
+      <div class="row"><span class="n">3</span> Στοιχεία Πελάτη</div>
+      <div class="row cond"><span class="n">·</span> Απαιτούμενα παρόχου</div>
+      <div class="row cond"><span class="n">·</span> Πάνω στο έντυπο</div>
+      <div class="row"><span class="n">4</span> Νόμιμος Εκπρόσωπος</div>
+      <div class="row"><span class="n">5</span> Υπεύθ. Επικοινωνίας</div>
+      <div class="row"><span class="n">6</span> Στοιχεία Μετρητή</div>
+      <div class="scrollhint">↓ πολύ scroll ως εδώ ↓</div>
+      <div class="row combo"><span class="n">6γ</span> Συνδυαστική Προσφορά</div>
+      <div class="row cond"><span class="n">6β</span> Στοιχεία Κινητής</div>
+      <div class="row"><span class="n">7</span> Στοιχεία Τιμολόγησης</div>
+    </div>
+
+    <div class="verdict">
+      <b>Τι πάει στραβά</b>
+      <span class="minus">Η προσφορά εμφανίζεται αφού έχει τελειώσει η κουβέντα. Η ετικέτα «6γ» λέει ψέματα για το πού ανήκει.</span>
+    </div>
+  </div>
+
+  <!-- Α -->
+  <div class="col pick">
+    <h3>Α · Πάνω, με το προϊόν <span class="tag tag-new">πρόταση</span></h3>
+    <p class="who">Η προσφορά είναι απόφαση προϊόντος, όχι πεδίο στοιχείων.</p>
+
+    <div class="steplabel">Βήμα 1-2</div>
+    <div class="stack">
+      <div class="row"><span class="n">1</span> Επιλογή Παρόχου</div>
+      <div class="row"><span class="n">2</span> Είδος &amp; κατηγορία</div>
+      <div class="row combo"><span class="n">2β</span> Συνδυαστική Προσφορά</div>
+    </div>
+
+    <div class="steplabel">Βήμα 3</div>
+    <div class="stack">
+      <div class="row"><span class="n">3</span> Στοιχεία Πελάτη</div>
+      <div class="row cond"><span class="n">·</span> Απαιτούμενα παρόχου</div>
+      <div class="row cond"><span class="n">·</span> Πάνω στο έντυπο</div>
+      <div class="row"><span class="n">4</span> Νόμιμος Εκπρόσωπος</div>
+      <div class="row"><span class="n">5</span> Υπεύθ. Επικοινωνίας</div>
+      <div class="row"><span class="n">6</span> Στοιχεία Μετρητή</div>
+      <div class="row cond"><span class="n">6β</span> Στοιχεία Κινητής</div>
+      <div class="row"><span class="n">7</span> Στοιχεία Τιμολόγησης</div>
+    </div>
+
+    <div class="verdict">
+      <b>Τι κερδίζει</b>
+      <span class="plus">Ο συνεργάτης βλέπει την προσφορά ενώ ακόμη μιλάει για πάροχο και πρόγραμμα — τη στιγμή που μπορεί να την προτείνει.</span>
+      <b style="margin-top:6px;">Τι κοστίζει</b>
+      <span class="minus">Τα στοιχεία του δεύτερου προσώπου (όνομα, ΑΦΜ, ΑΔΤ) ζητούνται πριν καν από τα στοιχεία του πρώτου.</span>
+    </div>
+  </div>
+
+  <!-- Β -->
+  <div class="col">
+    <h3>Β · Δικό της βήμα <span class="tag tag-new">πρόταση</span></h3>
+    <p class="who">Μένει στη ροή, αλλά παύει να κρύβεται πίσω από το «6».</p>
+
+    <div class="steplabel">Βήμα 1-2</div>
+    <div class="stack">
+      <div class="row"><span class="n">1</span> Επιλογή Παρόχου</div>
+      <div class="row"><span class="n">2</span> Είδος &amp; κατηγορία</div>
+    </div>
+
+    <div class="steplabel">Βήμα 3</div>
+    <div class="stack">
+      <div class="row"><span class="n">3</span> Στοιχεία Πελάτη</div>
+      <div class="row cond"><span class="n">·</span> Απαιτούμενα παρόχου</div>
+      <div class="row cond"><span class="n">·</span> Πάνω στο έντυπο</div>
+      <div class="row"><span class="n">4</span> Νόμιμος Εκπρόσωπος</div>
+      <div class="row"><span class="n">5</span> Υπεύθ. Επικοινωνίας</div>
+      <div class="row"><span class="n">6</span> Στοιχεία Μετρητή</div>
+      <div class="row combo"><span class="n">7</span> Συνδυαστική Προσφορά</div>
+      <div class="row cond"><span class="n">8</span> Στοιχεία Κινητής</div>
+      <div class="row"><span class="n">9</span> Στοιχεία Τιμολόγησης</div>
+    </div>
+
+    <div class="verdict">
+      <b>Τι κερδίζει</b>
+      <span class="plus">Σταματά να διαβάζεται ως «κάτι του μετρητή». Ελάχιστο ρίσκο — καμία αλλαγή σε ροή ή δεδομένα.</span>
+      <b style="margin-top:6px;">Τι κοστίζει</b>
+      <span class="minus">Το πρόβλημα του χρόνου μένει: πάλι στο τέλος. Και ξαναριθμούνται όλες οι επόμενες κάρτες.</span>
+    </div>
+  </div>
+
+  <!-- Γ -->
+  <div class="col">
+    <h3>Γ · Μόνο οπτικά <span class="tag tag-new">πρόταση</span></h3>
+    <p class="who">Ιδια θέση, καθαρός διαχωρισμός «προσφορά» από «στοιχεία».</p>
+
+    <div class="steplabel">Βήμα 1-2</div>
+    <div class="stack">
+      <div class="row"><span class="n">1</span> Επιλογή Παρόχου</div>
+      <div class="row"><span class="n">2</span> Είδος &amp; κατηγορία</div>
+    </div>
+
+    <div class="steplabel">Βήμα 3</div>
+    <div class="stack">
+      <div class="row"><span class="n">3</span> Στοιχεία Πελάτη</div>
+      <div class="row cond"><span class="n">·</span> Απαιτούμενα παρόχου</div>
+      <div class="row cond"><span class="n">·</span> Πάνω στο έντυπο</div>
+      <div class="row"><span class="n">4</span> Νόμιμος Εκπρόσωπος</div>
+      <div class="row"><span class="n">5</span> Υπεύθ. Επικοινωνίας</div>
+      <div class="row"><span class="n">6</span> Στοιχεία Μετρητή</div>
+      <div class="row combo"><span class="n">★</span> ΠΡΟΣΦΟΡΑ · Volton + Orizon</div>
+      <div class="row cond"><span class="n">6β</span> Στοιχεία Κινητής</div>
+      <div class="row"><span class="n">7</span> Στοιχεία Τιμολόγησης</div>
+    </div>
+
+    <div class="verdict">
+      <b>Τι κερδίζει</b>
+      <span class="plus">Η μικρότερη δυνατή αλλαγή: μόνο τίτλος και χρώμα. Μηδέν ρίσκο.</span>
+      <b style="margin-top:6px;">Τι κοστίζει</b>
+      <span class="minus">Δεν λύνει τίποτα από τα δύο — ούτε τον χρόνο, ούτε το ότι θάβεται στο scroll.</span>
+    </div>
+  </div>
+
+</div>
+
+<h2 class="sec">Η πρόταση: Α, και γιατί</h2>
+
+<div class="ok">
+  <strong>Το επιχείρημα σε μία γραμμή</strong>
+  Η φόρμα ήδη χωρίζεται σε «τι πουλάμε» (Βήματα 1-2: πάροχος, πρόγραμμα, είδος, κατηγορία, χρώμα) και «σε ποιον» (Βήμα 3 και μετά). Η συνδυαστική προσφορά είναι ολοκάθαρα το πρώτο. Σήμερα κάθεται στο δεύτερο — γι' αυτό ενοχλεί, όχι επειδή είναι λίγο πιο κάτω απ' όσο θα θέλαμε.
+</div>
+
+<div class="ask">
+  <strong>Το τίμημα του Α, χωρίς ωραιοποίηση</strong>
+  Στην περίπτωση «άλλο πρόσωπο στις δύο συμβάσεις», το Α ζητά όνομα / ΑΦΜ / ΑΔΤ του δεύτερου προσώπου <em>πριν</em> από τα στοιχεία του κύριου πελάτη. Είναι πραγματικό, και δεν το κρύβω. Δύο τρόποι να μη μας πονέσει: είτε το «Ίδιο πρόσωπο» μένει τσεκαρισμένο και τα τέσσερα πεδία σπάνια ανοίγουν (έτσι είναι σήμερα), είτε στο Βήμα 2β μένει μόνο η <em>επιλογή</em> της προσφοράς και τα στοιχεία του δεύτερου προσώπου κατεβαίνουν στο Βήμα 3, δίπλα στα στοιχεία του πρώτου.
+</div>
+
+<p class="caption" style="max-width:940px;margin-bottom:20px;">Η δεύτερη παραλλαγή («Α χωρισμένο στα δύο») είναι σχεδιαστικά η πιο καθαρή, αλλά σπάει την κάρτα σε δύο σημεία της φόρμας — αξίζει μόνο αν το «άλλο πρόσωπο» συμβαίνει συχνά στην πράξη. Αυτό το ξέρεις εσύ, όχι εγώ.</p>
+
+<h2 class="sec">Πώς θα φαίνεται το Α στο Βήμα 2</h2>
+
+<div class="cols">
+  <div class="demo">
+    <div class="card-head"><span class="n">2</span> Είδος &amp; κατηγορία πελάτη</div>
+    <div class="ecrm-field">
+      <span class="lbl">ΕΙΔΟΣ</span>
+      <div class="chips"><span class="chip on">Ηλεκτρισμός</span><span class="chip">Φυσικό Αέριο</span><span class="chip">Κινητή</span></div>
+    </div>
+    <div class="ecrm-field">
+      <span class="lbl">ΚΑΤΗΓΟΡΙΑ</span>
+      <div class="chips"><span class="chip on">Οικιακό</span><span class="chip">Επαγγελματικό</span><span class="chip">Κοινόχρηστο</span></div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="card-head"><span class="n">2β</span> Συνδυαστική Προσφορά</div>
+    <div class="ecrm-field">
+      <span class="lbl">Συνδυαστική Εκπτωση</span>
+      <select><option>COMBO με κινητή Orizon</option></select>
+    </div>
+    <div class="ecrm-field">
+      <span class="lbl">Τι έχει ήδη ο πελάτης</span>
+      <select><option>Νέος και στα δύο — ταυτόχρονη σύναψη</option></select>
+    </div>
+    <div class="ecrm-field">
+      <span class="lbl">Αριθμός Κινητού Orizon</span>
+      <input value="69········">
+    </div>
+    <div class="ecrm-field">
+      <span class="lbl">Πρόγραμμα Orizon</span>
+      <select><option>orizon 40GB</option></select>
+    </div>
+    <p class="caption">Εμφανίζεται μόνο σε Volton + Ηλεκτρισμός, ακριβώς όπως σήμερα. Ιδια πεδία, ίδια ονόματα, ίδια εκτύπωση — αλλάζει μόνο <em>πότε</em> τα βλέπει ο συνεργάτης.</p>
+  </div>
+</div>
+
+<h2 class="sec">Και η άλλη πλευρά: η ίδια απόφαση, στην αίτηση Orizon</h2>
+
+<div class="note">
+  <strong>Η ασυνέπεια που γεννά το Α, αν σταματήσει στη μέση</strong>
+  Το COMBO ξεκινά από δύο μεριές. Αν η κάρτα της Volton ανέβει στο Βήμα 1-2 και της Orizon μείνει στο Βήμα 3, η ίδια ακριβώς απόφαση ζει σε δύο διαφορετικά σημεία της φόρμας ανάλογα με το πού ξεκίνησε η αίτηση. Αυτό δεν είναι καθρέφτης — είναι δύο διαφορετικά προϊόντα στα μάτια του συνεργάτη.
+</div>
+
+<div class="ok">
+  <strong>Γιατί στην Orizon το επιχείρημα είναι ακόμα ισχυρότερο</strong>
+  Στο Βήμα 1-2 της αίτησης Orizon υπάρχει ήδη το <b>ΠΡΟΓΡΑΜΜΑ</b> (<code>orizon 10GB + 5GB</code>). Η συνδυαστική έκπτωση δεν είναι τίποτε άλλο από τροποποιητή αυτού του προγράμματος και της τιμής του. Το να τη διαλέγει κανείς τρία βήματα μακριά από το πρόγραμμα που αφορά ήταν ήδη περίεργο — απλώς δεν φαινόταν όσο ήταν και τα δύο μισά κάτω.
+</div>
+
+<div class="cols">
+  <div class="col">
+    <h3>Orizon — σήμερα <span class="tag tag-now">τώρα</span></h3>
+    <p class="who">Ολα μαζί στην κάρτα «6β Στοιχεία Κινητής».</p>
+    <div class="steplabel">Βήμα 1-2</div>
+    <div class="stack">
+      <div class="row"><span class="n">1</span> Επιλογή Παρόχου</div>
+      <div class="row"><span class="n">2</span> Είδος, κατηγορία, <b>πρόγραμμα</b></div>
+    </div>
+    <div class="steplabel">Βήμα 3</div>
+    <div class="stack">
+      <div class="row"><span class="n">3</span> Στοιχεία Πελάτη</div>
+      <div class="row"><span class="n">…</span> Εκπρόσωπος, επικοινωνία, μετρητής</div>
+      <div class="scrollhint">↓ πολύ scroll ως εδώ ↓</div>
+      <div class="row combo"><span class="n">6β</span> Στοιχεία Κινητής</div>
+      <div class="row cond" style="margin-left:14px;"><span class="n">·</span> Επιλογή προσφοράς</div>
+      <div class="row cond" style="margin-left:14px;"><span class="n">·</span> Αριθμός, SIM, επιδότηση</div>
+      <div class="row cond" style="margin-left:14px;"><span class="n">·</span> Πεδία COMBO / Family</div>
+      <div class="row cond" style="margin-left:14px;"><span class="n">·</span> Τιμές (ανάγνωση)</div>
+      <div class="row"><span class="n">7</span> Στοιχεία Τιμολόγησης</div>
+    </div>
+    <div class="verdict">
+      <b>Το πρόβλημα</b>
+      <span class="minus">Τέσσερα διαφορετικά πράγματα σε μία κάρτα: μια απόφαση προϊόντος, στοιχεία γραμμής, εξαρτώμενα πεδία και τιμές.</span>
+    </div>
+  </div>
+
+  <div class="col pick">
+    <h3>Orizon — πλήρης καθρέφτης <span class="tag tag-new">πρόταση</span></h3>
+    <p class="who">Η κάρτα σπάει στα δύο κατά μήκος της φυσικής της ραφής.</p>
+    <div class="steplabel">Βήμα 1-2</div>
+    <div class="stack">
+      <div class="row"><span class="n">1</span> Επιλογή Παρόχου</div>
+      <div class="row"><span class="n">2</span> Είδος, κατηγορία, <b>πρόγραμμα</b></div>
+      <div class="row combo"><span class="n">2β</span> Συνδυαστική Προσφορά</div>
+      <div class="row cond" style="margin-left:14px;"><span class="n">·</span> Επιλογή προσφοράς</div>
+      <div class="row cond" style="margin-left:14px;"><span class="n">·</span> Πεδία COMBO / Family</div>
+    </div>
+    <div class="steplabel">Βήμα 3</div>
+    <div class="stack">
+      <div class="row"><span class="n">3</span> Στοιχεία Πελάτη</div>
+      <div class="row"><span class="n">…</span> Εκπρόσωπος, επικοινωνία, μετρητής</div>
+      <div class="row"><span class="n">6β</span> Στοιχεία Κινητής</div>
+      <div class="row cond" style="margin-left:14px;"><span class="n">·</span> Αριθμός, SIM, επιδότηση</div>
+      <div class="row cond" style="margin-left:14px;"><span class="n">·</span> Τιμές (ανάγνωση)</div>
+      <div class="row"><span class="n">7</span> Στοιχεία Τιμολόγησης</div>
+    </div>
+    <div class="verdict">
+      <b>Τι κερδίζει</b>
+      <span class="plus">Ιδια θέση για την ίδια απόφαση, όποια κι αν είναι η προέλευση. Και η προσφορά κάθεται δίπλα στο πρόγραμμα που τροποποιεί.</span>
+      <b style="margin-top:6px;">Τι κοστίζει</b>
+      <span class="minus">Ιδιο τίμημα με τη Volton: σε COMBO με άλλο πρόσωπο, τα στοιχεία του δεύτερου ζητούνται πριν από του κύριου πελάτη.</span>
+    </div>
+  </div>
+</div>
+
+<p class="caption" style="max-width:940px;margin-bottom:20px;">Η ραφή δεν είναι αυθαίρετη: <b>πάνω</b> ό,τι αφορά την <em>προσφορά</em> (ποια είναι, και τα πεδία που ενεργοποιεί), <b>κάτω</b> ό,τι αφορά τη <em>γραμμή</em> (αριθμός, SIM, επιδότηση) και τις τιμές της. Τα κουτιά τιμών μένουν κάτω επίτηδες: είναι μόνο για ανάγνωση και τα γεμίζει το πρόγραμμα, δεν τα πληκτρολογεί κανείς.</p>
+
+<h2 class="sec">Τι αλλάζει τεχνικά σε κάθε εναλλακτική</h2>
+
+<table>
+  <tr><th style="width:70px;">Επιλογή</th><th>Τι πειράζεται</th><th>Ρίσκο</th></tr>
+  <tr>
+    <td><b>Α</b></td>
+    <td>Η κάρτα μετακινείται μέσα στο <code>class-ecrm-shortcodes.php</code> από το <code>data-wstep=3</code> στο <code>data-wstep=1</code>. Καμία αλλαγή σε ονόματα πεδίων, σε <code>values()</code>, σε στήλες ή σε εκτύπωση.</td>
+    <td>Χαμηλό. Το <code>applyComboFromVolton()</code> δουλεύει ήδη ανεξάρτητα από βήμα· χρειάζεται έλεγχος ότι το wizard-smoke μετράει σωστά τις κάρτες ανά βήμα.</td>
+  </tr>
+  <tr>
+    <td><b>Β</b></td>
+    <td>Μόνο ετικέτες: <code>6γ</code>→<code>7</code> και μετονομασία των επόμενων.</td>
+    <td>Πολύ χαμηλό, αλλά αγγίζει κάρτες που δεν έχουν σχέση με το θέμα.</td>
+  </tr>
+  <tr>
+    <td><b>Γ</b></td>
+    <td>Τίτλος κάρτας και CSS.</td>
+    <td>Μηδενικό.</td>
+  </tr>
+</table>
+
+<p class="caption" style="max-width:940px;">Και στις τρεις: καμία αλλαγή σε βάση, σε <code>extra_json</code>, σε συντεταγμένες εντύπων ή σε ό,τι τυπώνεται. Η αίτηση που φεύγει στον πάροχο είναι byte-προς-byte η ίδια.</p>
+
+</body>
+</html>
