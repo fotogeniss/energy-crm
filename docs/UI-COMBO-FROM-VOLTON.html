@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>Μακέτα: COMBO και από αίτηση Volton (Στάδιο 4)</title>
+<style>
+  :root{
+    --p500:#8a7bd8; --accent-ink:#5b4fc4; --accent-wash:#f1eefb; --accent-wash-2:#e4ddf6;
+    --ink:#1f2430; --muted:#6b7280; --line:#e2e5ea; --bg:#f7f8fa; --card:#ffffff;
+  }
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:32px;}
+  h1{font-size:18px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 24px;}
+  .demo-row{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:32px;align-items:flex-start;}
+  .demo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;width:340px;}
+  .demo h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:0 0 14px;font-weight:700;}
+  .demo h2 .tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:10px;letter-spacing:0;}
+  .tag-now{background:#eef0f3;color:#5a6270;}
+  .tag-new{background:var(--accent-wash);color:var(--accent-ink);}
+
+  .card-head{font-size:12px;font-weight:700;color:var(--ink);background:#f3f4f7;border:1px solid var(--line);
+    border-radius:6px;padding:6px 10px;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+  .card-head .n{background:var(--p500);color:#fff;border-radius:5px;padding:1px 6px;font-size:11px;}
+
+  .ecrm-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+  .ecrm-field label,.ecrm-field .lbl{font-size:12px;color:var(--muted);}
+  .ecrm-field input,.ecrm-field select{border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);}
+  .ecrm-field input[readonly]{background:#f5f6f8;color:var(--muted);}
+
+  .subhead{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--accent-ink);font-weight:700;margin:16px 0 8px;padding-top:14px;border-top:1px solid var(--line);}
+  .toggle{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--ink);
+    background:var(--accent-wash);border:1px solid var(--p500);border-radius:8px;padding:10px 12px;margin-bottom:10px;}
+  .toggle input{margin-top:2px;}
+  .toggle span small{display:block;color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.45;}
+
+  .note{background:#fff8e6;border:1px solid #f0dca0;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#6b5510;margin-bottom:20px;max-width:900px;line-height:1.55;}
+  .ask{background:#eef4ff;border:1px solid #b9cdf0;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#20355c;margin-bottom:14px;max-width:900px;line-height:1.55;}
+  .ok{background:#eefaf0;border:1px solid #a8ddb5;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#1d4d2b;margin-bottom:14px;max-width:900px;line-height:1.55;}
+  .note strong,.ask strong,.ok strong{display:block;margin-bottom:4px;}
+  .caption{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.45;}
+  code{background:#eef0f3;padding:1px 5px;border-radius:4px;font-size:11.5px;}
+  .new-mark{box-shadow:0 0 0 2px var(--accent-wash-2);border-radius:8px;padding:8px;margin:-4px -8px 8px;}
+  .empty{color:var(--muted);font-size:12.5px;font-style:italic;padding:22px 0;text-align:center;border:1px dashed var(--line);border-radius:8px;}
+
+  table{border-collapse:collapse;font-size:12.5px;max-width:900px;margin-bottom:24px;background:#fff;}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;}
+  th{background:#f3f4f7;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);}
+  h3{font-size:14px;margin:28px 0 10px;}
+</style>
+</head>
+<body>
+
+<h1>Μακέτα — COMBO και από αίτηση Volton</h1>
+<p class="sub">Σταδιο 4 &middot; combo <strong>Volton ρεύμα + Orizon κινητή</strong> &middot; μία αίτηση (καθρέφτης), τυπώνει <code>volton_he</code> + <code>orizon_combo</code></p>
+
+<div class="note">
+  <strong>Το πρόβλημα που λύνει.</strong> Το COMBO ζει σήμερα αποκλειστικά μέσα στην κάρτα «6β Στοιχεία Κινητής», που φέρει <code>data-when-energy="mobile"</code> — δηλαδή εμφανίζεται μόνο σε αίτηση κινητής Orizon. Ο συνεργάτης που ξεκινά από την πλευρά του ρεύματος (ο πελάτης θέλει Volton και παίρνει και κινητή) δεν έχει πουθενά να το δηλώσει, και η αίτηση Volton τυπώνει ένα μόνο φύλλο χωρίς ποτέ να ρωτηθεί για προσφορά.
+</div>
+
+<div class="ask">
+  <strong>Η αντιστροφή που κάνει τη διαφορά.</strong> Σε αίτηση Orizon ο κύριος πελάτης είναι ο πελάτης κινητής και ο «άλλος» είναι ο πελάτης ενέργειας — γι' αυτό τα σημερινά πεδία λέγονται <code>combo_energy_*</code>. Σε αίτηση Volton ισχύει το ακριβώς ανάποδο: ο κύριος είναι ο πελάτης ενέργειας και ο «άλλος» ο πελάτης κινητής. Το έντυπο <code>orizon_combo</code> όμως έχει σταθερά και τα δύο μπλοκ, οπότε δεν αλλάζει το χαρτί — αλλάζει <em>ποιος πάει πού</em>. Νέα πεδία <code>combo_mobile_*</code> αντί για επαναχρησιμοποίηση των υπαρχόντων με δεύτερη σημασία: το ίδιο κλειδί με δύο νοήματα είναι ακριβώς το σχήμα που κόστισε στο (220).
+</div>
+
+<div class="demo-row">
+
+  <div class="demo">
+    <h2>Πριν — αίτηση Volton <span class="tag tag-now">σήμερα</span></h2>
+    <div class="card-head"><span class="n">6α</span> Στοιχεία Παροχής</div>
+    <div class="ecrm-field"><label>Αριθμός Παροχής / ΗΚΑΣΠ</label><input type="text" value="123456789-012"></div>
+    <div class="ecrm-field"><span class="lbl">Πρόγραμμα</span>
+      <select><option>—</option><option selected>Volton Blue Flat 18M</option></select>
+    </div>
+    <div class="ecrm-field"><label>Συμφωνημένη Ισχύς (kVA)</label><input type="text" value="8"></div>
+    <div class="empty">Καμία επιλογή COMBO πουθενά</div>
+    <p class="caption">Η κάρτα «Στοιχεία Κινητής» — και μαζί της όλο το COMBO — είναι κρυμμένη: <code>data-when-energy="mobile"</code>.</p>
+  </div>
+
+  <div class="demo">
+    <h2>Μετά — ίδιο πρόσωπο <span class="tag tag-new">νέο</span></h2>
+    <div class="card-head"><span class="n">6α</span> Στοιχεία Παροχής</div>
+    <div class="ecrm-field"><label>Αριθμός Παροχής / ΗΚΑΣΠ</label><input type="text" value="123456789-012"></div>
+    <div class="ecrm-field"><span class="lbl">Πρόγραμμα</span>
+      <select><option>—</option><option selected>Volton Blue Flat 18M</option></select>
+    </div>
+    <div class="new-mark">
+      <div class="card-head" style="margin-top:12px;"><span class="n">6γ</span> Συνδυαστική Προσφορά</div>
+      <div class="ecrm-field"><span class="lbl">Συνδυαστική Έκπτωση</span>
+        <select><option>Καμία</option><option selected>COMBO με κινητή Orizon</option></select>
+      </div>
+      <div class="ecrm-field"><span class="lbl">Τι έχει ήδη ο πελάτης</span>
+        <select><option>—</option><option>Έχει ήδη ρεύμα Volton — νέα κινητή Orizon</option>
+          <option>Έχει ήδη κινητή Orizon — νέο ρεύμα Volton</option>
+          <option selected>Νέος και στα δύο — ταυτόχρονη σύναψη</option></select>
+      </div>
+      <div class="ecrm-field"><label>Αριθμός Κινητού Orizon</label><input type="text" value="69XXXXXXXX"></div>
+      <div class="ecrm-field"><span class="lbl">Πρόγραμμα Orizon</span>
+        <select><option>—</option><option>5GB</option><option selected>10GB + 5GB</option><option>40GB</option><option>Unlimited</option></select>
+      </div>
+      <div class="ecrm-field"><span class="lbl">Χρήστης Γραμμής</span>
+        <select><option>—</option><option selected>Κύριος Χρήστης</option><option>Δευτερεύων Χρήστης</option></select>
+      </div>
+      <label class="toggle"><input type="checkbox" checked>
+        <span>Ίδιο πρόσωπο με τον πελάτη ενέργειας
+          <small>Τσεκαρισμένο εξαρχής. Η συνηθισμένη περίπτωση δεν πληρώνει τίποτα.</small></span>
+      </label>
+    </div>
+    <p class="caption">Πέντε πεδία και ένα κουτάκι. Ό,τι χρειάζεται η σελ.1 του εντύπου, τίποτα παραπάνω.</p>
+  </div>
+
+  <div class="demo">
+    <h2>Μετά — δύο πρόσωπα <span class="tag tag-new">νέο</span></h2>
+    <div class="card-head"><span class="n">6γ</span> Συνδυαστική Προσφορά</div>
+    <div class="ecrm-field"><span class="lbl">Συνδυαστική Έκπτωση</span>
+      <select><option>Καμία</option><option selected>COMBO με κινητή Orizon</option></select>
+    </div>
+    <div class="ecrm-field"><label>Αριθμός Κινητού Orizon</label><input type="text" value="69XXXXXXXX"></div>
+    <div class="ecrm-field"><span class="lbl">Πρόγραμμα Orizon</span>
+      <select><option selected>10GB + 5GB</option></select>
+    </div>
+    <label class="toggle"><input type="checkbox">
+      <span>Ίδιο πρόσωπο με τον πελάτη ενέργειας
+        <small>Ξετσεκαρισμένο: η γραμμή κινητής είναι σε άλλο όνομα.</small></span>
+    </label>
+    <div class="new-mark">
+      <div class="subhead" style="border-top:none;padding-top:0;margin-top:6px;">ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ ΚΙΝΗΤΗΣ</div>
+      <div class="ecrm-field"><label>Ονοματεπώνυμο</label><input type="text" value="ΜΑΡΙΑ ΠΑΠΑΔΟΠΟΥΛΟΥ"></div>
+      <div class="ecrm-field"><label>Α.Φ.Μ.</label><input type="text" value="123456789"></div>
+      <div class="ecrm-field"><label>Αριθμός Εγγράφου Ταυτοπροσωπίας</label><input type="text" value="ΑΒ123456"></div>
+      <div class="ecrm-field"><label>Δ.Ο.Υ.</label><input type="text" value="Α ΑΘΗΝΩΝ"></div>
+      <div class="ecrm-field"><label>Κινητό</label><input type="text" value="69XXXXXXXX"></div>
+      <div class="ecrm-field"><label>Email</label><input type="text" value="maria@example.gr"></div>
+    </div>
+    <p class="caption">Κινητό/Email είναι για τον <strong>δεύτερο σύνδεσμο υπογραφής</strong> — δεν τυπώνονται πουθενά. Ίδιο μοτίβο με τα <code>combo_energy_mobile/email</code> του (224).</p>
+  </div>
+
+</div>
+
+<div class="ok">
+  <strong>Τι δουλεύει ήδη και δεν αγγίζεται.</strong> Το <code>SignatureState::requiredFrom()</code> διαβάζει μόνο <code>mobile_offer</code> και το «ίδιο πρόσωπο» από το <code>extra_json</code> — ποτέ <code>energy_type</code> ή πάροχο. Οι δύο υπογραφές, ο δεύτερος σύνδεσμος και η οθόνη «ποιος υπέγραψε» των (225)-(231) δουλεύουν αυτούσιες σε αίτηση Volton, χωρίς μία γραμμή αλλαγής.
+</div>
+
+<h3>Πού πάει το κάθε πεδίο πάνω στο χαρτί</h3>
+
+<table>
+  <tr><th>Μπλοκ εντύπου</th><th>Αίτηση Orizon (σήμερα)</th><th>Αίτηση Volton (νέο)</th></tr>
+  <tr><td>Σελ.1 — ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ ΚΙΝΗΤΗΣ<br><code>onomateponymo/afm/adt/doy_pelati</code></td>
+      <td>Ο κύριος πελάτης της αίτησης</td>
+      <td><strong>Ο «άλλος»</strong> — <code>combo_mobile_*</code>, ή ο κύριος αν είναι ίδιο πρόσωπο</td></tr>
+  <tr><td>Σελ.1 — <code>arithmos_kinitou</code></td>
+      <td><code>mobile_msisdn</code></td>
+      <td><strong>Νέο</strong> <code>combo_mobile_msisdn</code></td></tr>
+  <tr><td>Σελ.1 — τα 4 checkbox προγράμματος<br><code>programma_5gb / 10gb_5gb / 40gb / unlimited</code></td>
+      <td><code>MobilePlans::fillValues(program_code)</code> — το πρόγραμμα της σύμβασης</td>
+      <td><strong>Νέο</strong> <code>combo_mobile_plan</code>. Το <code>program_code</code> εδώ είναι Volton, όχι Orizon — χωρίς νέο πεδίο η σελ.1 βγαίνει κενή</td></tr>
+  <tr><td>Σελ.3 — ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ ΕΝΕΡΓΕΙΑΣ<br><code>onomateponymo/afm/adt/doy_energeias</code></td>
+      <td>Ο «άλλος» — <code>combo_energy_*</code></td>
+      <td><strong>Ο κύριος πελάτης</strong> της αίτησης</td></tr>
+  <tr><td>Σελ.3 — <code>combo_arithmos_paroxis</code></td>
+      <td><code>combo_supply_number</code> (πληκτρολογείται)</td>
+      <td>Το υπάρχον <code>supply_number</code> της αίτησης — κανείς δεν το ξαναγράφει</td></tr>
+  <tr><td>Σελ.3 — <code>combo_onoma_programmatos</code></td>
+      <td><code>combo_energy_program</code> (λίστα Volton)</td>
+      <td>Το υπάρχον πρόγραμμα της αίτησης</td></tr>
+  <tr><td>Σελ.1/3 — <code>xristis_kyrios[_energeias]</code></td>
+      <td colspan="2">Ίδιο πεδίο ρόλου, ίδια αντιστροφή — <code>MobilePaperwork::energyUserTicks()</code>, χωρίς αλλαγή</td></tr>
+</table>
+
+<div class="ask">
+  <strong>Δύο πράγματα που η μακέτα δεν αποφασίζει μόνη της.</strong>
+  Πρώτο: η κάρτα «6γ» εμφανίζεται μόνο για <em>πάροχο Volton</em> και ρεύμα — το combo είναι Volton+Orizon και τίποτα άλλο, οπότε σε αίτηση Protergia ή NRG δεν έχει θέση. Δεύτερο: η αίτηση Volton με COMBO τυπώνει <code>volton_he</code> + <code>orizon_combo</code>· η σύμβαση κινητής Orizon ανοίγει ως ξεχωριστή αίτηση, όπως το επέλεξες.
+</div>
+
+</body>
+</html>

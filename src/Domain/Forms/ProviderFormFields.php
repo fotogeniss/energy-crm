@@ -70,6 +70,20 @@ final class ProviderFormFields
         // τα συλλέγει ήδη στην κάρτα Στοιχεία Κινητής.
         'onomateponymo_energeias', 'adt_energeias', 'afm_energeias', 'doy_energeias',
         'xristis_kyrios_energeias', 'xristis_defterevon_energeias',
+
+        // Το ΑΝΤΙΣΤΡΟΦΟ μπλοκ, Σταδιο 4 (05/09/2026): «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ
+        // ΚΙΝΗΤΗΣ» της σελ.1 του orizon_combo, οταν το COMBO ξεκινα απο
+        // αιτηση Volton και ο πελατης κινητης ειναι «ο αλλος». Ιδιο νοημα
+        // εδω μεσα: η καρτα «6γ» τα συλλεγει ηδη, να μη ζητηθουν ξανα στο
+        // «Πανω στο εντυπο».
+        //
+        // Ξεχωριστα κλειδια απο τα `*_pelati` της ιδιας σελιδας -- ητανε
+        // `onomateponymo_pelati` κ.λπ. και μετονομαστηκαν: η values() ειναι
+        // ΚΑΘΑΡΗ συναρτηση της γραμμης, υπολογιζεται μια φορα και την
+        // καταναλωνουν ΟΛΑ τα προτυπα μαζι, οποτε οταν το volton_he και το
+        // orizon_combo τυπωνονται στην ιδια αιτηση, κοινο ονομα με αλλο
+        // νοημα θα τυπωνε σιωπηλα λαθος προσωπο.
+        'onomateponymo_kinitou', 'adt_kinitou', 'afm_kinitou', 'doy_kinitou',
     ];
 
     /**
@@ -273,6 +287,15 @@ final class ProviderFormFields
         // Ανεστραμμένα από το ένα πεδίο ρόλου -- βλ. MobilePaperwork::energyUserTicks().
         'xristis_kyrios_energeias'       => [],
         'xristis_defterevon_energeias'   => [],
+
+        // Στάδιο 4 (05/09/2026) -- COMBO από αίτηση Volton. Σελ.1 του
+        // orizon_combo.json με ΔΙΚΑ ΤΗΣ κλειδιά (όχι onomateponymo_pelati
+        // κ.λπ., που τα θέλει το volton_he.json για τον ΚΥΡΙΟ πελάτη -- δύο
+        // πρότυπα, ίδια κλήση values(), βλ. class-ecrm-formfill.php).
+        'onomateponymo_kinitou'          => ['combo_mobile_name'],
+        'afm_kinitou'                    => ['combo_mobile_afm'],
+        'adt_kinitou'                    => ['combo_mobile_adt'],
+        'doy_kinitou'                    => ['combo_mobile_doy'],
     ];
 
     /**
@@ -370,6 +393,12 @@ final class ProviderFormFields
         // αληθής και το COMBO δύο προσώπων ζητούσε σιωπηλά ΜΙΑ υπογραφή. Δες
         // CHANGELOG (226).
         'combo_energy_same',
+        // Στάδιο 4 (05/09/2026) -- ίδιο μοτίβο ανεστραμμένο: το COMBO από
+        // αίτηση Volton έχει δικό του checkbox `combo_mobile_same` (κάρτα
+        // 6γ, ποτέ ταυτόχρονα ορατή με την 6β) και δική του επιλογή
+        // προγράμματος `combo_mobile_plan` -- προϊοντική επιλογή, όχι
+        // προσωπικό δεδομένο, ίδιος λόγος με το `mobile_offer`.
+        'combo_mobile_same', 'combo_mobile_plan', 'combo_mobile_offer',
     ];
 
     /**

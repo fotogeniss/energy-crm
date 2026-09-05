@@ -7,6 +7,154 @@
 
 ---
 
+### (244) COMBO και από αίτηση Volton -- το ίδιο προϊόν, από την άλλη πλευρά
+
+**Το αίτημα.** Ως τώρα η συνδυαστική προσφορά (Volton ρεύμα + Orizon κινητή)
+γεννιόταν ΜΟΝΟ από αίτηση Orizon: ο συνεργάτης άνοιγε αίτηση κινητής και
+δήλωνε «και ρεύμα». Στην πράξη οι μισές πωλήσεις ξεκινούν ανάποδα -- ο
+πελάτης ρωτάει πρώτα για ρεύμα. Ο ιδιοκτήτης ζήτησε ρητά (04/09/2026) να
+μπορεί να διαλεχθεί και να τυπωθεί το COMBO ξεκινώντας από αίτηση Volton.
+
+**Τι ΔΕΝ κάνει, ρητή απόφαση.** Δεν ανοίγει σύμβαση κινητής. Η αίτηση Volton
+τυπώνει `volton_he` + `orizon_combo` -- το συμβόλαιο ρεύματος και το
+συνοδευτικό φύλλο της προσφοράς -- και τίποτα άλλο. Η πραγματική σύμβαση της
+γραμμής Orizon παραμένει ξεχωριστή, μεταγενέστερη αίτηση με προέλευση Orizon
+(επιλογή του ιδιοκτήτη, 05/09/2026). Γι' αυτό δεν επαναχρησιμοποιείται η
+`MobilePaperwork::forApplication()`, που περιλαμβάνει ΠΑΝΤΑ τη σύμβαση
+κινητής: νέα `comboAttachmentFor()`, που δίνει μόνο το συνοδευτικό.
+
+**Μία αίτηση, καθρέφτης -- όχι δύο συνδεδεμένες.** Επιλογή του ιδιοκτήτη
+ανάμεσα σε τρεις που του τέθηκαν. Η αίτηση Volton κρατά τα δικά της πεδία
+και «καθρεφτίζει» τα στοιχεία της κινητής, όπως ακριβώς η αίτηση Orizon
+καθρεφτίζει σήμερα τα στοιχεία του ρεύματος.
+
+**Η αντιστροφή που έκρυβε το σφάλμα.** Στην Orizon-origin κατεύθυνση ο
+ΚΥΡΙΟΣ πελάτης της σύμβασης είναι ο πελάτης κινητής και «ο άλλος» -- αν
+υπάρχει -- ο πελάτης ενέργειας. Από αίτηση Volton ισχύει το ανάποδο. Ο
+`SignLinkController` και ο `ContractsReadController` είχαν την παλιά
+ταύτιση ΚΑΡΦΩΜΕΝΗ (`$role === ENERGY` σήμαινε «ο άλλος»), σωστή μόνο επειδή
+η αίτηση ξεκινούσε πάντα από Orizon. Χωρίς αυτή τη διόρθωση ο σύνδεσμος
+υπογραφής θα έφευγε στο ΛΑΘΟΣ ΠΡΟΣΩΠΟ. Νέα
+`SignatureRoles::primaryRoleFor()`, ένα σημείο απόφασης, και οι δύο
+controllers ρωτούν αυτήν.
+
+**Ο κανόνας δεν είναι «το energy_type αποφασίζει».** Πρώτη γραφή της
+`primaryRoleFor()` κοίταζε μόνο το `energy_type` -- και έσπαγε την πιο κοινή
+περίπτωση του προϊόντος: μια ΑΠΛΗ αίτηση Volton έχει έναν υπογράφοντα, με
+ρόλο `mobile` (το `doc_kind` 'signature' είναι η γενική θέση υπογραφής κάθε
+εντύπου, όχι «του πελάτη κινητής», και δεν μετονομάζεται γιατί θα έκανε
+αόρατα όλα τα ήδη υπογεγραμμένα αρχεία). Με μόνο το `energy_type`, αυτός ο
+μοναδικός υπογράφων θα θεωρούνταν «δευτερεύων»: το SMS θα απορριπτόταν και
+το email θα ζητούνταν από κενή στήλη COMBO. Ο κανόνας που πράγματι ισχύει:
+με ΜΙΑ απαιτούμενη υπογραφή, ο μοναδικός ρόλος ΕΙΝΑΙ ο κύριος πελάτης -- εξ
+ορισμού· η προέλευση κρίνει μόνο όταν οι υπογράφοντες είναι δύο. Το πιάνει
+πλέον `SignatureRolesTest::testTheOnlyRequiredSignerIsAlwaysThePrimaryOne()`.
+
+**Δύο ζεύγη στηλών, όχι ένα γενικό «ο άλλος».** Νέες
+`contracts.combo_mobile_mobile` / `combo_mobile_email` (μετάπτωση
+`0032`), καθρέφτης των `combo_energy_*` του (0030). Στήλες και όχι
+`extra_json` για τον ίδιο λόγο με το (0030): τις διαβάζει ο σύνδεσμος
+υπογραφής, business-rule σημασία από την πρώτη μέρα (§1.17).
+
+**Ξεχωριστά ονόματα πεδίων, γιατί οι δύο κάρτες ζουν ΤΑΥΤΟΧΡΟΝΑ στο DOM.**
+Η νέα κάρτα «6γ» δεν αντικαθιστά την «6β» -- η μία είναι απλώς κρυμμένη.
+Κοινό `name` θα σήμαινε δύο input με το ίδιο όνομα, και το `setField()` της
+επεξεργασίας γράφει πάντα στο ΠΡΩΤΟ κατά σειρά DOM: άνοιγμα αποθηκευμένης
+αίτησης Orizon με Family/COMBO θα έγραφε την προσφορά στην κρυφή κάρτα
+Volton και θα την ΕΧΑΝΕ. Γι' αυτό η «6γ» έχει δικά της
+`combo_mobile_offer` / `combo_mobile_same` / `combo_mobile_relation` /
+`combo_mobile_user_role`, και δικό της attribute ορατότητας
+(`data-when-combo-offer`, `applyComboMobileOffer()`). Το ίδιο σκεπτικό
+έκρινε και το `data-when-combo-volton`: η κάρτα χρειάζεται ΔΥΟ συνθήκες
+μαζί (ρεύμα ΚΑΙ πάροχος Volton) και δύο ανεξάρτητα `data-when-*` πάνω στο
+ίδιο στοιχείο θα συγκρούονταν -- όποιο έτρεχε τελευταίο θα κέρδιζε.
+
+**Ποια κλειδιά ισχύουν το κρίνει η ΠΡΟΕΛΕΥΣΗ, όχι η τιμή.** Το
+`SignatureState` διαβάζει `mobile_offer`/`combo_energy_same` για αίτηση
+`energy_type = 'mobile'` και `combo_mobile_offer`/`combo_mobile_same`
+αλλιώς. Ετσι ένα ξεχασμένο `mobile_offer` σε αίτηση που έγινε ρεύματος δεν
+ζητά δεύτερη υπογραφή από πρόσωπο που δεν υπάρχει (δοκιμή
+`testALeftoverMobileOfferDoesNotMakeAnEnergyApplicationCombo`). Η σύμβαση
+της μεθόδου άλλαξε: η γραμμή πρέπει πλέον να φέρνει ΚΑΙ `energy_type` --
+ελέγχθηκε ότι και οι τέσσερις πραγματικές διαδρομές το φέρνουν.
+
+**Μετονομασίες κλειδιών στο `orizon_combo.json`.** Η `values()` είναι ΚΑΘΑΡΗ
+συνάρτηση της γραμμής: υπολογίζεται ΜΙΑ φορά και την καταναλώνει κάθε
+πρότυπο. Οταν το `volton_he` και το `orizon_combo` τυπώνονται ΜΑΖΙ, ένα
+κοινό όνομα κλειδιού με διαφορετικό νόημα θα τύπωνε σιωπηλά λάθος πρόσωπο.
+Τέσσερα πεδία της σελίδας 1 μετονομάστηκαν σε `onomateponymo_kinitou` /
+`afm_kinitou` / `adt_kinitou` / `doy_kinitou`. Το `onoma_programmatos` και
+οι τιμές ΔΕΝ υπάρχουν καν στο πεδιολόγιο του `orizon_combo` (μετρήθηκε) --
+τυπώνει μόνο κουτάκια, εξ ου και η νέα `MobilePlans::tickField()`.
+
+**Γνωστή παρενέργεια.** Το `orizon_combo.json` ξαναγράφτηκε προγραμματικά
+για τη μετονομασία, οπότε άλλαξε η στοίχισή του και το diff δείχνει ΟΛΟ το
+αρχείο. Το περιεχόμενο ελέγχθηκε: 24 πεδία, `sigs` και `source_is_filled`
+ακέραια.
+
+**Τι ΔΕΝ αλλάζει.** Οι δύο θέσεις υπογραφής στο χαρτί, τα `doc_kind`, οι
+ετικέτες ρόλων στην καρτέλα («Πελάτης κινητής»/«Πελάτης ενέργειας» --
+ονομάζουν τον ρόλο, όχι τη σειρά, άρα μένουν σωστές και στις δύο
+κατευθύνσεις), και ολόκληρη η Orizon-origin ροή.
+
+**Αρχεία:** `src/Persistence/Schema/Migrations/AddComboMobileContactColumns
+.php` (νέο), `src/Persistence/Schema/MigrationList.php`,
+`src/Persistence/WritableColumns.php`, `src/Http/ContractSaveMapping.php`,
+`src/Http/SignLinkController.php`, `src/Http/ContractsReadController.php`
+(`commsForEnergy()` -> `commsForSecondary()`),
+`src/Domain/Contract/SignatureRoles.php` (`primaryRoleFor()`),
+`src/Domain/Forms/MobilePaperwork.php` (`comboAttachmentFor()`),
+`src/Domain/Forms/MobilePlans.php` (`tickField()`),
+`src/Domain/Forms/ProviderFormFields.php`,
+`src/Infrastructure/SignatureState.php`, `includes/class-ecrm-formfill.php`,
+`assets/forms/orizon_combo.json`, `public/class-ecrm-shortcodes.php` (κάρτα
+«6γ»), `public/assets/ecrm-form.js`,
+`tests/Unit/Domain/Contract/SignatureRolesTest.php`,
+`tests/Unit/Domain/Forms/MobilePaperworkTest.php`,
+`tests/Unit/Domain/Forms/ProviderFormFieldsTest.php`,
+`tests/Integration/ComboSignatureRolesTest.php`.
+
+**Μακέτα.** `docs/UI-COMBO-FROM-VOLTON.html`, εγκεκριμένη (§1.8).
+
+**Πρόβλεψη πλήθους.** Ενα νέο αρχείο `src`
+(`Persistence/Schema/Migrations/AddComboMobileContactColumns`), καμία νέα
+κλάση `Domain` -- οι τρεις νέες μέθοδοι μπήκαν σε υπάρχουσες κλάσεις. phpcs
++1. phpstan +1. unit +10: +3 από τους τρεις αφιλτράριστους φύλακες
+(`VisibilityPolicyIsDecidedOnce`, `ClientAddressIsResolvedOnce`,
+`NoRemoteFonts`) επί το ένα νέο αρχείο `src`, +2 στον `SignatureRolesTest`,
++2 στον `MobilePaperworkTest`, +3 από τις νέες γραμμές του
+`impersonalInputs()` του `ProviderFormFieldsTest`. Ο
+`BytesOutliveAFailedDelete` ΔΕΝ επηρεάζεται (σαρώνει `src/Http`, το νέο
+αρχείο είναι σε `src/Persistence`). integration +3, όλες στον
+`ComboSignatureRolesTest`. Επειδή το `public/assets/ecrm-form.js` άλλαξε,
+θέλει και `cd tools\wizard-smoke && npm test`.
+
+**Τι έδειξε η μέτρηση.** phpcs 380 -> 381, phpstan 197 -> 198, unit 1194 ->
+1204: και τα τρία ακριβώς όπως προβλέφθηκαν. Integration 598 -> 602, ένα
+πάνω από την πρόβλεψη: προστέθηκε τέταρτη δοκιμή μετά το πρώτο τρέξιμο (βλ.
+αμέσως πιο κάτω). wizard-smoke 31/31.
+
+Δύο αστοχίες της πρόβλεψης, και οι δύο χρήσιμες:
+
+- Ο `ProviderFormFieldsColumnsTest` ελέγχει τις δύο λίστες ΚΑΙ ΠΡΟΣ ΤΙΣ ΔΥΟ
+  κατευθύνσεις -- τα τέσσερα νέα κλειδιά είχαν μπει μόνο στο `COLUMN_INPUTS`.
+  Η διόρθωση είναι και σημασιολογικά σωστή: η κάρτα «6γ» τα συλλέγει ήδη,
+  άρα ανήκουν στο `FROM_COLUMNS` («μη ζητηθούν ξανά στο Πάνω στο έντυπο»).
+- Ο `testTheDecryptedAndRawPathsAgree` έσπασε επειδή η μία από τις δύο
+  διαδρομές του έδινε γραμμή ΧΩΡΙΣ `energy_type` -- δηλαδή, μετά την αλλαγή,
+  άλλη ερώτηση. Η δοκιμή ενημερώθηκε να δίνει την ίδια είσοδο και στις δύο,
+  και προστέθηκε το αντίστοιχό της για τη νέα κατεύθυνση.
+
+**Laravel-ready;** Ναι. Ολη η νέα απόφαση ζει σε `src/Domain/` και είναι
+καθαρή PHP: `SignatureRoles::primaryRoleFor()`,
+`MobilePaperwork::comboAttachmentFor()`, `MobilePlans::tickField()` -- καμία
+`wp_*`, κανένα `$wpdb`, καμία γνώση φόρμας. Η πρόσβαση στη βάση μένει στο
+`src/Persistence/` (η μετάπτωση), το `src/Http/` παραμένει λεπτό (διαβάζει
+τον ρόλο, ρωτά το Domain, απαντά), και το `includes/class-ecrm-formfill.php`
+δεν απέκτησε νέα λογική -- ρωτά τις ίδιες τρεις μεθόδους.
+
+---
+
 ### (243) «Έγγραφα»: έλεγχος όλων των αιτήσεων μαζί, και μια ουρά που δεν περιμένει κανέναν
 
 **Το αίτημα.** Μετά το (242), ο ιδιοκτήτης ρώτησε το επόμενο ερώτημα: σε ό,τι

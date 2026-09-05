@@ -92,4 +92,41 @@ final class SignatureRolesTest extends TestCase
         self::assertFalse(R::isRole('landline'));
         self::assertTrue(R::isRole(R::ENERGY));
     }
+
+    /**
+     * Σταδιο 4 (05/09/2026): ποιος απο τους δυο ρολους ταυτιζεται με τον
+     * ΚΥΡΙΟ πελατη της συμβασης -- δηλαδη ποιανου το `contracts.email` /
+     * `mobile` μπορει να χρησιμοποιηθει απευθειας.
+     *
+     * **Η περιπτωση που ξεχαστηκε και επιασε αυτη η δοκιμη:** με μια μονο
+     * απαιτουμενη υπογραφη, ο μοναδικος ρολος ΕΙΝΑΙ ο κυριος -- ακομα κι οταν
+     * η αιτηση ειναι ρευματος και ο ρολος λεγεται (ιστορικα) `mobile`. Χωρις
+     * αυτο, καθε απλη αιτηση Volton θα θεωρουνταν «δευτερευων υπογραφων»: ο
+     * συνδεσμος υπογραφης θα ζητουσε email απο κενη στηλη COMBO και δεν θα
+     * εφευγε ποτε.
+     */
+    public function testTheOnlyRequiredSignerIsAlwaysThePrimaryOne(): void
+    {
+        foreach (['power', 'gas', 'mobile', ''] as $energyType) {
+            self::assertSame(
+                R::MOBILE,
+                R::primaryRoleFor($energyType, [R::MOBILE]),
+                "Μονος υπογραφων σε αιτηση '{$energyType}' δεν θεωρηθηκε κυριος πελατης."
+            );
+        }
+    }
+
+    /**
+     * Με ΔΥΟ υπογραφοντες υπαρχει πραγματικη ερωτηση «ποιος απο τους δυο»,
+     * και την κρινει η ΠΡΟΕΛΕΥΣΗ της αιτησης: αιτηση Orizon (`mobile`) εχει
+     * κυριο πελατη τον πελατη κινητης, αιτηση Volton τον πελατη ενεργειας.
+     */
+    public function testWithTwoSignersTheApplicationsOriginDecidesWhoIsPrimary(): void
+    {
+        $both = [R::MOBILE, R::ENERGY];
+
+        self::assertSame(R::MOBILE, R::primaryRoleFor('mobile', $both));
+        self::assertSame(R::ENERGY, R::primaryRoleFor('power', $both));
+        self::assertSame(R::ENERGY, R::primaryRoleFor('gas', $both));
+    }
 }

@@ -265,4 +265,48 @@ final class MobilePaperworkTest extends TestCase
             P::energyUserTicks('')
         );
     }
+
+    /**
+     * Σταδιο 4 (05/09/2026): το ιδιο COMBO, ξεκινωντας απο την ΑΛΛΗ πλευρα.
+     *
+     * Η `forApplication()` απανταει «τι χαρτια θελει μια αιτηση ORIZON» και
+     * περιλαμβανει ΠΑΝΤΑ τη συμβαση κινητης. Μια αιτηση VOLTON δεν ανοιγει
+     * συμβαση κινητης -- αυτη ειναι ξεχωριστη, μεταγενεστερη αιτηση, ρητη
+     * αποφαση του ιδιοκτητη (04/09/2026) -- αρα δεν μπορει να χρησιμοποιησει
+     * την ιδια μεθοδο: θελει ΜΟΝΟ το συνοδευτικο φυλλο του COMBO.
+     */
+    public function testAnApplicationThatIsNotTheMobileContractGetsOnlyTheComboSheet(): void
+    {
+        self::assertSame([P::COMBO], P::comboAttachmentFor(P::OFFER_COMBO));
+
+        // Καμια προσφορα, ή η ΑΛΛΗ προσφορα: κανενα συνοδευτικο. Το `family`
+        // ειναι δευτερη γραμμη κινητης -- δεν εχει νοημα σε αιτηση ρευματος.
+        self::assertSame([], P::comboAttachmentFor(P::OFFER_FAMILY));
+        self::assertSame([], P::comboAttachmentFor(P::OFFER_NONE));
+        self::assertSame([], P::comboAttachmentFor('ό,τι να ναι'));
+
+        // Και ποτε τη ΣΥΜΒΑΣΗ κινητης -- αυτο ειναι ολο το νοημα.
+        self::assertNotContains(P::CONTRACT, P::comboAttachmentFor(P::OFFER_COMBO));
+    }
+
+    /**
+     * Το `orizon_combo` τυπωνει ΜΟΝΟ «ποιο απο τα τεσσερα» -- η ιδια του η
+     * σελιδα δεν εχει ουτε ονομα ουτε τιμη προγραμματος (μετρημενο πανω στο
+     * assets/forms/orizon_combo.json, Σταδιο 4). Η `fillValues()` δινει και
+     * τα τρια μαζι· εδω χρειαζεται μονο το κουτακι.
+     */
+    public function testTheTickFieldMatchesWhatFillValuesTicks(): void
+    {
+        foreach (MobilePlans::codes() as $code) {
+            $tick = MobilePlans::tickField($code);
+
+            self::assertNotSame('', $tick, "Το {$code} δεν εχει κουτακι.");
+            self::assertSame('X', MobilePlans::fillValues($code, false)[$tick] ?? null, $code);
+        }
+
+        // Αγνωστο προγραμμα: κενο, ιδιος κανονας «δεν μαντευω» με την
+        // fillValues() -- ο καλων ελεγχει το κενο πριν γραψει 'X' πουθενα.
+        self::assertSame('', MobilePlans::tickField('orizon_100gb'));
+        self::assertSame('', MobilePlans::tickField(''));
+    }
 }

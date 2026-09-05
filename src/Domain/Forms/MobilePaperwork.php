@@ -117,6 +117,28 @@ final class MobilePaperwork
     }
 
     /**
+     * The COMBO attachment sheet, for an application that is NOT itself the
+     * Orizon mobile contract -- Στάδιο 4, 05/09/2026: the same combo
+     * (Volton ρεύμα + Orizon κινητή) started from the Volton side instead of
+     * the Orizon side.
+     *
+     * Mirrored, not duplicated: ONE application, printing its own template
+     * (volton_he) plus this attachment -- never the actual orizon_mobile
+     * contract, which is a deliberate, explicit decision (a real Orizon line
+     * still needs its own Orizon-origin application; this sheet only records
+     * the combo declaration on the Volton paperwork). forApplication() stays
+     * untouched because it answers a different question -- "what does an
+     * Orizon CONTRACT need" -- and always includes CONTRACT; this one never
+     * does.
+     *
+     * @return list<string>
+     */
+    public static function comboAttachmentFor(string $offer): array
+    {
+        return $offer === self::OFFER_COMBO ? [self::COMBO] : [];
+    }
+
+    /**
      * The state of **all three** ΕΙΔΟΣ ΣΥΝΔΕΣΗΣ boxes on the contract.
      *
      * ΑΝΑΝΕΩΣΗ stays unticked here on purpose — pre-existing limitation,
