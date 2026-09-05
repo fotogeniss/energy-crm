@@ -157,7 +157,7 @@ final class HealthChecks
             self::row('Έγγραφα', 'Φάκελος', is_dir($dir), is_dir($dir) ? $dir : 'Δεν υπάρχει.'),
         ];
 
-        $reachable = $this->probeIsReachable($dir);
+        $reachable = self::documentsAreExposed();
 
         $out[] = self::row(
             'Έγγραφα',
@@ -180,9 +180,16 @@ final class HealthChecks
      * Γράφει ένα αβλαβές αρχείο και ζητά το URL του.
      *
      * Η μόνη απάντηση που μετράει: αν έρθει 200, ο φάκελος σερβίρεται.
+     *
+     * Δημόσια και στατική επίτηδες -- η ίδια δοκιμή τη χρειάζεται και η οθόνη
+     * Υγεία (κατ' αίτημα, όταν κάποιος ανοίξει τη σελίδα) και η
+     * DocumentExposureCheck (προγραμματισμένα, ημερήσια). Δεύτερη υλοποίηση
+     * θα σήμαινε ότι κάποια μέρα οι δύο θα απαντούσαν διαφορετικά για το ίδιο
+     * ερώτημα -- ίδιο σκεπτικό με το DocumentStorage.
      */
-    private function probeIsReachable(string $dir): ?bool
+    public static function documentsAreExposed(): ?bool
     {
+        $dir  = \ECRM_Files::dir();
         $path = trailingslashit($dir) . self::PROBE;
 
         if (! file_exists($path)) {

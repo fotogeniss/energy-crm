@@ -27,8 +27,17 @@ final class Metrics
     /** Κάθε καταγραφή του ErrorLog -- και οι επαναλήψεις γνωστού κωδικού. */
     public const ERRORS = 'errors';
 
-    /** Ένα ολοκληρωμένο αντίγραφο ασφαλείας μέσω tools/backup.php. */
+    /** Ενα ολοκληρωμένο αντίγραφο ασφαλείας μέσω tools/backup.php. */
     public const BACKUP = 'backup';
+
+    /** Αποτυχημένη σύνδεση που μετρήθηκε -- δηλαδή δεν ήταν ήδη κλειδωμένη. */
+    public const LOGIN_FAILED = 'login_failed';
+
+    /** Προσπάθεια σύνδεσης που κόπηκε πριν καν ελεγχθεί ο κωδικός. */
+    public const LOGIN_BLOCKED = 'login_blocked';
+
+    /** Ο ημερήσιος έλεγχος βρήκε τον φάκελο εγγράφων δημόσια προσβάσιμο. */
+    public const DOCS_EXPOSED = 'docs_exposed';
 
     /** Πόσες ημέρες πίσω κρατιέται το ιστορικό, πριν το φίλτρο. */
     public const KEEP_DAYS = 180;
