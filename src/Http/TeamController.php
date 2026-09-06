@@ -26,7 +26,9 @@ use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Persistence\CommissionRepository;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\LeadRepository;
 use EnergyCRM\Persistence\PartnerCardRepository;
+use EnergyCRM\Persistence\TaskRepository;
 use EnergyCRM\Persistence\TeamRepository;
 use WP_Error;
 use WP_REST_Request;
@@ -39,6 +41,8 @@ final class TeamController implements Controller
         private readonly ScopeResolver $scopes,
         private readonly TeamRepository $team,
         private readonly ContractRepository $contracts,
+        private readonly LeadRepository $leads,
+        private readonly TaskRepository $tasks,
         private readonly PartnerCardRepository $card,
         private readonly CommissionRepository $commissions,
         private readonly TeamInvite $invite,
@@ -489,12 +493,20 @@ final class TeamController implements Controller
             // `detach()` θα τον είχε ήδη βγάλει από το scope, οπότε η μεταφορά
             // δεν θα έβρισκε τίποτα να μετακινήσει.
             //
-            // Και τα δύο πάνε στον από πάνω του, που είναι αυτός που κάνει την
-            // ενέργεια: οι συμβάσεις γιατί είναι πελάτες της εταιρείας και όχι
-            // δικοί του, τα παιδιά του γιατί αλλιώς βγαίνει ολόκληρο το
-            // υποδέντρο από το δέντρο μαζί του.
+            // Συμβάσεις, leads, ανοιχτές εργασίες, παιδιά -- όλα πάνε στον από
+            // πάνω του, που είναι αυτός που κάνει την ενέργεια: ίδια λίστα με το
+            // DepartingUser::handOverEverything() (src/Access), που καλύπτει την
+            // ΑΛΛΗ διαδρομή προς έξοδο -- Χρήστες → Διαγραφή στο ίδιο το
+            // WordPress. Μέχρι 06/09 αυτό εδώ, το επίσημο κουμπί «Αφαίρεση» της
+            // οθόνης Ομάδας, μετέφερε μόνο συμβάσεις και παιδιά -- τα leads κι οι
+            // ανοιχτές εργασίες έμεναν πάνω σε λογαριασμό πλέον χωρίς
+            // προϊστάμενο, δηλαδή αόρατα σε όλους εκτός διαχειριστή: ΑΚΡΙΒΩΣ το
+            // «leads που κανείς δεν θα ξανατηλεφωνήσει» εύρημα 5 της
+            // DepartingUser, μέσα από την υποτιθέμενα σωστή διαδρομή.
             $scope     = $this->scopes->forCurrentUser();
             $contracts = $this->contracts->handOver($member, $actor, $scope);
+            $leads     = $this->leads->handOver($member, $actor, $scope);
+            $tasks     = $this->tasks->handOverOpen($member, $actor);
             $members   = $this->team->reparentChildren($member, $actor);
 
             $this->team->detach($member);
@@ -503,6 +515,8 @@ final class TeamController implements Controller
                 'ok'        => true,
                 'removed'   => true,
                 'contracts' => $contracts,
+                'leads'     => $leads,
+                'tasks'     => $tasks,
                 'members'   => $members,
             ], 200);
         }

@@ -4,7 +4,7 @@
  * Τι παίρνει μαζί του ο άνθρωπος που φεύγει από την ομάδα.
  *
  * Το «Αφαίρεση» έσβηνε το `ecrm_parent` και σταματούσε εκεί. Επειδή η ορατότητα
- * τρέχει πάνω στο δέντρο, αυτό είχε δύο συνέπειες που κανείς δεν ζήτησε:
+ * τρέχει πάνω στο δέντρο, αυτό είχε συνέπειες που κανείς δεν ζήτησε:
  *
  * - **Οι συμβάσεις του έβγαιναν από την εταιρεία μαζί του.** Έμεναν δικές του,
  *   και ο προϊστάμενος που τον αφαίρεσε έπαυε να τις βλέπει. Πελάτες με
@@ -13,8 +13,15 @@
  * - **Και μαζί τους ολόκληρη η ομάδα του.** Τα παιδιά του κρατούσαν
  *   `ecrm_parent` προς αυτόν· μόλις εκείνος γινόταν ρίζα, το υποδέντρο κοβόταν.
  *   Αφαιρείς έναν, χάνεις πέντε.
+ * - **Και τα leads/ανοιχτές εργασίες του, μέχρι 06/09/2026.** Ο έλεγχος
+ *   λειτουργίας που έγραψε το DepartingUserTest (εύρημα 5) έλεγξε μόνο την
+ *   ΑΛΛΗ διαδρομή προς έξοδο -- Χρήστες → Διαγραφή. Αυτό εδώ, το επίσημο
+ *   κουμπί «Αφαίρεση», είχε το ΙΔΙΟ ελάττωμα και κανείς δεν το είχε ελέγξει: ο
+ *   προϊστάμενος έπαιρνε συμβάσεις και παιδιά, όχι leads ούτε ανοιχτές
+ *   εργασίες -- έμεναν πάνω σε λογαριασμό πλέον χωρίς προϊστάμενο, αόρατα σε
+ *   όλους εκτός διαχειριστή.
  *
- * Ο ιδιοκτήτης αποφάσισε 18/08/2026: και τα δύο πάνε στον από πάνω του.
+ * Ο ιδιοκτήτης αποφάσισε 18/08/2026: όλα πάνε στον από πάνω του.
  *
  * @package EnergyCRM
  */
@@ -26,6 +33,8 @@ namespace EnergyCRM\Tests\Integration;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\LeadRepository;
+use EnergyCRM\Persistence\TaskRepository;
 use EnergyCRM\Persistence\TeamRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -100,6 +109,8 @@ final class TeamRemovalTest extends IntegrationTestCase
     {
         $this->contractOf($this->member);
         $this->contractOf($this->member);
+        $this->leadOf($this->member);
+        $this->taskFor($this->member, 'open');
 
         $grandchild = $this->makeCrmUser(Roles::SELLER);
         $this->team->attach($grandchild, $this->member);
@@ -107,7 +118,55 @@ final class TeamRemovalTest extends IntegrationTestCase
         $data = $this->remove()->get_data();
 
         self::assertSame(2, $data['contracts']);
+        self::assertSame(1, $data['leads']);
+        self::assertSame(1, $data['tasks']);
         self::assertSame(1, $data['members']);
+    }
+
+    /**
+     * Ίδιο εύρημα με το DepartingUserTest, άλλη διαδρομή προς έξοδο.
+     *
+     * Χωρίς αυτό, ο υποψήφιος έμενε πάνω σε λογαριασμό πλέον χωρίς
+     * προϊστάμενο -- κανείς εκτός διαχειριστή δεν θα τον ξαναέβλεπε, ο πελάτης
+     * δεν θα τηλεφωνούσε ποτέ ξανά.
+     */
+    public function testTheirLeadsGoToTheirManager(): void
+    {
+        $leadId = $this->leadOf($this->member);
+
+        $this->remove();
+
+        self::assertSame(
+            $this->manager,
+            (int) $this->storedRow('leads', $leadId)['partner_user_id']
+        );
+    }
+
+    /** Ίδιο εύρημα, για τις ανοιχτές εργασίες. */
+    public function testTheirOpenTasksGoToTheirManager(): void
+    {
+        $taskId = $this->taskFor($this->member, 'open');
+
+        $this->remove();
+
+        self::assertSame(
+            $this->manager,
+            (int) $this->storedRow('tasks', $taskId)['assigned_to']
+        );
+    }
+
+    /**
+     * Ολοκληρωμένη εργασία δεν αλλάζει χέρια -- ίδιος κανόνας με το
+     * DepartingUserTest: λέει «αυτός ο άνθρωπος έκανε αυτό, τότε».
+     */
+    public function testACompletedTaskKeepsTheNameOfWhoDidIt(): void
+    {
+        $taskId = $this->taskFor($this->member, 'done');
+        $member = $this->member;
+
+        $this->remove();
+
+        self::assertSame($member, (int) $this->storedRow('tasks', $taskId)['assigned_to']);
     }
 
     /**
@@ -158,5 +217,31 @@ final class TeamRemovalTest extends IntegrationTestCase
         self::assertGreaterThan(0, $contractId, 'Το fixture σύμβασης δεν αποθηκεύτηκε.');
 
         return $contractId;
+    }
+
+    private function leadOf(int $ownerId): int
+    {
+        $leadId = (new LeadRepository())->create(
+            ['name' => 'Υποψήφιος Δοκιμής', 'phone' => '2310123456'],
+            UserScope::forSelf($ownerId)
+        );
+
+        self::assertGreaterThan(0, $leadId, 'Το fixture lead δεν αποθηκεύτηκε.');
+
+        return $leadId;
+    }
+
+    private function taskFor(int $ownerId, string $status): int
+    {
+        $taskId = (new TaskRepository())->create([
+            'assigned_to' => $ownerId,
+            'created_by'  => $ownerId,
+            'title'       => 'Εργασία δοκιμής',
+            'status'      => $status,
+        ]);
+
+        self::assertGreaterThan(0, $taskId, 'Το fixture εργασίας δεν αποθηκεύτηκε.');
+
+        return $taskId;
     }
 }

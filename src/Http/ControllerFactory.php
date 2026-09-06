@@ -142,6 +142,8 @@ final class ControllerFactory
                 $scope,
                 Services::team(),
                 Services::contracts(),
+                Services::leads(),
+                Services::tasks(),
                 Services::partnerCard(),
                 Services::commissions(),
                 new TeamInvite(),

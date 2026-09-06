@@ -80,9 +80,15 @@ final class Roles
                     // ContractRestAccessTest::testAPartnerWithTheCapability...
                     // Ο πραγματικός κίνδυνος (ON DELETE CASCADE σβήνει και
                     // τον φάκελο υπογραφής μαζί με μια ήδη υπογεγραμμένη
-                    // σύμβαση) ΔΕΝ λύνεται εδώ· χρειάζεται ξεχωριστή πύλη
-                    // (βλ. build queue #15, DeletionGate) πριν θεωρηθεί
-                    // πλήρως κλειστό.
+                    // σύμβαση) ΕΧΕΙ πλέον κλείσει — build queue #15,
+                    // EnergyCRM\Domain\Contract\DeletionGate: μια σύμβαση
+                    // που έφτασε ποτέ σε Signed (ιστορικό, όχι τρέχον status)
+                    // αρνείται τη διαγραφή σε ΚΑΘΕ διαδρομή, μεμονωμένη
+                    // (ContractStatusController::destroy()) και μαζική
+                    // (ContractsBulkController::delete()) — μόνο η ξεχωριστή
+                    // /contracts/{id}/force, manage_options only, την
+                    // προσπερνά ρητά. Το σχόλιο αυτό έμενε ενημερωμένο σαν
+                    // ανοιχτό ρίσκο μετά τη διόρθωση· διορθώθηκε 06/09.
                     Capability::DELETE_CONTRACT,
                     Capability::CHANGE_STATUS,
                     Capability::ASSIGN_CONTRACT,
