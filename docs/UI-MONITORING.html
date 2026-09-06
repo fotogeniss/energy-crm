@@ -116,7 +116,7 @@ td.r{text-align:right;font-variant-numeric:tabular-nums;color:var(--n700)}
 	μετρητή — όχι <i>πότε</i>. Το <code>Heartbeat</code> (235) κρατά μόνο το τελευταίο
 	run κάθε hook. Το <code>BackupState</code> (233) μόνο το τελευταίο αντίγραφο. Το
 	rate-limit ζει σε transient που λήγει. <b>Πουθενά στο plugin δεν υπάρχει ιστορικό
-	λειτουργίας.</b> Άρα το πάνω μισό αυτής της οθόνης δεν μπορεί να χτιστεί από
+	λειτουργίας.</b> Αρα το πάνω μισό αυτής της οθόνης δεν μπορεί να χτιστεί από
 	υπάρχοντα δεδομένα — χρειάζεται νέα, μικρή αποθήκευση.</div>
 
 	<div class="note note--ok"><b>Τι ΔΕΝ χρειάζεται νέα αποθήκευση.</b>
@@ -173,7 +173,7 @@ td.r{text-align:right;font-variant-numeric:tabular-nums;color:var(--n700)}
 			<div class="hm__lbl">Ημερήσια σύνοψη</div><div class="hm__row" data-hm="3"></div>
 		</div>
 		<div class="legend">
-			<span><i style="background:#12a413"></i>Έτρεξε</span>
+			<span><i style="background:#12a413"></i>Ετρεξε</span>
 			<span><i style="background:#fb8a91"></i>Δεν έτρεξε</span>
 			<span><i style="background:#2a2926"></i>Χωρίς δεδομένα</span>
 		</div>
@@ -205,7 +205,7 @@ td.r{text-align:right;font-variant-numeric:tabular-nums;color:var(--n700)}
 			<div class="bar"><div class="bar__l">Πρωτεργάτης</div><div class="bar__t"><div class="bar__f" style="width:100%"></div></div><div class="bar__v">86</div></div>
 			<div class="bar"><div class="bar__l">ΔΕΗ</div><div class="bar__t"><div class="bar__f" style="width:72%"></div></div><div class="bar__v">62</div></div>
 			<div class="bar"><div class="bar__l">Orizon</div><div class="bar__t"><div class="bar__f" style="width:44%"></div></div><div class="bar__v">38</div></div>
-			<div class="bar"><div class="bar__l">Ήρων</div><div class="bar__t"><div class="bar__f" style="width:22%"></div></div><div class="bar__v">19</div></div>
+			<div class="bar"><div class="bar__l">Ηρων</div><div class="bar__t"><div class="bar__f" style="width:22%"></div></div><div class="bar__v">19</div></div>
 			<div class="bar"><div class="bar__l">Λοιποί</div><div class="bar__t"><div class="bar__f" style="width:15%"></div></div><div class="bar__v">13</div></div>
 		</div>
 		<div class="card" style="margin:0">
@@ -233,13 +233,13 @@ td.r{text-align:right;font-variant-numeric:tabular-nums;color:var(--n700)}
 	MySQL</b>, χωρίς read-modify-write, άρα χωρίς την κούρσα που θα είχε ένα option με
 	πίνακα 90 ημερών μέσα του.</p>
 
-	<div class="note"><b>Γιατί όχι option.</b> Ένα <code>ecrm_metrics_history</code>
+	<div class="note"><b>Γιατί όχι option.</b> Ενα <code>ecrm_metrics_history</code>
 	option θα χρειαζόταν διάβασμα-τροποποίηση-γράψιμο σε κάθε σφάλμα και σε κάθε cron·
 	δύο ταυτόχρονα requests θα έχαναν το ένα τη μέτρηση του άλλου, σιωπηλά. Και η
 	ερώτηση «πόσα σφάλματα την ημέρα Χ» θα γινόταν PHP loop πάνω σε ολόκληρο το
 	ιστορικό αντί για ένα <code>WHERE day BETWEEN</code>.</div>
 
-	<p><b>Όγκος:</b> ~6 metrics × 1 γραμμή/ημέρα = <b>~2.200 γραμμές/έτος</b>. Η
+	<p><b>Ογκος:</b> ~6 metrics × 1 γραμμή/ημέρα = <b>~2.200 γραμμές/έτος</b>. Η
 	διατήρηση (180 ημέρες, φιλτραρίσιμο) μπαίνει στο ήδη υπάρχον ημερήσιο σάρωμα
 	<code>Retention</code> — καμία νέα cron εργασία.</p>
 

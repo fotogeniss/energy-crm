@@ -151,7 +151,7 @@ final class CustomerFieldsBackfillTest extends TestCase
     public function testTheEncryptedColumnListIsTheOneTheClassUses(): void
     {
         self::assertSame(
-            ['afm', 'adt', 'street', 'street_no', 'postal_code', 'phone'],
+            ['afm', 'adt', 'street', 'street_no', 'postal_code', 'phone', 'contact_phone'],
             CustomerFields::encryptedColumns()
         );
     }
