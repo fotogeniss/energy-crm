@@ -44,6 +44,29 @@ export function openCustomerCard(id) {
 		});
 }
 
+/*
+ * Μετά από επιτυχή αποθήκευση (σημείωση/τηλέφωνο/πλήρης επεξεργασία), ο
+ * παλιότερος κώδικας ξαναέμπαινε από openCustomerCard(id) -- σωστό για να
+ * μην ξαναχτίζει την όψη από κρατημένο, ενδεχομένως stale `d`, αλλά αυτό
+ * αδειάζει πρώτα ολόκληρη την όψη σε "Φόρτωση…" πριν ξαναφέρει τα δεδομένα,
+ * που ο συνεργάτης το βλέπει σαν πλήρες ανανέωση σελίδας (flash + χάνεται η
+ * θέση κύλισης). Εδώ κάνουμε το ίδιο φρέσκο fetch, αλλά ΧΩΡΙΣ το ενδιάμεσο
+ * άδειασμα -- η παλιά όψη μένει ορατή μέχρι να είναι έτοιμη η νέα, οπότε η
+ * αλλαγή μοιάζει με ενημέρωση, όχι με ανανέωση. Δεν καλεί ξανά go() -- ο
+ * συνεργάτης δεν έφυγε ποτέ από την οθόνη, ο router δεν χρειάζεται να το
+ * ξαναβεβαιώσει.
+ */
+function refreshCard(id) {
+	var view = viewEl('customer-detail');
+	if (!view) { return; }
+	fetch(api('/customers/' + id + '/card'), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) { return; }
+			renderCard(view, id, d);
+		});
+}
+
 function customerName(c) {
 	var name = c.company_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim();
 	return name || '—';
@@ -254,9 +277,9 @@ function editFields(id, name, eyebrow, kpi, fields, current) {
 				if (res && res.ok) {
 					close();
 					toast((res.changed && res.changed.length) ? 'Ενημερώθηκε.' : 'Καμία αλλαγή.');
-					// Ιδιο re-entry με το Στάδιο 2 -- βλ. σχόλιο στο addNote()/
-					// updateContactPhone() παρακάτω.
-					openCustomerCard(id);
+					// refreshCard(), όχι openCustomerCard() -- βλ. σχόλιό του: ίδιο φρέσκο
+					// fetch, χωρίς το ενδιάμεσο άδειασμα σε "Φόρτωση…".
+					refreshCard(id);
 					return;
 				}
 
@@ -390,11 +413,10 @@ function renderCard(view, id, d) {
 						if (res && res.ok) {
 							close();
 							toast('Προστέθηκε η σημείωση.');
-							// Ξαναμπαίνει από το openCustomerCard() -- ίδιο μονοπάτι με το
-							// αρχικό άνοιγμα της κάρτας -- αντί να ξαναχτίζει την όψη από το
-							// ήδη κρατημένο `d` -- ξαναβεβαιώνει και το go('customer-detail')
-							// στον router αντί να υποθέτει ότι η όψη έμεινε ενεργή.
-							openCustomerCard(id);
+							// refreshCard() -- φρέσκο fetch αντί για το ήδη κρατημένο,
+							// ενδεχομένως stale `d`, αλλά χωρίς το άδειασμα σε "Φόρτωση…"
+							// του openCustomerCard() (βλ. σχόλιό του).
+							refreshCard(id);
 						} else {
 							btn.disabled = false;
 							toast((res && res.error) || 'Αποτυχία.', false);
@@ -433,9 +455,8 @@ function renderCard(view, id, d) {
 						if (res && res.ok) {
 							close();
 							toast('Ενημερώθηκε.');
-							// Ιδιο σκεπτικό με το addNote() παραπάνω -- re-entry από το
-							// openCustomerCard() αντί για χειροκίνητο ξαναχτίσιμο της όψης.
-							openCustomerCard(id);
+							// refreshCard(), ίδιο σκεπτικό με το addNote() παραπάνω.
+							refreshCard(id);
 						} else {
 							btn.disabled = false;
 							toast((res && res.error) || 'Αποτυχία.', false);
@@ -500,8 +521,8 @@ function renderCard(view, id, d) {
 					eyebrow: 'Ιστορικό',
 					title: 'Αλλαγές στοιχείων -- ' + name,
 					body: '<div class="ecrm-modal__card">' + list + '</div>',
-					// Καθαρά προβολή -- το data-go κλείνει σαν το data-x, όχι
-					// δεύτερη σημασιολογία «αποθήκευση».
+					// Καθαρά προβολή -- το data-dlg-confirm κλείνει σαν το data-x,
+					// όχι δεύτερη σημασιολογία «αποθήκευση».
 					confirm: 'Κλείσιμο',
 					onConfirm: function (el, close) { close(); },
 				});

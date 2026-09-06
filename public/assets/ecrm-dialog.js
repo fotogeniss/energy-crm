@@ -63,6 +63,18 @@ function leadMarkup(lead) {
 export function openDialog(opts) {
 	opts = opts || {};
 
+	/*
+	 * Το κουμπί επιβεβαίωσης παρακάτω έχει `data-dlg-confirm`, ΟΧΙ `data-go`.
+	 * Το `root()` (@energy-crm/util) επιστρέφει το ΙΔΙΟ #ecrm-app στοιχείο
+	 * που έχει τον καθολικό click listener του κελύφους (ecrm-app.js), κι
+	 * αυτός ψάχνει ΟΠΟΙΟΔΗΠΟΤΕ `[data-go]` μέσα του χωρίς να ξέρει ότι είναι
+	 * μέσα σε διάλογο -- ένα bare `data-go` εδώ θα bubble-άρει ως go(''),
+	 * που αδειάζει την ενεργή όψη (καμία `.ecrm-view` δεν ταιριάζει σε
+	 * data-view="") ΠΡΙΝ καν προλάβει να τρέξει το onConfirm. Ζωντανό bug,
+	 * 06/09: η καρτέλα πελάτη έδειχνε λευκή σελίδα μετά από κάθε
+	 * αποθήκευση -- εμφανές μόνο όταν το onConfirm σταμάτησε να ξανακαλεί
+	 * go() μετά την αποθήκευση, που έως τότε "θεράπευε" τυχαία το ίδιο bug.
+	 */
 	var ov = document.createElement('div');
 	ov.className = 'ecrm-modalov';
 	ov.innerHTML =
@@ -75,7 +87,7 @@ export function openDialog(opts) {
 			'<div class="ecrm-modal__bar">' +
 				'<span class="ecrm-modal__spacer"></span>' +
 				'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-x>' + esc(opts.cancel || 'Ακύρωση') + '</button>' +
-				'<button type="button" class="ecrm-btn ' + (opts.danger ? 'ecrm-btn--danger' : 'ecrm-btn--primary') + '" data-go' +
+				'<button type="button" class="ecrm-btn ' + (opts.danger ? 'ecrm-btn--danger' : 'ecrm-btn--primary') + '" data-dlg-confirm' +
 					(opts.armed === false ? ' disabled' : '') + '>' + esc(opts.confirm || 'Εντάξει') + '</button>' +
 			'</div>' +
 		'</div>';
@@ -121,7 +133,7 @@ export function openDialog(opts) {
 	ov.addEventListener('click', function (e) { if (e.target === ov) { close(); } });
 	ov.querySelectorAll('[data-x]').forEach(function (b) { b.addEventListener('click', close); });
 
-	var go = ov.querySelector('[data-go]');
+	var go = ov.querySelector('[data-dlg-confirm]');
 	if (go && typeof opts.onConfirm === 'function') {
 		go.addEventListener('click', function () { opts.onConfirm(ov, close, go); });
 	}
@@ -177,7 +189,7 @@ export function confirmTyped(o) {
 	});
 
 	var input = dlg.el.querySelector('[data-gate]');
-	var go = dlg.el.querySelector('[data-go]');
+	var go = dlg.el.querySelector('[data-dlg-confirm]');
 
 	input.addEventListener('input', function () {
 		go.disabled = (input.value !== expect);
@@ -246,7 +258,7 @@ export function confirmTypedWithReason(o) {
 
 	var input  = dlg.el.querySelector('[data-gate]');
 	var reason = dlg.el.querySelector('[data-reason]');
-	var go     = dlg.el.querySelector('[data-go]');
+	var go     = dlg.el.querySelector('[data-dlg-confirm]');
 
 	function refresh() { go.disabled = (input.value !== expect) || !reason.value.trim(); }
 
