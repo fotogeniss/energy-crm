@@ -74,7 +74,7 @@ final class NotificationsController implements Controller
             ? $this->scopes->visibleUserIds($scope)
             : [$scope->actorId()];
 
-        $data = ECRM_Notifications::followups_for($ids);
+        $data = ECRM_Notifications::followups_for($ids, $scope->actorId());
         $data['ok']        = true;
         $data['threshold'] = ECRM_Notifications::threshold_days();
 
@@ -106,6 +106,16 @@ final class NotificationsController implements Controller
 
         $id = $request['id'] === null ? null : (int) $request['id'];
         $this->notifications->markRead($scope->actorId(), $id);
+
+        // Το ίδιο κλικ (άνοιγμα καμπανακιού, βλ. ecrm-app.js) σημαίνει «τα
+        // είδα όλα ΤΩΡΑ» -- και τις αποθηκευμένες ειδοποιήσεις (πάνω) ΚΑΙ
+        // τις εκκρεμότητες (κάτω). Μόνο στη μαζική περίπτωση (χωρίς id):
+        // ένα μελλοντικό mark-read ΜΙΑΣ συγκεκριμένης αποθηκευμένης
+        // ειδοποίησης δεν πρέπει να φωτογραφίζει ξανά ολόκληρη τη λίστα
+        // εκκρεμοτήτων.
+        if ($id === null) {
+            ECRM_Notifications::dismiss_stale_for($scope->actorId());
+        }
 
         return new WP_REST_Response(['ok' => true], 200);
     }

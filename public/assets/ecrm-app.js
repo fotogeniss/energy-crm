@@ -277,10 +277,16 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 			b.addEventListener('click', function () { bellPanel.hidden = true; openDetail(this.getAttribute('data-bell-open')); });
 		});
 
-		// Mark event notifications as read only while the panel is actually open.
-		if (unread > 0 && bellPanel && !bellPanel.hidden) {
+		// Ρητό αίτημα ιδιοκτήτη (06/09): «μόλις πατήσω το καμπανάκι να φεύγουν»
+		// -- και οι δύο μετρητές, όχι μόνο οι αποθηκευμένες ειδοποιήσεις. Ο
+		// αριθμός μηδενίζει αμέσως εδώ (οπτικά, αισιόδοξα)· ο server
+		// φωτογραφίζει τις τρέχουσες εκκρεμότητες ξεχωριστά (βλ.
+		// ECRM_Notifications::dismiss_stale_for()) ώστε να ξαναμετρηθούν
+		// μόνο αν πραγματικά αλλάξει κάτι πάνω τους -- καμία σύμβαση δεν
+		// χάνεται, απλά σταματά να χτυπάει το καμπανάκι γι' αυτήν.
+		if ((unread > 0 || stale > 0) && bellPanel && !bellPanel.hidden) {
 			fetch(api('/notifications/read'), { method: 'POST', headers: H() })
-				.then(function () { if (bellBadge) { if (stale > 0) { bellBadge.textContent = stale > 99 ? '99+' : stale; } else { bellBadge.hidden = true; } } })
+				.then(function () { if (bellBadge) { bellBadge.hidden = true; } })
 				// Best-effort: το badge έμεινε ήδη σωστό οπτικά· αν η σήμανση
 				// read στο server αποτύχει, θα ξανασταλεί στο επόμενο άνοιγμα.
 				.catch(function () {});
