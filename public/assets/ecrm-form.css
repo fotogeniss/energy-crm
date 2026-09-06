@@ -902,7 +902,6 @@
 	display: flex; align-items: center; justify-content: space-between; gap: 16px;
 	background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 15px;
 }
-.ecrm-foot__mode { color: var(--muted); font-size: var(--fs-14); }
 .ecrm-foot__actions { display: flex; gap: 10px; }
 
 /* --- toast / states --- */
