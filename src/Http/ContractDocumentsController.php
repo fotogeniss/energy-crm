@@ -138,7 +138,15 @@ final class ContractDocumentsController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
         }
 
-        $result = ECRM_FormFill::fill($row, $this->files->latestPathOfKind($id, 'signature'));
+        // 04/09/2026: το COMBO έχει δύο θέσεις υπογραφής -- ανά ρόλο --
+        // και χωρίς τον χάρτη ρόλων έμεναν ΠΑΝΤΑ κενές σε ό,τι κατέβαζε ο
+        // πωλητής από εδώ, ενώ το αυτόματα αποθηκευμένο/σταλμένο αντίγραφο
+        // (ContractDocuments::store(), ίδιος χάρτης) τις έδειχνε σωστά.
+        $result = ECRM_FormFill::fill(
+            $row,
+            $this->files->latestPathOfKind($id, 'signature'),
+            $this->documents->signaturesByRole($id)
+        );
 
         if (empty($result['ok'])) {
             return new WP_REST_Response(
