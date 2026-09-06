@@ -7,6 +7,118 @@
 
 ---
 
+### (249) Καρτέλα πελάτη — Στάδιο 3: πλήρης επεξεργασία, με ιστορικό αλλαγών
+
+**Το αίτημα.** Μετά την επιβεβαίωση στο (248) ότι η προσθήκη σημειώσεων και
+τηλεφώνου επικοινωνίας δουλεύει στην πράξη χωρίς σφάλμα, τρίτο και τελευταίο
+στάδιο της εγκεκριμένης μακέτας (`docs/UI-CUSTOMER-CARD.html`, §1.8): πλήρης
+επεξεργασία ονόματος/ΑΦΜ/διεύθυνσης/στοιχείων επικοινωνίας πάνω στην καρτέλα
+πελάτη -- το κομμάτι που αναβλήθηκε ρητά στο (247) γιατί απαιτεί
+κρυπτογράφηση, ξαναγράψιμο του `afm_hash`, έλεγχο διπλοεγγραφής και
+προειδοποίηση για ήδη κατατεθειμένα χαρτιά.
+
+**Τρεις αποφάσεις προϊόντος, πριν τον κώδικα.** Η μακέτα άφηνε ανοιχτά τρία
+ερωτήματα που δεν λύνονται σωστά με μαντεψιά. Ο ιδιοκτήτης διάλεξε και τα
+τρία, και οι τρεις επιλογές ήταν οι προτεινόμενες:
+
+1. **Ποιος επεξεργάζεται.** Οποιος βλέπει τον πελάτη μπορεί και να τον
+   επεξεργαστεί -- όχι μόνο ο συνεργάτης-ιδιοκτήτης -- αλλά κάθε αλλαγή
+   μένει ορατή στο ιστορικό. Το «ποιος βλέπει» ήδη υπάρχει σαν κανόνας
+   (`isReachable()`/scope), οπότε η νέα δουλειά είναι μόνο το ιστορικό.
+2. **Σύγκρουση ΑΦΜ.** Αν το νέο ΑΦΜ ανήκει ήδη σε άλλον πελάτη,
+   προειδοποίηση πριν την αποθήκευση -- όχι μπλοκάρισμα. Ο συνεργάτης
+   μπορεί να προχωρήσει ενσυνείδητα (π.χ. διόρθωση typo σε δύο κάρτες).
+3. **Πελάτης με ήδη κατατεθειμένες συμβάσεις.** Ενημέρωση για το πλήθος
+   των συμβάσεων που θα «κουβαλήσουν» το νέο στοιχείο -- χωρίς εμπόδιο. Η
+   ευθύνη για το αν αξίζει να αλλάξει κάτι σε ήδη τυπωμένο χαρτί μένει στον
+   άνθρωπο, όχι σε κανόνα του συστήματος.
+
+**Το repository δεν άλλαξε καθόλου.** Το `CustomerRepository::WRITABLE` και
+το `update()` υποστηρίζουν ήδη πλήρη επεξεργασία -- χτισμένα εξαρχής για
+εσωτερική χρήση από `ContractSaveController`/`ExtractionController`, με
+αυτόματο ξαναγράψιμο `afm_hash`/`phone_hash` μέσω `CustomerFields::forStorage()`
+όποτε αυτά τα κλειδιά υπάρχουν στο partial array. Η πραγματική δουλειά του
+Σταδίου 3 ήταν αποκλειστικά στο layer του REST -- επικύρωση, ιστορικό,
+προειδοποίηση διπλοεγγραφής -- όχι στην πρόσβαση δεδομένων.
+
+**`customer_events`, νέος πίνακας -- μία γραμμή ανά ΠΕΔΙΟ, όχι ανά save.**
+`field`/`old_value`/`new_value` σε ξεχωριστή γραμμή για κάθε στοιχείο που
+άλλαξε, ίδιο σκεπτικό με το `status_change` του `ContractEvent`: «ποιος
+άλλαξε ΤΙ και πότε» απαντιέται με ένα `SELECT`, όχι με parse JSON blob κάθε
+φορά. Κλειδωμένος με `customer_id` απευθείας (ίδια δεύτερη ακμή-προς-πρόσωπο
+με το `customer_notes` του (248)), άρα εκτός
+`PersonalDataTables::linkedToContracts()` -- χειρισμός χειροκίνητος σε
+`PersonalDataExporter`/`PersonalDataEraser`, δηλωμένος στο
+`PersonalDataCoverageTest::HANDLED_INLINE`. Τα `old_value`/`new_value`
+κρυπτογραφούνται ανά πεδίο με το ίδιο `CustomerFields::ENCRYPTED` και
+`forStorage()`/`fromStorage()` που προστατεύει τον ίδιο τον πίνακα
+`customers` -- το ιστορικό δεν είναι πιο αδύναμος κρίκος από τα δεδομένα που
+περιγράφει. Νέα μετανάστευση `0035_create_customer_events_table`, ΚΑΙ στο
+`ECRM_DB::install()`, ίδια υποχρέωση με το `customer_notes` πριν.
+
+**Ενα route, με δύο πύλες ελέγχου.** `PATCH /customers/{id}` δέχεται
+οποιοδήποτε υποσύνολο του `EDITABLE_FIELDS` (16 πεδία -- ταυτότητα,
+διεύθυνση, επικοινωνία· ρητά ΕΚΤΟΣ: `contact_phone` και `customer_type`,
+πρώτο γιατί έχει ήδη δικό του route από το (248), δεύτερο γιατί αλλάζει
+πλήρως ποια πεδία θεωρούνται σχετικά). Η αλλαγή υπολογίζεται με diff πάνω
+στα τρέχοντα δεδομένα -- μόνο τα πεδία που πραγματικά άλλαξαν γράφονται στο
+`customer_events`, όχι ολόκληρο το payload. Το ΑΦΜ περνά από
+`ECRM_Validate::afm()` (checksum modulo-11) πριν φτάσει στη βάση, ίδιο
+πρότυπο 422 με `field: 'afm'` όπως το `ContractSaveController`. Η
+διπλοεγγραφή ελέγχεται με το ήδη υπάρχον `CustomerRepository::duplicatesOf()`
+(φιλτραρισμένο ώστε να αγνοεί τον ίδιο τον πελάτη) -- πρώτη προσπάθεια χωρίς
+`confirm_duplicate` επιστρέφει 409 με `needs_confirm: true`, ίδιο πρότυπο
+retry με το ήδη υπάρχον resend του `SignLinkController`. Η οθόνη ξαναστέλνει
+με `confirm_duplicate: true` μετά από `window.confirm()` -- φυσικός browser
+dialog, όχι το custom `openDialog()`, ίδια χρήση με άλλα απλά ναι/όχι σε όλη
+την οθόνη.
+
+**Το ιστορικό, ορατό σε δύο σημεία.** Νέο route `GET /customers/{id}/events`
+για την πλήρη λίστα -- ανοίγει σε read-only `openDialog()` σε μορφή
+`.ecrm-timeline`, ίδιο οπτικό πρότυπο με τις σημειώσεις. Και μια σύντομη
+γραμμή «τελευταία αλλαγή» μόνιμα ορατή κάτω από το `.ecrm-pgrid` (`last_event`
+στην απάντηση του `/card`) -- ο συνεργάτης βλέπει ΠΟΙΟΣ άλλαξε ΤΙ τελευταία
+φορά χωρίς να ανοίξει τίποτα.
+
+**Τι ΔΕΝ αλλάζει.** Το `contact_phone`/`customer_type` κρατούν το δικό τους
+μονοπάτι, δεν μπαίνουν στο γενικό `PATCH`. Το `DB_VERSION` δεν αλλάζει, ίδια
+πρακτική με το (247)/(248) -- στοχευμένη μετανάστευση.
+
+**Αρχεία:** `includes/class-ecrm-db.php` (dbDelta `customer_events`),
+`src/Persistence/Tables.php` (`CUSTOMER_EVENTS`),
+`src/Persistence/Schema/Migrations/CreateCustomerEventsTable.php` (νέο),
+`src/Persistence/Schema/MigrationList.php` (wiring),
+`src/Persistence/CustomerEventRepository.php` (νέο -- `record()`,
+`forCustomer()`, `latestForCustomer()`), `src/Services.php`
+(`customerEvents()`), `src/Persistence/PersonalDataExporter.php`,
+`src/Persistence/PersonalDataEraser.php` (`eraseCustomerEvents()`),
+`tests/Unit/Persistence/PersonalDataCoverageTest.php` (`HANDLED_INLINE`),
+`tests/Integration/PersonalDataErasureTest.php` (νέα δοκιμή), `src/Http/
+CustomersController.php` (`EDITABLE_FIELDS`, `updateFull()`, `events()`,
+`lastEventWithAuthor()`, το `card()` πλέον στέλνει `last_event`),
+`src/Http/ControllerFactory.php` (wiring), `tests/Integration/
+CustomerRestAccessTest.php` (έξι νέες δοκιμές scope/επικύρωσης/
+διπλοεγγραφής/ιστορικού), `public/assets/ecrm-view-customer-card.js`
+(κουμπιά επεξεργασίας στα τρία μπλοκ ταυτότητας/διεύθυνσης/επικοινωνίας,
+γενικός διάλογος `editFields()` με retry σε 409, σύνδεσμος ιστορικού,
+γραμμή τελευταίας αλλαγής).
+
+**Μακέτα.** `docs/UI-CUSTOMER-CARD.html`, ήδη εγκεκριμένη (§1.8) --
+ολοκληρώνονται και τα τρία προτεινόμενα στάδια.
+
+**Πρόβλεψη πλήθους.** Δύο νέα αρχεία `src` (migration + repository): phpcs
+385 -> 387, phpstan 201 -> 203. unit 1218 -> 1218 (καμία νέα δοκιμή unit --
+μόνο νέα εγγραφή στο `HANDLED_INLINE`, ίδιο μοτίβο με το (248)). integration
+609 -> 616, οι επτά νέες (μία στο `PersonalDataErasureTest`, έξι στο
+`CustomerRestAccessTest`). wizard-smoke αμετάβλητο στο 31/31.
+
+**Laravel-ready; μερικώς.** `CustomerEventRepository` καθαρή πρόσβαση βάσης,
+ίδιο επίπεδο με το `CustomerNoteRepository`. Η λογική diff/επικύρωση/
+προειδοποίηση διπλοεγγραφής ζει προς το παρόν μέσα στο
+`CustomersController::updateFull()` (Http) -- ίδια συνειδητή συντόμευση με
+τα (247)/(248): αν χρειαστεί δεύτερος καταναλωτής («ποια πεδία άλλαξαν και
+γιατί», εκτός REST), αξίζει να βγει σε `Domain\Customer\CustomerEditor`.
+
 ### (248) Καρτέλα πελάτη — Στάδιο 2: σημειώσεις + τηλέφωνο επικοινωνίας
 
 **Το αίτημα.** Μετά την επιβεβαίωση στο (247) ότι η καρτέλα πελάτη δουλεύει

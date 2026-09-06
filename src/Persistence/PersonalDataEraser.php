@@ -76,6 +76,7 @@ final class PersonalDataEraser
             'leads'          => 0,
             'tasks'          => 0,
             'customer_notes' => 0,
+            'customer_events' => 0,
             'customer'       => 0,
         ];
 
@@ -93,8 +94,9 @@ final class PersonalDataEraser
         // -- η σημείωση δεν έχει τίποτα ΑΞΙΟ ΝΑ ΜΕΙΝΕΙ (ολόκληρη είναι
         // ελεύθερο κείμενο τρίτου), οπότε σβήνεται εξολοκλήρου, δεν
         // ανωνυμοποιείται όπως τα contracts/tasks/leads.
-        $report['customer_notes'] = $this->eraseCustomerNotes($customerId);
-        $report['customer']       = $this->eraseCustomer($customerId);
+        $report['customer_notes']  = $this->eraseCustomerNotes($customerId);
+        $report['customer_events'] = $this->eraseCustomerEvents($customerId);
+        $report['customer']        = $this->eraseCustomer($customerId);
 
         return $report;
     }
@@ -306,6 +308,32 @@ final class PersonalDataEraser
             $wpdb->prepare(
                 "DELETE FROM %i WHERE {$keyColumn} = %d",
                 Tables::name(Tables::CUSTOMER_NOTES),
+                $customerId
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $deleted === false ? 0 : (int) $deleted;
+    }
+
+    /**
+     * Ιδια δικαιολογία με το eraseCustomerNotes() ακριβώς από πάνω: το
+     * ιστορικό αλλαγών δεν έχει νόημα να επιβιώσει έναν πελάτη που δεν
+     * υπάρχει πια -- DELETE, όχι ανωνυμοποίηση.
+     */
+    private function eraseCustomerEvents(int $customerId): int
+    {
+        global $wpdb;
+
+        // Ιδιο σκεπτικό-literal με το eraseCustomerNotes(): το
+        // PersonalDataCoverageTest ψάχνει 'customer_id' ρητά σε αυτό το αρχείο.
+        $keyColumn = 'customer_id';
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $deleted = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM %i WHERE {$keyColumn} = %d",
+                Tables::name(Tables::CUSTOMER_EVENTS),
                 $customerId
             )
         );

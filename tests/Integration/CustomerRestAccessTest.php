@@ -185,6 +185,103 @@ final class CustomerRestAccessTest extends IntegrationTestCase
         self::assertSame('6944111222', $response->get_data()['contact_phone'] ?? null);
     }
 
+    /**
+     * 247, Στάδιο 3: πλήρης επεξεργασία στοιχείων -- ίδιος κίνδυνος, ίδιος
+     * έλεγχος scope με τη σημείωση/τηλέφωνο επικοινωνίας.
+     */
+    public function testAnotherPartnerCannotEditTheCustomersIdentity(): void
+    {
+        wp_set_current_user($this->bob);
+
+        $response = $this->send('PATCH', '/ecrm/v1/customers/' . $this->customerId, [
+            'mobile' => '6900000001',
+        ]);
+
+        self::assertSame(404, $response->get_status());
+    }
+
+    /** Ο ιδιοκτήτης αλλάζει ένα πεδίο και το βλέπει στην απάντηση, με ιστορικό. */
+    public function testTheOwningPartnerCanEditTheCustomersIdentity(): void
+    {
+        wp_set_current_user($this->alice);
+
+        $response = $this->send('PATCH', '/ecrm/v1/customers/' . $this->customerId, [
+            'mobile' => '6900000001',
+        ]);
+
+        self::assertSame(200, $response->get_status());
+        $data = $response->get_data();
+        self::assertSame('6900000001', $data['customer']['mobile'] ?? null);
+        self::assertSame(['mobile'], $data['changed'] ?? null);
+
+        $events = $this->send('GET', '/ecrm/v1/customers/' . $this->customerId . '/events');
+        self::assertSame(200, $events->get_status());
+        self::assertSame('mobile', $events->get_data()['events'][0]['field'] ?? null);
+    }
+
+    /** Ενα άκυρο ΑΦΜ απορρίπτεται πριν φτάσει καν στη βάση. */
+    public function testEditingToAnInvalidAfmIsRejected(): void
+    {
+        wp_set_current_user($this->alice);
+
+        $response = $this->send('PATCH', '/ecrm/v1/customers/' . $this->customerId, [
+            'afm' => '111111111',
+        ]);
+
+        self::assertSame(422, $response->get_status());
+    }
+
+    /**
+     * 247, Στάδιο 3: το ΑΦΜ ήδη ανήκει σε άλλον πελάτη -- προειδοποίηση, όχι
+     * εμπόδιο (απόφαση ιδιοκτήτη 05/09). Χωρίς confirm_duplicate, ο server
+     * αρνείται ώστε ο client να ρωτήσει πρώτα -- ίδιο σχήμα needs_confirm με
+     * το SignLinkController::create().
+     */
+    public function testEditingToAnAfmAlreadyOnFileNeedsConfirmation(): void
+    {
+        $other = $this->customers->create($this->customerData('200000006'));
+        $this->giveCustomerAContract($other, $this->alice);
+
+        wp_set_current_user($this->alice);
+
+        $response = $this->send('PATCH', '/ecrm/v1/customers/' . $this->customerId, [
+            'afm' => '200000006',
+        ]);
+
+        self::assertSame(409, $response->get_status());
+        self::assertTrue($response->get_data()['needs_confirm'] ?? false);
+    }
+
+    /** Με confirm_duplicate: true, ο συνεργάτης προχωράει ούτως ή άλλως. */
+    public function testEditingToAnAfmAlreadyOnFileProceedsWithConfirmation(): void
+    {
+        $other = $this->customers->create($this->customerData('200000006'));
+        $this->giveCustomerAContract($other, $this->alice);
+
+        wp_set_current_user($this->alice);
+
+        $response = $this->send('PATCH', '/ecrm/v1/customers/' . $this->customerId, [
+            'afm'                => '200000006',
+            'confirm_duplicate' => true,
+        ]);
+
+        self::assertSame(200, $response->get_status());
+        self::assertSame(['afm'], $response->get_data()['changed'] ?? null);
+    }
+
+    /**
+     * 247, Στάδιο 3: ίδιος κίνδυνος με τα υπόλοιπα routes -- ένας ξένος
+     * συνεργάτης δεν πρέπει να βλέπει καν ΟΤΙ υπάρχει ιστορικό.
+     */
+    public function testAnotherPartnerCannotReadTheCustomersEventHistory(): void
+    {
+        wp_set_current_user($this->bob);
+
+        $response = $this->send('GET', '/ecrm/v1/customers/' . $this->customerId . '/events');
+
+        self::assertSame(404, $response->get_status());
+    }
+
     /** The customer book is a list of one partner's rows, not the whole table. */
     public function testAnotherPartnersCustomerIsAbsentFromTheList(): void
     {

@@ -64,6 +64,30 @@ final class PersonalDataExporter
         // tasks.customer_id λίγο πιο κάτω, δηλωμένη στο
         // PersonalDataCoverageTest::HANDLED_INLINE.
         $subject[Tables::CUSTOMER_NOTES] = $this->rowsFor(Tables::CUSTOMER_NOTES, 'customer_id', [$customerId]);
+        // Ιδια κατηγορία ακμής με το customer_notes ακριβώς από πάνω --
+        // customer_events.customer_id, όχι contract_id. old_value/new_value
+        // αποκρυπτογραφούνται εδώ, ΟΧΙ μόνο rowsFor() ωμό: για ένα πεδίο σαν
+        // 'afm' η γραμμή είναι αποθηκευμένη ciphertext -- ένα GDPR export που
+        // επιστρέφει ciphertext αντί για την τιμή δεν έδωσε στο υποκείμενο
+        // τίποτα χρήσιμο.
+        $subject[Tables::CUSTOMER_EVENTS] = array_map(
+            function (array $event): array {
+                $field = (string) $event['field'];
+
+                if (! in_array($field, CustomerFields::encryptedColumns(), true)) {
+                    return $event;
+                }
+
+                foreach (['old_value', 'new_value'] as $column) {
+                    if (is_string($event[$column]) && $event[$column] !== '') {
+                        $event[$column] = (string) $this->fields->fromStorage([$field => $event[$column]])[$field];
+                    }
+                }
+
+                return $event;
+            },
+            $this->rowsFor(Tables::CUSTOMER_EVENTS, 'customer_id', [$customerId])
+        );
 
         foreach (PersonalDataTables::linkedToContracts() as $table => $keyColumn) {
             $rows = $this->rowsFor($table, $keyColumn, $contractIds);
