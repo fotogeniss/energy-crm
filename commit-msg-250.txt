@@ -1,0 +1,17 @@
+test: καμπανάκι-dismiss (59deb0d) -- backfill tests που έλειπαν
+
+Η λειτουργία «μόλις πατήσω το καμπανάκι να φεύγουν» (BELL_DISMISS_META,
+dismiss_stale_for/dismissed_map, viewer_id στο followups_for(),
+NotificationsController::markRead()) committed στο 59deb0d χωρίς κανένα
+integration test και χωρίς εγγραφή στο CHANGELOG -- εντοπίστηκε σε βαθύ
+έλεγχο που ζητήθηκε ρητά πριν προχωρήσουμε σε μετρήσεις scale80.
+
+Τέσσερα νέα tests στο NotificationsMarkReadScopeTest.php: mass mark-read
+αποσιωπά τη δική του αργή σύμβαση, δεν αγγίζει ξένη (ακόμα και σε κοινό
+scope=team view), single-id mark-read δεν αποσιωπά, και πραγματική αλλαγή
+μετά την απόρριψη ξαναμετράει ως αργή.
+
+Καμία αλλαγή σε production κώδικα -- μόνο tests + CHANGELOG (250).
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WTsKY6bJMV987pzmGYsFVo
