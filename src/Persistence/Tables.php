@@ -21,6 +21,7 @@ final class Tables
     public const CONTRACTS          = 'contracts';
     public const CUSTOMERS          = 'customers';
     public const CUSTOMER_NOTES     = 'customer_notes';
+    public const CUSTOMER_EVENTS    = 'customer_events';
     public const EVENTS             = 'events';
     public const FILES              = 'files';
     public const GUARANTEE_RULES    = 'guarantee_rules';
@@ -58,6 +59,7 @@ final class Tables
             self::PROGRAMS,
             self::CUSTOMERS,
             self::CUSTOMER_NOTES,
+            self::CUSTOMER_EVENTS,
             self::CONTRACTS,
             self::FILES,
             self::EVENTS,

@@ -101,6 +101,16 @@ final class PersonalDataErasureTest extends IntegrationTestCase
             ['contact_phone' => '6944111222']
         );
 
+        // 247, Στάδιο 3: δεύτερη ακμή-μόνο-από-πελάτη, ίδια κατηγορία με το
+        // customer_notes -- ένα ιστορικό αλλαγών, με τιμή ΠΙΘΑΝΟΝ κρυπτογραφημένη.
+        $wpdb->insert(Tables::name(Tables::CUSTOMER_EVENTS), [
+            'customer_id'     => $this->customerId,
+            'partner_user_id' => $partner,
+            'field'           => 'mobile',
+            'old_value'       => '6971000000',
+            'new_value'       => '6971234567',
+        ]);
+
         (new PersonalDataEraser(Services::files()))->erase($this->customerId);
     }
 
@@ -128,6 +138,22 @@ final class PersonalDataErasureTest extends IntegrationTestCase
             $wpdb->prepare(
                 'SELECT COUNT(*) FROM %i WHERE customer_id = %d',
                 Tables::name(Tables::CUSTOMER_NOTES),
+                $this->customerId
+            )
+        );
+
+        self::assertSame(0, $count);
+    }
+
+    /** 247, Στάδιο 3: ίδιος λόγος με το customer_notes -- μηδέν γραμμές, όχι ανωνυμοποίηση. */
+    public function testCustomerEventsAreGoneEntirely(): void
+    {
+        global $wpdb;
+
+        $count = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE customer_id = %d',
+                Tables::name(Tables::CUSTOMER_EVENTS),
                 $this->customerId
             )
         );

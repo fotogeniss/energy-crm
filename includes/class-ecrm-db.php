@@ -169,6 +169,27 @@ class ECRM_DB {
 			KEY customer_id (customer_id)
 		) {$charset};" );
 
+		// --- customer_events (247, Στάδιο 3) --------------------------------
+		// Ιστορικό αλλαγών στοιχείων πελάτη -- ένα γραμμή ανά ΠΕΔΙΟ που άλλαξε
+		// σε ένα save, όχι μία γραμμή ανά save με όλα μαζί: έτσι "ποιος άλλαξε
+		// ΤΙ" απαντιέται με ένα SELECT, όχι με parse ενός JSON blob. customer_id,
+		// ΟΧΙ contract_id -- ίδια ακμή-δύο με το customer_notes παραπάνω.
+		// old_value/new_value κρυπτογραφημένα όταν το πεδίο είναι στο
+		// CustomerFields::ENCRYPTED (βλ. CustomerEventRepository) -- ένα
+		// ιστορικό αλλαγών δεν έχει λόγο να είναι λιγότερο προστατευμένο από
+		// την ίδια τη στήλη που καταγράφει.
+		dbDelta( "CREATE TABLE {$p}customer_events (
+			id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			customer_id     BIGINT UNSIGNED NOT NULL,
+			partner_user_id BIGINT UNSIGNED NULL,
+			field           VARCHAR(40) NOT NULL,
+			old_value       TEXT NULL,
+			new_value       TEXT NULL,
+			created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY customer_id (customer_id)
+		) {$charset};" );
+
 		// --- contracts (applications) --------------------------------------
 		// code:            human ref, e.g. APP-0001
 		// partner_user_id: WP user — ο συνεργάτης

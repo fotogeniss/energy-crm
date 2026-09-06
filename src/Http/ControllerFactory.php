@@ -134,7 +134,8 @@ final class ControllerFactory
                 Services::customers(),
                 $queries,
                 Services::files(),
-                Services::customerNotes()
+                Services::customerNotes(),
+                Services::customerEvents()
             ),
             new LeadsController($scope, Services::leads(), Services::contracts(), Services::customers()),
             new TeamController(

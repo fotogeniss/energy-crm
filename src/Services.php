@@ -48,6 +48,7 @@ use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\ContractTransitions;
 use EnergyCRM\Persistence\CustomerRepository;
+use EnergyCRM\Persistence\CustomerEventRepository;
 use EnergyCRM\Persistence\CustomerNoteRepository;
 use EnergyCRM\Persistence\DashboardRepository;
 use EnergyCRM\Persistence\DeletionLogRepository;
@@ -75,6 +76,8 @@ final class Services
     private static ?CustomerRepository $customers = null;
 
     private static ?CustomerNoteRepository $customerNotes = null;
+
+    private static ?CustomerEventRepository $customerEvents = null;
 
     private static ?NetworkRepository $network = null;
 
@@ -378,6 +381,11 @@ final class Services
         return self::$customerNotes ??= new CustomerNoteRepository();
     }
 
+    public static function customerEvents(): CustomerEventRepository
+    {
+        return self::$customerEvents ??= new CustomerEventRepository();
+    }
+
     /** Test seam: swap implementations, then reset(). */
     public static function swap(
         ?ScopeResolver $scopeResolver = null,
@@ -399,6 +407,7 @@ final class Services
         self::$contracts     = null;
         self::$customers     = null;
         self::$customerNotes = null;
+        self::$customerEvents = null;
         self::$network       = null;
         self::$files         = null;
         self::$unprotectedDocuments = null;

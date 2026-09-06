@@ -64,6 +64,12 @@ final class PersonalDataCoverageTest extends TestCase
             . 'σύμβαση. Exporter::customerNotes() διαβάζει με Tables::CUSTOMER_NOTES, '
             . "Eraser::eraseCustomerNotes() σβήνει (DELETE, όχι redact -- η γραμμή "
             . 'ολόκληρη είναι ελεύθερο κείμενο).',
+        'customer_events.customer_id' =>
+            'Ιδια κατηγορία ακμής με το customer_notes -- κρέμεται μόνο από πελάτη '
+            . '(247, Στάδιο 3). Exporter::export() διαβάζει με Tables::CUSTOMER_EVENTS '
+            . 'και αποκρυπτογραφεί τα κρυπτογραφημένα πεδία, '
+            . 'Eraser::eraseCustomerEvents() σβήνει (DELETE, όχι redact -- το ιστορικό '
+            . 'ενός πελάτη που δεν υπάρχει πια δεν έχει λόγο να επιβιώσει).',
     ];
 
     /** Ο πίνακας που ΕΙΝΑΙ το υποκείμενο, όχι κάτι κρεμασμένο από αυτό. */

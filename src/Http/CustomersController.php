@@ -17,6 +17,7 @@ use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractQueries;
+use EnergyCRM\Persistence\CustomerEventRepository;
 use EnergyCRM\Persistence\CustomerNoteRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\FileRepository;
@@ -30,12 +31,33 @@ use WP_REST_Response;
  */
 final class CustomersController implements Controller
 {
+    /**
+     * Πεδία επεξεργάσιμα από το γενικό PATCH /customers/{id} (247, Στάδιο 3).
+     *
+     * ΟΧΙ 'contact_phone' (δικό του route, ξεχωριστό ιστορικό/GDPR κύκλος) ΟΥΤΕ
+     * 'customer_type' (αλλάζει ποια από τα ονοματεπώνυμο/επωνυμία έχουν νόημα --
+     * δομική αλλαγή, εκτός της μακέτας του Σταδίου 3). Υποσύνολο του
+     * CustomerRepository::WRITABLE, όχι το ίδιο -- το WRITABLE είναι το τι
+     * ΜΠΟΡΕΙ να γράψει η repository σε οποιονδήποτε καλούντα (ήδη χρειάζεται
+     * το πλήρες σύνολο για το ContractSaveController/ExtractionController),
+     * αυτό εδώ είναι το τι επιτρέπει να στείλει ΑΥΤΟ το route.
+     *
+     * @var list<string>
+     */
+    private const EDITABLE_FIELDS = [
+        'first_name', 'last_name', 'father_name', 'company_name',
+        'afm', 'doy', 'adt', 'birth_date',
+        'street', 'street_no', 'postal_code', 'city', 'region',
+        'phone', 'mobile', 'email',
+    ];
+
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly CustomerRepository $customers,
         private readonly ContractQueries $queries,
         private readonly FileRepository $files,
         private readonly CustomerNoteRepository $notes,
+        private readonly CustomerEventRepository $events,
     ) {
     }
 
@@ -117,10 +139,10 @@ final class CustomersController implements Controller
             ],
         ]);
 
-        // 247, Στάδιο 2: το ΜΟΝΟ εγγράψιμο πεδίο πελάτη προς το παρόν --
-        // εσωτερικής χρήσης, δεν τυπώνεται πουθενά. Η πλήρης επεξεργασία
-        // στοιχείων (όνομα, ΑΦΜ κλπ) μένει για το Στάδιο 3, με τα δικά της
-        // μέτρα ασφαλείας (hash, έλεγχος διπλοεγγραφής, ιστορικό αλλαγών).
+        // 247, Στάδιο 2: το τηλ. επικοινωνίας μένει σε ΔΙΚΟ ΤΟΥ route, ξεχωριστό
+        // από την πλήρη επεξεργασία του Σταδίου 3 -- εσωτερικής χρήσης, δεν
+        // τυπώνεται πουθενά, άρα δεν χρειάζεται ιστορικό αλλαγών (customer_events)
+        // ούτε έλεγχο διπλοεγγραφής.
         register_rest_route(Router::NAMESPACE, '/customers/(?P<id>\d+)/contact-phone', [
             'methods'             => 'PATCH',
             'callback'            => [$this, 'updateContactPhone'],
@@ -133,6 +155,49 @@ final class CustomersController implements Controller
                     'sanitize_callback' => 'sanitize_text_field',
                 ],
             ],
+        ]);
+
+        // 247, Στάδιο 3: πλήρης επεξεργασία στοιχείων -- Απόφαση ιδιοκτήτη
+        // (05/09): όποιος βλέπει τον πελάτη μπορεί να τον επεξεργαστεί, ΚΑΘΕ
+        // αλλαγή καταγράφεται στο customer_events (ορατή σε όλους στο
+        // ιστορικό), και δεν εμποδίζεται τίποτα -- ούτε δεύτερο ΑΦΜ που
+        // ανήκει ήδη σε άλλον πελάτη, ούτε αλλαγή σε πελάτη με ήδη
+        // κατατεθειμένες συμβάσεις. Το κόστος εξ ολοκλήρου στην ΠΡΟΕΙΔΟΠΟΙΗΣΗ
+        // πριν το save -- ο client καλεί ήδη το /customers/check και έχει ήδη
+        // το πλήθος συμβάσεων από το /card, οπότε δεν χρειάζεται νέο endpoint
+        // για κανένα από τα δύο.
+        //
+        // Κάθε πεδίο προαιρετικό -- ο client στέλνει ΜΟΝΟ όσα άλλαξε το ένα
+        // από τα τρία μπλοκ (Ταυτότητα/Διεύθυνση/Επικοινωνία) που άνοιξε,
+        // ίδιο σχήμα με το ContractSaveMapping::contractFrom(): ένα πεδίο που
+        // λείπει από το αίτημα μένει ανέγγιχτο, δεν γίνεται σιωπηλά NULL.
+        register_rest_route(Router::NAMESPACE, '/customers/(?P<id>\d+)', [
+            'methods'             => 'PATCH',
+            'callback'            => [$this, 'updateFull'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => array_merge(
+                [
+                    'id'                => ['type' => 'integer', 'required' => true],
+                    // Δεύτερη κλήση, αφού ο συνεργάτης έχει ήδη πει «ναι» στο
+                    // window.confirm() -- ίδιο σχήμα confirm_resend με το
+                    // SignLinkController::create().
+                    'confirm_duplicate' => ['type' => 'boolean', 'default' => false],
+                ],
+                array_fill_keys(
+                    self::EDITABLE_FIELDS,
+                    ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field']
+                )
+            ),
+        ]);
+
+        // 247, Στάδιο 3: όλο το ιστορικό αλλαγών -- το card() στέλνει ήδη μόνο
+        // την τελευταία γραμμή (last_event), αυτό το route ζητιέται μόνο όταν
+        // ο συνεργάτης ανοίξει ρητά «όλο το ιστορικό».
+        register_rest_route(Router::NAMESPACE, '/customers/(?P<id>\d+)/events', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'events'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => ['id' => ['type' => 'integer', 'required' => true]],
         ]);
     }
 
@@ -228,6 +293,10 @@ final class CustomersController implements Controller
             'contracts' => $contracts,
             'documents' => $documents,
             'notes'     => $this->withAuthorNames($this->notes->forCustomer($customerId)),
+            // 247, Στάδιο 3: η τελευταία γραμμή του ιστορικού αλλαγών, ίδια
+            // θέση με το ".audit" της μακέτας -- όχι όλο το ιστορικό εδώ, το
+            // openHistory() της οθόνης το ζητά ξεχωριστά μόνο όταν ανοίξει.
+            'last_event' => $this->lastEventWithAuthor($customerId),
             'doc_kinds' => ECRM_Docs::kinds(),
             'statuses'  => ContractStatus::labels(),
             'kpi'       => [
@@ -289,6 +358,104 @@ final class CustomersController implements Controller
     }
 
     /**
+     * Πλήρης επεξεργασία στοιχείων πελάτη (247, Στάδιο 3).
+     *
+     * Χωρίς κανένα εμπόδιο -- ούτε δεύτερο ΑΦΜ ήδη σε χρήση, ούτε επίδραση σε
+     * ήδη κατατεθειμένες συμβάσεις: απόφαση ιδιοκτήτη (05/09), και τα δύο
+     * μόνο προειδοποιήσεις στην οθόνη πριν το save (βλ. σχόλιο στο routes()).
+     * Ο μόνος πραγματικός έλεγχος εδώ είναι το ΑΦΜ (ψηφίο ελέγχου), ίδιος με
+     * το ContractSaveController -- ένα άκυρο ΑΦΜ δεν έχει καμία νόμιμη χρήση,
+     * σε αντίθεση με ένα ΑΦΜ που απλώς ανήκει ήδη σε κάποιον άλλον.
+     *
+     * Η καταγραφή στο customer_events γίνεται με βάση τη διαφορά ΠΡΙΝ/ΜΕΤΑ,
+     * όχι με βάση το τι έστειλε ο client: ένα πεδίο που στάλθηκε αλλά δεν
+     * άλλαξε ουσιαστικά (ίδια τιμή ξαναγραμμένη) δεν παράγει άχρηστη γραμμή
+     * ιστορικού.
+     */
+    public function updateFull(WP_REST_Request $request): WP_REST_Response
+    {
+        $scope      = $this->scopes->forCurrentUser();
+        $customerId = (int) $request['id'];
+        $before     = $this->customers->find($customerId, $scope);
+
+        if ($before === null) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.'], 404);
+        }
+
+        $data = [];
+
+        foreach (self::EDITABLE_FIELDS as $field) {
+            if (! $request->has_param($field)) {
+                continue;
+            }
+
+            $value = trim((string) $request[$field]);
+            $data[$field] = 'afm' === $field ? ECRM_Validate::digits($value) : $value;
+        }
+
+        if (isset($data['afm']) && $data['afm'] !== '' && ! ECRM_Validate::afm($data['afm'])) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Μη έγκυρο ΑΦΜ (αποτυχία ελέγχου ψηφίου).',
+                'field' => 'afm',
+            ], 422);
+        }
+
+        // Προειδοποίηση, όχι εμπόδιο -- απόφαση ιδιοκτήτη (05/09): ο
+        // συνεργάτης μπορεί να προχωρήσει ούτως ή άλλως, στέλνοντας ξανά το
+        // ίδιο αίτημα με confirm_duplicate: true. duplicatesOf() ψάχνει με
+        // βάση συμβάσεις, οπότε φιλτράρουμε τις γραμμές του ΙΔΙΟΥ πελάτη --
+        // αλλιώς κάθε αλλαγή ΑΦΜ θα προειδοποιούσε για τον εαυτό του.
+        if (
+            isset($data['afm']) && $data['afm'] !== '' && $data['afm'] !== (string) ($before['afm'] ?? '')
+            && ! (bool) $request['confirm_duplicate']
+        ) {
+            $matches = array_values(array_filter(
+                $this->customers->duplicatesOf($scope, $data['afm'], ''),
+                static fn (array $m): bool => (int) $m['id'] !== $customerId
+            ));
+
+            if ($matches !== []) {
+                $name = $matches[0]['company_name']
+                    ?: trim(($matches[0]['first_name'] ?? '') . ' ' . ($matches[0]['last_name'] ?? ''));
+
+                return new WP_REST_Response([
+                    'ok'            => false,
+                    'needs_confirm' => true,
+                    'reason'        => 'afm_duplicate',
+                    'error'         => 'Το ΑΦΜ ανήκει ήδη σε: ' . ($name ?: 'άλλον πελάτη') . '.',
+                ], 409);
+            }
+        }
+
+        $changes = [];
+
+        foreach ($data as $field => $value) {
+            $old = (string) ($before[$field] ?? '');
+
+            if ($old !== $value) {
+                $changes[$field] = ['old' => $old, 'new' => $value];
+            }
+        }
+
+        if ($changes === []) {
+            return new WP_REST_Response(['ok' => true, 'customer' => $before, 'changed' => []], 200);
+        }
+
+        if (! $this->customers->update($customerId, $scope, $data)) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.'], 404);
+        }
+
+        $this->events->record($customerId, $scope->actorId(), $changes);
+
+        return new WP_REST_Response([
+            'ok'       => true,
+            'customer' => $this->customers->find($customerId, $scope),
+            'changed'  => array_keys($changes),
+        ], 200);
+    }
+
+    /**
      * Ιδιο πρότυπο με το ContractsReadController::withActorNames() -- ένα
      * μαζικό get_users() αντί για N επερωτήσεις, ένα όνομα ανά partner_user_id.
      *
@@ -314,6 +481,34 @@ final class CustomersController implements Controller
         }
 
         return $notes;
+    }
+
+    /**
+     * Η μία γραμμή που δείχνει το ".audit" footer της κάρτας, με όνομα συντάκτη.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function lastEventWithAuthor(int $customerId): ?array
+    {
+        $event = $this->events->latestForCustomer($customerId);
+
+        return $event ? $this->withAuthorNames([$event])[0] : null;
+    }
+
+    /** GET /customers/{id}/events -- όλο το ιστορικό αλλαγών (247, Στάδιο 3). */
+    public function events(WP_REST_Request $request): WP_REST_Response
+    {
+        $scope      = $this->scopes->forCurrentUser();
+        $customerId = (int) $request['id'];
+
+        if (! $this->customers->isReachable($customerId, $scope)) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Ο πελάτης δεν βρέθηκε.'], 404);
+        }
+
+        return new WP_REST_Response(
+            ['ok' => true, 'events' => $this->withAuthorNames($this->events->forCustomer($customerId))],
+            200
+        );
     }
 
     public function index(WP_REST_Request $request): WP_REST_Response

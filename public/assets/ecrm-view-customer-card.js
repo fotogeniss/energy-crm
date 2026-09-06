@@ -1,11 +1,14 @@
 /* Energy CRM — καρτέλα πελάτη: όλα τα στοιχεία ενός πελάτη σε μία οθόνη.
  *
- * Build queue 09, 05/09 (247). Στάδιο 1 από τρία (docs/UI-CUSTOMER-CARD.html,
- * εγκρίθηκε 05/09): μόνο ανάγνωση. Πριν από αυτή την οθόνη, «άνοιξε τον
- * πελάτη» σήμαινε openCustomerContracts() -- τη λίστα «Συμβάσεις» φιλτραρισμένη
- * στο ΑΦΜ του (βλ. σχόλιο εκεί, build queue 08). Αυτό παραμένει, αλλά δεν
- * έλυνε ποτέ το ίδιο πρόβλημα: εδώ ο συνεργάτης βλέπει τον πελάτη, όχι μια
- * λίστα σχεδόν τυχαία φιλτραρισμένη γύρω του.
+ * Build queue 09, 05-06/09 (247). Και τα τρία στάδια της εγκεκριμένης μακέτας
+ * (docs/UI-CUSTOMER-CARD.html, εγκρίθηκε 05/09) είναι πλέον εδώ: Στάδιο 1
+ * μόνο ανάγνωση, Στάδιο 2 σημειώσεις + τηλ. επικοινωνίας, Στάδιο 3 πλήρης
+ * επεξεργασία στοιχείων (Ταυτότητα/Διεύθυνση/Επικοινωνία, με ιστορικό
+ * αλλαγών). Πριν από αυτή την οθόνη, «άνοιξε τον πελάτη» σήμαινε
+ * openCustomerContracts() -- τη λίστα «Συμβάσεις» φιλτραρισμένη στο ΑΦΜ του
+ * (βλ. σχόλιο εκεί, build queue 08). Αυτό παραμένει, αλλά δεν έλυνε ποτέ το
+ * ίδιο πρόβλημα: εδώ ο συνεργάτης βλέπει τον πελάτη, όχι μια λίστα σχεδόν
+ * τυχαία φιλτραρισμένη γύρω του.
  *
  * Ενα μόνο fetch (CustomersController::card()) φέρνει πελάτη + συμβάσεις +
  * έγγραφα + τα τρία KPI μαζί -- τα KPI υπολογισμένα ΕΚΕΙ, όχι εδώ, ώστε το
@@ -165,6 +168,130 @@ function contactPhoneBlock(phone) {
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-phone-edit>Επεξεργασία</button>';
 }
 
+/* 247, Στάδιο 3 (docs/UI-CUSTOMER-CARD.html): πλήρης επεξεργασία στοιχείων.
+ * Απόφαση ιδιοκτήτη (05/09): όποιος βλέπει τον πελάτη μπορεί να τον
+ * επεξεργαστεί, ΚΑΘΕ αλλαγή ορατή σε όλους στο ιστορικό (customer_events),
+ * και τίποτα δεν εμποδίζει το save -- ούτε δεύτερο ΑΦΜ που ανήκει ήδη σε
+ * άλλον πελάτη (μόνο προειδοποίηση, με δυνατότητα να προχωρήσει), ούτε
+ * επίδραση σε ήδη κατατεθειμένες συμβάσεις (μόνο ενημέρωση πλήθους).
+ */
+var FIELD_LABEL = {
+	first_name: 'Όνομα', last_name: 'Επώνυμο', father_name: 'Πατρώνυμο', company_name: 'Επωνυμία',
+	afm: 'Α.Φ.Μ.', doy: 'Δ.Ο.Υ.', adt: 'Α.Δ.Τ.', birth_date: 'Ημ. Γέννησης',
+	street: 'Οδός', street_no: 'Αριθμός', postal_code: 'Τ.Κ.', city: 'Πόλη', region: 'Περιοχή',
+	phone: 'Τηλέφωνο', mobile: 'Κινητό', email: 'Email',
+};
+
+function stepHead(title, attr) {
+	return '<div class="ecrm-step">' + esc(title) +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" style="margin-left:auto" data-' + attr + '>Επεξεργασία</button></div>';
+}
+
+/* Ενημέρωση, όχι εμπόδιο -- η μακέτα το λέει ρητά: «οι συμβάσεις με ήδη
+ * κατατεθειμένο χαρτί δεν αλλάζουν μόνες τους». Το πλήθος έρχεται ήδη
+ * φορτωμένο από το card() (d.kpi) -- κανένα δεύτερο αίτημα για αυτό. */
+function contractImpactHint(kpi) {
+	if (!kpi || !kpi.contracts_count) { return ''; }
+	var txt = 'Αφορά ' + kpi.contracts_count + (kpi.contracts_count === 1 ? ' σύμβαση' : ' συμβάσεις');
+	if (kpi.active_count) {
+		txt += ', ' + kpi.active_count + (kpi.active_count === 1 ? ' ενεργή' : ' ενεργές');
+	}
+	return '<p class="ecrm-hint">' + esc(txt) + '.</p>';
+}
+
+function eventValueText(field, value) {
+	if (!value) { return '—'; }
+	return field === 'birth_date' ? fmtDate(value) : value;
+}
+
+/* Η γραμμή ".audit" της μακέτας -- μόνο η τελευταία αλλαγή (last_event, ήδη
+ * μέσα στο card()), με σύνδεσμο για όλο το ιστορικό, ζητημένο ξεχωριστά μόνο
+ * όταν ανοίξει (GET /customers/{id}/events) -- ίδιο σκεπτικό με το γιατί το
+ * card() δεν στέλνει ήδη ολόκληρο το ιστορικό.
+ */
+function auditFooter(event) {
+	if (!event) { return ''; }
+	var label = FIELD_LABEL[event.field] || event.field;
+	return '<div class="ecrm-notes">' +
+		'Τελευταία αλλαγή στοιχείων: <b>' + esc(event.author || '—') + '</b> · ' + timeAgo(event.created_at) +
+		' · άλλαξε <b>' + esc(label) + '</b> από ' + esc(eventValueText(event.field, event.old_value)) +
+		' σε ' + esc(eventValueText(event.field, event.new_value)) +
+		' &nbsp;·&nbsp; <a href="#" data-history>όλο το ιστορικό</a>' +
+		'</div>';
+}
+
+/* Ενα generic dialog επεξεργασίας για ένα υποσύνολο πεδίων -- τα τρία μπλοκ
+ * (Ταυτότητα/Διεύθυνση/Επικοινωνία) στέλνουν διαφορετική λίστα `fields`,
+ * ίδιο PATCH /customers/{id} και ίδιος χειρισμός needs_confirm και για τα
+ * τρία (μόνο η Ταυτότητα στέλνει ποτέ 'afm', οπότε μόνο εκεί ενεργοποιείται
+ * στην πράξη).
+ *
+ * @param {Array<[string,string,string?]>} fields [κλειδί, ετικέτα, τύπος πεδίου]
+ */
+function editFields(id, name, eyebrow, kpi, fields, current) {
+	var body = '<div class="ecrm-modal__card ecrm-modal__stack">' +
+		fields.map(function (f) {
+			var key = f[0];
+			var type = f[2] || 'text';
+			var val = current[key] || '';
+			if (type === 'date' && val) { val = String(val).slice(0, 10); }
+			return '<label class="ecrm-field"><span class="ecrm-field__label">' + esc(f[1]) + '</span>' +
+				'<input class="ecrm-input" type="' + type + '" data-ef="' + key + '" value="' + esc(val) + '"></label>';
+		}).join('') +
+		'</div>' + contractImpactHint(kpi);
+
+	function save(payload, confirmDuplicate, close, btn) {
+		btn.disabled = true;
+		if (confirmDuplicate) { payload = Object.assign({}, payload, { confirm_duplicate: true }); }
+
+		fetch(api('/customers/' + id), {
+			method: 'PATCH',
+			headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+			body: JSON.stringify(payload),
+		})
+			.then(function (r) { return r.json(); })
+			.then(function (res) {
+				if (res && res.ok) {
+					close();
+					toast((res.changed && res.changed.length) ? 'Ενημερώθηκε.' : 'Καμία αλλαγή.');
+					// Ιδιο re-entry με το Στάδιο 2 -- βλ. σχόλιο στο addNote()/
+					// updateContactPhone() παρακάτω.
+					openCustomerCard(id);
+					return;
+				}
+
+				if (res && res.needs_confirm && res.reason === 'afm_duplicate') {
+					btn.disabled = false;
+					// window.confirm(), ίδιο μοτίβο με το SignLinkController::create()
+					// στο ecrm-view-detail.js -- needs_confirm από τον server, «ναι»
+					// από τον χρήστη, δεύτερη κλήση με confirm_duplicate: true.
+					if (window.confirm(res.error + ' Θέλεις να συνεχίσεις;')) {
+						save(payload, true, close, btn);
+					}
+					return;
+				}
+
+				btn.disabled = false;
+				toast((res && res.error) || 'Αποτυχία.', false);
+			})
+			.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+	}
+
+	openDialog({
+		eyebrow: eyebrow,
+		title: 'Επεξεργασία για ' + name,
+		body: body,
+		confirm: 'Αποθήκευση',
+		onConfirm: function (el, close, btn) {
+			var payload = {};
+			fields.forEach(function (f) {
+				payload[f[0]] = (el.querySelector('[data-ef="' + f[0] + '"]').value || '').trim();
+			});
+			save(payload, false, close, btn);
+		},
+	});
+}
+
 function renderCard(view, id, d) {
 	var c = d.customer || {};
 	var contracts = d.contracts || [];
@@ -191,14 +318,15 @@ function renderCard(view, id, d) {
 
 		'<div class="ecrm-pgrid">' +
 		'<div class="ecrm-pgrid__side">' +
-		'<div class="ecrm-card"><div class="ecrm-step">Ταυτότητα</div>' +
+		'<div class="ecrm-card">' + stepHead('Ταυτότητα', 'edit-identity') +
 		kv('Όνομα', c.first_name) + kv('Επώνυμο', c.last_name) + kv('Πατρώνυμο', c.father_name) +
+		(c.customer_type !== 'individual' ? kv('Επωνυμία', c.company_name) : '') +
 		kv('Α.Φ.Μ.', c.afm) + kv('Δ.Ο.Υ.', c.doy) + kv('Α.Δ.Τ.', c.adt) + kv('Ημ. Γέννησης', c.birth_date ? fmtDate(c.birth_date) : '') +
 		'</div>' +
-		'<div class="ecrm-card"><div class="ecrm-step">Διεύθυνση</div>' +
+		'<div class="ecrm-card">' + stepHead('Διεύθυνση', 'edit-address') +
 		kv('Οδός', [c.street, c.street_no].filter(Boolean).join(' ')) + kv('Πόλη', c.city) + kv('Τ.Κ.', c.postal_code) + kv('Περιοχή', c.region) +
 		'</div>' +
-		'<div class="ecrm-card"><div class="ecrm-step">Επικοινωνία</div>' +
+		'<div class="ecrm-card">' + stepHead('Επικοινωνία', 'edit-contact') +
 		kv('Τηλέφωνο', c.phone) + kv('Κινητό', c.mobile) + kv('Email', c.email) +
 		contactPhoneBlock(c.contact_phone) +
 		'</div>' +
@@ -210,7 +338,9 @@ function renderCard(view, id, d) {
 		'<div class="ecrm-card"><div class="ecrm-step">Σημειώσεις</div>' + notesBlock(d.notes) + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Έγγραφα όλων των συμβάσεων</div>' + documentsList(documents, d.doc_kinds, contracts) + '</div>' +
 		'</div>' +
-		'</div>';
+		'</div>' +
+
+		auditFooter(d.last_event);
 
 	var back = view.querySelector('[data-back]');
 	if (back) { back.addEventListener('click', function () { go('customers'); }); }
@@ -314,5 +444,68 @@ function renderCard(view, id, d) {
 					.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
 			},
 		});
+	});
+
+	/* 247, Στάδιο 3 -- τα τρία μπλοκ επεξεργασίας. Ιδιο editFields() και για
+	 * τα τρία, μόνο η λίστα πεδίων αλλάζει. */
+	var editIdentityBtn = view.querySelector('[data-edit-identity]');
+	if (editIdentityBtn) editIdentityBtn.addEventListener('click', function () {
+		var fields = [
+			['first_name', 'Όνομα'], ['last_name', 'Επώνυμο'], ['father_name', 'Πατρώνυμο'],
+		];
+		if (c.customer_type !== 'individual') { fields.push(['company_name', 'Επωνυμία']); }
+		fields.push(['afm', 'Α.Φ.Μ.'], ['doy', 'Δ.Ο.Υ.'], ['adt', 'Α.Δ.Τ.'], ['birth_date', 'Ημ. Γέννησης', 'date']);
+		editFields(id, name, 'Ταυτότητα', d.kpi, fields, c);
+	});
+
+	var editAddressBtn = view.querySelector('[data-edit-address]');
+	if (editAddressBtn) editAddressBtn.addEventListener('click', function () {
+		editFields(id, name, 'Διεύθυνση', d.kpi, [
+			['street', 'Οδός'], ['street_no', 'Αριθμός'], ['postal_code', 'Τ.Κ.'],
+			['city', 'Πόλη'], ['region', 'Περιοχή'],
+		], c);
+	});
+
+	var editContactBtn = view.querySelector('[data-edit-contact]');
+	if (editContactBtn) editContactBtn.addEventListener('click', function () {
+		editFields(id, name, 'Επικοινωνία', d.kpi, [
+			['phone', 'Τηλέφωνο'], ['mobile', 'Κινητό'], ['email', 'Email', 'email'],
+		], c);
+	});
+
+	/* 247, Στάδιο 3 -- «όλο το ιστορικό» της μακέτας. Ζητιέται μόνο εδώ,
+	 * ξεχωριστά από το card(), που στέλνει ήδη μόνο το τελευταίο (last_event). */
+	var historyLink = view.querySelector('[data-history]');
+	if (historyLink) historyLink.addEventListener('click', function (e) {
+		e.preventDefault();
+
+		fetch(api('/customers/' + id + '/events'), { headers: H() })
+			.then(function (r) { return r.json(); })
+			.then(function (res) {
+				var events = (res && res.ok) ? res.events : [];
+				var list = events.length
+					? '<ul class="ecrm-timeline">' + events.map(function (ev) {
+						var label = FIELD_LABEL[ev.field] || ev.field;
+						return '<li><span class="ecrm-timeline__dot"></span><div>' +
+							'<div class="ecrm-timeline__txt">' + esc(label) + ': ' +
+							esc(eventValueText(ev.field, ev.old_value)) + ' &rarr; ' +
+							esc(eventValueText(ev.field, ev.new_value)) + '</div>' +
+							'<div class="ecrm-timeline__time">' + timeAgo(ev.created_at) + '</div>' +
+							'<div class="ecrm-timeline__who"><span class="ecrm-timeline__whoname">' + esc(ev.author || '—') + '</span></div>' +
+							'</div></li>';
+					}).join('') + '</ul>'
+					: '<div class="ecrm-empty">Καμία καταγεγραμμένη αλλαγή.</div>';
+
+				openDialog({
+					eyebrow: 'Ιστορικό',
+					title: 'Αλλαγές στοιχείων -- ' + name,
+					body: '<div class="ecrm-modal__card">' + list + '</div>',
+					// Καθαρά προβολή -- το data-go κλείνει σαν το data-x, όχι
+					// δεύτερη σημασιολογία «αποθήκευση».
+					confirm: 'Κλείσιμο',
+					onConfirm: function (el, close) { close(); },
+				});
+			})
+			.catch(function () { toast('Σφάλμα δικτύου.', false); });
 	});
 }
