@@ -17,7 +17,7 @@
  * τη λίστα «Συμβάσεις» -- ο συνεργάτης δεν μαθαίνει δεύτερη γλώσσα χρωμάτων.
  */
 
-import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, markSubViewOpen, toast, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, timeAgo, tint } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
@@ -26,6 +26,7 @@ var TYPE_LABEL = { individual: 'ΙΔΙΩΤΗΣ', company: 'ΕΤΑΙΡΕΙΑ', so
 
 export function openCustomerCard(id) {
 	go('customer-detail');
+	markSubViewOpen();
 	var view = viewEl('customer-detail');
 	if (!view) { return; }
 	view.innerHTML = '<div class="ecrm-loading">Φόρτωση…</div>';

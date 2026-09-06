@@ -17,7 +17,7 @@
  * δείγμα δίπλα του θα περνούσε για ιστορικό.
  */
 
-import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, markSubViewOpen, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, tint } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
 
@@ -26,6 +26,7 @@ var MIN_SAMPLE = 5;
 
 export function openPartner(id) {
 	go('partner');
+	markSubViewOpen();
 	var view = viewEl('partner');
 	if (!view) { return; }
 	view.innerHTML = '<div class="ecrm-loading">Φόρτωση…</div>';

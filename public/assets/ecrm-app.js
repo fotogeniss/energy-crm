@@ -118,8 +118,15 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		if (g === 'contracts' && btn.hasAttribute('data-status')) {
 			setContractsFilter(btn.getAttribute('data-status'));
 		}
-		// Clicking the sidebar "Νέα Σύμβαση" starts a fresh form.
+		// Clicking the sidebar "Νέα Σύμβαση" starts a fresh form -- ΑΛΛΑ
+		// όχι σιωπηλά πάνω σε μια ήδη μισο-συμπληρωμένη: αναφέρθηκε 06/09 σαν
+		// μέρος του ίδιου προβλήματος με το beforeunload (ecrm-form.js) --
+		// εκεί προστατεύει από refresh/κλείσιμο, εδώ από αυτό το ΙΔΙΟ κλικ.
 		if (g === 'new-contract' && btn.classList.contains('ecrm-nav__item') && window.ECRMForm && window.ECRMForm.reset) {
+			if (window.ECRMForm.isDirty && window.ECRMForm.isDirty() &&
+				!window.confirm('Η τρέχουσα αίτηση έχει μη αποθηκευμένες αλλαγές. Να ξεκινήσει νέα αίτηση και να χαθούν;')) {
+				return;
+			}
 			window.ECRMForm.reset();
 		}
 		go(g);
@@ -295,6 +302,13 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 	}
 
 	function openEdit(c) {
+		// Ίδιος έλεγχος με το κλικ στο "Νέα Σύμβαση" παραπάνω: το άνοιγμα
+		// επεξεργασίας ΑΛΛΗΣ σύμβασης καλεί reset() πριν το prefill -- χωρίς αυτό
+		// θα έσβηνε σιωπηλά μια μισο-συμπληρωμένη νέα αίτηση.
+		if (window.ECRMForm && window.ECRMForm.isDirty && window.ECRMForm.isDirty() &&
+			!window.confirm('Η τρέχουσα αίτηση έχει μη αποθηκευμένες αλλαγές. Να ανοίξει η επεξεργασία και να χαθούν;')) {
+			return;
+		}
 		go('new-contract');
 		if (window.ECRMForm && window.ECRMForm.edit) {
 			// Clear whatever a previous edit session left behind before

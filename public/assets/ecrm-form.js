@@ -8,7 +8,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 (function () {
 	'use strict';
 
-	var _editFn = null, _resetFn = null;
+	var _editFn = null, _resetFn = null, _isDirtyFn = null;
 
 	// Force fresh data: never serve our API calls from cache.
 	var _origFetch = window.fetch.bind(window);
@@ -52,6 +52,27 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		var pendingProvider = null;
 		var q = function (sel) { return root.querySelector(sel); };
 		var qa = function (sel) { return root.querySelectorAll(sel); };
+
+		/*
+		 * Καμία προειδοποίηση δεν υπήρχε πριν από refresh/κλείσιμο -- ο
+		 * συνεργάτης μπορούσε να χάσει ολόκληρη τη δουλειά ενός βήματος
+		 * χωρίς κανένα σημάδι, αναφέρθηκε 06/09. Το `dirty` ανεβαίνει ΜΟΝΟ
+		 * από πραγματικό πληκτρολόγημα/επιλογή του χρήστη (native input/
+		 * change events) -- ΟΧΙ από γέμισμα πεδίων μέσω κώδικα (setField(),
+		 * applyEdit(), η αυτόματη εξαγωγή AI), αφού το `.value = ...` δεν
+		 * πυροδοτεί τέτοιο event από μόνο του. Κατεβαίνει μετά από κάθε
+		 * επιτυχή αποθήκευση (doSave()) και σε κάθε νέο ξεκίνημα
+		 * (resetForm()/applyEdit()) -- αλλιώς θα προειδοποιούσε ΚΑΙ μετά από
+		 * ένα ήδη αποθηκευμένο "Προσωρινή Αποθήκευση".
+		 */
+		var dirty = false;
+		root.addEventListener('input', function () { dirty = true; });
+		root.addEventListener('change', function () { dirty = true; });
+		window.addEventListener('beforeunload', function (e) {
+			if (!dirty) { return; }
+			e.preventDefault();
+			e.returnValue = '';
+		});
 
 		function applyCustomerType() {
 			var t = state.customer_type || 'individual';
@@ -1392,6 +1413,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 
 		function applyEdit(c) {
 			if (!c) return;
+			dirty = false;
 			state.contract_id = parseInt(c.id, 10) || 0;
 			state.customer_id = parseInt(c.customer_id, 10) || 0;
 			/* Το «Εξαγωγή με AI» γεννιέται disabled στο markup και το ξεκλειδώνει
@@ -1539,6 +1561,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		}
 
 		function resetForm() {
+			dirty = false;
 			state.contract_id = 0; state.customer_id = 0; state.extracted_json = null;
 			state.provider_id = null; state.program_id = null; state.invoice_code = null; state.activation_type = null;
 			state.energy_type = 'power'; state.category = 'home'; state.price_type = 'fixed'; state.customer_type = 'individual';
@@ -1586,7 +1609,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			state.wmax = 1; goStep(1, false);
 		}
 
-		_editFn = applyEdit; _resetFn = resetForm;
+		_editFn = applyEdit; _resetFn = resetForm; _isDirtyFn = function () { return dirty; };
 
 		// dropzone
 		var drop = q('[data-drop]'), input = q('[data-files]'), pick = q('[data-pick]'), extractBtn = q('[data-extract]');
@@ -2370,6 +2393,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				.then(function (d) {
 					if (d && d.ok) {
 						state.contract_id = d.contract_id; state.customer_id = d.customer_id;
+						dirty = false;
 						// An undefined status means "fields only, no transition".
 						toast(!status
 							? 'Οι αλλαγές αποθηκεύτηκαν.'
@@ -2504,7 +2528,17 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		});
 	}
 
-	window.ECRMForm = { init: initForm, edit: function (c) { if (_editFn) _editFn(c); }, reset: function () { if (_resetFn) _resetFn(); } };
+	window.ECRMForm = {
+		init: initForm,
+		edit: function (c) { if (_editFn) _editFn(c); },
+		reset: function () { if (_resetFn) _resetFn(); },
+		// Το κλείσιμο/άνοιγμα άλλης σύμβασης ενώ η φόρμα έχει αχρωμάτιστες
+		// αλλαγές (dirty) περνάει από εδώ πριν καλέσει reset()/edit() πάνω
+		// της -- βλ. ecrm-app.js, τα δύο σημεία που καλούν reset() για να
+		// ξεκινήσουν αλλού (νέα αίτηση από το πλαϊνό μενού, επεξεργασία
+		// άλλης σύμβασης). Το ίδιο dirty flag με το beforeunload.
+		isDirty: function () { return _isDirtyFn ? _isDirtyFn() : false; }
+	};
 
 	// Standalone auto-init
 	document.addEventListener('DOMContentLoaded', function () {
