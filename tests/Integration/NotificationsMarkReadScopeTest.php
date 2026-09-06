@@ -18,20 +18,26 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use ECRM_Notifications;
 use EnergyCRM\Access\Roles;
+use EnergyCRM\Access\UserScope;
+use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\NotificationRepository;
+use EnergyCRM\Persistence\Tables;
 use WP_REST_Request;
 use WP_REST_Response;
 
 final class NotificationsMarkReadScopeTest extends IntegrationTestCase
 {
     private NotificationRepository $notifications;
+    private ContractRepository $contracts;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->notifications = new NotificationRepository();
+        $this->contracts     = new ContractRepository();
     }
 
     protected function tearDown(): void
@@ -103,6 +109,152 @@ final class NotificationsMarkReadScopeTest extends IntegrationTestCase
         $data = rest_do_request(new WP_REST_Request('GET', '/ecrm/v1/notifications'))->get_data();
 
         self::assertSame(1, $data['unread']);
+    }
+
+    /**
+     * (59deb0d) «μόλις πατήσω το καμπανάκι να φεύγουν» -- committed χωρίς
+     * κανένα integration test. Αυτό το σετ καλύπτει το κενό: το mass
+     * mark-read πρέπει να φωτογραφίζει και να αποσιωπά τις ΔΙΚΕΣ ΤΟΥ
+     * θεατή εκκρεμότητες, χωρίς να αγγίζει άλλον χρήστη, χωρίς να το κάνει
+     * το single-id mark-read, και μόνο μέχρι να αλλάξει κάτι πραγματικό.
+     */
+    public function testMarkAllDismissesTheCallersOwnStaleContract(): void
+    {
+        $owner = $this->makeCrmUser(Roles::SELLER);
+        $contractId = $this->staleContract($owner, 'pending');
+
+        wp_set_current_user($owner);
+
+        $before = ECRM_Notifications::followups_for([$owner], $owner);
+        self::assertSame(1, $before['stale'], 'Fixture must start stale.');
+
+        $this->markRead(null);
+
+        $after = ECRM_Notifications::followups_for([$owner], $owner);
+        self::assertSame(
+            0,
+            $after['stale'],
+            'Dismissing via the bell must stop counting the still-open contract as stale.'
+        );
+
+        $row = $this->rowFor($after, $contractId);
+        self::assertNotNull($row, 'The contract itself must still be listed -- dismissal never hides it.');
+        self::assertFalse($row['stale']);
+    }
+
+    public function testDismissingDoesNotAffectAnotherUsersStaleContract(): void
+    {
+        $viewer   = $this->makeCrmUser(Roles::SELLER);
+        $stranger = $this->makeCrmUser(Roles::SELLER);
+
+        $viewerContract   = $this->staleContract($viewer, 'pending');
+        $strangerContract = $this->staleContract($stranger, 'pending');
+
+        wp_set_current_user($viewer);
+        $this->markRead(null);
+
+        // Ίδιο doc-claim με το followups_for(): μόνο η δική του φωτογραφία
+        // εφαρμόζεται -- ένας θεατής που βλέπει την ίδια ομάδα (scope=team)
+        // δεν πρέπει ξαφνικά να χάσει την εκκρεμότητα του ξένου.
+        $strangerView = ECRM_Notifications::followups_for([$viewer, $stranger], $stranger);
+        $row = $this->rowFor($strangerView, $strangerContract);
+        self::assertNotNull($row);
+        self::assertTrue($row['stale'], "Someone else's stale contract must not be dismissed by my click.");
+
+        $ownView = ECRM_Notifications::followups_for([$viewer], $viewer);
+        $ownRow = $this->rowFor($ownView, $viewerContract);
+        self::assertNotNull($ownRow);
+        self::assertFalse($ownRow['stale']);
+    }
+
+    /** Only the mass mark-all (no id) dismisses -- a single stored-notification id must not. */
+    public function testMarkingASingleNotificationByIdDoesNotDismissStaleContracts(): void
+    {
+        $owner = $this->makeCrmUser(Roles::SELLER);
+        $this->staleContract($owner, 'pending');
+        $this->notifications->add($owner, 'note', 'Κάτι άλλο');
+        $notifId = $this->onlyNotificationIdOf($owner);
+
+        wp_set_current_user($owner);
+        $this->markRead($notifId);
+
+        $data = ECRM_Notifications::followups_for([$owner], $owner);
+        self::assertSame(
+            1,
+            $data['stale'],
+            'Reading one stored notification must not silently dismiss the pending-contract count too.'
+        );
+    }
+
+    /** The whole point of a snapshot, not a hide: a real change re-arms the alert. */
+    public function testAContractThatChangesAfterDismissalCountsAsStaleAgain(): void
+    {
+        $owner = $this->makeCrmUser(Roles::SELLER);
+        $contractId = $this->staleContract($owner, 'pending');
+
+        wp_set_current_user($owner);
+        $this->markRead(null);
+        self::assertSame(0, ECRM_Notifications::followups_for([$owner], $owner)['stale']);
+
+        $this->contracts->update($contractId, UserScope::forSelf($owner), ['status' => 'routed']);
+        // +2 μέρες αντί για +1: αν το UPDATE και η επόμενη γήρανση πέσουν στο
+        // ίδιο δευτερόλεπτο (πολύ πιθανό σε γρήγορο test run), το DATETIME
+        // της MySQL δεν έχει κλάσματα δευτερολέπτου -- ίδιο πλήθος ημερών θα
+        // παρήγαγε ΤΑΥΤΟΣΗΜΗ τιμή με τη φωτογραφία απόρριψης και το test θα
+        // απέτυχε για λάθος λόγο (φαινομενικά ξαναδέχεται dismissal ενώ απλά
+        // δεν άλλαξε τίποτα μετρήσιμο). Διαφορετικό πλήθος ημερών εγγυάται
+        // διαφορετικό updated_at.
+        $this->ageContract($contractId, ECRM_Notifications::threshold_days() + 2);
+
+        $after = ECRM_Notifications::followups_for([$owner], $owner);
+        $row = $this->rowFor($after, $contractId);
+        self::assertNotNull($row);
+        self::assertTrue(
+            $row['stale'],
+            'A real change (new updated_at) must drop out of the dismissed snapshot and count again.'
+        );
+    }
+
+    /**
+     * Ίδιο τέχνασμα με `EscalationsScopeTest::staleContract()`/`ageContract()`:
+     * μόνο ένα δεύτερο UPDATE ενεργοποιεί το `ON UPDATE CURRENT_TIMESTAMP`.
+     */
+    private function staleContract(int $ownerId, string $status): int
+    {
+        $contractId = $this->contracts->create(
+            ['status' => $status, 'code' => 'ECRM-BELL-' . $ownerId . '-' . $status],
+            UserScope::forSelf($ownerId)
+        );
+
+        $this->ageContract($contractId, ECRM_Notifications::threshold_days() + 1);
+
+        return $contractId;
+    }
+
+    private function ageContract(int $contractId, int $days): void
+    {
+        global $wpdb;
+
+        $wpdb->query(
+            $wpdb->prepare(
+                'UPDATE %i SET updated_at = DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d DAY) WHERE id = %d',
+                Tables::name(Tables::CONTRACTS),
+                $days,
+                $contractId
+            )
+        );
+    }
+
+    /** @param array{rows: array} $data */
+    private function rowFor(array $data, int $contractId): ?array
+    {
+        foreach ($data['rows'] as $row) {
+            if ($row['id'] === $contractId) {
+                return $row;
+            }
+        }
+
+        return null;
     }
 
     private function onlyNotificationIdOf(int $userId): int
