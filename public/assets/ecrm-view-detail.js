@@ -8,7 +8,7 @@
  * shared module. Both have exactly one caller, here, and a helper with one
  * user is not shared — it is misplaced. */
 
-import { api, esc, fetch, H, rejectedNote, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, markSubViewOpen, rejectedNote, toast, viewEl } from '@energy-crm/util';
 import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint } from '@energy-crm/format';
 import { go, openEdit } from '@energy-crm/navigate';
 import { confirmTyped, confirmTypedWithReason, openDialog } from '@energy-crm/dialog';
@@ -38,6 +38,7 @@ function legacyCopy(text) {
 }
 export function openDetail(id) {
 	go('contract-detail');
+	markSubViewOpen();
 	var view = viewEl('contract-detail');
 	view.innerHTML = '<div class="ecrm-loading">Φόρτωση…</div>';
 	fetch(api('/contracts/' + id), { headers: H() })
