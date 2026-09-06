@@ -21,6 +21,20 @@ class ECRM_Notifications {
 	const CRON_HOOK = 'ecrm_daily_followups';
 
 	/**
+	 * user_meta: JSON {contract_id: updated_at} -- η φωτογραφία των «Εκκρεμοτήτων»
+	 * του καμπανακιού τη στιγμή που ο χρήστης το άνοιξε τελευταία.
+	 *
+	 * Δεν σβήνει τίποτα πραγματικό -- η αίτηση παραμένει ανοιχτή/αργή
+	 * παντού αλλού στην εφαρμογή (Αρχική, Έγγραφα, λίστα Συμβάσεων). Ο
+	 * αριθμός στο καμπανάκι απλά σταματά να τη μετράει ΜΕΧΡΙ να αλλάξει
+	 * κάτι πραγματικό πάνω της (updated_at διαφορετικό από τη φωτογραφία) --
+	 * ρητό αίτημα ιδιοκτήτη (06/09): «μόλις πατήσω το καμπανάκι να
+	 * φεύγουν», αλλά χωρίς να χαθεί οριστικά η ίδια η εκκρεμότητα, όπως
+	 * κάθε άλλη «απόκρυψη» σε αυτό το plugin (βλ. DeletionGate).
+	 */
+	const BELL_DISMISS_META = 'ecrm_bell_dismissed_stale';
+
+	/**
 	 * Statuses that are "open" and may need follow-up.
 	 *
 	 * ΜΕΤΡΗΜΕΝΟ κενό, όχι εικασία (31/08/2026): μέχρι εδώ έλειπαν τα
@@ -368,9 +382,16 @@ class ECRM_Notifications {
 	/**
 	 * Follow-up rows for a set of partner user IDs.
 	 *
+	 * `$viewer_id` είναι ΞΕΧΩΡΙΣΤΟ από `$ids` (ποιανού τις συμβάσεις βλέπουμε):
+	 * είναι ΠΟΙΟΣ κοιτάζει, και μόνο αυτού η δική του φωτογραφία απόρριψης
+	 * (BELL_DISMISS_META) εφαρμόζεται -- ένας προϊστάμενος που έχει
+	 * απορρίψει τις δικές του ειδοποιήσεις δεν κρύβει τίποτα από κάποιον
+	 * άλλο που κοιτάζει την ίδια ομάδα. 0 σημαίνει «καμία απόρριψη να
+	 * εφαρμοστεί» (π.χ. το ημερήσιο email digest, που δεν έχει «θεατή»).
+	 *
 	 * @return array{rows: array, count: int, stale: int}
 	 */
-	public static function followups_for( array $ids ): array {
+	public static function followups_for( array $ids, int $viewer_id = 0 ): array {
 		global $wpdb;
 		if ( ! $ids ) {
 			return [ 'rows' => [], 'count' => 0, 'stale' => 0 ];
@@ -392,11 +413,19 @@ class ECRM_Notifications {
 			array_merge( $ids, $open )
 		), ARRAY_A );
 
+		$dismissed = $viewer_id > 0 ? self::dismissed_map( $viewer_id ) : [];
+
 		$out = []; $stale = 0;
 		$labels = ECRM_DB::statuses();
 		foreach ( $rows as $r ) {
 			$age = (int) $r['age_days'];
 			$is_stale = $age >= $days;
+			// Απορριφθηκε ΚΑΙ δεν έχει αλλάξει τίποτα πάνω της από τότε --
+			// ίδιο updated_at με τη φωτογραφία. Αν κάτι πραγματικό συνέβη
+			// (νέο updated_at), ξαναμετράει κανονικά.
+			if ( $is_stale && isset( $dismissed[ (string) $r['id'] ] ) && $dismissed[ (string) $r['id'] ] === $r['updated_at'] ) {
+				$is_stale = false;
+			}
 			if ( $is_stale ) { $stale++; }
 			$name = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
 			$out[] = [
@@ -407,12 +436,57 @@ class ECRM_Notifications {
 				'status_label' => $labels[ $r['status'] ] ?? $r['status'],
 				'age_days' => $age,
 				'stale'    => $is_stale,
+				'updated_at' => $r['updated_at'],
 			];
 		}
 		// Stale first.
 		usort( $out, function ( $a, $b ) { return $b['age_days'] <=> $a['age_days']; } );
 
 		return [ 'rows' => $out, 'count' => count( $out ), 'stale' => $stale ];
+	}
+
+	/**
+	 * Η αποθηκευμένη φωτογραφία απόρριψης ενός θεατή, ή άδειο πίνακα αν δεν
+	 * υπάρχει/είναι κατεστραμμένη -- ποτέ δεν μπλοκάρει την ίδια την οθόνη.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function dismissed_map( int $viewer_id ): array {
+		$raw = get_user_meta( $viewer_id, self::BELL_DISMISS_META, true );
+		if ( ! is_string( $raw ) || $raw === '' ) {
+			return [];
+		}
+		$decoded = json_decode( $raw, true );
+
+		return is_array( $decoded ) ? $decoded : [];
+	}
+
+	/**
+	 * «Μόλις πατήσω το καμπανάκι να φεύγουν» -- ρητό αίτημα ιδιοκτήτη
+	 * (06/09). Φωτογραφίζει ό,τι είναι ΤΩΡΑ αργό για τον θεατή και το
+	 * αποθηκεύει σαν δικό του user_meta. Καμία σύμβαση δεν αγγίζεται --
+	 * μόνο ο αριθμός στο καμπανάκι σταματά να τις μετράει, μέχρι να
+	 * αλλάξει κάτι πραγματικό πάνω τους (βλ. docblock του BELL_DISMISS_META).
+	 *
+	 * @return int Πόσες εκκρεμότητες φωτογραφήθηκαν.
+	 */
+	public static function dismiss_stale_for( int $viewer_id ): int {
+		if ( $viewer_id <= 0 ) {
+			return 0;
+		}
+
+		$data = self::followups_for( [ $viewer_id ] );
+		$map  = [];
+
+		foreach ( $data['rows'] as $r ) {
+			if ( $r['stale'] ) {
+				$map[ (string) $r['id'] ] = $r['updated_at'];
+			}
+		}
+
+		update_user_meta( $viewer_id, self::BELL_DISMISS_META, wp_json_encode( $map ) );
+
+		return count( $map );
 	}
 
 	/**
