@@ -1486,7 +1486,6 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				toggleEnergyPerson(sameEl);
 			});
 			renderVoltonPrograms();
-			var modeEl = q('.ecrm-foot__mode strong'); if (modeEl) modeEl.textContent = 'Επεξεργασία #' + (c.code || c.id);
 			var titleEl = q('[data-form-title]'); if (titleEl) titleEl.textContent = 'Επεξεργασία Αίτησης';
 			/* Σε ΕΠΕΞΕΡΓΑΣΙΑ ξεκλειδώνουν και τα τέσσερα βήματα αμέσως: η αίτηση
 			 * υπάρχει ήδη, και το να ξαναπερπατήσει ο συνεργάτης έναν wizard για
@@ -1595,7 +1594,6 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				});
 			});
 			applyCustomerType(); renderPrograms();
-			var modeEl = q('.ecrm-foot__mode strong'); if (modeEl) modeEl.textContent = 'Νέα αίτηση';
 			var titleEl = q('[data-form-title]'); if (titleEl) titleEl.textContent = 'Δημιουργία Αίτησης';
 			var notes = q('[data-notes]'); if (notes) notes.value = '';
 			var fl = q('[data-filelist]'); if (fl) fl.innerHTML = '';

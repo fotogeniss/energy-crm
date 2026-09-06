@@ -743,7 +743,7 @@ class ECRM_Shortcodes {
 
 				<div class="ecrm-drop" data-drop tabindex="0" role="button" aria-label="Σύρε αρχεία ή πάτα για επιλογή">
 					<input type="file" data-files accept="application/pdf,image/jpeg,image/png" multiple hidden>
-					<div class="ecrm-drop__icon">⬆</div>
+					<div class="ecrm-drop__icon"><svg class="ecrm-i ecrm-i--drop" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V7m0 0l-4 4m4-4l4 4M4 21h16"/></svg></div>
 					<div class="ecrm-drop__title">Σύρε αρχεία εδώ</div>
 					<div class="ecrm-drop__hint">ή <button type="button" class="ecrm-link" data-pick>πάτα για επιλογή</button> · PDF, JPG, PNG · έως 10 αρχεία</div>
 				</div>
@@ -1294,7 +1294,6 @@ class ECRM_Shortcodes {
 				// their own timestamp. That one stays untouched and unticked.
 				?>
 				<label class="ecrm-consent"><input type="checkbox" data-consent name="consent" value="1" checked> Ο πελάτης ενημερώθηκε και συναινεί στην επεξεργασία των προσωπικών του δεδομένων για τη σύναψη/διαχείριση της σύμβασης (GDPR), συμπεριλαμβανομένης της αυτόματης ανάγνωσης των εγγράφων που υποβάλλει (ταυτότητα, λογαριασμός) από εξωτερική υπηρεσία τεχνητής νοημοσύνης.</label>
-				<div class="ecrm-foot__mode">Λειτουργία: <strong>Νέα αίτηση</strong></div>
 				<div class="ecrm-foot__actions">
 					<?php
 					/*
@@ -1308,9 +1307,9 @@ class ECRM_Shortcodes {
 					 * is what the third one does, by sending no status.
 					 */
 					?>
-					<button type="button" class="ecrm-btn ecrm-btn--ghost" data-wprev hidden>&larr; Πίσω</button>
+					<button type="button" class="ecrm-btn ecrm-btn--ghost" data-wprev hidden><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Πίσω</button>
 					<button type="button" class="ecrm-btn ecrm-btn--ghost" data-save-draft>Προσωρινή Αποθήκευση</button>
-					<button type="button" class="ecrm-btn ecrm-btn--primary" data-wnext>Συνέχεια &rarr;</button>
+					<button type="button" class="ecrm-btn ecrm-btn--primary" data-wnext>Συνέχεια <svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
 					<button type="button" class="ecrm-btn ecrm-btn--primary" data-finalize hidden>Οριστικοποίηση</button>
 					<button type="button" class="ecrm-btn ecrm-btn--primary" data-save-changes hidden>Αποθήκευση Αλλαγών</button>
 				</div>
