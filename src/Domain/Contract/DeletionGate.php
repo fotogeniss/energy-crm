@@ -15,17 +15,18 @@
  * δική του σύμβαση που υπογράφηκε ήδη, χάνοντας οριστικά το μόνο αντίγραφο
  * της υπογραφής του πελάτη.
  *
- * ## Γιατί το τρέχον status δεν αρκεί
+ * ## Γιατί ρωτάει το `signed_at` και όχι την κατάσταση (07/09/2026)
  *
- * Αντίθετα με το `CancellationGate` (που έχει μια φτηνή συντόμευση όταν το
- * τρέχον status είναι ήδη `Active`), εδώ ΔΕΝ υπάρχει τέτοια συντόμευση: το
- * `ContractStatus::allowedNext()` επιτρέπει `Submitted → Processing` και
- * `Submitted → Pending` απευθείας, προσπερνώντας το `Signed` εντελώς. Άρα μια
- * σύμβαση που είναι σήμερα `Processing` μπορεί να μην υπογράφηκε ΠΟΤΕ, ενώ μια
- * που είναι σήμερα `Cancelled` μπορεί κάλλιστα να υπογράφηκε πρώτα
- * (`Signed → Cancelled` επιτρέπεται στον γράφο). Το τρέχον status δεν λέει
- * τίποτα αξιόπιστο εδώ — μόνο το ιστορικό το ξέρει, ίδιο μάθημα με το
- * `CancellationGate`.
+ * Ρωτούσε το ιστορικό: «έφτασε ποτέ σε `signed`;». Με το νέο μοντέλο η
+ * κατάσταση `signed` **δεν υπάρχει** -- η υπογραφή είναι γεγονός, και το
+ * γεγονός γράφεται στη στήλη `signed_at`. Δεν αντικαταστάθηκε με «έφτασε ποτέ
+ * σε ΟΡΙΣΤΙΚΟΠΟΙΗΣΗ» επίτηδες: αυτό θα ήταν έμμεσο, και η ερώτηση που θέλουμε
+ * να κάνουμε είναι κυριολεκτικά «υπάρχει υπογραφή πελάτη;».
+ *
+ * Μία διαφορά συμπεριφοράς, συνειδητή: όταν ο `SignLinkController` ξανανοίγει
+ * μια σύμβαση για νέα υπογραφή, μηδενίζει το `signed_at` -- και τότε η
+ * σύμβαση γίνεται ξανά διαγράψιμη. Σωστό: εκείνη τη στιγμή δεν υπάρχει
+ * υπογραφή πελάτη να προστατευτεί.
  *
  * @package EnergyCRM
  */
@@ -34,14 +35,14 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Domain\Contract;
 
-use EnergyCRM\Persistence\EventRepository;
+use EnergyCRM\Persistence\ContractTransitions;
 
 final class DeletionGate
 {
     public const WAS_SIGNED = 'Η σύμβαση υπογράφηκε, οπότε δεν διαγράφεται. '
         . 'Αν χρειάζεται να σταματήσει, χρησιμοποίησε «Ακύρωση» ή «Έκλεισε».';
 
-    public function __construct(private readonly EventRepository $events)
+    public function __construct(private readonly ContractTransitions $contracts)
     {
     }
 
@@ -50,8 +51,14 @@ final class DeletionGate
      */
     public function refusalOnDelete(int $contractId): ?string
     {
-        return $this->events->hasReached($contractId, ContractStatus::Signed->value)
-            ? self::WAS_SIGNED
-            : null;
+        $row = $this->contracts->paperworkFieldsOf($contractId);
+
+        // Σύμβαση που δεν υπάρχει δεν κρίνεται εδώ -- η ίδια η διαγραφή δεν θα
+        // βρει τίποτα να σβήσει.
+        if ($row === null) {
+            return null;
+        }
+
+        return trim($row['signed_at']) === '' ? null : self::WAS_SIGNED;
     }
 }

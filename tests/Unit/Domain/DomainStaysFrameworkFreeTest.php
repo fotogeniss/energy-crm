@@ -60,12 +60,11 @@ final class DomainStaysFrameworkFreeTest extends TestCase
      * @var array<string, string>
      */
     private const ALLOWED = [
-        'src/Domain/Contract/AutoProcess.php' =>
-            'Είναι χρονοπρογραμματισμός: ζει πάνω σε WP-Cron (wp_schedule_event, '
-            . 'cron_schedules) και σε hooks. Στην πραγματικότητα είναι Infrastructure '
-            . 'με domain όνομα — η μετακόμισή του είναι χρέος του §1.12, όχι εξαίρεση '
-            . 'από αυτό.',
-
+        // 07/09/2026: ο AutoProcess έφυγε ολόκληρος -- η προώθηση μετά την
+        // υπογραφή είναι πια άμεση (ContractLifecycle::moveTo() στο ίδιο το
+        // αίτημα υπογραφής), όχι σάρωμα cron. Καμία γραμμή δεν χρειάζεται να
+        // πάρει τη θέση του εδώ· η δουλειά που δικαιολογούσε την εξαίρεση δεν
+        // υπάρχει πια.
         'src/Domain/Contract/ContractLifecycle.php' =>
             'Ένα do_action: το ecrm_contract_status_changed, που ειδοποιεί τον '
             . 'AutoProcess. Είναι το σημείο εξόδου του domain προς την πλατφόρμα και '
@@ -169,9 +168,9 @@ final class DomainStaysFrameworkFreeTest extends TestCase
     public function testTheSweepStillSeesTheKnownOffenders(): void
     {
         self::assertContains(
-            'src/Domain/Contract/AutoProcess.php',
+            'src/Domain/Contract/ContractLifecycle.php',
             self::domainFilesTouchingWordPress(),
-            'Ο σαρωτής δεν βλέπει πια ούτε τον AutoProcess, που είναι γεμάτος WP-Cron. '
+            'Ο σαρωτής δεν βλέπει πια ούτε το ContractLifecycle, που καλεί do_action(). '
             . 'Το regex έπαψε να ταιριάζει.'
         );
     }

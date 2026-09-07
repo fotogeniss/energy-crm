@@ -48,7 +48,7 @@ final class SignExpiryTest extends IntegrationTestCase
 
         $wpdb->insert(Tables::name(Tables::CONTRACTS), [
             'partner_user_id' => $seller,
-            'status'          => 'pending_signature',
+            'status'          => 'awaiting_signature',
             'code'            => 'ΕΝ-EXP-1',
             'supply_number'   => '12345678901',
             'energy_type'     => 'power',

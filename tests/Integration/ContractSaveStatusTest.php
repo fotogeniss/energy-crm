@@ -71,7 +71,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
     {
         $contractId = $this->makeDraft();
 
-        $this->forceStatus($contractId, ContractStatus::Cancelled->value);
+        $this->forceStatus($contractId, ContractStatus::CancelledByUs->value);
 
         $response = $this->save([
             'contract_id' => $contractId,
@@ -81,7 +81,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
         self::assertSame(409, $response->get_status(), 'Η ανάσταση ακυρωμένης σύμβασης έπρεπε να απορριφθεί.');
 
         self::assertSame(
-            ContractStatus::Cancelled->value,
+            ContractStatus::CancelledByUs->value,
             $this->statusOf($contractId),
             'Η απόρριψη απάντησε 409 αλλά η γραμμή άλλαξε — άρνηση που γράφει είναι χειρότερη από καθόλου άρνηση.'
         );
@@ -99,10 +99,9 @@ final class ContractSaveStatusTest extends IntegrationTestCase
     /**
      * 2. A draft cannot jump the queue into a payable status.
      *
-     * Draft->allowedNext() is [new, pending_signature, awaiting_signature,
-     * cancelled]. Active is not among them, and it is what makes a contract
-     * count for commission — which is why this one is about money rather than
-     * tidiness.
+     * Draft->allowedNext() is [presale, cancelled_by_us, cancelled_by_customer].
+     * Active is not among them, and it is what makes a contract count for
+     * commission — which is why this one is about money rather than tidiness.
      */
     public function testADraftCannotBeMovedStraightToPayableActive(): void
     {
@@ -125,7 +124,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
 
         self::assertNotContains(ContractStatus::Active->value, $allowed);
         self::assertContains(
-            ContractStatus::Submitted->value,
+            ContractStatus::Presale->value,
             $allowed,
             'Η λίστα των επιτρεπτών πρέπει να προτείνει τη μετάβαση που ο συνεργάτης όντως ήθελε.'
         );
@@ -172,8 +171,8 @@ final class ContractSaveStatusTest extends IntegrationTestCase
     /**
      * 4. Finalising a draft still works. The busiest action in the product.
      *
-     * Draft → new is the one transition the finalise button asks for, and a
-     * guard that broke it would be caught by no refusal test — every one of
+     * Draft → presale is the one transition the finalise button asks for, and
+     * a guard that broke it would be caught by no refusal test — every one of
      * those would still be green.
      */
     public function testFinalisingADraftStillSucceeds(): void
@@ -182,13 +181,13 @@ final class ContractSaveStatusTest extends IntegrationTestCase
 
         $response = $this->save([
             'contract_id' => $contractId,
-            'status'      => ContractStatus::Submitted->value,
+            'status'      => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
 
         self::assertSame(
-            ContractStatus::Submitted->value,
+            ContractStatus::Presale->value,
             $this->statusOf($contractId),
             'Η οριστικοποίηση δεν προχώρησε — ο φύλακας έπιασε μετάβαση που ο γράφος επιτρέπει.'
         );
@@ -206,7 +205,10 @@ final class ContractSaveStatusTest extends IntegrationTestCase
     {
         $contractId = $this->makeDraft();
 
-        $this->forceStatus($contractId, ContractStatus::Signed->value);
+        // 07/09: η «Signed» δεν υπάρχει πια σαν κατάσταση -- η υπογραφή είναι
+        // γεγονός (signed_at). Οποιαδήποτε μετά-υπογραφή κατάσταση δείχνει το
+        // ίδιο πράγμα εδώ: ότι η επεξεργασία πεδίου δεν μετακινεί τίποτα.
+        $this->forceStatus($contractId, ContractStatus::Finalisation->value);
 
         $response = $this->save([
             'contract_id' => $contractId,
@@ -220,7 +222,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
         self::assertSame('Διόρθωση μετά την υπογραφή', $row['notes'], 'Η επεξεργασία πεδίου δεν πέρασε.');
 
         self::assertSame(
-            ContractStatus::Signed->value,
+            ContractStatus::Finalisation->value,
             $row['status'],
             'Αίτημα χωρίς status μετακίνησε την κατάσταση — η παράλειψη πρέπει να είναι no-op.'
         );
@@ -256,7 +258,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
 
         $response = $this->save([
             'contract_id' => $contractId,
-            'status'      => ContractStatus::Submitted->value,
+            'status'      => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
@@ -271,7 +273,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
         );
 
         self::assertSame(ContractStatus::Draft->value, $events[0]['from_status']);
-        self::assertSame(ContractStatus::Submitted->value, $events[0]['to_status']);
+        self::assertSame(ContractStatus::Presale->value, $events[0]['to_status']);
     }
 
     /**

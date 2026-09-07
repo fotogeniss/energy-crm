@@ -74,10 +74,10 @@ final class ImportProviderNoteTest extends IntegrationTestCase
 
     public function testStatusChangeCarriesTheProviderNote(): void
     {
-        $id = $this->contractWith('new', '11100000001');
+        $id = $this->contractWith('presale', '11100000001');
 
         $report = ECRM_Import::apply(
-            [['supply' => '11100000001', 'status' => 'processing', 'message' => 'Καθυστέρηση εγγράφων']],
+            [['supply' => '11100000001', 'status' => 'registration', 'message' => 'Καθυστέρηση εγγράφων']],
             false
         );
 
@@ -96,9 +96,9 @@ final class ImportProviderNoteTest extends IntegrationTestCase
     /** Χωρίς σχόλιο, το μήνυμα μένει ακριβώς όπως ήταν πριν από αυτή την αλλαγή. */
     public function testStatusChangeWithoutNoteKeepsTheGenericMessage(): void
     {
-        $id = $this->contractWith('new', '11100000002');
+        $id = $this->contractWith('presale', '11100000002');
 
-        ECRM_Import::apply([['supply' => '11100000002', 'status' => 'processing']], false);
+        ECRM_Import::apply([['supply' => '11100000002', 'status' => 'registration']], false);
 
         $events = $this->eventsFor($id);
         self::assertCount(1, $events);
@@ -111,10 +111,10 @@ final class ImportProviderNoteTest extends IntegrationTestCase
      */
     public function testUnchangedStatusWithNewNoteWritesAPlainNoteEvent(): void
     {
-        $id = $this->contractWith('processing', '11100000003');
+        $id = $this->contractWith('registration', '11100000003');
 
         $report = ECRM_Import::apply(
-            [['supply' => '11100000003', 'status' => 'processing', 'message' => 'Ο μετρητής άλλαξε']],
+            [['supply' => '11100000003', 'status' => 'registration', 'message' => 'Ο μετρητής άλλαξε']],
             false
         );
 
@@ -132,9 +132,9 @@ final class ImportProviderNoteTest extends IntegrationTestCase
     /** Η προηγούμενη συμπεριφορά: ίδια κατάσταση, τίποτα να πει κανείς, καμία εγγραφή. */
     public function testUnchangedStatusWithoutNoteWritesNothing(): void
     {
-        $id = $this->contractWith('processing', '11100000004');
+        $id = $this->contractWith('registration', '11100000004');
 
-        $report = ECRM_Import::apply([['supply' => '11100000004', 'status' => 'processing']], false);
+        $report = ECRM_Import::apply([['supply' => '11100000004', 'status' => 'registration']], false);
 
         self::assertSame(1, $report['unchanged']);
         self::assertSame(0, $report['noted']);
@@ -147,10 +147,10 @@ final class ImportProviderNoteTest extends IntegrationTestCase
      */
     public function testProviderNoteIsTruncatedAt300Characters(): void
     {
-        $id  = $this->contractWith('processing', '11100000005');
+        $id  = $this->contractWith('registration', '11100000005');
         $raw = str_repeat('α', 350);
 
-        ECRM_Import::apply([['supply' => '11100000005', 'status' => 'processing', 'message' => $raw]], false);
+        ECRM_Import::apply([['supply' => '11100000005', 'status' => 'registration', 'message' => $raw]], false);
 
         $events = $this->eventsFor($id);
         self::assertCount(1, $events);
@@ -167,10 +167,10 @@ final class ImportProviderNoteTest extends IntegrationTestCase
     /** Το dry run μετρά, δεν γράφει -- ίδιος κανόνας με τις πραγματικές αλλαγές κατάστασης. */
     public function testDryRunReportsNotedWithoutWriting(): void
     {
-        $id = $this->contractWith('processing', '11100000006');
+        $id = $this->contractWith('registration', '11100000006');
 
         $report = ECRM_Import::apply(
-            [['supply' => '11100000006', 'status' => 'processing', 'message' => 'Θα γραφτεί;']],
+            [['supply' => '11100000006', 'status' => 'registration', 'message' => 'Θα γραφτεί;']],
             true
         );
 

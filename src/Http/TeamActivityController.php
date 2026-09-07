@@ -55,12 +55,12 @@ final class TeamActivityController implements Controller
 
         $members = [];
         $totals  = [
-            'today'   => 0,
-            'month'   => 0,
-            'pending' => 0,
-            'routed'  => 0,
-            'active'  => 0,
-            'online'  => 0,
+            'today'        => 0,
+            'month'        => 0,
+            'presale'      => 0,
+            'finalisation' => 0,
+            'active'       => 0,
+            'online'       => 0,
         ];
 
         foreach ($this->activity->memberIds($scope) as $memberId) {
@@ -82,8 +82,8 @@ final class TeamActivityController implements Controller
                 'is_self'         => $memberId === $scope->actorId(),
                 'today'           => (int) ($stat['today'] ?? 0),
                 'month'           => (int) ($stat['month'] ?? 0),
-                'pending'         => (int) ($stat['pending'] ?? 0),
-                'routed'          => (int) ($stat['routed'] ?? 0),
+                'presale'         => (int) ($stat['presale'] ?? 0),
+                'finalisation'    => (int) ($stat['finalisation'] ?? 0),
                 'active'          => (int) ($stat['active'] ?? 0),
                 'open_tasks'      => $openTasks[$memberId] ?? 0,
                 'last'            => $last,
@@ -93,7 +93,7 @@ final class TeamActivityController implements Controller
 
             $members[] = $row;
 
-            foreach (['today', 'month', 'pending', 'routed', 'active'] as $key) {
+            foreach (['today', 'month', 'presale', 'finalisation', 'active'] as $key) {
                 $totals[$key] += $row[$key];
             }
 

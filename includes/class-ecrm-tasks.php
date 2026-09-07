@@ -41,7 +41,7 @@ class ECRM_Tasks {
 		$cu = ECRM_DB::table( 'customers' );
 
 		// Non-final, "stuck in pipeline" statuses (drafts excluded — seller's own WIP).
-		$open   = [ 'new', 'pending_signature', 'processing', 'pending' ];
+		$open   = [ 'presale', 'registration', 'awaiting_signature', 'awaiting_sim', 'finalisation' ];
 		$ph     = implode( ',', array_fill( 0, count( $open ), '%s' ) );
 		$cutoff = gmdate( 'Y-m-d H:i:s', current_time( 'timestamp' ) - $days * DAY_IN_SECONDS );
 
@@ -119,7 +119,7 @@ class ECRM_Tasks {
 			 WHERE c.end_date IS NOT NULL
 			   AND c.end_date >= CURDATE()
 			   AND c.end_date <= DATE_ADD(CURDATE(), INTERVAL %d DAY)
-			   AND c.status NOT IN ('cancelled','terminated')
+			   AND c.status NOT IN ('cancelled_by_us','cancelled_by_customer','terminated')
 			   AND c.partner_user_id IS NOT NULL
 			   AND NOT EXISTS (
 			       SELECT 1 FROM {$t} t WHERE t.contract_id = c.id AND t.status='open' AND t.note='auto_renewal'

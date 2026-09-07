@@ -5,10 +5,15 @@
  * διαδρομή, ούτε μερικώς σε μια μαζική επιλογή.
  *
  * Ίδιο σύνορο με το `ContractDeleteBytesTest`: η μονάδα (`DeletionGate`) δεν
- * αγγίζει ΚΑΘΟΛΟΥ WordPress ή βάση πέρα από το `EventRepository::hasReached()`
- * που ήδη δοκιμάζεται αλλού (`CancellationGate`/`ContractLifecycleTest`) — αυτό
- * που λείπει είναι η καλωδίωση: ότι το REST endpoint πράγματι ρωτάει την πύλη
- * πριν σβήσει, και ότι τα bytes δεν αγγίζονται όταν αρνηθεί.
+ * αγγίζει ΚΑΘΟΛΟΥ WordPress ή βάση πέρα από το `signed_at` της ίδιας γραμμής —
+ * αυτό που λείπει είναι η καλωδίωση: ότι το REST endpoint πράγματι ρωτάει την
+ * πύλη πριν σβήσει, και ότι τα bytes δεν αγγίζονται όταν αρνηθεί.
+ *
+ * 07/09/2026: η πύλη ρωτούσε το ιστορικό («έφτασε ποτέ σε `signed`;»). Στο
+ * νέο μοντέλο η κατάσταση `signed` δεν υπάρχει -- η υπογραφή είναι γεγονός
+ * που γράφεται στη στήλη `signed_at` (δες `DeletionGate::refusalOnDelete()`).
+ * Τα fixtures εδώ γράφουν το `signed_at` απευθείας αντί να καταγράφουν ένα
+ * ψευδο-γεγονός `status_change` προς μια κατάσταση που δεν υπάρχει πια.
  *
  * @package EnergyCRM
  */
@@ -65,7 +70,7 @@ final class ContractDeletionGateTest extends IntegrationTestCase
     public function testDeletingASignedContractIsRefused(): void
     {
         [$contractId, $path] = $this->contractWithDocument();
-        $this->events->record($contractId, 0, 'status_change', ['to_status' => 'signed']);
+        $this->markSigned($contractId);
 
         $response = rest_do_request(new WP_REST_Request('DELETE', '/ecrm/v1/contracts/' . $contractId));
 
@@ -76,15 +81,14 @@ final class ContractDeletionGateTest extends IntegrationTestCase
 
     /**
      * 2. Το τρέχον status δεν είναι αξιόπιστο εδώ: μια σύμβαση που είναι
-     * ΤΩΡΑ «Ακυρώθηκε» μπορεί κάλλιστα να υπογράφηκε πρώτα
-     * (Signed → Cancelled επιτρέπεται στον γράφο) — η πύλη πρέπει να το
-     * πιάσει από το ιστορικό, όχι από το τρέχον status.
+     * ΤΩΡΑ «Ακυρώθηκε» μπορεί κάλλιστα να υπογράφηκε πρώτα -- η πύλη πρέπει
+     * να το πιάσει από το `signed_at`, όχι από το τρέχον status.
      */
     public function testACancelledContractThatWasOnceSignedIsStillRefused(): void
     {
         [$contractId, $path] = $this->contractWithDocument();
-        $this->events->record($contractId, 0, 'status_change', ['to_status' => 'signed']);
-        $this->contracts->update($contractId, UserScope::forSelf($this->actor), ['status' => 'cancelled']);
+        $this->markSigned($contractId);
+        $this->contracts->update($contractId, UserScope::forSelf($this->actor), ['status' => 'cancelled_by_us']);
 
         $response = rest_do_request(new WP_REST_Request('DELETE', '/ecrm/v1/contracts/' . $contractId));
 
@@ -92,11 +96,11 @@ final class ContractDeletionGateTest extends IntegrationTestCase
         self::assertFileExists($path);
     }
 
-    /** 3. Καμία ιστορία υπογραφής → η διαγραφή προχωράει κανονικά. */
+    /** 3. Κανένα `signed_at` → η διαγραφή προχωράει κανονικά. */
     public function testDeletingAContractNeverSignedStillSucceeds(): void
     {
         [$contractId, $path] = $this->contractWithDocument();
-        $this->events->record($contractId, 0, 'status_change', ['to_status' => 'processing']);
+        $this->events->record($contractId, 0, 'status_change', ['to_status' => 'registration']);
 
         $response = rest_do_request(new WP_REST_Request('DELETE', '/ecrm/v1/contracts/' . $contractId));
 
@@ -113,7 +117,7 @@ final class ContractDeletionGateTest extends IntegrationTestCase
     {
         [$signedId, $signedPath]     = $this->contractWithDocument();
         [$draftId, $draftPath]       = $this->contractWithDocument();
-        $this->events->record($signedId, 0, 'status_change', ['to_status' => 'signed']);
+        $this->markSigned($signedId);
 
         $request = new WP_REST_Request('POST', '/ecrm/v1/contracts/bulk');
         $request->set_body_params(['action' => 'delete', 'ids' => [$signedId, $draftId]]);
@@ -135,8 +139,8 @@ final class ContractDeletionGateTest extends IntegrationTestCase
     {
         [$firstId, $firstPath]   = $this->contractWithDocument();
         [$secondId, $secondPath] = $this->contractWithDocument();
-        $this->events->record($firstId, 0, 'status_change', ['to_status' => 'signed']);
-        $this->events->record($secondId, 0, 'status_change', ['to_status' => 'signed']);
+        $this->markSigned($firstId);
+        $this->markSigned($secondId);
 
         $request = new WP_REST_Request('POST', '/ecrm/v1/contracts/bulk');
         $request->set_body_params(['action' => 'delete', 'ids' => [$firstId, $secondId]]);
@@ -149,6 +153,16 @@ final class ContractDeletionGateTest extends IntegrationTestCase
     }
 
     // --- fixtures ------------------------------------------------------------
+
+    /** Γράφει `signed_at` απευθείας -- αυτό, και μόνο αυτό, κρίνει η πύλη. */
+    private function markSigned(int $contractId): void
+    {
+        $this->contracts->update(
+            $contractId,
+            UserScope::forSelf($this->actor),
+            ['signed_at' => gmdate('Y-m-d H:i:s')]
+        );
+    }
 
     /**
      * @return array{0:int, 1:string} id και απόλυτη διαδρομή του αρχείου

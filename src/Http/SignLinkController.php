@@ -60,7 +60,7 @@ use WP_REST_Response;
 
 final class SignLinkController implements Controller
 {
-    private const TARGET_STATUS = 'pending_signature';
+    private const TARGET_STATUS = 'awaiting_signature';
 
     public const CHANNEL_LINK = 'link';
 
@@ -286,7 +286,7 @@ final class SignLinkController implements Controller
             // ισχύει, και για την πιο συχνή περίπτωση επιστροφής από πάροχο
             // («Στάλθηκε στον πάροχο») το λέει ρητά, γιατί εκεί ο συνεργάτης
             // θέλει να ξέρει ότι η αίτηση ΕΧΕΙ ήδη φύγει.
-            if ($status === ContractStatus::Routed) {
+            if ($status === ContractStatus::Finalisation) {
                 return 'Η αίτηση έχει ήδη υπογραφεί και έχει σταλεί στον πάροχο. '
                     . 'Νέα αποστολή θα ακυρώσει την υπάρχουσα υπογραφή.';
             }

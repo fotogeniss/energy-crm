@@ -190,12 +190,12 @@ class ECRM_Tracking {
 
 	/** Ordered journey shown to the customer. */
 	public static function stages(): array {
-		return [ 'Καταχώρηση', 'Περιμένει υπογραφή', 'Σε επεξεργασία', 'Δρομολόγηση', 'Ενεργοποίηση' ];
+		return [ 'Καταχώρηση', 'Περιμένει υπογραφή', 'Αποστολή SIM', 'Οριστικοποίηση', 'Ενεργοποίηση' ];
 	}
 
 	/** Statuses where the customer is allowed to e-sign from the tracking link. */
 	public static function signable_statuses(): array {
-		return [ 'pending_signature', 'awaiting_signature' ];
+		return [ 'awaiting_signature' ];
 	}
 
 	/**
@@ -240,19 +240,23 @@ class ECRM_Tracking {
 
 	/** Map an internal status to a stage index (0-based) or -1 if cancelled. */
 	public static function stage_index( string $status ): int {
+		// Το `awaiting_sim` παίρνει δικό του βήμα (07/09): για τον πελάτη που
+		// περιμένει courier ΕΙΝΑΙ ξεχωριστό βήμα, και η αίτηση χωρίς κινητή
+		// απλώς το προσπερνά -- η μπάρα δείχνει 3 από 5 αντί για 2, που είναι
+		// η αλήθεια για εκείνη τη σύμβαση.
 		$map = [
 			'draft'              => 0,
-			'new'                => 0,
-			'pending_signature'  => 1,
-			'awaiting_signature' => 1, // System-A "sign-link" status — same stage.
-			'signed'             => 2, // Customer signed → moves on to processing.
-			'processing'         => 2,
-			'pending'           => 2,
-			'resolved'          => 2,
-			'routed'            => 3,
-			'active'            => 4,
+			'presale'            => 0,
+			'registration'       => 0,
+			'awaiting_signature' => 1,
+			'awaiting_sim'       => 2,
+			'finalisation'       => 3,
+			'active'             => 4,
 		];
-		if ( in_array( $status, [ 'cancelled', 'terminated' ], true ) ) {
+
+		// Η ΔΙΑΚΟΠΗ δεν είναι ακύρωση, αλλά για τη μπάρα του πελάτη είναι το
+		// ίδιο: η διαδρομή σταμάτησε και δεν υπάρχει επόμενο βήμα.
+		if ( in_array( $status, [ 'cancelled_by_us', 'cancelled_by_customer', 'terminated' ], true ) ) {
 			return -1;
 		}
 		return $map[ $status ] ?? 0;
@@ -276,7 +280,7 @@ class ECRM_Tracking {
 	 * @return array{items:array,complete:bool,can_upload:bool}
 	 */
 	public static function docs_payload( int $id, string $status, ?string $activation_type, ?string $energy_type = null ): array {
-		$can = ! in_array( $status, [ 'cancelled', 'terminated', 'active' ], true );
+		$can = ! in_array( $status, [ 'cancelled_by_us', 'cancelled_by_customer', 'terminated', 'active' ], true );
 		if ( ! class_exists( 'ECRM_Docs' ) ) {
 			return [ 'items' => [], 'complete' => true, 'can_upload' => $can ];
 		}
@@ -563,7 +567,21 @@ class ECRM_Tracking {
 		// ECRM_REST was missing, is gone: it wrote a different event type for the
 		// same act, so the one path nobody could reach was also the only one that
 		// logged it wrong.
-		\EnergyCRM\Services::lifecycle()->moveTo( $id, 'signed', [
+		// Η υπογραφή προχωράει την αίτηση ΑΜΕΣΩΣ (07/09/2026).
+		//
+		// Ως τότε έγραφε `status = 'signed'` και ένα cron (`AutoProcess`) την
+		// προωθούσε πέντε λεπτά αργότερα. Δύο πράγματα ήταν λάθος σε αυτό: η
+		// «Υπογράφηκε» ήταν γεγονός βαφτισμένο στάδιο -- η υπογραφή είναι το
+		// `signed_at`, όχι μια θέση στη γραμμή παραγωγής -- και το πεντάλεπτο
+		// «παράθυρο διόρθωσης» δεν το είχε ζητήσει κανείς. Το cron διαγράφηκε
+		// ολόκληρο μαζί με την κατάσταση.
+		//
+		// Ποιο είναι το επόμενο στάδιο το λέει το περιεχόμενο της αίτησης, όχι
+		// ο γράφος: με γραμμή κινητής περιμένει το SIM, χωρίς πάει κατευθείαν
+		// στην οριστικοποίηση (κανόνας Κ2).
+		$next = \EnergyCRM\Domain\Contract\MobileLine::stageAfterSignature( $row );
+
+		\EnergyCRM\Services::lifecycle()->moveTo( $id, $next->value, [
 			'from'    => (string) $row['status'],
 			'message' => 'Ο πελάτης υπέγραψε ηλεκτρονικά από τον σύνδεσμο παρακολούθησης' . ( $ip ? ' (IP ' . $ip . ')' : '' ),
 			'extra'   => [ 'signed_at' => $now, 'signed_ip' => $ip ],
@@ -571,8 +589,8 @@ class ECRM_Tracking {
 		] );
 
 		// Ξαναχτίζεται ΚΑΙ εδώ (και όχι μόνο πιο πάνω): τώρα η κατάσταση της
-		// σύμβασης άλλαξε σε "signed", και ο,τιδήποτε διαβάζει το status από
-		// το ίδιο έγγραφο (π.χ. footer/badge) πρέπει να το δει ενημερωμένο.
+		// σύμβασης προχώρησε, και ο,τιδήποτε διαβάζει το status από το ίδιο
+		// έγγραφο (π.χ. footer/badge) πρέπει να το δει ενημερωμένο.
 		\EnergyCRM\Services::contractDocuments()->store( $id );
 
 		\EnergyCRM\Services::contractNotices()->signed( $id, (string) ( $row['first_name'] ?? '' ) );
@@ -584,7 +602,11 @@ class ECRM_Tracking {
 				wp_mail(
 					$u->user_email,
 					sprintf( '✍️ Υπογράφηκε: %s', $row['code'] ),
-					sprintf( "Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση προχώρησε σε «Υπογράφηκε».", $row['code'] )
+					sprintf(
+						"Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση προχώρησε σε «%s».",
+						$row['code'],
+						$next->label()
+					)
 				);
 			}
 		}
@@ -612,7 +634,7 @@ class ECRM_Tracking {
 		if ( ! $row ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'not_found' ], 404 );
 		}
-		if ( in_array( $row['status'], [ 'cancelled', 'terminated', 'active' ], true ) ) {
+		if ( in_array( $row['status'], [ 'cancelled_by_us', 'cancelled_by_customer', 'terminated', 'active' ], true ) ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Η αίτηση δεν δέχεται πλέον έγγραφα.' ], 400 );
 		}
 

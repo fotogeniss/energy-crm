@@ -26,7 +26,6 @@ namespace EnergyCRM;
 
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\WordPressScopeResolver;
-use EnergyCRM\Domain\Contract\AutoProcess;
 use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
@@ -144,8 +143,6 @@ final class Services
 
     private static ?ContractLifecycle $lifecycle = null;
 
-    private static ?AutoProcess $autoProcess = null;
-
     private static ?RejectionFollowUp $rejectionFollowUp = null;
 
     private function __construct()
@@ -223,7 +220,7 @@ final class Services
 
     public static function deletionGate(): DeletionGate
     {
-        return self::$deletionGate ??= new DeletionGate(self::events());
+        return self::$deletionGate ??= new DeletionGate(self::contractTransitions());
     }
 
     public static function documents(): DocumentQueue
@@ -368,11 +365,6 @@ final class Services
         );
     }
 
-    public static function autoProcess(): AutoProcess
-    {
-        return self::$autoProcess ??= new AutoProcess(self::contractTransitions(), self::lifecycle());
-    }
-
     public static function rejectionFollowUp(): RejectionFollowUp
     {
         return self::$rejectionFollowUp ??= new RejectionFollowUp(
@@ -436,7 +428,6 @@ final class Services
         self::$contractDocuments = null;
         self::$extractionGate    = null;
         self::$lifecycle         = null;
-        self::$autoProcess       = null;
         // Οι δύο πύλες κρατούν repositories που μηδενίζονται από πάνω· χωρίς
         // αυτές τις δύο γραμμές ένα reset() άφηνε πίσω αντικείμενα που
         // δείχνουν σε παλιά.

@@ -68,8 +68,8 @@ final class CommissionsRoundingTest extends IntegrationTestCase
     {
         $partner = $this->makeCrmUser(Roles::SELLER);
 
-        $paidContract   = $this->routedContract($partner, '77788800001');
-        $unpaidContract = $this->routedContract($partner, '77788800002');
+        $paidContract   = $this->activeContract($partner, '77788800001');
+        $unpaidContract = $this->activeContract($partner, '77788800002');
         $this->snapshotAmount($unpaidContract, 12.34);
         $this->markPaidWithAmount($partner, $paidContract, 12.34);
 
@@ -95,10 +95,10 @@ final class CommissionsRoundingTest extends IntegrationTestCase
 
     // --- fixtures ------------------------------------------------------
 
-    private function routedContract(int $partner, string $supply): int
+    private function activeContract(int $partner, string $supply): int
     {
         $id = $this->contracts->create(
-            ['status' => 'routed', 'supply_number' => $supply, 'energy_type' => 'power'],
+            ['status' => 'active', 'supply_number' => $supply, 'energy_type' => 'power'],
             UserScope::forSelf($partner)
         );
 

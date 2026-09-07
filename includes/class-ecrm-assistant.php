@@ -156,7 +156,7 @@ class ECRM_Assistant {
 			. "- «Εισαγωγή Excel»: ανεβάζει το Excel του παρόχου για μαζική ενημέρωση καταστάσεων βάσει αριθμού παροχής.\n"
 			. "- «Βάση Γνώσης»: δικαιολογητικά, εγγυήσεις και χρεώσεις ανά πάροχο. Μπορείς να απαντάς τέτοιες ερωτήσεις αν σου δοθεί το σχετικό περιεχόμενο παρακάτω.\n\n"
 			. "Τρέχοντα νούμερα του χρήστη ({$u->display_name}) — χρησιμοποίησέ τα μόνο αν ρωτηθούν:\n"
-			. "- Σήμερα: {$stats['today']} · Εκκρεμότητες: {$stats['pending']} · Δρομολογήθηκαν: {$stats['routed']} · Αυτόν τον μήνα: {$stats['month']}\n\n"
+			. "- Σήμερα: {$stats['today']} · Presale: {$stats['presale']} · Οριστικοποίηση: {$stats['finalisation']} · Αυτόν τον μήνα: {$stats['month']}\n\n"
 			. "Κανόνες: Μην εφευρίσκεις νούμερα ή δυνατότητες. Αν δεν ξέρεις κάτι ή ζητείται ενέργεια που δεν υπάρχει, πες το ειλικρινά. Κράτα τις απαντήσεις σύντομες και πρακτικές.";
 	}
 
@@ -168,8 +168,8 @@ class ECRM_Assistant {
 		$month_start = gmdate( 'Y-m-01 00:00:00' );
 		return [
 			'today'   => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND created_at>=%s", $uid, $today_start ) ),
-			'pending' => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND status='pending'", $uid ) ),
-			'routed'  => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND status='routed'", $uid ) ),
+			'presale' => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND status='presale'", $uid ) ),
+			'finalisation' => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND status='finalisation'", $uid ) ),
 			'month'   => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND created_at>=%s", $uid, $month_start ) ),
 		];
 	}

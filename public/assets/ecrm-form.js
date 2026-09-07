@@ -2010,7 +2010,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		});
 
 		/* Ο ΜΟΝΑΔΙΚΟΣ φράχτης που προσθέτει ο wizard — και δεν είναι καινούριος:
-		 * το save('new') αρνείται ήδη χωρίς πάροχο, και χωρίς πάροχο δεν έχουν
+		 * το save('presale') αρνείται ήδη χωρίς πάροχο, και χωρίς πάροχο δεν έχουν
 		 * τι να φορτώσουν ούτε τα προγράμματα, ούτε τα δικαιολογητικά, ούτε τα
 		 * πεδία του παρόχου. Τα βήματα 2 και 3 ΔΕΝ έχουν φράχτη: ο έλεγχος για
 		 * ΑΦΜ και συναίνεση μένει ακριβώς εκεί που ήταν, στην οριστικοποίηση.
@@ -2334,10 +2334,10 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		});
 
 		function save(status, btn) {
-			if (status === 'new' && !state.provider_id) { toast('Διάλεξε πάροχο πρώτα.', false); return; }
+			if (status === 'presale' && !state.provider_id) { toast('Διάλεξε πάροχο πρώτα.', false); return; }
 			// GDPR: consent required to finalize.
 			var consentEl = q('[data-consent]');
-			if (status === 'new' && consentEl && !consentEl.checked) {
+			if (status === 'presale' && consentEl && !consentEl.checked) {
 				toast('Απαιτείται η συναίνεση του πελάτη (GDPR) για οριστικοποίηση.', false);
 				consentEl.focus();
 				return;
@@ -2349,19 +2349,19 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// — DraftExitGate, from both endpoints — and this is here so the
 			// agent is told before the round trip, next to the field.
 			var afmv = readField('afm');
-			if (status === 'new' && !afmv) {
+			if (status === 'presale' && !afmv) {
 				toast('Χρειάζεται ΑΦΜ πελάτη για την οριστικοποίηση.', false);
 				fieldNote(afmEl, 'Συμπλήρωσε το ΑΦΜ του πελάτη.', 'err');
 				if (afmEl) afmEl.focus();
 				return;
 			}
-			if (status === 'new' && afmv && !validAfm(afmv)) {
+			if (status === 'presale' && afmv && !validAfm(afmv)) {
 				toast('Μη έγκυρο ΑΦΜ — διόρθωσέ το πριν την οριστικοποίηση.', false);
 				fieldNote(afmEl, 'Μη έγκυρο ΑΦΜ (έλεγχος ψηφίου).', 'err');
 				return;
 			}
 			// Duplicate check on finalize: warn if same ΑΦΜ or παροχή already exists.
-			if (status === 'new') {
+			if (status === 'presale') {
 				var afm = readField('afm'), supply = readField('supply_number');
 				if (afm || supply) {
 					btn.disabled = true;
@@ -2406,7 +2406,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				.finally(function () { btn.disabled = false; });
 		}
 		q('[data-save-draft]').addEventListener('click', function () { save('draft', this); });
-		q('[data-finalize]').addEventListener('click', function () { save('new', this); });
+		q('[data-finalize]').addEventListener('click', function () { save('presale', this); });
 		// No status in the payload: collect() puts `status: undefined`, which
 		// JSON.stringify drops, and contractFrom() then omits the column
 		// entirely — the same no-op path an ordinary field edit already takes.

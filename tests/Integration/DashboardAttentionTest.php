@@ -7,11 +7,18 @@
  * πουθενά. Η λίστα τον αντικαθιστά, και δύο πράγματα σε αυτήν είναι επιχειρησιακοί
  * κανόνες μέσα σε WHERE και ORDER BY, δηλαδή ακριβώς ό,τι σπάει σιωπηλά:
  *
- *   1. Ποιες καταστάσεις περιμένουν ΤΟΝ ΣΥΝΕΡΓΑΤΗ. Το `routed` λείπει επίτηδες:
- *      εκεί η μπάλα είναι στον πάροχο. Αν κάποιος το προσθέσει «για πληρότητα»,
- *      η λίστα γεμίζει με γραμμές που δεν έχουν ενέργεια και παύει να διαβάζεται.
+ *   1. Ποιες καταστάσεις περιμένουν ΤΟΝ ΣΥΝΕΡΓΑΤΗ (`DashboardRepository::
+ *      NEEDS_ME` = presale, awaiting_signature, draft). Το `finalisation`
+ *      λείπει επίτηδες: εκεί η μπάλα είναι στον πάροχο. Αν κάποιος το
+ *      προσθέσει «για πληρότητα», η λίστα γεμίζει με γραμμές που δεν έχουν
+ *      ενέργεια και παύει να διαβάζεται.
  *   2. Η σειρά είναι κατά παλαιότητα, όχι κατά κατάσταση. Μια εκκρεμότητα δύο
  *      ημερών δεν είναι πιο επείγουσα από ένα πρόχειρο τριών εβδομάδων.
+ *
+ * 07/09/2026: το `pending` (παλιό «κάτι την μπλοκάρει») έφυγε από το
+ * `NEEDS_ME` -- έγινε εμπόδιο σε δικό του πίνακα και θα ξαναμπεί όταν
+ * υπάρξει (commit 255, ακόμα δεν υπάρχει). Το δίδυμο `pending_signature`/
+ * `awaiting_signature` έγινε ένα -- `awaiting_signature`.
  *
  * Και ένα τρίτο που δεν είναι κανόνας αλλά ατύχημα που περιμένει: τα ονόματα
  * πελατών είναι κρυπτογραφημένα. Ένα SELECT που ξεχνά το CustomerFields γυρίζει
@@ -56,52 +63,52 @@ final class DashboardAttentionTest extends IntegrationTestCase
 
     public function testItListsOnlyWhatWaitsOnThePartner(): void
     {
-        $this->contractFor($this->alice, ['status' => 'pending']);
+        $this->contractFor($this->alice, ['status' => 'presale']);
         $this->contractFor($this->alice, ['status' => 'draft']);
         $this->contractFor($this->alice, ['status' => 'awaiting_signature']);
-        $this->contractFor($this->alice, ['status' => 'pending_signature']);
-        $this->contractFor($this->alice, ['status' => 'routed']);
+        $this->contractFor($this->alice, ['status' => 'finalisation']);
         $this->contractFor($this->alice, ['status' => 'active']);
 
         $out = $this->dashboard->needsAttention($this->alice);
 
-        self::assertCount(4, $out);
+        self::assertCount(3, $out);
 
         $statuses = array_map(static fn (array $r): string => (string) $r['status'], $out);
         sort($statuses);
 
-        self::assertSame(['awaiting_signature', 'draft', 'pending', 'pending_signature'], $statuses);
+        self::assertSame(['awaiting_signature', 'draft', 'presale'], $statuses);
     }
 
     /**
-     * `pending_signature` -- ο πάροχος γύρισε πίσω την αίτηση ζητώντας νέα
-     * υπογραφή. Δική του assertion, ίδιος λόγος με το `routed` παρακάτω: η
-     * αποτυχία πρέπει να λέει ΤΙ έλειψε, όχι απλώς έναν αριθμό που άλλαξε.
+     * `awaiting_signature` -- η αίτηση στάλθηκε στον πελάτη και περιμένει την
+     * υπογραφή του. Δική του assertion, ίδιος λόγος με το `finalisation`
+     * παρακάτω: η αποτυχία πρέπει να λέει ΤΙ έλειψε, όχι απλώς έναν αριθμό
+     * που άλλαξε.
      */
-    public function testAContractSentBackForANewSignatureIsMyProblem(): void
+    public function testAContractAwaitingSignatureIsMyProblem(): void
     {
-        $this->contractFor($this->alice, ['status' => 'pending_signature']);
+        $this->contractFor($this->alice, ['status' => 'awaiting_signature']);
 
         $out = $this->dashboard->needsAttention($this->alice);
 
         self::assertCount(1, $out);
-        self::assertSame('pending_signature', $out[0]['status']);
+        self::assertSame('awaiting_signature', $out[0]['status']);
     }
 
     /**
-     * Το `routed` είναι το ένα που θα έμπαινε «για πληρότητα». Δική του
-     * assertion ώστε η αποτυχία να λέει ΤΙ έσπασε, όχι απλώς «τρία ≠ τέσσερα».
+     * Το `finalisation` είναι το ένα που θα έμπαινε «για πληρότητα». Δική
+     * του assertion ώστε η αποτυχία να λέει ΤΙ έσπασε, όχι απλώς «δύο ≠ τρία».
      */
     public function testAContractWaitingOnTheProviderIsNotMyProblem(): void
     {
-        $this->contractFor($this->alice, ['status' => 'routed']);
+        $this->contractFor($this->alice, ['status' => 'finalisation']);
 
         self::assertSame([], $this->dashboard->needsAttention($this->alice));
     }
 
     public function testItNeverShowsAnotherPartnersWork(): void
     {
-        $this->contractFor($this->bob, ['status' => 'pending']);
+        $this->contractFor($this->bob, ['status' => 'presale']);
 
         self::assertSame([], $this->dashboard->needsAttention($this->alice));
     }
@@ -109,14 +116,14 @@ final class DashboardAttentionTest extends IntegrationTestCase
     /** Το πιο ξεχασμένο πρώτο, ανεξάρτητα από κατάσταση. */
     public function testTheMostForgottenComesFirst(): void
     {
-        $fresh = $this->contractFor($this->alice, ['status' => 'pending']);
+        $fresh = $this->contractFor($this->alice, ['status' => 'presale']);
         $stale = $this->contractFor($this->alice, ['status' => 'draft']);
 
         $this->ageContract($stale, 30);
 
         $out = $this->dashboard->needsAttention($this->alice);
 
-        self::assertSame($stale, (int) $out[0]['id'], 'the 30-day draft should outrank a fresh pending');
+        self::assertSame($stale, (int) $out[0]['id'], 'the 30-day draft should outrank a fresh presale');
         self::assertSame($fresh, (int) $out[1]['id']);
         self::assertGreaterThanOrEqual(29, (int) $out[0]['days']);
     }
@@ -124,7 +131,7 @@ final class DashboardAttentionTest extends IntegrationTestCase
     public function testItStopsAtTheLimit(): void
     {
         for ($i = 0; $i < 8; $i++) {
-            $this->contractFor($this->alice, ['status' => 'pending']);
+            $this->contractFor($this->alice, ['status' => 'presale']);
         }
 
         self::assertCount(5, $this->dashboard->needsAttention($this->alice));
@@ -142,7 +149,7 @@ final class DashboardAttentionTest extends IntegrationTestCase
     {
         $this->encryptionOn();
 
-        $this->contractFor($this->alice, ['status' => 'pending'], $this->customerData());
+        $this->contractFor($this->alice, ['status' => 'presale'], $this->customerData());
 
         $out = $this->dashboard->needsAttention($this->alice);
 
@@ -181,7 +188,7 @@ final class DashboardAttentionTest extends IntegrationTestCase
         $noAfm = $this->customerData();
         unset($noAfm['afm']);
 
-        $this->contractFor($this->alice, ['status' => 'pending'], $noAfm);
+        $this->contractFor($this->alice, ['status' => 'presale'], $noAfm);
 
         $out = $this->dashboard->needsAttention($this->alice);
 
@@ -191,7 +198,7 @@ final class DashboardAttentionTest extends IntegrationTestCase
     /** Το customer_id δεν διαρρέει στο frontend: δεν το χρειάζεται. */
     public function testTheCustomerIdDoesNotTravelToTheScreen(): void
     {
-        $this->contractFor($this->alice, ['status' => 'pending'], $this->customerData());
+        $this->contractFor($this->alice, ['status' => 'presale'], $this->customerData());
 
         self::assertArrayNotHasKey('customer_id', $this->dashboard->needsAttention($this->alice)[0]);
     }

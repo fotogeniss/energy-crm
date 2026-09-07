@@ -68,7 +68,7 @@ final class ContractNotices
      *
      * @var list<ContractStatus>
      */
-    private const ANNOUNCED = [ContractStatus::Pending, ContractStatus::Cancelled, ContractStatus::Rejected];
+    private const ANNOUNCED = [ContractStatus::CancelledByUs, ContractStatus::CancelledByCustomer];
 
     public function __construct(
         private readonly ContractDetails $details,
@@ -81,8 +81,8 @@ final class ContractNotices
      * Ακούει τον κύκλο ζωής, αντί να τον καλεί εκείνος.
      *
      * Ο `ContractLifecycle` ζει στο `Domain` και δεν ξέρει ότι υπάρχει
-     * ειδοποίηση — όπως δεν ξέρει ούτε ότι υπάρχει χρονοπρογραμματιστής. Ο
-     * `AutoProcess` συνδέεται στο ίδιο σημείο για τον ίδιο λόγο.
+     * ειδοποίηση — όπως δεν ξέρει ούτε ότι υπάρχουν εργασίες. Ο
+     * `RejectionFollowUp` συνδέεται στο ίδιο σημείο για τον ίδιο λόγο.
      */
     public function register(): void
     {
@@ -126,9 +126,9 @@ final class ContractNotices
 
         $title = $status->label() . ' — ' . (string) ($row['code'] ?? '');
         $body   = $this->customerName($row) . ': η αίτηση ' . match ($to) {
-            'cancelled' => 'ακυρώθηκε.',
-            'rejected'  => 'απορρίφθηκε από τον πάροχο -- δημιουργήθηκε εργασία.',
-            default     => 'χρειάζεται ενέργεια.',
+            ContractStatus::CancelledByUs->value       => 'ακυρώθηκε από εμάς -- δημιουργήθηκε εργασία.',
+            ContractStatus::CancelledByCustomer->value => 'ακυρώθηκε από τον πελάτη.',
+            default                                    => 'χρειάζεται ενέργεια.',
         };
 
         $this->tell($row, 'status', $title, $body, $contractId);

@@ -102,9 +102,9 @@ final class DashboardCardsTest extends IntegrationTestCase
 
     public function testYesterdayExcludesToday(): void
     {
-        $todayOne = $this->contractFor('new');
-        $todayTwo = $this->contractFor('new');
-        $earlier  = $this->contractFor('new');
+        $todayOne = $this->contractFor('presale');
+        $todayTwo = $this->contractFor('presale');
+        $earlier  = $this->contractFor('presale');
 
         $this->stamp($todayOne, ['created_at' => '2026-08-21 09:00:00']);
         $this->stamp($todayTwo, ['created_at' => '2026-08-21 18:00:00']);
@@ -120,7 +120,7 @@ final class DashboardCardsTest extends IntegrationTestCase
 
     public function testNothingYesterdayIsZeroAndNotMissing(): void
     {
-        $today = $this->contractFor('new');
+        $today = $this->contractFor('presale');
         $this->stamp($today, ['created_at' => '2026-08-21 09:00:00']);
 
         $cards = $this->cardsFor('2026-08-21 00:00:00', '2026-08-01 00:00:00', '2026-08-20 00:00:00');
@@ -133,51 +133,51 @@ final class DashboardCardsTest extends IntegrationTestCase
 
     public function testAgeIsNullWhenNothingIsInThatStatus(): void
     {
-        $this->contractFor('new'); // ούτε pending ούτε routed
+        $this->contractFor('draft'); // ούτε presale ούτε finalisation
 
         $cards = $this->cardsFor('2026-08-21 00:00:00', '2026-08-01 00:00:00', '2026-08-20 00:00:00');
 
-        self::assertNull($cards['oldest']['pending']);
-        self::assertNull($cards['oldest']['routed']);
+        self::assertNull($cards['oldest']['presale']);
+        self::assertNull($cards['oldest']['finalisation']);
     }
 
     public function testAgeCountsTheOldestOfEachStatusSeparately(): void
     {
-        $stalePending  = $this->contractFor('pending');
-        $freshPending  = $this->contractFor('pending');
-        $routed        = $this->contractFor('routed');
+        $staleOne      = $this->contractFor('presale');
+        $freshOne      = $this->contractFor('presale');
+        $finalisation  = $this->contractFor('finalisation');
 
-        $this->ageByDays($stalePending, 12);
-        $this->ageByDays($freshPending, 2);
-        $this->ageByDays($routed, 5);
+        $this->ageByDays($staleOne, 12);
+        $this->ageByDays($freshOne, 2);
+        $this->ageByDays($finalisation, 5);
 
         $cards = $this->cardsFor('2026-08-21 00:00:00', '2026-08-01 00:00:00', '2026-08-20 00:00:00');
 
         // Η παλαιότερη, όχι η νεότερη ούτε ο μέσος όρος — και οι δύο
         // καταστάσεις μετριούνται χώρια.
-        self::assertSame(12, $cards['oldest']['pending']);
-        self::assertSame(5, $cards['oldest']['routed']);
+        self::assertSame(12, $cards['oldest']['presale']);
+        self::assertSame(5, $cards['oldest']['finalisation']);
     }
 
     public function testSomethingTouchedTodayIsZeroDaysAndNotNull(): void
     {
-        $justMoved = $this->contractFor('pending');
+        $justMoved = $this->contractFor('presale');
         $this->ageByDays($justMoved, 0);
 
         $cards = $this->cardsFor('2026-08-21 00:00:00', '2026-08-01 00:00:00', '2026-08-20 00:00:00');
 
         // Μηδέν μέρες ΕΙΝΑΙ μέτρηση («μπήκε σήμερα») και πρέπει να ξεχωρίζει
         // από το null («δεν υπάρχει καμία»). Η οθόνη τα λέει διαφορετικά.
-        self::assertSame(0, $cards['oldest']['pending']);
-        self::assertNotNull($cards['oldest']['pending']);
+        self::assertSame(0, $cards['oldest']['presale']);
+        self::assertNotNull($cards['oldest']['presale']);
     }
 
     // ── 3. Τα όρια τα ορίζει ο καλών ─────────────────────────────────
 
     public function testTheMonthWindowIsWhateverTheCallerPassed(): void
     {
-        $inside  = $this->contractFor('new');
-        $outside = $this->contractFor('new');
+        $inside  = $this->contractFor('presale');
+        $outside = $this->contractFor('presale');
 
         $this->stamp($inside, ['created_at' => '2026-08-03 10:00:00']);
         $this->stamp($outside, ['created_at' => '2026-07-30 10:00:00']);

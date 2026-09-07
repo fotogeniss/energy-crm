@@ -83,8 +83,8 @@ final class FrontendEscapingTest extends TestCase
      */
     private const NUMERIC_PROPERTIES = [
         'id', 'contract_id', 'customer_id', 'lead_id', 'file_id', 'provider_id',
-        'program_id', 'count', 'c', 'length', 'today', 'month', 'pending',
-        'routed', 'open_tasks', 'contracts', 'matched', 'updated', 'unchanged',
+        'program_id', 'count', 'c', 'length', 'today', 'month', 'presale',
+        'finalisation', 'open_tasks', 'contracts', 'matched', 'updated', 'unchanged',
         'unmatched_total', 'threshold', 'age_days', 'days_left', 'amount',
         'window', 'pending_est', 'total', 'page', 'pages', 'sort_order', 'v', 'n',
     ];

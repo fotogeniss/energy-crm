@@ -154,13 +154,9 @@ final class Plugin
 
         (new Router(...ControllerFactory::all()))->register();
 
-        // Signed contracts advance themselves after a delay: a one-off event per
-        // signature, plus a sweep that heals a missed one.
-        Services::autoProcess()->register();
-
-        // Το καμπανάκι για τις καταστάσεις που ζητούν ενέργεια. Συνδέεται στο
-        // ίδιο σημείο με τον AutoProcess, ώστε ο κύκλος ζωής να μη χρειάζεται
-        // να ξέρει ότι υπάρχουν ειδοποιήσεις.
+        // Το καμπανάκι για τις καταστάσεις που ζητούν ενέργεια. Συνδέεται στον
+        // κύκλο ζωής, ώστε αυτός να μη χρειάζεται να ξέρει ότι υπάρχουν
+        // ειδοποιήσεις.
         Services::contractNotices()->register();
 
         // Απόρριψη από πάροχο -> αυτόματη εργασία παρακολούθησης. Ίδιο σημείο

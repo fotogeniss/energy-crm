@@ -18,7 +18,6 @@ use ECRM_DB;
 use ECRM_Files;
 use ECRM_Notifications;
 use ECRM_Providers;
-use EnergyCRM\Domain\Contract\AutoProcess;
 use EnergyCRM\Infrastructure\DocumentProtection;
 use EnergyCRM\Infrastructure\DocumentsSweep;
 use EnergyCRM\Infrastructure\PiiBackfill;
@@ -62,7 +61,12 @@ final class Installer
         DocumentProtection::unschedule();
         DocumentsSweep::unschedule();
         PiiBackfill::unschedule();
-        AutoProcess::unschedule();
+        // Ο AutoProcess διαγράφηκε μαζί με την κατάσταση `signed` (07/09/2026).
+        // Τα δύο ονόματα μένουν εδώ γραμμένα με το χέρι για να καθαρίσουν τα
+        // προγραμματισμένα γεγονότα σε site που τα έχουν ήδη στημένα: χωρίς
+        // αυτό, ένα cron χωρίς ακροατή θα χτυπούσε για πάντα στο κενό.
+        wp_clear_scheduled_hook('ecrm_auto_process');
+        wp_clear_scheduled_hook('ecrm_auto_process_sweep');
         flush_rewrite_rules();
     }
 

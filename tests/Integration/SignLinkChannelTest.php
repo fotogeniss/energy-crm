@@ -68,7 +68,10 @@ final class SignLinkChannelTest extends IntegrationTestCase
         $wpdb->insert(Tables::name(Tables::CONTRACTS), [
             'customer_id'     => $customerId,
             'partner_user_id' => $this->seller,
-            'status'          => 'new',
+            // 'registration', όχι 'presale': ο γράφος πηγαίνει σε
+            // awaiting_signature ΜΟΝΟ από το registration (και ξανά από τον
+            // εαυτό του, για επανάληψη). Η αποστολή παρακάτω μετακινεί ΕΔΩ.
+            'status'          => 'registration',
             'code'            => 'ΕΝ-TEST-' . $customerId,
             'supply_number'   => '12345678901',
             'energy_type'     => 'power',
@@ -178,7 +181,7 @@ final class SignLinkChannelTest extends IntegrationTestCase
         // στείλει με το χέρι. Αυτό που δεν επιτρέπεται είναι να μην το μάθει —
         // και γι' αυτό υπάρχει το γεγονός από πάνω.
         self::assertContains('status_change', $this->eventTypes($noEmail));
-        self::assertSame('pending_signature', $this->statusOf($noEmail));
+        self::assertSame('awaiting_signature', $this->statusOf($noEmail));
     }
 
     /**

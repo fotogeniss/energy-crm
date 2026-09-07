@@ -224,37 +224,4 @@ final class ContractTransitions
 
         return true;
     }
-
-    /**
-     * Contracts still sitting in `signed` whose signature is older than the cutoff.
-     *
-     * The cutoff is site-local time, because `signed_at` is written with
-     * current_time('mysql'). Comparing against UTC would quietly do nothing for
-     * as many hours as the site is offset by.
-     *
-     * @return list<int>
-     */
-    public function idsSignedBefore(string $cutoffLocalTime, int $onlyId = 0, int $limit = 200): array
-    {
-        global $wpdb;
-
-        $onlyClause = $onlyId > 0 ? ' AND id = %d' : '';
-        $params     = $onlyId > 0
-            ? [$this->table, $cutoffLocalTime, $onlyId, $limit]
-            : [$this->table, $cutoffLocalTime, $limit];
-
-        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-        /** @var list<string> $ids */
-        $ids = $wpdb->get_col(
-            $wpdb->prepare(
-                "SELECT id FROM %i
-                  WHERE status = 'signed' AND signed_at IS NOT NULL AND signed_at <= %s{$onlyClause}
-                  LIMIT %d",
-                $params
-            )
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
-
-        return array_values(array_map('intval', $ids));
-    }
 }
