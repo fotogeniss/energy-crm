@@ -48,6 +48,47 @@ final class ContractTransitions
     }
 
     /**
+     * Τα τρία πεδία που χρειάζεται ο `PaperworkGate`, ή null όταν δεν υπάρχει
+     * τέτοια σύμβαση.
+     *
+     * Ένα ερώτημα και όχι τρία, και σε αυτόν τον repository και όχι σε άλλον:
+     * ο `ContractLifecycle` ήδη ζευγαρώνει με αυτή την κλάση για ακριβώς τον
+     * λόγο που την κάνει κατάλληλη -- δεν δέχεται `UserScope`, επειδή οι
+     * καλούντες έχουν ήδη λύσει τη σύμβαση μέσα από scoped ανάγνωση, και το
+     * cron τρέχει για λογαριασμό κανενός (ARCHITECTURE.md, «Αναγνώσεις χωρίς
+     * actor»). Μια πύλη που ελέγχει χαρτιά δεν αποφασίζει ποιος βλέπει τι.
+     *
+     * Οι τιμές γυρίζουν κανονικοποιημένες σε string: το `signed_at` είναι
+     * NULL για κάθε ανυπόγραφη σύμβαση, και ο καλών ρωτά «κενό;», όχι
+     * «null ή κενό;».
+     *
+     * @return array{activation_type: string, energy_type: string, signed_at: string}|null
+     */
+    public function paperworkFieldsOf(int $contractId): ?array
+    {
+        global $wpdb;
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT activation_type, energy_type, signed_at FROM %i WHERE id = %d',
+                $this->table,
+                $contractId
+            ),
+            ARRAY_A
+        );
+
+        if (! is_array($row)) {
+            return null;
+        }
+
+        return [
+            'activation_type' => (string) ($row['activation_type'] ?? ''),
+            'energy_type'     => (string) ($row['energy_type'] ?? ''),
+            'signed_at'       => (string) ($row['signed_at'] ?? ''),
+        ];
+    }
+
+    /**
      * Write the new status, and whatever columns come with it.
      *
      * AUDIT 30/08: αυτή η εγγραφή ήταν σκέτο `$wpdb->update(..., ['id' =>
