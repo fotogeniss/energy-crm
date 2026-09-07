@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use ECRM_Files;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\AutoProcess;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
@@ -226,11 +227,41 @@ final class ContractLifecycleTest extends IntegrationTestCase
     {
         $this->markSignedAt($this->contractId, '-1 hour');
 
-        $this->lifecycle->moveTo($this->contractId, 'routed', ['from' => 'signed']);
+        // 07/09: 'routed' είναι φυλασσόμενη κατάσταση (ECRM_Docs::gate_statuses())
+        // και η PaperworkGate αρνείται πλέον τη μετάβαση χωρίς χαρτιά -- χωρίς
+        // αυτό η κίνηση θα απέτυχε σιωπηλά, η σύμβαση θα έμενε 'signed', και το
+        // σάρωμα θα την προωθούσε σε 'processing' αντί να τη βρει ήδη
+        // μετακινημένη, που είναι ακριβώς αυτό που δοκιμάζει το test.
+        $this->completePaperwork($this->contractId);
+
+        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'routed', ['from' => 'signed']));
 
         $this->autoProcess->run();
 
         self::assertSame('routed', $this->statusOnDisk());
+    }
+
+    /**
+     * Τα ελάχιστα χαρτιά που η PaperworkGate απαιτεί πριν από μια φυλασσόμενη
+     * κατάσταση. Χωρίς activation_type η απαιτούμενη λίστα είναι η προεπιλογή
+     * [id_card, provider_bill] (ECRM_Docs::required_for()); η υπογραφή έρχεται
+     * από markSignedAt().
+     */
+    private function completePaperwork(int $contractId): void
+    {
+        $files = Services::files();
+
+        $files->attach($contractId, 'id_card', 'id.jpg', 'image/jpeg', $this->putBytes());
+        $files->attach($contractId, 'provider_bill', 'bill.pdf', 'application/pdf', $this->putBytes());
+    }
+
+    private function putBytes(): string
+    {
+        $saved = ECRM_Files::put_bytes('fixture bytes ' . wp_generate_password(8, false), 'jpg', 'image/jpeg', 'x.jpg');
+
+        self::assertIsArray($saved, 'Fixture failed to write bytes to protected storage.');
+
+        return (string) $saved['path'];
     }
 
     /** Straight from the table, so the assertion does not lean on the code under test. */

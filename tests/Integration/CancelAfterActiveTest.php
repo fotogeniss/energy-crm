@@ -26,11 +26,13 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use ECRM_Files;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\Tables;
 use EnergyCRM\Services;
 use WP_REST_Request;
 
@@ -181,15 +183,50 @@ final class CancelAfterActiveTest extends IntegrationTestCase
      * Μέσω moveTo() και όχι με απευθείας UPDATE: το γεγονός που ρωτά η πύλη
      * είναι ακριβώς αυτό που γράφει το moveTo(), και fixture που το παρακάμπτει
      * θα δοκίμαζε μια σύμβαση που η βάση δεν θα είχε δει ποτέ να ενεργοποιείται.
+     *
+     * Από 07/09 το moveTo(..., 'active') αρνείται από μόνο του χωρίς χαρτιά
+     * και υπογραφή (PaperworkGate) -- ίδιος λόγος, ίδια θέση με το σχόλιο από
+     * πάνω: το fixture πρέπει να τα προμηθεύσει πραγματικά, όχι να παρακάμψει
+     * την πύλη, αλλιώς θα δοκίμαζε μια σύμβαση που δεν θα μπορούσε ποτέ να
+     * γίνει πραγματικά ενεργή.
      */
     private function activeContract(): int
     {
         $contractId = $this->submittedContract();
 
         self::assertTrue($this->lifecycle->moveTo($contractId, 'processing'));
+
+        $this->completePaperwork($contractId);
+
         self::assertTrue($this->lifecycle->moveTo($contractId, 'active'));
 
         return $contractId;
+    }
+
+    /**
+     * Τα ελάχιστα χαρτιά + υπογραφή που η PaperworkGate απαιτεί πριν από μια
+     * φυλασσόμενη κατάσταση. Χωρίς activation_type η απαιτούμενη λίστα είναι
+     * η προεπιλογή [id_card, provider_bill] (ECRM_Docs::required_for()).
+     */
+    private function completePaperwork(int $contractId): void
+    {
+        $files = Services::files();
+
+        $files->attach($contractId, 'id_card', 'id.jpg', 'image/jpeg', $this->putBytes());
+        $files->attach($contractId, 'provider_bill', 'bill.pdf', 'application/pdf', $this->putBytes());
+
+        global $wpdb;
+
+        $wpdb->update(Tables::name('contracts'), ['signed_at' => current_time('mysql')], ['id' => $contractId]);
+    }
+
+    private function putBytes(): string
+    {
+        $saved = ECRM_Files::put_bytes('fixture bytes ' . wp_generate_password(8, false), 'jpg', 'image/jpeg', 'x.jpg');
+
+        self::assertIsArray($saved, 'Fixture failed to write bytes to protected storage.');
+
+        return (string) $saved['path'];
     }
 
     private function submittedContract(): int

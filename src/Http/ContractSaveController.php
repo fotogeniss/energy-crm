@@ -26,6 +26,7 @@ use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\CancellationGate;
+use EnergyCRM\Domain\Contract\StatusEntryGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\DocumentQueue;
@@ -44,6 +45,7 @@ final class ContractSaveController implements Controller
         private readonly ContractLifecycle $lifecycle,
         private readonly DraftExitGate $draftExit,
         private readonly CancellationGate $cancellation,
+        private readonly StatusEntryGate $paperwork,
     ) {
     }
 
@@ -255,14 +257,19 @@ final class ContractSaveController implements Controller
      * touched: contractFrom() omits the column entirely, which is what makes an
      * ordinary field edit on a signed contract still work.
      *
-     * Three refusals, in this order. First the capability, and 403: whether the
-     * caller may move a contract at all is not a question about this contract,
-     * so it is answered before anything is said about which moves exist. Then
-     * the graph decides whether the move exists, and answers 409. Only then
-     * does DraftExitGate ask whether this particular contract is ready to make
-     * it, and answers 422 — a legal move the contract is not ready for is a
-     * different thing from an illegal one, and the agent fixes them
-     * differently. The gate is a shared object rather than an `if` here because
+     * In this order. First the capability, and 403: whether the caller may move
+     * a contract at all is not a question about this contract, so it is
+     * answered before anything is said about which moves exist. Then the graph
+     * decides whether the move exists at all, and answers 409 — a move the
+     * graph has never heard of is refused for that reason, not for a missing
+     * document, so `testADraftCannotBeMovedStraightToPayableActive` still gets
+     * 409 even though ΕΝΕΡΓΟΣ also happens to be a gated status (07/09: this
+     * used to run before the graph check and stole its 409 for every illegal
+     * jump that happened to land on a gated status). Only for a move the graph
+     * allows does PaperworkGate ask whether THIS contract's papers are in
+     * order, 422 — a legal move the contract is not ready for is a different
+     * thing from an illegal one. Only then does DraftExitGate ask about the ΑΦΜ,
+     * also 422. The gates are shared objects rather than `if`s here because
      * ContractStatusController can make the same moves; a rule enforced on one
      * of two doors is the shape of the bug CHANGELOG (10) had just closed —
      * and the capability was exactly that bug, on exactly those two doors.
@@ -350,24 +357,42 @@ final class ContractSaveController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => $wasActive], 409);
         }
 
-        if ($source->canMoveTo($target)) {
-            return $this->refuseMissingAfm(
-                $this->draftExit->refusalOnMove($source, $target, $customerId, $scope, $afm)
-            );
+        // Ο γράφος πρώτα: μια μετάβαση που δεν υπάρχει καθόλου απορρίπτεται
+        // γι' αυτόν τον λόγο, όχι επειδή λείπει ένα χαρτί -- draft → active
+        // είναι 409 (δεν υπάρχει τέτοια μετάβαση), όχι 422 (λείπουν
+        // δικαιολογητικά), παρότι το active είναι και φυλασσόμενη κατάσταση.
+        if (! $source->canMoveTo($target)) {
+            return new WP_REST_Response([
+                'ok'      => false,
+                'error'   => sprintf(
+                    'Δεν επιτρέπεται μετάβαση από «%s» σε «%s».',
+                    $source->label(),
+                    $target->label()
+                ),
+                'allowed' => array_map(
+                    static fn (ContractStatus $s): array => ['status' => $s->value, 'label' => $s->label()],
+                    $source->allowedNext()
+                ),
+            ], 409);
         }
 
-        return new WP_REST_Response([
-            'ok'      => false,
-            'error'   => sprintf(
-                'Δεν επιτρέπεται μετάβαση από «%s» σε «%s».',
-                $source->label(),
-                $target->label()
-            ),
-            'allowed' => array_map(
-                static fn (ContractStatus $s): array => ['status' => $s->value, 'label' => $s->label()],
-                $source->allowedNext()
-            ),
-        ], 409);
+        // Χαρτιά και υπογραφή (07/09). Αυτή η διαδρομή ΔΕΝ τα ρωτούσε: ο
+        // έλεγχος ζούσε μόνο στον ContractStatusController και στον
+        // ContractsBulkController, ενώ η φόρμα γράφει `status` σαν κανονικό
+        // πεδίο -- και ο Πωλητής έχει CHANGE_STATUS. Ο ContractLifecycle
+        // αρνείται πλέον την ίδια μετάβαση ούτως ή άλλως· εδώ ρωτάμε πρώτοι
+        // ώστε ο χρήστης να πάρει 422 με τον λόγο, αντί για σιωπηλό false.
+        // Μετά τον γράφο -- όχι πριν -- ώστε μια μετάβαση που δεν υπάρχει
+        // καθόλου να απαντάει 409 και όχι 422.
+        $paperwork = $this->paperwork->refusalOnEntry($target, $contractId);
+
+        if ($paperwork !== null) {
+            return new WP_REST_Response(['ok' => false, 'error' => $paperwork], 422);
+        }
+
+        return $this->refuseMissingAfm(
+            $this->draftExit->refusalOnMove($source, $target, $customerId, $scope, $afm)
+        );
     }
 
     /**

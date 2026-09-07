@@ -79,7 +79,8 @@ final class ControllerFactory
                 Services::customers(),
                 $lifecycle,
                 $draftExit,
-                $cancel
+                $cancel,
+                Services::paperworkGate()
             ),
             new ContractStatusController(
                 $scope,

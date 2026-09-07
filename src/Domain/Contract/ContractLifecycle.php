@@ -22,6 +22,11 @@
  * here is the *pipeline* —
  * which move is legal — not who may make it.
  *
+ * Three questions are asked before the write, and none of them can be skipped
+ * by choosing a different door: is the move legal for this status
+ * (ContractStatus), may this particular contract be cancelled (CancellationGate),
+ * and is its paperwork complete enough for where it is going (StatusEntryGate).
+ *
  * @package EnergyCRM
  */
 
@@ -52,6 +57,7 @@ final class ContractLifecycle
         private readonly EventRepository $events,
         private readonly CancellationGate $cancellation,
         private readonly PayoutRepository $payouts,
+        private readonly StatusEntryGate $entry,
     ) {
     }
 
@@ -113,6 +119,20 @@ final class ContractLifecycle
         // Excel θα την επέτρεπαν ενώ οι δύο οθόνες όχι, που είναι ακριβώς ο
         // τρόπος με τον οποίο ένας κανόνας παύει να είναι κανόνας.
         if ($current !== null && $this->cancellation->refusalOnMove($current, $target, $contractId) !== null) {
+            return false;
+        }
+
+        // Χαρτιά και υπογραφή, για τις καταστάσεις που τα απαιτούν. Ο έλεγχος
+        // ζούσε ως τις 07/09 μόνο σε δύο controllers -- ο τρίτος δρόμος που
+        // γράφει status (η αποθήκευση της φόρμας) και η εισαγωγή Excel τον
+        // προσπερνούσαν, με τον Πωλητή να έχει CHANGE_STATUS και το `active`
+        // να είναι πληρωτέο. Εδώ είναι το σημείο που δεν παρακάμπτεται:
+        // ίδιος λόγος και ίδια θέση με τον CancellationGate από πάνω.
+        //
+        // ΔΕΝ ελέγχεται στη δημιουργία μέσω αυτής της διαδρομής -- ο
+        // ContractSaveController φυλάει μόνος του την πρώτη αποθήκευση, όπου
+        // δεν υπάρχει ακόμη `$contractId` να ρωτηθεί.
+        if ($this->entry->refusalOnEntry($target, $contractId) !== null) {
             return false;
         }
 

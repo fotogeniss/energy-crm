@@ -37,6 +37,7 @@ use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Infrastructure\DocumentKindReview;
 use EnergyCRM\Infrastructure\ExtractionGate;
+use EnergyCRM\Infrastructure\PaperworkGate;
 use EnergyCRM\Infrastructure\ProviderFormRenderer;
 use EnergyCRM\Infrastructure\SecretStore;
 use EnergyCRM\Infrastructure\SignatureState;
@@ -137,6 +138,8 @@ final class Services
 
     private static ?CancellationGate $cancellationGate = null;
 
+    private static ?PaperworkGate $paperworkGate = null;
+
     private static ?DeletionGate $deletionGate = null;
 
     private static ?ContractLifecycle $lifecycle = null;
@@ -210,6 +213,12 @@ final class Services
     public static function cancellationGate(): CancellationGate
     {
         return self::$cancellationGate ??= new CancellationGate(self::events(), self::payouts());
+    }
+
+    /** Χαρτιά + υπογραφή πριν από τις φυλασσόμενες καταστάσεις. */
+    public static function paperworkGate(): PaperworkGate
+    {
+        return self::$paperworkGate ??= new PaperworkGate(self::contractTransitions());
     }
 
     public static function deletionGate(): DeletionGate
@@ -355,6 +364,7 @@ final class Services
             self::events(),
             self::cancellationGate(),
             self::payouts(),
+            self::paperworkGate(),
         );
     }
 
