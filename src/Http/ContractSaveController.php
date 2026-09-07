@@ -182,7 +182,7 @@ final class ContractSaveController implements Controller
 
         // On an edit, a status in the payload is a real transition — the form
         // only ever sends one starting from draft (ecrm-form.js: stay on
-        // 'draft', or finalise to 'new'; refuseStatusChange() above has
+        // 'draft', or finalise to 'presale'; refuseStatusChange() above has
         // already refused anything the pipeline forbids). It must go through
         // ContractLifecycle::moveTo(), the only place that writes the
         // status_change event, fires the in-app/SMS notifications and the
@@ -298,7 +298,7 @@ final class ContractSaveController implements Controller
         // the screen rather than of this endpoint, and a contract could be born
         // payable. These two are the only stages a first save can mean.
         if ($existing === null) {
-            if ($target !== ContractStatus::Draft && $target !== ContractStatus::Submitted) {
+            if ($target !== ContractStatus::Draft && $target !== ContractStatus::Presale) {
                 return new WP_REST_Response([
                     'ok'    => false,
                     'error' => 'Νέα σύμβαση μπορεί να ξεκινήσει μόνο ως πρόχειρη ή ως νέα αίτηση.',
@@ -333,20 +333,22 @@ final class ContractSaveController implements Controller
             }
         }
 
-        // Ίδια πύλη με τον ContractStatusController και τον
-        // ContractsBulkController, 2026-08-24: αυτή η φόρμα γράφει `status`
-        // σαν κανονικό πεδίο επεξεργασίας — ένα «Αποθήκευση Αλλαγών» με
-        // status=signed στο payload θα δήλωνε την αίτηση υπογεγραμμένη χωρίς
-        // ο πελάτης να έχει υπογράψει ποτέ πραγματικά. Η μόνη νόμιμη πηγή
-        // είναι η δημόσια σελίδα παρακολούθησης, που γράφει signed_at.
-        if ($target === ContractStatus::Signed && empty($existing['signed_at'])) {
-            return new WP_REST_Response([
-                'ok'    => false,
-                'error' => 'Η κατάσταση «Υπογράφηκε» δεν μπαίνει χειροκίνητα — '
-                    . 'μόνο μέσω πραγματικής υπογραφής πελάτη από τον σύνδεσμο παρακολούθησης.',
-            ], 409);
+        // AUDIT 07/09: το ίδιο «όχι μετάβαση» πρέπει να γλιτώνει και τον
+        // γράφο, όχι μόνο το δικαίωμα. Ως τις 07/09 κάθε κατάσταση επέτρεπε
+        // να μείνει στον εαυτό της (`allowedNext()` περιείχε ένα self-loop),
+        // οπότε το `canMoveTo()` παρακάτω περνούσε σιωπηλά για ένα ξανά-
+        // στειλμένο ίδιο status. Το νέο μοντέλο αφαίρεσε επίτηδες τα
+        // self-loops -- η ιδιοποτεντία ζει στο ContractLifecycle::moveTo()
+        // (γραμμή «$from === $to» εκεί), όχι στον γράφο -- και χωρίς αυτό το
+        // early return η ίδια «Προσωρινή αποθήκευση» που η φόρμα στέλνει σε
+        // κάθε autosave θα έπαιρνε 409 «δεν επιτρέπεται μετάβαση από Χ σε Χ».
+        if ($target === $source) {
+            return null;
         }
 
+        // Ο ειδικός φύλακας για ψεύτικο «Υπογράφηκε» αφαιρέθηκε στις 07/09
+        // μαζί με την κατάσταση. Η ίδια ανησυχία ζει τώρα στην `PaperworkGate`
+        // λίγες γραμμές πιο κάτω -- και όχι μόνο για μία κατάσταση.
         // Η ίδια ερώτηση που κάνει ο ContractStatusController, με την ίδια
         // απάντηση: σύμβαση που υπήρξε ενεργή δεν ακυρώνεται. Πριν τον γράφο,
         // επειδή ο γράφος θα έλεγε «επιτρέπεται» για το Εκκρεμότητα →

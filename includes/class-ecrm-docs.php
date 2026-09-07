@@ -74,7 +74,7 @@ class ECRM_Docs {
 	 * by activation_type, and 'new_connection' => ['id_card', 'e9'] is real
 	 * for power/gas (Ε9 proves who may open a connection at that address) but
 	 * meaningless for a mobile line — a new Orizon number was blocked from
-	 * ever reaching 'routed'/'active' waiting for a property-tax document
+	 * ever reaching 'finalisation'/'active' waiting for a property-tax document
 	 * that has nothing to do with a SIM card. Caught by the site owner on
 	 * ORIZON-0002. Filtered for every activation_type, not only
 	 * 'new_connection', because nothing about Ε9 becomes relevant to mobile
@@ -154,7 +154,13 @@ class ECRM_Docs {
 	/** Statuses whose entry requires all documents to be present. */
 
 	public static function gate_statuses(): array {
-		return apply_filters( 'ecrm_doc_gate_statuses', [ 'routed', 'active' ] );
+		// 07/09/2026: `routed` -> `finalisation`, ίδιο στάδιο με νέο όνομα.
+		//
+		// Η `registration` ΔΕΝ μπαίνει εδώ, παρότι εξ ορισμού σημαίνει «έχουμε
+		// όλα τα χαρτιά»: η `PaperworkGate` απαιτεί ΚΑΙ υπογραφή πελάτη, και
+		// στην καταχώρηση ο πελάτης δεν έχει υπογράψει ακόμα. Θα κλείδωνε τη
+		// ροή στο πρώτο της βήμα.
+		return apply_filters( 'ecrm_doc_gate_statuses', [ 'finalisation', 'active' ] );
 	}
 
 	/** Distinct doc kinds already attached to a contract. */

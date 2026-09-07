@@ -15,20 +15,18 @@
  *
  * ## Γιατί Infrastructure και όχι Domain
  *
- * Πρώτη γραφή αυτού του αρχείου ήταν σε `Domain\Contract`, δίπλα στον
- * `AutoProcess` -- λάθος, και το έπιασε ο υπάρχων έλεγχος
- * `DomainStaysFrameworkFreeTest` στο πρώτο `composer check:all` (31/08): η
- * κλάση καλεί `add_action()`/`current_time()`, πλατφόρμα, όχι καθαρή λογική.
- * Ο `ContractNotices` κάνει ΑΚΡΙΒΩΣ την ίδια δουλειά -- ακούει το ίδιο
- * γεγονός, αγγίζει WordPress και Persistence -- και ήδη ζει σωστά εδώ, στο
- * `Infrastructure`. Ο `AutoProcess` είναι ο ίδιος ήδη καταγεγραμμένος ως
- * γνωστό χρέος στο `ALLOWED` του παραπάνω test, όχι πρότυπο προς αντιγραφή.
+ * Πρώτη γραφή αυτού του αρχείου ήταν σε `Domain\Contract` -- λάθος, και το
+ * έπιασε ο υπάρχων έλεγχος `DomainStaysFrameworkFreeTest` στο πρώτο
+ * `composer check:all` (31/08): η κλάση καλεί `add_action()`/`current_time()`,
+ * πλατφόρμα, όχι καθαρή λογική. Ο `ContractNotices` κάνει ΑΚΡΙΒΩΣ την ίδια
+ * δουλειά -- ακούει το ίδιο γεγονός, αγγίζει WordPress και Persistence -- και
+ * ήδη ζει σωστά εδώ, στο `Infrastructure`.
  *
- * ## Γιατί ακούει το ίδιο γεγονός με τον AutoProcess και τον ContractNotices
+ * ## Γιατί ακούει το ίδιο γεγονός με τον ContractNotices
  *
  * Ο `ContractLifecycle` δεν πρέπει να ξέρει ότι υπάρχουν εργασίες, όπως δεν
- * ξέρει ότι υπάρχει χρονοπρογραμματιστής (`AutoProcess`) ή καμπανάκι
- * (`ContractNotices`). Και οι τρεις συνδέονται στο ίδιο `STATUS_CHANGED` για
+ * ξέρει ότι υπάρχει καμπανάκι (`ContractNotices`). Και οι δύο συνδέονται στο
+ * ίδιο `STATUS_CHANGED` για
  * τον ίδιο λόγο: όποιος κι αν είναι ο καλών — χειροκίνητη αλλαγή, μαζική
  * ενέργεια, μελλοντικό webhook παρόχου — περνά ΠΑΝΤΑ από εδώ, άρα η εργασία
  * δημιουργείται μία φορά, με τον ίδιο τρόπο, ανεξάρτητα ποιος γύρισε τη
@@ -77,7 +75,7 @@ final class RejectionFollowUp
     ) {
     }
 
-    /** Ίδιο σημείο σύνδεσης με τον AutoProcess και τον ContractNotices. */
+    /** Ίδιο σημείο σύνδεσης με τον ContractNotices. */
     public function register(): void
     {
         add_action(ContractLifecycle::STATUS_CHANGED, [$this, 'onStatusChanged'], 10, 2);
@@ -85,7 +83,7 @@ final class RejectionFollowUp
 
     public function onStatusChanged(int $contractId, string $to): void
     {
-        if ($to !== ContractStatus::Rejected->value) {
+        if ($to !== ContractStatus::CancelledByUs->value) {
             return;
         }
 

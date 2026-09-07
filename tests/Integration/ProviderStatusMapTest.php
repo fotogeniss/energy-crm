@@ -102,10 +102,10 @@ final class ProviderStatusMapTest extends IntegrationTestCase
 
         self::assertTrue($this->maps->save(
             $providerId,
-            ProviderStatusMap::fromArray(['ΣΕ ΕΞΕΛΙΞΗ' => 'processing'])
+            ProviderStatusMap::fromArray(['ΣΕ ΕΞΕΛΙΞΗ' => 'registration'])
         ));
 
-        self::assertSame(['ΣΕ ΕΞΕΛΙΞΗ' => 'processing'], $this->maps->find($providerId)->toArray());
+        self::assertSame(['ΣΕ ΕΞΕΛΙΞΗ' => 'registration'], $this->maps->find($providerId)->toArray());
     }
 
     /** Αντικατάσταση, όχι συγχώνευση: τιμή που έσβησε ο χρήστης πρέπει να φύγει. */
@@ -113,7 +113,7 @@ final class ProviderStatusMapTest extends IntegrationTestCase
     {
         $providerId = $this->makeProvider('zenith-test', 'ΖΕΝΙΘ');
 
-        $this->maps->save($providerId, ProviderStatusMap::fromArray(['Α' => 'active', 'Β' => 'pending']));
+        $this->maps->save($providerId, ProviderStatusMap::fromArray(['Α' => 'active', 'Β' => 'registration']));
         $this->maps->save($providerId, ProviderStatusMap::fromArray(['Α' => 'active']));
 
         self::assertSame(['Α' => 'active'], $this->maps->find($providerId)->toArray());
@@ -139,16 +139,16 @@ final class ProviderStatusMapTest extends IntegrationTestCase
         $new = $this->makeProvider('protergia-test2', 'Protergia');
 
         $oldContract = $this->contractFor($old, '99900000001', 'active');
-        $newContract = $this->contractFor($new, '99900000001', 'new');
+        $newContract = $this->contractFor($new, '99900000001', 'presale');
 
         $report = ECRM_Import::apply(
-            [['supply' => '99900000001', 'status' => 'processing']],
+            [['supply' => '99900000001', 'status' => 'registration']],
             false,
             $new
         );
 
         self::assertSame(1, $report['updated']);
-        self::assertSame('processing', $this->statusOf($newContract));
+        self::assertSame('registration', $this->statusOf($newContract));
         self::assertSame('active', $this->statusOf($oldContract), 'Η σύμβαση του άλλου παρόχου δεν αγγίχτηκε.');
     }
 
@@ -158,28 +158,28 @@ final class ProviderStatusMapTest extends IntegrationTestCase
         $one = $this->makeProvider('one-test', 'Ένας');
         $two = $this->makeProvider('two-test', 'Δύο');
 
-        $contract = $this->contractFor($one, '99900000002', 'new');
+        $contract = $this->contractFor($one, '99900000002', 'presale');
 
         $report = ECRM_Import::apply(
-            [['supply' => '99900000002', 'status' => 'processing']],
+            [['supply' => '99900000002', 'status' => 'registration']],
             false,
             $two
         );
 
         self::assertSame(0, $report['matched']);
         self::assertSame(1, $report['unmatched_total']);
-        self::assertSame('new', $this->statusOf($contract));
+        self::assertSame('presale', $this->statusOf($contract));
     }
 
     /** Χωρίς επιλεγμένο πάροχο δεν μπαίνει φίλτρο — η παλιά ροή δεν σπάει. */
     public function testWithoutAProviderTheMatchIsUnrestricted(): void
     {
         $provider = $this->makeProvider('solo-test', 'Μόνος');
-        $contract = $this->contractFor($provider, '99900000003', 'new');
+        $contract = $this->contractFor($provider, '99900000003', 'presale');
 
-        $report = ECRM_Import::apply([['supply' => '99900000003', 'status' => 'processing']], false, 0);
+        $report = ECRM_Import::apply([['supply' => '99900000003', 'status' => 'registration']], false, 0);
 
         self::assertSame(1, $report['updated']);
-        self::assertSame('processing', $this->statusOf($contract));
+        self::assertSame('registration', $this->statusOf($contract));
     }
 }

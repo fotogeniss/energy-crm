@@ -39,6 +39,7 @@ use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureLegacyColumns;
 use EnergyCRM\Persistence\Schema\Migrations\FixProviderEnergyTypes;
+use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusVocabulary;
 use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
 use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
 use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
@@ -95,6 +96,7 @@ final class MigrationList
             new AddCustomerContactPhoneColumn(),
             new CreateCustomerNotesTable(),
             new CreateCustomerEventsTable(),
+            new MigrateStatusVocabulary(),
         ];
     }
 }

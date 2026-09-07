@@ -130,7 +130,7 @@ final class ContractSaveMappingTest extends IntegrationTestCase
             'supply_number'    => 'SUPPLY-000111',
             'meter_number'     => 'METER-000222',
             'invoice_code'     => 'INV-000333',
-            'status'           => 'new',
+            'status'           => 'presale',
             'notes'            => 'Σημείωση δοκιμής χαρτογράφησης',
             'extracted_json'   => '{"ocr":"test"}',
             'extra'            => ['agreed_power' => '8', 'guarantee_amount' => '250'],
@@ -202,7 +202,7 @@ final class ContractSaveMappingTest extends IntegrationTestCase
             'supply_number'   => 'SUPPLY-000111',
             'meter_number'    => 'METER-000222',
             'invoice_code'    => 'INV-000333',
-            'status'          => 'new',
+            'status'          => 'presale',
             'notes'           => 'Σημείωση δοκιμής χαρτογράφησης',
             'extracted_json'  => '{"ocr":"test"}',
             'start_date'      => '2026-01-15',
@@ -274,11 +274,11 @@ final class ContractSaveMappingTest extends IntegrationTestCase
             'activation_type'  => 'new_connection',
             'supply_number'    => 'SUPPLY-AAA',
             'meter_number'     => 'METER-BBB',
-            // 'new', not 'active': a first save may only mean draft or new
-            // since CHANGELOG 2026-08-16 (10). Fixture data, not an
+            // 'presale', not 'active': a first save may only mean draft or
+            // presale since CHANGELOG 2026-08-16 (10). Fixture data, not an
             // expectation — the assertions below compare this row against
             // itself, before and after an edit.
-            'status'           => 'new',
+            'status'           => 'presale',
             'notes'            => 'Αρχική σημείωση',
             'start_date'       => '2026-01-01',
             'term_months'      => 12,

@@ -5,11 +5,21 @@
  *
  * Εύρημα #2 του ελέγχου ασφαλείας/UI-UX/ροής-λογικής (26/08/2026): το
  * `CancellationGate` μπλοκάρει την ακύρωση μόνο όταν η σύμβαση υπήρξε ποτέ
- * `Active`. Όμως το `ContractStatus::isPayable()` περιλαμβάνει και `Routed`
- * και `Resolved` -- μια σύμβαση μπαίνει σε παρτίδα εκκαθάρισης και πληρώνεται
- * ΠΡΙΝ γίνει ποτέ Ενεργή (ο πάροχος την επεξεργάζεται ακόμα). Χωρίς αυτή τη
- * διόρθωση, μια τέτοια σύμβαση μπορούσε να ακυρωθεί κανονικά ΜΕΤΑ την
- * πληρωμή -- ο συνεργάτης κρατούσε την προμήθεια, χωρίς κανένα ίχνος.
+ * `Active`. Ως τις 07/09 το `ContractStatus::isPayable()` περιλάμβανε και
+ * `Routed` και `Resolved` -- μια σύμβαση μπαίνει σε παρτίδα εκκαθάρισης και
+ * πληρώνεται ΠΡΙΝ γίνει ποτέ Ενεργή (ο πάροχος την επεξεργάζεται ακόμα).
+ * Χωρίς αυτή τη διόρθωση, μια τέτοια σύμβαση μπορούσε να ακυρωθεί κανονικά
+ * ΜΕΤΑ την πληρωμή -- ο συνεργάτης κρατούσε την προμήθεια, χωρίς κανένα
+ * ίχνος.
+ *
+ * 07/09/2026: το νέο μοντέλο κατέστησε πληρωτέα ΜΟΝΟ την `active` -- οπότε το
+ * σενάριο «payable χωρίς να έχει γίνει ποτέ Active» δεν υπάρχει πια από τον
+ * ορισμό του `isPayable()`. Η πύλη ΔΕΝ στηρίζεται σε αυτόν τον ορισμό όμως:
+ * το `isPartOfPaidBatch()` ελέγχεται άνευ όρων, ανεξάρτητα από το αν η
+ * τρέχουσα κατάσταση θεωρείται «πληρωτέα» -- άμυνα σε βάθος για μια γραμμή
+ * που μπήκε σε παρτίδα με οποιονδήποτε τρόπο (π.χ. χειροκίνητη διόρθωση,
+ * εισαγωγή). Αυτό το αρχείο δοκιμάζει ότι η άμυνα αυτή παραμένει, όχι ότι
+ * μια συγκεκριμένη κατάσταση είναι «ειδική περίπτωση».
  *
  * Ο ιδιοκτήτης επιβεβαίωσε ρητά (AskUserQuestion, 26/08) δύο ξεχωριστές
  * αποφάσεις που αυτό το αρχείο δοκιμάζει και τις δύο:
@@ -60,48 +70,48 @@ final class PayoutClawbackGateTest extends IntegrationTestCase
     }
 
     /** Payable χωρίς ποτέ να έγινε Ενεργή -- ακριβώς το κενό του ευρήματος. */
-    public function testARoutedContractInAPaidBatchCannotBeCancelled(): void
+    public function testAFinalisationContractInAPaidBatchCannotBeCancelled(): void
     {
-        $contractId = $this->routedContract();
+        $contractId = $this->finalisationContract();
         $this->putInBatch($contractId, 'paid');
 
-        self::assertFalse($this->lifecycle->moveTo($contractId, 'cancelled'));
-        self::assertSame('routed', $this->statusOf($contractId));
+        self::assertFalse($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
+        self::assertSame('finalisation', $this->statusOf($contractId));
     }
 
     /** Ίδιο μήνυμα άρνησης με αυτό που ελέγχει το REST endpoint. */
     public function testTheRefusalReasonIsWasPaid(): void
     {
-        $contractId = $this->routedContract();
+        $contractId = $this->finalisationContract();
         $this->putInBatch($contractId, 'paid');
 
         $reason = (new CancellationGate(Services::events(), Services::payouts()))
-            ->refusalOnMove(ContractStatus::Routed, ContractStatus::Cancelled, $contractId);
+            ->refusalOnMove(ContractStatus::Finalisation, ContractStatus::CancelledByUs, $contractId);
 
         self::assertSame(CancellationGate::WAS_PAID, $reason);
     }
 
-    /** Resolved είναι το ίδιο payable με Routed -- δεν είναι ειδική περίπτωση μόνο του Routed. */
-    public function testAResolvedContractInAPaidBatchCannotBeCancelled(): void
+    /** Η άμυνα δεν είναι ειδική περίπτωση μόνο μίας κατάστασης. */
+    public function testARegistrationContractInAPaidBatchCannotBeCancelled(): void
     {
         $contractId = $this->contracts->create(
-            ['status' => 'resolved', 'supply_number' => '99988877701', 'energy_type' => 'power'],
+            ['status' => 'registration', 'supply_number' => '99988877701', 'energy_type' => 'power'],
             UserScope::forSelf($this->user)
         );
         $this->putInBatch($contractId, 'paid');
 
-        self::assertFalse($this->lifecycle->moveTo($contractId, 'cancelled'));
-        self::assertSame('resolved', $this->statusOf($contractId));
+        self::assertFalse($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
+        self::assertSame('registration', $this->statusOf($contractId));
     }
 
     /** Η αντίθετη περίπτωση: όσο η παρτίδα δεν έχει πληρωθεί, η ακύρωση μένει δυνατή. */
-    public function testARoutedContractInAPendingBatchCanStillBeCancelled(): void
+    public function testAFinalisationContractInAPendingBatchCanStillBeCancelled(): void
     {
-        $contractId = $this->routedContract();
+        $contractId = $this->finalisationContract();
         $this->putInBatch($contractId, 'pending');
 
-        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled'));
-        self::assertSame('cancelled', $this->statusOf($contractId));
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
+        self::assertSame('cancelled_by_us', $this->statusOf($contractId));
     }
 
     /**
@@ -111,10 +121,10 @@ final class PayoutClawbackGateTest extends IntegrationTestCase
      */
     public function testCancellingDropsTheContractOutOfItsPendingBatch(): void
     {
-        $contractId = $this->routedContract();
+        $contractId = $this->finalisationContract();
         $this->putInBatch($contractId, 'pending');
 
-        $this->lifecycle->moveTo($contractId, 'cancelled');
+        $this->lifecycle->moveTo($contractId, 'cancelled_by_us');
 
         $row = $this->storedRow('contracts', $contractId);
         self::assertNull($row['payout_id']);
@@ -124,18 +134,18 @@ final class PayoutClawbackGateTest extends IntegrationTestCase
     /** Σύμβαση που δεν μπήκε ποτέ σε καμία παρτίδα ακυρώνεται κανονικά, όπως πάντα. */
     public function testAContractNeverInAnyBatchIsUnaffected(): void
     {
-        $contractId = $this->routedContract();
+        $contractId = $this->finalisationContract();
 
-        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled'));
-        self::assertSame('cancelled', $this->statusOf($contractId));
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
+        self::assertSame('cancelled_by_us', $this->statusOf($contractId));
     }
 
     // --- fixtures ------------------------------------------------------
 
-    private function routedContract(): int
+    private function finalisationContract(): int
     {
         $contractId = $this->contracts->create(
-            ['status' => 'routed', 'supply_number' => '11122233301', 'energy_type' => 'power'],
+            ['status' => 'finalisation', 'supply_number' => '11122233301', 'energy_type' => 'power'],
             UserScope::forSelf($this->user)
         );
 

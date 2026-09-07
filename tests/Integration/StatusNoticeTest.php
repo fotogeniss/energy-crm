@@ -11,13 +11,23 @@
  * ακίνητο πέντε μέρες, ενώ η ίδια η αλλαγή κατάστασης μόλις ανανέωσε το
  * `updated_at`.
  *
- * Αποτέλεσμα: ο συνεργάτης μάθαινε ότι κόλλησε η αίτησή του **στην καλύτερη
- * περίπτωση πέντε μέρες μετά**, και μόνο αν στο μεταξύ δεν την άγγιζε κανείς.
+ * 07/09/2026: το σήμα «εκκρεμότητα» έγινε **εμπόδιο** σε δικό του πίνακα
+ * (commit 255 -- ακόμα δεν υπάρχει), οπότε τα δύο κανάλια αυτού του αρχείου
+ * μετακινήθηκαν στο σήμα που έμεινε στον κύκλο ζωής: η ακύρωση. Δεν
+ * μετακινήθηκαν όμως το ίδιο -- και αυτό είναι η δεύτερη πραγματική διαφορά
+ * που δοκιμάζει το αρχείο:
+ *
+ *   - Το **καμπανάκι** (`ContractNotices::ANNOUNCED`) χτυπά και για τις δύο
+ *     ακυρώσεις, δική μας και του πελάτη -- και οι δύο τερματίζουν τη δουλειά
+ *     του συνεργάτη το ίδιο.
+ *   - Το **email** (`ECRM_Notifications::notify_status_change()`) ελέγχει
+ *     ρητά `cancelled_by_us` και μόνο -- η ακύρωση από τον πελάτη δεν
+ *     χρειάζεται mail, ο συνεργάτης το βλέπει ήδη στο καμπανάκι.
  *
  * Το αρχείο δοκιμάζει και το αντίθετο, που είναι εξίσου σημαντικό: οι
- * ενδιάμεσες καταστάσεις **δεν** χτυπούν καμπανάκι. Ειδοποίηση σε κάθε βήμα
- * μαθαίνει τον χρήστη να μην κοιτάζει, και τότε η μία που μετράει χάνεται μαζί
- * με τις υπόλοιπες.
+ * ενδιάμεσες καταστάσεις **δεν** χτυπούν καμπανάκι ούτε στέλνουν email.
+ * Ειδοποίηση σε κάθε βήμα μαθαίνει τον χρήστη να μην κοιτάζει, και τότε η μία
+ * που μετράει χάνεται μαζί με τις υπόλοιπες.
  *
  * @package EnergyCRM
  */
@@ -77,10 +87,10 @@ final class StatusNoticeTest extends IntegrationTestCase
 
     // --- το καμπανάκι ------------------------------------------------------
 
-    /** Η εκκρεμότητα φτάνει στον κάτοχο, όχι σε αυτόν που την έβαλε. */
-    public function testThePendingStatusReachesTheOwner(): void
+    /** Η ακύρωση από εμάς φτάνει στον κάτοχο, όχι σε αυτόν που την έβαλε. */
+    public function testACancellationByUsReachesTheOwner(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'pending');
+        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_us');
 
         self::assertCount(1, $this->noticesFor($this->owner));
     }
@@ -88,15 +98,20 @@ final class StatusNoticeTest extends IntegrationTestCase
     /** Και στον από πάνω του: η προμήθεια ανεβαίνει το ίδιο δέντρο. */
     public function testTheManagerIsToldToo(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'pending');
+        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_us');
 
         self::assertCount(1, $this->noticesFor($this->manager));
     }
 
-    /** Η ακύρωση επίσης: τερματίζει τη δουλειά του. */
-    public function testACancellationIsAnnounced(): void
+    /**
+     * Η ακύρωση από τον πελάτη χτυπά το ίδιο καμπανάκι.
+     *
+     * Το `ANNOUNCED` καλύπτει και τις δύο ακυρώσεις -- τερματίζουν τη δουλειά
+     * του συνεργάτη το ίδιο, όποιος κι αν την αποφάσισε.
+     */
+    public function testACustomerCancellationAlsoRingsTheBell(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'cancelled');
+        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_customer');
 
         self::assertCount(1, $this->noticesFor($this->owner));
     }
@@ -109,7 +124,7 @@ final class StatusNoticeTest extends IntegrationTestCase
      */
     public function testAnOrdinaryStepDoesNotRingTheBell(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'processing');
+        $this->moveTo($this->contractOf($this->owner), 'registration');
 
         self::assertSame([], $this->noticesFor($this->owner));
     }
@@ -119,7 +134,7 @@ final class StatusNoticeTest extends IntegrationTestCase
     /** Ο παραλήπτης βγαίνει από τη σύμβαση, όχι από αυτόν που πάτησε το κουμπί. */
     public function testTheEmailGoesToTheOwnerAndNotTheActor(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'pending');
+        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_us');
 
         $ownerEmail   = (string) get_userdata($this->owner)->user_email;
         $managerEmail = (string) get_userdata($this->manager)->user_email;
@@ -128,10 +143,23 @@ final class StatusNoticeTest extends IntegrationTestCase
         self::assertNotContains($managerEmail, $this->recipients);
     }
 
-    /** Και δεν στέλνεται email για ό,τι δεν είναι εκκρεμότητα. */
+    /**
+     * Η ακύρωση από τον πελάτη δεν στέλνει email -- μόνο η δική μας.
+     *
+     * Ο συνεργάτης το βλέπει ήδη στο καμπανάκι (πιο πάνω)· το email είναι
+     * μόνο για ό,τι αποφασίσαμε εμείς και χρειάζεται τη δική του προσοχή.
+     */
+    public function testNoEmailForACustomerCancellation(): void
+    {
+        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_customer');
+
+        self::assertSame([], $this->recipients);
+    }
+
+    /** Και δεν στέλνεται email για ό,τι δεν είναι ακύρωση. */
     public function testNoEmailForAnOrdinaryStep(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'processing');
+        $this->moveTo($this->contractOf($this->owner), 'registration');
 
         self::assertSame([], $this->recipients);
     }
@@ -178,7 +206,7 @@ final class StatusNoticeTest extends IntegrationTestCase
     private function contractOf(int $ownerId): int
     {
         $contractId = $this->contracts->create(
-            ['status' => 'new', 'supply_number' => '12345678901', 'energy_type' => 'power'],
+            ['status' => 'presale', 'supply_number' => '12345678901', 'energy_type' => 'power'],
             UserScope::forSelf($ownerId)
         );
 

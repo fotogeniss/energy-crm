@@ -13,11 +13,11 @@
  * Excel (εύρημα ελέγχου #7, 18/08).
  *
  * Ο ρόλος **Πωλητής** έχει `CHANGE_STATUS` (`Roles.php:109`), ο γράφος
- * επιτρέπει `new → processing → active`, και το `isPayable()` περιλαμβάνει το
- * `active`: τρεις αποθηκεύσεις της φόρμας πάνω στη δική του σύμβαση και η
- * προμήθεια κλείδωνε, με μηδέν δικαιολογητικά και χωρίς ο πελάτης να έχει
- * υπογράψει ποτέ. Δεν είναι θεωρητικό σενάριο — το περιέγραψε ο υπεύθυνος του
- * δικτύου πριν βρεθεί στον κώδικα.
+ * επιτρέπει `presale → registration → ... → finalisation → active`, και το
+ * `isPayable()` περιλαμβάνει το `active`: αποθηκεύσεις της φόρμας πάνω στη
+ * δική του σύμβαση και η προμήθεια κλείδωνε, με μηδέν δικαιολογητικά και
+ * χωρίς ο πελάτης να έχει υπογράψει ποτέ. Δεν είναι θεωρητικό σενάριο — το
+ * περιέγραψε ο υπεύθυνος του δικτύου πριν βρεθεί στον κώδικα.
  *
  * ## Γιατί δοκιμάζονται και οι δύο πόρτες
  *
@@ -32,6 +32,16 @@
  * τη σουίτα πράσινη. Γι' αυτό υπάρχει και ο έλεγχος ότι οι **μη**
  * φυλασσόμενες καταστάσεις προχωρούν κανονικά.
  *
+ * ## Γιατί μερικά fixtures γράφουν το status απευθείας στη βάση
+ *
+ * Το `gate_statuses()` είναι `['finalisation', 'active']` -- και οι δύο
+ * φυλάσσονται. Αυτό σημαίνει ότι δεν μπορείς να φτιάξεις με το χέρι, μέσω
+ * `moveTo()`, μια σύμβαση ήδη σε `finalisation` ΧΩΡΙΣ χαρτιά -- η ίδια η
+ * είσοδος θα την είχε ήδη αρνηθεί. Όπου το test θέλει «σύμβαση που ΕΙΝΑΙ ήδη
+ * εκεί, χωρίς χαρτιά» (π.χ. για να δοκιμάσει το επόμενο βήμα προς `active`),
+ * το status γράφεται απευθείας στη βάση -- αντιπροσωπεύει μια γραμμή που
+ * έφτασε εκεί πριν υπάρξει η πύλη, ή από εισαγωγή Excel.
+ *
  * @package EnergyCRM
  */
 
@@ -44,6 +54,7 @@ use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\PaperworkGate;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\Tables;
 use EnergyCRM\Services;
 use WP_REST_Request;
 
@@ -78,18 +89,18 @@ final class PaperworkGateTest extends IntegrationTestCase
 
     public function testActiveIsRefusedWithoutPaperwork(): void
     {
-        $contractId = $this->processingContract();
+        $contractId = $this->finalisationContractWithoutPaperwork();
 
         self::assertFalse($this->lifecycle->moveTo($contractId, 'active'));
-        self::assertSame('processing', $this->statusOf($contractId));
+        self::assertSame('finalisation', $this->statusOf($contractId));
     }
 
-    public function testRoutedIsRefusedWithoutPaperworkToo(): void
+    public function testFinalisationIsRefusedWithoutPaperworkToo(): void
     {
-        $contractId = $this->processingContract();
+        $contractId = $this->awaitingSignatureContract();
 
-        self::assertFalse($this->lifecycle->moveTo($contractId, 'routed'));
-        self::assertSame('processing', $this->statusOf($contractId));
+        self::assertFalse($this->lifecycle->moveTo($contractId, 'finalisation'));
+        self::assertSame('awaiting_signature', $this->statusOf($contractId));
     }
 
     /**
@@ -101,19 +112,21 @@ final class PaperworkGateTest extends IntegrationTestCase
     {
         $contractId = $this->submittedContract();
 
-        self::assertTrue($this->lifecycle->moveTo($contractId, 'processing'));
-        self::assertSame('processing', $this->statusOf($contractId));
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'registration'));
+        self::assertSame('registration', $this->statusOf($contractId));
     }
 
     // --- η πόρτα της φόρμας, που ήταν η ανοιχτή -----------------------------
 
     /**
      * Το σενάριο αυτολεξεί: ο πωλητής στέλνει `status=active` στη δική του
-     * σύμβαση μέσα από την αποθήκευση της φόρμας.
+     * σύμβαση μέσα από την αποθήκευση της φόρμας, από ένα σημείο όπου ο
+     * γράφος θα το επέτρεπε (`finalisation`) -- ώστε ό,τι το μπλοκάρει να
+     * είναι αποκλειστικά η PaperworkGate, όχι ο γράφος.
      */
     public function testTheSaveFormCannotJumpStraightToActive(): void
     {
-        $contractId = $this->processingContract();
+        $contractId = $this->finalisationContractWithoutPaperwork();
 
         $request = new WP_REST_Request('POST', '/ecrm/v1/contracts');
         $request->set_param('contract_id', $contractId);
@@ -122,13 +135,13 @@ final class PaperworkGateTest extends IntegrationTestCase
         $response = rest_do_request($request);
 
         self::assertSame(422, $response->get_status());
-        self::assertSame('processing', $this->statusOf($contractId));
+        self::assertSame('finalisation', $this->statusOf($contractId));
     }
 
     /** Ο λόγος φτάνει στον χρήστη — δεν είναι σιωπηλή άρνηση. */
     public function testTheRefusalSaysWhy(): void
     {
-        $contractId = $this->processingContract();
+        $contractId = $this->finalisationContractWithoutPaperwork();
 
         $request = new WP_REST_Request('POST', '/ecrm/v1/contracts');
         $request->set_param('contract_id', $contractId);
@@ -148,23 +161,40 @@ final class PaperworkGateTest extends IntegrationTestCase
 
     // --- fixtures ----------------------------------------------------------
 
-    private function processingContract(): int
-    {
-        $contractId = $this->submittedContract();
-
-        self::assertTrue($this->lifecycle->moveTo($contractId, 'processing'));
-
-        return $contractId;
-    }
-
     private function submittedContract(): int
     {
         $contractId = $this->contracts->create(
-            ['status' => 'new', 'supply_number' => '12345678901', 'energy_type' => 'power'],
+            ['status' => 'presale', 'supply_number' => '12345678901', 'energy_type' => 'power'],
             UserScope::forSelf($this->user)
         );
 
         self::assertGreaterThan(0, $contractId, 'Το fixture σύμβασης δεν αποθηκεύτηκε.');
+
+        return $contractId;
+    }
+
+    /** Φτάνει σε `awaiting_signature` περνώντας νόμιμα από τον γράφο -- καμία από τις δύο δεν είναι φυλασσόμενη. */
+    private function awaitingSignatureContract(): int
+    {
+        $contractId = $this->submittedContract();
+
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'registration'));
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'awaiting_signature'));
+
+        return $contractId;
+    }
+
+    /**
+     * Ήδη σε `finalisation`, χωρίς χαρτιά ή υπογραφή -- γραμμένο απευθείας
+     * στη βάση, γιατί η ίδια η είσοδος στο `finalisation` είναι φυλασσόμενη
+     * (βλ. σχόλιο πάνω από την κλάση).
+     */
+    private function finalisationContractWithoutPaperwork(): int
+    {
+        $contractId = $this->submittedContract();
+
+        global $wpdb;
+        $wpdb->update(Tables::name('contracts'), ['status' => 'finalisation'], ['id' => $contractId]);
 
         return $contractId;
     }

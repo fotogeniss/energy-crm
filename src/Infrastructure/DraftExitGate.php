@@ -99,7 +99,7 @@ final class DraftExitGate
     /** Every stage past draft except the bin. */
     private function guards(ContractStatus $target): bool
     {
-        return $target !== ContractStatus::Draft && $target !== ContractStatus::Cancelled;
+        return $target !== ContractStatus::Draft && ! $target->isCancellation();
     }
 
     /**

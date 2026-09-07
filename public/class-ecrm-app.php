@@ -55,9 +55,16 @@ class ECRM_App {
 		foreach ( array_slice( $parts, 0, 2 ) as $w ) { $initials .= mb_substr( $w, 0, 1, 'UTF-8' ); }
 		$initials = mb_strtoupper( $initials ?: mb_substr( $user->display_name, 0, 1, 'UTF-8' ), 'UTF-8' );
 
-		// Pending count for the Εκκρεμότητες badge (own scope).
+		// Το σήμα δίπλα στις «Εκκρεμότητες» (δικό μου scope).
+		//
+		// 07/09/2026: μετρούσε `status = 'pending'` -- κατάσταση που έγινε
+		// **εμπόδιο** και ζει πλέον σε δικό της πίνακα. Ως τότε μετράει τα
+		// presale, δηλαδή τις αιτήσεις που περιμένουν χαρτιά από τον ίδιο τον
+		// συνεργάτη· είναι η πιο κοντινή «δουλειά δική σου» που υπάρχει σήμερα
+		// στη στήλη `status`, και θα ξαναδείξει στα ανοιχτά εμπόδια όταν
+		// υπάρχουν (commit 255).
 		$pending_ct = (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM " . ECRM_DB::table( 'contracts' ) . " WHERE partner_user_id = %d AND status = 'pending'",
+			"SELECT COUNT(*) FROM " . ECRM_DB::table( 'contracts' ) . " WHERE partner_user_id = %d AND status = 'presale'",
 			$user->ID
 		) );
 		$tasks_ct = class_exists( 'ECRM_Tasks' ) ? ECRM_Tasks::due_count( (int) $user->ID ) : 0;

@@ -27,7 +27,13 @@ use WP_REST_Response;
 final class CommissionsController implements Controller
 {
     /** Not yet payable, but on the way there. */
-    private const IN_PROGRESS = ['new', 'processing', 'pending_signature', 'pending'];
+    private const IN_PROGRESS = [
+        'presale',
+        'registration',
+        'awaiting_signature',
+        'awaiting_sim',
+        'finalisation',
+    ];
 
     public function __construct(
         private readonly ScopeResolver $scopes,

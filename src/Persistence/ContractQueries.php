@@ -320,7 +320,7 @@ final class ContractQueries
                  LEFT JOIN %i cu ON cu.id = c.customer_id
                  LEFT JOIN %i p  ON p.id  = c.provider_id
                  WHERE c.end_date IS NOT NULL
-                   AND c.status NOT IN ('cancelled', 'draft')
+                   AND c.status NOT IN ('cancelled_by_us', 'cancelled_by_customer', 'draft')
                    AND DATEDIFF(c.end_date, NOW()) <= %d{$clause}
                  ORDER BY c.end_date ASC
                  LIMIT 300",

@@ -187,13 +187,10 @@ function renderDetail(view, d) {
 	// δείχνει «πού είμαι → πού μπορώ να πάω» αντί για πλέγμα ισότιμων κουμπιών.
 	// Το allowed_next το δίνει ο server από το ContractStatus::allowedNext(),
 	// οπότε ο γράφος δεν αντιγράφεται εδώ — ερωτάται.
-	// 'awaiting_signature' μένει επιτρεπτό στο ContractStatus::allowedNext()
-	// (ο server), αλλά είναι το ίδιο βήμα με το 'pending_signature' — νεκρό
-	// status από παλιότερο σύστημα, τίποτα δεν το γράφει πια. Ένα κουμπί εδώ
-	// θα το ανασταίνε σε πραγματική σύμβαση. Ίδια εξαίρεση με τη μπάρα
-	// φίλτρων του ecrm-view-contracts.js, ίδιος λόγος.
+	// Καμία εξαίρεση: η παράκαμψη που έκρυβε το 'awaiting_signature' υπήρχε
+	// όσο δύο ονόματα έδειχναν στο ίδιο βήμα (07/09/2026 — ένα πλέον).
 	var statusOpts = Object.keys(statuses).filter(function (s) {
-		return allowedSet[s] && s !== c.status && s !== 'awaiting_signature';
+		return allowedSet[s] && s !== c.status;
 	}).map(function (s) {
 		return '<button type="button" class="ecrm-statuschip ecrm-badge--' + s + '" data-status="' + s + '">' + esc(statuses[s]) + '</button>';
 	}).join('');
@@ -277,12 +274,12 @@ function renderDetail(view, d) {
 	//
 	// AUDIT 30/08: εδώ ήταν μια λίστα καταστάσεων (SIGNED_ON) που έπρεπε να
 	// μένει διαρκώς συγχρονισμένη με το ContractStatus -- και δεν ήταν: μια
-	// σύμβαση που έφτασε Signed → Active → Terminated (ή Signed → Cancelled,
-	// νόμιμη απευθείας μετάβαση) έδειχνε «○ Υπογραφή πελάτη» παρότι είχε
-	// πράγματι υπογραφεί, γιατί το 'terminated'/'cancelled' δεν ήταν στη
-	// λίστα. Το `c.signed_at` είναι ήδη η πηγή αλήθειας παρακάτω σε αυτό το
-	// ίδιο αρχείο (`auditCard`) -- ίδιο κριτήριο εδώ, όχι δεύτερη λίστα να
-	// ξεσυγχρονιστεί.
+	// σύμβαση που προχώρησε ως το τέλος ή ακυρώθηκε έδειχνε «○ Υπογραφή
+	// πελάτη» παρότι είχε πράγματι υπογραφεί, γιατί οι τερματικές δεν ήταν
+	// στη λίστα. Το `c.signed_at` είναι ήδη η πηγή αλήθειας παρακάτω σε αυτό
+	// το ίδιο αρχείο (`auditCard`) -- ίδιο κριτήριο εδώ, όχι δεύτερη λίστα να
+	// ξεσυγχρονιστεί. Το ίδιο μάθημα ακριβώς επανέλαβε ο `DeletionGate` στον
+	// server στις 07/09.
 	var checks = [
 		{ ok: !!(c.afm && c.adt),  txt: 'Στοιχεία ταυτότητας' },
 		{ ok: !!c.program_name,    txt: 'Πρόγραμμα' }
@@ -425,18 +422,13 @@ function renderDetail(view, d) {
 		// πράσινο/ενεργό και καλούσε τον πράκτορα σε ενέργεια που θα
 		// απορριπτόταν με 409 χωρίς προειδοποίηση.
 		//
-		// 'signed' και 'routed' ΕΙΝΑΙ μέσα, σκόπιμα: από εκεί περνά η δεύτερη
-		// υπογραφή — ο πάροχος γυρίζει πίσω την αίτηση («Στάλθηκε στον
-		// πάροχο») ζητώντας νέα, ή βρέθηκε λάθος αμέσως μετά την υπογραφή.
-		// Δεν στέλνει σιωπηλά: ο SignLinkController απαντά needs_confirm και
-		// ο χρήστης επιβεβαιώνει πρώτα ότι σβήνει την παλιά υπογραφή.
+		// Τα στάδια ΜΕΤΑ την υπογραφή ('awaiting_sim', 'finalisation') είναι
+		// μέσα σκόπιμα: από εκεί περνά η δεύτερη υπογραφή — ο πάροχος γυρίζει
+		// πίσω την αίτηση ζητώντας νέα, ή βρέθηκε λάθος αμέσως μετά. Δεν
+		// στέλνει σιωπηλά: ο SignLinkController απαντά needs_confirm και ο
+		// χρήστης επιβεβαιώνει πρώτα ότι σβήνει την παλιά υπογραφή.
 		// ΑΦΟΡΑ ΟΛΟΥΣ ΤΟΥΣ ΠΑΡΟΧΟΥΣ — καμία σχέση με energy_type/Orizon.
-		//
-		// 'processing' προστέθηκε 04/09, ίδιο μοτίβο: κάθεται ανάμεσα σε
-		// 'signed' και 'routed' στο ContractStatus::allowedNext() -- μια
-		// COMBO αίτηση μπορεί να φτάσει εδώ αυτόματα (AutoProcess) ενώ
-		// γνήσια λείπει ακόμα η δεύτερη υπογραφή.
-		( [ 'draft', 'new', 'pending_signature', 'awaiting_signature', 'signed', 'processing', 'routed' ].indexOf( c.status ) !== -1
+		( [ 'draft', 'presale', 'registration', 'awaiting_signature', 'awaiting_sim', 'finalisation' ].indexOf( c.status ) !== -1
 			? '<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>'
 			: '' ) +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +

@@ -227,14 +227,11 @@ function subLine(r) {
 function primaryAction(status) {
 	switch (status) {
 		case 'draft':              return { txt: 'Συνέχεια',      quiet: false };
-		case 'new':                return { txt: 'Υπογραφή',      quiet: false };
-		case 'pending_signature':  return { txt: 'Υπογραφή',      quiet: false };
+		case 'presale':            return { txt: 'Δικαιολογητικά', quiet: false };
 		case 'awaiting_signature': return { txt: 'Υπενθύμιση',    quiet: false };
-		case 'signed':             return { txt: 'Στον πάροχο',   quiet: false };
-		case 'pending':            return { txt: 'Επίλυση',       quiet: false };
-		case 'processing':
-		case 'resolved':
-		case 'routed':             return { txt: 'Παρακολούθηση', quiet: true };
+		case 'awaiting_sim':
+		case 'registration':
+		case 'finalisation':       return { txt: 'Παρακολούθηση', quiet: true };
 		default:                   return { txt: 'Άνοιγμα',       quiet: true };
 	}
 }
@@ -245,16 +242,11 @@ function renderContracts(view, d) {
 
 	// status tabs — show ALL statuses with counts + colour dots (like PSS)
 	//
-	// Εξαίρεση: 'awaiting_signature'. Είναι το ίδιο βήμα με το 'pending_signature'
-	// (βλ. class-ecrm-tracking.php: "System-A sign-link status — same stage"),
-	// τίποτα στον ενεργό κώδικα δεν το γράφει πια σε καμία σύμβαση — μόνο το
-	// διαβάζει, για συμβατότητα με τυχόν παλιά εγγραφή. Δύο κουμπιά για το ίδιο
-	// βήμα μπέρδευαν τον χρήστη (βλ. ερώτημα ιδιοκτήτη 23/08). Το enum/DB/label
-	// ΔΕΝ αγγίζονται — αν ποτέ εμφανιστεί τέτοια γραμμή, συνεχίζει να δουλεύει
-	// κανονικά, απλώς χωρίς δικό της κουμπί φίλτρου.
+	// Χωρίς εξαιρέσεις πλέον: η παράκαμψη που έκρυβε το 'awaiting_signature'
+	// υπήρχε επειδή δύο ονόματα έδειχναν στο ίδιο βήμα. Το νέο μοντέλο έχει
+	// ένα (07/09/2026), οπότε κάθε κατάσταση παίρνει την καρτέλα της.
 	var tabs = '<button type="button" class="ecrm-tab' + (contractsState.status === '' ? ' is-on' : '') + '" data-status=""><span class="ecrm-tabdot ecrm-tabdot--all"></span>ΟΛΕΣ <b>' + (counts.all || 0) + '</b></button>';
 	Object.keys(statuses).forEach(function (st) {
-		if (st === 'awaiting_signature') return;
 		tabs += '<button type="button" class="ecrm-tab' + (contractsState.status === st ? ' is-on' : '') + '" data-status="' + st + '"><span class="ecrm-tabdot ecrm-tabdot--' + esc(st) + '"></span>' + esc(up(statuses[st])) + ' <b>' + (counts[st] || 0) + '</b></button>';
 	});
 

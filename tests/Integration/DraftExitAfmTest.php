@@ -5,13 +5,18 @@
  *
  * The rule was asked for as "mandatory ΑΦΜ on finalisation", and the analysis
  * that preceded it (CHANGELOG 2026-08-16 (9)) found the phrase hid two things.
- * A draft has three ways forward, not one — `new`, `pending_signature`,
- * `awaiting_signature` — and two endpoints can take them: POST /contracts,
- * where the form's Οριστικοποίηση button lands, and POST /contracts/{id}/status,
- * where the status screen does. Guarding only the button would have left the
- * status screen able to send an unidentified customer's contract for signature,
- * which is worse than finalising one: the provider's form prints with the ΑΦΜ
- * box empty and goes to the customer that way.
+ * A draft has one way forward — `presale` — and two endpoints can take it:
+ * POST /contracts, where the form's Οριστικοποίηση button lands, and POST
+ * /contracts/{id}/status, where the status screen does. Guarding only the
+ * button would have left the status screen able to move an unidentified
+ * customer's draft forward anyway, which is worse than finalising one: the
+ * provider's form prints with the ΑΦΜ box empty and goes to the customer that
+ * way.
+ *
+ * (07/09/2026: the graph used to give a draft three forward exits —
+ * `new`/`pending_signature`/`awaiting_signature` — before the status model
+ * was rebuilt. Draft now has exactly one, `presale`; the rule below does not
+ * care which one it is, only that leaving draft needs an ΑΦΜ.)
  *
  * So the tests below are arranged by door rather than by scenario, and the two
  * that matter most are 4 and 5 — the second door, and the exception that keeps
@@ -65,7 +70,7 @@ final class DraftExitAfmTest extends IntegrationTestCase
 
         $response = $this->save([
             'contract_id' => $contractId,
-            'status'      => ContractStatus::Submitted->value,
+            'status'      => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(422, $response->get_status(), 'Η οριστικοποίηση χωρίς ΑΦΜ έπρεπε να απορριφθεί.');
@@ -86,11 +91,11 @@ final class DraftExitAfmTest extends IntegrationTestCase
         $response = $this->save([
             'contract_id' => $contractId,
             'afm'         => self::VALID_AFM,
-            'status'      => ContractStatus::Submitted->value,
+            'status'      => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
-        self::assertSame(ContractStatus::Submitted->value, $this->statusOf($contractId));
+        self::assertSame(ContractStatus::Presale->value, $this->statusOf($contractId));
     }
 
     /**
@@ -107,20 +112,20 @@ final class DraftExitAfmTest extends IntegrationTestCase
 
         $response = $this->save([
             'contract_id' => $contractId,
-            'status'      => ContractStatus::Submitted->value,
+            'status'      => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
-        self::assertSame(ContractStatus::Submitted->value, $this->statusOf($contractId));
+        self::assertSame(ContractStatus::Presale->value, $this->statusOf($contractId));
     }
 
-    /** 4. A contract cannot be created straight into `new` without an ΑΦΜ either. */
+    /** 4. A contract cannot be created straight into `presale` without an ΑΦΜ either. */
     public function testCreatingDirectlyAsSubmittedWithoutAnAfmIsRefused(): void
     {
         $response = $this->save([
             'first_name' => 'Χωρίς',
             'last_name'  => 'ΑΦΜ',
-            'status'     => ContractStatus::Submitted->value,
+            'status'     => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(422, $response->get_status());
@@ -130,7 +135,7 @@ final class DraftExitAfmTest extends IntegrationTestCase
     // --- Door two: POST /contracts/{id}/status, the status screen ------------
 
     /**
-     * 5. The status screen cannot send an ΑΦΜ-less draft for signature.
+     * 5. The status screen cannot send an ΑΦΜ-less draft forward.
      *
      * The one that decides whether this was a rule or a suggestion. Everything
      * above could pass with the check written inline in ContractSaveController,
@@ -141,7 +146,7 @@ final class DraftExitAfmTest extends IntegrationTestCase
     {
         $contractId = $this->makeDraft('');
 
-        $response = $this->changeStatus($contractId, ContractStatus::PendingSignature->value);
+        $response = $this->changeStatus($contractId, ContractStatus::Presale->value);
 
         self::assertSame(422, $response->get_status(), 'Η δεύτερη πόρτα έμεινε ανοιχτή.');
         self::assertSame('afm', $response->get_data()['field']);
@@ -164,10 +169,10 @@ final class DraftExitAfmTest extends IntegrationTestCase
     {
         $contractId = $this->makeDraft('');
 
-        $response = $this->changeStatus($contractId, ContractStatus::Cancelled->value);
+        $response = $this->changeStatus($contractId, ContractStatus::CancelledByUs->value);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
-        self::assertSame(ContractStatus::Cancelled->value, $this->statusOf($contractId));
+        self::assertSame(ContractStatus::CancelledByUs->value, $this->statusOf($contractId));
     }
 
     /**
@@ -181,12 +186,12 @@ final class DraftExitAfmTest extends IntegrationTestCase
     {
         $contractId = $this->makeDraft('');
 
-        $this->forceStatus($contractId, ContractStatus::Submitted->value);
+        $this->forceStatus($contractId, ContractStatus::Presale->value);
 
-        $response = $this->changeStatus($contractId, ContractStatus::Processing->value);
+        $response = $this->changeStatus($contractId, ContractStatus::Registration->value);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
-        self::assertSame(ContractStatus::Processing->value, $this->statusOf($contractId));
+        self::assertSame(ContractStatus::Registration->value, $this->statusOf($contractId));
     }
 
     // --- fixtures and helpers ------------------------------------------------

@@ -121,7 +121,7 @@ final class NotificationsMarkReadScopeTest extends IntegrationTestCase
     public function testMarkAllDismissesTheCallersOwnStaleContract(): void
     {
         $owner = $this->makeCrmUser(Roles::SELLER);
-        $contractId = $this->staleContract($owner, 'pending');
+        $contractId = $this->staleContract($owner, 'presale');
 
         wp_set_current_user($owner);
 
@@ -147,8 +147,8 @@ final class NotificationsMarkReadScopeTest extends IntegrationTestCase
         $viewer   = $this->makeCrmUser(Roles::SELLER);
         $stranger = $this->makeCrmUser(Roles::SELLER);
 
-        $viewerContract   = $this->staleContract($viewer, 'pending');
-        $strangerContract = $this->staleContract($stranger, 'pending');
+        $viewerContract   = $this->staleContract($viewer, 'presale');
+        $strangerContract = $this->staleContract($stranger, 'presale');
 
         wp_set_current_user($viewer);
         $this->markRead(null);
@@ -171,7 +171,7 @@ final class NotificationsMarkReadScopeTest extends IntegrationTestCase
     public function testMarkingASingleNotificationByIdDoesNotDismissStaleContracts(): void
     {
         $owner = $this->makeCrmUser(Roles::SELLER);
-        $this->staleContract($owner, 'pending');
+        $this->staleContract($owner, 'presale');
         $this->notifications->add($owner, 'note', 'Κάτι άλλο');
         $notifId = $this->onlyNotificationIdOf($owner);
 
@@ -190,13 +190,13 @@ final class NotificationsMarkReadScopeTest extends IntegrationTestCase
     public function testAContractThatChangesAfterDismissalCountsAsStaleAgain(): void
     {
         $owner = $this->makeCrmUser(Roles::SELLER);
-        $contractId = $this->staleContract($owner, 'pending');
+        $contractId = $this->staleContract($owner, 'presale');
 
         wp_set_current_user($owner);
         $this->markRead(null);
         self::assertSame(0, ECRM_Notifications::followups_for([$owner], $owner)['stale']);
 
-        $this->contracts->update($contractId, UserScope::forSelf($owner), ['status' => 'routed']);
+        $this->contracts->update($contractId, UserScope::forSelf($owner), ['status' => 'finalisation']);
         // +2 μέρες αντί για +1: αν το UPDATE και η επόμενη γήρανση πέσουν στο
         // ίδιο δευτερόλεπτο (πολύ πιθανό σε γρήγορο test run), το DATETIME
         // της MySQL δεν έχει κλάσματα δευτερολέπτου -- ίδιο πλήθος ημερών θα

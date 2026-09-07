@@ -43,13 +43,13 @@ class ECRM_Messaging {
 	/** Default per-status message templates (Greek). */
 	public static function default_templates(): array {
 		return [
-			'pending_signature' => 'Αγαπητέ/ή {name}, η αίτησή σας {code} περιμένει την υπογραφή σας. Υπογράψτε εδώ: {track} — {company}',
-			'awaiting_signature' => 'Αγαπητέ/ή {name}, η αίτησή σας {code} αναμένει την υπογραφή σας. Υπογράψτε εδώ: {track} — {company}',
-			'signed'            => '{name}, λάβαμε την υπογραφή σας για την αίτηση {code}. Ευχαριστούμε! — {company}',
-			'routed'            => '{name}, η αίτησή σας {code} στάλθηκε στον πάροχο για ενεργοποίηση. Παρακολουθήστε την εδώ: {track} — {company}',
-			'active'            => 'Καλώς ήρθατε! Η σύμβασή σας {code} ({provider}) ενεργοποιήθηκε. — {company}',
-			'pending'           => '{name}, η αίτησή σας {code} εκκρεμεί. Θα επικοινωνήσουμε σύντομα μαζί σας. — {company}',
-			'cancelled'         => '{name}, η αίτησή σας {code} ακυρώθηκε. Για διευκρινίσεις επικοινωνήστε μαζί μας. — {company}',
+			'awaiting_signature'    => 'Αγαπητέ/ή {name}, η αίτησή σας {code} αναμένει την υπογραφή σας. Υπογράψτε εδώ: {track} — {company}',
+			'awaiting_sim'          => '{name}, λάβαμε την υπογραφή σας για την αίτηση {code}. Η κάρτα SIM είναι καθ\' οδόν. — {company}',
+			'finalisation'          => '{name}, η αίτησή σας {code} στάλθηκε στον πάροχο για ενεργοποίηση. Παρακολουθήστε την εδώ: {track} — {company}',
+			'active'                => 'Καλώς ήρθατε! Η σύμβασή σας {code} ({provider}) ενεργοποιήθηκε. — {company}',
+			'terminated'            => '{name}, η σύμβασή σας {code} διακόπηκε. Για διευκρινίσεις επικοινωνήστε μαζί μας. — {company}',
+			'cancelled_by_us'       => '{name}, η αίτησή σας {code} ακυρώθηκε. Για διευκρινίσεις επικοινωνήστε μαζί μας. — {company}',
+			'cancelled_by_customer' => '{name}, η αίτησή σας {code} ακυρώθηκε κατόπιν αιτήματός σας. — {company}',
 		];
 	}
 
@@ -62,7 +62,7 @@ class ECRM_Messaging {
 
 	/** @return array<string> statuses for which an SMS should fire. */
 	public static function active_statuses(): array {
-		$on = get_option( ECRM_PREFIX . 'sms_on', [ 'routed', 'active' ] );
+		$on = get_option( ECRM_PREFIX . 'sms_on', [ 'finalisation', 'active' ] );
 		return is_array( $on ) ? array_values( $on ) : [];
 	}
 

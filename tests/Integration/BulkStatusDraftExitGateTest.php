@@ -61,7 +61,7 @@ final class BulkStatusDraftExitGateTest extends IntegrationTestCase
         $response = $this->bulk([
             'ids'    => [$contractId],
             'action' => 'status',
-            'value'  => ContractStatus::PendingSignature->value,
+            'value'  => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
@@ -90,14 +90,14 @@ final class BulkStatusDraftExitGateTest extends IntegrationTestCase
         $response = $this->bulk([
             'ids'    => [$contractId],
             'action' => 'status',
-            'value'  => ContractStatus::PendingSignature->value,
+            'value'  => ContractStatus::Presale->value,
         ]);
 
         $data = $response->get_data();
 
         self::assertSame(200, $response->get_status(), (string) ($data['error'] ?? ''));
         self::assertSame(1, $data['updated']);
-        self::assertSame(ContractStatus::PendingSignature->value, $this->statusOf($contractId));
+        self::assertSame(ContractStatus::Presale->value, $this->statusOf($contractId));
     }
 
     /** Η ακύρωση ενός πρόχειρου χωρίς ΑΦΜ δεν μπλοκάρεται ποτέ, ούτε μαζικά. */
@@ -108,14 +108,14 @@ final class BulkStatusDraftExitGateTest extends IntegrationTestCase
         $response = $this->bulk([
             'ids'    => [$contractId],
             'action' => 'status',
-            'value'  => ContractStatus::Cancelled->value,
+            'value'  => ContractStatus::CancelledByUs->value,
         ]);
 
         $data = $response->get_data();
 
         self::assertSame(200, $response->get_status(), (string) ($data['error'] ?? ''));
         self::assertSame(1, $data['updated']);
-        self::assertSame(ContractStatus::Cancelled->value, $this->statusOf($contractId));
+        self::assertSame(ContractStatus::CancelledByUs->value, $this->statusOf($contractId));
     }
 
     // --- fixtures and helpers ------------------------------------------------

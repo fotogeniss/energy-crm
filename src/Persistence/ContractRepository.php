@@ -331,7 +331,7 @@ final class ContractRepository
      *   ContractQueries      search, quickSearch, countsByStatus, expiring,
      *                        possibleDuplicates
      *   ContractDetails      findDetailed, forDocument, noticeSubject
-     *   ContractTransitions  statusOf, applyTransition, idsSignedBefore
+     *   ContractTransitions  statusOf, applyTransition, paperworkFieldsOf
      *
      * Five of the six controllers that came through here turned out to use
      * nothing else from this class, so they no longer receive it at all — they

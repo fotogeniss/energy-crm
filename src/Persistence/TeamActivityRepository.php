@@ -66,8 +66,8 @@ final class TeamActivityRepository
                 "SELECT partner_user_id uid,
                         SUM( DATE(created_at) = %s ) today,
                         SUM( created_at >= %s ) month,
-                        SUM( status = 'pending' ) pending,
-                        SUM( status = 'routed' ) routed,
+                        SUM( status = 'presale' ) presale,
+                        SUM( status = 'finalisation' ) finalisation,
                         SUM( status = 'active' ) active,
                         MAX( updated_at ) last_activity
                  FROM %i WHERE partner_user_id IN ({$in})

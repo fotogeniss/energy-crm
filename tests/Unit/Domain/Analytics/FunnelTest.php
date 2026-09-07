@@ -14,26 +14,30 @@ use PHPUnit\Framework\TestCase;
 
 final class FunnelTest extends TestCase
 {
-    public function testWonIsThePayableStatusesAndLostIsTheTerminalOnes(): void
+    /**
+     * 07/09/2026: won = πληρωτέα (active) + ΔΙΑΚΟΠΗ (δούλεψε, δεν χάθηκε).
+     * lost = οι δύο ακυρώσεις. Ό,τι άλλο είναι ακόμα σε εξέλιξη.
+     */
+    public function testWonIsActivePlusTerminatedAndLostIsTheTwoCancellations(): void
     {
         $result = Funnel::from([
-            'routed'     => 3,
-            'active'     => 2,
-            'resolved'   => 1,
-            'cancelled'  => 2,
-            'terminated' => 2,
-            'processing' => 10,
+            'presale'                => 3,
+            'active'                 => 2,
+            'terminated'             => 2,
+            'cancelled_by_us'        => 1,
+            'cancelled_by_customer'  => 1,
+            'registration'           => 10,
         ]);
 
-        self::assertSame(6, $result['won']);
-        self::assertSame(4, $result['lost']);
-        self::assertSame(20, $result['total']);
+        self::assertSame(4, $result['won']);
+        self::assertSame(2, $result['lost']);
+        self::assertSame(19, $result['total']);
     }
 
     /** In-flight work counts towards neither side, only the denominator. */
     public function testContractsStillInProgressAreNeitherWonNorLost(): void
     {
-        $result = Funnel::from(['new' => 5, 'processing' => 5]);
+        $result = Funnel::from(['presale' => 5, 'registration' => 5]);
 
         self::assertSame(0, $result['won']);
         self::assertSame(0, $result['lost']);
@@ -43,7 +47,7 @@ final class FunnelTest extends TestCase
 
     public function testRatesAreRoundedToOneDecimal(): void
     {
-        $result = Funnel::from(['active' => 1, 'processing' => 2]);
+        $result = Funnel::from(['active' => 1, 'registration' => 2]);
 
         self::assertSame(33.3, $result['conv_rate']);
     }

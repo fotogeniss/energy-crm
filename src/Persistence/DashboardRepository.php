@@ -24,25 +24,23 @@ final class DashboardRepository
     /**
      * Οι καταστάσεις όπου η σύμβαση περιμένει ΤΟΝ ΣΥΝΕΡΓΑΤΗ, όχι τον πάροχο.
      *
-     * `routed` και `processing` λείπουν επίτηδες: εκεί η μπάλα είναι στον
-     * πάροχο και ο συνεργάτης δεν έχει τι να κάνει. Το dashboard δείχνει
-     * δουλειά, όχι αναμονή.
+     * `registration`, `awaiting_sim` και `finalisation` λείπουν επίτηδες: εκεί
+     * η μπάλα είναι στο back office, στον courier ή στον πάροχο, και ο
+     * συνεργάτης δεν έχει τι να κάνει. Το dashboard δείχνει δουλειά, όχι
+     * αναμονή.
      *
-     * AUDIT 30/08: `pending_signature` έλειπε. Δεν είναι δεύτερο «περιμένει
-     * τον πάροχο» -- είναι ο πάροχος που ΓΥΡΝΑΕΙ πίσω την αίτηση ζητώντας
-     * νέα υπογραφή (βλ. `ContractStatus::allowedNext()`, το σχόλιο πάνω
-     * από το `Routed`), και η μόνη ενέργεια που την προχωράει είναι του
-     * συνεργάτη -- να ξαναστείλει τον σύνδεσμο υπογραφής
-     * (`SignLinkController::create()`). Ίδια κατηγορία με το
-     * `awaiting_signature`, απλά διαφορετικό σημείο εισόδου στον γράφο.
+     * Το `presale` είναι η καθαρή περίπτωση: σημαίνει «λείπουν χαρτιά», και τα
+     * χαρτιά τα φέρνει ο συνεργάτης. Ως τις 07/09 η θέση του την κρατούσε η
+     * `pending`, που έλεγε «κάτι την μπλοκάρει» χωρίς να λέει τι· αυτό έγινε
+     * εμπόδιο σε δικό του πίνακα και θα ξαναμπεί εδώ όταν υπάρχει.
      *
      * @var list<string>
      */
-    private const NEEDS_ME = ['pending', 'awaiting_signature', 'pending_signature', 'draft'];
+    private const NEEDS_ME = ['presale', 'awaiting_signature', 'draft'];
 
     /**
      * Οι στατικές καταστάσεις που ΔΕΝ μετρούν ως «ανοιχτή» αίτηση: η
-     * `active` ολοκλήρωσε την πορεία της (πάει στο «Κλεισμένες»), οι δύο
+     * `active` ολοκλήρωσε την πορεία της (πάει στο «Κλεισμένες»), οι τρεις
      * τερματικές δεν μετρούν πουθενά. Ίδια λίστα με το
      * `ContractStatus::isTerminal()` συν την `active`, αλλά εδώ γραμμένη ως
      * τιμές SQL — το enum ζει στο Domain, εδώ ζει η Persistence, και δεν
@@ -50,7 +48,7 @@ final class DashboardRepository
      *
      * @var list<string>
      */
-    private const NOT_OPEN = ['active', 'cancelled', 'terminated', 'rejected'];
+    private const NOT_OPEN = ['active', 'terminated', 'cancelled_by_us', 'cancelled_by_customer'];
 
     private CustomerFields $fields;
 
@@ -60,14 +58,14 @@ final class DashboardRepository
     }
 
     /**
-     * @return array{today: int, pending: int, routed: int, month: int}
+     * @return array{today: int, presale: int, finalisation: int, month: int}
      */
     public function cards(int $userId, string $todayStart, string $monthStart, string $yesterdayStart): array
     {
         return [
             'today'   => $this->countSince($userId, $todayStart),
-            'pending' => $this->countWithStatus($userId, 'pending'),
-            'routed'  => $this->countWithStatus($userId, 'routed'),
+            'presale'      => $this->countWithStatus($userId, 'presale'),
+            'finalisation' => $this->countWithStatus($userId, 'finalisation'),
             'month'   => $this->countSince($userId, $monthStart),
 
             // Χθες, για τη μεταβολή της κάρτας «Σήμερα». Είναι ΡΟΗ — γεγονότα
@@ -76,7 +74,7 @@ final class DashboardRepository
             // είναι γραμμένος στην oldestPerStatus() παρακάτω.
             'yesterday' => $this->countBetween($userId, $yesterdayStart, $todayStart),
 
-            'oldest'    => $this->oldestPerStatus($userId, ['pending', 'routed']),
+            'oldest'    => $this->oldestPerStatus($userId, ['presale', 'finalisation']),
         ];
     }
 
@@ -283,7 +281,7 @@ final class DashboardRepository
                 'SELECT c.id, c.code, c.status, c.customer_id, c.updated_at, p.name provider,
                         DATEDIFF(UTC_TIMESTAMP(), c.updated_at) days
                  FROM %i c LEFT JOIN %i p ON p.id = c.provider_id
-                 WHERE c.partner_user_id = %d AND c.status IN (%s, %s, %s, %s)
+                 WHERE c.partner_user_id = %d AND c.status IN (%s, %s, %s)
                  ORDER BY c.updated_at ASC LIMIT %d',
                 [
                     Tables::name(Tables::CONTRACTS),
@@ -426,10 +424,11 @@ final class DashboardRepository
         return [
             'open'                    => $this->countOpen($userId),
             'open_this_week'          => $this->countOpenedThisWeek($userId),
-            'awaiting_signature'      => $this->countWithStatuses(
-                $userId,
-                ['pending_signature', 'awaiting_signature']
-            ),
+            // Ένα status πλέον, όχι δύο: η `pending_signature` και η
+            // `awaiting_signature` ήταν το ίδιο στάδιο με δύο ονόματα και
+            // συγχωνεύτηκαν (07/09). Το `countWithStatuses()` μένει -- το
+            // χρησιμοποιεί και η countExpiringToday() παρακάτω.
+            'awaiting_signature'      => $this->countWithStatuses($userId, ['awaiting_signature']),
             'expiring_today'          => $this->countExpiringToday($userId),
             'closed_month'            => $closedCount,
             'closed_month_commission' => $closedCommission,
@@ -534,7 +533,7 @@ final class DashboardRepository
         global $wpdb;
 
         $sendEvents = ['sign_sent_sms', 'sign_sent_email', 'sign_sent_link'];
-        $statuses   = ['pending_signature', 'awaiting_signature'];
+        $statuses   = ['awaiting_signature'];
 
         $eventPh  = implode(',', array_fill(0, count($sendEvents), '%s'));
         $statusPh = implode(',', array_fill(0, count($statuses), '%s'));

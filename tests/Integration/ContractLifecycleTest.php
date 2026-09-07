@@ -9,16 +9,21 @@
  * changed exactly one thing in this file — the name of what gets called — and
  * nothing else. That is what made it safe to make.
  *
- * It earns its place regardless. This is the single riskiest path in the
- * plugin: it writes the status, appends to the event log, fires the in-app
- * notification, fires the SMS, and schedules a cron job — and every signature
- * in the system passes through it. None of that was covered by anything.
+ * It earns its place regardless. This is one of the riskiest paths in the
+ * plugin: it writes the status, appends to the event log, and fires the
+ * in-app notification and the SMS — and every signature in the system passes
+ * through it. None of that was covered by anything.
  *
- * Two things make it safe to run: SMS is off unless `sms_enabled` is '1', which
- * no test sets, and the in-app notification only fires for `pending`, where the
- * test that goes there blocks wp_mail explicitly.
+ * 07/09/2026: it used to also schedule a cron job (AutoProcess) five minutes
+ * after a signature. That mechanism is gone — the owner chose immediate
+ * progression instead, so `signed_at` is written and the next status is
+ * computed and applied in the same request (see `MobileLine` and
+ * `class-ecrm-tracking.php::rest_sign()`). Nothing here schedules anything
+ * any more, which is why the sweep tests that used to live here are gone too.
  *
- * Authorisation is not tested here because it does not live here. `transition()`
+ * SMS is off unless `sms_enabled` is '1', which no test sets.
+ *
+ * Authorisation is not tested here because it does not live here. `moveTo()`
  * takes a raw id and trusts its caller; the controllers resolve the contract
  * through a scoped repository first. That is checked in ContractRestAccessTest.
  *
@@ -29,9 +34,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
-use ECRM_Files;
 use EnergyCRM\Access\UserScope;
-use EnergyCRM\Domain\Contract\AutoProcess;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\Tables;
@@ -43,8 +46,6 @@ final class ContractLifecycleTest extends IntegrationTestCase
 
     private ContractLifecycle $lifecycle;
 
-    private AutoProcess $autoProcess;
-
     private int $partner;
 
     private int $contractId;
@@ -54,17 +55,12 @@ final class ContractLifecycleTest extends IntegrationTestCase
         parent::setUp();
 
         $this->contracts = new ContractRepository();
-
-        // The same instances the plugin wired up at boot, on purpose: the
-        // scheduling test depends on AutoProcess having registered its listener
-        // for the lifecycle's status-changed action.
-        $this->lifecycle   = Services::lifecycle();
-        $this->autoProcess = Services::autoProcess();
+        $this->lifecycle = Services::lifecycle();
 
         $this->partner = $this->makePartner();
 
         $this->contractId = $this->contracts->create(
-            ['status' => 'new', 'supply_number' => '12345678901', 'energy_type' => 'power'],
+            ['status' => 'presale', 'supply_number' => '12345678901', 'energy_type' => 'power'],
             UserScope::forSelf($this->partner)
         );
 
@@ -73,8 +69,8 @@ final class ContractLifecycleTest extends IntegrationTestCase
 
     public function testAPermittedMoveIsApplied(): void
     {
-        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'processing'));
-        self::assertSame('processing', $this->statusOnDisk());
+        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'registration'));
+        self::assertSame('registration', $this->statusOnDisk());
     }
 
     /** An unknown slug is refused before anything is written. */
@@ -82,22 +78,22 @@ final class ContractLifecycleTest extends IntegrationTestCase
     {
         self::assertFalse($this->lifecycle->moveTo($this->contractId, 'not_a_status'));
 
-        self::assertSame('new', $this->statusOnDisk());
+        self::assertSame('presale', $this->statusOnDisk());
         self::assertSame([], $this->eventsFor($this->contractId));
     }
 
     /**
      * The pipeline graph is enforced here, not only in the controller.
      *
-     * Cancelled is terminal. If this ever passes, a cancelled contract can be
-     * brought back to life by any caller that skips the controller.
+     * A cancellation is terminal. If this ever passes, a cancelled contract
+     * can be brought back to life by any caller that skips the controller.
      */
     public function testAMoveThePipelineForbidsIsRefused(): void
     {
-        $this->lifecycle->moveTo($this->contractId, 'cancelled');
+        $this->lifecycle->moveTo($this->contractId, 'cancelled_by_us');
 
-        self::assertFalse($this->lifecycle->moveTo($this->contractId, 'signed'));
-        self::assertSame('cancelled', $this->statusOnDisk());
+        self::assertFalse($this->lifecycle->moveTo($this->contractId, 'registration'));
+        self::assertSame('cancelled_by_us', $this->statusOnDisk());
     }
 
     /**
@@ -105,24 +101,25 @@ final class ContractLifecycleTest extends IntegrationTestCase
      *
      * True rather than false on purpose: the caller asked for a state, and the
      * contract is in that state. But no event is logged, because nothing
-     * happened — a log full of "new → new" would bury the real history.
+     * happened — a log full of "presale → presale" would bury the real
+     * history.
      */
     public function testMovingToTheStatusItAlreadyHasSucceedsSilently(): void
     {
-        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'new'));
+        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'presale'));
         self::assertSame([], $this->eventsFor($this->contractId));
     }
 
     /** `force` is how a caller says "log it anyway", e.g. to re-run side effects. */
     public function testForceWritesTheEventEvenWithoutAChange(): void
     {
-        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'new', ['force' => true]));
+        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'presale', ['force' => true]));
         self::assertCount(1, $this->eventsFor($this->contractId));
     }
 
     public function testTheEventRecordsWhoMovedItAndFromWhere(): void
     {
-        $this->lifecycle->moveTo($this->contractId, 'processing', [
+        $this->lifecycle->moveTo($this->contractId, 'registration', [
             'user_id' => $this->partner,
             'message' => 'Χειροκίνητη μετάβαση',
         ]);
@@ -132,8 +129,8 @@ final class ContractLifecycleTest extends IntegrationTestCase
         self::assertCount(1, $events);
         self::assertSame('status_change', $events[0]['type']);
         self::assertSame($this->partner, (int) $events[0]['user_id']);
-        self::assertSame('new', $events[0]['from_status']);
-        self::assertSame('processing', $events[0]['to_status']);
+        self::assertSame('presale', $events[0]['from_status']);
+        self::assertSame('registration', $events[0]['to_status']);
         self::assertSame('Χειροκίνητη μετάβαση', $events[0]['message']);
     }
 
@@ -141,133 +138,54 @@ final class ContractLifecycleTest extends IntegrationTestCase
      * An empty origin is stored as NULL, not as ''.
      *
      * Callers that genuinely do not know the previous status pass `from => null`
-     * — the signing routes do exactly this. NULL says "unknown"; an empty string
+     * — the signing route does exactly this. NULL says "unknown"; an empty string
      * would read as a status that does not exist.
      */
     public function testAnUnknownOriginIsStoredAsNull(): void
     {
-        $this->lifecycle->moveTo($this->contractId, 'processing', ['from' => null]);
+        $this->lifecycle->moveTo($this->contractId, 'registration', ['from' => null]);
 
         self::assertNull($this->eventsFor($this->contractId)[0]['from_status']);
     }
 
-    /** `extra` is how the signature audit columns are written in the same UPDATE. */
+    /**
+     * `extra` is how the signature audit columns are written in the same
+     * UPDATE — status-agnostic, so it is tested from a status that can
+     * legally reach a next step regardless of which one.
+     *
+     * 07/09: ο στόχος είναι σκόπιμα `registration`, ΟΧΙ `finalisation` --
+     * το `finalisation` είναι πλέον φυλασσόμενο (`PaperworkGate::
+     * gate_statuses()`) και θα αρνιόταν τη μετάβαση χωρίς πλήρη χαρτιά και
+     * υπογραφή, κάτι άσχετο με το τι δοκιμάζει αυτό το test. Το `extra` δεν
+     * ξέρει ούτε νοιάζεται ποια κατάσταση είναι ο στόχος -- οποιαδήποτε
+     * νόμιμη, μη φυλασσόμενη μετάβαση αποδεικνύει το ίδιο πράγμα.
+     */
     public function testExtraColumnsAreWrittenAlongsideTheStatus(): void
     {
-        $this->lifecycle->moveTo($this->contractId, 'signed', [
+        $this->setStatusDirectly($this->contractId, 'awaiting_signature');
+
+        $this->lifecycle->moveTo($this->contractId, 'registration', [
             'extra' => ['signed_ip' => '198.51.100.7'],
         ]);
 
         $row = $this->storedRow('contracts', $this->contractId);
 
-        self::assertSame('signed', $row['status']);
+        self::assertSame('registration', $row['status']);
         self::assertSame('198.51.100.7', $row['signed_ip']);
-    }
-
-    /**
-     * Signing schedules its own follow-up.
-     *
-     * The contract id is passed as an argument so that several signatures in the
-     * same window each get their own event — WordPress de-duplicates identical
-     * no-argument events, and without the id all but the first would vanish.
-     */
-    public function testSigningSchedulesTheAutomaticMoveToProcessing(): void
-    {
-        $this->lifecycle->moveTo($this->contractId, 'signed');
-
-        self::assertIsInt(
-            wp_next_scheduled(AutoProcess::HOOK, [$this->contractId]),
-            'Nothing will ever move this contract on by itself.'
-        );
-    }
-
-    public function testTheDelayBeforeAutomaticProcessingIsFilterable(): void
-    {
-        add_filter('ecrm_auto_process_delay', static fn (): int => 42);
-
-        self::assertSame(42, AutoProcess::delay());
-
-        remove_all_filters('ecrm_auto_process_delay');
-    }
-
-    /**
-     * The sweep promotes a contract signed long enough ago.
-     *
-     * signed_at is written in site-local time by current_time('mysql'), and the
-     * cutoff is computed the same way. A UTC comparison here would silently do
-     * nothing for two hours of every Greek day.
-     */
-    public function testTheSweepPromotesAContractSignedLongEnoughAgo(): void
-    {
-        $this->markSignedAt($this->contractId, '-1 hour');
-
-        $this->autoProcess->run();
-
-        self::assertSame('processing', $this->statusOnDisk());
-    }
-
-    /** A fresh signature is left alone until its delay has passed. */
-    public function testTheSweepLeavesARecentSignatureAlone(): void
-    {
-        $this->markSignedAt($this->contractId, 'now');
-
-        $this->autoProcess->run();
-
-        self::assertSame('signed', $this->statusOnDisk());
-    }
-
-    /**
-     * The sweep never overrides a human.
-     *
-     * It selects on `status = 'signed'`, so an agent who already moved the
-     * contract forward keeps their decision. Without this the sweep would drag
-     * contracts backwards five minutes after anyone touched them.
-     */
-    public function testTheSweepDoesNotTouchAContractSomebodyAlreadyMovedOn(): void
-    {
-        $this->markSignedAt($this->contractId, '-1 hour');
-
-        // 07/09: 'routed' είναι φυλασσόμενη κατάσταση (ECRM_Docs::gate_statuses())
-        // και η PaperworkGate αρνείται πλέον τη μετάβαση χωρίς χαρτιά -- χωρίς
-        // αυτό η κίνηση θα απέτυχε σιωπηλά, η σύμβαση θα έμενε 'signed', και το
-        // σάρωμα θα την προωθούσε σε 'processing' αντί να τη βρει ήδη
-        // μετακινημένη, που είναι ακριβώς αυτό που δοκιμάζει το test.
-        $this->completePaperwork($this->contractId);
-
-        self::assertTrue($this->lifecycle->moveTo($this->contractId, 'routed', ['from' => 'signed']));
-
-        $this->autoProcess->run();
-
-        self::assertSame('routed', $this->statusOnDisk());
-    }
-
-    /**
-     * Τα ελάχιστα χαρτιά που η PaperworkGate απαιτεί πριν από μια φυλασσόμενη
-     * κατάσταση. Χωρίς activation_type η απαιτούμενη λίστα είναι η προεπιλογή
-     * [id_card, provider_bill] (ECRM_Docs::required_for()); η υπογραφή έρχεται
-     * από markSignedAt().
-     */
-    private function completePaperwork(int $contractId): void
-    {
-        $files = Services::files();
-
-        $files->attach($contractId, 'id_card', 'id.jpg', 'image/jpeg', $this->putBytes());
-        $files->attach($contractId, 'provider_bill', 'bill.pdf', 'application/pdf', $this->putBytes());
-    }
-
-    private function putBytes(): string
-    {
-        $saved = ECRM_Files::put_bytes('fixture bytes ' . wp_generate_password(8, false), 'jpg', 'image/jpeg', 'x.jpg');
-
-        self::assertIsArray($saved, 'Fixture failed to write bytes to protected storage.');
-
-        return (string) $saved['path'];
     }
 
     /** Straight from the table, so the assertion does not lean on the code under test. */
     private function statusOnDisk(): string
     {
         return (string) $this->storedRow('contracts', $this->contractId)['status'];
+    }
+
+    /** Bypasses the pipeline to set up a fixture in a given status directly. */
+    private function setStatusDirectly(int $contractId, string $status): void
+    {
+        global $wpdb;
+
+        $wpdb->update(Tables::name('contracts'), ['status' => $status], ['id' => $contractId]);
     }
 
     /**
@@ -288,20 +206,5 @@ final class ContractLifecycleTest extends IntegrationTestCase
         );
 
         return $rows;
-    }
-
-    /** Put a contract in `signed` with a signature timestamp of our choosing. */
-    private function markSignedAt(int $contractId, string $when): void
-    {
-        global $wpdb;
-
-        $wpdb->update(
-            Tables::name('contracts'),
-            [
-                'status'    => 'signed',
-                'signed_at' => gmdate('Y-m-d H:i:s', strtotime($when, (int) current_time('timestamp'))),
-            ],
-            ['id' => $contractId]
-        );
     }
 }

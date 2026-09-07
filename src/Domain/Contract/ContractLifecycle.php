@@ -47,8 +47,9 @@ final class ContractLifecycle
      * and not when the contract was already in the target status.
      *
      * Arguments: contract id, new status, previous status ('' when unknown).
-     * AutoProcess listens for it; that is how signing schedules its own
-     * follow-up without the lifecycle needing to know a scheduler exists.
+     * ContractNotices and RejectionFollowUp listen for it; that is how the
+     * things that react to a move happen without the lifecycle needing to know
+     * that notifications or tasks exist.
      */
     public const STATUS_CHANGED = 'ecrm_contract_status_changed';
 
@@ -109,7 +110,20 @@ final class ContractLifecycle
 
         // Refuse what the pipeline does not allow: reviving a cancelled
         // contract, or rewinding a signed one past its own signature.
-        if ($current !== null && ! $current->canMoveTo($target)) {
+        //
+        // AUDIT 07/09: `allowedNext()` δεν έχει πλέον self-loops -- κανένα
+        // status δεν αναφέρει τον εαυτό του ως νόμιμο επόμενο σταθμό, γιατί
+        // η ιδεμποτεντία «ήδη εκεί» ζει αποκλειστικά στο κλαδί λίγες γραμμές
+        // πιο πάνω. Χωρίς το `$from !== $to` εδώ, ένα `force => true` πάνω
+        // στην ΙΔΙΑ κατάσταση θα έφτανε σε αυτόν τον έλεγχο (το κλαδί από
+        // πάνω το προσπερνά ρητά όταν force είναι αληθές) και θα αρνιόταν
+        // πάντα, αφού canMoveTo(εαυτού) είναι πάντα false -- σκοτώνοντας τη
+        // δυνατότητα που το ίδιο το `ContractTransitions::applyTransition()`
+        // σχεδιάζει ρητά να υποστηρίξει («force => true χωρίς πραγματική
+        // αλλαγή», δες το δικό του docblock). Δεν είναι μετάβαση σε άλλο
+        // κόμβο του γράφου -- είναι ανανέωση επιτόπου, και ο γράφος δεν έχει
+        // λόγο να κρίνει κάτι που δεν αφορά καμία ακμή του.
+        if ($current !== null && $from !== $to && ! $current->canMoveTo($target)) {
             return false;
         }
 
@@ -161,7 +175,7 @@ final class ContractLifecycle
         // επιβεβαιωμένο ρητά από τον ιδιοκτήτη. Παρτίδα ήδη πληρωμένη δεν
         // αγγίζεται: αυτή τη διαδρομή την έχει ήδη κόψει η πύλη λίγες γραμμές
         // πιο πάνω, πριν φτάσουμε ποτέ σε αυτό το σημείο.
-        if ($target === ContractStatus::Cancelled) {
+        if ($target->isCancellation()) {
             $this->payouts->releaseFromPendingBatch($contractId);
         }
 

@@ -156,10 +156,10 @@ final class DashboardTilesTest extends IntegrationTestCase
 
     public function testOpenExcludesActiveAndTerminalStatuses(): void
     {
-        $this->contractFor('new');
-        $this->contractFor('pending');
+        $this->contractFor('presale');
+        $this->contractFor('registration');
         $this->contractFor('active');
-        $this->contractFor('cancelled');
+        $this->contractFor('cancelled_by_us');
         $this->contractFor('terminated');
 
         $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
@@ -178,13 +178,13 @@ final class DashboardTilesTest extends IntegrationTestCase
      */
     public function testOpenThisWeekIsASubsetOfOpen(): void
     {
-        $this->contractFor('new');
+        $this->contractFor('presale');
 
-        $old = $this->contractFor('pending');
+        $old = $this->contractFor('registration');
         $this->createdDaysAgo($old, 10);
 
         // Φρέσκια αλλά ακυρωμένη: εκτός και από τα δύο νούμερα.
-        $this->contractFor('cancelled');
+        $this->contractFor('cancelled_by_us');
 
         $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
 
@@ -201,13 +201,20 @@ final class DashboardTilesTest extends IntegrationTestCase
         );
     }
 
-    // ── 2. «Αναμονή υπογραφής»: δύο καταστάσεις μαζί ──────────────────
+    // ── 2. «Αναμονή υπογραφής»: μία κατάσταση, όχι δύο ονόματα ────────
 
-    public function testAwaitingSignatureCountsBothQualifyingStatuses(): void
+    /**
+     * 07/09/2026: μέχρι τότε το πλακίδιο μετρούσε ΔΥΟ ονόματα για το ίδιο
+     * στάδιο (`pending_signature`/`awaiting_signature`, δίδυμο slug). Το νέο
+     * μοντέλο αφαίρεσε το δεύτερο -- υπάρχει πια μία κατάσταση, και το
+     * πλακίδιο απλώς τη μετράει. Η `registration` (πριν την υπογραφή) δεν
+     * πρέπει να μετράει.
+     */
+    public function testAwaitingSignatureCountsThatOneStatus(): void
     {
-        $this->contractFor('pending_signature');
         $this->contractFor('awaiting_signature');
-        $this->contractFor('signed');
+        $this->contractFor('awaiting_signature');
+        $this->contractFor('registration');
 
         $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
 
@@ -246,7 +253,7 @@ final class DashboardTilesTest extends IntegrationTestCase
             $this->sentHoursAgo($notYet, 10);
 
             // 60 ώρες πριν: το παράθυρο πέρασε ήδη — δεν «λήγει», έχει λήξει.
-            $alreadyExpired = $this->contractFor('pending_signature');
+            $alreadyExpired = $this->contractFor('awaiting_signature');
             $this->sentHoursAgo($alreadyExpired, 60);
 
             // Καμία αποστολή καταγεγραμμένη — καμία προθεσμία, δεν μετράει.
@@ -307,7 +314,7 @@ final class DashboardTilesTest extends IntegrationTestCase
 
     public function testClosedMonthExcludesAContractThatWasCancelledAfter(): void
     {
-        $wonThenCancelled = $this->contractFor('cancelled');
+        $wonThenCancelled = $this->contractFor('cancelled_by_us');
         $this->becameActiveDaysAgo($wonThenCancelled, 1);
         $this->stamp($wonThenCancelled, ['payout_amount' => 200]);
 

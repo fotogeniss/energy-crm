@@ -37,7 +37,12 @@ use WP_REST_Response;
 final class ContractsReadController implements Controller
 {
     /** Καταστάσεις που δεν περιμένουν τίποτα — δεν «κάθονται», τελείωσαν. */
-    private const SETTLED_STATUSES = ['active', 'cancelled', 'terminated'];
+    private const SETTLED_STATUSES = [
+        'active',
+        'terminated',
+        'cancelled_by_us',
+        'cancelled_by_customer',
+    ];
 
     public function __construct(
         private readonly ScopeResolver $scopes,

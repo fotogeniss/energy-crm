@@ -55,38 +55,38 @@ final class ImportApplyScopeTest extends IntegrationTestCase
     public function testASupplyNumberOwnedByAnotherPartnerIsNotMatched(): void
     {
         $stranger   = $this->makeCrmUser(Roles::SELLER);
-        $contractId = $this->contractWith($stranger, 'new', '22200000001');
+        $contractId = $this->contractWith($stranger, 'presale', '22200000001');
 
         $importer = $this->makeCrmUser(Roles::SELLER);
         wp_set_current_user($importer);
 
         $report = ECRM_Import::apply(
-            [['supply' => '22200000001', 'status' => 'processing']],
+            [['supply' => '22200000001', 'status' => 'registration']],
             false
         );
 
         self::assertSame(0, $report['matched']);
         self::assertSame(0, $report['updated']);
         self::assertSame(['22200000001'], $report['unmatched']);
-        self::assertSame('new', $this->contracts->find($contractId, UserScope::forSelf($stranger))['status']);
+        self::assertSame('presale', $this->contracts->find($contractId, UserScope::forSelf($stranger))['status']);
     }
 
     /** Control: the same importer's own contract IS matched and moved. */
     public function testTheImportersOwnContractIsMatchedAndUpdated(): void
     {
         $importer   = $this->makeCrmUser(Roles::SELLER);
-        $contractId = $this->contractWith($importer, 'new', '22200000002');
+        $contractId = $this->contractWith($importer, 'presale', '22200000002');
 
         wp_set_current_user($importer);
 
         $report = ECRM_Import::apply(
-            [['supply' => '22200000002', 'status' => 'processing']],
+            [['supply' => '22200000002', 'status' => 'registration']],
             false
         );
 
         self::assertSame(1, $report['matched']);
         self::assertSame(1, $report['updated']);
-        self::assertSame('processing', $this->contracts->find($contractId, UserScope::forSelf($importer))['status']);
+        self::assertSame('registration', $this->contracts->find($contractId, UserScope::forSelf($importer))['status']);
     }
 
     /**
@@ -102,35 +102,35 @@ final class ImportApplyScopeTest extends IntegrationTestCase
         update_user_meta($partner, NetworkRepository::PARENT_META, $manager);
         (new NetworkRepository())->rebuild($partner);
 
-        $contractId = $this->contractWith($partner, 'new', '22200000003');
+        $contractId = $this->contractWith($partner, 'presale', '22200000003');
 
         wp_set_current_user($manager);
 
         $report = ECRM_Import::apply(
-            [['supply' => '22200000003', 'status' => 'processing']],
+            [['supply' => '22200000003', 'status' => 'registration']],
             false
         );
 
         self::assertSame(1, $report['updated']);
         $managerScope = Services::scopeResolver()->forUser($manager);
-        self::assertSame('processing', $this->contracts->find($contractId, $managerScope)['status']);
+        self::assertSame('registration', $this->contracts->find($contractId, $managerScope)['status']);
     }
 
     /** The dry-run promise: counted as matched/updated, nothing actually moves. */
     public function testDryRunLeavesTheStatusUntouched(): void
     {
         $importer   = $this->makeCrmUser(Roles::SELLER);
-        $contractId = $this->contractWith($importer, 'new', '22200000004');
+        $contractId = $this->contractWith($importer, 'presale', '22200000004');
 
         wp_set_current_user($importer);
 
         $report = ECRM_Import::apply(
-            [['supply' => '22200000004', 'status' => 'processing']],
+            [['supply' => '22200000004', 'status' => 'registration']],
             true
         );
 
         self::assertSame(1, $report['updated'], 'The preview count still reports what WOULD change.');
-        self::assertSame('new', $this->contracts->find($contractId, UserScope::forSelf($importer))['status']);
+        self::assertSame('presale', $this->contracts->find($contractId, UserScope::forSelf($importer))['status']);
     }
 
     private function contractWith(int $partnerId, string $status, string $supply): int

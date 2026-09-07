@@ -67,7 +67,7 @@ final class ContractSaveCapabilityTest extends IntegrationTestCase
 
         $response = $this->save([
             'contract_id' => $contractId,
-            'status'      => ContractStatus::Submitted->value,
+            'status'      => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(200, $response->get_status(), $this->errorOf($response));
@@ -126,7 +126,7 @@ final class ContractSaveCapabilityTest extends IntegrationTestCase
 
         $response = $this->save([
             'contract_id' => $contractId,
-            'status'      => ContractStatus::Submitted->value,
+            'status'      => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(403, $response->get_status());
@@ -143,7 +143,7 @@ final class ContractSaveCapabilityTest extends IntegrationTestCase
 
         $this->save([
             'contract_id' => $contractId,
-            'status'      => ContractStatus::Submitted->value,
+            'status'      => ContractStatus::Presale->value,
         ]);
 
         self::assertSame(

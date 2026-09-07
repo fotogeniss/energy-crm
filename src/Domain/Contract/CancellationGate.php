@@ -89,7 +89,10 @@ final class CancellationGate
      */
     public function refusalOnMove(ContractStatus $from, ContractStatus $target, int $contractId): ?string
     {
-        if ($target !== ContractStatus::Cancelled) {
+        // Δύο ακυρώσεις πλέον (από εμάς / από πελάτη) και η ερώτηση είναι η
+        // ίδια για τις δύο: ο λόγος που φυλάει αυτή η πύλη είναι ότι η
+        // σύμβαση δούλεψε, όχι ποιος πάτησε το κουμπί.
+        if (! $target->isCancellation()) {
             return null;
         }
 

@@ -58,7 +58,7 @@ final class EscalationsScopeTest extends IntegrationTestCase
         $owner   = $this->makeCrmUser(Roles::PARTNER);
         update_user_meta($owner, TeamRepository::PARENT_META, $manager);
 
-        $contractId = $this->staleContract($owner, 'routed');
+        $contractId = $this->staleContract($owner, 'finalisation');
 
         wp_set_current_user($manager);
         $rows = $this->escalations()->get_data()['rows'];
@@ -76,7 +76,7 @@ final class EscalationsScopeTest extends IntegrationTestCase
         $manager  = $this->makeCrmUser(Roles::PARTNER);
         $stranger = $this->makePartner();
 
-        $strangerContract = $this->staleContract($stranger, 'pending');
+        $strangerContract = $this->staleContract($stranger, 'presale');
 
         wp_set_current_user($manager);
         $ids = array_column($this->escalations()->get_data()['rows'], 'id');
@@ -94,7 +94,7 @@ final class EscalationsScopeTest extends IntegrationTestCase
         // Ίδια μέρα, καθόλου αδράνεια -- κάτω από το escalation_days() σε κάθε
         // λογική ρύθμιση κατωφλιού.
         $contractId = $this->contracts->create(
-            ['status' => 'routed', 'code' => 'ECRM-ESC-fresh-' . $owner],
+            ['status' => 'finalisation', 'code' => 'ECRM-ESC-fresh-' . $owner],
             UserScope::forSelf($owner)
         );
 
@@ -120,7 +120,7 @@ final class EscalationsScopeTest extends IntegrationTestCase
         $owner   = $this->makeCrmUser(Roles::PARTNER);
         update_user_meta($owner, TeamRepository::PARENT_META, $manager);
 
-        $contractId = $this->staleContract($owner, 'routed');
+        $contractId = $this->staleContract($owner, 'finalisation');
 
         wp_set_current_user($manager);
         $row = null;
@@ -131,7 +131,7 @@ final class EscalationsScopeTest extends IntegrationTestCase
         }
 
         self::assertNotNull($row);
-        self::assertSame('routed', $row['status']);
+        self::assertSame('finalisation', $row['status']);
         self::assertArrayHasKey('status_label', $row);
         self::assertArrayHasKey('owner_name', $row);
         self::assertGreaterThan(0, $row['age_days']);

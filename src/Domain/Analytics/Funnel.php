@@ -3,10 +3,16 @@
 /**
  * Conversion and cancellation rates over the status counts.
  *
- * Won and lost are defined here rather than inferred at the call site: a
- * contract that is routed, active or resolved has earned its commission, and
- * one that is cancelled or terminated has not. Everything else is still in
- * flight and counts towards neither.
+ * Won and lost are defined here rather than inferred at the call site, and the
+ * definition changed on 07/09/2026 with the status model: **won** is the
+ * payable status plus ΔΙΑΚΟΠΗ, **lost** is the two cancellations. Everything
+ * else is still in flight and counts towards neither.
+ *
+ * ΔΙΑΚΟΠΗ counts as won on purpose. It is terminal, but it is where a contract
+ * that *worked* ends up -- it was active, the commission was earned and paid,
+ * and the customer later left. Counting it as lost would quietly punish a
+ * partner for the passage of time, and would make the conversion rate fall
+ * without a single application going wrong.
  *
  * Pure arithmetic, tested — these percentages end up in front of partners
  * comparing themselves to each other.
@@ -51,12 +57,12 @@ final class Funnel
                 'count'  => $count,
             ];
 
-            if ($status->isPayable()) {
+            if ($status->isPayable() || $status === ContractStatus::Terminated) {
                 $won += $count;
                 continue;
             }
 
-            if ($status->isTerminal()) {
+            if ($status->isCancellation()) {
                 $lost += $count;
             }
         }

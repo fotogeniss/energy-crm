@@ -37,8 +37,8 @@ function renderTeamLive(view, d) {
 		stat('Online τώρα', (t.online || 0), 'is-online') +
 		stat('Σήμερα', (t.today || 0)) +
 		stat('Αυτόν τον μήνα', (t.month || 0)) +
-		stat('Εκκρεμότητες', (t.pending || 0)) +
-		stat('Δρομολογήθηκαν', (t.routed || 0)) +
+		stat('Presale', (t.presale || 0)) +
+		stat('Οριστικοποίηση', (t.finalisation || 0)) +
 		stat('Ενεργές', (t.active || 0)) +
 	'</div>';
 
@@ -49,8 +49,8 @@ function renderTeamLive(view, d) {
 			'<td>' + dot + '<strong>' + esc(m.name) + '</strong>' + (m.is_self ? ' <span class="ecrm-muted">(εσύ)</span>' : '') + '<div class="ecrm-muted ecrm-tlrole">' + esc(m.role) + '</div></td>' +
 			'<td class="ecrm-tlnum">' + m.today + '</td>' +
 			'<td class="ecrm-tlnum ecrm-col-sec">' + m.month + '</td>' +
-			'<td class="ecrm-tlnum">' + (m.pending ? '<span class="ecrm-pillwarn">' + m.pending + '</span>' : '0') + '</td>' +
-			'<td class="ecrm-tlnum ecrm-col-sec">' + m.routed + '</td>' +
+			'<td class="ecrm-tlnum">' + (m.presale ? '<span class="ecrm-pillwarn">' + m.presale + '</span>' : '0') + '</td>' +
+			'<td class="ecrm-tlnum ecrm-col-sec">' + m.finalisation + '</td>' +
 			'<td class="ecrm-tlnum">' + (m.open_tasks ? '<span class="ecrm-pillwarn">' + m.open_tasks + '</span>' : '0') + '</td>' +
 			'<td class="ecrm-muted ecrm-col-sec">' + last + '</td>' +
 			'</tr>';
@@ -63,6 +63,6 @@ function renderTeamLive(view, d) {
 		'<span class="ecrm-live"><span class="ecrm-live__dot"></span> ' + esc(d.ts || '') + '</span></header>' +
 		cards +
 		'<div class="ecrm-card"><div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr>' +
-		'<th>Μέλος</th><th>Σήμερα</th><th class="ecrm-col-sec">Μήνας</th><th>Εκκρεμ.</th><th class="ecrm-col-sec">Δρομ/καν</th><th>Εργασίες</th><th class="ecrm-col-sec">Τελ. δραστηριότητα</th>' +
+		'<th>Μέλος</th><th>Σήμερα</th><th class="ecrm-col-sec">Μήνας</th><th>Presale</th><th class="ecrm-col-sec">Οριστ/ση</th><th>Εργασίες</th><th class="ecrm-col-sec">Τελ. δραστηριότητα</th>' +
 		'</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 }

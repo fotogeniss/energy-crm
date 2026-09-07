@@ -26,7 +26,7 @@ final class ProviderStatusMapTest extends TestCase
         $resolved = ProviderStatusMap::empty()->resolve(['ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ', 'ΑΚΥΡΩΘΗΚΕ']);
 
         self::assertSame(
-            ['ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ' => 'active', 'ΑΚΥΡΩΘΗΚΕ' => 'cancelled'],
+            ['ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ' => 'active', 'ΑΚΥΡΩΘΗΚΕ' => 'cancelled_by_us'],
             $resolved['map']
         );
         self::assertSame(['ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ', 'ΑΚΥΡΩΘΗΚΕ'], $resolved['guessed']);
@@ -43,11 +43,11 @@ final class ProviderStatusMapTest extends TestCase
      */
     public function testASavedDecisionBeatsTheGuess(): void
     {
-        $map = ProviderStatusMap::fromArray(['ΕΝΕΡΓΟ' => 'processing']);
+        $map = ProviderStatusMap::fromArray(['ΕΝΕΡΓΟ' => 'registration']);
 
         $resolved = $map->resolve(['ΕΝΕΡΓΟ']);
 
-        self::assertSame(['ΕΝΕΡΓΟ' => 'processing'], $resolved['map']);
+        self::assertSame(['ΕΝΕΡΓΟ' => 'registration'], $resolved['map']);
         self::assertSame(['ΕΝΕΡΓΟ'], $resolved['saved']);
         self::assertSame([], $resolved['guessed']);
     }
@@ -80,7 +80,7 @@ final class ProviderStatusMapTest extends TestCase
 
     public function testJsonSurvivesARoundTrip(): void
     {
-        $map = ProviderStatusMap::fromArray(['ΣΕ ΕΞΕΛΙΞΗ' => 'processing']);
+        $map = ProviderStatusMap::fromArray(['ΣΕ ΕΞΕΛΙΞΗ' => 'registration']);
 
         self::assertSame(
             $map->toArray(),
@@ -97,24 +97,33 @@ final class ProviderStatusMapTest extends TestCase
     }
 
     /**
-     * Οι ευρετικές είναι ΟΙ ΙΔΙΕΣ που ζούσαν στη guessStatus() του
-     * ecrm-view-import.js ως τις 28/08. Καρφώνονται εδώ ώστε η μετακόμιση από
-     * JavaScript σε PHP να μην έχει αλλάξει σιωπηλά ούτε μία εικασία.
+     * Οι ευρετικές του `GUESSES`, καρφωμένες μία προς μία.
+     *
+     * Ξαναγράφτηκαν στο νέο λεξιλόγιο στις 07/09/2026 (δες το σχόλιο πάνω από
+     * το `GUESSES`): δύο μοτίβα έφυγαν χωρίς αντικατάσταση (`εκκρεμ|pending`,
+     * `επιλ|resolv` -- έγιναν εμπόδια, δεν ζουν πια στη στήλη status), και οι
+     * δύο απορρίψεις/ακυρώσεις παρόχου συγκλίνουν και οι δύο στο
+     * `cancelled_by_us` (το Excel δεν λέει ποιος αποφάσισε). Δεν είναι πια «οι
+     * ίδιες που ζούσαν στο JavaScript» -- είναι η επόμενη γενιά τους, και αυτό
+     * το test τις καρφώνει όπως είναι σήμερα, ώστε η επόμενη αλλαγή να είναι
+     * ρητή κι όχι σιωπηλή.
      */
-    public function testTheHeuristicsMatchTheOnesMovedFromJavascript(): void
+    public function testTheHeuristicsMatchTheCurrentVocabulary(): void
     {
         $cases = [
             'ΕΝΕΡΓΗ ΠΑΡΟΧΗ'    => 'active',
-            'ΑΚΥΡΩΘΗΚΕ'        => 'cancelled',
-            'ΕΚΚΡΕΜΕΙ ΕΓΓΡΑΦΟ' => 'pending',
-            'ΔΡΟΜΟΛΟΓΗΘΗΚΕ'    => 'routed',
-            'ΕΠΙΛΥΘΗΚΕ'        => 'resolved',
-            'ΠΡΟΣ ΥΠΟΓΡΑΦΗ'    => 'pending_signature',
-            'ΣΕ ΕΠΕΞΕΡΓΑΣΙΑ'   => 'processing',
+            'ΑΚΥΡΩΘΗΚΕ'        => 'cancelled_by_us',
+            'ΑΠΟΡΡΙΦΘΗΚΕ'      => 'cancelled_by_us',
+            'ΕΚΚΡΕΜΕΙ ΕΓΓΡΑΦΟ' => '',
+            'ΔΡΟΜΟΛΟΓΗΘΗΚΕ'    => 'finalisation',
+            'ΕΠΙΛΥΘΗΚΕ'        => '',
+            'ΠΡΟΣ ΥΠΟΓΡΑΦΗ'    => 'awaiting_signature',
+            'ΘΕΛΕΙ SIM'        => 'awaiting_sim',
+            'ΣΕ ΕΠΕΞΕΡΓΑΣΙΑ'   => 'registration',
             'ΤΕΡΜΑΤΙΣΤΗΚΕ'     => 'terminated',
-            'ΝΕΑ ΑΙΤΗΣΗ'       => 'new',
+            'ΝΕΑ ΑΙΤΗΣΗ'       => 'presale',
             'active'           => 'active',
-            'CANCELLED'        => 'cancelled',
+            'CANCELLED'        => 'cancelled_by_us',
             ''                 => '',
         ];
 

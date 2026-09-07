@@ -16,8 +16,9 @@ final class ContractStatusTest extends TestCase
 {
     public function testTheSlugsMatchWhatIsStoredInTheDatabase(): void
     {
-        self::assertSame('pending_signature', ContractStatus::PendingSignature->value);
-        self::assertSame('new', ContractStatus::Submitted->value);
+        self::assertSame('awaiting_signature', ContractStatus::AwaitingSignature->value);
+        self::assertSame('presale', ContractStatus::Presale->value);
+        self::assertSame('terminated', ContractStatus::Terminated->value);
     }
 
     public function testEveryStatusHasALabel(): void
@@ -28,7 +29,7 @@ final class ContractStatusTest extends TestCase
     }
 
     /**
-     * The whole point of the exercise: a cancelled contract is finished, and
+     * The whole point of the exercise: a terminal contract is finished, and
      * reviving one would rewrite commercial history that has already been
      * reported and paid on.
      */
@@ -54,39 +55,31 @@ final class ContractStatusTest extends TestCase
     public static function terminalStatuses(): array
     {
         return [
-            'cancelled'  => [ContractStatus::Cancelled],
-            'terminated' => [ContractStatus::Terminated],
-            'rejected'   => [ContractStatus::Rejected],
+            'terminated'             => [ContractStatus::Terminated],
+            'cancelled_by_us'        => [ContractStatus::CancelledByUs],
+            'cancelled_by_customer'  => [ContractStatus::CancelledByCustomer],
         ];
-    }
-
-    public function testASignedContractCannotGoBackBeforeItsSignature(): void
-    {
-        $signed = ContractStatus::Signed;
-
-        self::assertFalse($signed->canMoveTo(ContractStatus::Draft));
-        self::assertFalse($signed->canMoveTo(ContractStatus::Submitted));
-        self::assertFalse($signed->canMoveTo(ContractStatus::AwaitingSignature));
     }
 
     /**
      * 2026-08-24: όχι πια απαγορευμένο, σκόπιμα — η δεύτερη υπογραφή είναι
      * γνήσια ανάγκη (λάθος που φάνηκε μετά, ή ο πάροχος γύρισε πίσω την
-     * αίτηση). Ο ίδιος ο πίνακας πλέον επιτρέπει Signed -> PendingSignature
-     * (και Routed -> PendingSignature, δες testRoutedCanReturnForANewSignature
-     * παρακάτω) — η μόνη προστασία από ένα τυχαίο κλικ είναι στο
-     * SignLinkController::create() (confirm_resend), όχι εδώ. Ο γράφος λέει
-     * μόνο ποια μετάβαση είναι δομικά νόμιμη, όχι πότε επιτρέπεται να συμβεί.
+     * αίτηση). Ο ίδιος ο πίνακας πλέον επιτρέπει Finalisation ->
+     * AwaitingSignature και AwaitingSim -> AwaitingSignature (κανόνας Κ7,
+     * "Πίσω" στο ContractStatus::allowedNext()) — η μόνη προστασία από ένα
+     * τυχαίο κλικ είναι στο SignLinkController::create() (confirm_resend),
+     * όχι εδώ. Ο γράφος λέει μόνο ποια μετάβαση είναι δομικά νόμιμη, όχι
+     * πότε επιτρέπεται να συμβεί.
      */
-    public function testASignedContractCanReturnForANewSignature(): void
+    public function testFinalisationCanReturnForANewSignature(): void
     {
-        self::assertTrue(ContractStatus::Signed->canMoveTo(ContractStatus::PendingSignature));
+        self::assertTrue(ContractStatus::Finalisation->canMoveTo(ContractStatus::AwaitingSignature));
     }
 
-    /** @see testASignedContractCanReturnForANewSignature */
-    public function testRoutedCanReturnForANewSignature(): void
+    /** @see testFinalisationCanReturnForANewSignature */
+    public function testAwaitingSimCanReturnForANewSignature(): void
     {
-        self::assertTrue(ContractStatus::Routed->canMoveTo(ContractStatus::PendingSignature));
+        self::assertTrue(ContractStatus::AwaitingSim->canMoveTo(ContractStatus::AwaitingSignature));
     }
 
     public function testNoStatusEverReturnsToDraft(): void
@@ -103,26 +96,13 @@ final class ContractStatusTest extends TestCase
         }
     }
 
-    public function testAnActiveSupplyCannotBeRewoundIntoProcessing(): void
+    public function testAnActiveSupplyCannotBeRewoundIntoRegistration(): void
     {
-        self::assertFalse(ContractStatus::Active->canMoveTo(ContractStatus::Processing));
+        self::assertFalse(ContractStatus::Active->canMoveTo(ContractStatus::Registration));
         self::assertTrue(ContractStatus::Active->canMoveTo(ContractStatus::Terminated));
     }
 
-    /** The cron that advances signed contracts depends on this edge existing. */
-    public function testSignedAdvancesToProcessing(): void
-    {
-        self::assertTrue(ContractStatus::Signed->canMoveTo(ContractStatus::Processing));
-    }
-
-    public function testStayingPutIsAllowed(): void
-    {
-        foreach (ContractStatus::cases() as $status) {
-            self::assertTrue($status->canMoveTo($status), $status->value . ' cannot stay put');
-        }
-    }
-
-    public function testEveryNonTerminalStatusCanBeCancelled(): void
+    public function testEveryNonTerminalStatusExceptActiveCanBeCancelled(): void
     {
         foreach (ContractStatus::cases() as $status) {
             if ($status->isTerminal() || $status === ContractStatus::Active) {
@@ -130,20 +110,55 @@ final class ContractStatusTest extends TestCase
             }
 
             self::assertTrue(
-                $status->canMoveTo(ContractStatus::Cancelled),
-                $status->value . ' cannot be cancelled'
+                $status->canMoveTo(ContractStatus::CancelledByUs),
+                $status->value . ' cannot be cancelled by us'
+            );
+            self::assertTrue(
+                $status->canMoveTo(ContractStatus::CancelledByCustomer),
+                $status->value . ' cannot be cancelled by the customer'
             );
         }
     }
 
+    /**
+     * Η ΕΝΕΡΓΟΣ δεν ακυρώνεται -- διακόπτεται. Το allowedNext() το κλείνει
+     * ήδη ρητά (καμία ακύρωση στη λίστα), εδώ επιβεβαιώνεται ονομαστικά
+     * γιατί είναι ο κανόνας που φυλάει χρήματα ήδη κερδισμένα.
+     */
+    public function testActiveCannotBeCancelledOnlyTerminated(): void
+    {
+        self::assertFalse(ContractStatus::Active->canMoveTo(ContractStatus::CancelledByUs));
+        self::assertFalse(ContractStatus::Active->canMoveTo(ContractStatus::CancelledByCustomer));
+        self::assertTrue(ContractStatus::Active->canMoveTo(ContractStatus::Terminated));
+    }
+
     public function testPayableStatusesAreTheOnesCommissionIsOwedOn(): void
     {
-        self::assertTrue(ContractStatus::Routed->isPayable());
         self::assertTrue(ContractStatus::Active->isPayable());
-        self::assertTrue(ContractStatus::Resolved->isPayable());
 
         self::assertFalse(ContractStatus::Draft->isPayable());
-        self::assertFalse(ContractStatus::Cancelled->isPayable());
+        self::assertFalse(ContractStatus::Finalisation->isPayable());
+        self::assertFalse(ContractStatus::Terminated->isPayable());
+        self::assertFalse(ContractStatus::CancelledByUs->isPayable());
+        self::assertFalse(ContractStatus::CancelledByCustomer->isPayable());
+    }
+
+    public function testIsCancellationCoversBothCancellationsOnly(): void
+    {
+        foreach (ContractStatus::cases() as $status) {
+            $expected = $status === ContractStatus::CancelledByUs
+                || $status === ContractStatus::CancelledByCustomer;
+
+            self::assertSame($expected, $status->isCancellation(), $status->value);
+        }
+    }
+
+    public function testExitsActiveIsTrueOnlyWhenLeavingActive(): void
+    {
+        self::assertTrue(ContractStatus::exitsActive(ContractStatus::Active, ContractStatus::Terminated));
+        self::assertTrue(ContractStatus::exitsActive(ContractStatus::Active, ContractStatus::Finalisation));
+        self::assertFalse(ContractStatus::exitsActive(ContractStatus::Active, ContractStatus::Active));
+        self::assertFalse(ContractStatus::exitsActive(ContractStatus::Finalisation, ContractStatus::Active));
     }
 
     public function testAnUnknownSlugResolvesToNothing(): void
@@ -156,23 +171,5 @@ final class ContractStatusTest extends TestCase
     public function testLabelsCoverEveryCase(): void
     {
         self::assertCount(count(ContractStatus::cases()), ContractStatus::labels());
-    }
-
-    /**
-     * Μια απόρριψη παρόχου φτάνει μόνο από όπου η μπάλα είναι ήδη στον
-     * πάροχο -- Routed/Processing/Pending, τα ίδια σημεία όπου φτάνει ήδη
-     * το Cancelled. ΟΧΙ από Resolved/Active: εκεί η αίτηση έφτασε ή πέρασε
-     * ενεργοποίηση, δεν "απορρίπτεται" πια.
-     */
-    public function testRejectedIsReachableOnlyWhereTheProviderHasTheBall(): void
-    {
-        self::assertTrue(ContractStatus::Routed->canMoveTo(ContractStatus::Rejected));
-        self::assertTrue(ContractStatus::Processing->canMoveTo(ContractStatus::Rejected));
-        self::assertTrue(ContractStatus::Pending->canMoveTo(ContractStatus::Rejected));
-
-        self::assertFalse(ContractStatus::Resolved->canMoveTo(ContractStatus::Rejected));
-        self::assertFalse(ContractStatus::Active->canMoveTo(ContractStatus::Rejected));
-        self::assertFalse(ContractStatus::Draft->canMoveTo(ContractStatus::Rejected));
-        self::assertFalse(ContractStatus::Signed->canMoveTo(ContractStatus::Rejected));
     }
 }

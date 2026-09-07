@@ -118,7 +118,7 @@ final class BulkRequestPayloadTest extends IntegrationTestCase
         $response = $this->bulk([
             'ids'    => [$contractId],
             'action' => 'status',
-            'value'  => 'routed',
+            'value'  => 'registration',
         ]);
 
         self::assertSame(200, $response->get_status());
@@ -182,7 +182,7 @@ final class BulkRequestPayloadTest extends IntegrationTestCase
     private function aContract(): int
     {
         $contractId = $this->contracts->create(
-            ['status' => 'new'],
+            ['status' => 'presale'],
             UserScope::forSelf($this->partner)
         );
 

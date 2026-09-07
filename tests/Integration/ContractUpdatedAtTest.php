@@ -68,7 +68,7 @@ final class ContractUpdatedAtTest extends IntegrationTestCase
         $partner = $this->makePartner();
 
         $this->contractId = $this->contracts->create(
-            ['status' => 'new', 'supply_number' => '12345678901', 'energy_type' => 'power'],
+            ['status' => 'presale', 'supply_number' => '12345678901', 'energy_type' => 'power'],
             UserScope::forSelf($partner)
         );
 
@@ -84,7 +84,7 @@ final class ContractUpdatedAtTest extends IntegrationTestCase
      */
     public function testUpdatedAtIsInTheSameZoneAsCreatedAtBesideIt(): void
     {
-        $this->lifecycle->moveTo($this->contractId, 'processing');
+        $this->lifecycle->moveTo($this->contractId, 'registration');
 
         $row     = $this->storedRow('contracts', $this->contractId);
         $created = strtotime((string) $row['created_at']);
@@ -122,7 +122,7 @@ final class ContractUpdatedAtTest extends IntegrationTestCase
             $this->contractId
         ));
 
-        $this->lifecycle->moveTo($this->contractId, 'new', ['force' => true]);
+        $this->lifecycle->moveTo($this->contractId, 'presale', ['force' => true]);
 
         self::assertNotSame(
             '2020-01-01 00:00:00',
