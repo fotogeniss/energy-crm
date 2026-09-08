@@ -1,4 +1,4 @@
-import { api, esc, fetch, H } from '@energy-crm/util';
+import { api, esc, fetch, H, toast } from '@energy-crm/util';
 import { wire } from '@energy-crm/navigate';
 import { openDetail } from '@energy-crm/view-detail';
 import { loadContracts, setContractsFilter } from '@energy-crm/view-contracts';
@@ -79,6 +79,37 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 			if (formRoot && window.ECRMForm) { window.ECRMForm.init(formRoot); loaded.form = true; }
 		}
 	}
+	// ---- offline banner (docs/OFFLINE-MODEL.md §2Β) ------------------------
+	// Ρητό αίτημα ιδιοκτήτη (08/09): σήμερα μια αποτυχία δικτύου δείχνει απλά
+	// «Σφάλμα δικτύου» -- ο συνεργάτης το διαβάζει σαν «κάτι χάλασε», όχι σαν
+	// «είσαι offline, θα φύγει μόλις γυρίσει». Το banner μένει ΟΣΟ διαρκεί η
+	// αποσύνδεση -- δεν είναι toast (4 δευτερόλεπτα, ένα συμβάν που πέρασε),
+	// είναι κατάσταση που συνεχίζεται μέχρι να αλλάξει.
+	//
+	// navigator.onLine + events online/offline, τίποτα παραπάνω -- ρητή
+	// επιλογή του OFFLINE-MODEL.md, όχι δικό μου heartbeat/ping. Είναι γνωστό
+	// αναξιόπιστο (π.χ. συνδεδεμένος σε LAN χωρίς πραγματικό internet δείχνει
+	// online) αλλά φθηνό και σωστό στη μεγάλη πλειοψηφία -- «σήκωσε/έπεσε το
+	// wifi/δεδομένα», που είναι το πραγματικό σενάριο εδώ.
+	var offlineEl = app.querySelector('#ecrm-offline');
+	var wasOffline = !navigator.onLine;
+	function paintOnline() {
+		if (!offlineEl) return;
+		offlineEl.hidden = navigator.onLine;
+	}
+	window.addEventListener('online', function () {
+		paintOnline();
+		// Toast μόνο αν πράγματι ήμασταν offline -- ένα «Η σύνδεση επανήλθε»
+		// σε κάθε φόρτωση σελίδας (ήδη online) θα ήταν θόρυβος χωρίς νόημα.
+		if (wasOffline) { toast('Η σύνδεση επανήλθε.'); }
+		wasOffline = false;
+	});
+	window.addEventListener('offline', function () {
+		wasOffline = true;
+		paintOnline();
+	});
+	paintOnline();
+
 	// ---- εμφάνιση: ανοιχτό / σκούρο -----------------------------------------
 	// Το data-theme το γράφει ήδη η PHP στο ίδιο το .ecrm, οπότε εδώ μένει μόνο
 	// η εναλλαγή. Αλλάζει ΠΡΩΤΑ η οθόνη και μετά ειδοποιείται ο διακομιστής: ο

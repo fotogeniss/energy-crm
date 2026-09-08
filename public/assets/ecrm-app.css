@@ -117,6 +117,18 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 
 /* --- main --- */
 .ecrm-main { margin-left: 208px; min-height: 100vh; display: flex; flex-direction: column; transition: margin-left .18s ease; }
+/* Offline banner (docs/OFFLINE-MODEL.md §2Β) — ίδια λογική χρώματος με το
+   .ecrm-toast.is-err (--err/--on-dark), αλλά μόνιμο όσο κρατά η αποσύνδεση,
+   όχι 4 δευτερόλεπτα σαν το toast, και σε κανονική ροή πριν το topbar, όχι
+   fixed πάνω από αυτό. Το markup ζει πάντα στη σελίδα (class-ecrm-app.php),
+   η ecrm-app.js μόνο εναλλάσσει `hidden`. */
+.ecrm-offline {
+	display: flex; align-items: center; justify-content: center; gap: 8px;
+	background: var(--err); color: var(--on-dark);
+	font-size: var(--fs-13); font-weight: 700; text-align: center;
+	padding: 8px 16px;
+}
+.ecrm-offline[hidden] { display: none; }
 .ecrm-topbar {
 	position: sticky; top: 0; z-index: 20;
 	display: flex; align-items: center; justify-content: space-between; gap: 12px;
