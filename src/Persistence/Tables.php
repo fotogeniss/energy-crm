@@ -33,6 +33,7 @@ final class Tables
     public const PAYOUTS            = 'payouts';
     public const PROGRAMS           = 'programs';
     public const PROVIDERS          = 'providers';
+    public const REQUEST_KEYS       = 'request_keys';
     public const SIGNATURES         = 'signatures';
     public const TASKS              = 'tasks';
 
@@ -74,6 +75,7 @@ final class Tables
             self::METRICS,
             self::NOTIFICATIONS,
             self::DELETION_LOG,
+            self::REQUEST_KEYS,
         ];
     }
 

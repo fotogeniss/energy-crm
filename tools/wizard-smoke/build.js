@@ -31,6 +31,13 @@ function rejectedNote(){ return ''; }
 function toast(msg, ok){ __toasts.push({ msg: msg, ok: ok !== false }); }
 window.__toasts = __toasts;
 function openCustomerContracts(){ /* no-op: το smoke test δεν κάνει ποτέ click σε αυτό το κουμπί */ }
+/* Το πραγματικό requestId() ζει στο ecrm-util.js και στηρίζεται στο crypto,
+ * που εδώ δεν υπάρχει. Το stub κρατά ό,τι ελέγχεται: σχήμα UUID v4 (4 στην
+ * αρχή της τρίτης ομάδας, 8-b στην τέταρτη) και ΔΙΑΦΟΡΕΤΙΚΗ τιμή σε κάθε
+ * κλήση. Είναι ντετερμινιστικό επίτηδες -- δύο τρεξίματα βγάζουν το ίδιο
+ * output, οπότε μια διαφορά σημαίνει αλλαγή κώδικα και όχι τύχη. */
+var __rid = 0;
+function requestId(){ __rid++; return ('0000000' + __rid).slice(-8) + '-0000-4000-8000-000000000000'; }
 `);
 if (js === before) { console.error('Δεν βρέθηκε import στο ecrm-form.js — άλλαξε η κεφαλή του αρχείου.'); process.exit(2); }
 if (/^import /m.test(js)) { console.error('Έμεινε import χωρίς stub στο ecrm-form.js — δες την κεφαλή.'); process.exit(2); }

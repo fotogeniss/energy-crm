@@ -1,4 +1,4 @@
-import { api, esc, rejectedNote, toast } from '@energy-crm/util';
+import { api, esc, rejectedNote, requestId, toast } from '@energy-crm/util';
 import { energyLabel } from '@energy-crm/format';
 import { openCustomerContracts } from '@energy-crm/navigate';
 
@@ -14,14 +14,30 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 	var _origFetch = window.fetch.bind(window);
 	function fetch(url, opts) {
 		opts = opts || {};
+		var ours = false;
 		try {
 			var base = ECRM.rest.replace(/\/$/, '');
 			if (typeof url === 'string' && url.indexOf(base) === 0) {
+				ours = true;
 				opts.cache = 'no-store';
 				opts.headers = Object.assign({ 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }, opts.headers || {});
 			}
 		} catch (e) {}
-		return _origFetch(url, opts);
+		if (!ours) return _origFetch(url, opts);
+		/* Ανανέωση nonce από την κεφαλίδα που ήδη στέλνει το WordPress -- δες
+		 * refreshNonce() στο ecrm-util.js για το πλήρες σκεπτικό. Εδώ ΔΕΝ
+		 * αντικαθίσταται το τοπικό fetch με εκείνο του util (αυτό είναι αλλαγή
+		 * συμπεριφοράς και θέλει δικό της commit, βλ. σχόλιο εκεί) -- μπαίνει
+		 * μόνο η ανανέωση, γιατί η αυτόνομη φόρμα [ecrm_new_contract] δεν περνά
+		 * ΠΟΤΕ από το fetch του util και θα ήταν το ένα σημείο όπου το nonce δεν
+		 * φρεσκάρεται ποτέ -- ακριβώς η οθόνη που μένει ανοιχτή ώρες. */
+		return _origFetch(url, opts).then(function (r) {
+			try {
+				var fresh = r && r.headers && r.headers.get('X-WP-Nonce');
+				if (fresh) { ECRM.nonce = fresh; }
+			} catch (e) {}
+			return r;
+		});
 	}
 	function headers(json) {
 		var h = { 'X-WP-Nonce': ECRM.nonce };
@@ -37,6 +53,12 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			provider_id: null, program_id: null, energy_type: 'power', category: 'home',
 			price_type: 'fixed', customer_type: 'individual', activation_type: null, invoice_code: null,
 			contract_id: 0, customer_id: 0, extracted_json: null, files: [],
+			// Το κλειδί idempotency αυτής της «πρόθεσης δημιουργίας» (Επίπεδο Γ).
+			// Παράγεται μία φορά και ΔΕΝ αλλάζει σε αποτυχία: αν η αποθήκευση κοπεί
+			// για λάθος ΑΦΜ και ο συνεργάτης το διορθώσει, είναι ακόμα η ίδια
+			// αίτηση. Ανανεώνεται μόνο στο resetForm(), που είναι το μόνο σημείο
+			// όπου αρχίζει πραγματικά καινούργια αίτηση.
+			request_id: requestId(),
 			// wizard: πού είμαστε, και ως πού έχει φτάσει ο agent. Το δεύτερο
 			// ξεκλειδώνει τα κουμπιά της μπάρας — πίσω πάντα, μπροστά ως εκεί.
 			wstep: 1, wmax: 1,
@@ -1562,6 +1584,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		function resetForm() {
 			dirty = false;
 			state.contract_id = 0; state.customer_id = 0; state.extracted_json = null;
+			state.request_id = requestId();
 			state.provider_id = null; state.program_id = null; state.invoice_code = null; state.activation_type = null;
 			state.energy_type = 'power'; state.category = 'home'; state.price_type = 'fixed'; state.customer_type = 'individual';
 			state.files = []; state.filesUploaded = false;
@@ -2067,6 +2090,9 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				energy_type: state.energy_type, category: state.category, price_type: state.price_type,
 				customer_type: state.customer_type, activation_type: state.activation_type, invoice_code: state.invoice_code || undefined,
 				contract_id: state.contract_id || undefined, customer_id: state.customer_id || undefined,
+				// Μόνο σε δημιουργία: σε ενημέρωση ο server το αγνοεί ούτως ή άλλως,
+				// και το να το στέλναμε θα υπονοούσε ότι κάνει κάτι.
+				client_request_id: state.contract_id ? undefined : (state.request_id || undefined),
 				extracted_json: state.extracted_json || undefined, notes: q('[data-notes]').value || ''
 			};
 			payload.extra = {};
@@ -2393,9 +2419,15 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 						state.contract_id = d.contract_id; state.customer_id = d.customer_id;
 						dirty = false;
 						// An undefined status means "fields only, no transition".
-						toast(!status
-							? 'Οι αλλαγές αποθηκεύτηκαν.'
-							: (status === 'draft' ? 'Αποθηκεύτηκε προσωρινά.' : 'Η αίτηση οριστικοποιήθηκε.'));
+						// `replayed` σημαίνει ότι ο server αναγνώρισε επανάληψη του ίδιου
+						// αιτήματος και επέστρεψε την ΑΡΧΙΚΗ σύμβαση αντί να φτιάξει δεύτερη.
+						// «Αποθηκεύτηκε» θα ήταν ψέμα με καλή πρόθεση: ο συνεργάτης πρέπει να
+						// ξέρει ότι δεν έγινε τώρα.
+						toast(d.replayed
+							? 'Η αίτηση είχε ήδη καταχωρηθεί -- δεν δημιουργήθηκε δεύτερη.'
+							: (!status
+								? 'Οι αλλαγές αποθηκεύτηκαν.'
+								: (status === 'draft' ? 'Αποθηκεύτηκε προσωρινά.' : 'Η αίτηση οριστικοποιήθηκε.')));
 						// Finalising moves the form off draft, so the pair of
 						// buttons on screen has to move with it.
 						setStage(status || state.status);

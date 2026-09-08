@@ -65,19 +65,89 @@ export function can(capability) {
  */
 var _origFetch = window.fetch.bind(window);
 
+/*
+ * Το nonce ανανεώνεται μόνο του, από την κεφαλίδα που ήδη στέλνει το WordPress.
+ *
+ * Το `wp-includes/rest-api.php` (rest_cookie_check_errors) στέλνει σε ΚΑΘΕ
+ * επιτυχημένη REST απάντηση με cookie auth ένα φρέσκο `X-WP-Nonce`. Το
+ * διαβάζαμε ποτέ: το `ECRM.nonce` έμενε αυτό που τυπώθηκε inline στο
+ * wp_footer τη στιγμή που φόρτωσε η σελίδα. Μια καρτέλα ανοιχτή πάνω από
+ * δώδεκα ώρες -- κανονικό για συνεργάτη σε tablet -- περνούσε στο δεύτερο
+ * tick του nonce και μετά έληγε, και κάθε αποθήκευση γινόταν 403.
+ *
+ * Αυτό ΔΕΝ σώζει ένα ήδη ληγμένο nonce, και δεν υπάρχει τρόπος να το σώσει
+ * κανείς: με ληγμένο nonce το WordPress κόβει το αίτημα με 403 πριν φτάσει
+ * σε οποιοδήποτε permission_callback -- ένα δικό μας «GET /nonce» θα έπαιρνε
+ * το ίδιο 403. Κρατά το παράθυρο ανοιχτό όσο ο χρήστης είναι περιοδικά
+ * online· όταν έχει ήδη κλείσει, η απάντηση είναι να ξανασυνδεθεί.
+ *
+ * Γι' αυτό ΔΕΝ γράφτηκε το endpoint που προδιέγραφε το docs/OFFLINE-MODEL.md
+ * §2Γ: θα ήταν δεύτερος τρόπος να πάρεις κάτι που ήδη έρχεται μόνο του.
+ */
+function refreshNonce(response) {
+	try {
+		var fresh = response && response.headers && response.headers.get('X-WP-Nonce');
+
+		if (fresh) { ECRM.nonce = fresh; }
+	} catch (e) {}
+
+	return response;
+}
+
 export function fetch(url, opts) {
 	opts = opts || {};
+
+	var ours = false;
 
 	try {
 		var base = ECRM.rest.replace(/\/$/, '');
 
 		if (typeof url === 'string' && url.indexOf(base) === 0) {
+			ours = true;
 			opts.cache = 'no-store';
 			opts.headers = Object.assign({ 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }, opts.headers || {});
 		}
 	} catch (e) {}
 
-	return _origFetch(url, opts);
+	// Μόνο για τις δικές μας διαδρομές: η κεφαλίδα άλλου API δεν μας αφορά,
+	// και το `ours` το έχει ήδη αποφασίσει ο έλεγχος από πάνω.
+	return ours ? _origFetch(url, opts).then(refreshNonce) : _origFetch(url, opts);
+}
+
+/*
+ * Το αναγνωριστικό μιας «πρόθεσης δημιουργίας».
+ *
+ * Ενα uuid v4 που ταξιδεύει με το POST /contracts και ξαναστέλνεται αυτούσιο
+ * σε κάθε επανάληψη του ΙΔΙΟΥ αιτήματος: ο server δεσμεύει το κλειδί πριν
+ * γράψει οτιδήποτε, οπότε διπλό tap ή retry σε ασταθές δίκτυο επιστρέφει την
+ * αρχική σύμβαση αντί να φτιάξει δεύτερη. Δες RequestKey.php.
+ *
+ * Το `crypto.randomUUID` λείπει σε παλιότερα WebView (και σε κάθε μη-ασφαλές
+ * context), οπότε υπάρχει fallback πάνω σε `getRandomValues` -- τα bits της
+ * έκδοσης και της παραλλαγής γράφονται με το χέρι, γιατί ο server ελέγχει
+ * ρητά ότι είναι v4 και όχι v1.
+ */
+export function requestId() {
+	try {
+		if (crypto && typeof crypto.randomUUID === 'function') { return crypto.randomUUID(); }
+
+		var b = new Uint8Array(16);
+		crypto.getRandomValues(b);
+		b[6] = (b[6] & 0x0f) | 0x40;
+		b[8] = (b[8] & 0x3f) | 0x80;
+
+		var hex = Array.prototype.map.call(b, function (n) {
+			return ('0' + n.toString(16)).slice(-2);
+		}).join('');
+
+		return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) +
+			'-' + hex.slice(16, 20) + '-' + hex.slice(20);
+	} catch (e) {
+		// Χωρίς πηγή τυχαιότητας δεν στέλνουμε κλειδί καθόλου: ένα προβλέψιμο
+		// uuid θα ήταν χειρότερο από κανένα -- ο server αγνοεί το κενό και
+		// συμπεριφέρεται όπως πριν το Επίπεδο Γ.
+		return '';
+	}
 }
 
 /**
