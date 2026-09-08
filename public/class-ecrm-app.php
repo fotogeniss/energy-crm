@@ -218,6 +218,22 @@ class ECRM_App {
 			</aside>
 
 			<main class="ecrm-main">
+				<?php
+				/*
+				 * Offline banner (docs/OFFLINE-MODEL.md §2Β, commit Β) — άδειο
+				 * markup εδώ, η ecrm-app.js αποφασίζει πότε φαίνεται
+				 * (`navigator.onLine` + events `online`/`offline`). Ζει ΜΕΣΑ στο
+				 * `.ecrm-main`, πριν το topbar, ώστε να το σπρώχνει προς τα κάτω
+				 * σε κανονική ροή αντί για `position: fixed` πάνω από αυτό --
+				 * απλούστερο από το να συγχρονίζονται δύο sticky στοιχεία με
+				 * μεταβλητό ύψος. Σκόπιμα ΔΕΝ είναι sticky: σε scroll χάνεται
+				 * μαζί με το περιεχόμενο, όπως και το topbar παραμένει κολλημένο
+				 * -- αποδεκτός συμβιβασμός για πρώτη γραφή, όχι ξεχασμένο bug.
+				 */
+				?>
+				<div class="ecrm-offline" id="ecrm-offline" role="status" aria-live="polite" hidden>
+					Εκτός σύνδεσης — ό,τι κάνεις τώρα μπορεί να μην αποθηκευτεί.
+				</div>
 				<header class="ecrm-topbar">
 					<button type="button" class="ecrm-burger" data-mobnav-toggle aria-label="Μενού"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></button>
 					<span class="ecrm-topbar__brand">Energy <strong>CRM</strong></span>
