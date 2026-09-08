@@ -22,6 +22,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddComboMobileContactColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerContactPhoneColumn;
 use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerEventsTable;
 use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerNotesTable;
+use EnergyCRM\Persistence\Schema\Migrations\CreateRequestKeysTable;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerPhoneIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddGuaranteeRuleForeignKeys;
@@ -97,6 +98,7 @@ final class MigrationList
             new CreateCustomerNotesTable(),
             new CreateCustomerEventsTable(),
             new MigrateStatusVocabulary(),
+            new CreateRequestKeysTable(),
         ];
     }
 }

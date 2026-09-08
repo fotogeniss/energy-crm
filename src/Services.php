@@ -62,6 +62,7 @@ use EnergyCRM\Persistence\NotificationRepository;
 use EnergyCRM\Persistence\PartnerCardRepository;
 use EnergyCRM\Persistence\PayoutRepository;
 use EnergyCRM\Persistence\ProviderRepository;
+use EnergyCRM\Persistence\RequestKeyRepository;
 use EnergyCRM\Persistence\TaskRepository;
 use EnergyCRM\Persistence\UnprotectedDocuments;
 use EnergyCRM\Persistence\TeamActivityRepository;
@@ -103,6 +104,8 @@ final class Services
     private static ?TeamRepository $team = null;
 
     private static ?ProviderRepository $providers = null;
+
+    private static ?RequestKeyRepository $requestKeys = null;
 
     private static ?DashboardRepository $dashboard = null;
 
@@ -286,6 +289,14 @@ final class Services
         return self::$providers ??= new ProviderRepository();
     }
 
+    /**
+     * Οι δεσμεύσεις idempotency της δημιουργίας σύμβασης (Επίπεδο Γ).
+     */
+    public static function requestKeys(): RequestKeyRepository
+    {
+        return self::$requestKeys ??= new RequestKeyRepository();
+    }
+
     public static function partnerCard(): PartnerCardRepository
     {
         return self::$partnerCard ??= new PartnerCardRepository();
@@ -420,6 +431,7 @@ final class Services
         self::$team          = null;
         self::$partnerCard   = null;
         self::$providers     = null;
+        self::$requestKeys   = null;
         self::$dashboard     = null;
         self::$commissions   = null;
         self::$analytics     = null;

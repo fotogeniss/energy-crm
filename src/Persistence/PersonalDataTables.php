@@ -60,6 +60,12 @@ final class PersonalDataTables
             Tables::NOTIFICATIONS => 'contract_id',
             Tables::LEADS         => 'contract_id',
             Tables::TASKS         => 'contract_id',
+            // Η δέσμευση idempotency της δημιουργίας (Επίπεδο Γ). Δεν κρατά
+            // κανένα στοιχείο του πελάτη -- κρατά ένα uuid της συσκευής του
+            // συνεργάτη -- αλλά η ακμή προς τη σύμβαση είναι ζωντανή, οπότε
+            // μπαίνει εδώ αντί να δηλωθεί εξαίρεση: μια σβησμένη σύμβαση δεν
+            // έχει λόγο να αφήνει πίσω τη δέσμευση που τη γέννησε.
+            Tables::REQUEST_KEYS  => 'contract_id',
         ];
     }
 
@@ -76,6 +82,11 @@ final class PersonalDataTables
     {
         return [
             Tables::FILES => 'id, contract_id, doc_kind, filename, mime, created_at',
+            // Το `request_key` είναι τυχαίο uuid που παρήγαγε η συσκευή του
+            // συνεργάτη. Δεν λέει τίποτα στο υποκείμενο για τον εαυτό του και
+            // δείχνει σε τρίτον πώς δουλεύει η ουρά μας -- ίδιο σκεπτικό με το
+            // `path` των files ακριβώς από πάνω.
+            Tables::REQUEST_KEYS => 'id, contract_id, created_at, completed_at',
         ];
     }
 }

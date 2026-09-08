@@ -1,0 +1,25 @@
+Offline banner — honest UI όταν χάνεται η σύνδεση (Επίπεδο Β του offline-model)
+
+Δεύτερο στρώμα του docs/OFFLINE-MODEL.md (§2Β). Το (256) έκανε τα static
+assets να ανοίγουν χωρίς δίκτυο, αλλά τίποτα δεν έλεγε στον συνεργάτη ότι
+είναι offline. navigator.onLine + online/offline events (χωρίς heartbeat,
+επίτηδες απλό), μπάνερ .ecrm-offline μέσα στο .ecrm-main ώστε να βλέπει
+σωστά το σκούρο θέμα (σε αντίθεση με το .ecrm-toast που ζει εκτός .ecrm),
+toast στην επαναφορά.
+
+Παράλληλα διορθώθηκε ένα πραγματικό bug του (256): το <link rel="manifest">
+δεν εμφανιζόταν ποτέ, γιατί το wp_head hook καταχωρούνταν μέσα από το
+shortcode callback -- πολύ αργά. Μεταφέρθηκε σε JS μέσα στο ίδιο wp_footer
+script που κάνει το SW registration.
+
+Το -3 στο πλήθος unit tests που φάνηκε στο composer check:all μετά από αυτές
+τις αλλαγές διερευνήθηκε πλήρως: με git stash επιβεβαιώθηκε ότι το 1236
+υπάρχει ήδη στο ήδη-pushed 079a02a, πριν αγγιχτεί οποιοδήποτε αρχείο αυτού
+του commit -- άρα άσχετο με αυτή την αλλαγή. Η ρίζα του (πιθανό
+#[DataProvider] που σαρώνει φάκελο) μένει ανοιχτό, ξεχωριστό θέμα.
+
+Αρχεία: public/class-ecrm-app.php, public/assets/ecrm-app.css,
+public/assets/ecrm-app.js, docs/CHANGELOG.md (258).
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WTsKY6bJMV987pzmGYsFVo

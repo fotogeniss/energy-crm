@@ -19,6 +19,8 @@
  *                    δική του λίστα, για το badge του μενού (22/DB_VERSION)
  *   metrics        — ιστορικό λειτουργίας: (ημέρα, μετρητής, αριθμός), μόνο
  *                    αριθμοί, καμία σύνδεση με πρόσωπο (23/DB_VERSION)
+ *   request_keys   — idempotency στη δημιουργία σύμβασης: ένα uuid ανά πρόθεση
+ *                    δημιουργίας, δεσμευμένο πριν γραφτεί οτιδήποτε (24/DB_VERSION)
  *
  * Designed so future sessions can bolt on: network/team, commissions, mail.
  *
@@ -32,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '23';
+	const DB_VERSION = '24';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -525,6 +527,42 @@ class ECRM_DB {
 			value  BIGINT NOT NULL DEFAULT 0,
 			PRIMARY KEY (day, metric),
 			KEY metric_day (metric, day)
+		) {$charset};" );
+
+		/* --- request_keys (idempotency δημιουργίας) ------------------------
+		 *
+		 * Μία γραμμή ανά «πρόθεση δημιουργίας σύμβασης». Ο client στέλνει ένα
+		 * uuid v4 και το ξαναστέλνει αυτούσιο σε κάθε επανάληψη του ίδιου
+		 * αιτήματος· η δέσμευση γίνεται ΠΡΙΝ γραφτεί πελάτης ή σύμβαση, ώστε
+		 * ένα διπλό tap να μη γεννά δεύτερο πελάτη (ο πελάτης γράφεται πρώτος
+		 * στη ροή του ContractSaveController). Δες docs/OFFLINE-MODEL.md §2Γ.
+		 *
+		 * Το UNIQUE είναι σύνθετο -- χρήστης ΚΑΙ κλειδί: το uuid ανήκει στον
+		 * συνεργάτη που το έστειλε, ώστε να μην μπορεί κανείς να δεσμεύσει ή
+		 * να διαβάσει τη θέση άλλου. Πάνω σε αυτό το ευρετήριο στηρίζεται όλη
+		 * η διαιτησία: το INSERT IGNORE επιστρέφει 1 σε ακριβώς έναν από δύο
+		 * ταυτόχρονους -- η MySQL αποφασίζει, όχι η PHP.
+		 *
+		 * contract_id: ΖΩΝΤΑΝΗ ακμή προς σύμβαση, σε αντίθεση με το
+		 * deleted_contract_id του deletion_log παραπάνω -- η σύμβαση υπάρχει
+		 * ακόμα όταν γράφεται εδώ. Γι' αυτό λέγεται έτσι, μπαίνει κανονικά στη
+		 * σάρωση του PersonalDataCoverageTest, και καλύπτεται από τους δύο
+		 * καταναλωτές (PersonalDataTables::linkedToContracts()).
+		 *
+		 * Ολα τα timestamps τα γράφει η βάση (DEFAULT CURRENT_TIMESTAMP, NOW()
+		 * μέσα στο ερώτημα) -- ποτέ ώρα από PHP δίπλα τους, βλ.
+		 * TimeIsReadInOnePlaceTest.
+		 */
+		dbDelta( "CREATE TABLE {$p}request_keys (
+			id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			partner_user_id BIGINT UNSIGNED NOT NULL,
+			request_key     CHAR(36) NOT NULL,
+			contract_id     BIGINT UNSIGNED NULL,
+			created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			completed_at    DATETIME NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY partner_request (partner_user_id, request_key),
+			KEY contract_id (contract_id)
 		) {$charset};" );
 
 	}

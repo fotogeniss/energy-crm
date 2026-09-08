@@ -126,10 +126,40 @@ const step = function () {
 		!!atStep1 && atStep1.afm === '094014201' && atStep1.term_months === '24' && atStep1.notes === 'δοκιμή',
 		JSON.stringify(atStep1));
 
+	/* Το κλειδί ιδεμποτέντσιας (259). Ο διακομιστής αρνείται ό,τι δεν είναι
+	   UUID v4, οπότε το σχήμα ελέγχεται εδώ και όχι μόνο στην PHP. Και η
+	   σταθερότητα ΜΕΣΑ στη φόρμα είναι όλο το νόημα: αν κάθε αποθήκευση
+	   έβγαζε νέο κλειδί, το κλειδί δεν θα προστάτευε από τίποτα. */
+	console.log('\n5β. το κλειδί ιδεμποτέντσιας');
+	ok('έχει σχήμα UUID v4',
+		!!atStep1 && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+			.test(String(atStep1.client_request_id)),
+		String(atStep1 && atStep1.client_request_id));
+	ok('είναι το ΙΔΙΟ και στις τρεις αποθηκεύσεις της ίδιας φόρμας',
+		!!atStep3 && !!atStep4 && atStep1.client_request_id === atStep3.client_request_id
+			&& atStep1.client_request_id === atStep4.client_request_id,
+		String(atStep3 && atStep3.client_request_id) + ' / ' + String(atStep4 && atStep4.client_request_id));
+
 	console.log('\n6. reset: πίσω στο 1 και ξανακλείδωμα');
 	w.ECRMForm.reset();
 	ok('βήμα 1', step() === '1');
 	ok('τα 2-4 ξανακλείδωσαν', qa('[data-wgo]').slice(1).every(function (b) { return b.disabled; }));
+
+	/* Η άλλη πλευρά του ίδιου κλειδιού, και η επικίνδυνη: αν το reset() δεν
+	   έδινε νέο id, η ΔΕΥΤΕΡΗ σύμβαση που γράφει ο συνεργάτης θα έφτανε με το
+	   κλειδί της πρώτης -- ο διακομιστής θα απαντούσε «ήδη υπάρχει» και θα του
+	   επέστρεφε την προηγούμενη σύμβαση. Καμία σύμβαση δεν θα χανόταν με
+	   θόρυβο· απλώς δεν θα γραφόταν ποτέ. */
+	console.log('\n6β. νέα φόρμα, νέο κλειδί');
+	q('.ecrm-provider').click();
+	await tick();
+	q('[data-save-draft]').click();
+	await tick(); await tick();
+	const afterReset = posts[posts.length - 1];
+	ok('το reset() έδωσε καινούριο κλειδί',
+		!!afterReset && !!afterReset.client_request_id
+			&& afterReset.client_request_id !== atStep1.client_request_id,
+		String(afterReset && afterReset.client_request_id) + ' vs ' + String(atStep1.client_request_id));
 
 	/* Το ΑΦΜ κρίνει ΠΟΥ ανοίγει η επεξεργασία, και είναι ο ίδιος φύλακας που
 	   κρίνει αν θα τρέξει η αυτόματη εξαγωγή. Γεμάτο ΑΦΜ σημαίνει «τα έγγραφα

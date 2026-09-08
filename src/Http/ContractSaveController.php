@@ -29,10 +29,12 @@ use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\StatusEntryGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Domain\Contract\RequestKey;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
+use EnergyCRM\Persistence\RequestKeyRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -46,6 +48,7 @@ final class ContractSaveController implements Controller
         private readonly DraftExitGate $draftExit,
         private readonly CancellationGate $cancellation,
         private readonly StatusEntryGate $paperwork,
+        private readonly RequestKeyRepository $requestKeys,
     ) {
     }
 
@@ -70,15 +73,136 @@ final class ContractSaveController implements Controller
             'args'                => [
                 'contract_id' => ['type' => 'integer', 'default' => 0, 'minimum' => 0],
                 'customer_id' => ['type' => 'integer', 'default' => 0, 'minimum' => 0],
+                // Δηλωμένο εδώ ώστε να φαίνεται στο σχήμα της διαδρομής, αλλά
+                // η μορφή του ελέγχεται στο RequestKey -- ένα 'format' του WP
+                // δεν ξέρει τι είναι uuid v4 σε αντίθεση με v1.
+                'client_request_id' => ['type' => 'string', 'default' => ''],
             ],
         ]);
     }
 
+    /**
+     * Η μία πόρτα -- και το μόνο σημείο που ξέρει από idempotency.
+     *
+     * ## Γιατί περιτύλιγμα και όχι έξι κλήσεις μέσα στο perform()
+     *
+     * Η δέσμευση πρέπει να ελευθερώνεται σε ΚΑΘΕ άρνηση, αλλιώς ο συνεργάτης
+     * που διορθώνει ένα ΑΦΜ και ξαναπατά κλειδώνεται έξω από τη δική του
+     * δημιουργία. Το `perform()` επιστρέφει από επτά διαφορετικά σημεία, και
+     * ένας κανόνας που τηρείται σε έξι από τα επτά δεν είναι κανόνας -- είναι
+     * ακριβώς το σχήμα του σφάλματος που έκλεισε η (10). Εδώ υπάρχει μία
+     * απόφαση: 200 σημαίνει ολοκλήρωση, οτιδήποτε άλλο σημαίνει απελευθέρωση.
+     *
+     * ## Μόνο στη δημιουργία
+     *
+     * Σε ενημέρωση (`contract_id > 0`) το κλειδί αγνοείται: η εγγραφή πάει σε
+     * συγκεκριμένη γραμμή που υπάρχει ήδη, και η διπλή μετάβαση κόβεται από
+     * τον γράφο (χωρίς self-loops) και από το `ContractLifecycle::moveTo()`.
+     *
+     * ## Χωρίς κλειδί, όπως πριν
+     *
+     * Ενα αίτημα που δεν στέλνει `client_request_id` περνά ακριβώς όπως
+     * περνούσε ως τώρα. Αυτό είναι σκόπιμο και όχι παράλειψη: μια καρτέλα
+     * ανοιχτή από χθες τρέχει ακόμα το προηγούμενο JS από την cache, και δεν
+     * υπάρχει λόγος να της χαλάσει η αποθήκευση για ένα πεδίο που δεν ξέρει.
+     */
     public function save(WP_REST_Request $request): WP_REST_Response
     {
         $params = $request->get_json_params() ?: $request->get_params();
         $scope  = $this->scopes->forCurrentUser();
+        $sent   = (string) ($params['client_request_id'] ?? '');
 
+        if ($sent === '' || ((int) $request['contract_id']) > 0) {
+            return $this->perform($request, $params, $scope);
+        }
+
+        // Απορρίπτεται αντί να αγνοηθεί σιωπηλά: ένας client που στέλνει
+        // κλειδί νομίζει ότι προστατεύεται. Το να το πετούσαμε χωρίς να πούμε
+        // τίποτα θα του άφηνε την εντύπωση της προστασίας χωρίς την προστασία.
+        if (! RequestKey::isValid($sent)) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Μη έγκυρο αναγνωριστικό αιτήματος.',
+                'field' => 'client_request_id',
+            ], 422);
+        }
+
+        $key    = RequestKey::normalise($sent);
+        $userId = $scope->actorId();
+
+        if (! $this->requestKeys->claim($userId, $key)) {
+            return $this->answerForClaimedKey($userId, $key, $scope);
+        }
+
+        $response = $this->perform($request, $params, $scope);
+
+        if ($response->get_status() !== 200) {
+            $this->requestKeys->release($userId, $key);
+
+            return $response;
+        }
+
+        /** @var array<string, mixed> $data */
+        $data = $response->get_data();
+
+        $this->requestKeys->complete($userId, $key, (int) $data['contract_id']);
+
+        return $response;
+    }
+
+    /**
+     * Το κλειδί το κρατά ήδη κάποιος: τι λέμε στον client.
+     *
+     * Δύο διαφορετικά πράγματα, με διαφορετική απάντηση το καθένα. Αν η
+     * δέσμευση έχει αποτέλεσμα, αυτή είναι η επανάληψη που περιμέναμε και
+     * επιστρέφουμε την ΑΡΧΙΚΗ σύμβαση -- 200, ίδιο σχήμα με μια κανονική
+     * αποθήκευση, ώστε ο client να μη χρειάζεται δεύτερο μονοπάτι. Αν δεν
+     * έχει, το πρώτο αίτημα τρέχει αυτή τη στιγμή: 409 και ξαναδοκίμασε, ποτέ
+     * δεύτερη δημιουργία.
+     *
+     * Το `replayed` λέει την αλήθεια στο UI: «αποθηκεύτηκε» και «ήταν ήδη
+     * αποθηκευμένο» δεν είναι το ίδιο γεγονός, και το δεύτερο δεν πρέπει να
+     * μοιάζει με το πρώτο.
+     */
+    private function answerForClaimedKey(int $userId, string $key, UserScope $scope): WP_REST_Response
+    {
+        $contractId = $this->requestKeys->contractFor($userId, $key);
+
+        if ($contractId === null) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Η ίδια αίτηση βρίσκεται ήδη σε εξέλιξη. Δοκίμασε ξανά σε λίγο.',
+            ], 409);
+        }
+
+        $existing = $this->contracts->find($contractId, $scope);
+
+        // Η σύμβαση δημιουργήθηκε και μετά διαγράφηκε ή βγήκε από την εμβέλεια.
+        // Σιωπηλή νέα δημιουργία εδώ θα ήταν το χειρότερο: ο συνεργάτης θα
+        // έβλεπε «αποθηκεύτηκε» και θα είχε δύο αιτήσεις για τον ίδιο πελάτη.
+        if ($existing === null) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Η αίτηση είχε ήδη καταχωρηθεί, αλλά δεν είναι πια διαθέσιμη.',
+            ], 409);
+        }
+
+        return new WP_REST_Response([
+            'ok'          => true,
+            'contract_id' => $contractId,
+            'customer_id' => (int) ($existing['customer_id'] ?? 0),
+            'status'      => $existing['status'] ?? null,
+            'replayed'    => true,
+        ], 200);
+    }
+
+    /**
+     * Η αποθήκευση η ίδια -- αμετάβλητη από το Επίπεδο Γ.
+     *
+     * @param array<string, mixed> $params
+     */
+    private function perform(WP_REST_Request $request, array $params, UserScope $scope): WP_REST_Response
+    {
         // Resolve the target before touching anything: a contract the actor
         // cannot see is indistinguishable from one that does not exist.
         $contractId = (int) $request['contract_id'];

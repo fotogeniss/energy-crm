@@ -22,6 +22,7 @@ namespace EnergyCRM\Infrastructure;
 
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\MetricsRepository;
+use EnergyCRM\Persistence\RequestKeyRepository;
 
 final class Retention
 {
@@ -29,6 +30,16 @@ final class Retention
 
     /** Days an extraction payload is kept before being cleared. */
     private const DEFAULT_DAYS = 90;
+
+    /**
+     * Ημέρες που κρατιέται μια δέσμευση idempotency (Επίπεδο Γ).
+     *
+     * Η δέσμευση χρησιμεύει όσο ο client μπορεί ακόμα να επαναλάβει το ίδιο
+     * αίτημα. Η ουρά του (Δ) θα έχει δικό της TTL ωρών, οπότε επτά ημέρες
+     * είναι άνετο περιθώριο και όχι στόχος -- ένα uuid ανά νέα σύμβαση σε
+     * ~2.000 καρτέλες είναι μερικές χιλιάδες γραμμές, όχι όγκος.
+     */
+    private const REQUEST_KEY_DAYS = 7;
 
     public function __construct(private readonly ContractRepository $contracts)
     {
@@ -83,6 +94,12 @@ final class Retention
         // θα ήταν ένα ακόμη πράγμα που μπορεί να μην τρέξει -- ακριβώς το
         // πρόβλημα που μετράει ο ίδιος ο πίνακας.
         (new MetricsRepository())->prune(Metrics::keepDays());
+
+        // Ιδιος λόγος με το ιστορικό λειτουργίας ακριβώς από πάνω: σβήσιμο
+        // λίγων γραμμών μια φορά την ημέρα δεν αξίζει δική του cron εγγραφή --
+        // κάθε προγραμματισμένη εργασία είναι ένα ακόμη πράγμα που μπορεί να
+        // μην τρέξει.
+        (new RequestKeyRepository())->purge(self::REQUEST_KEY_DAYS);
     }
 
     /**

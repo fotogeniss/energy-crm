@@ -74,6 +74,7 @@ final class PersonalDataEraser
             'events'         => 0,
             'notifications'  => 0,
             'leads'          => 0,
+            'request_keys'   => 0,
             'tasks'          => 0,
             'customer_notes' => 0,
             'customer_events' => 0,
@@ -87,6 +88,7 @@ final class PersonalDataEraser
             $report['events']        = $this->eraseEvents($contractIds);
             $report['notifications'] = $this->eraseNotifications($contractIds);
             $report['leads']         = $this->eraseLeads($contractIds);
+            $report['request_keys']  = $this->eraseRequestKeys($contractIds);
         }
 
         $report['tasks']          = $this->eraseTasks($customerId, $contractIds);
@@ -286,6 +288,49 @@ final class PersonalDataEraser
             $contractIds,
             [self::REDACTED]
         );
+    }
+
+    /**
+     * Οι δεσμεύσεις idempotency των σβησμένων συμβάσεων (Επίπεδο Γ).
+     *
+     * DELETE και όχι ανωνυμοποίηση, ίδια δικαιολογία με το eraseCustomerNotes()
+     * παρακάτω: η γραμμή ΕΙΝΑΙ ένα uuid και δύο χρονοσφραγίδες -- δεν μένει
+     * τίποτα με νόημα αν σβηστεί το περιεχόμενό της, και μια δέσμευση που
+     * δείχνει σε σύμβαση χωρίς πρόσωπο δεν εξυπηρετεί κανέναν.
+     *
+     * Παρενέργεια που είναι σωστή και όχι ατύχημα: μετά από αίτημα διαγραφής,
+     * ένα καθυστερημένο replay με το ίδιο κλειδί θα δημιουργήσει νέα σύμβαση
+     * αντί να επιστρέψει τη σβησμένη. Η διαγραφή είναι τελεσίδικη· το να
+     * κρατούσαμε τη δέσμευση ΓΙΑ να θυμόμαστε τι σβήσαμε θα ήταν ακριβώς αυτό
+     * που το αίτημα ζήτησε να μη γίνει.
+     *
+     * @param list<int> $contractIds
+     */
+    private function eraseRequestKeys(array $contractIds): int
+    {
+        global $wpdb;
+
+        if ($contractIds === []) {
+            return 0;
+        }
+
+        // Ρητό literal, όπως στο eraseCustomerNotes(): το
+        // PersonalDataCoverageTest διαβάζει αυτό το αρχείο σαν κείμενο.
+        $keyColumn = 'contract_id';
+
+        $idPlaceholders = $this->idPlaceholders($contractIds);
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $deleted = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM %i WHERE {$keyColumn} IN ({$idPlaceholders})",
+                Tables::name(Tables::REQUEST_KEYS),
+                ...$contractIds
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $deleted === false ? 0 : (int) $deleted;
     }
 
     /**

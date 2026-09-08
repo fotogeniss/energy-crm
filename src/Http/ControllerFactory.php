@@ -80,7 +80,8 @@ final class ControllerFactory
                 $lifecycle,
                 $draftExit,
                 $cancel,
-                Services::paperworkGate()
+                Services::paperworkGate(),
+                Services::requestKeys()
             ),
             new ContractStatusController(
                 $scope,
