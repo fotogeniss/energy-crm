@@ -232,7 +232,25 @@ class ECRM_App {
 				 */
 				?>
 				<div class="ecrm-offline" id="ecrm-offline" role="status" aria-live="polite" hidden>
-					Εκτός σύνδεσης — ό,τι κάνεις τώρα μπορεί να μην αποθηκευτεί.
+					Εκτός σύνδεσης — ό,τι κάνεις τώρα μπαίνει σε ουρά και θα σταλεί μόλις γυρίσει η σύνδεση.
+				</div>
+				<?php
+				/*
+				 * Η ουρά εκτός σύνδεσης (260, docs/OFFLINE-MODEL.md §2Δ).
+				 *
+				 * Ξεχωριστή λωρίδα από το banner από πάνω, και όχι δεύτερο
+				 * μήνυμα μέσα σε εκείνο: λένε διαφορετικά πράγματα και
+				 * εμφανίζονται σε διαφορετικές στιγμές. Το πρώτο είναι «δεν
+				 * έχεις δίκτυο τώρα». Αυτό είναι «κάτι δικό σου δεν έχει
+				 * φύγει ακόμα» -- και μένει ορατό ΚΑΙ όταν η σύνδεση έχει
+				 * επανέλθει, όσο υπάρχει έστω μία αίτηση σε αναμονή. Ακριβώς
+				 * τότε χρειάζεται περισσότερο: ο συνεργάτης βλέπει «online»
+				 * και θα υπέθετε ότι όλα στάλθηκαν.
+				 */
+				?>
+				<div class="ecrm-queuebar" id="ecrm-queue" role="status" aria-live="polite" hidden>
+					<span data-queue-text></span>
+					<button type="button" class="ecrm-queuebar__btn" data-queue-retry>Στείλε τώρα</button>
 				</div>
 				<header class="ecrm-topbar">
 					<button type="button" class="ecrm-burger" data-mobnav-toggle aria-label="Μενού"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></button>

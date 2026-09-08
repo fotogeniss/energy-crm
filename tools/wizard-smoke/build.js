@@ -38,6 +38,14 @@ function openCustomerContracts(){ /* no-op: το smoke test δεν κάνει π
  * output, οπότε μια διαφορά σημαίνει αλλαγή κώδικα και όχι τύχη. */
 var __rid = 0;
 function requestId(){ __rid++; return ('0000000' + __rid).slice(-8) + '-0000-4000-8000-000000000000'; }
+/* Η ουρά (@energy-crm/queue) ελέγχεται ΞΕΧΩΡΙΣΤΑ, με πραγματικό IndexedDB,
+ * στο queue-run.js. Εδώ μπαίνουν κατάσκοποι: αυτό που χρειάζεται να αποδειχθεί
+ * στη φόρμα δεν είναι πώς αποθηκεύει η ουρά, αλλά ΟΤΙ η φόρμα τη φωνάζει --
+ * και με τι. */
+window.__queued = [];
+function enqueueContract(p, f){ window.__queued.push({ what: 'contract', payload: p, files: (f || []).length }); return Promise.resolve({ ok: true }); }
+function enqueueFiles(id, f, rid){ window.__queued.push({ what: 'files', contractId: id, files: (f || []).length, rid: rid }); return Promise.resolve({ ok: true }); }
+function forget(id){ window.__queued.push({ what: 'forget', id: id }); return Promise.resolve(); }
 `);
 if (js === before) { console.error('Δεν βρέθηκε import στο ecrm-form.js — άλλαξε η κεφαλή του αρχείου.'); process.exit(2); }
 if (/^import /m.test(js)) { console.error('Έμεινε import χωρίς stub στο ecrm-form.js — δες την κεφαλή.'); process.exit(2); }

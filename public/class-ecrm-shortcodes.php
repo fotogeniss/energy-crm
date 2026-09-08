@@ -64,6 +64,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/form'             => 'ecrm-form.js',
 		'@energy-crm/app'              => 'ecrm-app.js',
 		'@energy-crm/litsa'            => 'ecrm-litsa.js',
+		'@energy-crm/queue'            => 'ecrm-queue.js',
 	];
 
 	/** What each module imports, so the map carries the whole graph. */
@@ -127,10 +128,17 @@ class ECRM_Shortcodes {
 			'@energy-crm/navigate',
 			'@energy-crm/scope',
 		],
-		'@energy-crm/form'             => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
+		'@energy-crm/queue'            => [ '@energy-crm/util' ],
+		'@energy-crm/form'             => [
+			'@energy-crm/util',
+			'@energy-crm/format',
+			'@energy-crm/navigate',
+			'@energy-crm/queue',
+		],
 		'@energy-crm/app'              => [
 			'@energy-crm/util',
 			'@energy-crm/navigate',
+			'@energy-crm/queue',
 			'@energy-crm/view-detail',
 			'@energy-crm/view-contracts',
 			'@energy-crm/view-pending',
@@ -265,6 +273,14 @@ class ECRM_Shortcodes {
 			// ContractStatusController::routes()) -- αυτό είναι μόνο για να
 			// αποφασίσει το UI αν θα προσφέρει τη δεύτερη πύλη μετά από 409.
 			'isAdmin'  => current_user_can( 'manage_options' ),
+			// Ποιανού είναι η ουρά εκτός σύνδεσης (260). Σε κοινόχρηστο tablet
+			// call center, μια αίτηση που περιμένει στη συσκευή ΔΕΝ επιτρέπεται
+			// να σταλεί όταν έχει συνδεθεί άλλος συνεργάτης: θα δημιουργούσε τη
+			// σύμβαση στο δικό του όνομα, με τον πελάτη του πρώτου. Δεν είναι
+			// μυστικό -- ο ίδιος αριθμός ταξιδεύει ήδη σε κάθε απάντηση του API
+			// ως partner_user_id -- και δεν αντικαθιστά κανέναν έλεγχο: ο
+			// server επιβάλλει το UserScope ξανά, όπως πάντα.
+			'userId'   => get_current_user_id(),
 		] );
 	}
 

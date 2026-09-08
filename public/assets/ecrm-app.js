@@ -1,5 +1,6 @@
 import { api, esc, fetch, H, toast } from '@energy-crm/util';
 import { wire } from '@energy-crm/navigate';
+import { count as queueCount, flush as queueFlush, onChange as onQueueChange, purgeExpired, retryNow } from '@energy-crm/queue';
 import { openDetail } from '@energy-crm/view-detail';
 import { loadContracts, setContractsFilter } from '@energy-crm/view-contracts';
 import { loadPending } from '@energy-crm/view-pending';
@@ -103,12 +104,83 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		// σε κάθε φόρτωση σελίδας (ήδη online) θα ήταν θόρυβος χωρίς νόημα.
 		if (wasOffline) { toast('Η σύνδεση επανήλθε.'); }
 		wasOffline = false;
+		drainQueue();
 	});
 	window.addEventListener('offline', function () {
 		wasOffline = true;
 		paintOnline();
 	});
 	paintOnline();
+
+	// ---- ουρά εκτός σύνδεσης (docs/OFFLINE-MODEL.md §2Δ) -------------------
+	// Το κέλυφος είναι το ΜΟΝΟ σημείο που ξέρει για την ουρά συνολικά: η φόρμα
+	// βάζει μέσα, εδώ αδειάζει. Ο λόγος είναι ότι η φόρμα ζει μόνο όσο ο
+	// συνεργάτης βρίσκεται στην οθόνη «Νέα Σύμβαση», ενώ οι αιτήσεις πρέπει να
+	// φεύγουν όποια οθόνη κι αν κοιτά -- και ιδίως όταν δεν κοιτά καμία.
+	var queueEl   = app.querySelector('#ecrm-queue');
+	var queueText = app.querySelector('[data-queue-text]');
+	var queueBtn  = app.querySelector('[data-queue-retry]');
+
+	function paintQueue(n) {
+		if (!queueEl) { return; }
+
+		queueEl.hidden = n === 0;
+
+		if (n > 0 && queueText) {
+			queueText.textContent = n === 1
+				? 'Μία αίτηση δεν έχει σταλεί ακόμα.'
+				: n + ' αιτήσεις δεν έχουν σταλεί ακόμα.';
+		}
+	}
+
+	function drainQueue() {
+		return queueFlush().then(function (rep) {
+			if (rep.sent) {
+				toast(rep.sent === 1 ? 'Στάλθηκε 1 αίτηση σε αναμονή.' : 'Στάλθηκαν ' + rep.sent + ' αιτήσεις σε αναμονή.');
+			}
+
+			// Το nonce έχει λήξει (ή έφυγε το cookie). Το (259) έδειξε ότι
+			// φρέσκο nonce έρχεται σε κάθε ΕΠΙΤΥΧΗ απάντηση -- εδώ όμως δεν
+			// υπήρξε καμία επιτυχής απάντηση για ώρες, οπότε δεν υπάρχει
+			// τίποτα να το ανανεώσει. Το ΜΟΝΟ που δουλεύει είναι νέα φόρτωση
+			// σελίδας, που ξανατυπώνει nonce όσο ζει η σύνδεση του χρήστη.
+			// Λέγεται όπως είναι· η σιωπηλή απόρριψη απαγορεύεται ρητά (§2Δ).
+			if (rep.auth) {
+				toast('Ανανέωσε τη σελίδα για να σταλούν οι αιτήσεις που περιμένουν.', false);
+			}
+
+			if (rep.blocked) {
+				toast(rep.blocked === 1
+					? 'Μία αίτηση απορρίφθηκε και περιμένει διόρθωση.'
+					: rep.blocked + ' αιτήσεις απορρίφθηκαν και περιμένουν διόρθωση.', false);
+			}
+
+			return rep;
+		});
+	}
+
+	if (queueBtn) {
+		queueBtn.addEventListener('click', function () {
+			queueBtn.disabled = true;
+			retryNow().finally(function () { queueBtn.disabled = false; });
+		});
+	}
+
+	onQueueChange(paintQueue);
+	queueCount().then(paintQueue);
+
+	// Ο,τι πέρασε το TTL φεύγει πριν από κάθε άλλη κουβέντα -- και ο
+	// συνεργάτης το μαθαίνει, γιατί «έληξε και σβήστηκε» είναι ακριβώς το
+	// είδος του γεγονότος που δεν επιτρέπεται να συμβεί σιωπηλά.
+	purgeExpired().then(function (n) {
+		if (n) {
+			toast(n === 1
+				? 'Μία αίτηση σε αναμονή έληξε και διαγράφηκε — δεν στάλθηκε.'
+				: n + ' αιτήσεις σε αναμονή έληξαν και διαγράφηκαν — δεν στάλθηκαν.', false);
+		}
+
+		return drainQueue();
+	}).catch(function () {});
 
 	// ---- εμφάνιση: ανοιχτό / σκούρο -----------------------------------------
 	// Το data-theme το γράφει ήδη η PHP στο ίδιο το .ecrm, οπότε εδώ μένει μόνο
