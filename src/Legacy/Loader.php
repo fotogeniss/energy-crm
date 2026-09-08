@@ -61,6 +61,7 @@ final class Loader
             'public/class-ecrm-app.php',
             'public/class-ecrm-tracking.php',
             'public/class-ecrm-intake.php',
+            'public/class-ecrm-pwa.php',
         ];
     }
 
@@ -90,6 +91,7 @@ final class Loader
             'ECRM_App',
             'ECRM_Tracking',
             'ECRM_Intake',
+            'ECRM_Pwa',
         ];
     }
 

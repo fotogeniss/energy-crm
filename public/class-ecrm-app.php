@@ -37,6 +37,8 @@ class ECRM_App {
 		wp_enqueue_script_module( '@energy-crm/app' );
 		wp_enqueue_script_module( '@energy-crm/litsa' );
 
+		self::pwa_assets();
+
 		global $wpdb;
 		$user   = wp_get_current_user();
 		$accent = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'accent_color' ) : '';
@@ -385,6 +387,62 @@ class ECRM_App {
 		</div>
 		<?php
 		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Το manifest link στο <head> + η εγγραφή του service worker.
+	 *
+	 * Ζει ΕΔΩ και όχι μέσα στο κοινό `ECRM_Shortcodes::print_config()` -- το
+	 * «εγκατέστησέ το σαν app» έχει νόημα μόνο για το `[energy_crm_app]`, όχι
+	 * για το αυτόνομο `[energy_crm_new_contract]` (ο πελάτης/πωλητής που
+	 * ανοίγει μόνο τη φόρμα δεν χρειάζεται εικονίδιο CRM στην αρχική οθόνη
+	 * του). Το πλήρες σκεπτικό είναι στο `docs/OFFLINE-MODEL.md` §2Α.
+	 *
+	 * ## AUDIT 08/09: γιατί ΔΕΝ περνά από `wp_head`
+	 *
+	 * Πρώτη γραφή έβαζε το `<link rel="manifest">` σε `add_action('wp_head', ...)`
+	 * μέσα από ΕΔΩ -- λάθος, και το έπιασε ζωντανή δοκιμή πριν το commit, όχι
+	 * κάποιο test. Το `wp_head` εκτελείται ΠΡΙΝ από το `<body>` -- δηλαδή πριν
+	 * καν τρέξει το ίδιο το shortcode που καλεί αυτή τη μέθοδο. Ένα
+	 * `add_action('wp_head', ...)` που καταχωρείται ΜΕΣΑ σε shortcode callback
+	 * φτάνει πάντα αργά: το hook έχει ήδη πυροδοτηθεί, τίποτα δεν τυπώνεται,
+	 * και το manifest link απουσιάζει ολοκληρωτικά -- επιβεβαιώθηκε με πλήρη
+	 * αναζήτηση στο `document.documentElement.outerHTML`, όχι μόνο σε ένα
+	 * κομμάτι του `<head>`. Το `wp_footer` δουλεύει (γι' αυτό η εγγραφή SW,
+	 * ίδιο μοτίβο με το `print_config()`, ΠΕΡΝΟΥΣΕ κανονικά): εκτελείται ΜΕΤΑ
+	 * το `<body>`, άρα μετά και το ίδιο το shortcode.
+	 *
+	 * Διόρθωση: το link element φτιάχνεται και μπαίνει στο `<head>` με JS,
+	 * μέσα στο ίδιο inline script του `wp_footer` που κάνει την εγγραφή SW.
+	 * Δουλεύει ανεξάρτητα από τη σειρά hooks -- `document.head` υπάρχει ήδη
+	 * πολύ πριν φτάσει το script στο footer -- και είναι το ίδιο μοτίβο που
+	 * χρησιμοποιούν browsers/frameworks για δυναμικά manifest links.
+	 */
+	private static function pwa_assets(): void {
+		static $done = false;
+
+		if ( $done || ! class_exists( 'ECRM_Pwa' ) ) {
+			return;
+		}
+
+		$done = true;
+
+		add_action( 'wp_footer', static function (): void {
+			$manifest_url = wp_json_encode( ECRM_Pwa::manifest_url() );
+			$sw_url       = wp_json_encode( ECRM_Pwa::sw_url() );
+
+			wp_print_inline_script_tag(
+				'(function () {'
+					. ' var l = document.createElement("link"); l.rel = "manifest"; l.href = ' . $manifest_url . ';'
+					. ' document.head.appendChild(l);'
+					. ' if ("serviceWorker" in navigator) {'
+					. ' window.addEventListener("load", function () {'
+					. ' navigator.serviceWorker.register(' . $sw_url . ').catch(function () {});'
+					. ' }); }'
+					. ' })();',
+				[ 'id' => 'ecrm-pwa-register' ]
+			);
+		} );
 	}
 
 	/** Inline SVG icon set (stroke, currentColor). */

@@ -7,6 +7,74 @@
 
 ---
 
+### (256) PWA shell — manifest + service worker, ΜΟΝΟ για static assets
+
+**Πρώτο στρώμα του offline-model** (`docs/OFFLINE-MODEL.md`, γράφτηκε 08/09
+μετά από ρητό αίτημα: ο συνεργάτης μπορεί να χάσει δίκτυο κάποια στιγμή, όχι
+για ώρες, και το app να μοιάζει native σε κινητό/tablet). Το ίδιο έγγραφο
+απέρριψε ρητά Capacitor/Cordova/TWA (η κάμερα ήδη δουλεύει σαν web, βλ.
+`data-camera` input στο `class-ecrm-shortcodes.php`, 23/08) και το πλήρες
+offline-first (Επίπεδο 3 -- το `UserScope` επιβάλλεται server-side σε κάθε
+request, τοπική βάση θα ήταν επιφάνεια ασφαλείας χωρίς πραγματικό όφελος
+εδώ).
+
+**Νέα κλάση `ECRM_Pwa`** (`public/class-ecrm-pwa.php`), σερβίρει δύο
+στατικά αρχεία από τη **ρίζα** του site μέσω `template_redirect` + query
+arg -- ίδιο μοτίβο με `ECRM_Tracking`/`ECRM_Intake`, όχι rewrite rule:
+
+- `?ecrm_manifest=1` -- `manifest.json`, με `name`/`theme_color` από τις
+  ίδιες ρυθμίσεις (`ECRM_Admin::get('company_name'|'accent_color')`) που
+  ήδη χρησιμοποιεί η δημόσια σελίδα του `ECRM_Intake`, και `start_url` που
+  διαβάζει την ΠΡΑΓΜΑΤΙΚΗ σελίδα όπου ζει το `[energy_crm_app]` shortcode
+  (`get_permalink()`), όχι τη ρίζα του site -- ο χρήστης που ανοίγει το
+  εικονίδιο πρέπει να μπει κατευθείαν στο CRM.
+- `?ecrm_sw=1` -- το περιεχόμενο του `public/assets/ecrm-sw.js`.
+
+**Γιατί από τη ρίζα:** το scope ενός service worker είναι εξ ορισμού ο
+φάκελος του URL του. Αν σερβιριζόταν από το `public/assets/` του plugin θα
+κάλυπτε μόνο εκείνο τον φάκελο -- ποτέ την πραγματική σελίδα του CRM, που ο
+ιδιοκτήτης του site διαλέγει ελεύθερα. Η ρίζα είναι το μόνο scope που την
+καλύπτει σίγουρα. Αυτό ΔΕΝ σημαίνει ότι το SW «βλέπει» όλο το site: ο
+`fetch` handler στο `ecrm-sw.js` αγνοεί ρητά οτιδήποτε δεν είναι GET προς
+`/public/assets/*.js|css` του ίδιου origin -- κάθε άλλο αίτημα (wp-admin,
+REST, άλλα plugins/θέματα) περνά ανέγγιχτο, σαν να μην υπήρχε service
+worker.
+
+**Τι ΔΕΝ κάνει αυτό το commit, σκόπιμα:** καμία σελίδα HTML δεν μπαίνει σε
+cache, κανένα REST call, τίποτα εκτός GET. Το `?ver=<filemtime>` που ήδη
+κουβαλά κάθε asset URL (`ECRM_Shortcodes::asset_version()`) κάνει το
+cache-busting μόνο του -- αλλαγμένο αρχείο = αλλαγμένο URL = νέα εγγραφή
+cache, χωρίς το `ecrm-sw.js` να χρειάζεται να ξέρει τίποτα για εκδόσεις·
+το `CACHE_NAME` του αλλάζει μόνο όταν αλλάζει η ίδια η λογική caching. Η
+ουρά εγγραφής (offline write queue) και το cache διαβάσματος λιστών μένουν
+ρητά για επόμενα, ξεχωριστά commits (Γ/Δ/Ζ στο `OFFLINE-MODEL.md`) -- αυτό
+εδώ είναι μόνο «τα ίδια αρχεία ανοίγουν χωρίς δίκτυο, τα δεδομένα πάντα
+φρέσκα».
+
+Το `<link rel="manifest">` και η εγγραφή του service worker ζουν μέσα στο
+`ECRM_App::pwa_assets()` (νέο, `public/class-ecrm-app.php`) -- ΜΟΝΟ στο
+`[energy_crm_app]`, όχι στο αυτόνομο `[energy_crm_new_contract]`: το
+«εγκατέστησέ το σαν app» έχει νόημα μόνο για το πλήρες CRM, όχι για κάποιον
+που ανοίγει απλώς μια φόρμα. Το link περνά από `wp_head` (πρέπει να είναι
+μέσα στο πραγματικό `<head>`, το shortcode τυπώνεται μέσα στο `<body>`), η
+εγγραφή από `wp_footer`, ίδιο μοτίβο timing με το υπάρχον `print_config()`.
+
+**Εικονίδια** (`public/assets/icons/`, νέος φάκελος): δεν υπήρχε κανένα
+υπάρχον logo στο repo -- μόνο το κείμενο «E» στο sidebar (`.ecrm-brand__mark`).
+Παράχθηκαν προγραμματιστικά τρία PNG (192, 512, και ένα maskable-512 με
+γεμάτο φόντο για το safe-zone crop του Android) στο ίδιο ύφος: accent χρώμα
+`#c2f04a` φόντο, σκούρο `#1a2208` γράμμα «E» -- ίδιο ζεύγος χρωμάτων με το
+`--accent`/`--accent-text` που ήδη ορίζει η δημόσια σελίδα του
+`ECRM_Intake`. Εγκρίθηκαν από τον ιδιοκτήτη πριν μπουν στο manifest.
+
+**Καμία δοκιμή δεν προστέθηκε.** Ίδια επιλογή με τον `ECRM_Intake` και τον
+`ECRM_Tracking`: raw-HTML/στατικό περιεχόμενο χωρίς λογική άξια unit test,
+καμία υπάρχουσα σουίτα δεν καλύπτει ανάλογες κλάσεις. Επιβεβαιώνεται μόνο
+χειροκίνητα (άνοιγμα `?ecrm_manifest=1`/`?ecrm_sw=1`, DevTools →
+Application → Service Workers).
+
+---
+
 ### (255) Το `RejectionFollowUp` έλεγε «απέρριψε ο πάροχος» για κάθε ακύρωση από εμάς
 
 **Εύρημα, από αναδρομικό έλεγχο του commit (254) μετά το commit.** Το
