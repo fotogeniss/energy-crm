@@ -129,6 +129,22 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	padding: 8px 16px;
 }
 .ecrm-offline[hidden] { display: none; }
+/* Η ουρά εκτός σύνδεσης (260). Amber και όχι --err: δεν είναι σφάλμα, είναι
+   εκκρεμότητα -- κάτι κρατήθηκε σωστά και περιμένει. Το κόκκινο από πάνω
+   ανήκει στην πραγματική αποσύνδεση, και δύο κόκκινες λωρίδες μαζί θα έκαναν
+   και τις δύο θόρυβο. */
+.ecrm-queuebar {
+	display: flex; align-items: center; justify-content: center; gap: 12px;
+	background: var(--amber); color: var(--on-accent);
+	font-size: var(--fs-13); font-weight: 700; text-align: center;
+	padding: 8px 16px;
+}
+.ecrm-queuebar[hidden] { display: none; }
+.ecrm-queuebar__btn {
+	border: 1px solid currentColor; background: transparent; color: inherit;
+	border-radius: 8px; padding: 3px 10px; font: inherit; cursor: pointer;
+}
+.ecrm-queuebar__btn:disabled { opacity: .55; cursor: default; }
 .ecrm-topbar {
 	position: sticky; top: 0; z-index: 20;
 	display: flex; align-items: center; justify-content: space-between; gap: 12px;

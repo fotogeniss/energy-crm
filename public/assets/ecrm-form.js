@@ -1,4 +1,5 @@
 import { api, esc, rejectedNote, requestId, toast } from '@energy-crm/util';
+import { enqueueContract, enqueueFiles, forget } from '@energy-crm/queue';
 import { energyLabel } from '@energy-crm/format';
 import { openCustomerContracts } from '@energy-crm/navigate';
 
@@ -1912,7 +1913,20 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 						toast(note, false);
 					}
 				})
-				.catch(function () { toast('Τα έγγραφα δεν ανέβηκαν — σφάλμα δικτύου.', false); });
+				.catch(function () {
+					/* Η μισή αποτυχία που έτρωγε ταυτότητες: η σύμβαση ΕΧΕΙ
+					 * γραφτεί, τα έγγραφα όχι. Πριν από την ουρά (260) εδώ
+					 * υπήρχε μόνο ένα toast -- και επειδή το `dirty` είχε ήδη
+					 * μηδενιστεί από την επιτυχή αποθήκευση, ούτε το
+					 * beforeunload προειδοποιούσε. Η φωτογραφία της
+					 * ταυτότητας χανόταν οριστικά, online, χωρίς κανένα
+					 * offline σενάριο. */
+					enqueueFiles(state.contract_id, state.files, state.request_id).then(function (r) {
+						toast(r && r.ok
+							? 'Τα έγγραφα μπήκαν σε ουρά — θα σταλούν μόλις γυρίσει το δίκτυο.'
+							: ((r && r.reason) || 'Τα έγγραφα δεν ανέβηκαν — σφάλμα δικτύου.'), !!(r && r.ok));
+					});
+				});
 		}
 
 		/*
@@ -2410,14 +2424,51 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			doSave(status, btn);
 		}
 
+		/**
+		 * Η αποθήκευση δεν έφυγε ποτέ από τη συσκευή — κράτησέ την.
+		 *
+		 * ΜΟΝΟ δημιουργία μπαίνει σε ουρά, όπως ορίζει το §2Δ. Η ενημέρωση
+		 * υπάρχουσας σύμβασης μένει έξω επίτηδες: δεν έχει κλειδί
+		 * ιδεμποτέντσιας (το (259) το στέλνει μόνο σε δημιουργία), οπότε δύο
+		 * καθυστερημένες ενημερώσεις θα μπορούσαν να εφαρμοστούν ανάποδα και
+		 * να επαναφέρουν παλιά τιμή πάνω σε νεότερη. Μια ουρά που χαλάει
+		 * σιωπηλά δεδομένα είναι χειρότερη από καθόλου ουρά.
+		 */
+		function queueSave(payload) {
+			if (payload.contract_id) {
+				toast('Σφάλμα δικτύου — οι αλλαγές δεν αποθηκεύτηκαν.', false);
+
+				return;
+			}
+
+			return enqueueContract(payload, state.files).then(function (r) {
+				if (!r || !r.ok) { toast((r && r.reason) || 'Σφάλμα δικτύου.', false); return; }
+
+				/* Το `dirty` πέφτει επειδή η δουλειά ΕΙΝΑΙ αποθηκευμένη -- σε
+				 * IndexedDB, όχι στον server, αλλά αποθηκευμένη. Το
+				 * beforeunload θα ήταν ψέμα: το κλείσιμο της καρτέλας δεν
+				 * χάνει πια τίποτα. */
+				dirty = false;
+				toast('Εκτός σύνδεσης — η αίτηση μπήκε σε ουρά και θα σταλεί μόλις γυρίσει το δίκτυο.');
+			});
+		}
+
 		function doSave(status, btn) {
 			btn.disabled = true;
-			fetch(api('/contracts'), { method: 'POST', headers: headers(true), body: JSON.stringify(collect(status)) })
+			var payload = collect(status);
+			fetch(api('/contracts'), { method: 'POST', headers: headers(true), body: JSON.stringify(payload) })
 				.then(function (r) { return r.json(); })
 				.then(function (d) {
 					if (d && d.ok) {
 						state.contract_id = d.contract_id; state.customer_id = d.customer_id;
 						dirty = false;
+						/* Επιτυχής απευθείας αποθήκευση παίρνει πίσω την
+						 * κυριότητα από την ουρά. Χωρίς αυτό, μια αίτηση που
+						 * είχε μπει σε ουρά offline και μετά αποθηκεύτηκε
+						 * χειροκίνητα online θα ανέβαζε τα ίδια έγγραφα δύο
+						 * φορές -- μία από την uploadFiles() παρακάτω και μία
+						 * από την ουρά. Ενα σημείο κυριότητας, πάντα. */
+						forget(payload.client_request_id);
 						// An undefined status means "fields only, no transition".
 						// `replayed` σημαίνει ότι ο server αναγνώρισε επανάληψη του ίδιου
 						// αιτήματος και επέστρεψε την ΑΡΧΙΚΗ σύμβαση αντί να φτιάξει δεύτερη.
@@ -2434,7 +2485,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 						uploadFiles();
 					} else { toast((d && d.error) || 'Η αποθήκευση απέτυχε.', false); }
 				})
-				.catch(function () { toast('Σφάλμα δικτύου.', false); })
+				.catch(function () { return queueSave(payload); })
 				.finally(function () { btn.disabled = false; });
 		}
 		q('[data-save-draft]').addEventListener('click', function () { save('draft', this); });
@@ -2449,10 +2500,13 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			if (state.contract_id) { cb(); return; }
 			// auto-save a draft first so the actions have a contract to work on
 			toast('Αποθήκευση πρόχειρου…');
-			fetch(api('/contracts'), { method: 'POST', headers: headers(true), body: JSON.stringify(collect('draft')) })
+			var draft = collect('draft');
+			fetch(api('/contracts'), { method: 'POST', headers: headers(true), body: JSON.stringify(draft) })
 				.then(function (r) { return r.json(); })
 				.then(function (d) {
-					if (d && d.ok) { state.contract_id = d.contract_id; state.customer_id = d.customer_id; uploadFiles(); cb(); }
+					// Ιδια κυριότητα με το doSave(): πέτυχε απευθείας, άρα η
+					// ουρά δεν κρατά πια τίποτα γι' αυτή την αίτηση.
+					if (d && d.ok) { forget(draft.client_request_id); state.contract_id = d.contract_id; state.customer_id = d.customer_id; uploadFiles(); cb(); }
 					else { toast('Αποτυχία αποθήκευσης.', false); }
 				})
 				.catch(function () { toast('Σφάλμα δικτύου.', false); });

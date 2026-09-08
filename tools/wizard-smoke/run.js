@@ -22,10 +22,21 @@ const dom = new JSDOM(
 const w = dom.window;
 const posts = [];
 
-w.ECRM = { rest: 'http://x/wp-json/ecrm/v1', nonce: 'n' };
+w.ECRM = { rest: 'http://x/wp-json/ecrm/v1', nonce: 'n', userId: 7 };
+
+/* Πώς απαντά το ψεύτικο δίκτυο στο POST /contracts. Αλλάζει μέσα στον
+   έλεγχο, ΟΧΙ με αντικατάσταση του w.fetch: το ecrm-form.js κρατά
+   `_origFetch = window.fetch.bind(window)` τη στιγμή που φορτώνεται, οπότε
+   μια μετέπειτα αντικατάσταση δεν θα το άγγιζε ποτέ και ο έλεγχος θα
+   «περνούσε» ελέγχοντας τον εαυτό του. */
+var postMode = 'refuse';
 w.fetch = function (url, opts) {
 	if (opts && opts.method === 'POST' && /\/contracts$/.test(url)) {
 		posts.push(JSON.parse(opts.body));
+		if (postMode === 'offline') { return Promise.reject(new Error('offline')); }
+		if (postMode === 'accept') {
+			return Promise.resolve({ json: function () { return Promise.resolve({ ok: true, contract_id: 55, customer_id: 9 }); } });
+		}
 		// ok:false επίτηδες: κρατά το state ακίνητο ώστε δύο διαδοχικές
 		// αποθηκεύσεις να είναι συγκρίσιμες (το doSave γράφει contract_id
 		// μόνο σε επιτυχία).
@@ -192,6 +203,45 @@ const step = function () {
 	await tick();
 	ok('χωρίς ΑΦΜ, ξεκινά στο βήμα 1', step() === '1', 'ορατά: ' + step());
 	ok('αλλά και πάλι ξεκλείδωτα και τα τέσσερα', qa('[data-wgo]').every(function (b) { return !b.disabled; }));
+
+	/* Η ουρά ελέγχεται μόνη της στο queue-run.js, με πραγματικό IndexedDB.
+	   Εδώ αποδεικνύεται το ΑΛΛΟ μισό, που κανένας έλεγχος της ουράς δεν
+	   μπορεί να δει: ότι η φόρμα τη φωνάζει τη σωστή στιγμή και της δίνει
+	   τα σωστά. */
+	console.log('\n9. η ουρά: τι κάνει η φόρμα όταν πέφτει το δίκτυο');
+	w.ECRMForm.reset();
+	q('.ecrm-provider').click();
+	await tick();
+	root.querySelector('[name="afm"]').value = '094014201';
+	w.__queued.length = 0;
+	postMode = 'offline';
+	q('[data-save-draft]').click();
+	await tick(); await tick(); await tick();
+
+	const queued = w.__queued.filter(function (e) { return e.what === 'contract'; })[0];
+	ok('η αίτηση μπήκε στην ουρά αντί να χαθεί', !!queued, JSON.stringify(w.__queued));
+	ok('με το ΑΦΜ που είχε γραφτεί', queued && queued.payload.afm === '094014201', queued && queued.payload.afm);
+	ok('και με το κλειδί ιδεμποτέντσιας μέσα',
+		!!(queued && queued.payload.client_request_id),
+		queued && String(queued.payload.client_request_id));
+	ok('ο συνεργάτης το έμαθε', w.__toasts.some(function (t) { return /ουρά/.test(t.msg); }),
+		JSON.stringify(w.__toasts));
+
+	console.log('\n9β. επιτυχής αποθήκευση παίρνει πίσω την κυριότητα από την ουρά');
+	w.ECRMForm.reset();
+	q('.ecrm-provider').click();
+	await tick();
+	w.__queued.length = 0;
+	postMode = 'accept';
+	q('[data-save-draft]').click();
+	await tick(); await tick(); await tick();
+
+	const forgotten = w.__queued.filter(function (e) { return e.what === 'forget'; })[0];
+	const lastPost = posts[posts.length - 1];
+	ok('η ουρά ενημερώθηκε να ξεχάσει αυτή την αίτηση', !!forgotten, JSON.stringify(w.__queued));
+	ok('και μάλιστα ΑΥΤΗΝ, με το ίδιο κλειδί',
+		forgotten && lastPost && forgotten.id === lastPost.client_request_id,
+		String(forgotten && forgotten.id) + ' vs ' + String(lastPost && lastPost.client_request_id));
 
 	console.log('\n' + (fails ? '✗ ΑΠΟΤΥΧΙΕΣ: ' + fails : '✓ ΟΛΑ ΠΕΡΑΣΑΝ') + '  (' + passes + ' έλεγχοι)');
 	process.exit(fails ? 1 : 0);
