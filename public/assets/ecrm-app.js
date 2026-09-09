@@ -1,6 +1,6 @@
 import { api, esc, fetch, H, toast } from '@energy-crm/util';
 import { wire } from '@energy-crm/navigate';
-import { count as queueCount, flush as queueFlush, onChange as onQueueChange, purgeExpired, retryNow } from '@energy-crm/queue';
+import { count as queueCount, flush as queueFlush, forget as queueForget, onChange as onQueueChange, pending as queuePending, purgeExpired, retryNow } from '@energy-crm/queue';
 import { openDetail } from '@energy-crm/view-detail';
 import { loadContracts, setContractsFilter } from '@energy-crm/view-contracts';
 import { loadPending } from '@energy-crm/view-pending';
@@ -160,13 +160,108 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 	}
 
 	if (queueBtn) {
-		queueBtn.addEventListener('click', function () {
+		queueBtn.addEventListener('click', function (e) {
+			// Δεν πρέπει το «Στείλε τώρα» να ανοιγοκλείνει και το πάνελ από
+			// κάτω -- σταματά τη διάδοση όπως ακριβώς το καμπανάκι.
+			e.stopPropagation();
 			queueBtn.disabled = true;
 			retryNow().finally(function () { queueBtn.disabled = false; });
 		});
 	}
 
-	onQueueChange(paintQueue);
+	// ---- πάνελ ουράς (Επίπεδο Ε, docs/UI-QUEUE-PANEL.html, εγκρίθηκε 09/09) --
+	// Ίδιο σχήμα με το πάνελ ειδοποιήσεων (bellPanel) παρακάτω -- ίδιο μοτίβο
+	// ανοίγματος/κλεισίματος, καμία νέα αφαίρεση. Μόνη ενέργεια πάνω σε
+	// μπλοκαρισμένη εγγραφή είναι η διαγραφή (forget) -- σκόπιμα καμία inline
+	// επεξεργασία (βλ. σημείωση στη μακέτα).
+	var queuePanelToggle = app.querySelector('[data-queue-toggle]');
+	var queuePanelEl     = app.querySelector('[data-queue-panel]');
+	var queuePanelCount  = app.querySelector('[data-queue-panel-count]');
+	var queuePanelList   = app.querySelector('[data-queue-panel-list]');
+
+	function queueItemLabel(r) {
+		if (r.payload) {
+			var name = ((r.payload.first_name || '') + ' ' + (r.payload.last_name || '')).trim() || 'Χωρίς όνομα';
+			return name + (r.payload.afm ? ' — ΑΦΜ ' + r.payload.afm : '');
+		}
+		// Εγγραφή μόνο-αρχείων (enqueueFiles) -- η σύμβαση ήδη υπάρχει, δεν
+		// υπάρχει payload να διαβάσουμε όνομα/ΑΦΜ από αυτό.
+		return 'Έγγραφα για σύμβαση #' + r.contractId;
+	}
+
+	function renderQueuePanel() {
+		if (!queuePanelEl || !queuePanelList) return;
+
+		queuePending().then(function (records) {
+			if (queuePanelCount) {
+				queuePanelCount.textContent = records.length === 1 ? '1 αίτηση' : records.length + ' αιτήσεις';
+			}
+
+			if (!records.length) {
+				queuePanelList.innerHTML = '<div class="ecrm-queuepanel__empty">Καμία αίτηση σε αναμονή</div>';
+				return;
+			}
+
+			queuePanelList.innerHTML = records.map(function (r) {
+				var name = esc(queueItemLabel(r));
+				var html = '<div class="ecrm-queueitem' + (r.blocked ? ' is-blocked' : '') + '">' +
+					'<div class="ecrm-queueitem__dot"></div>' +
+					'<div class="ecrm-queueitem__main">' +
+					'<span class="ecrm-queueitem__name">' + name + '</span>';
+
+				if (r.blocked) {
+					html += '<span class="ecrm-queueitem__meta">Απορρίφθηκε από τον server</span>' +
+						'<span class="ecrm-queueitem__err">' + esc(r.lastError || '') + '</span>' +
+						'<div class="ecrm-queueitem__actions">' +
+						'<button type="button" class="ecrm-queueitem__del" data-queue-del="' + r.id + '">Διαγραφή</button>' +
+						'</div>';
+				} else {
+					html += '<span class="ecrm-queueitem__meta">Σε αναμονή δικτύου · θα σταλεί αυτόματα</span>';
+				}
+
+				html += '</div></div>';
+				return html;
+			}).join('');
+
+			queuePanelList.querySelectorAll('[data-queue-del]').forEach(function (b) {
+				b.addEventListener('click', function () {
+					var id = this.getAttribute('data-queue-del');
+					// Ίδιο μοτίβο με τη διαγραφή αρχείου στη φόρμα -- ένα
+					// window.confirm() αρκεί, καμία δική του συνιστώσα διαλόγου.
+					if (!window.confirm('Η αίτηση θα διαγραφεί οριστικά — δεν θα σταλεί ποτέ, ούτε τα έγγραφά της. Συνέχεια;')) {
+						return;
+					}
+					queueForget(id).then(renderQueuePanel);
+				});
+			});
+		});
+	}
+
+	if (queuePanelToggle) {
+		queuePanelToggle.addEventListener('click', function (e) {
+			e.stopPropagation();
+			if (queuePanelEl) {
+				queuePanelEl.hidden = !queuePanelEl.hidden;
+				queuePanelToggle.setAttribute('aria-expanded', queuePanelEl.hidden ? 'false' : 'true');
+				if (!queuePanelEl.hidden) { renderQueuePanel(); }
+			}
+		});
+		document.addEventListener('click', function (e) {
+			if (queuePanelEl && !queuePanelEl.hidden && !queuePanelEl.contains(e.target) &&
+				e.target !== queuePanelToggle && !queuePanelToggle.contains(e.target)) {
+				queuePanelEl.hidden = true;
+				queuePanelToggle.setAttribute('aria-expanded', 'false');
+			}
+		});
+	}
+
+	onQueueChange(function (n) {
+		paintQueue(n);
+		// Το πάνελ ξαναζωγραφίζεται μόνο όσο είναι ανοιχτό -- ίδια λογική με
+		// το loadBell() παρακάτω (κλειστό πάνελ = καμία δουλειά μέχρι το
+		// επόμενο άνοιγμα).
+		if (queuePanelEl && !queuePanelEl.hidden) { renderQueuePanel(); }
+	});
 	queueCount().then(paintQueue);
 
 	// Ο,τι πέρασε το TTL φεύγει πριν από κάθε άλλη κουβέντα -- και ο

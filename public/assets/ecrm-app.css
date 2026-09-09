@@ -133,18 +133,55 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
    εκκρεμότητα -- κάτι κρατήθηκε σωστά και περιμένει. Το κόκκινο από πάνω
    ανήκει στην πραγματική αποσύνδεση, και δύο κόκκινες λωρίδες μαζί θα έκαναν
    και τις δύο θόρυβο. */
+.ecrm-queuewrap { position: relative; }
+.ecrm-queuewrap[hidden] { display: none; }
 .ecrm-queuebar {
 	display: flex; align-items: center; justify-content: center; gap: 12px;
 	background: var(--amber); color: var(--on-accent);
 	font-size: var(--fs-13); font-weight: 700; text-align: center;
 	padding: 8px 16px;
 }
-.ecrm-queuebar[hidden] { display: none; }
+.ecrm-queuebar__toggle {
+	border: none; background: none; color: inherit; font: inherit; cursor: pointer;
+	padding: 0; text-decoration: underline; text-decoration-color: transparent;
+	transition: text-decoration-color .14s;
+}
+.ecrm-queuebar__toggle:hover { text-decoration-color: currentColor; }
 .ecrm-queuebar__btn {
 	border: 1px solid currentColor; background: transparent; color: inherit;
 	border-radius: 8px; padding: 3px 10px; font: inherit; cursor: pointer;
 }
 .ecrm-queuebar__btn:disabled { opacity: .55; cursor: default; }
+
+/* Το πάνελ (Επίπεδο Ε, docs/UI-QUEUE-PANEL.html) -- ίδιο σχήμα με το
+   .ecrm-bellpanel του καμπανακιού, εγκατεστημένο κάτω από τη λωρίδα αντί για
+   πάνω δεξιά, γιατί η λωρίδα είναι πλατιά και όχι εικονίδιο σε γωνία. */
+.ecrm-queuepanel {
+	position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+	background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+	box-shadow: 0 24px 60px -20px rgba(10, 31, 61, .4); z-index: 60; overflow: hidden;
+}
+.ecrm-queuepanel[hidden] { display: none; }
+.ecrm-queuepanel__head { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; }
+.ecrm-queuepanel__head b { font-size: var(--fs-14); color: var(--navy); }
+.ecrm-queuepanel__head span { font-size: var(--fs-11-5); color: var(--muted); }
+.ecrm-queuepanel__list { max-height: 360px; overflow-y: auto; overscroll-behavior-y: contain; }
+.ecrm-queuepanel__empty { padding: 22px 16px; text-align: center; color: var(--muted); font-size: var(--fs-13-5); }
+
+.ecrm-queueitem { display: flex; align-items: flex-start; gap: 11px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.ecrm-queueitem:last-child { border-bottom: none; }
+.ecrm-queueitem__dot { width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: var(--amber); margin-top: 5px; }
+.ecrm-queueitem.is-blocked .ecrm-queueitem__dot { background: var(--err); }
+.ecrm-queueitem__main { flex: 1; min-width: 0; }
+.ecrm-queueitem__name { display: block; font-size: var(--fs-13-5); font-weight: 700; color: var(--ink); overflow-wrap: break-word; }
+.ecrm-queueitem__meta { display: block; font-size: var(--fs-11-5); color: var(--muted); margin-top: 2px; }
+.ecrm-queueitem__err { display: block; font-size: var(--fs-12); color: var(--err); margin-top: 5px; font-weight: 600; }
+.ecrm-queueitem__actions { display: flex; gap: 8px; margin-top: 8px; }
+.ecrm-queueitem__del {
+	border: 1px solid var(--err); background: none; color: var(--err); border-radius: 7px;
+	padding: 3px 9px; font-size: var(--fs-11-5); font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.ecrm-queueitem__del:hover { background: color-mix(in srgb, var(--err) 12%, transparent); }
 .ecrm-topbar {
 	position: sticky; top: 0; z-index: 20;
 	display: flex; align-items: center; justify-content: space-between; gap: 12px;

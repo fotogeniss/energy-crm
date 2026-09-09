@@ -248,9 +248,30 @@ class ECRM_App {
 				 * και θα υπέθετε ότι όλα στάλθηκαν.
 				 */
 				?>
-				<div class="ecrm-queuebar" id="ecrm-queue" role="status" aria-live="polite" hidden>
-					<span data-queue-text></span>
-					<button type="button" class="ecrm-queuebar__btn" data-queue-retry>Στείλε τώρα</button>
+				<?php
+				/*
+				 * Το πάνελ από κάτω (Επίπεδο Ε, μακέτα docs/UI-QUEUE-PANEL.html,
+				 * εγκεκριμένη 09/09) -- ίδιο σχήμα με το .ecrm-bellpanel του
+				 * καμπανακιού ειδοποιήσεων, όχι νέο component. Η λωρίδα γίνεται
+				 * κλικαριστή (data-queue-toggle) εκτός από το ρητό κουμπί
+				 * «Στείλε τώρα», που σταματά τη διάδοση για να μην ανοιγοκλείνει
+				 * το πάνελ κάθε φορά που πατιέται.
+				 */
+				?>
+				<div class="ecrm-queuewrap" id="ecrm-queue" hidden>
+					<div class="ecrm-queuebar" role="status" aria-live="polite">
+						<button type="button" class="ecrm-queuebar__toggle" data-queue-toggle aria-expanded="false">
+							<span data-queue-text></span>
+						</button>
+						<button type="button" class="ecrm-queuebar__btn" data-queue-retry>Στείλε τώρα</button>
+					</div>
+					<div class="ecrm-queuepanel" data-queue-panel hidden>
+						<div class="ecrm-queuepanel__head">
+							<b>Ουρά εκτός σύνδεσης</b>
+							<span data-queue-panel-count></span>
+						</div>
+						<div class="ecrm-queuepanel__list" data-queue-panel-list></div>
+					</div>
 				</div>
 				<header class="ecrm-topbar">
 					<button type="button" class="ecrm-burger" data-mobnav-toggle aria-label="Μενού"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></button>
