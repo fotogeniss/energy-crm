@@ -31,6 +31,7 @@ use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractDocuments;
 use EnergyCRM\Infrastructure\ContractNotices;
+use EnergyCRM\Infrastructure\DuplicateFollowUp;
 use EnergyCRM\Infrastructure\RejectionFollowUp;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
@@ -147,6 +148,8 @@ final class Services
     private static ?ContractLifecycle $lifecycle = null;
 
     private static ?RejectionFollowUp $rejectionFollowUp = null;
+
+    private static ?DuplicateFollowUp $duplicateFollowUp = null;
 
     private function __construct()
     {
@@ -380,6 +383,16 @@ final class Services
     {
         return self::$rejectionFollowUp ??= new RejectionFollowUp(
             self::contractDetails(),
+            self::tasks(),
+        );
+    }
+
+    public static function duplicateFollowUp(): DuplicateFollowUp
+    {
+        return self::$duplicateFollowUp ??= new DuplicateFollowUp(
+            self::contractDetails(),
+            self::customers(),
+            self::scopeResolver(),
             self::tasks(),
         );
     }

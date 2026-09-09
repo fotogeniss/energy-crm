@@ -164,6 +164,12 @@ final class Plugin
         // πρέπει να ξέρει ότι υπάρχουν εργασίες.
         Services::rejectionFollowUp()->register();
 
+        // Επίπεδο ΣΤ (docs/OFFLINE-MODEL.md §2ΣΤ): ο ζωντανός έλεγχος
+        // διπλοεγγραφής (/customers/check) μπορεί να μην τρέξει ποτέ πριν
+        // την αποθήκευση -- δίχτυ ασφαλείας σε ΚΑΘΕ δημιουργία, ίδιο σημείο
+        // σύνδεσης, ίδιος λόγος.
+        Services::duplicateFollowUp()->register();
+
         // The PDF builder listens for its own scheduled events; without this
         // the queue fills and nothing ever drains it.
         Services::documents()->register();

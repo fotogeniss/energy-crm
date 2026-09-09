@@ -112,10 +112,14 @@ final class ContractDetails
 
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var array<string, mixed>|null $row */
+        // c.supply_number + cu.afm προστέθηκαν στο (262) -- ο μοναδικός λόγος
+        // ύπαρξης του DuplicateFollowUp είναι να ξαναρωτήσει με ΑΥΤΑ τα δύο
+        // ό,τι θα ρωτούσε ο ζωντανός έλεγχος (/customers/check). Πριν από
+        // αυτό η μέθοδος δεν τα χρειαζόταν κανένας καλών της.
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                'SELECT c.code, c.partner_user_id,
-                        cu.first_name, cu.last_name, cu.company_name
+                'SELECT c.code, c.partner_user_id, c.supply_number,
+                        cu.first_name, cu.last_name, cu.company_name, cu.afm
                  FROM %i c
                  LEFT JOIN %i cu ON cu.id = c.customer_id
                  WHERE c.id = %d',
