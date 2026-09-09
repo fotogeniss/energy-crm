@@ -1,0 +1,45 @@
+(262) Δίχτυ ασφαλείας διπλοεγγραφής μετά τη δημιουργία (Επίπεδο ΣΤ)
+
+Στην οριστικοποίηση, ο client καλεί GET /customers/check και δείχνει
+window.confirm() αν βρεθεί ήδη καταχωρημένο ΑΦΜ ή παροχή -- αλλά αν αυτή η
+κλήση αποτύχει (εκτός σύνδεσης, Επίπεδο Δ, ή απλό network error/timeout
+online), η φόρμα προχωρά κατευθείαν σε αποθήκευση χωρίς καμία
+προειδοποίηση. Μια πραγματική διπλοεγγραφή περνά χωρίς κανείς να το μάθει.
+
+Το δίχτυ τρέχει σε ΚΑΘΕ δημιουργία σύμβασης (όχι μόνο "μετά το sync") --
+ο server δεν έχει τρόπο να ξέρει αν ένα POST /contracts ήρθε από ζωντανό
+πάτημα ή από ecrm-queue.js::flush(), ίδιο route ίδιο σχήμα, ίδιος κίνδυνος
+και στις δύο περιπτώσεις αποτυχίας. Ίδιο σκεπτικό με το RejectionFollowUp.
+
+Νέο event ContractLifecycle::CREATED, fired μία φορά μέσα στο υπάρχον
+logCreation() -- ποτέ σε replay ιδεμποτέντσιας. Νέος listener
+DuplicateFollowUp (src/Infrastructure/), ίδιο σημείο σύνδεσης με το
+RejectionFollowUp. Ακολουθεί το ίδιο όριο με τον ζωντανό έλεγχο: μόνο
+status=presale, ποτέ πρόχειρο. Χρησιμοποιεί CustomerRepository::duplicatesOf()
+με scope για λογαριασμό του ιδιοκτήτη της σύμβασης (ScopeResolver::forUser()),
+ίδιο scope που θα είχε ο ζωντανός έλεγχος.
+
+Η καινούρια σύμβαση δεν πρέπει ποτέ να ταιριάζει με τον εαυτό της --
+προστέθηκε c.id AS contract_id στο SELECT του duplicatesOf() ειδικά γι'
+αυτό, όχι αποκλεισμός με code (που μπορεί να είναι ακόμα κενό).
+
+Ρητά ΕΚΤΟΣ: καμία προσπάθεια να ξεχωρίσει "ο συνεργάτης είδε ήδη την
+προειδοποίηση" -- θα χρειαζόταν αλλαγή στο σχήμα του POST /contracts για
+όφελος μικρότερο από τον κίνδυνο. Το χειρότερο σήμερα είναι μία επιπλέον
+εργασία που κλείνει σε ένα κλικ.
+
+Εύρημα καταγεγραμμένο, όχι διορθωμένο: το ContractLifecycle.php αγγίχτηκε
+(δεύτερο do_action) αλλά η πληρωμή του χρέους §1.12 (event dispatch έξω
+από το Domain) δεν έγινε εδώ -- ξεχωριστή απόφαση.
+
+Καμία αλλαγή JS -- το δίχτυ είναι εξ ολοκλήρου server-side, δεν χρειάζεται
+wizard-smoke.
+
+Αρχεία: src/Infrastructure/DuplicateFollowUp.php (νέο),
+tests/Integration/DuplicateFollowUpTest.php (νέο, 4 έλεγχοι),
+src/Domain/Contract/ContractLifecycle.php, src/Persistence/ContractDetails.php,
+src/Persistence/CustomerRepository.php, src/Services.php, src/Plugin.php,
+docs/CHANGELOG.md.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01GL1eocwLze2HrfwLpQ6NhN

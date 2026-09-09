@@ -53,6 +53,17 @@ final class ContractLifecycle
      */
     public const STATUS_CHANGED = 'ecrm_contract_status_changed';
 
+    /**
+     * Fired once, right after `logCreation()` writes the "created" event --
+     * never on a replayed idempotent request (Επίπεδο ΣΤ, docs/OFFLINE-MODEL.md
+     * §2ΣΤ). `DuplicateFollowUp` listens for it, the same decoupling reason as
+     * `STATUS_CHANGED`: creation itself does not need to know that an
+     * automatic duplicate check exists.
+     *
+     * Arguments: contract id, status the contract was created with.
+     */
+    public const CREATED = 'ecrm_contract_created';
+
     public function __construct(
         private readonly ContractTransitions $transitions,
         private readonly EventRepository $events,
@@ -197,6 +208,14 @@ final class ContractLifecycle
             'to_status' => $status,
             'message'   => 'Αποθήκευση αίτησης',
         ]);
+
+        /*
+         * Same convention as announce(): the constant is declared once at the
+         * top of this class, and spelling the string out here again would put
+         * it in two places.
+         */
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+        do_action(self::CREATED, $contractId, $status);
     }
 
     /**

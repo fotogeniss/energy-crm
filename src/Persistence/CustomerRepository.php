@@ -212,11 +212,18 @@ final class CustomerRepository
         // cu.id προστέθηκε 25/08 (build queue 08): η οθόνη «Επαναχρησιμοποίηση
         // πελάτη» χρειάζεται το id για να καλέσει CustomersController::show(),
         // όχι μόνο το προειδοποιητικό κείμενο που ζητούσε ο πρώτος καλών.
+        // c.id AS contract_id προστέθηκε στο (262): το DuplicateFollowUp
+        // ρωτά αμέσως μετά τη δημιουργία μιας σύμβασης, οπότε αυτή η ίδια η
+        // καινούρια γραμμή εμφανίζεται πάντα στα αποτελέσματα -- ο μόνος
+        // αξιόπιστος τρόπος να την αποκλείσει είναι το ΔΙΚΟ ΤΗΣ contract id,
+        // όχι το code (που μπορεί να είναι ακόμα κενό σε ένα fixture/edge
+        // case) ούτε το customer id (θα έκρυβε και ΑΛΛΗ παλιότερη σύμβαση
+        // του ΙΔΙΟΥ πελάτη, που είναι ακριβώς αυτό που ψάχνει ο έλεγχος).
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT cu.id, c.code, c.status, c.supply_number, cu.afm,
+                "SELECT cu.id, c.id AS contract_id, c.code, c.status, c.supply_number, cu.afm,
                         cu.first_name, cu.last_name, cu.company_name
                  FROM %i cu
                  JOIN %i c ON c.customer_id = cu.id
