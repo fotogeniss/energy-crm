@@ -62,6 +62,12 @@ final class ProviderFormFields
         'combo_arithmos_paroxis', 'combo_onoma_programmatos',
         'energopoiisi_foritotita',
         'programma_5gb', 'programma_10gb_5gb', 'programma_40gb', 'programma_unlimited',
+        // (265) Ανώτατο Όριο Λογαριασμού -- πίνακας 15 κουτιών στη σελ.4 του
+        // orizon_mobile.json, ένα fill key ανά τιμή, όλα από το ίδιο dropdown
+        // 'mobile_bill_cap' (βλ. COLUMN_INPUTS παρακάτω).
+        'mobile_cap_0', 'mobile_cap_10', 'mobile_cap_25', 'mobile_cap_50', 'mobile_cap_100',
+        'mobile_cap_150', 'mobile_cap_200', 'mobile_cap_250', 'mobile_cap_300', 'mobile_cap_350',
+        'mobile_cap_400', 'mobile_cap_450', 'mobile_cap_500', 'mobile_cap_1000', 'mobile_cap_2000',
         'xristis_kyrios', 'xristis_defterevon',
 
         // Το δεύτερο μπλοκ ταυτότητας του COMBO (219/220): «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ
@@ -284,6 +290,25 @@ final class ProviderFormFields
         'programma_10gb_5gb'             => [],
         'programma_40gb'                 => [],
         'programma_unlimited'            => [],
+        // (265) Ένα dropdown, δεκαπέντε κουτιά -- ίδιο σχήμα με το
+        // 'idiotita_idioktitis'/'idiotita_misthotis' => ['capacity_role']
+        // πιο πάνω. Χωρίς αυτό, το mainFormInputsForTemplate('orizon_mobile', ...)
+        // δεν θα έδειχνε το 'mobile_bill_cap' ως κάτι που τυπώνεται.
+        'mobile_cap_0'                   => ['mobile_bill_cap'],
+        'mobile_cap_10'                  => ['mobile_bill_cap'],
+        'mobile_cap_25'                  => ['mobile_bill_cap'],
+        'mobile_cap_50'                  => ['mobile_bill_cap'],
+        'mobile_cap_100'                 => ['mobile_bill_cap'],
+        'mobile_cap_150'                 => ['mobile_bill_cap'],
+        'mobile_cap_200'                 => ['mobile_bill_cap'],
+        'mobile_cap_250'                 => ['mobile_bill_cap'],
+        'mobile_cap_300'                 => ['mobile_bill_cap'],
+        'mobile_cap_350'                 => ['mobile_bill_cap'],
+        'mobile_cap_400'                 => ['mobile_bill_cap'],
+        'mobile_cap_450'                 => ['mobile_bill_cap'],
+        'mobile_cap_500'                 => ['mobile_bill_cap'],
+        'mobile_cap_1000'                => ['mobile_bill_cap'],
+        'mobile_cap_2000'                => ['mobile_bill_cap'],
         'xristis_kyrios'                 => [],
         'xristis_defterevon'             => [],
 
@@ -321,6 +346,10 @@ final class ProviderFormFields
         'activity'           => 'Αντικείμενο Δραστηριότητας',
         'eidiki_katigoria'   => 'Ειδική Κατηγορία (Ευάλωτος / Κ.Ο.Τ.)',
         'anotato_orio'       => 'Ανώτατο Όριο Λογαριασμού (€)',
+        // (265) Ξεχωριστό από το 'anotato_orio' από πάνω -- εκείνο είναι
+        // ρεύμα/αέριο, ελεύθερο κείμενο. Αυτό είναι κινητή, με τις 15
+        // συγκεκριμένες τιμές του χαρτιού.
+        'mobile_bill_cap'    => 'Ανώτατο Όριο Λογαριασμού (Κινητή, €)',
         'ar_koinoxristou'    => 'Αρ. Κοινόχρηστου Μετρητή',
         'agreed_power'       => 'Συμφωνημένη Ισχύς (kVA)',
         'day_indication'     => 'Τελευταία Ένδειξη Μετρητή',
@@ -393,7 +422,7 @@ final class ProviderFormFields
         'anotato_orio', 'ar_koinoxristou', 'agreed_power', 'day_indication', 'guarantee',
         'previous_provider', 'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method', 'bill_delivery',
         'subsidy_type', 'base_price', 'offer_price', 'price_after',
-        'request_type', 'mobile_offer',
+        'request_type', 'mobile_offer', 'mobile_bill_cap',
         // «Ίδιο πρόσωπο με τον πελάτη κινητής;» -- δομικό στοιχείο της αίτησης,
         // όχι προσωπικό δεδομένο: ένα ναι/όχι που δεν ταυτοποιεί κανέναν, ακριβώς
         // όπως το `mobile_offer` δίπλα του. **Και πρέπει να μένει αναγνώσιμο:**
