@@ -1106,25 +1106,67 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 			});
 		});
 
+		/* (271) Ίδιο σκεπτικό με το class-ecrm-intake.php: το iPhone στέλνει
+		 * HEIC από προεπιλογή, αποθηκεύεται κανονικά εδώ (magic-bytes το
+		 * επιβεβαιώνουν, UploadCheck.php), αλλά ο εξαγωγέας AI δεν διαβάζει
+		 * HEIC καθόλου -- έμενε αόρατο, σιωπηλά. Μετατροπή σε JPEG εδώ, πριν
+		 * το FileReader, με το ίδιο heic2any (WASM, lazy-load). Αποτυχία
+		 * μετατροπής δεν μπλοκάρει το ανέβασμα -- ίδια συμπεριφορά με σήμερα. */
+		var _heicLib = null;
+		function loadHeic2Any() {
+			if (_heicLib) return _heicLib;
+			_heicLib = new Promise(function (res, rej) {
+				if (window.heic2any) { res(window.heic2any); return; }
+				var s = document.createElement('script');
+				s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+				s.onload = function () { res(window.heic2any); };
+				s.onerror = function () { rej(new Error('heic2any load failed')); };
+				document.head.appendChild(s);
+			});
+			return _heicLib;
+		}
+		function isHeic(file) {
+			return file.type === 'image/heic' || file.type === 'image/heif' || /\.hei[cf]$/i.test(file.name || '');
+		}
+		function heicToJpeg(file) {
+			if (!isHeic(file)) return Promise.resolve(file);
+			return loadHeic2Any().then(function (heic2any) {
+				return heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+			}).then(function (result) {
+				var blob = Array.isArray(result) ? result[0] : result;
+				var name = (file.name || 'photo.heic').replace(/\.hei[cf]$/i, '.jpg');
+				return new File([blob], name, { type: 'image/jpeg' });
+			}).catch(function (err) {
+				console.warn('[ecrm] Μετατροπή HEIC απέτυχε, στέλνεται το αρχικό:', err);
+				return file;
+			});
+		}
+
 		function handleFile(f){
 			if (!f) return;
-			if (f.size > 12*1024*1024) { say('Το αρχείο είναι πολύ μεγάλο (μέγιστο 12MB).', false); return; }
 			if (curBtn) curBtn.classList.add('is-busy');
 			say('Ανέβασμα…');
-			var reader = new FileReader();
-			reader.onload = function(){
-				fetch(REST + '/upload', {
-					method:'POST', headers:{'Content-Type':'application/json'},
-					body: JSON.stringify({ kind: curKind, filename: f.name, data: reader.result })
-				}).then(function(r){ return r.json().catch(function(){return null;}); })
-				.then(function(res){
+			heicToJpeg(f).then(function (file) {
+				if (file.size > 12*1024*1024) {
 					if (curBtn) curBtn.classList.remove('is-busy');
-					if (res && res.ok) { say(res.message || 'Το έγγραφο ανέβηκε.', true); load(); }
-					else { say((res && res.error) || 'Αποτυχία ανεβάσματος.', false); }
-				}).catch(function(){ if(curBtn) curBtn.classList.remove('is-busy'); say('Σφάλμα δικτύου.', false); });
-			};
-			reader.onerror = function(){ if(curBtn) curBtn.classList.remove('is-busy'); say('Δεν ήταν δυνατή η ανάγνωση του αρχείου.', false); };
-			reader.readAsDataURL(f);
+					say('Το αρχείο είναι πολύ μεγάλο (μέγιστο 12MB).', false);
+					return;
+				}
+				var reader = new FileReader();
+				reader.onload = function(){
+					fetch(REST + '/upload', {
+						method:'POST', headers:{'Content-Type':'application/json'},
+						body: JSON.stringify({ kind: curKind, filename: file.name, data: reader.result })
+					}).then(function(r){ return r.json().catch(function(){return null;}); })
+					.then(function(res){
+						if (curBtn) curBtn.classList.remove('is-busy');
+						if (res && res.ok) { say(res.message || 'Το έγγραφο ανέβηκε.', true); load(); }
+						else { say((res && res.error) || 'Αποτυχία ανεβάσματος.', false); }
+					}).catch(function(){ if(curBtn) curBtn.classList.remove('is-busy'); say('Σφάλμα δικτύου.', false); });
+				};
+				reader.onerror = function(){ if(curBtn) curBtn.classList.remove('is-busy'); say('Δεν ήταν δυνατή η ανάγνωση του αρχείου.', false); };
+				reader.readAsDataURL(file);
+			});
 		}
 
 		input.addEventListener('change', function(){ handleFile(input.files && input.files[0]); });
