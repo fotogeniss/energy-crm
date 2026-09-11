@@ -3,12 +3,15 @@
 /**
  * POST /contracts/{id}/files/review          διάβασε τα έγγραφα, διόρθωσε είδη
  * POST /contracts/{id}/files/{file}/unkind   ανέτρεψε μια αυτόματη διόρθωση
+ * POST /contracts/{id}/files/{file}/kind     όρισε το είδος χειροκίνητα (272)
  *
- * Δύο άκρα της ίδιας ιστορίας: το ένα αφήνει την ανάγνωση να διορθώσει, το άλλο
- * δίνει στον άνθρωπο τον τελευταίο λόγο. Και τα δύο περνούν πρώτα από τη
- * σύμβαση με την εμβέλεια του χρήστη -- ένα αρχείο δεν είναι ποτέ αρκετό
- * αναγνωριστικό από μόνο του, γιατί τότε ο έλεγχος πρόσβασης θα εξαρτιόταν από
- * το να μαντέψει κάποιος ένα id.
+ * Τρία άκρα της ίδιας ιστορίας: το ένα αφήνει την ανάγνωση να διορθώσει, το
+ * δεύτερο δίνει στον άνθρωπο τον τελευταίο λόγο πάνω σε μια αυτόματη διόρθωση,
+ * το τρίτο του δίνει τον λόγο εξαρχής -- για έγγραφα που η ανάγνωση ποτέ δεν
+ * κατάφερε να διορθώσει με σιγουριά. Και τα τρία περνούν πρώτα από τη σύμβαση
+ * με την εμβέλεια του χρήστη -- ένα αρχείο δεν είναι ποτέ αρκετό αναγνωριστικό
+ * από μόνο του, γιατί τότε ο έλεγχος πρόσβασης θα εξαρτιόταν από το να
+ * μαντέψει κάποιος ένα id.
  *
  * @package EnergyCRM
  */
@@ -52,6 +55,17 @@ final class DocumentKindController implements Controller
             'args'                => [
                 'id'   => ['type' => 'integer', 'required' => true],
                 'file' => ['type' => 'integer', 'required' => true],
+            ],
+        ]);
+
+        register_rest_route(Router::NAMESPACE, '/contracts/(?P<id>\d+)/files/(?P<file>\d+)/kind', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'setKind'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => [
+                'id'   => ['type' => 'integer', 'required' => true],
+                'file' => ['type' => 'integer', 'required' => true],
+                'kind' => ['type' => 'string', 'required' => true],
             ],
         ]);
     }
@@ -120,6 +134,37 @@ final class DocumentKindController implements Controller
                 ['ok' => false, 'error' => 'Δεν υπάρχει αυτόματη διόρθωση για αναίρεση.'],
                 404
             );
+        }
+
+        return new WP_REST_Response(
+            ['ok' => true, 'kind' => $kind, 'label' => ECRM_Docs::label($kind)],
+            200
+        );
+    }
+
+    /**
+     * Ο συνεργάτης διαλέγει ο ίδιος το είδος -- (272), για έγγραφα που η
+     * ανάγνωση ποτέ δεν κατάφερε να διορθώσει με σιγουριά και έμεναν
+     * κλειδωμένα σε γενική ετικέτα για πάντα (βλ. `FileRepository::setKind()`).
+     * Το ίδιο κλείδωμα με το `revert()`: γίνεται 'human' και δεν ξαναγγίζεται
+     * αυτόματα.
+     */
+    public function setKind(WP_REST_Request $request): WP_REST_Response
+    {
+        $contractId = (int) $request['id'];
+        $fileId     = (int) $request['file'];
+        $kind       = (string) $request['kind'];
+
+        if (! $this->contracts->exists($contractId, $this->scopes->forCurrentUser())) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
+        }
+
+        if (! array_key_exists($kind, ECRM_Docs::kinds())) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Άγνωστο είδος εγγράφου.'], 400);
+        }
+
+        if (! $this->files->setKind($fileId, $contractId, $kind)) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε το αρχείο.'], 404);
         }
 
         return new WP_REST_Response(

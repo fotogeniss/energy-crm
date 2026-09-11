@@ -6,7 +6,7 @@
  * ήδη ήρθε -- η λίστα είναι ήδη μικρή (≤200 γραμμές, ίδιο ταβάνι με τις
  * υπόλοιπες οθόνες), δεν αξίζει δεύτερο request ανά φίλτρο. */
 
-import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
 import { openDetail } from '@energy-crm/navigate';
 import { scope, setScope } from '@energy-crm/scope';
@@ -95,7 +95,19 @@ function renderDocuments(view, d) {
 		goBtn.innerHTML = '<span class="ecrm-spin"></span> Ελέγχω…';
 		fetch(api('/documents-overview/review') + '?scope=' + scope(), { method: 'POST', headers: H() })
 			.then(function (r) { return r.json(); })
-			.then(function () { loadDocuments(); })
-			.catch(function () { goBtn.disabled = false; goBtn.innerHTML = original; });
+			.then(function (d) {
+				goBtn.disabled = false;
+				goBtn.innerHTML = original;
+				if (!d || !d.ok) { toast((d && d.error) || 'Σφάλμα κατά τον έλεγχο.', false); return; }
+				if (!d.contracts_checked) { toast('Δεν βρέθηκε τίποτα σε εκκρεμότητα.'); }
+				else {
+					var msg = 'Έλεγξε ' + d.contracts_checked + (d.contracts_checked === 1 ? ' αίτηση' : ' αιτήσεις') +
+						' — διόρθωσε ' + d.fixed + (d.fixed === 1 ? ' έγγραφο' : ' έγγραφα');
+					if (d.more) { msg += ' — υπάρχουν και άλλες, ξαναπάτησε σε λίγο.'; }
+					toast(msg, d.fixed > 0);
+				}
+				loadDocuments();
+			})
+			.catch(function () { goBtn.disabled = false; goBtn.innerHTML = original; toast('Σφάλμα δικτύου.', false); });
 	});
 }

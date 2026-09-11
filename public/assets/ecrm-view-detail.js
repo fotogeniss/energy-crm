@@ -85,21 +85,28 @@ function filesCard(c) {
 		list = '<div class="ecrm-files">' + files.map(function (f) {
 			var thumb = f.is_image && f.url ? '<img src="' + esc(f.url) + '" alt="">' : '<span class="ecrm-file__ext">' + (f.mime === 'application/pdf' ? 'PDF' : 'DOC') + '</span>';
 			var expiryTag = f.expires_at ? '<span class="ecrm-file__kind">λήξη ' + esc(fmtDate(f.expires_at)) + '</span>' : '';
-			var body = '<span class="ecrm-file__thumb">' + thumb + '</span>' +
-				'<span class="ecrm-file__meta"><span class="ecrm-file__name">' + esc(f.filename || 'έγγραφο') + '</span>' +
-				'<span class="ecrm-file__kind">' + esc(kindLabel[f.doc_kind] || 'Έγγραφο') + '</span>' + expiryTag + '</span>';
 
-			/* Το αρχείο που άλλαξε ετικέτα μόνο του το λέει, και δίνει τρόπο να
-			   αναιρεθεί. Το κουμπί ΔΕΝ μπορεί να ζήσει μέσα στο <a> της λήψης —
-			   κουμπί μέσα σε σύνδεσμο είναι άκυρο HTML και ο browser το χειρίζεται
-			   όπως θέλει. Οποτε μόνο σε αυτή την περίπτωση η γραμμή γίνεται <div>
-			   με τον σύνδεσμο μέσα της. */
+			var link = '<a class="ecrm-file__link" href="' + esc(f.url || '#') + '" target="_blank" rel="noopener">' +
+				'<span class="ecrm-file__thumb">' + thumb + '</span>' +
+				'<span class="ecrm-file__meta"><span class="ecrm-file__name">' + esc(f.filename || 'έγγραφο') + '</span>' + expiryTag + '</span>' +
+				'</a>';
+
+			/* (272) Χειροκίνητη διόρθωση είδους -- για έγγραφα που η αυτόματη
+			   ανάγνωση δεν κατάφερε ποτέ να ταξινομήσει με σιγουριά και έμεναν
+			   κλειδωμένα σε γενική ετικέτα («Άλλο έγγραφο») για πάντα. Πάντα
+			   διαθέσιμο, όχι μόνο όταν υπάρχει διόρθωση AI να αναιρεθεί -- και
+			   ΕΞΩ από το <a> της λήψης, ίδιος λόγος με το κουμπί «Αναίρεση» πιο
+			   κάτω: interactive στοιχείο μέσα σε σύνδεσμο είναι άκυρο HTML. */
+			var kindPicker = '<select class="ecrm-file__kindsel" data-setkind="' + esc(String(f.id)) + '">' +
+				Object.keys(kindLabel).map(function (k) {
+					return '<option value="' + esc(k) + '"' + (k === f.doc_kind ? ' selected' : '') + '>' + esc(kindLabel[k]) + '</option>';
+				}).join('') + '</select>';
+
 			if (f.kind_source !== 'ai' || !f.kind_before) {
-				return '<a class="ecrm-file" href="' + esc(f.url || '#') + '" target="_blank" rel="noopener">' + body + '</a>';
+				return '<div class="ecrm-file">' + link + kindPicker + '</div>';
 			}
 
-			return '<div class="ecrm-file ecrm-file--fixed">' +
-				'<a class="ecrm-file__link" href="' + esc(f.url || '#') + '" target="_blank" rel="noopener">' + body + '</a>' +
+			return '<div class="ecrm-file ecrm-file--fixed">' + link + kindPicker +
 				'<span class="ecrm-aiflag">' +
 					'<span class="ecrm-aiflag__txt">Η AI το διάβασε και το άλλαξε από «' +
 						esc(kindLabel[f.kind_before] || 'Έγγραφο') + '»</span>' +
@@ -1004,6 +1011,28 @@ function renderDetail(view, d) {
 					openDetail(c.id);
 				})
 				.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
+	}
+
+	/* (272) Χειροκίνητη επιλογή είδους -- πάντα διαθέσιμη, δουλεύει και όταν
+	   δεν υπήρξε ποτέ αυτόματη διόρθωση να αναιρεθεί. */
+	var kindSels = view.querySelectorAll('[data-setkind]');
+	for (var ks = 0; ks < kindSels.length; ks++) {
+		kindSels[ks].addEventListener('change', function () {
+			var fileId = this.getAttribute('data-setkind');
+			var sel = this;
+			var kind = sel.value;
+			sel.disabled = true;
+			fetch(api('/contracts/' + c.id + '/files/' + fileId + '/kind'), {
+				method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ kind: kind })
+			})
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (!d || !d.ok) { sel.disabled = false; toast((d && d.error) || 'Αποτυχία.', false); return; }
+					toast('Ορίστηκε ως «' + d.label + '».');
+					openDetail(c.id);
+				})
+				.catch(function () { sel.disabled = false; toast('Σφάλμα δικτύου.', false); });
 		});
 	}
 

@@ -377,6 +377,35 @@ final class FileRepository
     }
 
     /**
+     * Ο συνεργάτης λέει ο ίδιος τι είναι το έγγραφο, ρητά.
+     *
+     * Υπάρχει για την περίπτωση που η `revertKind()` δεν καλύπτει: ένα αρχείο
+     * που ΠΟΤΕ δεν διορθώθηκε αυτόματα (η ανάγνωση δεν βρήκε κάτι σίγουρο, ή
+     * βγήκε `confidence` χαμηλότερο από `KindVerdict::CONFIDENCE_REQUIRED`)
+     * μένει κλειδωμένο στην αρχική, γενική ετικέτα για πάντα -- χωρίς αυτή τη
+     * μέθοδο δεν υπήρχε κανένας τρόπος να το διορθώσει κανείς, ούτε χειροκίνητα.
+     *
+     * Ίδιο κλείδωμα με την αναίρεση: `kind_source` γίνεται 'human' και το
+     * `kind_before` αδειάζει -- η επόμενη αυτόματη ανάγνωση δεν το ξαναγγίζει.
+     * Η εγκυρότητα του `$kind` (ένα από τα `ECRM_Docs::kinds()`) ελέγχεται στον
+     * caller, όχι εδώ -- ίδιο μοτίβο με το `markKindReviewed()`.
+     */
+    public function setKind(int $fileId, int $contractId, string $kind): bool
+    {
+        global $wpdb;
+
+        if ($fileId <= 0 || $contractId <= 0 || $kind === '') {
+            return false;
+        }
+
+        return false !== $wpdb->update(
+            $this->table,
+            ['doc_kind' => $kind, 'kind_source' => KindVerdict::SOURCE_HUMAN, 'kind_before' => null],
+            ['id' => $fileId, 'contract_id' => $contractId]
+        );
+    }
+
+    /**
      * Doc_kind/kind_source/mime για ΠΟΛΛΕΣ συμβάσεις μαζί -- ίδιο σχήμα batch
      * με το signatureKindsFor(), για τον ίδιο λόγο: η οθόνη «Έγγραφα» (243)
      * δείχνει τι έχει ανέβει σε ΟΛΗ τη λίστα μιας φοράς, όχι ένα forContract()
