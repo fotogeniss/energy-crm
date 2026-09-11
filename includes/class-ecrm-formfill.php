@@ -495,6 +495,22 @@ class ECRM_FormFill {
 			'mobile_cap_1000' => ( $xg( 'mobile_bill_cap' ) === '1000' ? 'X' : '' ),
 			'mobile_cap_2000' => ( $xg( 'mobile_bill_cap' ) === '2000' ? 'X' : '' ),
 
+			// --- Σελ.5: Χρήση προσωπικών δεδομένων για προωθητικές ενέργειες --
+			// (268): τέσσερις δηλώσεις ΝΑΙ/ΟΧΙ στη σελ.5 του orizon_mobile.json.
+			// Η πρώτη είναι το ήδη υπάρχον 'no_marketing_calls' (μητρώο άρθρου
+			// 11) -- ίδιο input με τα Protergia έντυπα, απλά τώρα τυπώνεται και
+			// εδώ (η ερώτηση έγινε ορατή και για mobile, βλ.
+			// class-ecrm-shortcodes.php). Οι άλλες τρεις είναι νέες, ειδικές
+			// συναινέσεις Orizon/Volton που δεν υπήρχαν πουθενά αλλού.
+			'mitroo_11_nai'            => ( $xg( 'no_marketing_calls' ) === 'yes' ? 'X' : '' ),
+			'mitroo_11_oxi'            => ( $xg( 'no_marketing_calls' ) === 'no'  ? 'X' : '' ),
+			'synainesi_prowthisis_nai' => ( $xg( 'orizon_marketing_consent' ) === 'yes' ? 'X' : '' ),
+			'synainesi_prowthisis_oxi' => ( $xg( 'orizon_marketing_consent' ) === 'no'  ? 'X' : '' ),
+			'synainesi_volton_nai'     => ( $xg( 'volton_marketing_consent' ) === 'yes' ? 'X' : '' ),
+			'synainesi_volton_oxi'     => ( $xg( 'volton_marketing_consent' ) === 'no'  ? 'X' : '' ),
+			'synainesi_meta_lysi_nai'  => ( $xg( 'promo_after_termination' ) === 'yes' ? 'X' : '' ),
+			'synainesi_meta_lysi_oxi'  => ( $xg( 'promo_after_termination' ) === 'no'  ? 'X' : '' ),
+
 			// --- COMBO: το ηλεκτρικό σκέλος -----------------------------------
 			// Το έντυπο COMBO ζητά, σε δικές του θέσεις, την παροχή και το
 			// πρόγραμμα ρεύματος του ίδιου πελάτη — ξεχωριστά κλειδιά από τα

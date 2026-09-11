@@ -68,6 +68,15 @@ final class ProviderFormFields
         'mobile_cap_0', 'mobile_cap_10', 'mobile_cap_25', 'mobile_cap_50', 'mobile_cap_100',
         'mobile_cap_150', 'mobile_cap_200', 'mobile_cap_250', 'mobile_cap_300', 'mobile_cap_350',
         'mobile_cap_400', 'mobile_cap_450', 'mobile_cap_500', 'mobile_cap_1000', 'mobile_cap_2000',
+        // (268) Σελ.5: «Χρήση προσωπικών δεδομένων για προωθητικές
+        // ενέργειες». 'mitroo_11_nai/oxi' είναι το ήδη υπάρχον
+        // 'no_marketing_calls' -- τυπώνεται τώρα και εδώ, όχι μόνο στα
+        // Protergia έντυπα. Οι άλλες τρεις είναι νέες συναινέσεις
+        // Orizon/Volton (βλ. COLUMN_INPUTS παρακάτω).
+        'mitroo_11_nai', 'mitroo_11_oxi',
+        'synainesi_prowthisis_nai', 'synainesi_prowthisis_oxi',
+        'synainesi_volton_nai', 'synainesi_volton_oxi',
+        'synainesi_meta_lysi_nai', 'synainesi_meta_lysi_oxi',
         'xristis_kyrios', 'xristis_defterevon',
 
         // Το δεύτερο μπλοκ ταυτότητας του COMBO (219/220): «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ
@@ -309,6 +318,17 @@ final class ProviderFormFields
         'mobile_cap_500'                 => ['mobile_bill_cap'],
         'mobile_cap_1000'                => ['mobile_bill_cap'],
         'mobile_cap_2000'                => ['mobile_bill_cap'],
+        // (268) Σελ.5 -- 'mitroo_11_*' μοιράζεται input με τα Protergia
+        // έντυπα (βλ. INPUTS παραπάνω), οι άλλες τρεις είναι νέα, δικά
+        // τους inputs.
+        'mitroo_11_nai'                  => ['no_marketing_calls'],
+        'mitroo_11_oxi'                  => ['no_marketing_calls'],
+        'synainesi_prowthisis_nai'       => ['orizon_marketing_consent'],
+        'synainesi_prowthisis_oxi'       => ['orizon_marketing_consent'],
+        'synainesi_volton_nai'           => ['volton_marketing_consent'],
+        'synainesi_volton_oxi'           => ['volton_marketing_consent'],
+        'synainesi_meta_lysi_nai'        => ['promo_after_termination'],
+        'synainesi_meta_lysi_oxi'        => ['promo_after_termination'],
         'xristis_kyrios'                 => [],
         'xristis_defterevon'             => [],
 
@@ -390,6 +410,10 @@ final class ProviderFormFields
         // γράφει το νομικό κείμενο του εντύπου.
         'bill_cap'           => 'Θέλει ανώτατο όριο λογαριασμού;',
         'no_marketing_calls' => 'Να μπει στο μητρώο του άρθρου 11 (να ΜΗΝ δέχεται προωθητικές κλήσεις);',
+        // (268) Σελ.5 -- τρεις νέες συναινέσεις Orizon/Volton.
+        'orizon_marketing_consent' => 'Επιθυμεί προωθητικά μηνύματα Orizon (SMS/Viber/email);',
+        'volton_marketing_consent' => 'Συναινεί σε επεξεργασία δεδομένων από Volton για προώθηση;',
+        'promo_after_termination'  => 'Συναινεί σε επεξεργασία από Orizon μετά τη λήξη σύμβασης (προώθηση);',
         'group_data_consent' => 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;',
         'survey_consent'     => 'Δέχεται τηλεφωνικές έρευνες ικανοποίησης πελατών;',
         'waive_withdrawal'   => 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;',
@@ -455,6 +479,9 @@ final class ProviderFormFields
         'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
         'bill_cap', 'no_marketing_calls', 'group_data_consent', 'survey_consent',
         'waive_withdrawal', 'no_directory_listing',
+        // (268) Σελ.5 -- ίδιο σκεπτικό: καταγράφουν ΤΙ επέλεξε ο πελάτης,
+        // δεν ταυτοποιούν κανέναν.
+        'orizon_marketing_consent', 'volton_marketing_consent', 'promo_after_termination',
     ];
 
     private function __construct()

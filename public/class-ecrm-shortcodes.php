@@ -375,14 +375,19 @@ class ECRM_Shortcodes {
 			// Τιμολόγησης. Defined here (not inline where it's used) because it
 			// used to live inside the mobile section and moved out with the
 			// fields it belongs to — see ORIZON-TODO.md #3.
-			$ecrm_yesno = function ( $name, $label ) {
+			// (268): πήρε ένα τρίτο, προαιρετικό $energy_when -- ίδιο μοτίβο με
+			// το $ecrm_field παραπάνω -- ώστε μια Ναι/Όχι ερώτηση να μπορεί να
+			// δηλώσει ρητά ΠΟΙΟΥΣ τύπους ενέργειας αφορά, αντί να κληρονομεί
+			// σιωπηλά την ορατότητα ενός γονικού div (βλ. CHANGELOG (268)).
+			$ecrm_yesno = function ( $name, $label, $energy_when = '' ) {
 				printf(
-					'<label class="ecrm-field" data-for="%1$s"><span class="ecrm-field__label">%2$s</span>'
+					'<label class="ecrm-field" data-for="%1$s"%3$s><span class="ecrm-field__label">%2$s</span>'
 					. '<select name="%1$s" class="ecrm-input" data-extra="1">'
 					. '<option value="">—</option><option value="yes">Ναι</option><option value="no">Όχι</option>'
 					. '</select></label>',
 					esc_attr( $name ),
-					esc_html( $label )
+					esc_html( $label ),
+					$energy_when !== '' ? ' data-when-energy="' . esc_attr( $energy_when ) . '"' : ''
 				);
 			};
 			?>
@@ -1106,6 +1111,18 @@ class ECRM_Shortcodes {
 							<option value="2000">2000€</option>
 						</select>
 					</label>
+					<?php
+					/*
+					 * (268): οι τρεις δηλώσεις ΝΑΙ/ΟΧΙ της σελ.5 του orizon_mobile.json
+					 * που ΔΕΝ ταυτίζονται με καμία ήδη υπάρχουσα ερώτηση -- η τέταρτη
+					 * (άρθρο 11) είναι το ήδη υπάρχον 'no_marketing_calls', ζωντανό
+					 * πλέον και για mobile στην ενότητα «Ερωτήσεις προς τον πελάτη»
+					 * παρακάτω, όχι εδώ -- δεν ζητάμε το ίδιο πράγμα δύο φορές.
+					 */
+					$ecrm_yesno( 'orizon_marketing_consent', 'Επιθυμεί προωθητικά μηνύματα Orizon (SMS/Viber/email);' );
+					$ecrm_yesno( 'volton_marketing_consent', 'Συναινεί σε επεξεργασία δεδομένων από Volton για προώθηση;' );
+					$ecrm_yesno( 'promo_after_termination', 'Συναινεί σε επεξεργασία από Orizon μετά τη λήξη της σύμβασης (προώθηση);' );
+					?>
 				</div>
 
 				<?php
@@ -1223,28 +1240,31 @@ class ECRM_Shortcodes {
 				</div>
 
 				<?php
-				// Απαντήσεις του πελάτη, όχι ρυθμίσεις της εταιρείας. Μόνο
-				// ρεύμα/αέριο: κανένα από τα τέσσερα έντυπα Orizon δεν τυπώνει
-				// αυτά τα κλειδιά (επιβεβαιωμένο με grep σε όλα τα JSON) — πριν
-				// ζούσαν μέσα στο τμήμα κινητής, όπου ήταν ακριβώς ανάποδα
-				// ορατά: φαινόντουσαν μόνο όταν δεν εξυπηρετούσαν κανέναν.
+				// Απαντήσεις του πελάτη, όχι ρυθμίσεις της εταιρείας. Το
+				// 'bill_cap'/'anotato_orio' είναι μόνο ρεύμα/αέριο (η κινητή έχει
+				// δικό της 'mobile_bill_cap', βλ. (265)) — πριν ζούσαν μέσα στο
+				// τμήμα κινητής, όπου ήταν ακριβώς ανάποδα ορατά: φαινόντουσαν
+				// μόνο όταν δεν εξυπηρετούσαν κανέναν. Το 'no_marketing_calls'
+				// (268) είναι πλέον ΚΑΙ mobile -- το orizon_mobile.json τυπώνει
+				// τη δήλωση άρθρου 11 στη σελ.5 -- οπότε το gate έφυγε από το
+				// γονικό div και πήγε ανά πεδίο (ίδιο μοτίβο με το «Διάρκεια
+				// Σύμβασης» παρακάτω), ώστε το καθένα να δηλώνει τη δική του
+				// ορατότητα αντί να την κληρονομεί σιωπηλά.
 				?>
-				<div data-when-energy="power,gas">
-					<div class="ecrm-subhead">Ερωτήσεις προς τον πελάτη <span class="ecrm-hint">— απαντά ο ίδιος</span></div>
-					<div class="ecrm-grid">
-						<?php
-						$ecrm_yesno( 'bill_cap', 'Θέλει ανώτατο όριο λογαριασμού;' );
-						$ecrm_field( 'anotato_orio', 'Ανώτατο Όριο (€)', 'text', true );
-						$ecrm_yesno( 'no_marketing_calls', 'Μητρώο άρθρου 11 — να ΜΗΝ δέχεται προωθητικές κλήσεις;' );
-						$ecrm_yesno( 'group_data_consent', 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;' );
-						// Χωριστή ερώτηση από την προηγούμενη: τα νέα οικιακά έντυπα
-						// Protergia έχουν δικό τους ΝΑΙ/ΟΧΙ γι' αυτήν (όρος Η), και
-						// συναίνεση που δεν τη ζήτησες δεν μπορείς να τη σημειώσεις.
-						$ecrm_yesno( 'survey_consent', 'Δέχεται τηλεφωνικές έρευνες ικανοποίησης πελατών;' );
-						$ecrm_yesno( 'waive_withdrawal', 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;' );
-						$ecrm_yesno( 'no_directory_listing', 'Να ΜΗΝ καταχωρηθεί στους τηλεφωνικούς καταλόγους;' );
-						?>
-					</div>
+				<div class="ecrm-subhead">Ερωτήσεις προς τον πελάτη <span class="ecrm-hint">— απαντά ο ίδιος</span></div>
+				<div class="ecrm-grid">
+					<?php
+					$ecrm_yesno( 'bill_cap', 'Θέλει ανώτατο όριο λογαριασμού;', 'power,gas' );
+					$ecrm_field( 'anotato_orio', 'Ανώτατο Όριο (€)', 'text', true, '', 'power,gas' );
+					$ecrm_yesno( 'no_marketing_calls', 'Μητρώο άρθρου 11 — να ΜΗΝ δέχεται προωθητικές κλήσεις;', 'power,gas,mobile' );
+					$ecrm_yesno( 'group_data_consent', 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;', 'power,gas' );
+					// Χωριστή ερώτηση από την προηγούμενη: τα νέα οικιακά έντυπα
+					// Protergia έχουν δικό τους ΝΑΙ/ΟΧΙ γι' αυτήν (όρος Η), και
+					// συναίνεση που δεν τη ζήτησες δεν μπορείς να τη σημειώσεις.
+					$ecrm_yesno( 'survey_consent', 'Δέχεται τηλεφωνικές έρευνες ικανοποίησης πελατών;', 'power,gas' );
+					$ecrm_yesno( 'waive_withdrawal', 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;', 'power,gas' );
+					$ecrm_yesno( 'no_directory_listing', 'Να ΜΗΝ καταχωρηθεί στους τηλεφωνικούς καταλόγους;', 'power,gas' );
+					?>
 				</div>
 
 				<?php

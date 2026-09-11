@@ -409,6 +409,62 @@
       "y": 67.6,
       "check": true,
       "size": 9
+    },
+    "mitroo_11_nai": {
+      "page": 5,
+      "x": 27.5,
+      "y": 115.3,
+      "check": true,
+      "size": 9
+    },
+    "mitroo_11_oxi": {
+      "page": 5,
+      "x": 41.5,
+      "y": 115.3,
+      "check": true,
+      "size": 9
+    },
+    "synainesi_prowthisis_nai": {
+      "page": 5,
+      "x": 27.5,
+      "y": 159.2,
+      "check": true,
+      "size": 9
+    },
+    "synainesi_prowthisis_oxi": {
+      "page": 5,
+      "x": 41.5,
+      "y": 159.2,
+      "check": true,
+      "size": 9
+    },
+    "synainesi_volton_nai": {
+      "page": 5,
+      "x": 27.5,
+      "y": 198.7,
+      "check": true,
+      "size": 9
+    },
+    "synainesi_volton_oxi": {
+      "page": 5,
+      "x": 41.5,
+      "y": 198.7,
+      "check": true,
+      "size": 9
+    },
+    "synainesi_meta_lysi_nai": {
+      "page": 5,
+      "x": 27.5,
+      "y": 229.2,
+      "check": true,
+      "size": 9
+    },
+    "synainesi_meta_lysi_oxi": {
+      "page": 5,
+      "x": 41.5,
+      "y": 229.2,
+      "check": true,
+      "size": 9
     }
   },
   "sigs": [
