@@ -1066,13 +1066,20 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 		var items = docs.items || [];
 		var html = '<div class="docs"><h2>Δικαιολογητικά</h2>'+
 			'<p class="lead">Ανεβάστε τα απαραίτητα έγγραφα (φωτογραφία ή PDF). Συνδέονται αυτόματα με την αίτησή σας.</p>';
+		/* (275) Πριν, μόλις ανέβαινε ΕΝΑ αρχείο ενός είδους (π.χ. ταυτότητα),
+		 * το `it.done` γινόταν true και τα κουμπιά ανεβάσματος εξαφανίζονταν
+		 * ΜΟΝΙΜΑ -- ο πελάτης δεν είχε κανέναν τρόπο να προσθέσει δεύτερο
+		 * αρχείο του ίδιου είδους (π.χ. πίσω όψη ταυτότητας μετά την μπροστινή).
+		 * Το backend ήδη δέχεται πολλά αρχεία ανά kind (βλ. FileRepository::
+		 * deleteKind() που σβήνει ΟΛΑ τα αρχεία ενός kind, όχι ένα) -- το
+		 * όριο ήταν μόνο εδώ, στο UI. Τώρα το ✓ δείχνει ότι καλύφθηκε η
+		 * απαίτηση, αλλά τα κουμπιά μένουν διαθέσιμα για να προστεθεί κι
+		 * άλλο αρχείο του ίδιου είδους. */
 		for (var i=0;i<items.length;i++){
 			var it = items[i];
-			html += '<div class="doc-item"><span class="doc-lbl">'+esc(it.label)+'</span>'+
-				(it.done
-					? '<span class="doc-ok">✓ Ανέβηκε</span>'
-					: '<span class="doc-btns"><button type="button" class="up-btn" data-kind="'+esc(it.kind)+'">Ανέβασμα</button>'+
-						'<button type="button" class="up-btn up-btn--cam" data-kind="'+esc(it.kind)+'" aria-label="Λήψη φωτογραφίας">📷</button></span>')+
+			html += '<div class="doc-item"><span class="doc-lbl">'+esc(it.label)+(it.done ? ' <span class="doc-ok">✓ Ανέβηκε</span>' : '')+'</span>'+
+				'<span class="doc-btns"><button type="button" class="up-btn" data-kind="'+esc(it.kind)+'">Ανέβασμα</button>'+
+					'<button type="button" class="up-btn up-btn--cam" data-kind="'+esc(it.kind)+'" aria-label="Λήψη φωτογραφίας">📷</button></span>'+
 				'</div>';
 		}
 		// Always allow a free-form extra document.
