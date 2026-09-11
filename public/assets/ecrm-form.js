@@ -337,13 +337,24 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// is typing while it runs, and an answer that arrives late must not
 		// overwrite what they entered in the meantime. Pressing the button is
 		// an explicit "use what you found", so that path still overwrites.
-		function setField(name, val, keepExisting) {
+		//
+		// skipAiMark (270): setField() also does double duty as the plain
+		// "put this value in and show it" helper for REOPENING an existing
+		// application -- CUST_FIELDS/ADDR_FIELDS/extra below. Those are
+		// values a human already saved, not a fresh AI guess, but without
+		// this flag they got the exact same green "AI" pill as a live
+		// extraction result, forever (nothing ever clears it, since the
+		// agent never "touches" a field that already shows their own
+		// earlier answer). Bug reported by the customer: μη σχετικά πεδία
+		// (bill_cap, τα Ναι/Όχι του (268)) έδειχναν "AI" σε ΚΑΘΕ άνοιγμα
+		// μιας αποθηκευμένης αίτησης, χωρίς να έχει τρέξει ποτέ εξαγωγή.
+		function setField(name, val, keepExisting, skipAiMark) {
 			var input = root.querySelector('.ecrm-input[name="' + name + '"]');
 			if (!input || val == null || val === '') return;
 			if (keepExisting && input.value.trim() !== '') return;
 			input.value = val;
 			var field = input.closest('.ecrm-field');
-			if (field) {
+			if (field && !skipAiMark) {
 				field.classList.add('is-ai');
 				setTimeout(function () { field.classList.remove('is-ai'); }, 1800);
 				// Το is-ai είναι η στιγμιαία αναλαμπή· αυτή μένει ώσπου ο
@@ -1457,14 +1468,14 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			state.program_id = c.program_id ? parseInt(c.program_id, 10) : null;
 			renderPrograms();
 			var sel = q('[data-program]'); if (sel && c.program_id) sel.value = c.program_id;
-			CUST_FIELDS.forEach(function (k) { setField(k, c[k]); });
+			CUST_FIELDS.forEach(function (k) { setField(k, c[k], false, true); });
 			ADDR_PARTS.forEach(function (which) {
 				var cb = root.querySelector('[data-addr-same="' + which + '"]');
 				if (!cb) return;
 				// Contracts saved before these columns existed have no value;
 				// they meant "the same", which is what the column defaults to.
 				cb.checked = c[which + '_addr_same'] == null || !!Number(c[which + '_addr_same']);
-				ADDR_FIELDS.forEach(function (p) { setField(which + '_' + p, c[which + '_' + p]); });
+				ADDR_FIELDS.forEach(function (p) { setField(which + '_' + p, c[which + '_' + p], false, true); });
 				toggleAddr(cb);
 			});
 			// Editing shows what was actually recorded, not the default. A
@@ -1472,7 +1483,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// though it had been.
 			var consentEl = q('[data-consent]');
 			if (consentEl) consentEl.checked = !!c.consent_at;
-			if (c.extra) { Object.keys(c.extra).forEach(function (k) { setField(k, c.extra[k]); }); }
+			if (c.extra) { Object.keys(c.extra).forEach(function (k) { setField(k, c.extra[k], false, true); }); }
 			// «Πάνω στο έντυπο» (31/08): selectProvider()/sel.value= παραπάνω ΔΕΝ
 			// στέλνουν 'change' -- τα μόνα σημεία που καλούν refreshProviderFields()
 			// είναι το κλικ σε κάρτα παρόχου, το chip και το onchange του
