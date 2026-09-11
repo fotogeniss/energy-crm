@@ -470,6 +470,31 @@ class ECRM_FormFill {
 			'timi_prosforas'          => $xg( 'offer_price' ),
 			'pagio_meta_ti_prosfora'  => $xg( 'price_after' ),
 
+			// --- Ανώτατο Όριο Λογαριασμού (κινητή) --------------------------
+			// (265): πίνακας 15 τιμών στη σελ.4 του orizon_mobile.json --
+			// ΔΕΝ είναι το ίδιο πράγμα με το 'anotato_orio' (ελεύθερο κείμενο)
+			// λίγο πιο πάνω στα Στοιχεία Τιμολόγησης -- εκείνο είναι για
+			// ρεύμα/αέριο (`data-when-energy="power,gas"`), δεν τυπώνεται
+			// πουθενά. Το `mobile_bill_cap` είναι ΔΙΚΟ ΤΟΥ πεδίο, dropdown με
+			// ΑΚΡΙΒΩΣ τις 15 τιμές του χαρτιού -- ελεύθερο κείμενο δεν θα
+			// ταίριαζε ποτέ σε συγκεκριμένο κουτί. Μία τιμή, ένα κουτί: όλα
+			// τα άλλα μένουν κενά, όχι μόνο το επιλεγμένο τυπωμένο σωστά.
+			'mobile_cap_0'    => ( $xg( 'mobile_bill_cap' ) === '0'    ? 'X' : '' ),
+			'mobile_cap_10'   => ( $xg( 'mobile_bill_cap' ) === '10'   ? 'X' : '' ),
+			'mobile_cap_25'   => ( $xg( 'mobile_bill_cap' ) === '25'   ? 'X' : '' ),
+			'mobile_cap_50'   => ( $xg( 'mobile_bill_cap' ) === '50'   ? 'X' : '' ),
+			'mobile_cap_100'  => ( $xg( 'mobile_bill_cap' ) === '100'  ? 'X' : '' ),
+			'mobile_cap_150'  => ( $xg( 'mobile_bill_cap' ) === '150'  ? 'X' : '' ),
+			'mobile_cap_200'  => ( $xg( 'mobile_bill_cap' ) === '200'  ? 'X' : '' ),
+			'mobile_cap_250'  => ( $xg( 'mobile_bill_cap' ) === '250'  ? 'X' : '' ),
+			'mobile_cap_300'  => ( $xg( 'mobile_bill_cap' ) === '300'  ? 'X' : '' ),
+			'mobile_cap_350'  => ( $xg( 'mobile_bill_cap' ) === '350'  ? 'X' : '' ),
+			'mobile_cap_400'  => ( $xg( 'mobile_bill_cap' ) === '400'  ? 'X' : '' ),
+			'mobile_cap_450'  => ( $xg( 'mobile_bill_cap' ) === '450'  ? 'X' : '' ),
+			'mobile_cap_500'  => ( $xg( 'mobile_bill_cap' ) === '500'  ? 'X' : '' ),
+			'mobile_cap_1000' => ( $xg( 'mobile_bill_cap' ) === '1000' ? 'X' : '' ),
+			'mobile_cap_2000' => ( $xg( 'mobile_bill_cap' ) === '2000' ? 'X' : '' ),
+
 			// --- COMBO: το ηλεκτρικό σκέλος -----------------------------------
 			// Το έντυπο COMBO ζητά, σε δικές του θέσεις, την παροχή και το
 			// πρόγραμμα ρεύματος του ίδιου πελάτη — ξεχωριστά κλειδιά από τα

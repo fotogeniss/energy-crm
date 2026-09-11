@@ -1078,6 +1078,34 @@ class ECRM_Shortcodes {
 						</span>
 					</label>
 					<?php $ecrm_field( 'subsidy_type', 'Τύπος Επιδότησης', 'text', true, 'π.χ. Έκπτωση Παγίου' ); ?>
+					<?php
+					// (265) Ανώτατο Όριο Λογαριασμού -- πίνακας 15 συγκεκριμένων
+					// τιμών στη σελ.4 του orizon_mobile.json. Dropdown με ΑΚΡΙΒΩΣ
+					// αυτές τις τιμές, όχι ελεύθερο κείμενο σαν το 'anotato_orio'
+					// του ρεύματος/αερίου παρακάτω -- ένας αριθμός εκτός λίστας
+					// δεν θα ταίριαζε σε κανένα κουτί του χαρτιού.
+					?>
+					<label class="ecrm-field" data-for="mobile_bill_cap">
+						<span class="ecrm-field__label">Ανώτατο Όριο Λογαριασμού</span>
+						<select name="mobile_bill_cap" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="0">0€</option>
+							<option value="10">10€</option>
+							<option value="25">25€</option>
+							<option value="50">50€</option>
+							<option value="100">100€</option>
+							<option value="150">150€</option>
+							<option value="200">200€</option>
+							<option value="250">250€</option>
+							<option value="300">300€</option>
+							<option value="350">350€</option>
+							<option value="400">400€</option>
+							<option value="450">450€</option>
+							<option value="500">500€</option>
+							<option value="1000">1000€</option>
+							<option value="2000">2000€</option>
+						</select>
+					</label>
 				</div>
 
 				<?php
