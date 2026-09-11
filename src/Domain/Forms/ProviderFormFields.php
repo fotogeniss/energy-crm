@@ -57,7 +57,7 @@ final class ProviderFormFields
         // Κινητή τηλεφωνία -- έλειπαν εντελώς από εδώ (214). Τα τρία έντυπα
         // Orizon (family/combo/mobile) τα τυπώνουν ήδη μέσω του
         // class-ecrm-formfill.php· το φίλτρο απλώς δεν το ήξερε.
-        'arithmos_kinitou', 'deuteros_arithmos_kinitou', 'arithmos_sim',
+        'arithmos_kinitou', 'arithmoi_kinitou_synduastikou', 'arithmos_sim',
         'typos_epidotisis', 'poso_eggiisis', 'tropos_apostolis_logariasmou',
         'combo_arithmos_paroxis', 'combo_onoma_programmatos',
         'energopoiisi_foritotita',
@@ -126,7 +126,11 @@ final class ProviderFormFields
 
         // Κινητή τηλεφωνία
         'arithmos_kinitou'           => ['mobile_msisdn'],
-        'deuteros_arithmos_kinitou'  => ['mobile_msisdn_2'],
+        // (264) Το 'deuteros_arithmos_kinitou' που ζούσε εδώ έφυγε -- ήταν
+        // μόνο του orizon_family.json, που δεν το χρησιμοποιεί πια (βλ.
+        // COLUMN_INPUTS παρακάτω). Το πεδίο του orizon_family.json που
+        // δείχνει ΚΑΙ τους δύο αριθμούς μαζί στη σελίδα 1:
+        'arithmoi_kinitou_synduastikou' => ['mobile_msisdn', 'mobile_msisdn_2'],
         'arithmos_sim'               => ['sim_number'],
         'typos_epidotisis'           => ['subsidy_type'],
         'arxiki_timi_pagiou'         => ['base_price'],
@@ -258,7 +262,14 @@ final class ProviderFormFields
 
         // Κινητή τηλεφωνία (214) -- ίδιο σχόλιο με το FROM_COLUMNS παραπάνω.
         'arithmos_kinitou'               => ['mobile_msisdn'],
-        'deuteros_arithmos_kinitou'      => ['mobile_msisdn_2'],
+        // (264) 'deuteros_arithmos_kinitou' αφαιρέθηκε: ζούσε μόνο στο
+        // orizon_family.json, που πλέον τυπώνει και τους δύο αριθμούς της
+        // Συνδυαστικής μαζί, στο κουτί "ΑΡΙΘΜΟΣ ΚΙΝΗΤΟΥ" της σελ.1 --
+        // αντί για τον δεύτερο σε ξεχωριστή σημείωση στη σελ.3. Ένα fill
+        // key, δύο inputs: χωρίς αυτό, το
+        // mainFormInputsForTemplate('orizon_family', ...) θα σταματούσε να
+        // ζητά το mobile_msisdn_2 -- το κουτί θα έμενε μισό.
+        'arithmoi_kinitou_synduastikou'  => ['mobile_msisdn', 'mobile_msisdn_2'],
         'arithmos_sim'                   => ['sim_number'],
         'typos_epidotisis'               => ['subsidy_type'],
         'poso_eggiisis'                  => ['guarantee'],
