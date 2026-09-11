@@ -1,8 +1,9 @@
 <?php
 
 /**
- * POST /contracts/{id}/files  attach scanned documents
- * GET  /file/{id}             stream one back, behind a signed token
+ * POST   /contracts/{id}/files        attach scanned documents
+ * GET    /file/{id}                   stream one back, behind a signed token
+ * DELETE /contracts/{id}/files/{file} remove one, bytes included
  *
  * These carry identity documents, so two rules apply throughout: the contract
  * is resolved through a scoped repository before anything is written, and the
@@ -82,6 +83,39 @@ final class DocumentsController implements Controller
             'permission_callback' => '__return_true',
             'args'                => ['id' => ['type' => 'integer', 'required' => true]],
         ]);
+
+        register_rest_route(Router::NAMESPACE, '/contracts/(?P<id>\d+)/files/(?P<file>\d+)', [
+            'methods'             => 'DELETE',
+            'callback'            => [$this, 'destroy'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => [
+                'id'   => ['type' => 'integer', 'required' => true],
+                'file' => ['type' => 'integer', 'required' => true],
+            ],
+        ]);
+    }
+
+    /**
+     * Ο συνεργάτης σβήνει ένα έγγραφο που ανέβηκε λάθος (π.χ. διπλό, ή λάθος
+     * αρχείο) -- bytes και σειρά μαζί, μόνιμα, όχι soft-delete: δεν υπάρχει
+     * ούτε ένας λόγος να κρατηθεί ένα σαρωμένο έγγραφο ταυτότητας «για κάθε
+     * ενδεχόμενο» μετά τη ρητή αίτηση διαγραφής του.
+     */
+    public function destroy(WP_REST_Request $request): WP_REST_Response
+    {
+        $scope      = $this->scopes->forCurrentUser();
+        $contractId = (int) $request['id'];
+        $fileId     = (int) $request['file'];
+
+        if (! $this->contracts->exists($contractId, $scope)) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
+        }
+
+        if (! $this->files->deleteFile($fileId, $contractId)) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε το έγγραφο.'], 404);
+        }
+
+        return new WP_REST_Response(['ok' => true], 200);
     }
 
     public function upload(WP_REST_Request $request): WP_REST_Response
