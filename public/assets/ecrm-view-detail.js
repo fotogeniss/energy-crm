@@ -102,11 +102,17 @@ function filesCard(c) {
 					return '<option value="' + esc(k) + '"' + (k === f.doc_kind ? ' selected' : '') + '>' + esc(kindLabel[k]) + '</option>';
 				}).join('') + '</select>';
 
+			// (274) Σβήσιμο λάθος/διπλού εγγράφου. Ίδιος λόγος με το
+			// kindPicker: ΕΞΩ από το <a>, δικό του κουμπί -- όχι μέρος του
+			// συνδέσμου λήψης.
+			var delBtn = '<button type="button" class="ecrm-file__del" data-delfile="' + esc(String(f.id)) +
+				'" title="Διαγραφή εγγράφου" aria-label="Διαγραφή εγγράφου">✕</button>';
+
 			if (f.kind_source !== 'ai' || !f.kind_before) {
-				return '<div class="ecrm-file">' + link + kindPicker + '</div>';
+				return '<div class="ecrm-file">' + link + kindPicker + delBtn + '</div>';
 			}
 
-			return '<div class="ecrm-file ecrm-file--fixed">' + link + kindPicker +
+			return '<div class="ecrm-file ecrm-file--fixed">' + link + kindPicker + delBtn +
 				'<span class="ecrm-aiflag">' +
 					'<span class="ecrm-aiflag__txt">Η AI το διάβασε και το άλλαξε από «' +
 						esc(kindLabel[f.kind_before] || 'Έγγραφο') + '»</span>' +
@@ -1033,6 +1039,29 @@ function renderDetail(view, d) {
 					openDetail(c.id);
 				})
 				.catch(function () { sel.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
+	}
+
+	/* (274) Οριστική διαγραφή ενός εγγράφου -- λάθος αρχείο, διπλό, ό,τι
+	   ανέβηκε κατά λάθος. Απλό window.confirm(), ίδιο επίπεδο με τη
+	   διαγραφή πρόχειρης αίτησης (γραμμή 524) -- ένα έγγραφο δεν έχει την
+	   ίδια βαρύτητα με ολόκληρη υπογεγραμμένη σύμβαση, δεν χρειάζεται την
+	   τελετουργία του confirmTypedWithReason(). */
+	var delFiles = view.querySelectorAll('[data-delfile]');
+	for (var df = 0; df < delFiles.length; df++) {
+		delFiles[df].addEventListener('click', function () {
+			var fileId = this.getAttribute('data-delfile');
+			var btn = this;
+			if (!window.confirm('Οριστική διαγραφή αυτού του εγγράφου;')) { return; }
+			btn.disabled = true;
+			fetch(api('/contracts/' + c.id + '/files/' + fileId), { method: 'DELETE', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (!d || !d.ok) { btn.disabled = false; toast((d && d.error) || 'Αποτυχία διαγραφής.', false); return; }
+					toast('Το έγγραφο διαγράφηκε.', true);
+					openDetail(c.id);
+				})
+				.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
 		});
 	}
 

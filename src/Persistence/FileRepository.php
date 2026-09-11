@@ -406,6 +406,49 @@ final class FileRepository
     }
 
     /**
+     * Ο συνεργάτης σβήνει ΕΝΑ συγκεκριμένο έγγραφο (π.χ. ανέβηκε λάθος
+     * αρχείο, ή διπλό) -- bytes και σειρά μαζί, ίδιο μοτίβο με
+     * `deleteBytes()` που ήδη χρησιμοποιούν το `deleteKind()`/`purgeGenerated()`.
+     *
+     * Σκόπιμα ΔΕΝ μοιράζεται μέθοδο με το `deleteKind()`: εκείνο σβήνει με
+     * βάση `doc_kind` (ολόκληρη κατηγορία, π.χ. για ξαναϋπογραφή), αυτό με
+     * βάση συγκεκριμένο `id` -- διαφορετικός κίνδυνος λάθους αν
+     * μπερδευτούν οι παράμετροι.
+     *
+     * Scoped σε contract_id, ίδιος λόγος με το setKind()/revertKind(): το
+     * `$fileId` μόνο του δεν αποδεικνύει ότι ο καλών έχει δικαίωμα πάνω σε
+     * αυτή τη σύμβαση -- τον έλεγχο τον κάνει ο caller (ScopeResolver) πριν
+     * φτάσει εδώ, εδώ είναι το δεύτερο, φθηνό εμπόδιο.
+     */
+    public function deleteFile(int $fileId, int $contractId): bool
+    {
+        global $wpdb;
+
+        if ($fileId <= 0 || $contractId <= 0) {
+            return false;
+        }
+
+        /** @var array<string, mixed>|null $row */
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT id, path, attachment_id FROM %i WHERE id = %d AND contract_id = %d',
+                $this->table,
+                $fileId,
+                $contractId
+            ),
+            ARRAY_A
+        );
+
+        if ($row === null) {
+            return false;
+        }
+
+        $this->deleteBytes([$row]);
+
+        return false !== $wpdb->delete($this->table, ['id' => $fileId, 'contract_id' => $contractId]);
+    }
+
+    /**
      * Doc_kind/kind_source/mime για ΠΟΛΛΕΣ συμβάσεις μαζί -- ίδιο σχήμα batch
      * με το signatureKindsFor(), για τον ίδιο λόγο: η οθόνη «Έγγραφα» (243)
      * δείχνει τι έχει ανέβει σε ΟΛΗ τη λίστα μιας φοράς, όχι ένα forContract()
