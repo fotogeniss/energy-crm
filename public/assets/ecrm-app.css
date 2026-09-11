@@ -769,7 +769,7 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
    Contract documents
    ============================================================ */
 .ecrm-files { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-.ecrm-file { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; text-decoration: none; background: var(--surface); transition: border-color .14s, box-shadow .14s; }
+.ecrm-file { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; text-decoration: none; background: var(--surface); transition: border-color .14s, box-shadow .14s; }
 .ecrm-file:hover { border-color: var(--navy-soft); box-shadow: 0 4px 12px -6px rgba(10,31,61,.2); }
 .ecrm-file__thumb { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 8px; overflow: hidden; background: var(--bg); display: grid; place-items: center; }
 .ecrm-file__thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -924,10 +924,17 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	.ecrm-docup__row .ecrm-docup__kind, .ecrm-docup__expiry { grid-column:2 / -1; }
 }
 
-/* Το έγγραφο που άλλαξε ετικέτα μόνο του. Μόνο εδώ η γραμμή είναι <div> και όχι
-   <a>: το κουμπί αναίρεσης δεν μπορεί να ζήσει μέσα σε σύνδεσμο. */
-.ecrm-file--fixed { flex-wrap:wrap; border-color:var(--accent-soft); background:var(--accent-wash); }
+/* (272) Κάθε γραμμή είναι <div>, ποτέ <a>: το select του είδους (και, όταν
+   υπάρχει, το κουμπί αναίρεσης) δεν μπορούν να ζήσουν μέσα σε σύνδεσμο --
+   ο ίδιος σύνδεσμος της λήψης είναι τώρα μόνο το .ecrm-file__link μέσα.
+   Το .ecrm-file πήρε flex-wrap:wrap (όχι μόνο το --fixed): ένα native
+   <select> σαν flex item αρνείται να σμικρυνθεί κάτω από το πλάτος του
+   κειμένου του (min-width:auto από προεπιλογή) -- σε στενή κάρτα (180-220px
+   στο grid) ξεχείλιζε πάνω στη μικρογραφία/όνομα του αρχείου. */
+.ecrm-file--fixed { border-color:var(--accent-soft); background:var(--accent-wash); }
 .ecrm-file__link { display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-decoration:none; }
+.ecrm-file__kindsel { font-size:var(--fs-11); color:var(--muted); background:transparent; border:1px solid transparent; border-radius:6px; padding:1px 4px; margin-left:-4px; min-width:0; max-width:100%; }
+.ecrm-file__kindsel:hover, .ecrm-file__kindsel:focus { border-color:var(--line); color:var(--ink); }
 .ecrm-aiflag { flex:1 0 100%; display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; padding-top:8px; border-top:1px dashed var(--accent-soft); }
 .ecrm-aiflag__txt { font-size:var(--fs-12-5); color:var(--accent-ink); font-weight:600; }
 
