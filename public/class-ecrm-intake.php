@@ -554,6 +554,49 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 			});
 		}
 
+		/* (271) Το iPhone στέλνει HEIC από προεπιλογή, και το <img>/canvas του
+		 * browser δεν το αποκωδικοποιεί -- γι' αυτό μέχρι τώρα περνούσε
+		 * αυτούσιο (βλ. παλιό σχόλιο πιο κάτω). Αποθηκευόταν κανονικά,
+		 * αλλά ο εξαγωγέας AI (ECRM_Extractor::file_to_block()) δεν διαβάζει HEIC
+		 * καθόλου -- ταυτότητες/λογαριασμοί που έφταναν έτσι έμεναν αόρατοι
+		 * στην ανάγνωση, σιωπηλά, χωρίς κανένα μήνυμα πουθενά.
+		 *
+		 * Το heic2any (WASM, φορτώνεται ΜΟΝΟ όταν χρειαστεί) μετατρέπει σε
+		 * JPEG εδώ, πριν καν φύγει το αρχείο από το κινητό του πελάτη -- ό,τι
+		 * αποθηκεύεται από εδώ και πέρα είναι ήδη αναγνώσιμο από το AI, χωρίς
+		 * καμία αλλαγή στον server. Αποτυχία μετατροπής (φόρτωση CDN απέτυχε,
+		 * κ.λπ.) ΔΕΝ μπλοκάρει το ανέβασμα -- το αρχείο φεύγει όπως πριν
+		 * (αόρατο στο AI, αλλά αποθηκευμένο), ίδια συμπεριφορά με σήμερα. */
+		var _heicLib = null;
+		function loadHeic2Any() {
+			if (_heicLib) return _heicLib;
+			_heicLib = new Promise(function (res, rej) {
+				if (window.heic2any) { res(window.heic2any); return; }
+				var s = document.createElement('script');
+				s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+				s.onload = function () { res(window.heic2any); };
+				s.onerror = function () { rej(new Error('heic2any load failed')); };
+				document.head.appendChild(s);
+			});
+			return _heicLib;
+		}
+		function isHeic(file) {
+			return file.type === 'image/heic' || file.type === 'image/heif' || /\.hei[cf]$/i.test(file.name || '');
+		}
+		function heicToJpeg(file) {
+			if (!isHeic(file)) return Promise.resolve(file);
+			return loadHeic2Any().then(function (heic2any) {
+				return heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+			}).then(function (result) {
+				var blob = Array.isArray(result) ? result[0] : result;
+				var name = (file.name || 'photo.heic').replace(/\.hei[cf]$/i, '.jpg');
+				return new File([blob], name, { type: 'image/jpeg' });
+			}).catch(function (err) {
+				console.warn('[ecrm] Μετατροπή HEIC απέτυχε, στέλνεται το αρχικό:', err);
+				return file;
+			});
+		}
+
 		/* Σμίκρυνση ΠΡΙΝ το ανέβασμα, και δεν είναι καλλωπισμός.
 		 *
 		 * Φωτογραφία σύγχρονου κινητού είναι 4-8MB· σε base64 φουσκώνει κατά
@@ -562,10 +605,13 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 		 * το κείμενο ενός λογαριασμού παραμένει άνετα αναγνώσιμο, και το
 		 * αρχείο πέφτει 5-10 φορές -- που μετράει και στα δεδομένα του πελάτη.
 		 *
-		 * PDF και HEIC περνούν ως έχουν: το <img> δεν τα φορτώνει, οπότε η
-		 * onerror τα στέλνει αυτούσια και ο server τα δέχεται κανονικά. */
+		 * PDF περνάει ως έχει: το <img> δεν το φορτώνει, οπότε η onerror το
+		 * στέλνει αυτούσιο και ο server το δέχεται κανονικά. HEIC περνάει
+		 * ήδη από την heicToJpeg() πιο πάνω πριν φτάσει εδώ (βλ. σημείο
+		 * κλήσης πιο κάτω) -- αν όμως η μετατροπή απέτυχε, το ίδιο
+		 * onerror καλύπτει και αυτό, όπως κάλυπτε πάντα. */
 		function shrink(file) {
-			if (file.type.indexOf('image/') !== 0 || file.type === 'image/heic') { return toDataUrl(file); }
+			if (file.type.indexOf('image/') !== 0) { return toDataUrl(file); }
 			return new Promise(function (res) {
 				var img = new Image();
 				var url = URL.createObjectURL(file);
@@ -608,7 +654,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 					return all.reduce(function (chain, item, i) {
 						return chain.then(function () {
 							say('Ανέβασμα ' + (i + 1) + ' από ' + all.length + '…', 'ok');
-							return shrink(item.f).then(function (data) {
+							return heicToJpeg(item.f).then(shrink).then(function (data) {
 								return fetch(REST + '/file', {
 									method: 'POST',
 									headers: { 'Content-Type': 'application/json' },
