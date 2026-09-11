@@ -77,6 +77,14 @@ final class ProviderFormFields
         'synainesi_prowthisis_nai', 'synainesi_prowthisis_oxi',
         'synainesi_volton_nai', 'synainesi_volton_oxi',
         'synainesi_meta_lysi_nai', 'synainesi_meta_lysi_oxi',
+        // (269) Μονό κουτί στην κορυφή της σελ.6 -- συνέχεια της ίδιας
+        // ενότητας του (268), νέο input.
+        'gdpr_rights_ack',
+        // (269) Το 'mi_katachorisi_katalogous' υπήρχε ήδη στο INPUTS (άλλοι
+        // καταναλωτές) αλλά ποτέ σε πρότυπο JSON -- τώρα που το
+        // orizon_mobile.json το τυπώνει πρώτη φορά, χρειάζεται δικιά του
+        // εγγραφή εδώ, όπως και το 'mitroo_11_*' παραπάνω.
+        'mi_katachorisi_katalogous',
         'xristis_kyrios', 'xristis_defterevon',
 
         // Το δεύτερο μπλοκ ταυτότητας του COMBO (219/220): «ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ
@@ -329,6 +337,9 @@ final class ProviderFormFields
         'synainesi_volton_oxi'           => ['volton_marketing_consent'],
         'synainesi_meta_lysi_nai'        => ['promo_after_termination'],
         'synainesi_meta_lysi_oxi'        => ['promo_after_termination'],
+        // (269) Σελ.6 -- μονό κουτί, νέο input.
+        'gdpr_rights_ack'                => ['gdpr_rights_ack'],
+        'mi_katachorisi_katalogous'      => ['no_directory_listing'],
         'xristis_kyrios'                 => [],
         'xristis_defterevon'             => [],
 
@@ -414,6 +425,8 @@ final class ProviderFormFields
         'orizon_marketing_consent' => 'Επιθυμεί προωθητικά μηνύματα Orizon (SMS/Viber/email);',
         'volton_marketing_consent' => 'Συναινεί σε επεξεργασία δεδομένων από Volton για προώθηση;',
         'promo_after_termination'  => 'Συναινεί σε επεξεργασία από Orizon μετά τη λήξη σύμβασης (προώθηση);',
+        // (269) Σελ.6 -- μονό κουτί, συνέχεια της ίδιας ενότητας.
+        'gdpr_rights_ack'  => 'Ενημερώθηκε για δικαίωμα ανάκλησης συναίνεσης & καταγγελίας (dpa.gr);',
         'group_data_consent' => 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;',
         'survey_consent'     => 'Δέχεται τηλεφωνικές έρευνες ικανοποίησης πελατών;',
         'waive_withdrawal'   => 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;',
@@ -482,6 +495,8 @@ final class ProviderFormFields
         // (268) Σελ.5 -- ίδιο σκεπτικό: καταγράφουν ΤΙ επέλεξε ο πελάτης,
         // δεν ταυτοποιούν κανέναν.
         'orizon_marketing_consent', 'volton_marketing_consent', 'promo_after_termination',
+        // (269) Σελ.6 -- ίδιο σκεπτικό: απλή επιβεβαίωση ενημέρωσης.
+        'gdpr_rights_ack',
     ];
 
     private function __construct()

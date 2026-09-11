@@ -412,7 +412,7 @@
     },
     "mitroo_11_nai": {
       "page": 5,
-      "x": 27.5,
+      "x": 25.1,
       "y": 115.3,
       "check": true,
       "size": 9
@@ -426,7 +426,7 @@
     },
     "synainesi_prowthisis_nai": {
       "page": 5,
-      "x": 27.5,
+      "x": 25.1,
       "y": 159.2,
       "check": true,
       "size": 9
@@ -440,7 +440,7 @@
     },
     "synainesi_volton_nai": {
       "page": 5,
-      "x": 27.5,
+      "x": 25.1,
       "y": 198.7,
       "check": true,
       "size": 9
@@ -454,7 +454,7 @@
     },
     "synainesi_meta_lysi_nai": {
       "page": 5,
-      "x": 27.5,
+      "x": 25.1,
       "y": 229.2,
       "check": true,
       "size": 9
@@ -463,6 +463,20 @@
       "page": 5,
       "x": 41.5,
       "y": 229.2,
+      "check": true,
+      "size": 9
+    },
+    "gdpr_rights_ack": {
+      "page": 6,
+      "x": 11.9,
+      "y": 84.5,
+      "check": true,
+      "size": 9
+    },
+    "mi_katachorisi_katalogous": {
+      "page": 6,
+      "x": 159.2,
+      "y": 125.8,
       "check": true,
       "size": 9
     }
