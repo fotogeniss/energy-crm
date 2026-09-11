@@ -91,11 +91,26 @@ class ECRM_Files {
 		return [ (int) $uid, (int) $fid ];
 	}
 
-	/** Build an authenticated, signed URL for a file id (bound to current user). */
+	/**
+	 * Build an authenticated, signed URL for a file id (bound to current user).
+	 *
+	 * Το `_wpnonce` εδώ δεν είναι προαιρετικό. Το link ανοίγει με κανονική
+	 * πλοήγηση browser (`<a target="_blank">`), όχι fetch() -- άρα ΔΕΝ
+	 * στέλνεται ποτέ `X-WP-Nonce` header. Το ίδιο το WordPress core
+	 * (`rest_cookie_check_errors()`) βλέπει REST request με cookie-login
+	 * αλλά χωρίς nonce και το αντιμετωπίζει σαν ανώνυμο
+	 * (`wp_set_current_user(0)`) -- πριν καν φτάσει στο δικό μας signed
+	 * token. Χωρίς `_wpnonce` εδώ, `serve()` βλέπει πάντα uid 0 και αρνείται
+	 * με 403, ό,τι κι αν λέει το token. Ίδιο nonce action ('wp_rest') με
+	 * αυτό που ήδη χρησιμοποιεί το `ECRM.nonce` για τα fetch() calls.
+	 */
 	public static function url( int $file_id ): string {
 		$uid = get_current_user_id();
 		return add_query_arg(
-			[ 't' => self::sign( $file_id, $uid ) ],
+			[
+				't'         => self::sign( $file_id, $uid ),
+				'_wpnonce'  => wp_create_nonce( 'wp_rest' ),
+			],
 			rest_url( \EnergyCRM\Http\Router::NAMESPACE . '/file/' . $file_id )
 		);
 	}
