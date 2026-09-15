@@ -34,6 +34,7 @@ use EnergyCRM\Infrastructure\KeyFingerprint;
 use EnergyCRM\Infrastructure\MonitoringReport;
 use EnergyCRM\Infrastructure\PiiBackfill;
 use EnergyCRM\Infrastructure\Retention;
+use EnergyCRM\Infrastructure\SmtpMailer;
 use EnergyCRM\Legacy\Loader as LegacyLoader;
 use EnergyCRM\Persistence\CustomerFields;
 use EnergyCRM\Persistence\MetricsRepository;
@@ -106,7 +107,13 @@ final class Plugin
         Roles::maybeSync();
 
         // Πρώτο απ' όλα: αν σκάσει κάτι παρακάτω, θέλουμε να έχει καταγραφεί.
-        (new ErrorLog())->register();
+        $errors = new ErrorLog();
+        $errors->register();
+
+        // Η αποστολή email: ο δρόμος αποστολής (ανενεργός μέχρι το
+        // wp-config.php να ορίσει ECRM_SMTP_HOST) και -- πάντα -- η καταγραφή
+        // των αποτυχιών, που ως τώρα ήταν σιωπηλές. Δες SmtpMailer.
+        (new SmtpMailer($errors))->register();
 
         // Πριν από κάθε έλεγχο κωδικού: μια σειρά αποτυχιών σταματάει να
         // δέχεται προσπάθειες, αντί να τις πληρώνει ο server μία-μία.
