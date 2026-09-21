@@ -218,6 +218,56 @@ export function rejectedNote(list) {
 	}).join(' — ');
 }
 
+/**
+ * Τα chips πολλαπλής επιλογής παρόχων (279) -- ίδια σήμανση σε τρεις οθόνες
+ * (νέο μέλος, καρτέλα μέλους, μαζικά -- docs/UI-PROVIDER-ACCESS.html,
+ * εγκεκριμένη μακέτα 21/09), οπότε ζουν εδώ μία φορά αντί για τρεις σχεδόν
+ * ίδιες συναρτήσεις που θα ξέφευγαν η μία από την άλλη με τον καιρό -- ίδιο
+ * μάθημα με το esc()/api()/toast() πιο πάνω σε αυτό το αρχείο.
+ *
+ * readonly=true βγάζει το κουτάκι και το κλικ: η καρτέλα κάποιου που δεν
+ * επεξεργάζεσαι εσύ δείχνει τι έχει, δεν αποφασίζεις εσύ γι' αυτόν.
+ */
+export function providerChipsHtml(providers, checkedIds, readonly) {
+	if (!providers || !providers.length) { return '<div class="ecrm-empty">Δεν υπάρχουν πάροχοι.</div>'; }
+	var checked = (checkedIds || []).map(function (id) { return parseInt(id, 10); });
+	return '<div class="ecrm-pchips" data-pwrap>' + providers.map(function (p) {
+		var pid = parseInt(p.id, 10);
+		if (readonly) { return '<span class="ecrm-pchip ecrm-pchip--ro">' + esc(p.name) + '</span>'; }
+		var on = checked.indexOf(pid) !== -1;
+		return '<button type="button" class="ecrm-pchip' + (on ? ' is-on' : '') + '" data-pchip="' + pid + '">' +
+			'<span class="ecrm-pchip__b"></span>' + esc(p.name) + '</button>';
+	}).join('') + '</div>';
+}
+
+/** Τα id των chips τσεκαρισμένα αυτή τη στιγμή μέσα σε ένα container. */
+export function checkedProviderIds(scope) {
+	return Array.prototype.map.call(scope.querySelectorAll('.ecrm-pchip.is-on[data-pchip]'), function (b) {
+		return parseInt(b.getAttribute('data-pchip'), 10);
+	});
+}
+
+/**
+ * Κλικ σε chip = toggle, χωρίς αίτημα -- αποθηκεύεται μαζί όταν πατηθεί το
+ * κουμπί της φόρμας. «Ολοι»/«Κανενας» (data-pall/data-pnone μέσα στο ίδιο
+ * scope) τσεκάρουν/ξετσεκάρουν όλα μαζί.
+ */
+export function wireProviderChips(scope) {
+	scope.querySelectorAll('.ecrm-pchip[data-pchip]').forEach(function (b) {
+		b.addEventListener('click', function () { b.classList.toggle('is-on'); });
+	});
+	var all = scope.querySelector('[data-pall]');
+	var none = scope.querySelector('[data-pnone]');
+	if (all) all.addEventListener('click', function (e) {
+		e.preventDefault();
+		scope.querySelectorAll('.ecrm-pchip[data-pchip]').forEach(function (b) { b.classList.add('is-on'); });
+	});
+	if (none) none.addEventListener('click', function (e) {
+		e.preventDefault();
+		scope.querySelectorAll('.ecrm-pchip[data-pchip]').forEach(function (b) { b.classList.remove('is-on'); });
+	});
+}
+
 export function toast(msg, ok) {
 	var t = document.getElementById('ecrm-toast');
 

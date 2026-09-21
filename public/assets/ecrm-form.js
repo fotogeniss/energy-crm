@@ -73,6 +73,11 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		var mobilePricing = {};
 		var providersLoaded = false;
 		var pendingProvider = null;
+		// (279) η αρχική λίστα του /providers μπορεί να «φαρδύνει» προσωρινά
+		// (βλ. ensureProviderVisible()) όταν ανοίγει σε επεξεργασία μια παλιά
+		// αίτηση με πάροχο που ο χρήστης έχασε στο μεταξύ. Το resetForm() το
+		// ξαναστενεύει, ώστε μια ΝΕΑ αίτηση να μη δείχνει ξανά αυτόν τον πάροχο.
+		var providersWidened = false;
 		var q = function (sel) { return root.querySelector(sel); };
 		var qa = function (sel) { return root.querySelectorAll(sel); };
 
@@ -1010,14 +1015,22 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			.then(function (r) { return r.json(); })
 			.then(function (d) {
 				programsCache = d.programs || []; providersCache = d.providers || []; mobilePricing = d.mobile_pricing || {}; renderProviders(d.providers || []); providersLoaded = true; renderVoltonPrograms();
-				// Επεξεργασία υπάρχουσας αίτησης: το applyEdit() καλεί selectProvider(c.provider_id)
+				// Επεξεργασία υπάρχουσας αίτησης: το applyEdit() καλεί selectProviderForEdit(c.provider_id)
 				// ΠΡΙΝ προλάβει να απαντήσει αυτό εδώ το fetch -- selectProvider() το βλέπει και
 				// απλώς αποθηκεύει pendingProvider, χωρίς state.provider_id/κλάση is-on ακόμα.
 				// Το applyEdit() τότε καλεί refreshProviderFields() σε άδειο state -- κάνει early
 				// return, καμία αίτηση /forms/fields. Χωρίς αυτή τη δεύτερη κλήση ΕΔΩ, το «Πάνω στο
 				// έντυπο» ανοίγει σε άδειο κουτί κάθε φορά που η επεξεργασία ανοίγει πιο γρήγορα απ'
 				// όσο προλαβαίνει να απαντήσει το /providers -- ό,τι είδαμε ζωντανά 31/08.
-				if (pendingProvider) { selectProvider(pendingProvider); pendingProvider = null; }
+				//
+				// (279) Ο πάροχος μπορεί να μην είναι καν στη λίστα -- ο χρήστης να τον έχασε
+				// στο μεταξύ (ProviderVisibility). ensureProviderVisible() το καλύπτει με
+				// GET /providers?contract=<id>, που κρατά ρητά τον πάροχο της ΣΥΓΚΕΚΡΙΜΕΝΗΣ
+				// αίτησης (CatalogueController::keptProvider()).
+				if (pendingProvider) {
+					var pp = pendingProvider; pendingProvider = null;
+					ensureProviderVisible(pp, function () { selectProvider(pp); });
+				}
 				renderPrograms(); renderUsual(d.usual);
 				refreshProviderFields();
 				refreshGuaranteeSuggestion();
@@ -1026,7 +1039,14 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 
 		function renderProviders(list) {
 			var wrap = q('[data-providers]');
-			if (!list.length) { wrap.innerHTML = '<div class="ecrm-empty">Δεν υπάρχουν πάροχοι.</div>'; return; }
+			// (279) «Δεν υπάρχουν πάροχοι» ήταν σωστό όσο ο κατάλογος ήταν ίδιος
+			// για όλους -- τώρα μια άδεια λίστα σχεδόν πάντα σημαίνει «δεν σου
+			// έχει δοθεί κανένας ακόμα», όχι ότι ο κατάλογος είναι κενός.
+			if (!list.length) {
+				wrap.innerHTML = '<div class="ecrm-empty">Δεν σου έχει δοθεί κανένας πάροχος ακόμη.<br>' +
+					'Ζήτα από τον υπεύθυνό σου να σου ανοίξει πρόσβαση.</div>';
+				return;
+			}
 			wrap.innerHTML = '';
 			list.forEach(function (p) {
 				var b = document.createElement('button');
@@ -1188,6 +1208,42 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			}
 			limitEnergyToProvider();
 			refreshKbDocs();
+		}
+
+		/**
+		 * Επεξεργασία υπάρχουσας αίτησης (279): ο πάροχός της μπορεί να μην
+		 * είναι πια στη λίστα -- ο χρήστης τον έχασε στο μεταξύ. Χωρίς αυτό,
+		 * η selectProvider() δεν έβρισκε κουμπί, δεν έγραφε state.provider_id,
+		 * και η φόρμα άνοιγε με άδειο πάροχο (ζωντανή αναφορά, 21/09).
+		 *
+		 * Το GET /providers?contract=<id> κρατά ρητά τον πάροχο ΑΥΤΗΣ της
+		 * αίτησης (CatalogueController::keptProvider(), μόνο για αίτηση μέσα
+		 * στο scope του χρήστη) -- όχι όλους, ένας μόνο κρίκος παραπάνω.
+		 */
+		function ensureProviderVisible(pid, done) {
+			pid = parseInt(pid, 10);
+			if (!pid) { done(); return; }
+			var known = providersCache.some(function (p) { return parseInt(p.id, 10) === pid; });
+			if (known) { done(); return; }
+			var qs = state.contract_id ? ('?contract=' + state.contract_id) : '';
+			fetch(api('/providers') + qs, { headers: headers() })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					programsCache = d.programs || programsCache;
+					providersCache = d.providers || providersCache;
+					providersWidened = true;
+					renderProviders(providersCache);
+					renderVoltonPrograms();
+					done();
+				})
+				.catch(function () { done(); });
+		}
+
+		/** Ο,τι κάνει η applyEdit() για τον πάροχο -- selectProvider() με το φάρδεμα από πάνω. */
+		function selectProviderForEdit(pid) {
+			pid = parseInt(pid, 10) || 0;
+			if (!pid || !providersLoaded) { selectProvider(pid); return; }
+			ensureProviderVisible(pid, function () { selectProvider(pid); });
 		}
 
 		// Only offer what the provider actually sells. Orizon is a mobile
@@ -1464,7 +1520,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			setChip('activation_type', c.activation_type); if (c.activation_type) state.activation_type = c.activation_type;
 			setChip('invoice_code', c.invoice_code); if (c.invoice_code) state.invoice_code = c.invoice_code;
 			applyCustomerType();
-			selectProvider(c.provider_id);
+			selectProviderForEdit(c.provider_id);
 			state.program_id = c.program_id ? parseInt(c.program_id, 10) : null;
 			renderPrograms();
 			var sel = q('[data-program]'); if (sel && c.program_id) sel.value = c.program_id;
@@ -1597,6 +1653,22 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			dirty = false;
 			state.contract_id = 0; state.customer_id = 0; state.extracted_json = null;
 			state.request_id = requestId();
+			// (279) Αν το άνοιγμα μιας επεξεργασίας φάρδυνε προσωρινά τη λίστα
+			// (ensureProviderVisible()) για να δείξει έναν πάροχο που ο χρήστης
+			// έχει πλέον χάσει, μια ΝΕΑ αίτηση δεν πρέπει να τον ξαναδείχνει --
+			// η αποθήκευση θα την απέρριπτε ούτως ή άλλως, αλλά το κουμπί δεν
+			// έχει λόγο να υπάρχει καν. providersLoaded ξαναγίνεται true αμέσως
+			// μόλις απαντήσει το fetch· ώσπου τότε η λίστα μένει όπως ήταν.
+			if (providersWidened) {
+				providersWidened = false;
+				fetch(api('/providers'), { headers: headers() })
+					.then(function (r) { return r.json(); })
+					.then(function (d) {
+						programsCache = d.programs || []; providersCache = d.providers || [];
+						renderProviders(providersCache); renderVoltonPrograms(); renderPrograms();
+					})
+					.catch(function () {});
+			}
 			state.provider_id = null; state.program_id = null; state.invoice_code = null; state.activation_type = null;
 			state.energy_type = 'power'; state.category = 'home'; state.price_type = 'fixed'; state.customer_type = 'individual';
 			state.files = []; state.filesUploaded = false;

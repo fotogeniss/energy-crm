@@ -1,6 +1,6 @@
 /* Energy CRM — team: the members at each role, and adding one. */
 
-import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, checkedProviderIds, esc, fetch, H, providerChipsHtml, toast, viewEl, wireProviderChips } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
 import { openPartner } from '@energy-crm/navigate';
 
@@ -55,7 +55,15 @@ function renderTeam(view, d) {
 		'<div class="ecrm-grid">' +
 		'<label class="ecrm-field"><span class="ecrm-field__label">Ονοματεπώνυμο</span><input class="ecrm-input" data-f="name"></label>' +
 		'<label class="ecrm-field"><span class="ecrm-field__label">Email</span><input class="ecrm-input" type="email" data-f="email"></label>' +
-		'</div><button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-add-member>+ Προσθήκη</button>' +
+		'</div>' +
+		// Παρόχοι που θα βλέπει (279): φορτώνονται με το πρώτο άνοιγμα της
+		// φόρμας, όχι εδώ -- δεν αξίζει δεύτερο αίτημα στην κάθε φόρτωση της
+		// οθόνης για κάτι που ο manager μπορεί να μην ανοίξει καθόλου.
+		'<div class="ecrm-step" style="margin-top:14px" data-newprov-step hidden>Πάροχοι που θα βλέπει ' +
+		'<span><a href="#" data-pall>Ολοι</a> <a href="#" data-pnone>Κανένας</a></span></div>' +
+		'<div data-newprov-chips></div>' +
+		'<div class="ecrm-hint" data-newprov-hint hidden>Βλέπεις μόνο όσους παρόχους έχεις κι εσύ.</div>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-add-member>+ Προσθήκη</button>' +
 		'<div class="ecrm-ai-status" data-member-msg></div></div>'
 	) : '';
 
@@ -63,11 +71,58 @@ function renderTeam(view, d) {
 		'<header class="ecrm-head"><h2 class="ecrm-title">Η ομάδα μου</h2><p class="ecrm-sub">Διαχείριση πωλητών του γραφείου σου.</p></header>' +
 		'<div class="ecrm-card">' +
 		'<div class="ecrm-listhead"><span class="ecrm-listhead__count">' + members.length + ' πωλητές</span>' +
-		(canManage ? '<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-show-add>+ Νέος Πωλητής</button>' : '') + '</div>' +
-		table + '</div>' + addForm;
+		(canManage ? '<span><button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-show-bulk>Πάροχοι ομάδας</button> ' +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-show-add>+ Νέος Πωλητής</button></span>' : '') + '</div>' +
+		table + '</div>' + addForm +
+		(canManage ? '<div class="ecrm-card" data-bulkwrap hidden></div>' : '');
+
+	// Παρόχοι (279): φορτώνονται μία φορά ανά άνοιγμα οθόνης, μοιρασμένοι
+	// ανάμεσα στη φόρμα «Νέο μέλος» και το «Πάροχοι ομάδας» -- το GET
+	// /team/providers είναι το ίδιο ερώτημα και για τα δύο.
+	var providersPromise = null;
+	function loadProviders() {
+		if (!providersPromise) {
+			providersPromise = fetch(api('/team/providers'), { headers: H() }).then(function (r) { return r.json(); });
+		}
+		return providersPromise;
+	}
 
 	var showAdd = view.querySelector('[data-show-add]');
-	if (showAdd) showAdd.addEventListener('click', function () { var w = view.querySelector('[data-addwrap]'); if (w) { w.hidden = !w.hidden; if (!w.hidden) w.scrollIntoView({ behavior: 'smooth' }); } });
+	if (showAdd) showAdd.addEventListener('click', function () {
+		var w = view.querySelector('[data-addwrap]');
+		if (!w) return;
+		w.hidden = !w.hidden;
+		if (w.hidden) return;
+		w.scrollIntoView({ behavior: 'smooth' });
+		var chipsBox = w.querySelector('[data-newprov-chips]');
+		if (chipsBox && !chipsBox.getAttribute('data-loaded')) {
+			chipsBox.innerHTML = '<div class="ecrm-empty">Φόρτωση…</div>';
+			loadProviders().then(function (d) {
+				if (!d || !d.ok) { chipsBox.innerHTML = '<div class="ecrm-empty">Δεν φόρτωσαν οι πάροχοι.</div>'; return; }
+				var providers = d.providers || [];
+				// Απόφαση ιδιοκτήτη 21/09: στη δημιουργία, όλοι όσους βλέπει ο
+				// manager τσεκαρισμένοι εξ αρχής -- ο ίδιος διαλέγει ποιους θα
+				// αφαιρέσει, όχι ποιους θα προσθέσει.
+				var ids = providers.map(function (p) { return parseInt(p.id, 10); });
+				chipsBox.innerHTML = providerChipsHtml(providers, ids, false);
+				chipsBox.setAttribute('data-loaded', '1');
+				wireProviderChips(w);
+				var step = w.querySelector('[data-newprov-step]'); if (step) step.hidden = false;
+				var hint = w.querySelector('[data-newprov-hint]'); if (hint) hint.hidden = false;
+			}).catch(function () { chipsBox.innerHTML = '<div class="ecrm-empty">Δεν φόρτωσαν οι πάροχοι.</div>'; });
+		}
+	});
+
+	var showBulk = view.querySelector('[data-show-bulk]');
+	if (showBulk) showBulk.addEventListener('click', function () {
+		var w = view.querySelector('[data-bulkwrap]');
+		if (!w) return;
+		w.hidden = !w.hidden;
+		if (w.hidden) return;
+		w.scrollIntoView({ behavior: 'smooth' });
+		renderBulk(w, loadProviders);
+	});
+
 	// Η γραμμή ανοίγει την καρτέλα, ΕΚΤΟΣ αν πατήθηκε κουμπί μέσα της: τα
 	// «Απενεργοποίηση» και «Αφαίρεση» κάθονται στην ίδια γραμμή, και χωρίς
 	// αυτόν τον έλεγχο κάθε τους πάτημα θα άνοιγε και την καρτέλα από κάτω.
@@ -109,7 +164,14 @@ function teamOp(id, op) {
 }
 function addMember(view, btn) {
 	var get = function (f) { var el = view.querySelector('[data-f="' + f + '"]'); return el ? el.value : ''; };
+	var chipsWrap = view.querySelector('[data-addwrap]');
 	var payload = { name: get('name'), email: get('email'), role: 'ecrm_seller' };
+	// Αν οι παρόχοι δεν πρόλαβαν καν να φορτώσουν (η φόρμα ανοίχτηκε και
+	// πατήθηκε αμέσως), δεν στέλνουμε provider_ids καθόλου -- ο server βάζει
+	// τότε όλους όσους έχει ο δημιουργός, το ίδιο προεπιλεγμένο αποτέλεσμα.
+	if (chipsWrap && chipsWrap.querySelector('[data-newprov-chips] [data-pchip]')) {
+		payload.provider_ids = checkedProviderIds(chipsWrap);
+	}
 	if (!payload.name || !payload.email) { toast('Συμπλήρωσε όνομα και email.', false); return; }
 	btn.disabled = true;
 	fetch(api('/team'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(payload) })
@@ -128,4 +190,71 @@ function addMember(view, btn) {
 		})
 		.catch(function () { toast('Σφάλμα δικτύου.', false); })
 		.finally(function () { btn.disabled = false; });
+}
+
+/**
+ * «Πάροχοι ομάδας» (279, §3 της μακέτας): ένας πάροχος ανά γραμμή, πόσοι από
+ * τους ΑΜΕΣΟΥΣ υφισταμένους τον έχουν, «Σε όλους» / «Αφαίρεση από όλους».
+ * Μοιράζεται το ίδιο GET /team/providers με τη φόρμα «Νέο μέλος» (loadProviders,
+ * cache-αρισμένο στον καλούντα) -- όχι δεύτερο αίτημα για το ίδιο δεδομένο.
+ */
+function renderBulk(wrap, loadProviders) {
+	wrap.innerHTML = '<div class="ecrm-step">Πάροχοι ομάδας</div><div class="ecrm-empty">Φόρτωση…</div>';
+	loadProviders().then(function (d) {
+		if (!d || !d.ok) { wrap.innerHTML = '<div class="ecrm-empty">Δεν φόρτωσαν οι πάροχοι.</div>'; return; }
+		var members = d.members || 0;
+		var rows = (d.providers || []).map(function (p) {
+			var has = p.has || 0;
+			var pct = members ? Math.round((has / members) * 100) : 0;
+			var grantBtn = has < members
+				? '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-bulk-op="grant" data-bulk-id="' + p.id + '">Σε όλους</button>'
+				: '';
+			var revokeBtn = has > 0
+				? '<button type="button" class="ecrm-btn ecrm-btn--danger ecrm-btn--sm" data-bulk-op="revoke" data-bulk-id="' + p.id + '" data-bulk-name="' + esc(p.name) + '">Αφαίρεση από όλους</button>'
+				: '';
+			return '<tr><td>' + esc(p.name) + '</td>' +
+				'<td><span class="ecrm-ptbl__cnt"><b>' + has + '</b> από ' + members + '</span>' +
+				'<div class="ecrm-ptbl__bar"><i style="width:' + pct + '%"></i></div></td>' +
+				'<td class="ecrm-ptbl__act">' + grantBtn + ' ' + revokeBtn + '</td></tr>';
+		}).join('');
+
+		wrap.innerHTML = '<div class="ecrm-step">Πάροχοι ομάδας</div>' +
+			(rows
+				? '<div class="ecrm-tablewrap"><table class="ecrm-ptbl"><thead><tr><th>Πάροχος</th><th>Το έχουν</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+				: '<div class="ecrm-empty">Δεν έχεις κανέναν πάροχο ακόμα.</div>') +
+			'<div class="ecrm-hint">Μόνο οι άμεσοι υφιστάμενοί σου. Οι υποσυνεργάτες σου αποφασίζουν οι ίδιοι για τους δικούς τους.</div>';
+
+		wrap.querySelectorAll('[data-bulk-op]').forEach(function (b) {
+			b.addEventListener('click', function () {
+				var op = this.getAttribute('data-bulk-op');
+				var pid = this.getAttribute('data-bulk-id');
+				if (op === 'revoke') {
+					var name = this.getAttribute('data-bulk-name');
+					var msg = 'Αφαιρείς ' + name + ' από όλους τους άμεσους υφισταμένους σου. Όσοι έχουν δική ' +
+						'τους ομάδα, το χάνουν κι εκείνοι από κάτω τους. Οι αιτήσεις που έχουν ήδη γίνει μένουν ' +
+						'όπως είναι.\n\nΣυνέχεια;';
+					if (!confirm(msg)) return;
+				}
+				bulkOp(wrap, pid, op);
+			});
+		});
+	}).catch(function () { wrap.innerHTML = '<div class="ecrm-empty">Δεν φόρτωσαν οι πάροχοι.</div>'; });
+}
+
+function bulkOp(wrap, providerId, op) {
+	fetch(api('/team/providers'), {
+		method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+		body: JSON.stringify({ provider_id: providerId, op: op })
+	})
+		.then(function (r) { return r.json(); })
+		.then(function (res) {
+			if (!res || !res.ok) { toast((res && res.error) || 'Αποτυχία.', false); return; }
+			toast(res.below > 0 ? 'Έγινε -- επηρέασε και ' + res.below + ' από κάτω.' : 'Έγινε.');
+			// Ξαναζητά φρέσκο /team/providers -- η κρυφή μνήμη του καλούντος
+			// θα έδειχνε τα παλιά "has" νούμερα.
+			renderBulk(wrap, function () {
+				return fetch(api('/team/providers'), { headers: H() }).then(function (r) { return r.json(); });
+			});
+		})
+		.catch(function () { toast('Σφάλμα δικτύου.', false); });
 }

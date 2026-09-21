@@ -17,7 +17,7 @@
  * δείγμα δίπλα του θα περνούσε για ιστορικό.
  */
 
-import { api, esc, fetch, H, markSubViewOpen, viewEl } from '@energy-crm/util';
+import { api, checkedProviderIds, esc, fetch, H, markSubViewOpen, providerChipsHtml, toast, viewEl, wireProviderChips } from '@energy-crm/util';
 import { fmtDate, initials, tint } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
 
@@ -27,22 +27,34 @@ var MIN_SAMPLE = 5;
 export function openPartner(id) {
 	go('partner');
 	markSubViewOpen();
+	loadPartner(id);
+}
+
+/**
+ * Δύο αιτήματα μαζί (279): η ίδια η καρτέλα (KPI, ιστορικό) και η κάρτα
+ * «Πάροχοι» -- δεν έχουν σχέση μεταξύ τους, οπότε δεν περιμένει το ένα το
+ * άλλο. Ξεχωριστή συνάρτηση από το openPartner() ώστε η αποθήκευση παρόχων
+ * να μπορεί να ξαναφορτώσει την καρτέλα χωρίς να προσθέσει δεύτερη εγγραφή
+ * ιστορικού (markSubViewOpen() τρέχει μία φορά, στο άνοιγμα).
+ */
+function loadPartner(id) {
 	var view = viewEl('partner');
 	if (!view) { return; }
 	view.innerHTML = '<div class="ecrm-loading">Φόρτωση…</div>';
-	fetch(api('/team/' + id), { headers: H() })
-		.then(function (r) { return r.json(); })
-		.then(function (d) {
-			if (!d || !d.ok) {
-				view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">' +
-					esc((d && d.error) || 'Δεν βρέθηκε.') + '</div></div>';
-				return;
-			}
-			renderPartner(view, d);
-		})
-		.catch(function () {
-			view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>';
-		});
+	Promise.all([
+		fetch(api('/team/' + id), { headers: H() }).then(function (r) { return r.json(); }),
+		fetch(api('/team/' + id + '/providers'), { headers: H() }).then(function (r) { return r.json(); }).catch(function () { return null; }),
+	]).then(function (res) {
+		var d = res[0], p = res[1];
+		if (!d || !d.ok) {
+			view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">' +
+				esc((d && d.error) || 'Δεν βρέθηκε.') + '</div></div>';
+			return;
+		}
+		renderPartner(view, d, id, p);
+	}).catch(function () {
+		view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>';
+	});
 }
 
 /** Το τσιπάκι μεταβολής — ίδιο σχήμα και ίδιο SVG με του πίνακα. */
@@ -166,7 +178,95 @@ function commissionRows(rows) {
 		'</tr></thead><tbody>' + body + '</tbody></table></div>' + more;
 }
 
-function renderPartner(view, d) {
+/**
+ * Η κάρτα «Πάροχοι» (279, §2 της μακέτας) -- τι βλέπει το μέλος αυτό, και αν
+ * επιτρέπεται σε ΕΣΕΝΑ να το αλλάξεις. Το `prov` είναι η απάντηση του GET
+ * /team/{id}/providers· `null`/`!ok` όταν απέτυχε το αίτημα (δίκτυο, 404 --
+ * δεν εμποδίζει την υπόλοιπη καρτέλα, απλά δεν δείχνει τίποτα εδώ.
+ */
+function providersCard(prov) {
+	if (!prov || !prov.ok) { return ''; }
+
+	if (prov.unrestricted) {
+		return '<div class="ecrm-card"><div class="ecrm-step">Πάροχοι</div>' +
+			'<span class="ecrm-badge ecrm-badge--active">Ολοι (διαχειριστής)</span></div>';
+	}
+
+	if (prov.editable) {
+		return '<div class="ecrm-card" data-provcard>' +
+			'<div class="ecrm-step">Πάροχοι <span><a href="#" data-pall>Ολοι</a> <a href="#" data-pnone>Κανένας</a></span></div>' +
+			providerChipsHtml(prov.providers, prov.granted, false) +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-prov-save>Αποθήκευση</button>' +
+			'<div class="ecrm-pconfirm" data-prov-confirm hidden></div>' +
+			'</div>';
+	}
+
+	return '<div class="ecrm-card"><div class="ecrm-step">Πάροχοι</div>' +
+		providerChipsHtml(prov.providers, prov.granted, true) +
+		'<div class="ecrm-hint">Τους ορίζει ο υπεύθυνός του.</div></div>';
+}
+
+/** Καρφώνει τα κλικ της κάρτας «Πάροχοι» -- μόνο όταν είναι επεξεργάσιμη. */
+function wireProvidersCard(view, memberId, memberName, prov) {
+	if (!prov || !prov.ok || !prov.editable) { return; }
+
+	var card = view.querySelector('[data-provcard]');
+	if (!card) { return; }
+
+	wireProviderChips(card);
+
+	var original = (prov.granted || []).map(function (id) { return parseInt(id, 10); });
+	var confirmBox = card.querySelector('[data-prov-confirm]');
+	var confirmed = false;
+
+	// Αλλαγή στην επιλογή μετά από confirm ζητά νέα επιβεβαίωση -- αλλιώς ένα
+	// «Συνέχεια» θα κάλυπτε και μια εντελώς διαφορετική αφαίρεση.
+	card.querySelectorAll('.ecrm-pchip[data-pchip]').forEach(function (b) {
+		b.addEventListener('click', function () { confirmed = false; confirmBox.hidden = true; confirmBox.innerHTML = ''; });
+	});
+
+	var saveBtn = card.querySelector('[data-prov-save]');
+	if (!saveBtn) { return; }
+
+	saveBtn.addEventListener('click', function () {
+		var requested = checkedProviderIds(card);
+		var removedNames = (prov.providers || [])
+			.filter(function (pr) {
+				var pid = parseInt(pr.id, 10);
+				return original.indexOf(pid) !== -1 && requested.indexOf(pid) === -1;
+			})
+			.map(function (pr) { return pr.name; });
+
+		if (removedNames.length && !confirmed) {
+			confirmBox.hidden = false;
+			confirmBox.innerHTML = 'Αφαιρείς <b>' + esc(removedNames.join(', ')) + '</b>. Αν ο/η ' + esc(memberName) +
+				' έχει δική του/της ομάδα, το χάνουν και όλοι από κάτω του/της. Οι αιτήσεις που έχουν ήδη γίνει ' +
+				'μένουν όπως είναι.<br><button type="button" class="ecrm-btn ecrm-btn--danger ecrm-btn--sm" ' +
+				'data-prov-confirm-yes style="margin-top:8px">Συνέχεια</button>';
+			var yes = confirmBox.querySelector('[data-prov-confirm-yes]');
+			if (yes) yes.addEventListener('click', function () { confirmed = true; saveProviders(memberId, requested); });
+			return;
+		}
+
+		saveProviders(memberId, requested);
+	});
+}
+
+function saveProviders(memberId, providerIds) {
+	fetch(api('/team/' + memberId + '/providers'), {
+		method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+		body: JSON.stringify({ provider_ids: providerIds }),
+	})
+		.then(function (r) { return r.json(); })
+		.then(function (res) {
+			if (!res || !res.ok) { toast((res && res.error) || 'Αποτυχία.', false); return; }
+			toast(res.below > 0 ? 'Αποθηκεύτηκε -- επηρέασε και ' + res.below + ' από κάτω.' : 'Αποθηκεύτηκε.');
+			loadPartner(memberId);
+		})
+		.catch(function () { toast('Σφάλμα δικτύου.', false); });
+}
+
+function renderPartner(view, d, memberId, prov) {
 	var m = d.member || {};
 	var statuses = d.statuses || {};
 	var down = d.downline || [];
@@ -209,6 +309,8 @@ function renderPartner(view, d) {
 		'</header>' +
 
 		kpiCards(d.kpi || {}) +
+
+		providersCard(prov) +
 
 		'<div class="ecrm-pgrid">' +
 		// .ecrm-pgrid__main: η βασική στήλη (1.6fr) έχει πλέον ΔΥΟ κάρτες
@@ -253,4 +355,6 @@ function renderPartner(view, d) {
 	view.querySelectorAll('[data-open]').forEach(function (row) {
 		row.addEventListener('click', function () { openDetail(this.getAttribute('data-open')); });
 	});
+
+	wireProvidersCard(view, memberId, m.name || '', prov);
 }
