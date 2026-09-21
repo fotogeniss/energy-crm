@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Domain\Document\KindVerdict;
+use EnergyCRM\Domain\Document\SystemKind;
 
 final class FileRepository
 {
@@ -267,6 +268,13 @@ final class FileRepository
                 continue;
             }
 
+            // Ο,τι έφτιαξε το σύστημα (αίτηση, φύλλα, υπογραφές) το ξέρουμε ήδη
+            // τι είναι -- δεν πληρώνουμε ανάγνωση γι' αυτό, και δεν αφήνουμε μια
+            // «διόρθωση» να μετονομάσει μια υπογραφή. Δες SystemKind.
+            if (SystemKind::isSystem((string) ($row['doc_kind'] ?? ''))) {
+                continue;
+            }
+
             $path = (string) ($row['path'] ?? '');
             $mime = (string) ($row['mime'] ?? '');
 
@@ -395,6 +403,22 @@ final class FileRepository
         global $wpdb;
 
         if ($fileId <= 0 || $contractId <= 0 || $kind === '') {
+            return false;
+        }
+
+        // Το είδος ενός αρχείου του συστήματος δεν αλλάζει από το χέρι: μια
+        // υπογραφή που γίνεται «Ταυτότητα» παύει να βρίσκεται από το
+        // latestPathOfKind() και χάνεται από κάθε έντυπο. Δες SystemKind.
+        $current = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT doc_kind FROM %i WHERE id = %d AND contract_id = %d',
+                $this->table,
+                $fileId,
+                $contractId
+            )
+        );
+
+        if ($current === null || SystemKind::isSystem((string) $current)) {
             return false;
         }
 

@@ -25,6 +25,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\SignatureRoles;
+use EnergyCRM\Domain\Document\SystemKind;
 use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\ContractQueries;
@@ -116,18 +117,26 @@ final class ContractsReadController implements Controller
         }
 
         $row['events'] = $this->withActorNames($this->events->forContract($id));
-        $row['files']  = array_map(
+        // Η αίτηση (και τα φύλλα της, και το υπογεγραμμένο αντίγραφο) ΔΕΝ είναι
+        // έγγραφο της λίστας: έχει δικό της κουμπί «PDF έντυπο», που δίνει την
+        // τελευταία εκδοχή. Οι υπογραφές μένουν, με σταθερή ετικέτα αντί για
+        // επιλογή είδους. Δες SystemKind.
+        $row['files']  = array_values(array_map(
             static function (array $file): array {
-                $file['url']      = ECRM_Files::url((int) $file['id']);
-                $file['is_image'] = str_starts_with((string) $file['mime'], 'image/');
+                $file['url']          = ECRM_Files::url((int) $file['id']);
+                $file['is_image']     = str_starts_with((string) $file['mime'], 'image/');
+                $file['system_label'] = SystemKind::label((string) $file['doc_kind']);
 
                 // Storage layout is ours, not the client's business.
                 unset($file['path'], $file['attachment_id']);
 
                 return $file;
             },
-            $this->files->forContract($id)
-        );
+            array_filter(
+                $this->files->forContract($id),
+                static fn (array $file): bool => ! SystemKind::isApplication((string) $file['doc_kind'])
+            )
+        ));
 
         $row['extra'] = empty($row['extra_json'])
             ? []
