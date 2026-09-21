@@ -764,6 +764,10 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-emptybox__txt { font-size: var(--fs-15); color: var(--muted); }
 
 .ecrm-addform { margin-top: 16px; }
+/* (280) Η γραμμή του κουμπιού δημιουργίας: χωρισμένη από τα chips με
+   διαχωριστική, ώστε να μη διαβάζεται σαν μέρος της επιλογής παρόχων. */
+.ecrm-addform__foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+.ecrm-addform__foot .ecrm-hint { margin: 0; }
 
 /* ============================================================
    Contract documents
