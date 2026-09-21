@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use EnergyCRM\Access\NotAuthenticated;
+use EnergyCRM\Access\ProviderVisibility;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ContractTerm;
 use EnergyCRM\Domain\Contract\ExtraFields;
@@ -53,6 +54,7 @@ final class RenewalsController implements Controller
         private readonly ContractRepository $contracts,
         private readonly ContractQueries $queries,
         private readonly EventRepository $events,
+        private readonly ProviderVisibility $providerAccess,
     ) {
     }
 
@@ -116,6 +118,18 @@ final class RenewalsController implements Controller
 
         if ($source === null) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
+        }
+
+        // Η ανανέωση είναι ΝΕΑ αίτηση στον ίδιο πάροχο (278): αν ο δράστης δεν
+        // τον βλέπει πια, δεν την ανοίγει. Η παλιά σύμβαση μένει όπως ήταν.
+        $providerId = (int) ($source['provider_id'] ?? 0);
+
+        if ($providerId > 0 && ! $this->providerAccess->forScope($scope)->allows($providerId)) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Δεν έχεις πλέον πρόσβαση στον πάροχο αυτής της σύμβασης, '
+                    . 'οπότε δεν μπορείς να την ανανεώσεις. Ζήτα από τον υπεύθυνό σου.',
+            ], 403);
         }
 
         $draft = $this->carriedForward($source);

@@ -39,6 +39,7 @@ use EnergyCRM\Access\Roles;
 use EnergyCRM\Domain\Contract\ContractAddresses;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\Tables;
+use EnergyCRM\Providers\Persistence\ProviderGrantRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -633,6 +634,12 @@ final class ContractSaveMappingTest extends IntegrationTestCase
 
         $providerId = (int) $wpdb->insert_id;
         self::assertGreaterThan(0, $providerId, 'Το provider fixture δεν μπήκε.');
+
+        // (278) Η αποθήκευση δέχεται μόνο πάροχο που έχει δοθεί στον πωλητή --
+        // όπως στην πραγματική εγκατάσταση, όπου του τον έδωσε το 0037 ή ο
+        // manager του. Αυτό το test ελέγχει τη χαρτογράφηση, όχι την πρόσβαση
+        // (εκείνη: ProviderAccessTest).
+        (new ProviderGrantRepository())->set(get_current_user_id(), [$providerId]);
 
         return $providerId;
     }

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy CRM — Ποιους παρόχους βλέπει κάθε χρήστης</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9e8e4;color:#2a2926;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.6}
+main{max-width:1220px;margin:0 auto;padding:30px 18px 90px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:#1a1a18}
+h2.sec{font-size:17px;margin:44px 0 6px;color:#1a1a18}
+.lead{color:#5c5a55;font-size:14px;margin:0 0 10px;max-width:880px}
+.lead b{color:#1a1a18}
+.src{color:#83817a;font-size:12px;margin:0 0 22px}
+.src code,.lead code{background:#dcdad4;padding:1px 5px;border-radius:4px;font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#83817a;margin:0 0 12px}
+.tag.before{color:#a34a3a}
+.tag.after{color:#1f7a3d}
+
+.appwrap{--bg:#141412;--surface:#1a1a18;--line:#33322e;--line-soft:#232320;
+	--ink:#f1f1ee;--muted:#a3a099;--amber:#16c217;--danger:#e0603d;
+	background:var(--bg);border-radius:14px;padding:16px 18px 20px;color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card + .card{margin-top:12px}
+.step{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.step a{color:var(--amber);text-transform:none;letter-spacing:0;font-weight:600;font-size:11.5px;text-decoration:none;margin-left:10px}
+label.f{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px}
+label.f:first-of-type{margin-top:0}
+input.i{width:100%;background:#141412;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{margin-top:14px;background:var(--amber);color:#0c1a0c;border:none;font-weight:700;font-size:13px;padding:8px 14px;border-radius:8px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:600;font-size:12px;padding:5px 10px;margin:0}
+.btn.ghost.warn{color:#e7a89c;border-color:#4a231e}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:5px 11px 5px 8px;font-size:12.5px;background:#141412}
+.chip .bx{width:15px;height:15px;border-radius:4px;border:1.5px solid #5a5852;display:inline-block;position:relative}
+.chip.on{border-color:#2d6b2e;background:#132313}
+.chip.on .bx{background:var(--amber);border-color:var(--amber)}
+.chip.on .bx::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #0c1a0c;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.chip.ro{padding:5px 11px}
+.hint{font-size:11.5px;color:var(--muted);margin-top:8px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:8px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+.tbl td.act{text-align:right;white-space:nowrap}
+.tbl td.act .btn{margin-left:6px}
+.cnt{font-variant-numeric:tabular-nums;color:var(--muted)}
+.cnt b{color:var(--ink)}
+.bar{height:5px;border-radius:3px;background:#2a2926;margin-top:4px;width:90px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--amber)}
+
+.confirm{margin-top:12px;background:#2a1614;border:1px solid #4a231e;color:#e7a89c;border-radius:9px;padding:10px 12px;font-size:12.5px}
+.empty{color:var(--muted);font-size:12.5px;padding:18px;text-align:center;border:1px dashed var(--line);border-radius:10px}
+.select{width:100%;background:#141412;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px}
+.opts{margin-top:4px;border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:13px}
+.opts div{padding:7px 10px;border-bottom:1px solid var(--line-soft)}
+.opts div:last-child{border-bottom:none}
+.opts .gone{color:#6b6962;text-decoration:line-through}
+
+.notes{margin-top:44px;background:#fff;border:1px solid #dcdad4;border-radius:12px;padding:20px 24px}
+.notes h2{font-size:14px;margin:0 0 12px;color:#1a1a18}
+.notes ul{margin:0;padding-left:20px;font-size:13px;color:#3c3a36}
+.notes li{margin-bottom:9px}
+.notes li b{color:#1a1a18}
+.notes .q{background:#f3f1ea;border-left:3px solid #b8860b;padding:9px 12px;margin-top:14px;font-size:12.5px;border-radius:0 8px 8px 0}
+.notes .q b{color:#7a5c00}
+</style></head>
+<body><main>
+
+<h1>Ποιους παρόχους βλέπει κάθε χρήστης</h1>
+<p class="lead">Σήμερα ο κατάλογος παρόχων είναι <b>ίδιος για όλους</b> (<code>ProviderRepository</code>: «the same for
+every user, so no scope»). Με αυτή την αλλαγή ο admin ορίζει τι βλέπει κάθε manager, και κάθε manager δίνει στους
+άμεσους υφισταμένους του <b>μόνο από όσα βλέπει ο ίδιος</b>. Τρία σημεία της οθόνης αλλάζουν· η φόρμα αίτησης δεν
+αλλάζει όψη, απλώς δείχνει λιγότερους παρόχους.</p>
+<p class="src">Ονόματα παρόχων και ατόμων ενδεικτικά. Αποφάσεις ιδιοκτήτη 21/09: μόνο για νέες αιτήσεις · νέος χρήστης
+= όλοι του manager τσεκαρισμένοι · νέος πάροχος = μόνο ο admin · μαζικά = μόνο οι άμεσοι.</p>
+
+<!-- ============ 1. ΝΕΟ ΜΕΛΟΣ ============ -->
+<h2 class="sec">1 · Νέος πωλητής (οθόνη «Η ομάδα μου»)</h2>
+<p class="lead">Ιδιο και στο «Νέος υποσυνεργάτης» της οθόνης Δίκτυο. Προτσεκαρισμένοι όσοι βλέπει ο manager· τουλάχιστον
+ένας υποχρεωτικά, αλλιώς το κουμπί δεν προχωρά.</p>
+<div class="grid">
+<div>
+<div class="tag before">Πριν — σήμερα</div>
+<div class="appwrap"><div class="card">
+<div class="step">Νέο μέλος · Πωλητής</div>
+<div class="row2">
+<div><label class="f">Ονοματεπώνυμο</label><input class="i" value="Γιώργος Παπαδόπουλος" disabled></div>
+<div><label class="f">Email</label><input class="i" value="giorgos@example.gr" disabled></div>
+</div>
+<button class="btn">+ Προσθήκη</button>
+</div></div>
+</div>
+<div>
+<div class="tag after">Μετά — πρόταση</div>
+<div class="appwrap"><div class="card">
+<div class="step">Νέο μέλος · Πωλητής</div>
+<div class="row2">
+<div><label class="f">Ονοματεπώνυμο</label><input class="i" value="Γιώργος Παπαδόπουλος" disabled></div>
+<div><label class="f">Email</label><input class="i" value="giorgos@example.gr" disabled></div>
+</div>
+<div class="step" style="margin-top:14px">Παροχοι που θα βλεπει <span><a href="#">Ολοι</a><a href="#">Κανενας</a></span></div>
+<div class="chips">
+<span class="chip on"><span class="bx"></span>ΔΕΗ</span>
+<span class="chip on"><span class="bx"></span>ΗΡΩΝ</span>
+<span class="chip"><span class="bx"></span>Volton</span>
+<span class="chip on"><span class="bx"></span>Protergia</span>
+<span class="chip on"><span class="bx"></span>Orizon</span>
+</div>
+<div class="hint">Βλέπεις μόνο όσους παρόχους έχεις κι εσύ.</div>
+<button class="btn">+ Προσθήκη</button>
+</div></div>
+</div>
+</div>
+
+<!-- ============ 2. ΚΑΡΤΕΛΑ ΜΕΛΟΥΣ ============ -->
+<h2 class="sec">2 · Καρτέλα μέλους — νέα κάρτα «Πάροχοι»</h2>
+<p class="lead">Στην καρτέλα που ανοίγει με κλικ σε μέλος (<code>ecrm-view-partner.js</code>), κάτω από τα KPI. Επεξεργάσιμη
+<b>μόνο</b> από τον άμεσο manager και τον admin. Ο ίδιος ο χρήστης, και όποιος βλέπει την καρτέλα από πιο ψηλά στο
+δίκτυο, τη βλέπει μόνο για ανάγνωση.</p>
+<div class="grid">
+<div>
+<div class="tag after">Μετά — ο manager του / ο admin</div>
+<div class="appwrap"><div class="card">
+<div class="step">Παροχοι <span><a href="#">Ολοι</a><a href="#">Κανενας</a></span></div>
+<div class="chips">
+<span class="chip on"><span class="bx"></span>ΔΕΗ</span>
+<span class="chip"><span class="bx"></span>ΗΡΩΝ</span>
+<span class="chip"><span class="bx"></span>Volton</span>
+<span class="chip on"><span class="bx"></span>Protergia</span>
+<span class="chip on"><span class="bx"></span>Orizon</span>
+</div>
+<button class="btn">Αποθήκευση</button>
+<div class="confirm">Αφαιρείς <b>ΗΡΩΝ</b>. Αν ο Γιώργος έχει δική του ομάδα, το χάνουν και όλοι από κάτω του.
+Οι αιτήσεις που έχουν ήδη γίνει μένουν όπως είναι. Συνέχεια;</div>
+</div></div>
+</div>
+<div>
+<div class="tag after">Μετά — ο ίδιος / πιο ψηλά στο δίκτυο</div>
+<div class="appwrap"><div class="card">
+<div class="step">Παροχοι</div>
+<div class="chips">
+<span class="chip ro">ΔΕΗ</span>
+<span class="chip ro">Protergia</span>
+<span class="chip ro">Orizon</span>
+</div>
+<div class="hint">Τους ορίζει ο υπεύθυνός του.</div>
+</div></div>
+</div>
+</div>
+
+<!-- ============ 3. ΜΑΖΙΚΑ ============ -->
+<h2 class="sec">3 · Μαζικά — κουμπί «Πάροχοι ομάδας»</h2>
+<p class="lead">Νέο κουμπί στην κεφαλίδα της οθόνης «Η ομάδα μου» (και του Δικτύου), δίπλα στο «+ Νέος Πωλητής». Ανοίγει
+πίνακα: ένας πάροχος ανά γραμμή, πόσοι από τους άμεσους υφισταμένους τον έχουν, και δύο κουμπιά. Η αφαίρεση ζητά
+επιβεβαίωση με το ίδιο κείμενο όπως πάνω.</p>
+<div class="grid">
+<div>
+<div class="tag before">Πριν — σήμερα</div>
+<div class="appwrap"><div class="card">
+<div class="step">6 πωλητες <span><a href="#" style="background:var(--amber);color:#0c1a0c;padding:3px 9px;border-radius:7px">+ Νεος Πωλητης</a></span></div>
+<div class="empty">(πίνακας μελών — δεν αλλάζει)</div>
+</div></div>
+</div>
+<div>
+<div class="tag after">Μετά — πρόταση</div>
+<div class="appwrap"><div class="card">
+<div class="step">6 πωλητες <span><a href="#" style="border:1px solid var(--line);color:var(--ink);padding:3px 9px;border-radius:7px">Παροχοι ομαδας</a><a href="#" style="background:var(--amber);color:#0c1a0c;padding:3px 9px;border-radius:7px">+ Νεος Πωλητης</a></span></div>
+<table class="tbl">
+<thead><tr><th>Πάροχος</th><th>Το έχουν</th><th></th></tr></thead>
+<tbody>
+<tr><td>ΔΕΗ</td><td><span class="cnt"><b>6</b> από 6</span><div class="bar"><i style="width:100%"></i></div></td>
+<td class="act"><button class="btn ghost warn">Αφαίρεση από όλους</button></td></tr>
+<tr><td>ΗΡΩΝ</td><td><span class="cnt"><b>2</b> από 6</span><div class="bar"><i style="width:33%"></i></div></td>
+<td class="act"><button class="btn ghost">Σε όλους</button><button class="btn ghost warn">Αφαίρεση από όλους</button></td></tr>
+<tr><td>Protergia</td><td><span class="cnt"><b>0</b> από 6</span><div class="bar"><i style="width:0"></i></div></td>
+<td class="act"><button class="btn ghost">Σε όλους</button></td></tr>
+<tr><td>Orizon</td><td><span class="cnt"><b>5</b> από 6</span><div class="bar"><i style="width:83%"></i></div></td>
+<td class="act"><button class="btn ghost">Σε όλους</button><button class="btn ghost warn">Αφαίρεση από όλους</button></td></tr>
+</tbody></table>
+<div class="hint">Μόνο οι άμεσοι υφιστάμενοί σου. Οι υποσυνεργάτες σου αποφασίζουν οι ίδιοι για τους δικούς τους.</div>
+</div></div>
+</div>
+</div>
+
+<!-- ============ 4. ΦΟΡΜΑ ΑΙΤΗΣΗΣ ============ -->
+<h2 class="sec">4 · Νέα αίτηση — καμία αλλαγή όψης</h2>
+<p class="lead">Το ίδιο dropdown, με λιγότερες επιλογές. Μόνη νέα εικόνα: αν κάποιος δεν έχει κανέναν πάροχο.</p>
+<div class="grid">
+<div>
+<div class="tag after">Μετά — ο πωλητής με ΔΕΗ, Protergia, Orizon</div>
+<div class="appwrap"><div class="card">
+<label class="f">Πάροχος</label>
+<div class="select">Επίλεξε πάροχο ▾</div>
+<div class="opts"><div>ΔΕΗ</div><div class="gone">ΗΡΩΝ</div><div class="gone">Volton</div><div>Protergia</div><div>Orizon</div></div>
+<div class="hint">Διαγραμμένοι = δεν εμφανίζονται καθόλου (εδώ φαίνονται μόνο για τη σύγκριση).</div>
+</div></div>
+</div>
+<div>
+<div class="tag after">Μετά — χρήστης χωρίς κανέναν πάροχο</div>
+<div class="appwrap"><div class="card">
+<label class="f">Πάροχος</label>
+<div class="empty">Δεν σου έχει δοθεί κανένας πάροχος ακόμη.<br>Ζήτα από τον υπεύθυνό σου να σου ανοίξει.</div>
+</div></div>
+</div>
+</div>
+
+<div class="notes">
+<h2>Τι γίνεται από πίσω (δεν φαίνεται στην οθόνη)</h2>
+<ul>
+<li><b>Κανείς δεν βλέπει κάτι που δεν βλέπει ο από πάνω του.</b> Τελικά ορατοί = η λίστα του χρήστη ∩ ό,τι βλέπει ο
+manager του ∩ … ως την κορυφή. Ο admin βλέπει πάντα όλους.</li>
+<li><b>Αφαίρεση κατεβαίνει παντού:</b> σβήνεται και από τις λίστες όλων από κάτω, ώστε αν ξαναδοθεί στον manager να μη
+ξαναεμφανιστεί μόνη της στους πωλητές του — θα τους τη δώσει ξανά ρητά.</li>
+<li><b>Μετακίνηση χρήστη</b> (αποχώρηση προϊσταμένου, «Αφαίρεση», αλλαγή από wp-admin): κόβεται αυτόματα στα όρια του
+νέου του manager, χωρίς κανένα βήμα από κανέναν.</li>
+<li><b>Ελεγχος στον server, όχι μόνο στην οθόνη:</b> αποθήκευση αίτησης με πάροχο εκτός λίστας απορρίπτεται, ίδια και
+ανανέωση, προσφορά/υπολογιστής, import, «συνήθης επιλογή».</li>
+<li><b>Παλιές αιτήσεις δεν αγγίζονται:</b> αν κάποιος χάσει την ΗΡΩΝ, οι ΗΡΩΝ αιτήσεις του μένουν ορατές με
+ιστορικό και προμήθειες, και μπορεί να τις επεξεργαστεί — απλώς δεν μπορεί να αλλάξει άλλη αίτηση ΣΕ ΗΡΩΝ.</li>
+<li><b>Την ημέρα που θα ανέβει δεν αλλάζει τίποτα:</b> όλοι οι υπάρχοντες χρήστες παίρνουν όλους τους ενεργούς
+παρόχους. Νέος πάροχος από εκεί και πέρα = μόνο ο admin, ώσπου να τον δώσεις.</li>
+</ul>
+<div class="q"><b>Ερώτηση:</b> εγκρίνεις τις τρεις θέσεις (φόρμα νέου μέλους, κάρτα «Πάροχοι» στην καρτέλα, κουμπί «Πάροχοι
+ομάδας») ή θέλεις κάτι αλλού / αλλιώς;</div>
+</div>
+
+</main></body></html>
