@@ -32,6 +32,7 @@ namespace EnergyCRM\Http;
 use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Persistence\GuaranteeRuleRepository;
+use EnergyCRM\Providers\Http\ProviderAccessController;
 use EnergyCRM\Providers\Http\ProviderStatusMapController;
 use EnergyCRM\Providers\Persistence\ProviderStatusMapRepository;
 use EnergyCRM\Providers\Persistence\UsualChoiceRepository;
@@ -81,7 +82,8 @@ final class ControllerFactory
                 $draftExit,
                 $cancel,
                 Services::paperworkGate(),
-                Services::requestKeys()
+                Services::requestKeys(),
+                Services::providerVisibility(),
             ),
             new ContractStatusController(
                 $scope,
@@ -116,7 +118,13 @@ final class ControllerFactory
                 Services::documentKindReview()
             ),
             new DuplicateCheckController($scope, $queries),
-            new RenewalsController($scope, Services::contracts(), $queries, Services::events()),
+            new RenewalsController(
+                $scope,
+                Services::contracts(),
+                $queries,
+                Services::events(),
+                Services::providerVisibility(),
+            ),
 
             // Signing. Ο σύνδεσμος ΕΙΝΑΙ το tracking URL — δεν υπάρχει δεύτερο
             // token να λήξει ή να διαρρεύσει, και ο SigningController που
@@ -149,6 +157,16 @@ final class ControllerFactory
                 Services::partnerCard(),
                 Services::commissions(),
                 new TeamInvite(),
+                Services::providerVisibility(),
+                Services::providerGrants(),
+            ),
+            // Ποιους παρόχους βλέπει κάθε μέλος (278).
+            new ProviderAccessController(
+                $scope,
+                Services::providerVisibility(),
+                Services::providerGrants(),
+                Services::providers(),
+                Services::team(),
             ),
             new TeamActivityController($scope, Services::teamActivity()),
 
@@ -167,7 +185,14 @@ final class ControllerFactory
             new ThemeController($scope),
 
             // Catalogue and form metadata.
-            new CatalogueController($scope, Services::providers(), $queries, new UsualChoiceRepository()),
+            new CatalogueController(
+                $scope,
+                Services::providers(),
+                $queries,
+                new UsualChoiceRepository(),
+                Services::providerVisibility(),
+                Services::contracts(),
+            ),
             new ProviderFormController(),
 
             // Tools.

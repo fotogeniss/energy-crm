@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use EnergyCRM\Access\Capability;
+use EnergyCRM\Access\ProviderVisibility;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
@@ -30,6 +31,8 @@ use EnergyCRM\Persistence\LeadRepository;
 use EnergyCRM\Persistence\PartnerCardRepository;
 use EnergyCRM\Persistence\TaskRepository;
 use EnergyCRM\Persistence\TeamRepository;
+use EnergyCRM\Providers\Domain\ProviderAccess;
+use EnergyCRM\Providers\Persistence\ProviderGrantRepository;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -46,6 +49,8 @@ final class TeamController implements Controller
         private readonly PartnerCardRepository $card,
         private readonly CommissionRepository $commissions,
         private readonly TeamInvite $invite,
+        private readonly ProviderVisibility $providerAccess,
+        private readonly ProviderGrantRepository $grants,
     ) {
     }
 
@@ -80,6 +85,13 @@ final class TeamController implements Controller
                         'type'    => 'string',
                         'default' => Roles::SELLER,
                         'enum'    => [Roles::SELLER, Roles::PARTNER],
+                    ],
+                    // Ποιους παρόχους θα βλέπει (278). Προαιρετικό: χωρίς
+                    // αυτό παίρνει όσους βλέπει αυτός που τον φτιάχνει -- ίδια
+                    // προεπιλογή με τη φόρμα, όπου είναι όλοι τσεκαρισμένοι.
+                    'provider_ids' => [
+                        'type'  => 'array',
+                        'items' => ['type' => 'integer'],
                     ],
                 ],
             ],
@@ -442,6 +454,31 @@ final class TeamController implements Controller
             );
         }
 
+        // Πριν φτιαχτεί ο λογαριασμός: μια άρνηση εδώ δεν πρέπει να αφήνει πίσω
+        // της χρήστη χωρίς παρόχους.
+        $scope     = $this->scopes->forCurrentUser();
+        $editable  = $this->providerAccess->editableBy($scope);
+        $requested = $request->has_param('provider_ids')
+            ? array_map('intval', (array) $request['provider_ids'])
+            : $editable;
+
+        if (! ProviderAccess::only($editable)->covers($requested)) {
+            return new WP_REST_Response(
+                ['ok' => false, 'error' => 'Δεν μπορείς να δώσεις πάροχο που δεν έχεις ο ίδιος.'],
+                422
+            );
+        }
+
+        // «Τουλάχιστον ένας» -- εκτός αν δεν έχει κανέναν ούτε αυτός που τον
+        // φτιάχνει (π.χ. καινούργια εγκατάσταση χωρίς παρόχους): τότε δεν έχει
+        // τι να διαλέξει, και το να μην μπορεί να προσθέσει άνθρωπο δεν βοηθά.
+        if ($editable !== [] && ProviderAccess::only($requested)->ids() === []) {
+            return new WP_REST_Response(
+                ['ok' => false, 'error' => 'Διάλεξε τουλάχιστον έναν πάροχο.'],
+                422
+            );
+        }
+
         $password = wp_generate_password(20, true);
 
         $username = sanitize_user(
@@ -461,7 +498,8 @@ final class TeamController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => $userId->get_error_message()], 400);
         }
 
-        $this->team->attach($userId, $this->scopes->forCurrentUser()->actorId());
+        $this->team->attach($userId, $scope->actorId());
+        $this->grants->set($userId, $requested);
 
         $invited = $this->invite->send($userId, (string) $request['name']);
 

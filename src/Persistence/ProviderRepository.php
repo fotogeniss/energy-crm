@@ -7,6 +7,12 @@
  * is read on nearly every page, which makes it the obvious first candidate if
  * caching is ever needed.
  *
+ * (278, 21/09) «Ιδιος για όλους» ισχύει για ΤΟΝ ΚΑΤΑΛΟΓΟ, όχι για το τι βλέπει
+ * ο καθένας: ποιους παρόχους επιτρέπεται να δει ένας χρήστης το αποφασίζει το
+ * `Access\ProviderVisibility`, στον controller, πάνω σε αυτό που γυρνά εδώ.
+ * Εδώ δεν μπαίνει φίλτρο χρήστη σκόπιμα -- το ίδιο αποθετήριο το ρωτά και ο
+ * admin για να ζωγραφίσει τη λίστα από την οποία δίνει.
+ *
  * @package EnergyCRM
  */
 
@@ -34,6 +40,19 @@ final class ProviderRepository
         );
 
         return $rows;
+    }
+
+    /**
+     * Τα id των ενεργών παρόχων, με τη σειρά του καταλόγου.
+     *
+     * @return list<int>
+     */
+    public function activeIds(): array
+    {
+        return array_map(
+            static fn (array $row): int => (int) $row['id'],
+            $this->active()
+        );
     }
 
     /**

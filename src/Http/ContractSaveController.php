@@ -23,6 +23,7 @@ namespace EnergyCRM\Http;
 use ECRM_Audit;
 use ECRM_Validate;
 use EnergyCRM\Access\Capability;
+use EnergyCRM\Access\ProviderVisibility;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\CancellationGate;
@@ -49,6 +50,7 @@ final class ContractSaveController implements Controller
         private readonly CancellationGate $cancellation,
         private readonly StatusEntryGate $paperwork,
         private readonly RequestKeyRepository $requestKeys,
+        private readonly ProviderVisibility $providerAccess,
     ) {
     }
 
@@ -226,6 +228,12 @@ final class ContractSaveController implements Controller
             if ($existing === null) {
                 return new WP_REST_Response(['ok' => false, 'error' => 'Η σύμβαση δεν βρέθηκε.'], 404);
             }
+        }
+
+        $refusal = $this->refuseProvider($params, $existing, $scope);
+
+        if ($refusal !== null) {
+            return $refusal;
         }
 
         $customer = ContractSaveMapping::customerFrom($params);
@@ -528,6 +536,45 @@ final class ContractSaveController implements Controller
      * γεγονός, και δύο διατυπώσεις του ίδιου «δεν επιτρέπεται» διαβάζονται σαν
      * δύο διαφορετικά προβλήματα.
      */
+    /**
+     * Πάροχος που ο δράστης δεν βλέπει (278).
+     *
+     * Ο έλεγχος ζει εδώ και όχι μόνο στη φόρμα: η φόρμα απλώς δεν δείχνει τον
+     * πάροχο, αλλά ένα αίτημα φτιάχνεται και χωρίς φόρμα. Πριν γραφτεί
+     * οτιδήποτε, όπως κάθε άρνηση αυτού του controller.
+     *
+     * Περνάει χωρίς ερώτηση όταν ο πάροχος ΔΕΝ ΑΛΛΑΖΕΙ σε υπάρχουσα αίτηση:
+     * απόφαση ιδιοκτήτη 21/09, ο περιορισμός είναι για νέες αιτήσεις, και μια
+     * παλιά αίτηση σε πάροχο που αφαιρέθηκε μένει επεξεργάσιμη. Αλλαγή ΠΡΟΣ
+     * πάροχο που δεν βλέπει, όμως, είναι νέα επιλογή και ελέγχεται.
+     *
+     * @param array<string, mixed>      $params
+     * @param array<string, mixed>|null $existing
+     */
+    private function refuseProvider(array $params, ?array $existing, UserScope $scope): ?WP_REST_Response
+    {
+        $requested = (int) ($params['provider_id'] ?? 0);
+
+        if ($requested <= 0) {
+            return null;
+        }
+
+        if ($existing !== null && (int) ($existing['provider_id'] ?? 0) === $requested) {
+            return null;
+        }
+
+        if ($this->providerAccess->forScope($scope)->allows($requested)) {
+            return null;
+        }
+
+        return new WP_REST_Response([
+            'ok'    => false,
+            'error' => 'Δεν έχεις πρόσβαση σε αυτόν τον πάροχο. '
+                . 'Ζήτα από τον υπεύθυνό σου να σου τον ανοίξει.',
+            'field' => 'provider_id',
+        ], 403);
+    }
+
     private function refuseWithout(string $capability): ?WP_REST_Response
     {
         if (current_user_can($capability)) {

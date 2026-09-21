@@ -27,6 +27,7 @@ use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\Tables;
 use EnergyCRM\Providers\Domain\UsualChoice;
+use EnergyCRM\Providers\Persistence\ProviderGrantRepository;
 use EnergyCRM\Providers\Persistence\UsualChoiceRepository;
 use WP_REST_Request;
 
@@ -166,6 +167,9 @@ final class UsualChoiceIntegrationTest extends IntegrationTestCase
         $provider = $this->makeProvider('alpha');
 
         $this->fileContracts($partner, 3, $provider, 'power', $this->makeProgram($provider, 'power'));
+
+        // (278) Το «συνήθως» ταξιδεύει μόνο για πάροχο που ο πωλητής βλέπει.
+        (new ProviderGrantRepository())->set($partner, [$provider]);
 
         wp_set_current_user($partner);
 

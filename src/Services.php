@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM;
 
+use EnergyCRM\Access\ProviderVisibility;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\WordPressScopeResolver;
 use EnergyCRM\Domain\Contract\CancellationGate;
@@ -68,6 +69,7 @@ use EnergyCRM\Persistence\TaskRepository;
 use EnergyCRM\Persistence\UnprotectedDocuments;
 use EnergyCRM\Persistence\TeamActivityRepository;
 use EnergyCRM\Persistence\TeamRepository;
+use EnergyCRM\Providers\Persistence\ProviderGrantRepository;
 
 final class Services
 {
@@ -105,6 +107,10 @@ final class Services
     private static ?TeamRepository $team = null;
 
     private static ?ProviderRepository $providers = null;
+
+    private static ?ProviderGrantRepository $providerGrants = null;
+
+    private static ?ProviderVisibility $providerVisibility = null;
 
     private static ?RequestKeyRepository $requestKeys = null;
 
@@ -292,6 +298,22 @@ final class Services
         return self::$providers ??= new ProviderRepository();
     }
 
+    /** Η γραμμένη λίστα παρόχων κάθε χρήστη (278). */
+    public static function providerGrants(): ProviderGrantRepository
+    {
+        return self::$providerGrants ??= new ProviderGrantRepository();
+    }
+
+    /** Ποιους παρόχους βλέπει κάποιος -- η μία απάντηση, για κάθε controller (278). */
+    public static function providerVisibility(): ProviderVisibility
+    {
+        return self::$providerVisibility ??= new ProviderVisibility(
+            self::network(),
+            self::providerGrants(),
+            self::providers(),
+        );
+    }
+
     /**
      * Οι δεσμεύσεις idempotency της δημιουργίας σύμβασης (Επίπεδο Γ).
      */
@@ -444,6 +466,8 @@ final class Services
         self::$team          = null;
         self::$partnerCard   = null;
         self::$providers     = null;
+        self::$providerGrants     = null;
+        self::$providerVisibility = null;
         self::$requestKeys   = null;
         self::$dashboard     = null;
         self::$commissions   = null;
