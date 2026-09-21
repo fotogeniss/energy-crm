@@ -50,6 +50,8 @@ function field(label, val) {
 	return '<div class="ecrm-dl"><dt>' + esc(label) + '</dt><dd>' + (val ? esc(val) : '—') + '</dd></div>';
 }
 function filesCard(c) {
+	// Η αίτηση/φύλλα/υπογεγραμμένο αντίγραφο δεν έρχονται καν εδώ: ο server τα
+	// κρατά έξω (SystemKind) -- έχουν το δικό τους κουμπί «PDF έντυπο».
 	var files = c.files || [];
 	var kindLabel = c.doc_kinds || { id_card: 'Ταυτότητα', provider_bill: 'Λογαριασμός', other: 'Έγγραφο' };
 
@@ -97,7 +99,11 @@ function filesCard(c) {
 			   διαθέσιμο, όχι μόνο όταν υπάρχει διόρθωση AI να αναιρεθεί -- και
 			   ΕΞΩ από το <a> της λήψης, ίδιος λόγος με το κουμπί «Αναίρεση» πιο
 			   κάτω: interactive στοιχείο μέσα σε σύνδεσμο είναι άκυρο HTML. */
-			var kindPicker = '<select class="ecrm-file__kindsel" data-setkind="' + esc(String(f.id)) + '">' +
+			// Αρχείο του συστήματος (υπογραφή): σταθερή ετικέτα, όχι επιλογή --
+			// το είδος του δεν αλλάζει, αλλιώς η υπογραφή χάνεται από τα έντυπα.
+			var kindPicker = f.system_label
+				? '<span class="ecrm-file__kind">' + esc(f.system_label) + '</span>'
+				: '<select class="ecrm-file__kindsel" data-setkind="' + esc(String(f.id)) + '">' +
 				Object.keys(kindLabel).map(function (k) {
 					return '<option value="' + esc(k) + '"' + (k === f.doc_kind ? ' selected' : '') + '>' + esc(kindLabel[k]) + '</option>';
 				}).join('') + '</select>';
@@ -122,9 +128,12 @@ function filesCard(c) {
 	}
 
 	// Inline upload control
-	var kindOpts = Object.keys(kindLabel).map(function (k) {
-		return '<option value="' + esc(k) + '">' + esc(kindLabel[k]) + '</option>';
-	}).join('');
+	//
+	// Κάθε νέο αρχείο ξεκινούσε πάντα στο πρώτο kind του καταλόγου (`id_card`) γιατί κανένα <option> δεν είχε `selected` -- ο browser απλώς
+	// διαλέγει το πρώτο. Τώρα το είδος μαντεύεται από το όνομα αρχείου (guessDocKind, παρακάτω στο renderDocupRows),
+	// με ασφαλή προεπιλογή «Άλλο» όταν δεν αναγνωρίζεται -- ποτέ ξανά «Ταυτότητα» για ο,τιδήποτε δεν μοιάζει με ταυτότητα
+	// (π.χ. μια signature.png).
+	var kindMap = JSON.stringify(kindLabel);
 	var expirable = c.doc_expirable || [];
 	/* Ενα είδος ΑΝΑ ΑΡΧΕΙΟ, όχι ένα για όλο το batch.
 	 *
@@ -133,7 +142,7 @@ function filesCard(c) {
 	 * δηλαδή η συνηθισμένη περίπτωση — έπαιρνε το ένα από τα δύο με λάθος
 	 * ετικέτα, και μετά η καρτέλα έλεγε «λείπουν δικαιολογητικά» για χαρτί που
 	 * ήταν ήδη εκεί. Οι γραμμές γεμίζουν όταν επιλεγούν αρχεία (renderDocupRows). */
-	var upload = '<div class="ecrm-docup" data-docup="' + c.id + '" data-docup-expirable="' + esc(JSON.stringify(expirable)) + '" data-docup-kinds="' + esc(kindOpts) + '">' +
+	var upload = '<div class="ecrm-docup" data-docup="' + c.id + '" data-docup-expirable="' + esc(JSON.stringify(expirable)) + '" data-docup-kinds="' + esc(kindMap) + '">' +
 		'<input type="file" multiple accept="image/*,application/pdf" data-docup-file>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-docup-go>Προσθήκη</button>' +
 		'<span class="ecrm-docup__msg" data-docup-msg></span>' +
@@ -932,19 +941,49 @@ function renderDetail(view, d) {
 	 * (ECRM_Docs::expirable_kinds()), δεν είναι κωδικοποιημένη εδώ. Πριν ήταν
 	 * ένα πεδίο για όλο το widget· τώρα ακολουθεί τη γραμμή του, γιατί δύο
 	 * αρχεία του ίδιου batch μπορεί να θέλουν διαφορετική απάντηση. */
+	/* Μαντεύει το είδος από το όνομα αρχείου -- ίδιο μοτίβο με το guessKind() της δημόσιας φόρμας
+	 * (ecrm-form.js). Ασφαλής προεπιλογή "other": ένα λάθος-σίγουρο "Ταυτότητα" σε έγγραφο
+	 * που δεν είναι κρύβει το πραγματικό πρόβλημα (λείπει ταυτότητα) πίσω από ψεύτικο
+	 * "υπάρχει". Δεν υπάρχει δικό είδος "υπογραφή" στον κατάλογο (ECRM_Docs::kinds()) -- η υπογραφή της σύμβασης
+	 * ζει στο ContractDocuments, όχι εδώ, οπότε ένα signature.png που έρχεται χειροκίνητα πέφτει στο "Άλλο", όχι στο
+	 * "Ταυτότητα" που ήταν το πρώτο kind του καταλόγου. */
+	function guessDocKind(name, kindLabel) {
+		var n = (name || '').toLowerCase();
+		var guesses = [
+			['provider_bill', /(λογαριασμ|bill|invoice|παροχ)/],
+			['id_card', /(ταυτοτητ|passport|διαβατ)/],
+			['sim_card', /(sim[-_]?card|καρτα ?sim)/],
+			['iban', /(iban)/],
+			['gemi', /(γεμη|καταστατικ)/],
+			['death_cert', /(θανατ)/],
+			['heir_cert', /(κληρονομ|συγγεν)/],
+			['residence', /(κατοικ|residence)/],
+			['authorization', /(εξουσιοδοτ|authoriz)/],
+		];
+		for (var i = 0; i < guesses.length; i++) {
+			if (guesses[i][1].test(n) && kindLabel[guesses[i][0]]) return guesses[i][0];
+		}
+		return kindLabel.other ? 'other' : Object.keys(kindLabel)[0];
+	}
+
 	function renderDocupRows() {
 		if (!docupRows || !docupFile) return;
-		var kindOpts = docupWrap.getAttribute('data-docup-kinds') || '';
+		var kindLabel = {};
+		try { kindLabel = JSON.parse(docupWrap.getAttribute('data-docup-kinds') || '{}'); } catch (e) { kindLabel = {}; }
 		var files = docupFile.files || [];
 		var out = '';
 
 		for (var i = 0; i < files.length; i++) {
 			var name = files[i].name || 'αρχείο';
 			var ext = (name.split('.').pop() || '').toUpperCase().slice(0, 4);
+			var guessed = guessDocKind(name, kindLabel);
+			var rowKindOpts = Object.keys(kindLabel).map(function (k) {
+				return '<option value="' + esc(k) + '"' + (k === guessed ? ' selected' : '') + '>' + esc(kindLabel[k]) + '</option>';
+			}).join('');
 			out += '<div class="ecrm-docup__row" data-docup-row="' + i + '">' +
 				'<span class="ecrm-docup__ext">' + esc(ext) + '</span>' +
 				'<span class="ecrm-docup__name" title="' + esc(name) + '">' + esc(name) + '</span>' +
-				'<select class="ecrm-input ecrm-docup__kind" data-docup-kind>' + kindOpts + '</select>' +
+				'<select class="ecrm-input ecrm-docup__kind" data-docup-kind>' + rowKindOpts + '</select>' +
 				'<input type="date" class="ecrm-input ecrm-docup__expiry" data-docup-expiry title="Ημερομηνία λήξης (αν υπάρχει πάνω στο έγγραφο)" hidden>' +
 				'</div>';
 		}
@@ -996,7 +1035,7 @@ function renderDetail(view, d) {
 	 * πρώτη φορά που ανοίγει η καρτέλα τους. Ο,τι έχει ήδη κριθεί δεν
 	 * ξαναδιαβάζεται — ο server το ξέρει από το kind_source, εδώ απλά δεν
 	 * ενοχλούμε τον χρήστη με μήνυμα. */
-	var unread = (c.files || []).filter(function (f) { return !f.kind_source; });
+	var unread = (c.files || []).filter(function (f) { return !f.kind_source && !f.system_label; });
 	if (unread.length) {
 		reviewKinds(true).then(function (changed) { if (changed) openDetail(c.id); });
 	}
