@@ -194,7 +194,7 @@ function providersCard(prov) {
 
 	if (prov.editable) {
 		return '<div class="ecrm-card" data-provcard>' +
-			'<div class="ecrm-step">Πάροχοι <span><a href="#" data-pall>Ολοι</a> <a href="#" data-pnone>Κανένας</a></span></div>' +
+			'<div class="ecrm-step">Πάροχοι <span><a href="#" class="ecrm-plink" data-pall>Ολοι</a><a href="#" class="ecrm-plink" data-pnone>Κανένας</a></span></div>' +
 			providerChipsHtml(prov.providers, prov.granted, false) +
 			'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-prov-save>Αποθήκευση</button>' +
 			'<div class="ecrm-pconfirm" data-prov-confirm hidden></div>' +

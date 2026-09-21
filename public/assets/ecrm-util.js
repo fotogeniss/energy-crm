@@ -268,6 +268,44 @@ export function wireProviderChips(scope) {
 	});
 }
 
+/**
+ * POST JSON σε δική μας διαδρομή και φέρε πίσω ΚΑΙ τον κωδικό HTTP.
+ *
+ * Το σκέτο `r.json()` έχανε τον κωδικό, και ένα σφάλμα του ίδιου του
+ * WordPress (rest_invalid_param, rest_forbidden) έχει `message`, όχι `error`
+ * -- οπότε η οθόνη έγραφε σκέτο «Αποτυχία.» χωρίς κανέναν λόγο.
+ */
+export function postJson(url, body) {
+	return fetch(url, {
+		method: 'POST',
+		headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+		body: JSON.stringify(body),
+	}).then(function (r) {
+		return r.json().then(
+			function (d) { return { status: r.status, d: d }; },
+			function () { return { status: r.status, d: null }; }
+		);
+	});
+}
+
+/** Ο λόγος μιας αποτυχημένης απάντησης, σε μία πρόταση που διαβάζεται. */
+export function failureText(res) {
+	var d = res && res.d;
+	var why = d && (d.error || d.message);
+	return why ? String(why) : 'Αποτυχία (HTTP ' + ((res && res.status) || '?') + ').';
+}
+
+/**
+ * Μήνυμα που ΜΕΝΕΙ στη θέση του -- όχι toast που σβήνει σε 4 δευτερόλεπτα.
+ * Για αποτελέσματα φόρμας: ο χρήστης κοιτάζει το κουμπί που πάτησε, όχι το
+ * κάτω μέρος της οθόνης. Ίδιες κλάσεις με το banner της εισαγωγής Excel.
+ */
+export function banner(el, text, ok) {
+	if (!el) { return; }
+	el.innerHTML = '<div class="ecrm-import-banner ' + (ok ? 'is-ok' : 'is-warn') + '" style="margin:10px 0 0">' +
+		esc(text) + '</div>';
+}
+
 export function toast(msg, ok) {
 	var t = document.getElementById('ecrm-toast');
 

@@ -1,17 +1,17 @@
 /* Energy CRM — team: the members at each role, and adding one. */
 
-import { api, checkedProviderIds, esc, fetch, H, providerChipsHtml, toast, viewEl, wireProviderChips } from '@energy-crm/util';
+import { api, banner, checkedProviderIds, esc, failureText, fetch, H, postJson, providerChipsHtml, toast, viewEl, wireProviderChips } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
 import { openPartner } from '@energy-crm/navigate';
 
-export function loadTeam() {
+export function loadTeam(flash) {
 	var view = viewEl('team');
 	fetch(api('/team'), { headers: H() })
 		.then(function (r) { return r.json(); })
-		.then(function (d) { renderTeam(view, d); })
+		.then(function (d) { renderTeam(view, d, flash); })
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
 }
-function renderTeam(view, d) {
+function renderTeam(view, d, flash) {
 	// Ο Καταχωρητής συγχωνεύτηκε στον Πωλητή (Roles::matrix() v6, 25/08) --
 	// το /team επιστρέφει πλέον μόνο Πωλητές (οι Συνεργάτες φιλτράρονται ήδη
 	// στο TeamController::index() και ζουν στο /network), οπότε τα δύο tabs
@@ -60,7 +60,7 @@ function renderTeam(view, d) {
 		// φόρμας, όχι εδώ -- δεν αξίζει δεύτερο αίτημα στην κάθε φόρτωση της
 		// οθόνης για κάτι που ο manager μπορεί να μην ανοίξει καθόλου.
 		'<div class="ecrm-step" style="margin-top:14px" data-newprov-step hidden>Πάροχοι που θα βλέπει ' +
-		'<span><a href="#" data-pall>Ολοι</a> <a href="#" data-pnone>Κανένας</a></span></div>' +
+		'<span><a href="#" class="ecrm-plink" data-pall>Ολοι</a><a href="#" class="ecrm-plink" data-pnone>Κανένας</a></span></div>' +
 		'<div data-newprov-chips></div>' +
 		'<div class="ecrm-hint" data-newprov-hint hidden>Βλέπεις μόνο όσους παρόχους έχεις κι εσύ.</div>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-add-member>+ Προσθήκη</button>' +
@@ -69,6 +69,10 @@ function renderTeam(view, d) {
 
 	view.innerHTML =
 		'<header class="ecrm-head"><h2 class="ecrm-title">Η ομάδα μου</h2><p class="ecrm-sub">Διαχείριση πωλητών του γραφείου σου.</p></header>' +
+		// Το αποτέλεσμα της δημιουργίας μέλους, πάνω από τη λίστα που μόλις
+		// ξαναφορτώθηκε -- αλλιώς το username και το αν έφυγε η πρόσκληση
+		// χάνονταν μαζί με την παλιά φόρμα.
+		(flash ? '<div class="ecrm-import-banner is-ok">' + esc(flash) + '</div>' : '') +
 		'<div class="ecrm-card">' +
 		'<div class="ecrm-listhead"><span class="ecrm-listhead__count">' + members.length + ' πωλητές</span>' +
 		(canManage ? '<span><button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-show-bulk>Πάροχοι ομάδας</button> ' +
@@ -163,33 +167,43 @@ function teamOp(id, op) {
 		.catch(function () { toast('Σφάλμα δικτύου.', false); });
 }
 function addMember(view, btn) {
-	var get = function (f) { var el = view.querySelector('[data-f="' + f + '"]'); return el ? el.value : ''; };
+	var get = function (f) { var el = view.querySelector('[data-f="' + f + '"]'); return el ? el.value.trim() : ''; };
 	var chipsWrap = view.querySelector('[data-addwrap]');
+	var out = view.querySelector('[data-member-msg]');
 	var payload = { name: get('name'), email: get('email'), role: 'ecrm_seller' };
 	// Αν οι παρόχοι δεν πρόλαβαν καν να φορτώσουν (η φόρμα ανοίχτηκε και
 	// πατήθηκε αμέσως), δεν στέλνουμε provider_ids καθόλου -- ο server βάζει
 	// τότε όλους όσους έχει ο δημιουργός, το ίδιο προεπιλεγμένο αποτέλεσμα.
 	if (chipsWrap && chipsWrap.querySelector('[data-newprov-chips] [data-pchip]')) {
 		payload.provider_ids = checkedProviderIds(chipsWrap);
+		// Ο server το αρνείται ούτως ή άλλως («Διάλεξε τουλάχιστον έναν
+		// πάροχο.») -- εδώ απλώς γλιτώνουμε το ταξίδι.
+		if (!payload.provider_ids.length) { banner(out, 'Διάλεξε τουλάχιστον έναν πάροχο.', false); return; }
 	}
-	if (!payload.name || !payload.email) { toast('Συμπλήρωσε όνομα και email.', false); return; }
-	btn.disabled = true;
-	fetch(api('/team'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(payload) })
-		.then(function (r) { return r.json(); })
-		.then(function (d) {
-			if (!d || !d.ok) { toast((d && d.error) || 'Αποτυχία.', false); return; }
-			var msg = view.querySelector('[data-member-msg]');
+	if (!payload.name || !payload.email) { banner(out, 'Συμπλήρωσε όνομα και email.', false); return; }
+
+	// Κάθε αποτέλεσμα γράφεται ΜΕΣΑ στη φόρμα και μένει εκεί. Ως τώρα ένα λάθος
+	// ήταν toast κάτω-κάτω στην οθόνη για 4 δευτερόλεπτα, και η επιτυχία
+	// γραφόταν στη φόρμα και σβηνόταν αμέσως από το loadTeam() που την
+	// ξαναζωγράφιζε: και στις δύο περιπτώσεις ο manager έβλεπε «δεν έγινε
+	// τίποτα» (αναφορά ιδιοκτήτη 21/09).
+	var label = btn.textContent;
+	btn.disabled = true; btn.textContent = 'Δημιουργία…';
+	if (out) out.innerHTML = '';
+	postJson(api('/team'), payload)
+		.then(function (res) {
+			var d = res.d;
+			if (!d || !d.ok) { banner(out, failureText(res), false); return; }
 			// invited:false δεν σημαίνει αποτυχία -- ο λογαριασμός υπάρχει κανονικά,
 			// απλά δεν έφυγε το email (π.χ. SMTP δεν έχει ρυθμιστεί ακόμα στην
 			// παραγωγή). Ο manager πρέπει να το μάθει ρητά, όχι να υποθέσει ότι
 			// στάλθηκε -- βλ. docs/UI-TEAM-INVITE.html (§1.8, εγκρίθηκε).
-			if (msg) msg.textContent = d.invited
-				? 'Δημιουργήθηκε. Username: ' + d.username + '. Στάλθηκε email πρόσκλησης με σύνδεσμο ορισμού κωδικού (ισχύει 24 ώρες).'
-				: 'Δημιουργήθηκε ο λογαριασμός ' + d.username + ', αλλά το email πρόσκλησης ΔΕΝ στάλθηκε. Δώσε του το username και πες του να πατήσει «Ξέχασα τον κωδικό» στην οθόνη σύνδεσης.';
-			loadTeam();
+			loadTeam(d.invited
+				? 'Δημιουργήθηκε ο/η ' + payload.name + '. Username: ' + d.username + '. Στάλθηκε email πρόσκλησης με σύνδεσμο ορισμού κωδικού (ισχύει 24 ώρες).'
+				: 'Δημιουργήθηκε ο λογαριασμός ' + d.username + ', αλλά το email πρόσκλησης ΔΕΝ στάλθηκε. Δώσε του το username και πες του να πατήσει «Ξέχασα τον κωδικό» στην οθόνη σύνδεσης.');
 		})
-		.catch(function () { toast('Σφάλμα δικτύου.', false); })
-		.finally(function () { btn.disabled = false; });
+		.catch(function () { banner(out, 'Σφάλμα δικτύου -- δεν έφτασε στον server. Ξαναδοκίμασε.', false); })
+		.finally(function () { btn.disabled = false; btn.textContent = label; });
 }
 
 /**

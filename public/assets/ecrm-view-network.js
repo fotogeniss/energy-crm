@@ -1,20 +1,20 @@
 /* Energy CRM — network: the partner tree below the acting user. */
 
-import { api, checkedProviderIds, esc, fetch, H, providerChipsHtml, toast, viewEl, wireProviderChips } from '@energy-crm/util';
+import { api, banner, checkedProviderIds, esc, failureText, fetch, H, postJson, providerChipsHtml, toast, viewEl, wireProviderChips } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
 import { openPartner } from '@energy-crm/navigate';
 
-export function loadNetwork() {
+export function loadNetwork(flash) {
 	var view = viewEl('network');
 	fetch(api('/network'), { headers: H() })
 		.then(function (r) { return r.json(); })
-		.then(function (d) { renderNetwork(view, (d && d.partners) || []); })
+		.then(function (d) { renderNetwork(view, (d && d.partners) || [], flash); })
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
 }
 function networkIcon() {
 	return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.2 10.8 15.8 7.2"/><path d="M8.2 13.2 15.8 16.8"/></svg>';
 }
-function renderNetwork(view, partners) {
+function renderNetwork(view, partners, flash) {
 	var head =
 		'<header class="ecrm-head ecrm-head--row"><div class="ecrm-titlewrap"><span class="ecrm-pageicon">' + networkIcon() + '</span>' +
 		'<div><h2 class="ecrm-title">Το δίκτυό μου</h2><p class="ecrm-sub">Οι υποσυνεργάτες σου. Πάτα σε έναν για να δεις τα στατιστικά του.</p></div></div>' +
@@ -45,18 +45,17 @@ function renderNetwork(view, partners) {
 		'<div class="ecrm-grid">' +
 		'<label class="ecrm-field"><span class="ecrm-field__label">Ονοματεπώνυμο</span><input class="ecrm-input" data-nf="name"></label>' +
 		'<label class="ecrm-field"><span class="ecrm-field__label">Email</span><input class="ecrm-input" type="email" data-nf="email"></label>' +
-		'<label class="ecrm-field"><span class="ecrm-field__label">Κωδικός (προαιρετικό)</span><input class="ecrm-input" data-nf="password" placeholder="αυτόματος αν κενό"></label>' +
 		'</div>' +
 		// Ίδιο σημείο με το ecrm-view-team.js «Νέο μέλος»: παρόχοι που θα
 		// βλέπει, φορτώνεται με το πρώτο άνοιγμα (279).
 		'<div class="ecrm-step" style="margin-top:14px" data-newprov-step hidden>Πάροχοι που θα βλέπει ' +
-		'<span><a href="#" data-pall>Ολοι</a> <a href="#" data-pnone>Κανένας</a></span></div>' +
+		'<span><a href="#" class="ecrm-plink" data-pall>Ολοι</a><a href="#" class="ecrm-plink" data-pnone>Κανένας</a></span></div>' +
 		'<div data-newprov-chips></div>' +
 		'<div class="ecrm-hint" data-newprov-hint hidden>Βλέπεις μόνο όσους παρόχους έχεις κι εσύ.</div>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-invite>+ Πρόσκληση</button>' +
 		'<div class="ecrm-ai-status" data-invite-msg></div></div>';
 
-	view.innerHTML = head + bodyCard + inviteForm + '<div class="ecrm-card" data-bulkwrap hidden></div>';
+	view.innerHTML = head + (flash ? '<div class="ecrm-import-banner is-ok">' + esc(flash) + '</div>' : '') + bodyCard + inviteForm + '<div class="ecrm-card" data-bulkwrap hidden></div>';
 
 	var providersPromise = null;
 	function loadProviders() {
@@ -106,24 +105,32 @@ function renderNetwork(view, partners) {
 	});
 	var inv = view.querySelector('[data-invite]');
 	if (inv) inv.addEventListener('click', function () {
-		var get = function (f) { var el = view.querySelector('[data-nf="' + f + '"]'); return el ? el.value : ''; };
-		var payload = { name: get('name'), email: get('email'), role: 'ecrm_partner', password: get('password') };
-		if (!payload.name || !payload.email) { toast('Συμπλήρωσε όνομα και email.', false); return; }
+		var b = this;
+		var get = function (f) { var el = view.querySelector('[data-nf="' + f + '"]'); return el ? el.value.trim() : ''; };
+		var out = view.querySelector('[data-invite-msg]');
+		var payload = { name: get('name'), email: get('email'), role: 'ecrm_partner' };
+		if (!payload.name || !payload.email) { banner(out, 'Συμπλήρωσε όνομα και email.', false); return; }
 		var chipsWrap = view.querySelector('[data-invitewrap]');
 		if (chipsWrap && chipsWrap.querySelector('[data-newprov-chips] [data-pchip]')) {
 			payload.provider_ids = checkedProviderIds(chipsWrap);
+			if (!payload.provider_ids.length) { banner(out, 'Διάλεξε τουλάχιστον έναν πάροχο.', false); return; }
 		}
-		this.disabled = true; var b = this;
-		fetch(api('/team'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(payload) })
-			.then(function (r) { return r.json(); })
-			.then(function (d) {
-				if (!d || !d.ok) { toast((d && d.error) || 'Αποτυχία.', false); return; }
-				var msg = view.querySelector('[data-invite-msg]');
-				if (msg) msg.textContent = 'Δημιουργήθηκε. Username: ' + d.username + ' · Κωδικός: ' + d.password;
-				loadNetwork();
+		// Ίδιο με το ecrm-view-team.js: το αποτέλεσμα μένει ορατό, όχι toast
+		// που σβήνει. Και χωρίς «Κωδικός: undefined» -- ο server φτιάχνει δικό
+		// του κωδικό και στέλνει πρόσκληση, δεν τον επιστρέφει ποτέ.
+		var label = b.textContent;
+		b.disabled = true; b.textContent = 'Δημιουργία…';
+		if (out) out.innerHTML = '';
+		postJson(api('/team'), payload)
+			.then(function (res) {
+				var d = res.d;
+				if (!d || !d.ok) { banner(out, failureText(res), false); return; }
+				loadNetwork(d.invited
+					? 'Δημιουργήθηκε ο/η ' + payload.name + '. Username: ' + d.username + '. Στάλθηκε email πρόσκλησης με σύνδεσμο ορισμού κωδικού (ισχύει 24 ώρες).'
+					: 'Δημιουργήθηκε ο λογαριασμός ' + d.username + ', αλλά το email πρόσκλησης ΔΕΝ στάλθηκε. Δώσε του το username και πες του να πατήσει «Ξέχασα τον κωδικό» στην οθόνη σύνδεσης.');
 			})
-			.catch(function () { toast('Σφάλμα δικτύου.', false); })
-			.finally(function () { b.disabled = false; });
+			.catch(function () { banner(out, 'Σφάλμα δικτύου -- δεν έφτασε στον server. Ξαναδοκίμασε.', false); })
+			.finally(function () { b.disabled = false; b.textContent = label; });
 	});
 }
 
