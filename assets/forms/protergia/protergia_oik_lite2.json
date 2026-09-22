@@ -200,11 +200,18 @@
    "y": 173.7,
    "check": true
   },
-  "imerominia_aitisis": {
-   "page": 2,
-   "x": 107.0,
-   "y": 14.3
-  },
+  "imerominia_aitisis": [
+   {
+    "page": 2,
+    "x": 107.0,
+    "y": 14.3
+   },
+   {
+    "page": 1,
+    "x": 139.6,
+    "y": 51.7
+   }
+  ],
   "ypovoli_ilektronika": {
    "page": 2,
    "x": 130.3,
@@ -246,6 +253,20 @@
    "page": 3,
    "x": 77.6,
    "y": 208.2,
+   "check": true,
+   "size": 9
+  },
+  "apostoli_logariasmou_entypo": {
+   "page": 3,
+   "x": 78.0,
+   "y": 125.9,
+   "check": true,
+   "size": 9
+  },
+  "apostoli_logariasmou_email": {
+   "page": 3,
+   "x": 94.2,
+   "y": 125.9,
    "check": true,
    "size": 9
   }
@@ -290,6 +311,8 @@
   "synainesi_omilou_nai": "ΝΑΙ",
   "synainesi_erevnas_nai": "ΝΑΙ",
   "isxis_paroxis": "ΙΣΧΥΣ ΠΑΡΟΧΗΣ (kVA)",
-  "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης"
+  "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης",
+  "apostoli_logariasmou_entypo": "Αποστολή λογαριασμού: Ταχυδρομικώς",
+  "apostoli_logariasmou_email": "Αποστολή λογαριασμού: Με e-mail"
  }
 }
