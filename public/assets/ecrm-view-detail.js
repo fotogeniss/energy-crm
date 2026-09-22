@@ -326,6 +326,20 @@ function renderDetail(view, d) {
 		checks.push({ ok: !!c.signed_at, txt: 'Υπογραφή πελάτη' });
 	}
 	checks.push({ ok: !!c.consent_at, txt: 'Συναίνεση GDPR' });
+	// (281β) «Ενώ δεν υπάρχει κανένα έγγραφο δεν μου λέει το checklist ότι
+	// λείπουν έγγραφα» -- σωστό: το rail δεν είχε ΚΑΘΟΛΟΥ γραμμή για τα
+	// δικαιολογητικά, μόνο η ξεχωριστή κάρτα «Απαιτούμενα δικαιολογητικά»
+	// πιο κάτω (`c.doc_checklist`, ίδιο πεδίο, ίδιο "ok" ανά έγγραφο). Ιδιο
+	// guard με εκείνη την κάρτα -- items άδεια/απούσα σημαίνει "καμία
+	// απαίτηση για αυτόν τον τύπο", όχι "λείπουν", οπότε δεν μπαίνει γραμμή.
+	if (c.doc_checklist && c.doc_checklist.items && c.doc_checklist.items.length) {
+		var missingDocs = c.doc_checklist.items.filter(function (it) { return !it.ok; }).map(function (it) { return it.label; });
+		checks.push({
+			ok: !!c.doc_checklist.complete,
+			txt: 'Δικαιολογητικά',
+			hint: missingDocs.length ? 'Λείπει: ' + missingDocs.join(', ') + '.' : ''
+		});
+	}
 	// «Αριθμός παροχής» μπαίνει μόνο για ρεύμα/αέριο — 2026-08-24: καμία
 	// φόρμα Orizon δεν συλλέγει/τυπώνει supply_number (ίδιος λόγος με την
 	// απόκρυψη του πεδίου στην κάρτα «Διεύθυνση» παραπάνω, (112)). Χωρίς
