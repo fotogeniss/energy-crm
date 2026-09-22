@@ -91,6 +91,11 @@ class ECRM_Providers {
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaHomePlans::all() as $code => $plan ) {
 						$starters[] = [ $plan['label'], $code, 'power', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'] ];
 					}
+					// (283) Και τα τρία επαγγελματικά, ένα έντυπο το καθένα -- με
+					// έβδομο στοιχείο την κατηγορία, όπως η Volton παρακάτω.
+					foreach ( \EnergyCRM\Domain\Forms\ProtergiaBizPlans::all() as $code => $plan ) {
+						$starters[] = [ $plan['label'], $code, 'power', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'], 'business' ];
+					}
 				} elseif ( $row['slug'] === 'volton' ) {
 					// Η Volton δίνει 23 προγράμματα, σε ρεύμα ΚΑΙ σε αέριο, και σε
 					// τρεις κατηγορίες. Το γενικό «Σταθερό Οικιακό» δεν αντιστοιχεί

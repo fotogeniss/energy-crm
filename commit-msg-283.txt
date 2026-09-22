@@ -1,0 +1,12 @@
+(283) Protergia: τα τρία επαγγελματικά τιμολόγια, ένα έντυπο το καθένα
+
+Γ21 Sure (σταθερό), Simple και Seasonal (κυμαινόμενα) ως προγράμματα
+category=business με code, migration 0038 + seed νέας εγκατάστασης. Το
+template_key() τυπώνει το έντυπο του προγράμματος πριν κοιτάξει τον τύπο
+πελάτη· ό,τι άλλο μένει στο protergia_he_biz. 18 υπόβαθρα + 3 χάρτες
+(σελ.1 από he_biz, πίνακας παροχής από το οικιακό, σελ.2 μετρημένη ανά
+έντυπο). Και στο he_biz: η επωνυμία πελάτη πήγε από τη σκούρα μπάρα στο
+λευκό κουτί.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01GL1eocwLze2HrfwLpQ6NhN

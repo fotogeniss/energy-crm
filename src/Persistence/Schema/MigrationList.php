@@ -44,6 +44,7 @@ use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusVocabulary;
 use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
 use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
 use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaBizPlans;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaHomePlans;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProviderGrants;
 use EnergyCRM\Persistence\Schema\Migrations\DedupeProgramsByCode;
@@ -101,6 +102,7 @@ final class MigrationList
             new MigrateStatusVocabulary(),
             new CreateRequestKeysTable(),
             new SeedProviderGrants(),
+            new SeedProtergiaBizPlans(),
         ];
     }
 }
