@@ -1,0 +1,11 @@
+(285) Protergia φυσικό αέριο: Value Gas Sure και Single Value, ένα έντυπο το καθένα
+
+Sure (σταθερό) και Single Value (κυμαινόμενο) ως προγράμματα gas με code,
+migration 0039 + seed νέας εγκατάστασης. Το template_key() τυπώνει το
+έντυπο του προγράμματος· ό,τι άλλο μένει στο protergia_fa. 9 υπόβαθρα +
+2 χάρτες (Sure = protergia_fa, Single = ίδιο πλέγμα + κουτιά
+Αυτόνομο/Κοινόχρηστο). Και στο protergia_fa: το ποσό εγγύησης πήγε δίπλα
+στην ετικέτα του, από το κουτάκι «Καταβολή με τον 1ο λογαριασμό».
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01GL1eocwLze2HrfwLpQ6NhN

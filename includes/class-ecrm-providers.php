@@ -96,6 +96,10 @@ class ECRM_Providers {
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaBizPlans::all() as $code => $plan ) {
 						$starters[] = [ $plan['label'], $code, 'power', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'], 'business' ];
 					}
+					// (285) Και τα δύο τιμολόγια φυσικού αερίου, ένα έντυπο το καθένα.
+					foreach ( \EnergyCRM\Domain\Forms\ProtergiaGasPlans::all() as $code => $plan ) {
+						$starters[] = [ $plan['label'], $code, 'gas', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'] ];
+					}
 				} elseif ( $row['slug'] === 'volton' ) {
 					// Η Volton δίνει 23 προγράμματα, σε ρεύμα ΚΑΙ σε αέριο, και σε
 					// τρεις κατηγορίες. Το γενικό «Σταθερό Οικιακό» δεν αντιστοιχεί
