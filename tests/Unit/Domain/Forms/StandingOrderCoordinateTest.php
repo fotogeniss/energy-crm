@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Unit\Domain\Forms;
 
+use EnergyCRM\Domain\Forms\FormTemplates;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -52,6 +53,10 @@ final class StandingOrderCoordinateTest extends TestCase
             ['protergia_oik_lite2'],
             ['protergia_oik_sure12'],
             ['protergia_oik_sure18'],
+            // (283) Τα τρία επαγγελματικά, ίδια σελ. 1 με το protergia_he_biz.
+            ['protergia_epag_sure12'],
+            ['protergia_epag_simple2'],
+            ['protergia_epag_seasonal'],
         ];
     }
 
@@ -60,7 +65,7 @@ final class StandingOrderCoordinateTest extends TestCase
      */
     private function field(string $template): array
     {
-        $path = dirname(__DIR__, 4) . '/assets/forms/' . $template . '.json';
+        $path = FormTemplates::mapPath(dirname(__DIR__, 4) . '/assets/forms', $template);
 
         self::assertFileExists($path);
 
@@ -117,7 +122,7 @@ final class StandingOrderCoordinateTest extends TestCase
      */
     public function testTheSharedHomeMapsStayIdentical(): void
     {
-        $dir = dirname(__DIR__, 4) . '/assets/forms/';
+        $dir = dirname(__DIR__, 4) . '/assets/forms/protergia/';
 
         foreach ([['bright', 'lite2'], ['sure12', 'sure18']] as [$a, $b]) {
             self::assertSame(

@@ -1,6 +1,6 @@
 # Protergia — συντεταγμένες ανά έντυπο
 
-Κάθε γραμμή είναι μία θέση στο `assets/forms/<έντυπο>.json`, με σειρά ανάγνωσης
+Κάθε γραμμή είναι μία θέση στο `assets/forms/protergia/<έντυπο>.json`, με σειρά ανάγνωσης
 (σελίδα, μετά από πάνω προς τα κάτω). Η τελευταία στήλη είναι η ετικέτα που
 τυπώνει το ίδιο το έντυπο αμέσως αριστερά — από εκεί αναγνωρίζεις τι είναι το
 κάθε πεδίο χωρίς να ανοίξεις το PDF.
@@ -84,7 +84,7 @@ python tools/form-map-audit.py --sources tools/source-forms --only protergia_he
 
 ## protergia_he — Οικιακός πελάτης, ρεύμα
 
-Αρχείο: `assets/forms/protergia_he.json` · 39 θέσεις
+Αρχείο: `assets/forms/protergia/protergia_he.json` · 39 θέσεις
 
 | σελ | x | y | κλειδί | τύπος | ετικέτα αριστερά στο έντυπο |
 |----:|----:|----:|---|---|---|
@@ -131,12 +131,12 @@ python tools/form-map-audit.py --sources tools/source-forms --only protergia_he
 
 ## protergia_he_biz — Επαγγελματίας, ρεύμα
 
-Αρχείο: `assets/forms/protergia_he_biz.json` · 37 θέσεις
+Αρχείο: `assets/forms/protergia/protergia_he_biz.json` · 37 θέσεις
 
 | σελ | x | y | κλειδί | τύπος | ετικέτα αριστερά στο έντυπο |
 |----:|----:|----:|---|---|---|
 | 1 | 31.4 | 46.8 | `eponymia_etaireias_mas` | κείμενο | συνεργάτη |
-| 1 | 58.4 | 76.7 | `onomateponymo_pelati` | κείμενο | επιχείρησης |
+| 1 | 12.0 | 82.8 | `onomateponymo_pelati` | κείμενο 10pt | (στο λευκό κουτί κάτω από την ετικέτα — (283)) |
 | 1 | 24.2 | 94.1 | `odos_arithmos_katoikias` | κείμενο | Διεύθυνση |
 | 1 | 110.0 | 94.1 | `tk_katoikias` | κείμενο | ΤΚ |
 | 1 | 137.9 | 94.1 | `poli_katoikias` | κείμενο | Πόλη |
@@ -174,9 +174,98 @@ python tools/form-map-audit.py --sources tools/source-forms --only protergia_he
 | 2 | 130.3 | 25.9 | `ypovoli_ilektronika` | ☑ X | Ηλεκτρονικά |
 | 2 | 30.1 | 144.2 | `poso_eggiisis` | κείμενο | ΕΓΓΎΗΣΗ |
 
+## protergia_epag_* — Επαγγελματίας, ρεύμα, ένα έντυπο ανά τιμολόγιο (283)
+
+Αρχεία: `protergia_epag_sure12.json` (Γ21 Value Sure 12 Μήνες 3.0),
+`protergia_epag_simple2.json` (Value Simple 2.0), `protergia_epag_seasonal.json`
+(Value Seasonal 2026). Το έντυπο διαλέγεται από το `code` του προγράμματος
+(`ProtergiaBizPlans`), όχι από τον τύπο πελάτη.
+
+**Σελ. 1** είναι το ίδιο φύλλο με το `protergia_he_biz` (template matching,
+μετατόπιση 0,0): οι θέσεις εκτός πίνακα ήρθαν αυτούσιες από εκεί. Ο πίνακας
+«Ταυτότητα παροχής» ήρθε από το οικιακό (`protergia_oik_*`) +0.4 mm — εκεί οι
+τιμές κάθονται στη στήλη τιμών, ενώ το `protergia_he_biz` τις έβαζε κάτω από τις
+ετικέτες. Τα checkbox μετρήθηκαν από τα οβάλ του PDF (κέντρο −1.0, κορυφή −0.8).
+Προστέθηκαν ό,τι το `he_biz` δεν τύπωνε: αρ. αίτησης, κωδ. συνεργάτη, πωλητής,
+υφιστάμενος προμηθευτής, Ημερήσια/Τηλεμετρούμενη.
+
+**Σελ. 2** (πίνακας τιμών) διαφέρει: το Sure έχει ψηλότερες γραμμές. Simple και
+Seasonal έχουν ίδια γεωμετρία → **ο χάρτης τους είναι byte-identical**. Το PDF
+του Sure είναι σκαναρισμένο (χωρίς κείμενο) — οι θέσεις του βρέθηκαν με template
+matching από το Simple.
+
+**Σελ. 3** ίδια με το οικιακό για συναινέσεις Ζ/Η και υπογραφή· το
+«ΗΜΕΡΟΜΗΝΙΑ/ΤΟΠΟΣ» είναι 7 mm ψηλότερα (237.7 αντί 244.6).
+
+Υπογραφές: σελ 3 (150.0, 142.0) w=42 · σελ 3 (110.0, 229.0) w=42
+
+### protergia_epag_sure12 · 49 θέσεις
+
+| σελ | x | y | κλειδί | τύπος |
+|----:|----:|----:|---|---|
+| 1 | 145.0 | 45.9 | `arithmos_aitisis` | κείμενο |
+| 1 | 31.4 | 46.8 | `eponymia_etaireias_mas` | κείμενο |
+| 1 | 30.2 | 51.7 | `kodikos_synergati` | κείμενο |
+| 1 | 28.5 | 57.6 | `onomateponymo_politi` | κείμενο |
+| 1 | 12.0 | 82.8 | `onomateponymo_pelati` | κείμενο 10pt |
+| 1 | 24.2 | 94.1 | `odos_arithmos_katoikias` | κείμενο |
+| 1 | 110.0 | 94.1 | `tk_katoikias` | κείμενο |
+| 1 | 137.9 | 94.1 | `poli_katoikias` | κείμενο |
+| 1 | 24.2 | 99.1 | `epaggelma_pelati` | κείμενο |
+| 1 | 112.8 | 99.1 | `email_pelati` [1] | κείμενο |
+| 1 | 22.7 | 103.2 | `tilefono_pelati` | κείμενο |
+| 1 | 113.7 | 103.2 | `kinito_pelati` | κείμενο |
+| 1 | 18.7 | 115.0 | `afm_pelati` | κείμενο |
+| 1 | 44.9 | 115.0 | `doy_pelati` | κείμενο |
+| 1 | 126.8 | 115.0 | `kad` | κείμενο |
+| 1 | 30.9 | 132.2 | `onomateponymo_ekprosopou` | κείμενο |
+| 1 | 150.0 | 132.2 | `adt_pelati` | κείμενο |
+| 1 | 31.6 | 149.2 | `onomateponymo_epikoinonias` | κείμενο |
+| 1 | 23.7 | 153.4 | `tilefono_epikoinonias` | κείμενο |
+| 1 | 86.2 | 153.4 | `kinito_epikoinonias` | κείμενο |
+| 1 | 150.1 | 153.4 | `email_epikoinonias` | κείμενο |
+| 1 | 23.2 | 170.3 | `odos_arithmos_apostolis` | κείμενο |
+| 1 | 81.7 | 170.3 | `tk_apostolis` | κείμενο |
+| 1 | 104.8 | 170.3 | `poli_apostolis` | κείμενο |
+| 1 | 164.8 | 170.3 | `email_pelati` [2] | κείμενο 7pt |
+| 1 | 113.2 | 178.4 | `pliromi_pagia_entoli` | ☑ X |
+| 1 | 55.0 | 195.7 | `arithmos_paroxis` | κείμενο |
+| 1 | 156.0 | 195.7 | `arithmos_metriti` | κείμενο |
+| 1 | 135.5 | 206.6 | `tk_paroxis` | κείμενο |
+| 1 | 166.0 | 206.6 | `poli_paroxis` | κείμενο |
+| 1 | 55.0 | 207.1 | `odos_arithmos_paroxis` | κείμενο |
+| 1 | 55.0 | 225.3 | `ipistamenos_promitheftis` | κείμενο |
+| 1 | 77.9 | 232.7 | `katigoria_paroxis_epaggelmatiki` | ☑ X |
+| 1 | 77.9 | 240.7 | `metrisi_imerisia` | ☑ X |
+| 1 | 128.0 | 240.7 | `metrisi_imerisia_nyxterini` | ☑ X |
+| 1 | 157.4 | 240.7 | `metrisi_tilemetroumeni` | ☑ X |
+| 1 | 55.0 | 248.2 | `isxis_paroxis` | κείμενο |
+| 1 | 103.3 | 255.7 | `energopoiisi_nea_syndesi` | ☑ X |
+| 1 | 171.0 | 255.7 | `energopoiisi_epanasyndesi` | ☑ X |
+| 1 | 55.0 | 263.4 | `teleftaia_endeixi_metriti` | κείμενο |
+| 1 | 19.3 | 281.4 | `hkasp` | κείμενο |
+| 2 | 107.0 | 17.3 | `imerominia_aitisis` | κείμενο |
+| 2 | 130.3 | 25.9 | `ypovoli_ilektronika` | ☑ X |
+| 2 | 46.0 | 143.7 | `poso_eggiisis` | κείμενο |
+| 3 | 51.3 | 198.1 | `synainesi_omilou_nai` | ☑ X |
+| 3 | 62.0 | 198.1 | `synainesi_omilou_oxi` | ☑ X |
+| 3 | 67.6 | 208.2 | `synainesi_erevnas_nai` | ☑ X |
+| 3 | 77.6 | 208.2 | `synainesi_erevnas_oxi` | ☑ X |
+| 3 | 36.0 | 237.7 | `topos_imerominia_aitisis` | κείμενο |
+
+### protergia_epag_simple2 = protergia_epag_seasonal · 49 θέσεις
+
+Ιδιες με το Sure εκτός από τη σελ. 2:
+
+| σελ | x | y | κλειδί | τύπος |
+|----:|----:|----:|---|---|
+| 2 | 107.0 | 14.3 | `imerominia_aitisis` | κείμενο |
+| 2 | 130.3 | 21.6 | `ypovoli_ilektronika` | ☑ X |
+| 2 | 46.0 | 96.9 | `poso_eggiisis` | κείμενο |
+
 ## protergia_fa — Φυσικό αέριο
 
-Αρχείο: `assets/forms/protergia_fa.json` · 31 θέσεις
+Αρχείο: `assets/forms/protergia/protergia_fa.json` · 31 θέσεις
 
 | σελ | x | y | κλειδί | τύπος | ετικέτα αριστερά στο έντυπο |
 |----:|----:|----:|---|---|---|

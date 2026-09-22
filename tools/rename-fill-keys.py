@@ -26,7 +26,7 @@ Run once, from the plugin root:
 
     python tools/rename-fill-keys.py
 
-It rewrites ECRM_FormFill, every assets/forms/*.json, ProviderFormFields,
+It rewrites ECRM_FormFill, every assets/forms/*/*.json, ProviderFormFields,
 form-map-build.py and the docs, then verifies that no key was left behind. The
 file is kept in the repository as the record of what became what.
 """
@@ -195,7 +195,7 @@ def main() -> int:
     check_map()
 
     # 1. The maps themselves — a plain key rename, applied simultaneously.
-    for form in sorted((ROOT / "assets" / "forms").glob("*.json")):
+    for form in sorted((ROOT / "assets" / "forms").glob("*/*.json")):
         data = json.loads(form.read_text(encoding="utf-8"))
         data["fields"] = {RENAMES.get(k, k): v for k, v in data["fields"].items()}
         if isinstance(data.get("labels"), dict):

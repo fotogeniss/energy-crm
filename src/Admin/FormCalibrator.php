@@ -3,7 +3,7 @@
 /**
  * Prints a provider template with a millimetre grid over it.
  *
- * Field positions in assets/forms/*.json are millimetres from the top-left of
+ * Field positions in assets/forms/{provider}/*.json are millimetres from the top-left of
  * the page. Working them out by editing a number, regenerating a contract and
  * squinting at the result costs minutes per field — and there are fifteen
  * templates with roughly thirty fields each, revised whenever a provider
@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Admin;
 
+use EnergyCRM\Domain\Forms\FormTemplates;
 use EnergyCRM\Plugin;
 use tFPDF;
 
@@ -56,7 +57,7 @@ final class FormCalibrator
         echo '<div class="wrap"><h1>Έντυπα παρόχων</h1>';
         echo '<p>Το φύλλο βαθμονόμησης δείχνει πλέγμα χιλιοστών πάνω στο έντυπο και,'
             . ' με κόκκινο, κάθε πεδίο που ήδη τοποθετεί ο χάρτης. Οι συντεταγμένες στο'
-            . ' <code>assets/forms/{key}.json</code> είναι χιλιοστά από την πάνω αριστερή γωνία.</p>';
+            . ' <code>assets/forms/{πάροχος}/{key}.json</code> είναι χιλιοστά από την πάνω αριστερή γωνία.</p>';
 
         echo '<table class="widefat striped"><thead><tr>'
             . '<th>Πρότυπο</th><th>Πεδία</th><th>Σελίδες</th><th></th>'
@@ -88,8 +89,7 @@ final class FormCalibrator
     {
         $found = [];
 
-        foreach (glob($this->formsDir() . '*.json') ?: [] as $path) {
-            $key = basename($path, '.json');
+        foreach (FormTemplates::keys($this->formsDir()) as $key) {
             $map = $this->map($key);
 
             if ($map === null) {
@@ -97,7 +97,7 @@ final class FormCalibrator
             }
 
             $pages = 0;
-            while (file_exists($this->formsDir() . $key . '-' . ($pages + 1) . '.jpg')) {
+            while (file_exists(FormTemplates::pagePath($this->formsDir(), $key, $pages + 1))) {
                 $pages++;
             }
 
@@ -152,9 +152,9 @@ final class FormCalibrator
 
         $page = 1;
 
-        while (file_exists($this->formsDir() . $key . '-' . $page . '.jpg')) {
+        while (file_exists(FormTemplates::pagePath($this->formsDir(), $key, $page))) {
             $pdf->AddPage($orient, [$width, $height]);
-            $pdf->Image($this->formsDir() . $key . '-' . $page . '.jpg', 0, 0, $width, $height);
+            $pdf->Image(FormTemplates::pagePath($this->formsDir(), $key, $page), 0, 0, $width, $height);
 
             $this->drawGrid($pdf, $width, $height);
             $this->drawFields($pdf, $map['fields'] ?? [], $page);
@@ -220,7 +220,7 @@ final class FormCalibrator
      */
     private function map(string $key): ?array
     {
-        $path = $this->formsDir() . $key . '.json';
+        $path = FormTemplates::mapPath($this->formsDir(), $key);
 
         if ($key === '' || ! is_readable($path)) {
             return null;

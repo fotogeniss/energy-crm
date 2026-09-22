@@ -50,7 +50,7 @@ final class ProtergiaHomePlansTest extends TestCase
     #[DataProvider('plans')]
     public function testEveryPlanHasItsBundledTemplate(string $code): void
     {
-        $dir = dirname(__DIR__, 4) . '/assets/forms/';
+        $dir = dirname(__DIR__, 4) . '/assets/forms/protergia/';
 
         self::assertFileExists($dir . $code . '.json');
 

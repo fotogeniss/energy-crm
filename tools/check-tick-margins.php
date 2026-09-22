@@ -37,7 +37,8 @@ if (! is_dir($outDir) && ! mkdir($outDir, 0755, true) && ! is_dir($outDir)) {
 $plans = ['programma_5gb', 'programma_10gb_5gb', 'programma_40gb', 'programma_unlimited'];
 
 foreach (['orizon_mobile', 'orizon_family', 'orizon_combo'] as $key) {
-    $mapFile = $formsDir . $key . '.json';
+    // (284) Ενας φάκελος ανά πάροχο: assets/forms/orizon/orizon_mobile.json
+    $mapFile = $formsDir . strtok($key, '_') . '/' . $key . '.json';
     $map     = json_decode((string) file_get_contents($mapFile), true);
 
     if (! is_array($map)) {
@@ -62,7 +63,7 @@ foreach (['orizon_mobile', 'orizon_family', 'orizon_combo'] as $key) {
         $pdf->AddFont('DejaVu', '', 'DejaVuSans.ttf', true);
         $pdf->AddFont('DejaVu', 'B', 'DejaVuSans-Bold.ttf', true);
         $pdf->AddPage('P', [$w, $h]);
-        $pdf->Image($formsDir . $key . '-1.jpg', 0, 0, $w, $h);
+        $pdf->Image($formsDir . strtok($key, '_') . '/' . $key . '-1.jpg', 0, 0, $w, $h);
         $pdf->SetTextColor(0, 0, 150);
         // Mirrors ECRM_FormFill::render()'s check-mark branch exactly (same
         // size/bold opt-in, same default) so this preview matches production.

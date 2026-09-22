@@ -1,0 +1,10 @@
+(284) Τα έντυπα παρόχων σε φάκελο ανά πάροχο
+
+assets/forms/ είχε 119 αρχεία χύμα από επτά παρόχους. Τώρα
+assets/forms/<πάροχος>/<key>.json|-N.jpg, με τον φάκελο να βγαίνει από το
+κλειδί (ό,τι είναι πριν την πρώτη κάτω παύλα) σε ένα σημείο: FormTemplates.
+Εκτύπωση, «Πάνω στο έντυπο», calibrator και εργαλεία περνούν από εκεί.
+Ονόματα αρχείων, κλειδιά και χάρτες αμετάβλητα.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01GL1eocwLze2HrfwLpQ6NhN

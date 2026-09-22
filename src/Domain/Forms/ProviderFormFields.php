@@ -516,7 +516,7 @@ final class ProviderFormFields
      */
     public static function forTemplate(string $key, string $formsDir): array
     {
-        $path = rtrim($formsDir, '/\\') . '/' . $key . '.json';
+        $path = FormTemplates::mapPath($formsDir, $key);
 
         if ($key === '' || ! is_readable($path)) {
             return [];
@@ -575,7 +575,7 @@ final class ProviderFormFields
      */
     public static function mainFormInputsForTemplate(string $key, string $formsDir): array
     {
-        $path = rtrim($formsDir, '/\\') . '/' . $key . '.json';
+        $path = FormTemplates::mapPath($formsDir, $key);
 
         if ($key === '' || ! is_readable($path)) {
             return [];
@@ -629,7 +629,7 @@ final class ProviderFormFields
      */
     public static function positionsForTemplate(string $key, string $formsDir): array
     {
-        $path = rtrim($formsDir, '/\\') . '/' . $key . '.json';
+        $path = FormTemplates::mapPath($formsDir, $key);
 
         if ($key === '' || ! is_readable($path)) {
             return [];

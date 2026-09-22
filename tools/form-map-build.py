@@ -372,7 +372,8 @@ def main() -> int:
             continue
 
         key = pdf.stem
-        target = args.forms / f"{key}.json"
+        # (284) Ενας φάκελος ανά πάροχο: assets/forms/<πάροχος>/<key>.json
+        target = args.forms / key.split("_")[0] / f"{key}.json"
         proposed = build(pdf)
 
         if not target.exists():

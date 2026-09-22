@@ -361,7 +361,7 @@ def dirty_background(key: str, forms: Path, placed: list[dict]) -> list[str]:
     already records: a source marked as filled, and fields placed on the pages
     that came from it. It cannot be fixed here either. It needs a blank PDF.
     """
-    document = json.loads((forms / f"{key}.json").read_text(encoding="utf-8"))
+    document = json.loads((forms / key.split("_")[0] / f"{key}.json").read_text(encoding="utf-8"))
 
     if not document.get("source_is_filled"):
         return []
@@ -372,7 +372,7 @@ def dirty_background(key: str, forms: Path, placed: list[dict]) -> list[str]:
 
 
 def audit(key: str, pdf: Path, forms: Path, suggest: bool) -> int:
-    document = json.loads((forms / f"{key}.json").read_text(encoding="utf-8"))
+    document = json.loads((forms / key.split("_")[0] / f"{key}.json").read_text(encoding="utf-8"))
     fields = document["fields"]
     found = marks(pdf)
 
@@ -441,7 +441,8 @@ def main() -> int:
     args = parser.parse_args()
 
     total = 0
-    for path in sorted(args.forms.glob("*.json")):
+    # (284) Ενας φάκελος ανά πάροχο: assets/forms/<πάροχος>/<key>.json
+    for path in sorted(args.forms.glob("*/*.json")):
         key = path.stem
         if args.only and key != args.only:
             continue
