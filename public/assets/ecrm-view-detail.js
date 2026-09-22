@@ -303,7 +303,13 @@ function renderDetail(view, d) {
 	// ξεσυγχρονιστεί. Το ίδιο μάθημα ακριβώς επανέλαβε ο `DeletionGate` στον
 	// server στις 07/09.
 	var checks = [
-		{ ok: !!(c.afm && c.adt),  txt: 'Στοιχεία ταυτότητας' },
+		// (281) hint: μόνο σε αυτή τη γραμμή -- ο συνεργάτης έβλεπε πράσινο
+		// "Όλα τα δικαιολογητικά παρόντα" στα έγγραφα λίγο πιο πάνω και δεν
+		// καταλάβαινε γιατί εδώ είναι ακόμα ○: τα δύο ελέγχουν διαφορετικά
+		// πράγματα (αρχεία vs. τα ίδια τα πεδία ΑΦΜ/ΑΔΤ). Βλ. kv('ΑΦΜ', ...)
+		// στην κάρτα "Στοιχεία πελάτη" παρακάτω -- ίδια πηγή, ίδιο tooltip.
+		{ ok: !!(c.afm && c.adt),  txt: 'Στοιχεία ταυτότητας',
+			hint: c.afm && !c.adt ? 'Λείπει το ΑΔΤ.' : !c.afm && c.adt ? 'Λείπει το ΑΦΜ.' : 'Λείπουν ΑΦΜ και ΑΔΤ.' },
 		{ ok: !!c.program_name,    txt: 'Πρόγραμμα' }
 	];
 	// COMBO με δύο πρόσωπα (3β-Γ, 04/09): δύο γραμμές αντί για μία, ΜΟΝΟ όταν
@@ -331,7 +337,8 @@ function renderDetail(view, d) {
 	}
 	var done = checks.filter(function (x) { return x.ok; }).length;
 	var checklistHTML = '<ul class="ecrm-rcheck">' + checks.map(function (x) {
-		return '<li class="' + (x.ok ? 'is-ok' : '') + '"><span class="ecrm-rcheck__m">' + (x.ok ? '✓' : '○') + '</span>' + esc(x.txt) + '</li>';
+		var title = (!x.ok && x.hint) ? ' title="' + esc(x.hint) + '"' : '';
+		return '<li class="' + (x.ok ? 'is-ok' : '') + '"' + title + '><span class="ecrm-rcheck__m">' + (x.ok ? '✓' : '○') + '</span>' + esc(x.txt) + '</li>';
 	}).join('') + '</ul>';
 
 	function kv(label, val) {
@@ -1113,13 +1120,16 @@ function renderDetail(view, d) {
 
 		var rows = wrap.querySelectorAll('[data-docup-row]');
 		var fd = new FormData();
+		var uploadedKinds = [];
 		for (var i = 0; i < input.files.length; i++) {
 			var row = rows[i];
 			var sel = row ? row.querySelector('[data-docup-kind]') : null;
 			var exp = row ? row.querySelector('[data-docup-expiry]') : null;
+			var kind = sel ? sel.value : 'other';
 			fd.append('files[]', input.files[i]);
-			fd.append('kinds[]', sel ? sel.value : 'other');
+			fd.append('kinds[]', kind);
 			fd.append('expires_at[]', exp && !exp.hidden ? exp.value : '');
+			uploadedKinds.push(kind);
 		}
 
 		var b = this; b.disabled = true; msg.textContent = 'Ανέβασμα…'; msg.className = 'ecrm-docup__msg';
@@ -1139,12 +1149,49 @@ function renderDetail(view, d) {
 					return;
 				}
 				toast('Προστέθηκαν ' + d.saved + ' έγγραφα.' + (note ? ' ' + note : ''), !note);
+				// (281) Λείπουν ΑΦΜ/ΑΔΤ και μόλις μπήκε ταυτότητα/λογαριασμός/SIM;
+				// Ο εξαγωγέας υπάρχει ήδη και δουλεύει ακριβώς έτσι στη "Νέα
+				// αίτηση" (ExtractionController::extract() με contract_id+apply,
+				// χωρίς αρχεία -- διαβάζει ό,τι είναι ήδη αποθηκευμένο) -- απλά
+				// δεν καλούνταν ποτέ από εδώ. Ξαναδιαβάζει ΟΛΑ τα αναγνώσιμα
+				// έγγραφα της αίτησης, όχι μόνο το καινούργιο (δεν υπάρχει
+				// "already read" σημείωση σαν το kind_source για την ταξινόμηση),
+				// άρα τρέχει ΜΟΝΟ όταν κάτι πραγματικά λείπει -- όχι σε κάθε
+				// ανέβασμα, να μην πληρώνεται το μοντέλο ξανά και ξανά για τα
+				// ίδια αρχεία.
+				var worthExtracting = !(c.afm && c.adt) && uploadedKinds.some(function (k) {
+					return k === 'id_card' || k === 'provider_bill' || k === 'sim_card';
+				});
 				// Η ανάγνωση τρέχει ΠΡΙΝ το ξαναχτίσιμο, ώστε η καρτέλα να έρθει
 				// ήδη με τις διορθωμένες ετικέτες και το checklist σωστό.
-				reviewKinds(false).then(function () { openDetail(c.id); });
+				reviewKinds(false).then(function () {
+					return worthExtracting ? extractMissing(c.id) : null;
+				}).then(function () { openDetail(c.id); });
 			})
 			.catch(function () { msg.textContent = 'Σφάλμα δικτύου.'; msg.className = 'ecrm-docup__msg is-err'; b.disabled = false; });
 	});
+}
+
+/* (281) Ιδια κλήση με αυτή που ήδη κάνει η "Νέα αίτηση" (βλ. ecrm-form.js)
+ * -- διαβάζει ό,τι έγγραφο έχει ήδη η αίτηση και γράφει ό,τι πεδίο είναι
+ * ακόμα κενό (ΑΦΜ/ΑΔΤ κλπ, βλ. ExtractionController::applyToRecords() --
+ * γεμίζει μόνο τα κενά, ποτέ δεν αντικαθιστά κάτι που ο συνεργάτης έγραψε).
+ * Ο καλών αποφασίζει ΠΟΤΕ αξίζει να τρέξει -- εδώ απλά την εκτελεί, σιωπηλή
+ * σε κάθε αποτυχία: μια ανάγνωση που δεν πρόλαβε δεν είναι κρίση, μένει η
+ * "Επεξεργασία" για το χέρι. */
+function extractMissing(contractId) {
+	var fd = new FormData();
+	fd.append('contract_id', String(contractId));
+	fd.append('apply', '1');
+
+	return fetch(api('/extract'), { method: 'POST', headers: H(), body: fd })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (d && d.ok && d.applied && d.applied.length) {
+				toast('Η AI συμπλήρωσε ' + d.applied.length + ' στοιχεί' + (d.applied.length === 1 ? 'ο' : 'α') + ' από τα έγγραφα.');
+			}
+		})
+		.catch(function () {});
 }
 function downloadBinary(path, btn, busy, idle) {
 	btn.disabled = true; var t = btn.innerHTML; btn.innerHTML = busy;
