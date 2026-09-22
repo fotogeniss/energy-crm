@@ -141,6 +141,9 @@ final class ProviderFormFields
         'metrisi_tilemetroumeni'     => ['meter_reading_type'],
         'pliromi_pagia_entoli'       => ['payment_method'],
         'tropos_apostolis_logariasmou' => ['bill_delivery'],
+        // (286) Τα κουτάκια «Ταχυδρομικώς / Με e-mail» -- ίδιο dropdown.
+        'apostoli_logariasmou_email'  => ['bill_delivery'],
+        'apostoli_logariasmou_entypo' => ['bill_delivery'],
         'onomateponymo_ekprosopou'   => ['rep_first_name', 'rep_last_name'],
         'onomateponymo_epikoinonias' => ['contact_first_name', 'contact_last_name'],
         'adt_epikoinonias'           => ['contact_adt'],

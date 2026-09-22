@@ -1,0 +1,9 @@
+(286) Protergia οικιακά: ημερομηνία στη σελ. 1 και τρόπος αποστολής λογαριασμού
+
+Τα τέσσερα PDF (Sure 12/18, Bright, Lite) είναι ίδια με τα υπόβαθρα που
+ήδη υπάρχουν -- κανένα υπόβαθρο και κανένα πρόγραμμα δεν αλλάζει. Στους
+τέσσερις χάρτες προστέθηκαν η ημερομηνία στο πλαίσιο συνεργάτη της σελ. 1
+και τα κουτάκια «Ταχυδρομικώς / Με e-mail» της σελ. 3, από το bill_delivery.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01GL1eocwLze2HrfwLpQ6NhN
