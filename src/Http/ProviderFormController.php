@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_FormFill;
+use EnergyCRM\Domain\Forms\FormTemplates;
 use EnergyCRM\Domain\Forms\ProviderFormFields;
 use EnergyCRM\Plugin;
 use WP_REST_Request;
@@ -87,6 +88,11 @@ final class ProviderFormController implements Controller
         return new WP_REST_Response([
             'ok'       => true,
             'template' => $template,
+
+            // (284) Ο φάκελος του παρόχου μέσα στο assets/forms/, για την εικόνα
+            // της σελ. 1 στο «Πάνω στο έντυπο». Από εδώ και όχι υπολογισμένος
+            // στη JS: ο κανόνας ζει μόνο στο FormTemplates.
+            'folder'   => FormTemplates::provider($template),
 
             // Τα ΕΞΤΡΑ του παρόχου, που δεν υπάρχουν στην κύρια φόρμα.
             'fields'   => ProviderFormFields::forTemplate($template, $dir),

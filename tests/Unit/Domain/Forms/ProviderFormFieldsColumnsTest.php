@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Unit\Domain\Forms;
 
+use EnergyCRM\Domain\Forms\FormTemplates;
 use EnergyCRM\Domain\Forms\ProviderFormFields;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -130,8 +131,8 @@ final class ProviderFormFieldsColumnsTest extends TestCase
     {
         $out = [];
 
-        foreach ((array) glob(dirname(__DIR__, 4) . '/assets/forms/*.json') as $path) {
-            $out[] = [basename((string) $path, '.json')];
+        foreach (FormTemplates::keys(self::formsDir()) as $key) {
+            $out[] = [$key];
         }
 
         return $out;

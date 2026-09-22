@@ -880,7 +880,9 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			box.querySelectorAll('.ecrm-docfld').forEach(function (n) { n.remove(); });
 			docSlots = [];
 
-			img.src = (ECRM.formsUrl || '') + d.template + '-1.jpg';
+			// (284) Κάθε πάροχος έχει δικό του φάκελο· το `folder` το στέλνει ο
+			// server (FormTemplates::provider), δεν το μαντεύει η JS.
+			img.src = (ECRM.formsUrl || '') + (d.folder ? d.folder + '/' : '') + d.template + '-1.jpg';
 
 			var pw = d.positions.pageSize.w, ph = d.positions.pageSize.h;
 			var fields = d.positions.fields;

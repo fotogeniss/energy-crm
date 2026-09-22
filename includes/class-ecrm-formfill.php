@@ -8,9 +8,10 @@
  * Overlaying with the bundled DejaVu (Unicode) font renders Greek correctly
  * everywhere — exactly like ECRM_PDF already does.
  *
- * Templates live in assets/forms/{key}.pdf (qpdf-normalised so the free FPDI
+ * Templates live in assets/forms/{provider}/{key}-{n}.jpg (see FormTemplates;
+ * they were once assets/forms/{key}.pdf, qpdf-normalised so the free FPDI
  * parser can read them on any host — no external tools needed in production).
- * Their coordinate maps live in assets/forms/{key}.json (mm, origin top-left).
+ * Their coordinate maps live in assets/forms/{provider}/{key}.json (mm, origin top-left).
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -61,6 +62,15 @@ class ECRM_FormFill {
 
 		if ( $has( 'volton' ) && $e === 'power' )                         { return 'volton_he'; }
 		if ( $has( 'volton' ) && $e === 'gas' )                           { return 'volton_fa'; }
+		// (283) Τα τρία επαγγελματικά τιμολόγια: το πρόγραμμα αποφασίζει το
+		// έντυπο ΠΡΙΝ από τον τύπο πελάτη. Ενα «Επαγγελματικό» τιμολόγιο σε
+		// πελάτη που καταχωρήθηκε κατά λάθος ως ιδιώτης θα έπεφτε αλλιώς στο
+		// οικιακό φύλλο -- δηλαδή ο πελάτης θα υπέγραφε άλλο τιμολόγιο από
+		// αυτό που του πουλήθηκε.
+		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power'
+			&& \EnergyCRM\Domain\Forms\ProtergiaBizPlans::exists( $program ) ) {
+			return \EnergyCRM\Domain\Forms\ProtergiaBizPlans::templateKey( $program );
+		}
 		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power' && ! $biz ) {
 			// Ένα τιμολόγιο, ένα έντυπο. Όταν η σύμβαση δεν κρατάει κάποιο από
 			// τα τέσσερα (παλιές συμβάσεις, ή πρόγραμμα που έφτιαξε ο χρήστης),
@@ -717,9 +727,11 @@ class ECRM_FormFill {
 		$orient = ( $w > $h ) ? 'L' : 'P';
 
 		$p = 1;
-		while ( file_exists( $dir . $key . '-' . $p . '.jpg' ) ) {
+		// (284) Ο $dir είναι η βάση assets/forms/· κάθε πάροχος έχει τον
+		// φάκελό του, και τη διαδρομή τη λέει μόνο το FormTemplates.
+		while ( file_exists( \EnergyCRM\Domain\Forms\FormTemplates::pagePath( $dir, $key, $p ) ) ) {
 			$pdf->AddPage( $orient, [ $w, $h ] );
-			$pdf->Image( $dir . $key . '-' . $p . '.jpg', 0, 0, $w, $h );
+			$pdf->Image( \EnergyCRM\Domain\Forms\FormTemplates::pagePath( $dir, $key, $p ), 0, 0, $w, $h );
 
 			$pdf->SetTextColor( 0, 0, 0 );
 			foreach ( $map['fields'] as $field => $placements ) {
@@ -781,8 +793,8 @@ class ECRM_FormFill {
 	 * @return array<string, mixed>
 	 */
 	private static function load_map( string $dir, string $key ): array {
-		$mapf = $dir . $key . '.json';
-		if ( ! file_exists( $dir . $key . '-1.jpg' ) || ! file_exists( $mapf ) ) {
+		$mapf = \EnergyCRM\Domain\Forms\FormTemplates::mapPath( $dir, $key );
+		if ( ! file_exists( \EnergyCRM\Domain\Forms\FormTemplates::pagePath( $dir, $key, 1 ) ) || ! file_exists( $mapf ) ) {
 			throw new \RuntimeException( 'Λείπει το αρχείο προτύπου για ' . $key . '.' );
 		}
 		$map = json_decode( (string) file_get_contents( $mapf ), true );
@@ -802,7 +814,7 @@ class ECRM_FormFill {
 	private static function render( string $key, array $c, ?string $sig_path, array $sig_roles = [] ): array {
 		$dir = ECRM_DIR . 'assets/forms/';
 
-		// Each template page is bundled as a background image (assets/forms/{key}-{n}.jpg);
+		// Each template page is bundled as a background image (assets/forms/{provider}/{key}-{n}.jpg);
 		// we overlay the Greek values with tFPDF (DejaVu Unicode). No PDF-import library is
 		// used, so this works identically on any host regardless of PDF parser support.
 		require_once ECRM_DIR . 'includes/lib/tfpdf/tfpdf.php';
