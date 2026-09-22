@@ -80,6 +80,12 @@ class ECRM_FormFill {
 			return $sheet !== '' ? $sheet : 'protergia_he';
 		}
 		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power' ) { return 'protergia_he_biz'; }
+		// (285) Φυσικό αέριο: ίδιος κανόνας -- το τιμολόγιο διαλέγει το φύλλο.
+		// Ό,τι δεν είναι ένα από τα δύο (παλιές συμβάσεις) μένει στο protergia_fa.
+		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'gas'
+			&& \EnergyCRM\Domain\Forms\ProtergiaGasPlans::exists( $program ) ) {
+			return \EnergyCRM\Domain\Forms\ProtergiaGasPlans::templateKey( $program );
+		}
 		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'gas' )   { return 'protergia_fa'; }
 		if ( $has( 'nrg' ) && $e === 'power' )                            { return $biz ? 'nrg_he_biz' : 'nrg_he'; }
 		if ( $has( 'nrg' ) && $e === 'gas' )                              { return 'nrg_fa'; }
@@ -384,6 +390,12 @@ class ECRM_FormFill {
 			'eidiki_katigoria'        => $xg( 'eidiki_katigoria' ),
 			'anotato_orio'            => $xg( 'anotato_orio' ),
 			'arithmos_koinoxristou'   => $xg( 'ar_koinoxristou' ),
+
+			// (285) Το φύλλο Single Value της Protergia έχει δύο κουτιά τιμολογίου
+			// (Αυτόνομο / Κοινόχρηστο) -- τα διαλέγει η κατηγορία της σύμβασης.
+			// Οτιδήποτε εκτός «Κοινόχρηστο» είναι αυτόνομη θέρμανση.
+			'fa_aftonomo'             => ( ( $c['category'] ?? '' ) !== 'communal' ? 'X' : '' ),
+			'fa_koinoxristo'          => ( ( $c['category'] ?? '' ) === 'communal' ? 'X' : '' ),
 
 			// Single-choice groups: every option is its own checkbox key, and
 			// only the selected one carries an X.

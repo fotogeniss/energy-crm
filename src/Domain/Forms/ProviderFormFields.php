@@ -53,6 +53,8 @@ final class ProviderFormFields
         'diarkeia_aoristou', 'diarkeia_6_mines', 'diarkeia_12_mines',
         'diarkeia_18_mines', 'diarkeia_24_mines', 'diarkeia_36_mines',
         'ypovoli_ilektronika', 'ypovoli_taxydromika',
+        // (285) Φ.Α. Protergia Single Value: Αυτόνομο/Κοινόχρηστο από την κατηγορία της σύμβασης.
+        'fa_aftonomo', 'fa_koinoxristo',
 
         // Κινητή τηλεφωνία -- έλειπαν εντελώς από εδώ (214). Τα τρία έντυπα
         // Orizon (family/combo/mobile) τα τυπώνουν ήδη μέσω του
@@ -282,6 +284,8 @@ final class ProviderFormFields
         'diarkeia_36_mines'              => [],
         'ypovoli_ilektronika'            => [],
         'ypovoli_taxydromika'            => [],
+        'fa_aftonomo'                    => [],
+        'fa_koinoxristo'                 => [],
 
         // Κινητή τηλεφωνία (214) -- ίδιο σχόλιο με το FROM_COLUMNS παραπάνω.
         'arithmos_kinitou'               => ['mobile_msisdn'],

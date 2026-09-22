@@ -161,6 +161,18 @@
    "x": 154.8,
    "y": 140.3,
    "check": true
+  },
+  "fa_aftonomo": {
+   "page": 1,
+   "x": 33.6,
+   "y": 161.7,
+   "check": true
+  },
+  "fa_koinoxristo": {
+   "page": 1,
+   "x": 84.2,
+   "y": 161.7,
+   "check": true
   }
  },
  "sig": {
@@ -192,6 +204,8 @@
   "idiotita_idioktitis": "Ιδιοκτήτης εγκατάστασης Ενοικιαστής εγκατάστασης",
   "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης",
   "hkasp": "ΗΚΑΣΠ",
-  "arithmos_paroxis": "Αριθμός παροχής"
+  "arithmos_paroxis": "Αριθμός παροχής",
+  "fa_aftonomo": "Φυσικό Αέριο Οικιακό Αυτόνομο",
+  "fa_koinoxristo": "Φυσικό Αέριο Οικιακό Κοινόχρηστο"
  }
 }

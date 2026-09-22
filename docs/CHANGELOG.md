@@ -6,6 +6,52 @@
 Νεότερα πρώτα. Κάθε εγγραφή αναφέρει το πρόβλημα, όχι μόνο τη λύση.
 
 ---
+### (285) Protergia φυσικό αέριο: Value Gas Sure και Single Value, ένα έντυπο το καθένα
+
+**Αφορμή.** Ο συνεργάτης έστειλε τα ΦΑ της Protergia με τις αιτήσεις τους, για
+το dropdown: σταθερό (μπλε) **Value Gas Sure**, κυμαινόμενο (κίτρινο) **Single
+Value**. Δύο PDF: `ΣΤΑΘΕΡΟ ΦΑ Αίτηση Οικιακό Αυτόνομο Value Gas Sure (Editable) & ΓΟΣ.pdf`
+(5 σελ.) και `ΦΑ SINGLE ή DOUBLE VALUE.pdf` (4 σελ.).
+
+**Τι βρέθηκε.** Το υπάρχον `protergia_fa` (2 σελ.) είναι ήδη το Value Gas Sure --
+pixel προς pixel οι σελ. 1-2 του νέου PDF. Το Single Value έχει ίδιο πλέγμα σελ. 1
+(κάθε ετικέτα στα ίδια mm) και ίδιο μπλοκ υπογραφής στη σελ. 2· αλλάζει μόνο το
+κουτί «Τιμολόγιο προμηθευτή» (δύο επιλογές, Αυτόνομο/Κοινόχρηστο, αντί για ένα
+προτυπωμένο) και ο πίνακας τιμών.
+
+**Η αλλαγή.** Νέο `ProtergiaGasPlans` (ίδιο σχήμα με `ProtergiaHomePlans`/
+`ProtergiaBizPlans`: ο κωδικός προγράμματος είναι το έντυπο). Το `template_key()`
+κοιτά πρώτα το πρόγραμμα· ό,τι δεν είναι ένα από τα δύο (παλιές συμβάσεις) μένει
+στο `protergia_fa`. Migration `0039_seed_protergia_gas_plans` + seed νέας
+εγκατάστασης: δύο γραμμές `energy_type=gas`, `category=home`, με code.
+
+- Sure: 9,90 €/μήνα, 41,90 €/MWh (χωρίς την έκπτωση Power+Gas).
+- Single Value: 5,00 €/μήνα, τιμή με τύπο TTF → `price_kwh` κενό.
+
+Τα κουτιά Αυτόνομο/Κοινόχρηστο του Single γεμίζουν από την `category` της
+σύμβασης (`communal` → Κοινόχρηστο). **Σημείωση:** το dropdown δείχνει το Single
+μόνο στην κατηγορία «Οικιακό», άρα σήμερα τυπώνεται πάντα Αυτόνομο. Το ίδιο φύλλο
+γράφει και το **Double Value** (πελάτης με ρεύμα Protergia) -- δεν μπήκε, δεν ζητήθηκε.
+
+**Και ένα παλιό λάθος.** Στο `protergia_fa` το ποσό εγγύησης τυπωνόταν στο x = 113,
+πάνω στο κουτάκι «Καταβολή εγγύησης με τον 1ο λογαριασμό», όχι δίπλα στο «Ποσό
+εγγύησης (€)». Μεταφέρθηκε (29.5, 173.7) -- και στα τρία φύλλα.
+
+**Tests.** Νέο `ProtergiaGasPlansTest`: οι δύο κωδικοί, καμία σύγκρουση με ρεύμα,
+όλες οι σελίδες (5/4, και όχι μία παραπάνω), Sure ≡ `protergia_fa` byte προς byte,
+Single = πλέγμα Sure + ακριβώς τα δύο κουτιά, εγγύηση δίπλα στην ετικέτα της,
+χρώματα και τιμές. Αρνητικά ελεγμένο (σελίδα που λείπει, εγγύηση στο 113 → κόκκινο).
+`FormTemplatesTest`: τα δύο νέα έντυπα ονομαστικά.
+
+**Αρχεία.** `assets/forms/protergia/protergia_fa_{sure,single}*` (9 υπόβαθρα + 2 χάρτες),
+`assets/forms/protergia/protergia_fa.json`, `src/Domain/Forms/ProtergiaGasPlans.php` (νέο),
+`src/Persistence/Schema/Migrations/SeedProtergiaGasPlans.php` (νέο),
+`src/Persistence/Schema/MigrationList.php`, `src/Domain/Forms/ProviderFormFields.php`,
+`includes/class-ecrm-formfill.php`, `includes/class-ecrm-providers.php`,
+`tests/Unit/Domain/Forms/{ProtergiaGasPlansTest,FormTemplatesTest}.php`,
+`docs/PROTERGIA-COORDS.md`.
+
+---
 ### (284) Τα έντυπα παρόχων σε φάκελο ανά πάροχο
 
 **Αφορμή.** «Είναι μπάχαλο ο φάκελος, τα έχει όλα μαζί.» Το `assets/forms/`

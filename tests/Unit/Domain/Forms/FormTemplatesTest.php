@@ -109,7 +109,7 @@ final class FormTemplatesTest extends TestCase
                 'elpedison_he', 'enerwave_fa', 'enerwave_he', 'nrg_fa', 'nrg_he', 'nrg_he_biz',
                 'orizon_combo', 'orizon_family', 'orizon_mobile', 'orizon_portability',
                 'protergia_epag_seasonal', 'protergia_epag_simple2', 'protergia_epag_sure12',
-                'protergia_fa', 'protergia_he', 'protergia_he_biz',
+                'protergia_fa', 'protergia_fa_single', 'protergia_fa_sure', 'protergia_he', 'protergia_he_biz',
                 'protergia_oik_bright', 'protergia_oik_lite2', 'protergia_oik_sure12', 'protergia_oik_sure18',
                 'volton_fa', 'volton_he', 'zenith_he',
             ] as $key
