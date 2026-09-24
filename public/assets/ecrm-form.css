@@ -721,7 +721,7 @@
 .ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="fixed"]::before { background-color: var(--st-new); }
 .ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="special"]::before { background-color: var(--st-active); }
 .ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="variable"]::before { background-color: var(--st-pending); }
-.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="dynamic"]::before { background-color: var(--st-pending); }
+.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="dynamic"]::before { background-color: var(--cat-violet); }
 
 /* --- Εικονίδια — 2026-08-17 ----------------------------------------------
  * Αντικατέστησαν 15 emoji. Τα emoji τα ζωγραφίζει το λειτουργικό σύστημα: άλλα
