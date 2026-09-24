@@ -288,6 +288,34 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			return providerName().toLowerCase().indexOf('volton') !== -1;
 		}
 
+		// (289) Η σειρά «Τιμολόγιο» (Γ1/Γ21/Γ22/Γ23) δεν αφορά την Protergia:
+		// κανένα έντυπό της δεν έχει θέση για κωδικό τιμολογίου, και το
+		// έντυπο το διαλέγει το πρόγραμμα, όχι ο κωδικός. Ίδιο κριτήριο
+		// ονόματος με το template_key() του ECRM_FormFill (protergia/metlen).
+		//
+		// `hidden` στη σειρά, όχι style.display: το style.display το ελέγχει
+		// ήδη το applyEnergyType() (data-when-energy) και όποιο έτρεχε
+		// τελευταίο θα κέρδιζε. Με το [hidden] οι δύο συνθήκες ισχύουν μαζί
+		// (βλ. .ecrm-row[hidden] στο ecrm-form.css).
+		function isProtergiaProvider() {
+			var n = providerName().toLowerCase();
+			return n.indexOf('protergia') !== -1 || n.indexOf('metlen') !== -1;
+		}
+
+		function applyInvoiceCodeRow() {
+			var group = root.querySelector('.ecrm-chips[data-field="invoice_code"]');
+			var row = group ? group.closest('.ecrm-row') : null;
+			if (!row) return;
+
+			var off = isProtergiaProvider();
+			row.hidden = off;
+
+			if (off && state.invoice_code) {
+				group.querySelectorAll('.ecrm-chip').forEach(function (c) { c.classList.remove('is-on'); });
+				state.invoice_code = null;
+			}
+		}
+
 		// Η κατηγορία κρύβει ό,τι δεν της ανήκει, με τον ΙΔΙΟ μηχανισμό που
 		// χρησιμοποιεί από πάντα το είδος παροχής. Σήμερα αφορά μόνο τα
 		// Γ-τιμολόγια (Γ1 οικιακό, Γ21-23 επαγγελματικά), αλλά ο μηχανισμός
@@ -570,6 +598,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 
 		function refreshProviderFields() {
 			applyComboFromVolton();
+			applyInvoiceCodeRow();
 
 			var card = root.querySelector('[data-provider-fields]');
 			if (!card) return;
@@ -1177,7 +1206,55 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			});
 		}
 
+		// (289) «Χρώμα»: μόνο όσα χρώματα έχει ΠΡΑΓΜΑΤΙΚΑ ο πάροχος για αυτό το
+		// είδος παροχής και αυτή την κατηγορία. Η Protergia έχει μόνο Σταθερό
+		// (μπλε) και Κυμαινόμενο (κίτρινο)· το «Ειδικό» και το «Δυναμικό»
+		// οδηγούσαν απλώς στο «δεν υπάρχει πρόγραμμα για αυτόν τον συνδυασμό».
+		// Βγαίνει από τα ίδια τα προγράμματα, όχι από λίστα ανά πάροχο: νέο
+		// πρόγραμμα με άλλο χρώμα εμφανίζει μόνο του το chip του.
+		//
+		// Χωρίς πάροχο, ή με έστω ένα πρόγραμμα χωρίς χρώμα (ταιριάζει με όλα),
+		// φαίνονται και τα τέσσερα -- να δείχνει περισσότερα είναι ανεκτό, να
+		// κρύψει το σωστό δεν είναι. style.display και όχι hidden: το CSS του
+		// chip ορίζει display, που θα νικούσε το [hidden].
+		function applyPriceTypeChips() {
+			var group = root.querySelector('.ecrm-chips[data-field="price_type"]');
+			if (!group) return;
+
+			var scoped = !!state.provider_id && (state.energy_type === 'power' || state.energy_type === 'gas');
+			var avail = {};
+			var any = false;
+			var untyped = false;
+
+			if (scoped) {
+				programsCache.forEach(function (pr) {
+					if (parseInt(pr.provider_id, 10) !== state.provider_id) return;
+					if (pr.energy_type !== state.energy_type) return;
+					if (state.category && pr.category && pr.category !== state.category) return;
+					if (!pr.price_type) { untyped = true; return; }
+					avail[pr.price_type] = true;
+					any = true;
+				});
+			}
+
+			var filter = any && !untyped;
+			var chips = Array.prototype.slice.call(group.querySelectorAll('.ecrm-chip'));
+
+			chips.forEach(function (c) {
+				var off = filter && !avail[c.getAttribute('data-val')];
+				c.style.display = off ? 'none' : '';
+				c.disabled = off;
+			});
+
+			// Κρυμμένο αλλά επιλεγμένο = αόρατη επιλογή που φιλτράρει τη λίστα.
+			if (filter && !avail[state.price_type]) {
+				var first = chips.filter(function (c) { return c.style.display !== 'none'; })[0];
+				if (first) setChip('price_type', first.getAttribute('data-val'));
+			}
+		}
+
 		function renderPrograms() {
+			applyPriceTypeChips();
 			var sel = q('[data-program]');
 			var opts = programsMatching();
 

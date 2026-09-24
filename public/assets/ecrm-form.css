@@ -1235,3 +1235,9 @@
 .ecrm-docfld--multi .ecrm-docfld__i { min-width: 44px; }
 .ecrm-docfld--multi .ecrm-docfld__i:first-child { flex: 2; }
 .ecrm-docfld--multi .ecrm-docfld__i:last-child { flex: 1; }
+
+/* (289) Σειρά που την κρύβει ο πάροχος (π.χ. «Τιμολόγιο» στην Protergia).
+ * Το display της .ecrm-row θα νικούσε το [hidden] του browser -- ίδιο gotcha
+ * με .ecrm-wstep[hidden]. Συνυπάρχει με το inline style.display του
+ * data-when-energy: κρυμμένη αν την κρύβει έστω ένα από τα δύο. */
+.ecrm-row[hidden] { display: none; }
