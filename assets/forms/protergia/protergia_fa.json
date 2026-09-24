@@ -163,13 +163,16 @@
    "check": true
   }
  },
- "sig": {
-  "page": 2,
-  "x": 18.1,
-  "y": 298.0,
-  "w": 46,
-  "h": 0
- },
+ "sigs": [
+  {
+   "page": 2,
+   "x": 18.1,
+   "y": 298.0,
+   "w": 46,
+   "h": 0,
+   "fit_h": 14.0
+  }
+ ],
  "labels": {
   "onomateponymo_pelati": "Ονοματεπώνυμο",
   "odos_arithmos_katoikias": "Διεύθυνση",

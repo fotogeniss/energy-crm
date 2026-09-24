@@ -157,7 +157,12 @@ final class ContractLifecycle
         // ΔΕΝ ελέγχεται στη δημιουργία μέσω αυτής της διαδρομής -- ο
         // ContractSaveController φυλάει μόνος του την πρώτη αποθήκευση, όπου
         // δεν υπάρχει ακόμη `$contractId` να ρωτηθεί.
-        if ($this->entry->refusalOnEntry($target, $contractId) !== null) {
+        //
+        // AUDIT 22/09: περνάμε το `extra` που πάει να γραφτεί ΣΕ ΑΥΤΗ ΤΗΝ
+        // ΚΛΗΣΗ -- η πύλη το χρειάζεται για να δει π.χ. το `signed_at` που η
+        // ίδια η υπογραφή κουβαλάει, πριν αυτό υπάρχει στη βάση (βλ. docblock
+        // του StatusEntryGate).
+        if ($this->entry->refusalOnEntry($target, $contractId, (array) ($options['extra'] ?? [])) !== null) {
             return false;
         }
 
