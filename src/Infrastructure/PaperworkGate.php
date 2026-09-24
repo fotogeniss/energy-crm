@@ -48,6 +48,25 @@
  * της λείπουν και τα δύο να δίνει **το ίδιο μήνυμα που έδινε πάντα**, και να
  * μην αλλάξει η συμπεριφορά που ήδη ξέρουν οι χρήστες.
  *
+ * ## Το `signed_at` που η ίδια η μετάβαση πάει να γράψει (22/09/2026)
+ *
+ * Ο έλεγχος `NOT_SIGNED` παρακάτω διάβαζε το `signed_at` ΜΟΝΟ από φρέσκια
+ * γραμμή της βάσης. Αυτό είναι σωστό σε κάθε πύλη εκτός από μία: το
+ * `rest_sign()` (η ίδια η υπογραφή του πελάτη) καλεί
+ * `moveTo($id, 'finalisation', ['extra' => ['signed_at' => $now]])` -- ο
+ * ΣΚΟΠΟΣ αυτής της μετάβασης είναι να γράψει το `signed_at` που η πύλη
+ * ζητάει. Επειδή ο έλεγχος γίνεται πριν τη γραφή, έβλεπε πάντα το παλιό,
+ * άδειο πεδίο και αρνιόταν -- ενώ το αρχείο υπογραφής, το PDF και οι
+ * ειδοποιήσεις είχαν ήδη φύγει σαν να πέτυχε. Η σύμβαση έμενε μόνιμα
+ * κολλημένη σε `awaiting_signature`, χωρίς δρόμο επιστροφής: το
+ * `rest_sign()` βλέπει το αρχείο να υπάρχει ήδη σε κάθε επόμενη προσπάθεια
+ * και γυρίζει «already signed» πριν καν ξαναφτάσει εδώ.
+ *
+ * Η θεραπεία: όταν η ΙΔΙΑ η μετάβαση κουβαλάει μη κενό `signed_at` στο
+ * `$pendingExtra`, αυτό μετράει σαν να είναι ήδη γραμμένο -- ο πελάτης μόλις
+ * υπέγραψε, δεν χρειάζεται να το ξαναδιαβάσουμε από τη βάση για να το
+ * πιστέψουμε.
+ *
  * @package EnergyCRM
  */
 
@@ -79,7 +98,7 @@ final class PaperworkGate implements StatusEntryGate
      * κατάσταση. Κάθε άλλη μετάβαση φεύγει από την πρώτη γραμμή χωρίς κόστος:
      * ο κανόνας δεν έχει λόγο να επιβαρύνει διαδρομές που δεν αφορά.
      */
-    public function refusalOnEntry(ContractStatus $target, int $contractId): ?string
+    public function refusalOnEntry(ContractStatus $target, int $contractId, array $pendingExtra = []): ?string
     {
         if (! in_array($target->value, ECRM_Docs::gate_statuses(), true)) {
             return null;
@@ -108,6 +127,17 @@ final class PaperworkGate implements StatusEntryGate
             $labels = array_map(static fn (array $e): string => (string) $e['label'], $expired);
 
             return self::EXPIRED_DOCS . implode(', ', $labels);
+        }
+
+        // AUDIT 22/09: το `signed_at` της ΤΡΕΧΟΥΣΑΣ μετάβασης (αν υπάρχει)
+        // κερδίζει το φρέσκο-αλλά-ακόμη-παλιό διάβασμα της βάσης -- βλ.
+        // docblock της κλάσης. Χωρίς αυτό, το moveTo() που η ίδια η υπογραφή
+        // καλεί για να ΓΡΑΨΕΙ το signed_at αρνείται πάντα, γιατί ρωτάει την
+        // πύλη ΠΡΙΝ τη γραφή.
+        $pendingSignedAt = trim((string) ($pendingExtra['signed_at'] ?? ''));
+
+        if ($pendingSignedAt !== '') {
+            return null;
         }
 
         return trim($row['signed_at']) === '' ? self::NOT_SIGNED : null;

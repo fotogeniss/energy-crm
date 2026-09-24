@@ -42,6 +42,19 @@
  * το status γράφεται απευθείας στη βάση -- αντιπροσωπεύει μια γραμμή που
  * έφτασε εκεί πριν υπάρξει η πύλη, ή από εισαγωγή Excel.
  *
+ * ## Το κενό που έμεινε: η ίδια η υπογραφή (εύρημα 22/09/2026)
+ *
+ * Κάθε fixture παραπάνω που φτιάχνει «πλήρη φάκελο» έγραφε το `signed_at`
+ * ΑΠΕΥΘΕΙΑΣ στη βάση, πριν καλέσει `moveTo()` -- δες `CancelAfterActiveTest::
+ * completePaperwork()`. Κανένα test δεν αναπαρήγαγε αυτό που κάνει στ'
+ * αλήθεια το `rest_sign()`: καλεί `moveTo($id, 'finalisation', ['extra' =>
+ * ['signed_at' => $now]])` για να γράψει το ΠΡΩΤΟ `signed_at` -- δηλαδή η
+ * τιμή που η πύλη πρέπει να δει είναι ΜΕΣΑ στην ίδια κλήση, όχι ήδη στη βάση.
+ * Επειδή η πύλη διάβαζε μόνο φρέσκια γραμμή, αρνιόταν πάντα, ενώ το αρχείο
+ * υπογραφής και οι ειδοποιήσεις είχαν ήδη φύγει -- η σύμβαση έμενε μόνιμα σε
+ * `awaiting_signature`. Τα tests παρακάτω αναπαράγουν ακριβώς αυτή την
+ * κλήση.
+ *
  * @package EnergyCRM
  */
 
@@ -49,6 +62,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use ECRM_Files;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
@@ -159,7 +173,75 @@ final class PaperworkGateTest extends IntegrationTestCase
         );
     }
 
+    // --- η ίδια η υπογραφή: η τιμή γράφεται ΣΤΗΝ ΙΔΙΑ κλήση που την ελέγχει --
+
+    /**
+     * Αναπαράγει ακριβώς αυτό που κάνει το `rest_sign()`: πλήρη χαρτιά,
+     * κανένα `signed_at` ακόμα στη βάση, και μετά ένα `moveTo()` προς
+     * `finalisation` που κουβαλάει το `signed_at` στο ίδιο `extra`. Πριν
+     * τη διόρθωση της 22/09, αυτό αρνιόταν πάντα -- η πύλη έβλεπε μόνο το
+     * (ακόμη άδειο) πεδίο της βάσης.
+     */
+    public function testSigningWritesFinalisationInTheSameCallThatSetsSignedAt(): void
+    {
+        $contractId = $this->contractReadyToSign();
+        $now        = current_time('mysql');
+
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'finalisation', [
+            'extra' => ['signed_at' => $now],
+        ]));
+
+        $row = $this->storedRow('contracts', $contractId);
+
+        self::assertSame('finalisation', $row['status']);
+        self::assertSame($now, $row['signed_at']);
+    }
+
+    /**
+     * Το `signed_at` σε εκκρεμότητα δεν παρακάμπτει τα ελλείποντα χαρτιά --
+     * ο πελάτης μπορεί να υπέγραψε, αλλά η αίτηση δεν έχει ακόμα τα
+     * απαραίτητα έγγραφα. Χωρίς αυτό, ένα test που περνάει το προηγούμενο θα
+     * περνούσε ακόμα κι αν η διόρθωση παρέκαμπτε ολόκληρη την πύλη αντί να
+     * συμπληρώνει απλώς το `signed_at` που λείπει.
+     */
+    public function testPendingSignedAtDoesNotBypassMissingDocs(): void
+    {
+        $contractId = $this->awaitingSignatureContract();
+
+        self::assertFalse($this->lifecycle->moveTo($contractId, 'finalisation', [
+            'extra' => ['signed_at' => current_time('mysql')],
+        ]));
+        self::assertSame('awaiting_signature', $this->statusOf($contractId));
+    }
+
     // --- fixtures ----------------------------------------------------------
+
+    /**
+     * Σε `awaiting_signature`, με πλήρη χαρτιά (id_card + provider_bill) αλλά
+     * ΧΩΡΙΣ `signed_at` -- ο πελάτης δεν έχει υπογράψει ακόμα. Ίδιο σχήμα με
+     * `CancelAfterActiveTest::completePaperwork()`, μείον τη γραμμή που θα
+     * έγραφε το `signed_at` απευθείας: εδώ αυτό ακριβώς είναι το πράγμα που
+     * δοκιμάζεται να γίνει μέσω `moveTo()`.
+     */
+    private function contractReadyToSign(): int
+    {
+        $contractId = $this->awaitingSignatureContract();
+
+        $files = Services::files();
+        $files->attach($contractId, 'id_card', 'id.jpg', 'image/jpeg', $this->putBytes());
+        $files->attach($contractId, 'provider_bill', 'bill.pdf', 'application/pdf', $this->putBytes());
+
+        return $contractId;
+    }
+
+    private function putBytes(): string
+    {
+        $saved = ECRM_Files::put_bytes('fixture bytes ' . wp_generate_password(8, false), 'jpg', 'image/jpeg', 'x.jpg');
+
+        self::assertIsArray($saved, 'Fixture failed to write bytes to protected storage.');
+
+        return (string) $saved['path'];
+    }
 
     private function submittedContract(): int
     {

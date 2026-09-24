@@ -65,10 +65,21 @@ final class ProtergiaGasPlansTest extends TestCase
      * Η σελ. 1 και 2 του Sure είναι pixel προς pixel το `protergia_fa` --
      * ίδιος χάρτης. Μια διόρθωση στο ένα που δεν πέρασε στο άλλο είναι ο
      * τρόπος που τα δύο αρχίζουν να τυπώνουν αλλού.
+     *
+     * (288) Όχι πια byte προς byte: το Sure έχει και ΓΟΣ (σελ. 5) με δική του
+     * υπογραφή, που το δισέλιδο `protergia_fa` δεν έχει. Ίδια παραμένουν τα
+     * πεδία και η υπογραφή της σελ. 2.
      */
     public function testSureIsTheOldGasSheet(): void
     {
-        self::assertFileEquals(self::dir() . 'protergia_fa.json', self::dir() . ProtergiaGasPlans::SURE . '.json');
+        $old  = $this->map('protergia_fa');
+        $sure = $this->map(ProtergiaGasPlans::SURE);
+
+        self::assertSame($old['fields'], $sure['fields']);
+        self::assertSame(
+            array_values(array_filter($old['sigs'], static fn (array $s): bool => $s['page'] <= 2)),
+            array_values(array_filter($sure['sigs'], static fn (array $s): bool => $s['page'] <= 2))
+        );
     }
 
     /**
@@ -110,7 +121,7 @@ final class ProtergiaGasPlansTest extends TestCase
         self::assertNull($plans[ProtergiaGasPlans::SINGLE]['priceKwh']);
     }
 
-    /** @return array{fields: array<string, mixed>} */
+    /** @return array{fields: array<string, mixed>, sigs: list<array<string, mixed>>} */
     private function map(string $code): array
     {
         $map = json_decode((string) file_get_contents(self::dir() . $code . '.json'), true);

@@ -793,7 +793,17 @@ class ECRM_FormFill {
 
 				if ( ! $img || ! file_exists( $img ) ) { continue; }
 
-				$pdf->Image( $img, (float) $s['x'], (float) $s['y'], (float) ( $s['w'] ?? 40 ), (float) ( $s['h'] ?? 0 ) );
+				// (288) Θέση με `fit_h` = κουτί: η υπογραφή χωράει μέσα του και
+				// ακουμπά στη γραμμή, όποια κι αν είναι η αναλογία του pad
+				// (υπολογιστής ~3,3:1, κινητό ~1,8:1). Χωρίς `fit_h`, όπως πάντα.
+				$size  = getimagesize( $img );
+				$place = \EnergyCRM\Domain\Forms\SignatureBox::place(
+					$s,
+					is_array( $size ) ? (int) $size[0] : 0,
+					is_array( $size ) ? (int) $size[1] : 0
+				);
+
+				$pdf->Image( $img, $place['x'], $place['y'], $place['w'], $place['h'] );
 			}
 			$p++;
 		}
