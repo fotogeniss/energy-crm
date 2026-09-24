@@ -203,6 +203,7 @@
 	 * «ενέργεια», μένει στο πράσινο του προϊόντος — δεν χρειάζεται τρίτο. */
 	--cat-teal: #007a79;		--cat-teal-bg: #e3f4f3;
 	--cat-violet: #9255a3;		--cat-violet-bg: #f6eef8;
+	--cat-yellow: #b8860b;		--cat-yellow-bg: #fbf3df;
 
 	/* Μάρκα και κατάταξη: σωστά χρώματα που δεν είχαν όνομα. Το μοβ της Viber
 	 * είναι χρώμα μάρκας και ΔΕΝ αλλάζει· το χρυσό/ασημί/χάλκινο σημαίνουν
@@ -402,6 +403,7 @@
 	   πλησιέστερη σκούρα κατάσταση. */
 	--cat-teal: #5ec0be;		--cat-teal-bg: #333535;
 	--cat-violet: #cca2d6;		--cat-violet-bg: #3a323c;
+	--cat-yellow: #e0b84a;		--cat-yellow-bg: #3a3526;
 }
 
 .ecrm *, .ecrm *::before, .ecrm *::after { box-sizing: border-box; }
@@ -720,7 +722,7 @@
 }
 .ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="fixed"]::before { background-color: var(--st-new); }
 .ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="special"]::before { background-color: var(--st-active); }
-.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="variable"]::before { background-color: var(--st-pending); }
+.ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="variable"]::before { background-color: var(--cat-yellow); }
 .ecrm-chips[data-field="price_type"] .ecrm-chip[data-val="dynamic"]::before { background-color: var(--cat-violet); }
 
 /* --- Εικονίδια — 2026-08-17 ----------------------------------------------
