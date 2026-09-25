@@ -1194,13 +1194,28 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 		// ίδιο το chip: στην κινητή δεν σημαίνει τίποτα, και τα τέσσερα πλάνα
 		// της Orizon είναι όλα «fixed» από το seed. Χωρίς αυτή τη συνθήκη, μια
 		// αίτηση κινητής θα φιλτραριζόταν από μια επιλογή που δεν βλέπει καν.
+		//
+		// (291) Το αέριο της Protergia ΔΕΝ έχει πραγματικά προγράμματα ανά
+		// κατηγορία -- τα δύο τιμολόγιά της (Sure/Single) ισχύουν είτε ο
+		// πελάτης είναι Οικιακός είτε Επαγγελματικός είτε Κοινόχρηστος. Η
+		// στήλη category είναι `NOT NULL DEFAULT 'home'` (η βάση δεν δέχεται
+		// κενό), άρα τα δύο προγράμματα κουβαλούν 'home' χωρίς αυτό να
+		// σημαίνει τίποτα εμπορικά. Χωρίς αυτή την εξαίρεση, «Επαγγελματικό» +
+		// «Φυσικό Αέριο» δεν έβρισκε ΚΑΝΕΝΑ πρόγραμμα Protergia -- η λίστα
+		// έδειχνε «δεν υπάρχει» και το φίλτρο χρωμάτων έσβηνε (βλ.
+		// applyPriceTypeChips), δείχνοντας πάλι και τα τέσσερα χρώματα.
+		function categoryMatches(pr) {
+			if (state.energy_type === 'gas' && isProtergiaProvider()) return true;
+			return !(state.category && pr.category && pr.category !== state.category);
+		}
+
 		function programsMatching() {
 			var scoped = state.energy_type === 'power' || state.energy_type === 'gas';
 
 			return programsCache.filter(function (pr) {
 				if (state.provider_id && parseInt(pr.provider_id, 10) !== state.provider_id) return false;
 				if (state.energy_type && pr.energy_type !== state.energy_type) return false;
-				if (state.category && pr.category && pr.category !== state.category) return false;
+				if (!categoryMatches(pr)) return false;
 				if (scoped && state.price_type && pr.price_type && pr.price_type !== state.price_type) return false;
 				return true;
 			});
@@ -1230,7 +1245,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				programsCache.forEach(function (pr) {
 					if (parseInt(pr.provider_id, 10) !== state.provider_id) return;
 					if (pr.energy_type !== state.energy_type) return;
-					if (state.category && pr.category && pr.category !== state.category) return;
+					if (!categoryMatches(pr)) return;
 					if (!pr.price_type) { untyped = true; return; }
 					avail[pr.price_type] = true;
 					any = true;

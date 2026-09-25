@@ -70,6 +70,9 @@ final class ProviderFormFields
         'mobile_cap_0', 'mobile_cap_10', 'mobile_cap_25', 'mobile_cap_50', 'mobile_cap_100',
         'mobile_cap_150', 'mobile_cap_200', 'mobile_cap_250', 'mobile_cap_300', 'mobile_cap_350',
         'mobile_cap_400', 'mobile_cap_450', 'mobile_cap_500', 'mobile_cap_1000', 'mobile_cap_2000',
+        // (293) Σελ.3 του ίδιου εντύπου: «ΧΡΗΣΗ ΥΠΗΡΕΣΙΑΣ ΑΝΩΤΑΤΟ ΟΡΙΟ» ΝΑΙ/ΟΧΙ
+        // και η γραμμή «ΑΝΩΤΑΤΟ ΟΡΙΟ:».
+        'mobile_cap_nai', 'mobile_cap_oxi', 'mobile_anotato_orio',
         // (268) Σελ.5: «Χρήση προσωπικών δεδομένων για προωθητικές
         // ενέργειες». 'mitroo_11_nai/oxi' είναι το ήδη υπάρχον
         // 'no_marketing_calls' -- τυπώνεται τώρα και εδώ, όχι μόνο στα
@@ -333,6 +336,11 @@ final class ProviderFormFields
         'mobile_cap_500'                 => ['mobile_bill_cap'],
         'mobile_cap_1000'                => ['mobile_bill_cap'],
         'mobile_cap_2000'                => ['mobile_bill_cap'],
+        // (293) Σελ.3: το ΝΑΙ/ΟΧΙ είναι δική του ερώτηση· η γραμμή
+        // «ΑΝΩΤΑΤΟ ΟΡΙΟ:» τυπώνει την ίδια τιμή με τον πίνακα της σελ.4.
+        'mobile_cap_nai'                 => ['mobile_bill_cap_use'],
+        'mobile_cap_oxi'                 => ['mobile_bill_cap_use'],
+        'mobile_anotato_orio'            => ['mobile_bill_cap'],
         // (268) Σελ.5 -- 'mitroo_11_*' μοιράζεται input με τα Protergia
         // έντυπα (βλ. INPUTS παραπάνω), οι άλλες τρεις είναι νέα, δικά
         // τους inputs.
@@ -388,6 +396,7 @@ final class ProviderFormFields
         // ρεύμα/αέριο, ελεύθερο κείμενο. Αυτό είναι κινητή, με τις 15
         // συγκεκριμένες τιμές του χαρτιού.
         'mobile_bill_cap'    => 'Ανώτατο Όριο Λογαριασμού (Κινητή, €)',
+        'mobile_bill_cap_use' => 'Θέλει ανώτατο όριο λογαριασμού (κινητή);',
         'ar_koinoxristou'    => 'Αρ. Κοινόχρηστου Μετρητή',
         'agreed_power'       => 'Συμφωνημένη Ισχύς (kVA)',
         'day_indication'     => 'Τελευταία Ένδειξη Μετρητή',
@@ -466,7 +475,7 @@ final class ProviderFormFields
         'anotato_orio', 'ar_koinoxristou', 'agreed_power', 'day_indication', 'guarantee',
         'previous_provider', 'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method', 'bill_delivery',
         'subsidy_type', 'base_price', 'offer_price', 'price_after',
-        'request_type', 'mobile_offer', 'mobile_bill_cap',
+        'request_type', 'mobile_offer', 'mobile_bill_cap', 'mobile_bill_cap_use',
         // «Ίδιο πρόσωπο με τον πελάτη κινητής;» -- δομικό στοιχείο της αίτησης,
         // όχι προσωπικό δεδομένο: ένα ναι/όχι που δεν ταυτοποιεί κανέναν, ακριβώς
         // όπως το `mobile_offer` δίπλα του. **Και πρέπει να μένει αναγνώσιμο:**
@@ -504,6 +513,8 @@ final class ProviderFormFields
         'orizon_marketing_consent', 'volton_marketing_consent', 'promo_after_termination',
         // (269) Σελ.6 -- ίδιο σκεπτικό: απλή επιβεβαίωση ενημέρωσης.
         'gdpr_rights_ack',
+        // (293) Σελ.3 orizon_mobile -- ΝΑΙ/ΟΧΙ ανώτατου ορίου κινητής.
+        'mobile_bill_cap_use',
     ];
 
     private function __construct()
