@@ -154,6 +154,10 @@ class ECRM_FormFill {
 			if ( is_array( $d ) ) { $x = $d; }
 		}
 		$xg = static function ( $k ) use ( $x ) { return isset( $x[ $k ] ) ? (string) $x[ $k ] : ''; };
+		// (293) Ανώτατο όριο κινητής: «Όχι» στη χρήση της υπηρεσίας σημαίνει
+		// ούτε κουτί στον πίνακα της σελ.4 ούτε ποσό στη σελ.3, ακόμα κι αν
+		// έμεινε κάποια τιμή στο dropdown από πριν.
+		$mobile_cap = $xg( 'mobile_bill_cap_use' ) === 'no' ? '' : $xg( 'mobile_bill_cap' );
 
 		$contact_name = trim( $xg( 'contact_first_name' ) . ' ' . $xg( 'contact_last_name' ) );
 		$rep_name     = trim( $xg( 'rep_first_name' ) . ' ' . $xg( 'rep_last_name' ) );
@@ -501,21 +505,28 @@ class ECRM_FormFill {
 			// ΑΚΡΙΒΩΣ τις 15 τιμές του χαρτιού -- ελεύθερο κείμενο δεν θα
 			// ταίριαζε ποτέ σε συγκεκριμένο κουτί. Μία τιμή, ένα κουτί: όλα
 			// τα άλλα μένουν κενά, όχι μόνο το επιλεγμένο τυπωμένο σωστά.
-			'mobile_cap_0'    => ( $xg( 'mobile_bill_cap' ) === '0'    ? 'X' : '' ),
-			'mobile_cap_10'   => ( $xg( 'mobile_bill_cap' ) === '10'   ? 'X' : '' ),
-			'mobile_cap_25'   => ( $xg( 'mobile_bill_cap' ) === '25'   ? 'X' : '' ),
-			'mobile_cap_50'   => ( $xg( 'mobile_bill_cap' ) === '50'   ? 'X' : '' ),
-			'mobile_cap_100'  => ( $xg( 'mobile_bill_cap' ) === '100'  ? 'X' : '' ),
-			'mobile_cap_150'  => ( $xg( 'mobile_bill_cap' ) === '150'  ? 'X' : '' ),
-			'mobile_cap_200'  => ( $xg( 'mobile_bill_cap' ) === '200'  ? 'X' : '' ),
-			'mobile_cap_250'  => ( $xg( 'mobile_bill_cap' ) === '250'  ? 'X' : '' ),
-			'mobile_cap_300'  => ( $xg( 'mobile_bill_cap' ) === '300'  ? 'X' : '' ),
-			'mobile_cap_350'  => ( $xg( 'mobile_bill_cap' ) === '350'  ? 'X' : '' ),
-			'mobile_cap_400'  => ( $xg( 'mobile_bill_cap' ) === '400'  ? 'X' : '' ),
-			'mobile_cap_450'  => ( $xg( 'mobile_bill_cap' ) === '450'  ? 'X' : '' ),
-			'mobile_cap_500'  => ( $xg( 'mobile_bill_cap' ) === '500'  ? 'X' : '' ),
-			'mobile_cap_1000' => ( $xg( 'mobile_bill_cap' ) === '1000' ? 'X' : '' ),
-			'mobile_cap_2000' => ( $xg( 'mobile_bill_cap' ) === '2000' ? 'X' : '' ),
+			'mobile_cap_0'     => ( $mobile_cap === '0'    ? 'X' : '' ),
+			'mobile_cap_10'    => ( $mobile_cap === '10'   ? 'X' : '' ),
+			'mobile_cap_25'    => ( $mobile_cap === '25'   ? 'X' : '' ),
+			'mobile_cap_50'    => ( $mobile_cap === '50'   ? 'X' : '' ),
+			'mobile_cap_100'   => ( $mobile_cap === '100'  ? 'X' : '' ),
+			'mobile_cap_150'   => ( $mobile_cap === '150'  ? 'X' : '' ),
+			'mobile_cap_200'   => ( $mobile_cap === '200'  ? 'X' : '' ),
+			'mobile_cap_250'   => ( $mobile_cap === '250'  ? 'X' : '' ),
+			'mobile_cap_300'   => ( $mobile_cap === '300'  ? 'X' : '' ),
+			'mobile_cap_350'   => ( $mobile_cap === '350'  ? 'X' : '' ),
+			'mobile_cap_400'   => ( $mobile_cap === '400'  ? 'X' : '' ),
+			'mobile_cap_450'   => ( $mobile_cap === '450'  ? 'X' : '' ),
+			'mobile_cap_500'   => ( $mobile_cap === '500'  ? 'X' : '' ),
+			'mobile_cap_1000'  => ( $mobile_cap === '1000' ? 'X' : '' ),
+			'mobile_cap_2000'  => ( $mobile_cap === '2000' ? 'X' : '' ),
+
+			// (293) Σελ.3 του ίδιου εντύπου: «ΧΡΗΣΗ ΥΠΗΡΕΣΙΑΣ ΑΝΩΤΑΤΟ ΟΡΙΟ
+			// ΛΟΓΑΡΙΑΣΜΟΥ ΑΝΑ ΑΡΙΘΜΟ ΣΥΝΔΕΣΗΣ» ΝΑΙ/ΟΧΙ και «ΑΝΩΤΑΤΟ ΟΡΙΟ:».
+			// Αναπάντητο = κανένα κουτί (ίδιος κανόνας με το 'bill_cap').
+			'mobile_cap_nai'      => ( $xg( 'mobile_bill_cap_use' ) === 'yes' ? 'X' : '' ),
+			'mobile_cap_oxi'      => ( $xg( 'mobile_bill_cap_use' ) === 'no'  ? 'X' : '' ),
+			'mobile_anotato_orio' => ( $mobile_cap !== '' ? $mobile_cap . ' €' : '' ),
 
 			// --- Σελ.5: Χρήση προσωπικών δεδομένων για προωθητικές ενέργειες --
 			// (268): τέσσερις δηλώσεις ΝΑΙ/ΟΧΙ στη σελ.5 του orizon_mobile.json.
@@ -738,7 +749,8 @@ class ECRM_FormFill {
 		$h = (float) ( $map['page_h'] ?? 297 );
 		$orient = ( $w > $h ) ? 'L' : 'P';
 
-		$p = 1;
+		$p       = 1;
+		$ink_tmp = [];
 		// (284) Ο $dir είναι η βάση assets/forms/· κάθε πάροχος έχει τον
 		// φάκελό του, και τη διαδρομή τη λέει μόνο το FormTemplates.
 		while ( file_exists( \EnergyCRM\Domain\Forms\FormTemplates::pagePath( $dir, $key, $p ) ) ) {
@@ -803,10 +815,27 @@ class ECRM_FormFill {
 					is_array( $size ) ? (int) $size[1] : 0
 				);
 
-				$pdf->Image( $img, $place['x'], $place['y'], $place['w'], $place['h'] );
+				// (293) Πιο χοντρή πινελιά: το pad γράφει ~0,15mm στο χαρτί,
+				// σχεδόν αόρατο σε φωτοτυπία. Αν δεν γίνεται (χωρίς GD, αδιαφανές
+				// φόντο), τυπώνεται το πρωτότυπο όπως πριν.
+				$ink = \EnergyCRM\Infrastructure\SignatureInk::thicken(
+					$img,
+					\EnergyCRM\Infrastructure\SignatureInk::radiusPx(
+						is_array( $size ) ? (int) $size[0] : 0,
+						$place['w']
+					)
+				);
+				$pdf->Image( $ink ?? $img, $place['x'], $place['y'], $place['w'], $place['h'] );
+
+				// Το tFPDF έχει ήδη διαβάσει την εικόνα στη μνήμη. Σβήνεται
+				// μετά το τέλος όλων των σελίδων, ώστε κανένα νέο προσωρινό
+				// αρχείο να μην πάρει το ίδιο όνομα όσο ζει η cache του tFPDF.
+				if ( $ink !== null ) { $ink_tmp[] = $ink; }
 			}
 			$p++;
 		}
+
+		foreach ( $ink_tmp as $t ) { @unlink( $t ); }
 	}
 
 	/**

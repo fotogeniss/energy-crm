@@ -1090,6 +1090,12 @@ class ECRM_Shortcodes {
 					// του ρεύματος/αερίου παρακάτω -- ένας αριθμός εκτός λίστας
 					// δεν θα ταίριαζε σε κανένα κουτί του χαρτιού.
 					?>
+					<?php
+					// (293) Σελ.3 του orizon_mobile: «ΧΡΗΣΗ ΥΠΗΡΕΣΙΑΣ ΑΝΩΤΑΤΟ ΟΡΙΟ
+					// ΛΟΓΑΡΙΑΣΜΟΥ» ΝΑΙ/ΟΧΙ. Δική του ερώτηση, όχι το 'bill_cap' του
+					// ρεύματος/αερίου -- εκείνο κρύβεται στην κινητή.
+					$ecrm_yesno( 'mobile_bill_cap_use', 'Χρήση υπηρεσίας «Ανώτατο Όριο Λογαριασμού»' );
+					?>
 					<label class="ecrm-field" data-for="mobile_bill_cap">
 						<span class="ecrm-field__label">Ανώτατο Όριο Λογαριασμού</span>
 						<select name="mobile_bill_cap" class="ecrm-input" data-extra="1">
