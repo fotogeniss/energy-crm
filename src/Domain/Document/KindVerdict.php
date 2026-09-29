@@ -40,7 +40,7 @@ final class KindVerdict
      *
      * @var list<string>
      */
-    public const DETECTABLE = ['id_card', 'provider_bill', 'sim_card'];
+    public const DETECTABLE = ['id_card', 'provider_bill', 'telecom_bill', 'sim_card'];
 
     /** Η ετικέτα άλλαξε αυτόματα, μετά από ανάγνωση. */
     public const SOURCE_AI = 'ai';

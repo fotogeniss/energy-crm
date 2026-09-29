@@ -178,7 +178,7 @@ final class FileRepository
      * @param list<string> $kinds
      * @param list<string> $mimes
      *
-     * @return list<array{path: string, mime: string, kind: string}>
+     * @return list<array{id: int, path: string, mime: string, kind: string}>
      */
     public function extractableForContract(int $contractId, array $kinds, array $mimes): array
     {
@@ -200,7 +200,7 @@ final class FileRepository
      * @param list<string> $kinds
      * @param list<string> $mimes
      *
-     * @return list<array{path: string, mime: string, kind: string}>
+     * @return list<array{id: int, path: string, mime: string, kind: string}>
      */
     public function extractableForLead(int $leadId, array $kinds, array $mimes): array
     {
@@ -219,7 +219,7 @@ final class FileRepository
      * @param list<string>               $kinds
      * @param list<string>               $mimes
      *
-     * @return list<array{path: string, mime: string, kind: string}>
+     * @return list<array{id: int, path: string, mime: string, kind: string}>
      */
     private function extractableFrom(array $rows, array $kinds, array $mimes): array
     {
@@ -238,7 +238,7 @@ final class FileRepository
                 continue;
             }
 
-            $documents[] = ['path' => $path, 'mime' => $mime, 'kind' => $kind];
+            $documents[] = ['id' => (int) ($row['id'] ?? 0), 'path' => $path, 'mime' => $mime, 'kind' => $kind];
         }
 
         return $documents;

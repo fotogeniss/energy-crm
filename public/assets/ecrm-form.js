@@ -2,6 +2,7 @@ import { api, esc, rejectedNote, requestId, toast } from '@energy-crm/util';
 import { enqueueContract, enqueueFiles, forget } from '@energy-crm/queue';
 import { energyLabel } from '@energy-crm/format';
 import { openCustomerContracts } from '@energy-crm/navigate';
+import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 
 /* Energy CRM — New Contract form behaviour.
  * Exposes window.ECRMForm.init(rootEl) so it can run standalone OR inside the
@@ -1867,53 +1868,8 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			});
 		}
 
-		// Στο AI πάνε μόνο οι πρώτες σελίδες ενός PDF.
-		//
-		// Το μοντέλο χρεώνει και αργεί ανά σελίδα, όχι ανά byte. Ένας
-		// λογαριασμός Vodafone 28 σελίδων (1,4MB) είναι ~100.000 tokens επειδή
-		// από τη σελ. 5 και μετά είναι αναλυτικό κλήσεων — ξεπερνούσε το όριο
-		// των 30s και η ανάγνωση έπεφτε χωρίς να βγει τίποτα. Τα στοιχεία του
-		// πελάτη και ο αριθμός παροχής είναι στην πρώτη σελίδα, και οι κλήσεις
-		// είναι αριθμοί τρίτων που δεν έχουν λόγο να φύγουν από εδώ.
-		//
-		// Στη σύμβαση αποθηκεύεται ΟΛΟΚΛΗΡΟ το αρχείο (item.file). Το κομμένο
-		// (item.forAi) υπάρχει μόνο για την ανάγνωση.
-		var AI_PDF_PAGES = 2;
-		var pdfLibLoading = null;
-
-		function isPdf(file) {
-			return file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
-		}
-
-		function firstPages(file) {
-			if (!isPdf(file)) { return Promise.resolve(null); }
-			// Φορτώνεται μόνο την πρώτη φορά που πέφτει PDF — η φόρμα δεν
-			// κουβαλά μισό MB για όσους ανεβάζουν μόνο φωτογραφίες.
-			pdfLibLoading = pdfLibLoading || import('./vendor/pdf-lib-1.17.1.esm.min.js');
-
-			return Promise.all([pdfLibLoading, file.arrayBuffer()])
-				.then(function (r) {
-					var lib = r[0];
-					return lib.PDFDocument.load(r[1], { ignoreEncryption: true }).then(function (src) {
-						// Κρυπτογραφημένο PDF βγαίνει με λευκές σελίδες αν το
-						// κόψεις — καλύτερα ολόκληρο και αργό παρά γρήγορο και άδειο.
-						if (src.isEncrypted || src.getPageCount() <= AI_PDF_PAGES) { return null; }
-						return lib.PDFDocument.create().then(function (out) {
-							var keep = [];
-							for (var i = 0; i < AI_PDF_PAGES; i++) { keep.push(i); }
-							return out.copyPages(src, keep).then(function (pages) {
-								pages.forEach(function (page) { out.addPage(page); });
-								return out.save();
-							});
-						});
-					});
-				})
-				.then(function (bytes) {
-					return bytes ? new File([bytes], file.name, { type: 'application/pdf' }) : null;
-				})
-				// Ό,τι κι αν πάει στραβά, στέλνεται ολόκληρο όπως πριν.
-				.catch(function () { return null; });
-		}
+		// firstPages() / storedForAi(): στο AI πάνε μόνο οι πρώτες σελίδες
+		// των PDF. Ζουν στο ecrm-ai-docs.js, κοινά με την καρτέλα και τα leads.
 
 		function addFiles(fileList) {
 			var accepted = Array.prototype.filter.call(fileList, function (f) {
@@ -1945,6 +1901,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 				var kindOpts = [
 					['id_card', 'Ταυτότητα/Διαβατήριο'],
 					['provider_bill', 'Λογαριασμός παρόχου'],
+					['telecom_bill', 'Λογαριασμός τηλεφωνίας'],
 					['authorization', 'Εξουσιοδότηση'],
 					['residence', 'Αποδεικτικό κατοικίας'],
 					['e9', 'Ε9 / ακινήτου'],
@@ -2037,10 +1994,17 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			// nothing and keeps identity documents off the server's disk.
 			// A 503 with retry_after means "not now", not "failed".
 			var waited = 0;
+			// Έγγραφα που έστειλε ο πελάτης: ο browser τα κατεβάζει και κόβει τα
+			// PDF πριν τα στείλει (storedForAi). Αν δεν γίνει, null, και ο server
+			// τα διαβάζει ολόκληρα όπως πριν.
+			var stored = null;
 			function send() {
 				var fd = new FormData();
 				if (state.files.length) {
 					state.files.forEach(function (item) { fd.append('files[]', item.forAi || item.file); fd.append('kinds[]', item.kind); });
+				} else if (stored && stored.length) {
+					stored.forEach(function (item) { fd.append('files[]', item.file); fd.append('kinds[]', item.kind); });
+					fd.append('contract_id', String(state.contract_id));
 				} else {
 					/* Καμία επιλογή αρχείων: τα έγγραφα είναι ήδη στον διακομιστή
 					 * -- τα έστειλε ο πελάτης από τον «σύνδεσμό μου» και
@@ -2066,7 +2030,11 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 					});
 			}
 
-			send()
+			var prepared = (!state.files.length && state.contract_id)
+				? storedForAi({ contract_id: state.contract_id }).then(function (list) { stored = list; })
+				: Promise.resolve();
+
+			prepared.then(send)
 				.then(function (d) {
 					if (!d || !d.ok) {
 						statusEl.textContent = '';

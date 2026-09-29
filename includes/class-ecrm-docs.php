@@ -25,6 +25,10 @@ class ECRM_Docs {
 		return apply_filters( 'ecrm_doc_kinds', [
 			'id_card'       => 'Ταυτότητα/Διαβατήριο',
 			'provider_bill' => 'Λογαριασμός παρόχου',
+			// Κινητή/σταθερή/internet. Ξεχωριστό από τον provider_bill: σε
+			// σύμβαση ρεύματος δεν αντικαθιστά τον λογαριασμό ρεύματος (δεν έχει
+			// αριθμό παροχής), σε σύμβαση κινητής όμως είναι ακριβώς αυτός.
+			'telecom_bill'  => 'Λογαριασμός τηλεφωνίας',
 			'sim_card'      => 'Κάρτα SIM',
 			'authorization' => 'Εξουσιοδότηση',
 			'residence'     => 'Αποδεικτικό κατοικίας',
@@ -181,6 +185,10 @@ class ECRM_Docs {
 	public static function checklist( int $contract_id, ?string $activation_type, ?string $energy_type = null ): array {
 		$required = self::required_for( $activation_type, $energy_type );
 		$present  = self::present_kinds( $contract_id );
+		// Σε κινητή, «λογαριασμός παρόχου» είναι ο λογαριασμός τηλεφωνίας.
+		if ( 'mobile' === (string) $energy_type && in_array( 'telecom_bill', $present, true ) ) {
+			$present[] = 'provider_bill';
+		}
 		$items = []; $missing = [];
 		foreach ( $required as $slug ) {
 			$ok = in_array( $slug, $present, true );

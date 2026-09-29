@@ -31,6 +31,7 @@ class ECRM_Shortcodes {
 	 */
 	private const MODULES = [
 		'@energy-crm/util'             => 'ecrm-util.js',
+		'@energy-crm/ai-docs'          => 'ecrm-ai-docs.js',
 		'@energy-crm/format'           => 'ecrm-format.js',
 		'@energy-crm/scope'            => 'ecrm-scope.js',
 		'@energy-crm/view-commissions' => 'ecrm-view-commissions.js',
@@ -70,6 +71,7 @@ class ECRM_Shortcodes {
 	/** What each module imports, so the map carries the whole graph. */
 	private const MODULE_DEPS = [
 		'@energy-crm/util'             => [],
+		'@energy-crm/ai-docs'          => [ '@energy-crm/util' ],
 		'@energy-crm/format'           => [],
 		'@energy-crm/scope'            => [],
 		'@energy-crm/view-commissions' => [ '@energy-crm/util' ],
@@ -81,6 +83,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/format',
 			'@energy-crm/navigate',
 			'@energy-crm/dialog',
+			'@energy-crm/ai-docs',
 		],
 		'@energy-crm/view-contracts'   => [
 			'@energy-crm/util',
@@ -102,6 +105,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/format',
 			'@energy-crm/navigate',
 			'@energy-crm/dialog',
+			'@energy-crm/ai-docs',
 		],
 		'@energy-crm/view-renewals'    => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-tasks'       => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
@@ -134,6 +138,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/format',
 			'@energy-crm/navigate',
 			'@energy-crm/queue',
+			'@energy-crm/ai-docs',
 		],
 		'@energy-crm/app'              => [
 			'@energy-crm/util',

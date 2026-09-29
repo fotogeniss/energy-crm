@@ -7,6 +7,7 @@ import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { fmtDate } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
+import { storedForAi } from '@energy-crm/ai-docs';
 
 var leadsState = { stage: '', q: '', editing: null, showForm: false };
 export function loadLeads() {
@@ -365,10 +366,18 @@ function handoffUsualBlock(usual, catalogue) {
  * καταλήγει στο ίδιο: `{ data: null, hadDocuments: … }`. Ο διάλογος ανοίγει
  * ούτως ή άλλως. Δες τον κανόνα στην κορυφή. */
 function handoffRead(leadId) {
-	var fd = new FormData();
-	fd.append('lead_id', String(leadId));
-
-	return fetch(api('/extract'), { method: 'POST', headers: H(), body: fd })
+	// Τα PDF που έστειλε ο πελάτης κόβονται εδώ πριν πάνε στο AI. Αν δεν
+	// υπάρχει PDF ή κάτι αποτύχει, πάει το lead_id και ο server τα διαβάζει
+	// ολόκληρα, όπως πριν -- με το ίδιο 404 όταν δεν υπάρχουν έγγραφα.
+	return storedForAi({ lead_id: leadId }).then(function (stored) {
+		var fd = new FormData();
+		if (stored && stored.length) {
+			stored.forEach(function (item) { fd.append('files[]', item.file); fd.append('kinds[]', item.kind); });
+		} else {
+			fd.append('lead_id', String(leadId));
+		}
+		return fetch(api('/extract'), { method: 'POST', headers: H(), body: fd });
+	})
 		.then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
 		.then(function (res) {
 			// 404 εδώ σημαίνει ένα και μόνο πράγμα: ο πελάτης δεν έστειλε
