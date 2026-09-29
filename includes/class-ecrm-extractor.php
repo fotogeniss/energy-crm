@@ -87,7 +87,12 @@ class ECRM_Extractor {
 
 		$body = [
 			'model'      => self::model(),
-			'max_tokens' => 1500,
+			// Ήταν 1500 και δεν έφτανε. Δοκιμή στο live 29/09 με λογαριασμό
+			// Vodafone: η απάντηση κόπηκε στο «"postal_» και απορρίφθηκε ως
+			// άκυρο JSON. Τα ελληνικά κοστίζουν περισσότερα tokens ανά γράμμα, και
+			// ό,τι σκεφτεί το μοντέλο πριν απαντήσει μετράει στο ίδιο όριο.
+			// Πληρώνεται μόνο ό,τι χρησιμοποιηθεί, οπότε το περιθώριο δεν κοστίζει.
+			'max_tokens' => 4096,
 			'messages'   => [
 				[ 'role' => 'user', 'content' => $content ],
 			],
@@ -127,6 +132,12 @@ class ECRM_Extractor {
 			if ( ( $blk['type'] ?? '' ) === 'text' ) {
 				$text .= $blk['text'];
 			}
+		}
+
+		// Κομμένη απάντηση: να λέει ότι κόπηκε, όχι «άκυρο JSON» που στέλνει
+		// όποιον ψάχνει να κοιτάξει το prompt αντί για το όριο.
+		if ( 'max_tokens' === ( $json['stop_reason'] ?? '' ) ) {
+			return [ 'ok' => false, 'error' => 'Η απάντηση του AI κόπηκε στο όριο max_tokens.', 'raw' => $text ];
 		}
 
 		$data = self::parse_json( $text );
