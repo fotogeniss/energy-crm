@@ -1174,9 +1174,8 @@ function renderDetail(view, d) {
 				// άρα τρέχει ΜΟΝΟ όταν κάτι πραγματικά λείπει -- όχι σε κάθε
 				// ανέβασμα, να μην πληρώνεται το μοντέλο ξανά και ξανά για τα
 				// ίδια αρχεία.
-				var worthExtracting = !(c.afm && c.adt) && uploadedKinds.some(function (k) {
-					return k === 'id_card' || k === 'provider_bill' || k === 'telecom_bill' || k === 'sim_card';
-				});
+				// Κάθε έγγραφο μπορεί να έχει στοιχεία (29/09) -- όχι μόνο ταυτότητα/λογαριασμός.
+				var worthExtracting = !(c.afm && c.adt) && uploadedKinds.length > 0;
 				// Η ανάγνωση τρέχει ΠΡΙΝ το ξαναχτίσιμο, ώστε η καρτέλα να έρθει
 				// ήδη με τις διορθωμένες ετικέτες και το checklist σωστό.
 				reviewKinds(false).then(function () {

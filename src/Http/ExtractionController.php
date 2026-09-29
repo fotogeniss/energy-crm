@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use ECRM_Docs;
 use ECRM_Extractor;
 use ECRM_RateLimit;
 use ECRM_Validate;
@@ -86,18 +87,19 @@ final class ExtractionController implements Controller
      *
      * @var list<string>
      */
-    private const EXTRA_FIELDS = ['sim_number', 'mobile_msisdn'];
+    private const EXTRA_FIELDS = ['sim_number', 'mobile_msisdn', 'kad', 'gemi'];
 
     /**
-     * Τα είδη εγγράφου που έχει νόημα να διαβάσει ο εξαγωγέας.
-     *
-     * Το prompt του είναι γραμμένο για ταυτότητα και λογαριασμό παρόχου. Ό,τι
-     * άλλο κρέμεται από μια αίτηση -- συμπληρωμένο έντυπο, εξουσιοδότηση --
-     * δεν προσθέτει πεδία, μόνο κόστος.
+     * Τα είδη που διαβάζονται πρώτα, όταν τα έγγραφα είναι πάνω από
+     * MAX_DOCUMENTS. Κατά τα άλλα διαβάζεται ΚΑΘΕ έγγραφο που ανέβασε
+     * άνθρωπος (29/09, ζήτημα του πελάτη: «να διαβάζει οποιοδήποτε έγγραφο
+     * έχει πληροφορίες») -- ΓΕΜΗ, Ε9, εξουσιοδότηση, αποδεικτικό κατοικίας.
+     * Μέχρι τότε διάβαζε μόνο ταυτότητα/λογαριασμό/SIM, και τα στοιχεία μιας
+     * εταιρείας από το καταστατικό της γράφονταν με το χέρι.
      *
      * @var list<string>
      */
-    private const EXTRACTABLE_KINDS = ['id_card', 'provider_bill', 'telecom_bill', 'sim_card'];
+    private const READ_FIRST = ['id_card', 'provider_bill', 'telecom_bill', 'sim_card'];
 
     private const ALLOWED_MIMES = [
         'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf',
@@ -131,6 +133,36 @@ final class ExtractionController implements Controller
             'permission_callback' => Guards::crmUser(),
             'args'                => ['id' => ['type' => 'integer', 'required' => true]],
         ]);
+    }
+
+    /**
+     * Κάθε είδος του καταλόγου -- όσα ανεβάζει άνθρωπος.
+     *
+     * Ο κατάλογος δεν περιέχει τα είδη που φτιάχνει το ίδιο το σύστημα
+     * (αίτηση, φύλλα, υπογραφές -- `SystemKind`), οπότε αυτά μένουν εκτός χωρίς
+     * δεύτερη λίστα να συντηρείται.
+     *
+     * @return list<string>
+     */
+    private static function extractableKinds(): array
+    {
+        return array_values(array_map('strval', array_keys(ECRM_Docs::kinds())));
+    }
+
+    /**
+     * Ταυτότητα και λογαριασμοί πρώτα, τα υπόλοιπα με τη σειρά που ανέβηκαν.
+     *
+     * @param list<array<string, mixed>> $documents
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function mostUsefulFirst(array $documents): array
+    {
+        $rank = static fn(array $doc): int => in_array($doc['kind'] ?? '', self::READ_FIRST, true) ? 0 : 1;
+
+        usort($documents, static fn(array $a, array $b): int => $rank($a) <=> $rank($b));
+
+        return $documents;
     }
 
     /**
@@ -335,7 +367,7 @@ final class ExtractionController implements Controller
         }
 
         try {
-            $result = ECRM_Extractor::extract(array_slice($documents, 0, self::MAX_DOCUMENTS));
+            $result = ECRM_Extractor::extract(array_slice(self::mostUsefulFirst($documents), 0, self::MAX_DOCUMENTS));
         } finally {
             // In a finally so a thrown extractor does not hold the slot until
             // the connection closes.
@@ -600,7 +632,7 @@ final class ExtractionController implements Controller
 
         return $this->files->extractableForContract(
             $contractId,
-            self::EXTRACTABLE_KINDS,
+            self::extractableKinds(),
             self::ALLOWED_MIMES
         );
     }
@@ -623,7 +655,7 @@ final class ExtractionController implements Controller
 
         return $this->files->extractableForLead(
             $leadId,
-            self::EXTRACTABLE_KINDS,
+            self::extractableKinds(),
             self::ALLOWED_MIMES
         );
     }
