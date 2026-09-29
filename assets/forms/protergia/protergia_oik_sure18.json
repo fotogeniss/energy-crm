@@ -269,6 +269,11 @@
    "y": 125.9,
    "check": true,
    "size": 9
+  },
+  "eidiki_katigoria": {
+   "page": 1,
+   "x": 100.0,
+   "y": 232.5
   }
  },
  "sigs": [
@@ -323,6 +328,7 @@
   "isxis_paroxis": "ΙΣΧΥΣ ΠΑΡΟΧΗΣ (kVA)",
   "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης",
   "apostoli_logariasmou_entypo": "Αποστολή λογαριασμού: Ταχυδρομικώς",
-  "apostoli_logariasmou_email": "Αποστολή λογαριασμού: Με e-mail"
+  "apostoli_logariasmou_email": "Αποστολή λογαριασμού: Με e-mail",
+  "eidiki_katigoria": "ΕΙΔΙΚΗ ΚΑΤΗΓΟΡΙΑ"
  }
 }

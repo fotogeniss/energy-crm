@@ -266,6 +266,11 @@
    "page": 3,
    "x": 36.0,
    "y": 237.7
+  },
+  "eidiki_katigoria": {
+   "page": 1,
+   "x": 140.0,
+   "y": 232.7
   }
  },
  "sigs": [
@@ -326,6 +331,7 @@
   "metrisi_imerisia": "ΜΕΤΡΗΣΗ",
   "topos_imerominia_aitisis": "ΗΜΕΡΟΜΗΝΙΑ/ΤΟΠΟΣ",
   "synainesi_omilou_nai": "ΝΑΙ",
-  "synainesi_erevnas_nai": "ΝΑΙ"
+  "synainesi_erevnas_nai": "ΝΑΙ",
+  "eidiki_katigoria": "ΕΙΔΙΚΗ ΚΑΤΗΓΟΡΙΑ"
  }
 }

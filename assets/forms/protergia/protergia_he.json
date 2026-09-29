@@ -210,6 +210,11 @@
    "x": 130.3,
    "y": 25.9,
    "check": true
+  },
+  "eidiki_katigoria": {
+   "page": 1,
+   "x": 100.0,
+   "y": 232.5
   }
  },
  "sigs": [
@@ -249,6 +254,7 @@
   "hkasp": "ΗΚΑΣΠ",
   "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΊΑ ΥΠΟΒΟΛΉΣ ΑΊΤΗΣΗΣ",
   "metrisi_imerisia": "ΜΕΤΡΗΣΗ",
-  "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης"
+  "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης",
+  "eidiki_katigoria": "ΕΙΔΙΚΗ ΚΑΤΗΓΟΡΙΑ"
  }
 }
