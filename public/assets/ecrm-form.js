@@ -1867,6 +1867,54 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			});
 		}
 
+		// Στο AI πάνε μόνο οι πρώτες σελίδες ενός PDF.
+		//
+		// Το μοντέλο χρεώνει και αργεί ανά σελίδα, όχι ανά byte. Ένας
+		// λογαριασμός Vodafone 28 σελίδων (1,4MB) είναι ~100.000 tokens επειδή
+		// από τη σελ. 5 και μετά είναι αναλυτικό κλήσεων — ξεπερνούσε το όριο
+		// των 30s και η ανάγνωση έπεφτε χωρίς να βγει τίποτα. Τα στοιχεία του
+		// πελάτη και ο αριθμός παροχής είναι στην πρώτη σελίδα, και οι κλήσεις
+		// είναι αριθμοί τρίτων που δεν έχουν λόγο να φύγουν από εδώ.
+		//
+		// Στη σύμβαση αποθηκεύεται ΟΛΟΚΛΗΡΟ το αρχείο (item.file). Το κομμένο
+		// (item.forAi) υπάρχει μόνο για την ανάγνωση.
+		var AI_PDF_PAGES = 2;
+		var pdfLibLoading = null;
+
+		function isPdf(file) {
+			return file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+		}
+
+		function firstPages(file) {
+			if (!isPdf(file)) { return Promise.resolve(null); }
+			// Φορτώνεται μόνο την πρώτη φορά που πέφτει PDF — η φόρμα δεν
+			// κουβαλά μισό MB για όσους ανεβάζουν μόνο φωτογραφίες.
+			pdfLibLoading = pdfLibLoading || import('./vendor/pdf-lib-1.17.1.esm.min.js');
+
+			return Promise.all([pdfLibLoading, file.arrayBuffer()])
+				.then(function (r) {
+					var lib = r[0];
+					return lib.PDFDocument.load(r[1], { ignoreEncryption: true }).then(function (src) {
+						// Κρυπτογραφημένο PDF βγαίνει με λευκές σελίδες αν το
+						// κόψεις — καλύτερα ολόκληρο και αργό παρά γρήγορο και άδειο.
+						if (src.isEncrypted || src.getPageCount() <= AI_PDF_PAGES) { return null; }
+						return lib.PDFDocument.create().then(function (out) {
+							var keep = [];
+							for (var i = 0; i < AI_PDF_PAGES; i++) { keep.push(i); }
+							return out.copyPages(src, keep).then(function (pages) {
+								pages.forEach(function (page) { out.addPage(page); });
+								return out.save();
+							});
+						});
+					});
+				})
+				.then(function (bytes) {
+					return bytes ? new File([bytes], file.name, { type: 'application/pdf' }) : null;
+				})
+				// Ό,τι κι αν πάει στραβά, στέλνεται ολόκληρο όπως πριν.
+				.catch(function () { return null; });
+		}
+
 		function addFiles(fileList) {
 			var accepted = Array.prototype.filter.call(fileList, function (f) {
 				return /\.(pdf|jpe?g|png)$/i.test(f.name)
@@ -1883,9 +1931,9 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			renderFiles();
 
 			Promise.all(accepted.map(function (f) {
-				return shrink(f).then(function (small) {
+				return Promise.all([shrink(f), firstPages(f)]).then(function (r) {
 					var entry = state.files.filter(function (i) { return i.file === f; })[0];
-					if (entry) { entry.file = small; }
+					if (entry) { entry.file = r[0]; entry.forAi = r[1]; }
 					shrinking--;
 				});
 			})).then(renderFiles);
@@ -1992,7 +2040,7 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 			function send() {
 				var fd = new FormData();
 				if (state.files.length) {
-					state.files.forEach(function (item) { fd.append('files[]', item.file); fd.append('kinds[]', item.kind); });
+					state.files.forEach(function (item) { fd.append('files[]', item.forAi || item.file); fd.append('kinds[]', item.kind); });
 				} else {
 					/* Καμία επιλογή αρχείων: τα έγγραφα είναι ήδη στον διακομιστή
 					 * -- τα έστειλε ο πελάτης από τον «σύνδεσμό μου» και
@@ -2023,11 +2071,14 @@ import { openCustomerContracts } from '@energy-crm/navigate';
 					if (!d || !d.ok) {
 						statusEl.textContent = '';
 						// A failed automatic pass may be retried by the button.
-						// Σιωπηλά: η αυτόματη διαδρομή τρέχει χωρίς να τη ζητήσει
-						// κανείς, και «αίτηση χωρίς έγγραφα πελάτη» είναι η
-						// κανονική περίπτωση, όχι σφάλμα που αξίζει μήνυμα.
-						if (auto) { extractedFor = ''; return; }
-						toast((d && d.error) || 'Η εξαγωγή απέτυχε.', false);
+						if (auto) { extractedFor = ''; }
+						// Σιωπηλά ΜΟΝΟ όταν δεν έδωσε κανείς αρχεία: τότε η
+						// αυτόματη διαδρομή ψάχνει έγγραφα στην αίτηση, και «δεν
+						// υπάρχουν» είναι το κανονικό. Όταν ο συνεργάτης έριξε
+						// αρχείο και δεν διαβάστηκε, πρέπει να το μάθει — μέχρι
+						// τις 29/09 έβλεπε το «Διαβάζονται…» να σβήνει και τίποτα.
+						if (auto && !state.files.length) { return; }
+						toast(((d && d.error) || 'Η ανάγνωση απέτυχε.') + ' Συμπλήρωσε με το χέρι ή ξαναδοκίμασε.', false);
 						return;
 					}
 					var filled = 0;
