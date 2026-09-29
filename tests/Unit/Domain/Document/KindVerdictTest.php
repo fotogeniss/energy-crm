@@ -59,6 +59,17 @@ final class KindVerdictTest extends TestCase
         );
     }
 
+    /**
+     * Λογαριασμός Vodafone ανεβασμένος ως «Άλλο» ή ως «Λογαριασμός παρόχου»:
+     * γίνεται λογαριασμός τηλεφωνίας, ώστε να διαβαστεί, χωρίς να περνά για
+     * λογαριασμό ρεύματος σε σύμβαση ρεύματος.
+     */
+    public function testATelecomBillIsRecognisedAsItsOwnKind(): void
+    {
+        self::assertSame('telecom_bill', KindVerdict::correction('other', 'telecom_bill', 'high'));
+        self::assertSame('telecom_bill', KindVerdict::correction('provider_bill', 'telecom_bill', 'high'));
+    }
+
     public function testOnlyAFileNobodyHasJudgedIsExamined(): void
     {
         self::assertTrue(KindVerdict::shouldExamine(null));

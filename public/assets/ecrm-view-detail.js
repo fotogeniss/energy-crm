@@ -12,6 +12,7 @@ import { api, esc, fetch, H, markSubViewOpen, rejectedNote, toast, viewEl } from
 import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint } from '@energy-crm/format';
 import { go, openEdit } from '@energy-crm/navigate';
 import { confirmTyped, confirmTypedWithReason, openDialog } from '@energy-crm/dialog';
+import { storedForAi } from '@energy-crm/ai-docs';
 
 function copyText(text) {
 	text = String(text == null ? '' : text);
@@ -1174,7 +1175,7 @@ function renderDetail(view, d) {
 				// ανέβασμα, να μην πληρώνεται το μοντέλο ξανά και ξανά για τα
 				// ίδια αρχεία.
 				var worthExtracting = !(c.afm && c.adt) && uploadedKinds.some(function (k) {
-					return k === 'id_card' || k === 'provider_bill' || k === 'sim_card';
+					return k === 'id_card' || k === 'provider_bill' || k === 'telecom_bill' || k === 'sim_card';
 				});
 				// Η ανάγνωση τρέχει ΠΡΙΝ το ξαναχτίσιμο, ώστε η καρτέλα να έρθει
 				// ήδη με τις διορθωμένες ετικέτες και το checklist σωστό.
@@ -1194,11 +1195,15 @@ function renderDetail(view, d) {
  * σε κάθε αποτυχία: μια ανάγνωση που δεν πρόλαβε δεν είναι κρίση, μένει η
  * "Επεξεργασία" για το χέρι. */
 function extractMissing(contractId) {
-	var fd = new FormData();
-	fd.append('contract_id', String(contractId));
-	fd.append('apply', '1');
-
-	return fetch(api('/extract'), { method: 'POST', headers: H(), body: fd })
+	// Τα PDF κόβονται στον browser πριν πάνε στο AI (ecrm-ai-docs.js). Χωρίς
+	// PDF ή αν αποτύχει, ο server τα διαβάζει από τον δίσκο όπως πριν.
+	return storedForAi({ contract_id: contractId }).then(function (stored) {
+		var fd = new FormData();
+		fd.append('contract_id', String(contractId));
+		fd.append('apply', '1');
+		(stored || []).forEach(function (item) { fd.append('files[]', item.file); fd.append('kinds[]', item.kind); });
+		return fetch(api('/extract'), { method: 'POST', headers: H(), body: fd });
+	})
 		.then(function (r) { return r.json(); })
 		.then(function (d) {
 			if (d && d.ok && d.applied && d.applied.length) {

@@ -97,7 +97,7 @@ final class ExtractionController implements Controller
      *
      * @var list<string>
      */
-    private const EXTRACTABLE_KINDS = ['id_card', 'provider_bill', 'sim_card'];
+    private const EXTRACTABLE_KINDS = ['id_card', 'provider_bill', 'telecom_bill', 'sim_card'];
 
     private const ALLOWED_MIMES = [
         'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf',
@@ -113,6 +113,102 @@ final class ExtractionController implements Controller
             'callback'            => [$this, 'extract'],
             'permission_callback' => Guards::crmUser(),
         ]);
+
+        // Τα αποθηκευμένα έγγραφα, για να τα κόψει ο browser πριν τα στείλει
+        // πίσω στο /extract. Ο server δεν έχει βιβλιοθήκη που να κόβει PDF·
+        // ο browser έχει (pdf-lib). Χωρίς αυτό, ένας λογαριασμός 28 σελίδων
+        // που έστειλε ο πελάτης πήγαινε ολόκληρος στο AI, μαζί με τους
+        // αριθμούς τρίτων του αναλυτικού κλήσεων. Δες CHANGELOG (297).
+        register_rest_route(Router::NAMESPACE, '/extract/sources', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'sources'],
+            'permission_callback' => Guards::crmUser(),
+        ]);
+
+        register_rest_route(Router::NAMESPACE, '/extract/sources/(?P<id>\d+)', [
+            'methods'             => 'GET',
+            'callback'            => [$this, 'source'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => ['id' => ['type' => 'integer', 'required' => true]],
+        ]);
+    }
+
+    /**
+     * Ποια αποθηκευμένα έγγραφα θα διάβαζε το /extract για αυτή την αίτηση ή lead.
+     *
+     * Ίδιος κατάλογος, ίδια φίλτρα, ίδιος έλεγχος εμβέλειας με το /extract --
+     * δεν αποκαλύπτει τίποτα που ο χρήστης δεν μπορεί ήδη να στείλει στο AI.
+     * Χωρίς διαδρομές δίσκου στην απάντηση.
+     */
+    public function sources(WP_REST_Request $request): WP_REST_Response
+    {
+        $documents = $this->scopedDocuments($request);
+
+        if ($documents === null) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Δώσε είτε contract_id είτε lead_id.'], 400);
+        }
+
+        $list = array_map(
+            static fn(array $doc): array => ['id' => $doc['id'], 'kind' => $doc['kind'], 'mime' => $doc['mime']],
+            $documents
+        );
+
+        return new WP_REST_Response(['ok' => true, 'sources' => array_values($list)], 200);
+    }
+
+    /**
+     * Τα bytes ενός εγγράφου από τον κατάλογο του sources().
+     *
+     * Όχι μέσω του /file/{id}: εκείνο κρίνει την πρόσβαση από τον συνεργάτη
+     * της σύμβασης, και τα έγγραφα ενός lead δεν έχουν ακόμα σύμβαση. Εδώ
+     * σερβίρεται ΜΟΝΟ id που υπάρχει στον ίδιο κατάλογο που θα διάβαζε το
+     * /extract για την ίδια αίτηση ή lead.
+     */
+    public function source(WP_REST_Request $request): WP_REST_Response
+    {
+        $wanted    = (int) $request['id'];
+        $documents = $this->scopedDocuments($request) ?? [];
+
+        foreach ($documents as $doc) {
+            if ($doc['id'] !== $wanted) {
+                continue;
+            }
+
+            $size = filesize($doc['path']);
+
+            if ($size === false) {
+                break;
+            }
+
+            // Ίδιο μοτίβο με το ECRM_Files::serve(): readfile χωρίς να φορτωθεί
+            // όλο το αρχείο στη μνήμη.
+            nocache_headers();
+            header('Content-Type: ' . $doc['mime']);
+            header('Content-Length: ' . $size);
+            header('X-Content-Type-Options: nosniff');
+            readfile($doc['path']);
+            exit;
+        }
+
+        return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε.'], 404);
+    }
+
+    /**
+     * Ο κατάλογος του /extract για contract_id ή lead_id, ή null όταν η
+     * αίτηση δεν λέει ποιο από τα δύο.
+     *
+     * @return list<array{id: int, path: string, mime: string, kind: string}>|null
+     */
+    private function scopedDocuments(WP_REST_Request $request): ?array
+    {
+        $contractId = (int) $request->get_param('contract_id');
+        $leadId     = (int) $request->get_param('lead_id');
+
+        if (($contractId > 0) === ($leadId > 0)) {
+            return null;
+        }
+
+        return $leadId > 0 ? $this->leadDocuments($leadId) : $this->storedDocuments($contractId);
     }
 
     public function extract(WP_REST_Request $request): WP_REST_Response
@@ -494,7 +590,7 @@ final class ExtractionController implements Controller
      * browser και δεν αποδεικνύει τίποτα. Αίτηση εκτός εμβέλειας απαντά όπως
      * και ανύπαρκτη -- δεν επιβεβαιώνεται καν ότι υπάρχει.
      *
-     * @return list<array{path: string, mime: string, kind: string}>
+     * @return list<array{id: int, path: string, mime: string, kind: string}>
      */
     private function storedDocuments(int $contractId): array
     {
@@ -517,7 +613,7 @@ final class ExtractionController implements Controller
      * browser και δεν αποδεικνύει τίποτα -- ο μόνος κριτής είναι το
      * `LeadRepository::find()` με το `UserScope` του συνδεδεμένου.
      *
-     * @return list<array{path: string, mime: string, kind: string}>
+     * @return list<array{id: int, path: string, mime: string, kind: string}>
      */
     private function leadDocuments(int $leadId): array
     {
