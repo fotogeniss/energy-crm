@@ -390,7 +390,7 @@ final class ProviderFormFields
         'gemi'               => 'Αρ. Γ.Ε.ΜΗ.',
         'company_type'       => 'Νομική Μορφή',
         'activity'           => 'Αντικείμενο Δραστηριότητας',
-        'eidiki_katigoria'   => 'Ειδική Κατηγορία (Ευάλωτος / Κ.Ο.Τ.)',
+        'eidiki_katigoria'   => 'Ειδική Κατηγορία (ΚΟΤ Α/Β/Γ, Ευάλωτος)',
         'anotato_orio'       => 'Ανώτατο Όριο Λογαριασμού (€)',
         // (265) Ξεχωριστό από το 'anotato_orio' από πάνω -- εκείνο είναι
         // ρεύμα/αέριο, ελεύθερο κείμενο. Αυτό είναι κινητή, με τις 15
@@ -401,7 +401,7 @@ final class ProviderFormFields
         'agreed_power'       => 'Συμφωνημένη Ισχύς (kVA)',
         'day_indication'     => 'Τελευταία Ένδειξη Μετρητή',
         'guarantee'          => 'Εγγύηση (€)',
-        'previous_provider'  => 'Υφιστάμενος Πάροχος',
+        'previous_provider'  => 'Υφιστάμενος Προμηθευτής',
         'capacity_role'      => 'Ιδιότητα (Ιδιοκτήτης / Ενοικιαστής)',
         'meter_position'     => 'Θέση Μετρητή (Εσωτερικός / Εξωτερικός)',
         'meter_reading_type' => 'Είδος Μέτρησης',

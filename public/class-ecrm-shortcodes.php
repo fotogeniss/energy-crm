@@ -985,7 +985,31 @@ class ECRM_Shortcodes {
 					<?php $ecrm_field( 'region_code', 'Κωδ. Περιφέρειας', 'text', true ); ?>
 					<?php $ecrm_field( 'successor_no', 'Διάδοχος', 'text', true ); ?>
 					<?php $ecrm_field( 'meter_activity', 'Δραστηριότητα', 'text', true ); ?>
-					<?php $ecrm_field( 'previous_provider', 'Προηγούμενος Πάροχος', 'text', true ); ?>
+					<?php
+					/*
+					 * Λίστα και όχι <select>: το πεδίο τυπώνεται αυτούσιο στο
+					 * «ΥΦΙΣΤΑΜΕΝΟΣ ΠΡΟΜΗΘΕΥΤΗΣ» του εντύπου, και οι παλιές αιτήσεις
+					 * έχουν ελεύθερο κείμενο. Ένα <select> θα άδειαζε σιωπηλά κάθε
+					 * τιμή που δεν είναι στη λίστα την πρώτη φορά που θα
+					 * αποθηκευόταν η αίτηση. Έτσι διαλέγεις από τη λίστα, αλλά αν ο
+					 * πάροχος λείπει μπορείς να τον γράψεις. Λίστα ΡΑΑΕΥ/αγοράς,
+					 * 29/09/2026.
+					 */
+					$ecrm_suppliers = [
+						'ΔΕΗ', 'Protergia', 'Ήρων', 'Elpedison', 'NRG', 'ZeniΘ', 'Volton',
+						'Watt+Volt', 'Enerwave', 'Φυσικό Αέριο Ελληνική Εταιρεία Ενέργειας',
+						'Volterra', 'Solar Energy', 'We Energy', 'Ελίν', 'EFA Energy', 'ΚΕΝ',
+					];
+					?>
+					<label class="ecrm-field" data-for="previous_provider">
+						<span class="ecrm-field__label">Υφιστάμενος Προμηθευτής</span>
+						<input type="text" name="previous_provider" class="ecrm-input" data-extra="1" list="ecrm-suppliers" autocomplete="off" placeholder="Διάλεξε ή γράψε">
+					</label>
+					<datalist id="ecrm-suppliers">
+						<?php foreach ( $ecrm_suppliers as $ecrm_supplier ) : ?>
+							<option value="<?php echo esc_attr( $ecrm_supplier ); ?>"></option>
+						<?php endforeach; ?>
+					</datalist>
 					<label class="ecrm-field" data-for="capacity_role">
 						<span class="ecrm-field__label">Ιδιότητα</span>
 						<select name="capacity_role" class="ecrm-input" data-extra="1">
@@ -1009,7 +1033,16 @@ class ECRM_Shortcodes {
 							<option value="telemetry">Τηλεμετρούμενη</option>
 						</select>
 					</label>
-					<?php $ecrm_field( 'eidiki_katigoria', 'Ειδική Κατηγορία', 'text', true, 'Ευάλωτος / Κ.Ο.Τ.' ); ?>
+					<?php // Ίδιο σκεπτικό με τον προμηθευτή: λίστα, όχι <select>, για να μη χαθούν οι παλιές τιμές. ?>
+					<label class="ecrm-field" data-for="eidiki_katigoria">
+						<span class="ecrm-field__label">Ειδική Κατηγορία</span>
+						<input type="text" name="eidiki_katigoria" class="ecrm-input" data-extra="1" list="ecrm-special-category" autocomplete="off" placeholder="Διάλεξε ή γράψε">
+					</label>
+					<datalist id="ecrm-special-category">
+						<?php foreach ( [ 'ΚΟΤ Α', 'ΚΟΤ Β', 'ΚΟΤ Γ', 'Ευάλωτος Πελάτης' ] as $ecrm_category ) : ?>
+							<option value="<?php echo esc_attr( $ecrm_category ); ?>"></option>
+						<?php endforeach; ?>
+					</datalist>
 					<?php // Η εγγύηση μετακόμισε στα Στοιχεία Τιμολόγησης — τη ζητά και η κινητή, όχι μόνο ρεύμα/αέριο. ?>
 					<?php $ecrm_field( 'promotion', 'Promotion', 'text', true ); ?>
 				</div>
@@ -1183,10 +1216,15 @@ class ECRM_Shortcodes {
 			<section class="ecrm-card">
 				<div class="ecrm-step"><span class="ecrm-step__n">7</span> Στοιχεία Τιμολόγησης</div>
 				<div class="ecrm-grid">
+					<?php
+					// «Μετρητά» στη θέση του «Με την παραλαβή» (29/09). Η τιμή μένει
+					// `manual` ώστε οι παλιές αιτήσεις να δείχνουν σωστά· στο έντυπο
+					// ό,τι δεν είναι `standing_order` σημαίνει ούτως ή άλλως «όχι πάγια».
+					?>
 					<label class="ecrm-field" data-for="payment_method" data-when-energy="power,gas">
 						<span class="ecrm-field__label">Τρόπος Πληρωμής</span>
 						<select name="payment_method" class="ecrm-input" data-extra="1">
-							<option value="">—</option><option value="standing_order">Πάγια Εντολή</option><option value="manual">Με την παραλαβή</option>
+							<option value="">—</option><option value="standing_order">Πάγια Εντολή</option><option value="manual">Μετρητά</option>
 						</select>
 					</label>
 					<label class="ecrm-field" data-for="bill_delivery" data-when-energy="power,gas,mobile">
