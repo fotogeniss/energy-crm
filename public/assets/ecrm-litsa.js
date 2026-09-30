@@ -37,8 +37,10 @@ import { api, esc } from '@energy-crm/util';
 	}
 
 	function render() {
+		// Το CSS παλμεύει το σήμα όσο περιμένουμε απάντηση.
+		root.setAttribute('data-busy', busy ? '1' : '0');
 		if (!history.length) {
-			body.innerHTML = '<div class="ecrm-litsa__greet">Γεια! Είμαι η <strong>Λίτσα</strong> <svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 100-18 9 9 0 000 18z"/><path d="M8.5 14a4 4 0 007 0M9 9.5v.01M15 9.5v.01"/></svg><br>Ρώτησέ με πώς να καταχωρίσεις σύμβαση, πώς δουλεύει η AI εξαγωγή, ή πόσες εκκρεμότητες έχεις.</div>';
+			body.innerHTML = '<div class="ecrm-litsa__greet">Γεια! Είμαι ο <strong>AlfrAId</strong> <svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 100-18 9 9 0 000 18z"/><path d="M8.5 14a4 4 0 007 0M9 9.5v.01M15 9.5v.01"/></svg><br>Ρώτησέ με πώς να καταχωρίσεις σύμβαση, πώς δουλεύει η AI εξαγωγή, ή πόσες εκκρεμότητες έχεις.</div>';
 			return;
 		}
 		body.innerHTML = history.map(function (m) {
@@ -87,7 +89,7 @@ import { api, esc } from '@energy-crm/util';
 	// η στάθμιση δεν άλλαξε.
 	function clearHistory() {
 		if (!history.length) return;
-		if (!confirm('Διαγραφή της συνομιλίας με τη Λίτσα;')) return;
+		if (!confirm('Διαγραφή της συνομιλίας με τον AlfrAId;')) return;
 		fetch(api('/assistant/history/clear'), { method: 'POST', headers: headers() })
 			// Η τοπική συνομιλία καθαρίζει έτσι κι αλλιώς (.finally παρακάτω) --
 			// αν αποτύχει το server-side clear, δεν υπάρχει λόγος να το δει ο
