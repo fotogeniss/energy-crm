@@ -287,7 +287,7 @@ function renderDetail(view, d) {
 				esc(String(d.typical)) + (d.typical === 1 ? '\u00a0μέρα' : '\u00a0μέρες') +
 				'</b> <span class="ecrm-stuck__s">(από ' + esc(String(d.sample)) + ' αιτήσεις)</span>.</p>' +
 			'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm ecrm-stuck__ask" data-ask-litsa>' +
-				'Ρώτα τη Λίτσα γι\' αυτή την αίτηση</button>' +
+				'Ρώτα τον AlfrAId γι\' αυτή την αίτηση</button>' +
 			'</div>';
 	}
 
@@ -588,7 +588,7 @@ function renderDetail(view, d) {
 	var askBtn = view.querySelector('[data-ask-litsa]');
 	if (askBtn) askBtn.addEventListener('click', function () {
 		var panel = document.getElementById('ecrm-litsa');
-		if (!panel) { toast('Η Λίτσα δεν είναι διαθέσιμη εδώ.', false); return; }
+		if (!panel) { toast('Ο AlfrAId δεν είναι διαθέσιμος εδώ.', false); return; }
 
 		var input = panel.querySelector('[data-litsa-input]');
 		var opener = panel.querySelector('[data-litsa-toggle]');
