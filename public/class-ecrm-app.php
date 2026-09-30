@@ -419,12 +419,12 @@ class ECRM_App {
 
 			<!-- Λίτσα assistant -->
 			<div class="ecrm-litsa" id="ecrm-litsa" data-open="0">
-				<button type="button" class="ecrm-litsa__fab" data-litsa-toggle aria-label="Άνοιγμα βοηθού Λίτσα">
-					<span class="ecrm-litsa__fab-ico"><?php echo self::icon( 'chat' ); // phpcs:ignore ?></span>
+				<button type="button" class="ecrm-litsa__fab" data-litsa-toggle aria-label="Άνοιγμα βοηθού AlfrAId">
+					<span class="ecrm-litsa__fab-ico"><?php echo self::alfraid_icon(); // phpcs:ignore ?></span>
 				</button>
-				<div class="ecrm-litsa__panel" role="dialog" aria-label="Βοηθός Λίτσα">
+				<div class="ecrm-litsa__panel" role="dialog" aria-label="Βοηθός AlfrAId">
 					<div class="ecrm-litsa__head">
-						<div class="ecrm-litsa__id"><span class="ecrm-litsa__avatar">Λ</span><div><strong>Λίτσα</strong><span class="ecrm-litsa__sub">βοηθός CRM</span></div></div>
+						<div class="ecrm-litsa__id"><span class="ecrm-litsa__avatar"><?php echo self::alfraid_icon(); // phpcs:ignore ?></span><div><strong>AlfrAId</strong><span class="ecrm-litsa__sub">βοηθός CRM</span></div></div>
 						<div class="ecrm-litsa__headbtns">
 							<button type="button" class="ecrm-litsa__clear" data-litsa-clear aria-label="Διαγραφή συνομιλίας" title="Διαγραφή συνομιλίας"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg></button>
 							<button type="button" class="ecrm-litsa__x" data-litsa-toggle aria-label="Κλείσιμο">✕</button>
@@ -498,6 +498,15 @@ class ECRM_App {
 				[ 'id' => 'ecrm-pwa-register' ]
 			);
 		} );
+	}
+
+	/**
+	 * Το σήμα του AlfrAId: ημίψηλο καπέλο μπάτλερ με σπινθήρα. Χωριστό από το
+	 * icon() γιατί είναι γεμάτο σχήμα, όχι γραμμή, και τα χρώματά του ζουν στο
+	 * CSS (.ecrm-alfraid*), όχι εδώ.
+	 */
+	public static function alfraid_icon(): string {
+		return '<svg class="ecrm-alfraid" viewBox="1.5 0.8 21.5 18.8" aria-hidden="true"><rect x="2.5" y="16.2" width="19" height="2.6" rx="1.3"/><path d="M6.6 16.4V6.2a1.2 1.2 0 011.2-1.2h8.4a1.2 1.2 0 011.2 1.2v10.2z"/><rect class="ecrm-alfraid__band" x="6.6" y="12.4" width="10.8" height="2.2"/><path class="ecrm-alfraid__spark" d="M18.6 1.6L19.61 4.19L22.2 5.2L19.61 6.21L18.6 8.8L17.59 6.21L15 5.2L17.59 4.19z"/></svg>';
 	}
 
 	/** Inline SVG icon set (stroke, currentColor). */

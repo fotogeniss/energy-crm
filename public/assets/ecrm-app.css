@@ -610,6 +610,16 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 /* Litsa FAB icon (SVG instead of emoji) */
 .ecrm-litsa__fab-ico svg { width: 26px; height: 26px; stroke: var(--on-accent); }
 
+/* Σήμα AlfrAId: γεμάτο καπέλο, όχι γραμμή — γι' αυτό σβήνει το stroke του κανόνα από πάνω. */
+.ecrm-litsa .ecrm-alfraid { display: block; width: 32px; height: 28px; color: var(--on-accent); fill: currentColor; stroke: none; }
+.ecrm-litsa__avatar .ecrm-alfraid { width: 29px; height: 25px; }
+.ecrm-alfraid__band { fill: var(--amber-bright); }
+.ecrm-alfraid__spark { fill: var(--chrome-ink-hi); stroke: var(--on-accent); stroke-width: .6; stroke-linejoin: round; transform-box: fill-box; transform-origin: center; }
+/* Όσο περιμένει απάντηση ο σπινθήρας παλμεύει. Φαίνεται στο avatar της κεφαλίδας, γιατί το κουμπί είναι κρυμμένο όσο το πάνελ είναι ανοιχτό. */
+.ecrm-litsa[data-busy="1"] .ecrm-alfraid__spark { animation: ecrm-alfraid-think 1.1s ease-in-out infinite; }
+@keyframes ecrm-alfraid-think { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.35) rotate(20deg); } }
+@media (prefers-reduced-motion: reduce) { .ecrm-litsa[data-busy="1"] .ecrm-alfraid__spark { animation: none; } }
+
 /* ============================================================
    Topbar org + avatar, nav badge, refined collapsed rail
    ============================================================ */
