@@ -1001,7 +1001,7 @@ class ECRM_Shortcodes {
 					 * 29/09/2026.
 					 */
 					$ecrm_suppliers = [
-						'ΔΕΗ', 'Protergia', 'Ήρων', 'Elpedison', 'NRG', 'ZeniΘ', 'Volton',
+						'Μη επιβεβαιωμένος', 'ΔΕΗ', 'Protergia', 'Ήρων', 'Elpedison', 'NRG', 'ZeniΘ', 'Volton',
 						'Watt+Volt', 'Enerwave', 'Φυσικό Αέριο Ελληνική Εταιρεία Ενέργειας',
 						'Volterra', 'Solar Energy', 'We Energy', 'Ελίν', 'EFA Energy', 'ΚΕΝ',
 					];
