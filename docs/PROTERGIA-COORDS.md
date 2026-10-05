@@ -172,7 +172,7 @@ python tools/form-map-audit.py --sources tools/source-forms --only protergia_he
 | 1 | 19.3 | 281.4 | `hkasp` | κείμενο | ΗΚΑΣΠ |
 | 2 | 107.0 | 17.3 | `imerominia_aitisis` | κείμενο | ΑΊΤΗΣΗΣ |
 | 2 | 130.3 | 25.9 | `ypovoli_ilektronika` | ☑ X | Ηλεκτρονικά |
-| 2 | 30.1 | 144.2 | `poso_eggiisis` | κείμενο | ΕΓΓΎΗΣΗ |
+| 2 | 46.0 | 144.2 | `poso_eggiisis` | κείμενο | ΕΓΓΎΗΣΗ (303: ήταν x = 30.1, πάνω στην ετικέτα) |
 
 ## protergia_epag_* — Επαγγελματίας, ρεύμα, ένα έντυπο ανά τιμολόγιο (283)
 

@@ -581,12 +581,29 @@ class ECRM_Tracking {
 		// στην οριστικοποίηση (κανόνας Κ2).
 		$next = \EnergyCRM\Domain\Contract\MobileLine::stageAfterSignature( $row );
 
-		\EnergyCRM\Services::lifecycle()->moveTo( $id, $next->value, [
+		$moved = \EnergyCRM\Services::lifecycle()->moveTo( $id, $next->value, [
 			'from'    => (string) $row['status'],
 			'message' => 'Ο πελάτης υπέγραψε ηλεκτρονικά από τον σύνδεσμο παρακολούθησης' . ( $ip ? ' (IP ' . $ip . ')' : '' ),
 			'extra'   => [ 'signed_at' => $now, 'signed_ip' => $ip ],
 			'inapp'   => false, // The contractNotices() call below handles the in-app notification.
 		] );
+
+		// Αν η πύλη δεν αφήσει την αίτηση να προχωρήσει (συνήθως λείπουν
+		// δικαιολογητικά ή έχει λήξει η ταυτότητα), το moveTo() επιστρέφει false
+		// και δεν γράφει τίποτα, ούτε το signed_at. Η εικόνα της υπογραφής όμως
+		// έχει ήδη αποθηκευτεί, οπότε ο πελάτης έβλεπε «καταχωρήθηκε» ενώ η
+		// λίστα ελέγχου έμενε με «○ Υπογραφή πελάτη». Η υπογραφή είναι γεγονός,
+		// όχι στάδιο: γράφεται το signed_at και η κατάσταση μένει όπως ήταν.
+		if ( ! $moved ) {
+			\EnergyCRM\Services::lifecycle()->moveTo( $id, (string) $row['status'], [
+				'from'    => (string) $row['status'],
+				'force'   => true,
+				'message' => 'Ο πελάτης υπέγραψε ηλεκτρονικά' . ( $ip ? ' (IP ' . $ip . ')' : '' ) . ', αλλά η αίτηση δεν προχώρησε: λείπουν δικαιολογητικά.',
+				'extra'   => [ 'signed_at' => $now, 'signed_ip' => $ip ],
+				'inapp'   => false,
+				'sms'     => false,
+			] );
+		}
 
 		// Ξαναχτίζεται ΚΑΙ εδώ (και όχι μόνο πιο πάνω): τώρα η κατάσταση της
 		// σύμβασης προχώρησε, και ο,τιδήποτε διαβάζει το status από το ίδιο
@@ -603,7 +620,9 @@ class ECRM_Tracking {
 					$u->user_email,
 					sprintf( '✍️ Υπογράφηκε: %s', $row['code'] ),
 					sprintf(
-						"Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση προχώρησε σε «%s».",
+						$moved
+							? "Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση προχώρησε σε «%s»."
+							: "Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση δεν προχώρησε σε «%s» γιατί λείπουν δικαιολογητικά. Δες τη λίστα ελέγχου της αίτησης.",
 						$row['code'],
 						$next->label()
 					)
