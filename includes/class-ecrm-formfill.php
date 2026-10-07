@@ -318,7 +318,10 @@ class ECRM_FormFill {
 			'tk_katoikias'            => (string) ( $c['postal_code'] ?? '' ),
 			'nomos_katoikias'         => (string) ( $c['region'] ?? '' ),
 			'arithmos_paroxis'        => (string) ( $c['supply_number'] ?? '' ),
-			'hkasp'                   => (string) ( $c['supply_number'] ?? '' ),
+			// (307) Το ΗΚΑΣΠ μόνο στο φυσικό αέριο. Στα έντυπα ρεύματος το κουτί
+			// ΗΚΑΣΠ είναι για παροχή αερίου που ίσως έχει ήδη ο πελάτης, όχι για
+			// τον αριθμό παροχής ρεύματος, που έχει δικό του κουτί.
+			'hkasp'                   => ( $c['energy_type'] ?? '' ) === 'gas' ? (string) ( $c['supply_number'] ?? '' ) : '',
 			'arithmos_metriti'        => (string) ( $c['meter_number'] ?? '' ),
 
 			// --- Διεύθυνση παροχής: where the meter is ---------------------
