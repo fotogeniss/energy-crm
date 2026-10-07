@@ -88,7 +88,12 @@ class ECRM_Providers {
 					// Η Protergia δίνει τέσσερα οικιακά έντυπα, ένα ανά τιμολόγιο.
 					// Ένα γενικό «Σταθερό Οικιακό» χωρίς code δεν αντιστοιχεί σε
 					// κανένα από αυτά, άρα δεν θα μπορούσε ποτέ να τυπωθεί σωστά.
+					// (306) Όσα αποσύρθηκαν από τη λίστα της Protergia δεν μπαίνουν σε
+					// νέα εγκατάσταση· μπαίνουν τα νέα του ProtergiaCatalogue.
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaHomePlans::all() as $code => $plan ) {
+						if ( \EnergyCRM\Domain\Forms\ProtergiaCatalogue::isRetired( $code ) ) {
+							continue;
+						}
 						$starters[] = [ $plan['label'], $code, 'power', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'] ];
 					}
 					// (283) Και τα τρία επαγγελματικά, ένα έντυπο το καθένα -- με
@@ -98,7 +103,13 @@ class ECRM_Providers {
 					}
 					// (285) Και τα δύο τιμολόγια φυσικού αερίου, ένα έντυπο το καθένα.
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaGasPlans::all() as $code => $plan ) {
+						if ( \EnergyCRM\Domain\Forms\ProtergiaCatalogue::isRetired( $code ) ) {
+							continue;
+						}
 						$starters[] = [ $plan['label'], $code, 'gas', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'] ];
+					}
+					foreach ( \EnergyCRM\Domain\Forms\ProtergiaCatalogue::added() as $code => $plan ) {
+						$starters[] = [ $plan['label'], $code, $plan['energy'], $plan['priceType'], null, null ];
 					}
 				} elseif ( $row['slug'] === 'volton' ) {
 					// Η Volton δίνει 23 προγράμματα, σε ρεύμα ΚΑΙ σε αέριο, και σε
