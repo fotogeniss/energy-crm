@@ -249,17 +249,22 @@ class ECRM_Tracking {
 			'presale'            => 0,
 			'registration'       => 0,
 			'awaiting_signature' => 1,
+			'signature_complete' => 2,
 			'awaiting_sim'       => 2,
+			'sim_delivered'      => 2,
+			'to_finalisation'    => 3,
 			'finalisation'       => 3,
 			'active'             => 4,
 		];
 
-		// Η ΔΙΑΚΟΠΗ δεν είναι ακύρωση, αλλά για τη μπάρα του πελάτη είναι το
-		// ίδιο: η διαδρομή σταμάτησε και δεν υπάρχει επόμενο βήμα.
-		if ( in_array( $status, [ 'cancelled_by_us', 'cancelled_by_customer', 'terminated' ], true ) ) {
+		// 05/10/2026: μία τερματική, η «Ακυρώθηκε». Οι υπόλοιπες νέες
+		// (ΘΑΛΗΣ, Εκκρεμότητα, Επανέλεγχος, Οφειλή, For review, MP reject)
+		// συμβαίνουν αφού η αίτηση έχει φύγει από τη δική μας πλευρά, οπότε
+		// για τον πελάτη είναι το βήμα «στον πάροχο».
+		if ( 'cancelled' === $status ) {
 			return -1;
 		}
-		return $map[ $status ] ?? 0;
+		return $map[ $status ] ?? 3;
 	}
 
 	/** Allowed upload MIME types → file extension. */
@@ -280,7 +285,7 @@ class ECRM_Tracking {
 	 * @return array{items:array,complete:bool,can_upload:bool}
 	 */
 	public static function docs_payload( int $id, string $status, ?string $activation_type, ?string $energy_type = null ): array {
-		$can = ! in_array( $status, [ 'cancelled_by_us', 'cancelled_by_customer', 'terminated', 'active' ], true );
+		$can = ! in_array( $status, [ 'cancelled', 'active' ], true );
 		if ( ! class_exists( 'ECRM_Docs' ) ) {
 			return [ 'items' => [], 'complete' => true, 'can_upload' => $can ];
 		}
@@ -653,7 +658,7 @@ class ECRM_Tracking {
 		if ( ! $row ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'not_found' ], 404 );
 		}
-		if ( in_array( $row['status'], [ 'cancelled_by_us', 'cancelled_by_customer', 'terminated', 'active' ], true ) ) {
+		if ( in_array( $row['status'], [ 'cancelled', 'active' ], true ) ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Η αίτηση δεν δέχεται πλέον έγγραφα.' ], 400 );
 		}
 

@@ -48,6 +48,22 @@ final class ContractTransitions
     }
 
     /**
+     * Ποια λίστα καταστάσεων ισχύει για τη σύμβαση (`StatusTrack`), ή null
+     * όταν δεν υπάρχει τέτοια σύμβαση.
+     */
+    public function trackOf(int $contractId): ?string
+    {
+        global $wpdb;
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare('SELECT energy_type, extra_json FROM %i WHERE id = %d', $this->table, $contractId),
+            ARRAY_A
+        );
+
+        return is_array($row) ? \EnergyCRM\Domain\Contract\StatusTrack::of($row) : null;
+    }
+
+    /**
      * Τα τρία πεδία που χρειάζεται ο `PaperworkGate`, ή null όταν δεν υπάρχει
      * τέτοια σύμβαση.
      *

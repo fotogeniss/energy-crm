@@ -100,8 +100,7 @@ function expiringRows(contracts) {
 	// days_left έρχεται έτοιμο από το backend, δεν ξαναϋπολογίζεται εδώ.
 	var upcoming = contracts.filter(function (c) {
 		return c.end_date && c.days_left != null && c.status !== 'draft'
-			&& c.status !== 'terminated'
-			&& c.status !== 'cancelled_by_us' && c.status !== 'cancelled_by_customer';
+			&& c.status !== 'cancelled';
 	}).sort(function (a, b) { return a.days_left - b.days_left; });
 
 	if (!upcoming.length) {

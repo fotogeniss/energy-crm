@@ -24,8 +24,8 @@
  * Ο ιδιοκτήτης επιβεβαίωσε ρητά (AskUserQuestion, 26/08) δύο ξεχωριστές
  * αποφάσεις που αυτό το αρχείο δοκιμάζει και τις δύο:
  *
- *   1. Παρτίδα ήδη ΠΛΗΡΩΜΕΝΗ -> η ακύρωση μπλοκάρεται, ίδια αντιμετώπιση με
- *      το «υπήρξε Ενεργή» (`CancellationGate::WAS_PAID`).
+ *   1. Παρτίδα ήδη ΠΛΗΡΩΜΕΝΗ -> η ακύρωση μπλοκαριζόταν. Από 05/10/2026
+ *      περνάει, και η προμήθεια μένει (`CancellationGate::keepsCommission()`).
  *   2. Παρτίδα ακόμα ΕΚΚΡΕΜΗΣ (μη πληρωμένη) -> η ακύρωση προχωράει
  *      κανονικά, ΚΑΙ η σύμβαση βγαίνει αυτόματα από την παρτίδα
  *      (`payout_id`/`payout_amount` καθαρίζουν), ώστε το σύνολο που θα
@@ -44,9 +44,7 @@ namespace EnergyCRM\Tests\Integration;
 
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
-use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
-use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\Tables;
 use EnergyCRM\Services;
@@ -69,39 +67,21 @@ final class PayoutClawbackGateTest extends IntegrationTestCase
         $this->user = $this->makeCrmUser(Roles::SELLER);
     }
 
-    /** Payable χωρίς ποτέ να έγινε Ενεργή -- ακριβώς το κενό του ευρήματος. */
-    public function testAFinalisationContractInAPaidBatchCannotBeCancelled(): void
+    /**
+     * 05/10/2026: η ακύρωση δεν μπλοκάρεται πια. Μια αίτηση σε πληρωμένη
+     * παρτίδα ακυρώνεται, και κρατάει την προμήθειά της.
+     */
+    public function testAContractInAPaidBatchIsCancelledButKeepsItsCommission(): void
     {
         $contractId = $this->finalisationContract();
         $this->putInBatch($contractId, 'paid');
 
-        self::assertFalse($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
-        self::assertSame('finalisation', $this->statusOf($contractId));
-    }
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled'));
+        self::assertSame('cancelled', $this->statusOf($contractId));
+        self::assertTrue(Services::cancellationGate()->keepsCommission($contractId));
 
-    /** Ίδιο μήνυμα άρνησης με αυτό που ελέγχει το REST endpoint. */
-    public function testTheRefusalReasonIsWasPaid(): void
-    {
-        $contractId = $this->finalisationContract();
-        $this->putInBatch($contractId, 'paid');
-
-        $reason = (new CancellationGate(Services::events(), Services::payouts()))
-            ->refusalOnMove(ContractStatus::Finalisation, ContractStatus::CancelledByUs, $contractId);
-
-        self::assertSame(CancellationGate::WAS_PAID, $reason);
-    }
-
-    /** Η άμυνα δεν είναι ειδική περίπτωση μόνο μίας κατάστασης. */
-    public function testARegistrationContractInAPaidBatchCannotBeCancelled(): void
-    {
-        $contractId = $this->contracts->create(
-            ['status' => 'registration', 'supply_number' => '99988877701', 'energy_type' => 'power'],
-            UserScope::forSelf($this->user)
-        );
-        $this->putInBatch($contractId, 'paid');
-
-        self::assertFalse($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
-        self::assertSame('registration', $this->statusOf($contractId));
+        $row = $this->storedRow('contracts', $contractId);
+        self::assertNotNull($row['payout_id']);
     }
 
     /** Η αντίθετη περίπτωση: όσο η παρτίδα δεν έχει πληρωθεί, η ακύρωση μένει δυνατή. */
@@ -110,8 +90,8 @@ final class PayoutClawbackGateTest extends IntegrationTestCase
         $contractId = $this->finalisationContract();
         $this->putInBatch($contractId, 'pending');
 
-        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
-        self::assertSame('cancelled_by_us', $this->statusOf($contractId));
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled'));
+        self::assertSame('cancelled', $this->statusOf($contractId));
     }
 
     /**
@@ -124,7 +104,7 @@ final class PayoutClawbackGateTest extends IntegrationTestCase
         $contractId = $this->finalisationContract();
         $this->putInBatch($contractId, 'pending');
 
-        $this->lifecycle->moveTo($contractId, 'cancelled_by_us');
+        $this->lifecycle->moveTo($contractId, 'cancelled');
 
         $row = $this->storedRow('contracts', $contractId);
         self::assertNull($row['payout_id']);
@@ -136,8 +116,8 @@ final class PayoutClawbackGateTest extends IntegrationTestCase
     {
         $contractId = $this->finalisationContract();
 
-        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
-        self::assertSame('cancelled_by_us', $this->statusOf($contractId));
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled'));
+        self::assertSame('cancelled', $this->statusOf($contractId));
     }
 
     // --- fixtures ------------------------------------------------------

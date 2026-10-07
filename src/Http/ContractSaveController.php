@@ -26,7 +26,6 @@ use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ProviderVisibility;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
-use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\StatusEntryGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
@@ -47,7 +46,6 @@ final class ContractSaveController implements Controller
         private readonly CustomerRepository $customers,
         private readonly ContractLifecycle $lifecycle,
         private readonly DraftExitGate $draftExit,
-        private readonly CancellationGate $cancellation,
         private readonly StatusEntryGate $paperwork,
         private readonly RequestKeyRepository $requestKeys,
         private readonly ProviderVisibility $providerAccess,
@@ -481,16 +479,6 @@ final class ContractSaveController implements Controller
         // Ο ειδικός φύλακας για ψεύτικο «Υπογράφηκε» αφαιρέθηκε στις 07/09
         // μαζί με την κατάσταση. Η ίδια ανησυχία ζει τώρα στην `PaperworkGate`
         // λίγες γραμμές πιο κάτω -- και όχι μόνο για μία κατάσταση.
-        // Η ίδια ερώτηση που κάνει ο ContractStatusController, με την ίδια
-        // απάντηση: σύμβαση που υπήρξε ενεργή δεν ακυρώνεται. Πριν τον γράφο,
-        // επειδή ο γράφος θα έλεγε «επιτρέπεται» για το Εκκρεμότητα →
-        // Ακυρώθηκε και θα προχωρούσαμε.
-        $wasActive = $this->cancellation->refusalOnMove($source, $target, $contractId);
-
-        if ($wasActive !== null) {
-            return new WP_REST_Response(['ok' => false, 'error' => $wasActive], 409);
-        }
-
         // Ο γράφος πρώτα: μια μετάβαση που δεν υπάρχει καθόλου απορρίπτεται
         // γι' αυτόν τον λόγο, όχι επειδή λείπει ένα χαρτί -- draft → active
         // είναι 409 (δεν υπάρχει τέτοια μετάβαση), όχι 422 (λείπουν

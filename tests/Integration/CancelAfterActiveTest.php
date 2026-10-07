@@ -1,30 +1,16 @@
 <?php
 
 /**
- * Μια σύμβαση που υπήρξε ενεργή δεν ακυρώνεται, από καμία πόρτα.
+ * Η ακύρωση μιας αίτησης που υπήρξε ενεργή (05/10/2026).
  *
- * Ο γράφος δεν έχει καμία ακύρωση κάτω από την `active` -- η `active` πάει
- * μόνο σε `terminated` ή πίσω σε `finalisation` (δες `ContractStatus::
- * allowedNext()`). Το `finalisation` όμως δέχεται και τις δύο ακυρώσεις, άρα
- * το ίδιο δίκλικο σχήμα παραμένει: Active → Finalisation → Ακύρωση θα
- * επέτρεπε αυτό που η απευθείας μετάβαση απαγορεύει.
+ * Ως τις 05/10 μια σύμβαση που υπήρξε ενεργή δεν ακυρωνόταν από καμία πόρτα·
+ * τερματιζόταν («Διακοπή»). Ο ιδιοκτήτης ένωσε Διακοπή και ακυρώσεις σε μία
+ * «Ακυρώθηκε» και αποφάσισε ότι η προμήθεια μιας αίτησης που δούλεψε μένει.
+ * Το αρχείο δοκιμάζει ακριβώς αυτό: η ακύρωση περνάει, και το ιστορικό
+ * κρίνει αν κρατιέται η προμήθεια.
  *
- * 07/09/2026: το αρχείο μεταφέρθηκε στο νέο λεξιλόγιο -- ο παλιός δρόμος
- * ήταν `new → processing → active`, με `pending` ως τη δίοδο της παράκαμψης·
- * ο νέος είναι `presale → registration → awaiting_signature → finalisation →
- * active`, με `finalisation` ως τη δίοδο. Ίδιο σχήμα σφάλματος, διαφορετικό
- * σταθμό.
- *
- * Τέσσερις διαδρομές γράφουν κατάσταση — η οθόνη κατάστασης, η αποθήκευση
- * σύμβασης, η μαζική ενέργεια και ο ίδιος ο `ContractLifecycle` για cron και
- * εισαγωγή — και το αρχείο τις δοκιμάζει και τις τέσσερις. Κανόνας που τον
- * τηρούν τρεις στις τέσσερις πόρτες δεν είναι κανόνας· είναι το σχήμα λάθους
- * που αυτό το CRM έχει ήδη πληρώσει οκτώ φορές.
- *
- * Η αντίθετη περίπτωση είναι εξίσου σημαντική και είναι εδώ: σύμβαση που δεν
- * υπήρξε ποτέ ενεργή ακυρώνεται κανονικά από την εκκρεμότητα. Χωρίς αυτήν, η
- * πύλη θα μπορούσε να μπλοκάρει τα πάντα και όλα τα υπόλοιπα tests θα ήταν
- * ακόμα πράσινα.
+ * Το δικαίωμα (`ecrm_exit_active`) για την έξοδο από Ενεργό το φυλάνε οι
+ * controllers και έχει δικά του tests· εδώ ο δρόμος είναι ο `ContractLifecycle`.
  *
  * @package EnergyCRM
  */
@@ -36,12 +22,10 @@ namespace EnergyCRM\Tests\Integration;
 use ECRM_Files;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
-use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\Tables;
 use EnergyCRM\Services;
-use WP_REST_Request;
 
 final class CancelAfterActiveTest extends IntegrationTestCase
 {
@@ -70,116 +54,35 @@ final class CancelAfterActiveTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    // --- η πόρτα του ContractLifecycle (cron, εισαγωγή) ---------------------
-
-    /** Χαρακτηρισμός: το απευθείας Ενεργή → Ακυρώθηκε ήταν ήδη κλειστό -- ο γράφος δεν το έχει καν. */
-    public function testTheDirectMoveWasAlreadyBlocked(): void
+    /** Η παλιά Διακοπή: Ενεργός → Ακυρώθηκε περνάει. */
+    public function testAnActiveContractCanBeCancelled(): void
     {
         $contractId = $this->activeContract();
 
-        self::assertFalse($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
-        self::assertSame('active', $this->statusOf($contractId));
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled'));
+        self::assertSame('cancelled', $this->statusOf($contractId));
     }
 
-    /** Και τώρα κλείνει και ο δρόμος των δύο βημάτων, μέσω finalisation. */
-    public function testTheDetourThroughFinalisationIsBlockedToo(): void
+    /** Και κρατάει την προμήθεια, γιατί το ιστορικό λέει ότι δούλεψε. */
+    public function testACancelledContractThatWasActiveKeepsItsCommission(): void
     {
         $contractId = $this->activeContract();
 
-        self::assertTrue($this->lifecycle->moveTo($contractId, 'finalisation'));
-        self::assertFalse($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
-        self::assertSame('finalisation', $this->statusOf($contractId));
+        $this->lifecycle->moveTo($contractId, 'finalisation');
+        $this->lifecycle->moveTo($contractId, 'cancelled');
+
+        self::assertTrue(Services::cancellationGate()->keepsCommission($contractId));
     }
 
-    /** Ο σωστός δρόμος μένει ανοιχτός — αλλιώς δεν θα υπήρχε τρόπος να κλείσει. */
-    public function testTerminatingAnActiveContractStillWorks(): void
-    {
-        $contractId = $this->activeContract();
-
-        self::assertTrue($this->lifecycle->moveTo($contractId, 'terminated'));
-        self::assertSame('terminated', $this->statusOf($contractId));
-    }
-
-    /**
-     * Σύμβαση που δεν υπήρξε ποτέ ενεργή ακυρώνεται κανονικά.
-     *
-     * Ίδια μετάβαση, ίδια κατάσταση αφετηρίας, αντίθετη απάντηση: αυτό που
-     * αλλάζει είναι μόνο το ιστορικό.
-     */
-    public function testAContractThatWasNeverActiveIsStillCancelledFromRegistration(): void
+    /** Ίδια μετάβαση, αντίθετη απάντηση: εδώ αλλάζει μόνο το ιστορικό. */
+    public function testAContractThatWasNeverActiveDoesNotKeepCommission(): void
     {
         $contractId = $this->submittedContract();
 
         self::assertTrue($this->lifecycle->moveTo($contractId, 'registration'));
-        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled_by_us'));
-        self::assertSame('cancelled_by_us', $this->statusOf($contractId));
-    }
-
-    // --- η πόρτα της οθόνης κατάστασης -------------------------------------
-
-    /** Και με λόγο, όχι με σιωπηλή αποτυχία. */
-    public function testTheStatusEndpointAnswersWithTheReason(): void
-    {
-        $contractId = $this->activeContract();
-
-        $this->lifecycle->moveTo($contractId, 'finalisation');
-
-        $request = new WP_REST_Request('POST', '/ecrm/v1/contracts/' . $contractId . '/status');
-        $request->set_body_params(['id' => $contractId, 'status' => 'cancelled_by_us']);
-
-        $response = rest_do_request($request);
-
-        self::assertSame(409, $response->get_status());
-        self::assertSame(CancellationGate::WAS_ACTIVE, $response->get_data()['error']);
-        self::assertSame('finalisation', $this->statusOf($contractId));
-    }
-
-    // --- η πόρτα της αποθήκευσης σύμβασης ----------------------------------
-
-    public function testTheSaveEndpointRefusesTheSameMove(): void
-    {
-        $contractId = $this->activeContract();
-
-        $this->lifecycle->moveTo($contractId, 'finalisation');
-
-        $request = new WP_REST_Request('POST', '/ecrm/v1/contracts');
-        $request->set_body_params(['contract_id' => $contractId, 'status' => 'cancelled_by_us']);
-
-        $response = rest_do_request($request);
-
-        self::assertSame(409, $response->get_status());
-        self::assertSame('finalisation', $this->statusOf($contractId));
-    }
-
-    // --- η πόρτα της μαζικής ενέργειας -------------------------------------
-
-    /**
-     * Η μαζική ακύρωση αφήνει πίσω τη σύμβαση που υπήρξε ενεργή.
-     *
-     * Δύο γραμμές στην ίδια παρτίδα, και στην ίδια κατάσταση: η μία ακυρώνεται,
-     * η άλλη όχι. Αν η πύλη δεν έφτανε ως εδώ, η μαζική ενέργεια θα ήταν ο
-     * εύκολος τρόπος να παρακαμφθεί ό,τι απαγορεύουν οι δύο οθόνες.
-     */
-    public function testTheBulkActionCancelsOnlyTheContractThatWasNeverActive(): void
-    {
-        $wasActive   = $this->activeContract();
-        $neverActive = $this->submittedContract();
-
-        $this->lifecycle->moveTo($wasActive, 'finalisation');
-        $this->lifecycle->moveTo($neverActive, 'registration');
-
-        $request = new WP_REST_Request('POST', '/ecrm/v1/contracts/bulk');
-        $request->set_body_params([
-            'ids'    => [$wasActive, $neverActive],
-            'action' => 'status',
-            'value'  => 'cancelled_by_us',
-        ]);
-
-        $response = rest_do_request($request);
-
-        self::assertSame(200, $response->get_status());
-        self::assertSame('finalisation', $this->statusOf($wasActive));
-        self::assertSame('cancelled_by_us', $this->statusOf($neverActive));
+        self::assertTrue($this->lifecycle->moveTo($contractId, 'cancelled'));
+        self::assertSame('cancelled', $this->statusOf($contractId));
+        self::assertFalse(Services::cancellationGate()->keepsCommission($contractId));
     }
 
     // --- fixtures ----------------------------------------------------------

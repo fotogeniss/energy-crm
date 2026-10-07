@@ -205,6 +205,6 @@ final class StatusDwellTest extends IntegrationTestCase
 
     public function testAStatusNobodyHasBeenInSaysNothing(): void
     {
-        self::assertNull($this->dwell->typicalDays('terminated', null));
+        self::assertNull($this->dwell->typicalDays('cancelled', null));
     }
 }

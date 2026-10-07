@@ -108,14 +108,14 @@ final class BulkStatusDraftExitGateTest extends IntegrationTestCase
         $response = $this->bulk([
             'ids'    => [$contractId],
             'action' => 'status',
-            'value'  => ContractStatus::CancelledByUs->value,
+            'value'  => ContractStatus::Cancelled->value,
         ]);
 
         $data = $response->get_data();
 
         self::assertSame(200, $response->get_status(), (string) ($data['error'] ?? ''));
         self::assertSame(1, $data['updated']);
-        self::assertSame(ContractStatus::CancelledByUs->value, $this->statusOf($contractId));
+        self::assertSame(ContractStatus::Cancelled->value, $this->statusOf($contractId));
     }
 
     // --- fixtures and helpers ------------------------------------------------

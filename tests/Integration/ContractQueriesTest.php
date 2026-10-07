@@ -98,7 +98,7 @@ final class ContractQueriesTest extends IntegrationTestCase
 
         $counts = $this->queries->countsByStatus(UserScope::forSelf($this->alice));
 
-        self::assertArrayNotHasKey('cancelled_by_us', $counts);
+        self::assertArrayNotHasKey('cancelled', $counts);
     }
 
     public function testTheTabsNeverCountAnotherPartnersContracts(): void
@@ -276,7 +276,7 @@ final class ContractQueriesTest extends IntegrationTestCase
     public function testDraftsAndCancellationsAreLeftOutEvenWhenTheyExpire(): void
     {
         $this->contractFor($this->alice, ['status' => 'draft', 'end_date' => $this->daysFromToday(10)]);
-        $this->contractFor($this->alice, ['status' => 'cancelled_by_us', 'end_date' => $this->daysFromToday(10)]);
+        $this->contractFor($this->alice, ['status' => 'cancelled', 'end_date' => $this->daysFromToday(10)]);
 
         self::assertSame([], $this->queries->expiring(UserScope::forSelf($this->alice), 30));
     }

@@ -169,10 +169,10 @@ final class DraftExitAfmTest extends IntegrationTestCase
     {
         $contractId = $this->makeDraft('');
 
-        $response = $this->changeStatus($contractId, ContractStatus::CancelledByUs->value);
+        $response = $this->changeStatus($contractId, ContractStatus::Cancelled->value);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
-        self::assertSame(ContractStatus::CancelledByUs->value, $this->statusOf($contractId));
+        self::assertSame(ContractStatus::Cancelled->value, $this->statusOf($contractId));
     }
 
     /**

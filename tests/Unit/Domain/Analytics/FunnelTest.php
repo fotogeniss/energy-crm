@@ -15,23 +15,21 @@ use PHPUnit\Framework\TestCase;
 final class FunnelTest extends TestCase
 {
     /**
-     * 07/09/2026: won = πληρωτέα (active) + ΔΙΑΚΟΠΗ (δούλεψε, δεν χάθηκε).
-     * lost = οι δύο ακυρώσεις. Ό,τι άλλο είναι ακόμα σε εξέλιξη.
+     * 05/10/2026: won = Ενεργός, lost = Ακυρώθηκε. Ό,τι άλλο είναι ακόμα
+     * σε εξέλιξη.
      */
-    public function testWonIsActivePlusTerminatedAndLostIsTheTwoCancellations(): void
+    public function testWonIsActiveAndLostIsCancelled(): void
     {
         $result = Funnel::from([
-            'presale'                => 3,
-            'active'                 => 2,
-            'terminated'             => 2,
-            'cancelled_by_us'        => 1,
-            'cancelled_by_customer'  => 1,
-            'registration'           => 10,
+            'presale'      => 3,
+            'active'       => 2,
+            'cancelled'    => 2,
+            'registration' => 10,
         ]);
 
-        self::assertSame(4, $result['won']);
+        self::assertSame(2, $result['won']);
         self::assertSame(2, $result['lost']);
-        self::assertSame(19, $result['total']);
+        self::assertSame(17, $result['total']);
     }
 
     /** In-flight work counts towards neither side, only the denominator. */

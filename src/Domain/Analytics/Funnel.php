@@ -14,6 +14,11 @@
  * partner for the passage of time, and would make the conversion rate fall
  * without a single application going wrong.
  *
+ * 05/10/2026: η ΔΙΑΚΟΠΗ καταργήθηκε και μπήκε στην «Ακυρώθηκε», οπότε από
+ * τα μετρητικά καταστάσεων δεν ξεχωρίζει πια μια αίτηση που δούλεψε και
+ * σταμάτησε από μια που δεν έγινε ποτέ. Κερδισμένη μετράει μόνο η Ενεργός,
+ * χαμένη κάθε Ακυρώθηκε.
+ *
  * Pure arithmetic, tested — these percentages end up in front of partners
  * comparing themselves to each other.
  *
@@ -57,7 +62,7 @@ final class Funnel
                 'count'  => $count,
             ];
 
-            if ($status->isPayable() || $status === ContractStatus::Terminated) {
+            if ($status->isPayable()) {
                 $won += $count;
                 continue;
             }

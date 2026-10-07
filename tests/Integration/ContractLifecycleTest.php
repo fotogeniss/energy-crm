@@ -90,10 +90,10 @@ final class ContractLifecycleTest extends IntegrationTestCase
      */
     public function testAMoveThePipelineForbidsIsRefused(): void
     {
-        $this->lifecycle->moveTo($this->contractId, 'cancelled_by_us');
+        $this->lifecycle->moveTo($this->contractId, 'cancelled');
 
         self::assertFalse($this->lifecycle->moveTo($this->contractId, 'registration'));
-        self::assertSame('cancelled_by_us', $this->statusOnDisk());
+        self::assertSame('cancelled', $this->statusOnDisk());
     }
 
     /**

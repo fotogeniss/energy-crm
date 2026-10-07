@@ -229,10 +229,11 @@ function primaryAction(status) {
 		case 'draft':              return { txt: 'Συνέχεια',      quiet: false };
 		case 'presale':            return { txt: 'Δικαιολογητικά', quiet: false };
 		case 'awaiting_signature': return { txt: 'Υπενθύμιση',    quiet: false };
-		case 'awaiting_sim':
-		case 'registration':
-		case 'finalisation':       return { txt: 'Παρακολούθηση', quiet: true };
-		default:                   return { txt: 'Άνοιγμα',       quiet: true };
+		case 'pending_issue':
+		case 'debt':               return { txt: 'Άνοιγμα',       quiet: false };
+		case 'active':
+		case 'cancelled':          return { txt: 'Άνοιγμα',       quiet: true };
+		default:                   return { txt: 'Παρακολούθηση', quiet: true };
 	}
 }
 
@@ -246,7 +247,10 @@ function renderContracts(view, d) {
 	// υπήρχε επειδή δύο ονόματα έδειχναν στο ίδιο βήμα. Το νέο μοντέλο έχει
 	// ένα (07/09/2026), οπότε κάθε κατάσταση παίρνει την καρτέλα της.
 	var tabs = '<button type="button" class="ecrm-tab' + (contractsState.status === '' ? ' is-on' : '') + '" data-status=""><span class="ecrm-tabdot ecrm-tabdot--all"></span>ΟΛΕΣ <b>' + (counts.all || 0) + '</b></button>';
+	// 05/10/2026: με δύο λίστες οι καταστάσεις έγιναν 18, οπότε καρτέλα
+	// παίρνουν μόνο όσες έχουν αιτήσεις, συν αυτή που είναι επιλεγμένη.
 	Object.keys(statuses).forEach(function (st) {
+		if (!counts[st] && contractsState.status !== st) return;
 		tabs += '<button type="button" class="ecrm-tab' + (contractsState.status === st ? ' is-on' : '') + '" data-status="' + st + '"><span class="ecrm-tabdot ecrm-tabdot--' + esc(st) + '"></span>' + esc(up(statuses[st])) + ' <b>' + (counts[st] || 0) + '</b></button>';
 	});
 

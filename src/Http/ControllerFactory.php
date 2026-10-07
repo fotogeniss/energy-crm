@@ -60,7 +60,6 @@ final class ControllerFactory
         $queries   = Services::contractQueries();
         $details   = Services::contractDetails();
         $draftExit = Services::draftExitGate();
-        $cancel    = Services::cancellationGate();
         $deletion  = Services::deletionGate();
 
         return [
@@ -80,7 +79,6 @@ final class ControllerFactory
                 Services::customers(),
                 $lifecycle,
                 $draftExit,
-                $cancel,
                 Services::paperworkGate(),
                 Services::requestKeys(),
                 Services::providerVisibility(),
@@ -91,7 +89,6 @@ final class ControllerFactory
                 Services::files(),
                 $lifecycle,
                 $draftExit,
-                $cancel,
                 $deletion,
                 Services::deletionLog()
             ),

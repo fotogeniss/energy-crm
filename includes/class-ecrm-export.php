@@ -123,7 +123,7 @@ class ECRM_Export {
 				'', // ΜΗΝΑΣ ΕΚΚΑΘΑΡΙΣΗΣ
 				'', // ΗΜΕΡΟΜΗΝΙΑ THALIS
 				$fmt( $r['start_date'] ),
-				( $r['status'] === 'terminated' ) ? $fmt( $r['updated_at'] ) : '',
+				( $r['status'] === 'cancelled' ) ? $fmt( $r['updated_at'] ) : '',
 				$fmt( $r['end_date'] ),
 			];
 		}
