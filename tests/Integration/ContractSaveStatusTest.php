@@ -71,7 +71,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
     {
         $contractId = $this->makeDraft();
 
-        $this->forceStatus($contractId, ContractStatus::CancelledByUs->value);
+        $this->forceStatus($contractId, ContractStatus::Cancelled->value);
 
         $response = $this->save([
             'contract_id' => $contractId,
@@ -81,7 +81,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
         self::assertSame(409, $response->get_status(), 'Η ανάσταση ακυρωμένης σύμβασης έπρεπε να απορριφθεί.');
 
         self::assertSame(
-            ContractStatus::CancelledByUs->value,
+            ContractStatus::Cancelled->value,
             $this->statusOf($contractId),
             'Η απόρριψη απάντησε 409 αλλά η γραμμή άλλαξε — άρνηση που γράφει είναι χειρότερη από καθόλου άρνηση.'
         );
@@ -99,7 +99,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
     /**
      * 2. A draft cannot jump the queue into a payable status.
      *
-     * Draft->allowedNext() is [presale, cancelled_by_us, cancelled_by_customer].
+     * Draft->allowedNext() is [presale, cancelled].
      * Active is not among them, and it is what makes a contract count for
      * commission — which is why this one is about money rather than tidiness.
      */

@@ -53,12 +53,11 @@ class ECRM_Notifications {
 	 * 07/09/2026: γράφτηκε στο νέο λεξιλόγιο. Είναι κυριολεκτικά «όλες οι μη
 	 * τερματικές πλην της `active`» -- ίδιο σύνολο με το
 	 * `DashboardRepository::NOT_OPEN`, από την ανάποδη.
+	 *
+	 * 05/10/2026: από το enum, γιατί οι ενδιάμεσες έγιναν πολλές.
 	 */
 	public static function open_statuses(): array {
-		return [
-			'draft', 'presale', 'registration', 'awaiting_signature',
-			'awaiting_sim', 'finalisation',
-		];
+		return array_merge( [ 'draft' ], \EnergyCRM\Domain\Contract\ContractStatus::intermediateValues() );
 	}
 
 	/**
@@ -502,7 +501,12 @@ class ECRM_Notifications {
 		// καμπανάκι θα ξανακρεμαστεί εκεί όταν υπάρχει (commit 255). Ως τότε
 		// ειδοποιεί για την ακύρωση από εμάς, που είναι το άλλο γεγονός που
 		// ζητά ανθρώπινη ενέργεια σε αυτή τη διαδρομή.
-		if ( $to !== 'cancelled_by_us' ) {
+		// 05/10/2026: η Εκκρεμότητα ξαναέγινε κατάσταση, οπότε το email
+		// ξαναπαίρνει τη δουλειά για την οποία γράφτηκε. Μαζί και οι άλλες
+		// καταστάσεις που θέλουν τον συνεργάτη: Οφειλή και απορρίψεις.
+		$status = \EnergyCRM\Domain\Contract\ContractStatus::tryFromSlug( $to );
+		$wanted = [ 'pending_issue', 'debt', 'thalis_rejected', 'mnp_reject' ];
+		if ( null === $status || ! in_array( $to, $wanted, true ) ) {
 			return;
 		}
 		if ( class_exists( 'ECRM_Admin' ) && ! ECRM_Admin::get( 'notify_email', '1' ) ) {
@@ -522,10 +526,10 @@ class ECRM_Notifications {
 		}
 		$name    = $row ? ( $row['company_name'] ?: trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) ) ) : '';
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' );
-		$subject = '⚠ Εκκρεμεί: ' . ( $row['code'] ?? '' ) . ' - ' . $name;
+		$subject = '⚠ ' . $status->label() . ': ' . ( $row['code'] ?? '' ) . ' - ' . $name;
 		$body    = sprintf(
-			"Η σύμβαση %s (%s) μπήκε σε κατάσταση «Εκκρεμεί» και χρειάζεται ενέργεια.\n\nΣυνδέσου στο CRM για λεπτομέρειες.\n\n%s",
-			$row['code'] ?? '', $name ?: 'πελάτης', $company
+			"Η σύμβαση %s (%s) μπήκε σε κατάσταση «%s» και χρειάζεται ενέργεια.\n\nΣυνδέσου στο CRM για λεπτομέρειες.\n\n%s",
+			$row['code'] ?? '', $name ?: 'πελάτης', $status->label(), $company
 		);
 		wp_mail( $user->user_email, $subject, $body );
 	}

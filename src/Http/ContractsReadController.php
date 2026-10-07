@@ -25,6 +25,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\SignatureRoles;
+use EnergyCRM\Domain\Contract\StatusTrack;
 use EnergyCRM\Domain\Document\SystemKind;
 use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Persistence\ContractDetails;
@@ -40,9 +41,7 @@ final class ContractsReadController implements Controller
     /** Καταστάσεις που δεν περιμένουν τίποτα — δεν «κάθονται», τελείωσαν. */
     private const SETTLED_STATUSES = [
         'active',
-        'terminated',
-        'cancelled_by_us',
-        'cancelled_by_customer',
+        'cancelled',
     ];
 
     public function __construct(
@@ -202,9 +201,14 @@ final class ContractsReadController implements Controller
             'contract'         => $row,
             'statuses'         => ECRM_DB::statuses(),
             'activation_types' => ECRM_DB::activation_types(),
+            // 05/10/2026: μόνο οι καταστάσεις της λίστας της αίτησης (ρεύμα,
+            // αέριο ή κινητή), ίδιο φίλτρο με τον ContractLifecycle.
             'allowed_next'     => $currentStatus === null
                 ? array_keys(ECRM_DB::statuses())
-                : array_map(static fn (ContractStatus $s): string => $s->value, $currentStatus->allowedNext()),
+                : array_map(
+                    static fn (ContractStatus $s): string => $s->value,
+                    $currentStatus->allowedNextFor(StatusTrack::of($row))
+                ),
         ], 200);
     }
 

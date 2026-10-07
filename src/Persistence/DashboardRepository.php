@@ -34,21 +34,24 @@ final class DashboardRepository
      * `pending`, που έλεγε «κάτι την μπλοκάρει» χωρίς να λέει τι· αυτό έγινε
      * εμπόδιο σε δικό του πίνακα και θα ξαναμπεί εδώ όταν υπάρχει.
      *
+     * 05/10/2026: τα εμπόδια δεν χτίστηκαν. Η Εκκρεμότητα και η Οφειλή έγιναν
+     * καταστάσεις, και θέλουν τον συνεργάτη, οπότε μπαίνουν εδώ.
+     *
      * @var list<string>
      */
-    private const NEEDS_ME = ['presale', 'awaiting_signature', 'draft'];
+    private const NEEDS_ME = ['presale', 'awaiting_signature', 'draft', 'pending_issue', 'debt'];
 
     /**
      * Οι στατικές καταστάσεις που ΔΕΝ μετρούν ως «ανοιχτή» αίτηση: η
-     * `active` ολοκλήρωσε την πορεία της (πάει στο «Κλεισμένες»), οι τρεις
-     * τερματικές δεν μετρούν πουθενά. Ίδια λίστα με το
+     * `active` ολοκλήρωσε την πορεία της (πάει στο «Κλεισμένες»), η
+     * `cancelled` (από 05/10/2026 η μόνη τερματική) δεν μετράει πουθενά. Ίδια λίστα με το
      * `ContractStatus::isTerminal()` συν την `active`, αλλά εδώ γραμμένη ως
      * τιμές SQL — το enum ζει στο Domain, εδώ ζει η Persistence, και δεν
      * χρειάζεται τρίτο επίπεδο για τέσσερις λέξεις.
      *
      * @var list<string>
      */
-    private const NOT_OPEN = ['active', 'terminated', 'cancelled_by_us', 'cancelled_by_customer'];
+    private const NOT_OPEN = ['active', 'cancelled'];
 
     private CustomerFields $fields;
 

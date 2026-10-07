@@ -88,7 +88,7 @@ final class ContractDeletionGateTest extends IntegrationTestCase
     {
         [$contractId, $path] = $this->contractWithDocument();
         $this->markSigned($contractId);
-        $this->contracts->update($contractId, UserScope::forSelf($this->actor), ['status' => 'cancelled_by_us']);
+        $this->contracts->update($contractId, UserScope::forSelf($this->actor), ['status' => 'cancelled']);
 
         $response = rest_do_request(new WP_REST_Request('DELETE', '/ecrm/v1/contracts/' . $contractId));
 

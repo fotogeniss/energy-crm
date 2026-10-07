@@ -159,8 +159,8 @@ final class DashboardTilesTest extends IntegrationTestCase
         $this->contractFor('presale');
         $this->contractFor('registration');
         $this->contractFor('active');
-        $this->contractFor('cancelled_by_us');
-        $this->contractFor('terminated');
+        $this->contractFor('cancelled');
+        $this->contractFor('cancelled');
 
         $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
 
@@ -184,7 +184,7 @@ final class DashboardTilesTest extends IntegrationTestCase
         $this->createdDaysAgo($old, 10);
 
         // Φρέσκια αλλά ακυρωμένη: εκτός και από τα δύο νούμερα.
-        $this->contractFor('cancelled_by_us');
+        $this->contractFor('cancelled');
 
         $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
 
@@ -314,7 +314,7 @@ final class DashboardTilesTest extends IntegrationTestCase
 
     public function testClosedMonthExcludesAContractThatWasCancelledAfter(): void
     {
-        $wonThenCancelled = $this->contractFor('cancelled_by_us');
+        $wonThenCancelled = $this->contractFor('cancelled');
         $this->becameActiveDaysAgo($wonThenCancelled, 1);
         $this->stamp($wonThenCancelled, ['payout_amount' => 200]);
 

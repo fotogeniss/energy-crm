@@ -20,21 +20,13 @@ use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Commission\CommissionAmount;
 use EnergyCRM\Domain\Commission\MonthlyTotals;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\CommissionRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
 final class CommissionsController implements Controller
 {
-    /** Not yet payable, but on the way there. */
-    private const IN_PROGRESS = [
-        'presale',
-        'registration',
-        'awaiting_signature',
-        'awaiting_sim',
-        'finalisation',
-    ];
-
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly CommissionRepository $commissions,
@@ -109,7 +101,7 @@ final class CommissionsController implements Controller
         // Ζωντανός υπολογισμός, σωστά: τίποτα από αυτά δεν έχει μπει σε
         // παρτίδα, άρα δεν υπάρχει στιγμιότυπο να σεβαστούμε. Ίδια διόρθωση
         // εδώ: στρογγυλεύεται πριν την πρόσθεση, όχι μετά.
-        foreach ($this->commissions->inProgress($scope, self::IN_PROGRESS) as $row) {
+        foreach ($this->commissions->inProgress($scope, ContractStatus::intermediateValues()) as $row) {
             $expected += round((float) ECRM_Commissions::amount_for($row), 2);
         }
 

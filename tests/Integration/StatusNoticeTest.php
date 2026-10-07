@@ -20,9 +20,8 @@
  *   - Το **καμπανάκι** (`ContractNotices::ANNOUNCED`) χτυπά και για τις δύο
  *     ακυρώσεις, δική μας και του πελάτη -- και οι δύο τερματίζουν τη δουλειά
  *     του συνεργάτη το ίδιο.
- *   - Το **email** (`ECRM_Notifications::notify_status_change()`) ελέγχει
- *     ρητά `cancelled_by_us` και μόνο -- η ακύρωση από τον πελάτη δεν
- *     χρειάζεται mail, ο συνεργάτης το βλέπει ήδη στο καμπανάκι.
+ *   - Το **email** (`ECRM_Notifications::notify_status_change()`) πάει από
+ *     05/10/2026 για Εκκρεμότητα, Οφειλή και απορρίψεις, όχι για ακύρωση.
  *
  * Το αρχείο δοκιμάζει και το αντίθετο, που είναι εξίσου σημαντικό: οι
  * ενδιάμεσες καταστάσεις **δεν** χτυπούν καμπανάκι ούτε στέλνουν email.
@@ -90,7 +89,7 @@ final class StatusNoticeTest extends IntegrationTestCase
     /** Η ακύρωση από εμάς φτάνει στον κάτοχο, όχι σε αυτόν που την έβαλε. */
     public function testACancellationByUsReachesTheOwner(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_us');
+        $this->moveTo($this->contractOf($this->owner), 'cancelled');
 
         self::assertCount(1, $this->noticesFor($this->owner));
     }
@@ -98,20 +97,15 @@ final class StatusNoticeTest extends IntegrationTestCase
     /** Και στον από πάνω του: η προμήθεια ανεβαίνει το ίδιο δέντρο. */
     public function testTheManagerIsToldToo(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_us');
+        $this->moveTo($this->contractOf($this->owner), 'cancelled');
 
         self::assertCount(1, $this->noticesFor($this->manager));
     }
 
-    /**
-     * Η ακύρωση από τον πελάτη χτυπά το ίδιο καμπανάκι.
-     *
-     * Το `ANNOUNCED` καλύπτει και τις δύο ακυρώσεις -- τερματίζουν τη δουλειά
-     * του συνεργάτη το ίδιο, όποιος κι αν την αποφάσισε.
-     */
-    public function testACustomerCancellationAlsoRingsTheBell(): void
+    /** 05/10/2026: η Εκκρεμότητα ξαναέγινε κατάσταση και χτυπά καμπανάκι. */
+    public function testAPendingIssueAlsoRingsTheBell(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_customer');
+        $this->moveTo($this->contractOf($this->owner), 'pending_issue');
 
         self::assertCount(1, $this->noticesFor($this->owner));
     }
@@ -134,7 +128,7 @@ final class StatusNoticeTest extends IntegrationTestCase
     /** Ο παραλήπτης βγαίνει από τη σύμβαση, όχι από αυτόν που πάτησε το κουμπί. */
     public function testTheEmailGoesToTheOwnerAndNotTheActor(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_us');
+        $this->moveTo($this->contractOf($this->owner), 'pending_issue');
 
         $ownerEmail   = (string) get_userdata($this->owner)->user_email;
         $managerEmail = (string) get_userdata($this->manager)->user_email;
@@ -144,14 +138,12 @@ final class StatusNoticeTest extends IntegrationTestCase
     }
 
     /**
-     * Η ακύρωση από τον πελάτη δεν στέλνει email -- μόνο η δική μας.
-     *
-     * Ο συνεργάτης το βλέπει ήδη στο καμπανάκι (πιο πάνω)· το email είναι
-     * μόνο για ό,τι αποφασίσαμε εμείς και χρειάζεται τη δική του προσοχή.
+     * Η ακύρωση δεν στέλνει email: ο συνεργάτης το βλέπει στο καμπανάκι και
+     * έχει και εργασία. Το email είναι για ό,τι θέλει κίνηση από αυτόν.
      */
-    public function testNoEmailForACustomerCancellation(): void
+    public function testNoEmailForACancellation(): void
     {
-        $this->moveTo($this->contractOf($this->owner), 'cancelled_by_customer');
+        $this->moveTo($this->contractOf($this->owner), 'cancelled');
 
         self::assertSame([], $this->recipients);
     }

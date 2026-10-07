@@ -7,7 +7,7 @@
  *
  * Το `RejectionFollowUp` άκουγε ως τις 07/09 το παλιό status `Rejected` --
  * φτανόταν ΜΟΝΟ όταν ο πάροχος είχε πράγματι απορρίψει την αίτηση. Το (254)
- * συγχώνευσε το `Rejected` και το γενικό `Cancelled` σε ένα `cancelled_by_us`
+ * συγχώνευσε το `Rejected` και το γενικό `Cancelled` σε ένα `cancelled_by_us` (από 05/10/2026 ξανά `cancelled`)
  * (`MigrateStatusVocabulary::MAP`), και η κλάση ξανασυνδέθηκε στο νέο status.
  *
  * Το πρόβλημα: το `cancelled_by_us` καλύπτει πλέον και τους **τρεις** λόγους
@@ -51,48 +51,45 @@ final class RejectionFollowUpTest extends IntegrationTestCase
         $this->owner      = $this->makePartner();
     }
 
-    /** Κάθε ακύρωση «από εμάς» αφήνει εργασία -- ανεξαρτήτως λόγου, όχι μόνο απόρριψη παρόχου. */
-    public function testACancellationByUsCreatesAFollowUpTask(): void
+    /** 05/10/2026: κάθε «Ακυρώθηκε» αφήνει εργασία. */
+    public function testACancellationCreatesAFollowUpTask(): void
     {
         $contractId = $this->contractOf($this->owner);
 
-        $this->moveTo($contractId, 'cancelled_by_us');
+        $this->moveTo($contractId, 'cancelled');
 
         $task = $this->taskFor($contractId);
 
-        self::assertNotNull($task, 'Καμία εργασία δεν δημιουργήθηκε για ακύρωση από εμάς.');
+        self::assertNotNull($task, 'Καμία εργασία δεν δημιουργήθηκε για την ακύρωση.');
         self::assertSame($this->owner, (int) $task['assigned_to']);
         self::assertSame('high', $task['priority']);
         self::assertSame('open', $task['status']);
     }
 
-    /**
-     * Το κείμενο δεν λέει πλέον «ο πάροχος απέρριψε» -- αυτό ήταν το ίδιο το
-     * bug: μια ακύρωση λόγω δέσμευσης συμβολαίου ή ημιτελών δικαιολογητικών
-     * δεν έχει καμία σχέση με τον πάροχο, και το παλιό κείμενο το ισχυριζόταν
-     * ούτως ή άλλως.
-     */
-    public function testTheTaskTextDoesNotClaimAProviderRejection(): void
+    /** Η ακύρωση δεν ισχυρίζεται ότι την απέρριψε ο πάροχος. */
+    public function testTheCancellationTextDoesNotClaimAProviderRejection(): void
     {
         $contractId = $this->contractOf($this->owner);
 
-        $this->moveTo($contractId, 'cancelled_by_us');
+        $this->moveTo($contractId, 'cancelled');
 
         $task = $this->taskFor($contractId);
 
         self::assertNotNull($task);
-        self::assertStringNotContainsString('πάροχ', $task['title']);
         self::assertStringNotContainsString('πάροχ', $task['note']);
     }
 
-    /** Η ακύρωση από τον πελάτη δεν δημιουργεί εργασία -- μόνο η δική μας. */
-    public function testACustomerCancellationCreatesNoTask(): void
+    /** Η απόρριψη ΘΑΛΗΣ είναι απόρριψη παρόχου, και το λέει. */
+    public function testAThalisRejectionCreatesATaskThatSaysSo(): void
     {
         $contractId = $this->contractOf($this->owner);
 
-        $this->moveTo($contractId, 'cancelled_by_customer');
+        $this->moveTo($contractId, 'thalis_rejected');
 
-        self::assertNull($this->taskFor($contractId));
+        $task = $this->taskFor($contractId);
+
+        self::assertNotNull($task);
+        self::assertStringContainsString('πάροχ', $task['note']);
     }
 
     /** Ένα συνηθισμένο βήμα δεν δημιουργεί εργασία. */

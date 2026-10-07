@@ -44,12 +44,12 @@ class ECRM_Messaging {
 	public static function default_templates(): array {
 		return [
 			'awaiting_signature'    => 'Αγαπητέ/ή {name}, η αίτησή σας {code} αναμένει την υπογραφή σας. Υπογράψτε εδώ: {track} — {company}',
-			'awaiting_sim'          => '{name}, λάβαμε την υπογραφή σας για την αίτηση {code}. Η κάρτα SIM είναι καθ\' οδόν. — {company}',
+			'to_finalisation'       => '{name}, λάβαμε την υπογραφή σας για την αίτηση {code}. — {company}',
+			'signature_complete'    => '{name}, λάβαμε την υπογραφή σας για την αίτηση {code}. — {company}',
+			'awaiting_sim'          => '{name}, η κάρτα SIM για την αίτηση {code} είναι καθ\' οδόν. — {company}',
 			'finalisation'          => '{name}, η αίτησή σας {code} στάλθηκε στον πάροχο για ενεργοποίηση. Παρακολουθήστε την εδώ: {track} — {company}',
 			'active'                => 'Καλώς ήρθατε! Η σύμβασή σας {code} ({provider}) ενεργοποιήθηκε. — {company}',
-			'terminated'            => '{name}, η σύμβασή σας {code} διακόπηκε. Για διευκρινίσεις επικοινωνήστε μαζί μας. — {company}',
-			'cancelled_by_us'       => '{name}, η αίτησή σας {code} ακυρώθηκε. Για διευκρινίσεις επικοινωνήστε μαζί μας. — {company}',
-			'cancelled_by_customer' => '{name}, η αίτησή σας {code} ακυρώθηκε κατόπιν αιτήματός σας. — {company}',
+			'cancelled'             => '{name}, η αίτησή σας {code} ακυρώθηκε. Για διευκρινίσεις επικοινωνήστε μαζί μας. — {company}',
 		];
 	}
 

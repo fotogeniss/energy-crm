@@ -26,7 +26,7 @@ final class ProviderStatusMapTest extends TestCase
         $resolved = ProviderStatusMap::empty()->resolve(['ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ', 'ΑΚΥΡΩΘΗΚΕ']);
 
         self::assertSame(
-            ['ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ' => 'active', 'ΑΚΥΡΩΘΗΚΕ' => 'cancelled_by_us'],
+            ['ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ' => 'active', 'ΑΚΥΡΩΘΗΚΕ' => 'cancelled'],
             $resolved['map']
         );
         self::assertSame(['ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ', 'ΑΚΥΡΩΘΗΚΕ'], $resolved['guessed']);
@@ -99,31 +99,37 @@ final class ProviderStatusMapTest extends TestCase
     /**
      * Οι ευρετικές του `GUESSES`, καρφωμένες μία προς μία.
      *
-     * Ξαναγράφτηκαν στο νέο λεξιλόγιο στις 07/09/2026 (δες το σχόλιο πάνω από
-     * το `GUESSES`): δύο μοτίβα έφυγαν χωρίς αντικατάσταση (`εκκρεμ|pending`,
-     * `επιλ|resolv` -- έγιναν εμπόδια, δεν ζουν πια στη στήλη status), και οι
-     * δύο απορρίψεις/ακυρώσεις παρόχου συγκλίνουν και οι δύο στο
-     * `cancelled_by_us` (το Excel δεν λέει ποιος αποφάσισε). Δεν είναι πια «οι
-     * ίδιες που ζούσαν στο JavaScript» -- είναι η επόμενη γενιά τους, και αυτό
-     * το test τις καρφώνει όπως είναι σήμερα, ώστε η επόμενη αλλαγή να είναι
-     * ρητή κι όχι σιωπηλή.
+     * Ξαναγράφτηκαν στο λεξιλόγιο της 05/10/2026: η εκκρεμότητα έγινε ξανά
+     * κατάσταση, ακύρωση/απόρριψη/διακοπή πάνε όλες στην «Ακυρώθηκε», και
+     * μπήκαν οι νέες καταστάσεις ρεύματος και κινητής. Το test τις καρφώνει
+     * όπως είναι σήμερα, ώστε η επόμενη αλλαγή να είναι ρητή κι όχι σιωπηλή.
      */
     public function testTheHeuristicsMatchTheCurrentVocabulary(): void
     {
         $cases = [
-            'ΕΝΕΡΓΗ ΠΑΡΟΧΗ'    => 'active',
-            'ΑΚΥΡΩΘΗΚΕ'        => 'cancelled_by_us',
-            'ΑΠΟΡΡΙΦΘΗΚΕ'      => 'cancelled_by_us',
-            'ΕΚΚΡΕΜΕΙ ΕΓΓΡΑΦΟ' => '',
-            'ΔΡΟΜΟΛΟΓΗΘΗΚΕ'    => 'finalisation',
-            'ΕΠΙΛΥΘΗΚΕ'        => '',
-            'ΠΡΟΣ ΥΠΟΓΡΑΦΗ'    => 'awaiting_signature',
-            'ΘΕΛΕΙ SIM'        => 'awaiting_sim',
-            'ΣΕ ΕΠΕΞΕΡΓΑΣΙΑ'   => 'registration',
-            'ΤΕΡΜΑΤΙΣΤΗΚΕ'     => 'terminated',
-            'ΝΕΑ ΑΙΤΗΣΗ'       => 'presale',
-            'active'           => 'active',
-            'CANCELLED'        => 'cancelled_by_us',
+            'ΕΝΕΡΓΗ ΠΑΡΟΧΗ'          => 'active',
+            'ΑΚΥΡΩΘΗΚΕ'              => 'cancelled',
+            'ΑΠΟΡΡΙΦΘΗΚΕ'            => 'cancelled',
+            'ΕΚΚΡΕΜΕΙ ΕΓΓΡΑΦΟ'       => 'pending_issue',
+            'ΔΡΟΜΟΛΟΓΗΘΗΚΕ'          => 'finalisation',
+            'ΠΡΟΣ ΟΡΙΣΤΙΚΟΠΟΙΗΣΗ'    => 'to_finalisation',
+            'ΕΠΙΛΥΘΗΚΕ'              => '',
+            'ΠΡΟΣ ΥΠΟΓΡΑΦΗ'          => 'awaiting_signature',
+            'ΟΛΟΚΛΗΡΩΣΗ ΥΠΟΓΡΑΦΗΣ'   => 'signature_complete',
+            'ΘΕΛΕΙ SIM'              => 'awaiting_sim',
+            'ΑΝΑΜΟΝΗ ΠΑΡΑΔΟΣΗΣ SIM'  => 'awaiting_sim',
+            'ΠΑΡΑΔΟΣΗ SIM'           => 'sim_delivered',
+            'ΣΕ ΕΠΕΞΕΡΓΑΣΙΑ'         => 'registration',
+            'ΤΕΡΜΑΤΙΣΤΗΚΕ'           => 'cancelled',
+            'ΝΕΑ ΑΙΤΗΣΗ'             => 'presale',
+            'ΕΠΙΒΕΒΑΙΩΣΗ ΘΑΛΗΣ'      => 'thalis_confirmed',
+            'ΑΠΟΡΡΙΨΗ ΘΑΛΗΣ'         => 'thalis_rejected',
+            'ΟΦΕΙΛΗ'                 => 'debt',
+            'ΕΠΑΝΕΛΕΓΧΟΣ'            => 'recheck',
+            'FOR REVIEW'             => 'for_review',
+            'MP REJECT'              => 'mnp_reject',
+            'active'                 => 'active',
+            'CANCELLED'              => 'cancelled',
             ''                 => '',
         ];
 

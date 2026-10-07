@@ -472,7 +472,9 @@ function renderDetail(view, d) {
 		// στέλνει σιωπηλά: ο SignLinkController απαντά needs_confirm και ο
 		// χρήστης επιβεβαιώνει πρώτα ότι σβήνει την παλιά υπογραφή.
 		// ΑΦΟΡΑ ΟΛΟΥΣ ΤΟΥΣ ΠΑΡΟΧΟΥΣ — καμία σχέση με energy_type/Orizon.
-		( [ 'draft', 'presale', 'registration', 'awaiting_signature', 'awaiting_sim', 'finalisation' ].indexOf( c.status ) !== -1
+		// 05/10/2026: όλες οι ενδιάμεσες πάνε πλέον ελεύθερα σε Αναμονή
+		// υπογραφής, οπότε το κουμπί κρύβεται μόνο σε Ενεργό και Ακυρώθηκε.
+		( c.status !== 'active' && c.status !== 'cancelled'
 			? '<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>'
 			: '' ) +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +

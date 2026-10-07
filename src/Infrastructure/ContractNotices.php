@@ -68,7 +68,13 @@ final class ContractNotices
      *
      * @var list<ContractStatus>
      */
-    private const ANNOUNCED = [ContractStatus::CancelledByUs, ContractStatus::CancelledByCustomer];
+    private const ANNOUNCED = [
+        ContractStatus::PendingIssue,
+        ContractStatus::Debt,
+        ContractStatus::ThalisRejected,
+        ContractStatus::MnpReject,
+        ContractStatus::Cancelled,
+    ];
 
     public function __construct(
         private readonly ContractDetails $details,
@@ -126,9 +132,10 @@ final class ContractNotices
 
         $title = $status->label() . ' — ' . (string) ($row['code'] ?? '');
         $body   = $this->customerName($row) . ': η αίτηση ' . match ($to) {
-            ContractStatus::CancelledByUs->value       => 'ακυρώθηκε από εμάς -- δημιουργήθηκε εργασία.',
-            ContractStatus::CancelledByCustomer->value => 'ακυρώθηκε από τον πελάτη.',
-            default                                    => 'χρειάζεται ενέργεια.',
+            ContractStatus::Cancelled->value      => 'ακυρώθηκε -- δημιουργήθηκε εργασία.',
+            ContractStatus::ThalisRejected->value,
+            ContractStatus::MnpReject->value      => 'απορρίφθηκε από τον πάροχο -- δημιουργήθηκε εργασία.',
+            default                               => 'χρειάζεται ενέργεια.',
         };
 
         $this->tell($row, 'status', $title, $body, $contractId);

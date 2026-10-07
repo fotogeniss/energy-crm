@@ -1,6 +1,9 @@
 <?php
 
 /**
+ * Το μοντέλο καταστάσεων της 05/10/2026: δύο λίστες (ρεύμα/αέριο, κινητή),
+ * ελεύθερη κίνηση στις ενδιάμεσες, μία «Ακυρώθηκε».
+ *
  * @package EnergyCRM
  */
 
@@ -9,7 +12,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Unit\Domain\Contract;
 
 use EnergyCRM\Domain\Contract\ContractStatus;
-use PHPUnit\Framework\Attributes\DataProvider;
+use EnergyCRM\Domain\Contract\StatusTrack;
 use PHPUnit\Framework\TestCase;
 
 final class ContractStatusTest extends TestCase
@@ -18,7 +21,8 @@ final class ContractStatusTest extends TestCase
     {
         self::assertSame('awaiting_signature', ContractStatus::AwaitingSignature->value);
         self::assertSame('presale', ContractStatus::Presale->value);
-        self::assertSame('terminated', ContractStatus::Terminated->value);
+        self::assertSame('awaiting_sim', ContractStatus::AwaitingSim->value);
+        self::assertSame('cancelled', ContractStatus::Cancelled->value);
     }
 
     public function testEveryStatusHasALabel(): void
@@ -28,67 +32,62 @@ final class ContractStatusTest extends TestCase
         }
     }
 
-    /**
-     * The whole point of the exercise: a terminal contract is finished, and
-     * reviving one would rewrite commercial history that has already been
-     * reported and paid on.
-     */
-    #[DataProvider('terminalStatuses')]
-    public function testNothingLeavesATerminalStatus(ContractStatus $terminal): void
+    /** Η λίστα του ρεύματος, με τη σειρά του χαρτιού του ιδιοκτήτη. */
+    public function testThePowerListIsThePaperOne(): void
     {
-        self::assertTrue($terminal->isTerminal());
-        self::assertSame([], $terminal->allowedNext());
+        self::assertSame(
+            [
+                'Πρόχειρο', 'Presale', 'Καταχώρηση', 'Αναμονή υπογραφής', 'Προς οριστικοποίηση',
+                'Οριστικοποίηση', 'Επιβεβαίωση ΘΑΛΗΣ', 'Απόρριψη ΘΑΛΗΣ', 'Εκκρεμότητα',
+                'Επανέλεγχος', 'Ενεργός', 'Ακυρώθηκε',
+            ],
+            self::labelsOf(StatusTrack::POWER)
+        );
+    }
 
-        foreach (ContractStatus::cases() as $target) {
-            if ($target === $terminal) {
-                continue;
-            }
+    public function testGasIsPowerWithoutThalis(): void
+    {
+        $power = self::labelsOf(StatusTrack::POWER);
+        $gas   = self::labelsOf(StatusTrack::GAS);
 
-            self::assertFalse(
-                $terminal->canMoveTo($target),
-                $terminal->value . ' must not move to ' . $target->value
-            );
+        self::assertSame(
+            array_values(array_diff($power, ['Επιβεβαίωση ΘΑΛΗΣ', 'Απόρριψη ΘΑΛΗΣ'])),
+            $gas
+        );
+    }
+
+    /** Η λίστα της κινητής Orizon, με τη σειρά του χαρτιού. */
+    public function testTheMobileListIsThePaperOne(): void
+    {
+        self::assertSame(
+            [
+                'Πρόχειρο', 'Presale', 'Καταχώρηση', 'Αναμονή υπογραφής', 'Ολοκλήρωση υπογραφής',
+                'Αναμονή παράδοσης SIM', 'Παράδοση SIM', 'Οριστικοποίηση', 'Εκκρεμότητα',
+                'Οφειλή', 'Ενεργός', 'For review', 'MP reject', 'Ακυρώθηκε',
+            ],
+            self::labelsOf(StatusTrack::MOBILE)
+        );
+    }
+
+    public function testNothingLeavesCancelled(): void
+    {
+        self::assertTrue(ContractStatus::Cancelled->isTerminal());
+        self::assertSame([], ContractStatus::Cancelled->allowedNext());
+    }
+
+    public function testCancelledIsTheOnlyTerminalAndTheOnlyCancellation(): void
+    {
+        foreach (ContractStatus::cases() as $status) {
+            $expected = $status === ContractStatus::Cancelled;
+
+            self::assertSame($expected, $status->isTerminal(), $status->value);
+            self::assertSame($expected, $status->isCancellation(), $status->value);
         }
-    }
-
-    /** @return array<string, array{0: ContractStatus}> */
-    public static function terminalStatuses(): array
-    {
-        return [
-            'terminated'             => [ContractStatus::Terminated],
-            'cancelled_by_us'        => [ContractStatus::CancelledByUs],
-            'cancelled_by_customer'  => [ContractStatus::CancelledByCustomer],
-        ];
-    }
-
-    /**
-     * 2026-08-24: όχι πια απαγορευμένο, σκόπιμα — η δεύτερη υπογραφή είναι
-     * γνήσια ανάγκη (λάθος που φάνηκε μετά, ή ο πάροχος γύρισε πίσω την
-     * αίτηση). Ο ίδιος ο πίνακας πλέον επιτρέπει Finalisation ->
-     * AwaitingSignature και AwaitingSim -> AwaitingSignature (κανόνας Κ7,
-     * "Πίσω" στο ContractStatus::allowedNext()) — η μόνη προστασία από ένα
-     * τυχαίο κλικ είναι στο SignLinkController::create() (confirm_resend),
-     * όχι εδώ. Ο γράφος λέει μόνο ποια μετάβαση είναι δομικά νόμιμη, όχι
-     * πότε επιτρέπεται να συμβεί.
-     */
-    public function testFinalisationCanReturnForANewSignature(): void
-    {
-        self::assertTrue(ContractStatus::Finalisation->canMoveTo(ContractStatus::AwaitingSignature));
-    }
-
-    /** @see testFinalisationCanReturnForANewSignature */
-    public function testAwaitingSimCanReturnForANewSignature(): void
-    {
-        self::assertTrue(ContractStatus::AwaitingSim->canMoveTo(ContractStatus::AwaitingSignature));
     }
 
     public function testNoStatusEverReturnsToDraft(): void
     {
         foreach (ContractStatus::cases() as $status) {
-            if ($status === ContractStatus::Draft) {
-                continue;
-            }
-
             self::assertFalse(
                 $status->canMoveTo(ContractStatus::Draft),
                 $status->value . ' must not return to draft'
@@ -96,66 +95,62 @@ final class ContractStatusTest extends TestCase
         }
     }
 
-    public function testAnActiveSupplyCannotBeRewoundIntoRegistration(): void
+    public function testADraftCanOnlyBeSubmittedOrCancelled(): void
     {
-        self::assertFalse(ContractStatus::Active->canMoveTo(ContractStatus::Registration));
-        self::assertTrue(ContractStatus::Active->canMoveTo(ContractStatus::Terminated));
+        self::assertSame(
+            [ContractStatus::Presale, ContractStatus::Cancelled],
+            ContractStatus::Draft->allowedNext()
+        );
     }
 
-    public function testEveryNonTerminalStatusExceptActiveCanBeCancelled(): void
+    /** Επιλογή του ιδιοκτήτη: ελεύθερα ανάμεσα στις ενδιάμεσες. */
+    public function testEveryIntermediateReachesEveryOtherAndActiveAndCancelled(): void
     {
-        foreach (ContractStatus::cases() as $status) {
-            if ($status->isTerminal() || $status === ContractStatus::Active) {
+        foreach (ContractStatus::cases() as $from) {
+            if (! $from->isIntermediate()) {
                 continue;
             }
 
-            self::assertTrue(
-                $status->canMoveTo(ContractStatus::CancelledByUs),
-                $status->value . ' cannot be cancelled by us'
-            );
-            self::assertTrue(
-                $status->canMoveTo(ContractStatus::CancelledByCustomer),
-                $status->value . ' cannot be cancelled by the customer'
-            );
+            foreach (ContractStatus::cases() as $to) {
+                if ($to === $from || $to === ContractStatus::Draft) {
+                    continue;
+                }
+
+                self::assertTrue($from->canMoveTo($to), $from->value . ' -> ' . $to->value);
+            }
         }
     }
 
-    /**
-     * Η ΕΝΕΡΓΟΣ δεν ακυρώνεται -- διακόπτεται. Το allowedNext() το κλείνει
-     * ήδη ρητά (καμία ακύρωση στη λίστα), εδώ επιβεβαιώνεται ονομαστικά
-     * γιατί είναι ο κανόνας που φυλάει χρήματα ήδη κερδισμένα.
-     */
-    public function testActiveCannotBeCancelledOnlyTerminated(): void
+    /** Η παλιά Διακοπή: μια Ενεργός ακυρώνεται, και διορθώνεται προς τα πίσω. */
+    public function testActiveCanBeCancelledOrCorrected(): void
     {
-        self::assertFalse(ContractStatus::Active->canMoveTo(ContractStatus::CancelledByUs));
-        self::assertFalse(ContractStatus::Active->canMoveTo(ContractStatus::CancelledByCustomer));
-        self::assertTrue(ContractStatus::Active->canMoveTo(ContractStatus::Terminated));
+        self::assertTrue(ContractStatus::Active->canMoveTo(ContractStatus::Cancelled));
+        self::assertTrue(ContractStatus::Active->canMoveTo(ContractStatus::Finalisation));
+        self::assertTrue(ContractStatus::exitsActive(ContractStatus::Active, ContractStatus::Cancelled));
     }
 
-    public function testPayableStatusesAreTheOnesCommissionIsOwedOn(): void
+    public function testTheTrackFiltersTheNextSteps(): void
     {
-        self::assertTrue(ContractStatus::Active->isPayable());
+        $power = ContractStatus::Finalisation->allowedNextFor(StatusTrack::POWER);
 
-        self::assertFalse(ContractStatus::Draft->isPayable());
-        self::assertFalse(ContractStatus::Finalisation->isPayable());
-        self::assertFalse(ContractStatus::Terminated->isPayable());
-        self::assertFalse(ContractStatus::CancelledByUs->isPayable());
-        self::assertFalse(ContractStatus::CancelledByCustomer->isPayable());
+        self::assertContains(ContractStatus::ThalisConfirmed, $power);
+        self::assertNotContains(ContractStatus::SimDelivered, $power);
+
+        $mobile = ContractStatus::Finalisation->allowedNextFor(StatusTrack::MOBILE);
+
+        self::assertContains(ContractStatus::SimDelivered, $mobile);
+        self::assertNotContains(ContractStatus::ThalisConfirmed, $mobile);
     }
 
-    public function testIsCancellationCoversBothCancellationsOnly(): void
+    public function testOnlyActiveIsPayable(): void
     {
         foreach (ContractStatus::cases() as $status) {
-            $expected = $status === ContractStatus::CancelledByUs
-                || $status === ContractStatus::CancelledByCustomer;
-
-            self::assertSame($expected, $status->isCancellation(), $status->value);
+            self::assertSame($status === ContractStatus::Active, $status->isPayable(), $status->value);
         }
     }
 
     public function testExitsActiveIsTrueOnlyWhenLeavingActive(): void
     {
-        self::assertTrue(ContractStatus::exitsActive(ContractStatus::Active, ContractStatus::Terminated));
         self::assertTrue(ContractStatus::exitsActive(ContractStatus::Active, ContractStatus::Finalisation));
         self::assertFalse(ContractStatus::exitsActive(ContractStatus::Active, ContractStatus::Active));
         self::assertFalse(ContractStatus::exitsActive(ContractStatus::Finalisation, ContractStatus::Active));
@@ -164,6 +159,7 @@ final class ContractStatusTest extends TestCase
     public function testAnUnknownSlugResolvesToNothing(): void
     {
         self::assertNull(ContractStatus::tryFromSlug('nonsense'));
+        self::assertNull(ContractStatus::tryFromSlug('terminated'));
         self::assertNull(ContractStatus::tryFromSlug(null));
         self::assertSame(ContractStatus::Active, ContractStatus::tryFromSlug('active'));
     }
@@ -171,5 +167,14 @@ final class ContractStatusTest extends TestCase
     public function testLabelsCoverEveryCase(): void
     {
         self::assertCount(count(ContractStatus::cases()), ContractStatus::labels());
+    }
+
+    /** @return list<string> */
+    private static function labelsOf(string $track): array
+    {
+        return array_map(
+            static fn (ContractStatus $s): string => $s->label(),
+            ContractStatus::forTrack($track)
+        );
     }
 }

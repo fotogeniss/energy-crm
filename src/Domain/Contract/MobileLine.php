@@ -76,7 +76,7 @@ final class MobileLine
     public static function stageAfterSignature(array $contract): ContractStatus
     {
         return self::isPresent($contract)
-            ? ContractStatus::AwaitingSim
-            : ContractStatus::Finalisation;
+            ? ContractStatus::SignatureComplete
+            : ContractStatus::ToFinalisation;
     }
 }

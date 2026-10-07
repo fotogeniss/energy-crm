@@ -1,7 +1,13 @@
 <?php
 
 /**
- * Μια σύμβαση που ακυρώθηκε από εμάς αφήνει πίσω της μια εργασία.
+ * Μια αίτηση που απορρίφθηκε ή ακυρώθηκε αφήνει πίσω της μια εργασία.
+ *
+ * ## Από 05/10/2026
+ *
+ * Η «Ακυρώθηκε από εμάς» δεν υπάρχει πια. Εργασία φτιάχνεται σε τρεις
+ * καταστάσεις: Απόρριψη ΘΑΛΗΣ, MP reject (ο πάροχος απέρριψε) και Ακυρώθηκε.
+ * Το κείμενο παρακάτω περιγράφει πώς φτάσαμε εδώ.
  *
  * ## Το κομμάτι του pipeline που καλύπτει
  *
@@ -95,6 +101,17 @@ final class RejectionFollowUp
     ) {
     }
 
+    /**
+     * Οι καταστάσεις που θέλουν κάποιον να κάνει κάτι.
+     *
+     * @var list<ContractStatus>
+     */
+    private const FOLLOWED_UP = [
+        ContractStatus::ThalisRejected,
+        ContractStatus::MnpReject,
+        ContractStatus::Cancelled,
+    ];
+
     /** Ίδιο σημείο σύνδεσης με τον ContractNotices. */
     public function register(): void
     {
@@ -103,7 +120,9 @@ final class RejectionFollowUp
 
     public function onStatusChanged(int $contractId, string $to): void
     {
-        if ($to !== ContractStatus::CancelledByUs->value) {
+        $status = ContractStatus::tryFromSlug($to);
+
+        if (! in_array($status, self::FOLLOWED_UP, true)) {
             return;
         }
 
@@ -129,10 +148,11 @@ final class RejectionFollowUp
             'customer_id' => null,
             'assigned_to' => $owner,
             'created_by'  => null,
-            'title'       => trim('Ακυρώθηκε από εμάς — ' . $code),
+            'title'       => trim($status->label() . ' — ' . $code),
             'note'        => sprintf(
-                '%s: η αίτηση ακυρώθηκε από εμάς. Έλεγξε την αιτία (δέσμευση συμβολαίου, '
-                    . 'πολιτική αποδοχής ή ημιτελή δικαιολογητικά) και ενημέρωσε τον πελάτη αν χρειάζεται.',
+                $status === ContractStatus::Cancelled
+                    ? '%s: η αίτηση ακυρώθηκε. Έλεγξε την αιτία και ενημέρωσε τον πελάτη αν χρειάζεται.'
+                    : '%s: ο πάροχος απέρριψε την αίτηση. Δες τι χρειάζεται για να ξαναμπεί.',
                 $name
             ),
             'due_at'   => current_time('mysql'),

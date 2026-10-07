@@ -17,19 +17,23 @@
  * Κ1-Κ8 και οι λόγοι ακύρωσης. Εδώ ζει μόνο ό,τι μπορεί να επιβληθεί από
  * τον τύπο.
  *
- * ## Κατάσταση ≠ εμπόδιο
+ * ## Δύο λίστες από 05/10/2026
  *
- * Η κεντρική διάκριση, και ο λόγος που από τα 11 ονόματα της αρχικής λίστας
- * εδώ υπάρχουν τα 8 (συν το πρόχειρο και τη διακοπή):
+ * Ο ιδιοκτήτης έδωσε νέες καταστάσεις γραμμένες στο χέρι: μία λίστα για
+ * ρεύμα (και αέριο, χωρίς τα ΘΑΛΗΣ) και μία για κινητή Orizon. Εδώ ζουν
+ * όλες σε έναν τύπο, και το `appliesTo()` λέει ποια ανήκει πού. Ποια λίστα
+ * ισχύει για μια αίτηση το λέει το `StatusTrack::of()`.
  *
- * - **Κατάσταση** = πού βρίσκεται η αίτηση στη γραμμή. Μία τιμή, εδώ.
- * - **Εμπόδιο** = τι την κρατάει αυτή τη στιγμή. Μηδέν έως τρία ταυτόχρονα,
- *   σε δικό τους πίνακα (`contract_blockers`).
+ * Τα «εμπόδια» (οφειλές, εκκρεμότητα) που σχεδιάστηκαν στις 07/09 δεν
+ * χτίστηκαν ποτέ. Η Εκκρεμότητα και η Οφειλή είναι πλέον καταστάσεις, όπως
+ * στο χαρτί.
  *
- * Μια σύμβαση μπορεί να είναι «Οριστικοποίηση **με** οφειλές **και**
- * εκκρεμότητα». Με μία στήλη αυτό δεν λέγεται -- ή χάνεις πού βρίσκεται, ή
- * χάνεις τι την κρατάει. Οι παλιές `pending`/`resolved` ήταν ακριβώς αυτή η
- * σύγχυση, κωδικοποιημένη.
+ * Οι τρεις παλιές τερματικές (Διακοπή, Ακυρώθηκε από εμάς, από πελάτη)
+ * έγιναν μία: «Ακυρώθηκε». Αν η αίτηση είχε γίνει ποτέ Ενεργός, η προμήθεια
+ * που πληρώθηκε μένει (βλ. `CancellationGate::keepsCommission()`).
+ *
+ * Ανάμεσα στις ενδιάμεσες καταστάσεις η αίτηση πάει ελεύθερα, επιλογή του
+ * ιδιοκτήτη: το back office ξέρει τι έγινε, ο γράφος όχι.
  *
  * ## Πληρωτέα είναι ΜΟΝΟ η ΕΝΕΡΓΟΣ
  *
@@ -50,95 +54,154 @@ enum ContractStatus: string
     /** Δεν υποβλήθηκε ακόμα. Δεν φτάνει στο back office, δεν μετράει πουθενά. */
     case Draft = 'draft';
 
-    /** Υποβλήθηκε, λείπουν δικαιολογητικά. */
     case Presale = 'presale';
 
-    /** Έχουμε όλα τα χαρτιά· καταχωρείται από το back office. */
     case Registration = 'registration';
 
-    /** Στάλθηκε στον πελάτη, περιμένουμε την υπογραφή του. */
     case AwaitingSignature = 'awaiting_signature';
 
-    /** Courier με SIM. Μόνο για αιτήσεις με κινητή -- αλλιώς παρακάμπτεται. */
+    /** Ρεύμα/αέριο: ο πελάτης υπέγραψε, πάει για οριστικοποίηση. */
+    case ToFinalisation = 'to_finalisation';
+
+    /** Κινητή: ο πελάτης υπέγραψε. */
+    case SignatureComplete = 'signature_complete';
+
+    /** Κινητή: courier με SIM. Το slug κρατήθηκε από το παλιό μοντέλο. */
     case AwaitingSim = 'awaiting_sim';
 
-    /** Ολοκληρώθηκε από πλευράς μας· περιμένει τον πάροχο. */
+    case SimDelivered = 'sim_delivered';
+
     case Finalisation = 'finalisation';
+
+    /** Μόνο ρεύμα. */
+    case ThalisConfirmed = 'thalis_confirmed';
+
+    /** Μόνο ρεύμα. */
+    case ThalisRejected = 'thalis_rejected';
+
+    case PendingIssue = 'pending_issue';
+
+    /** Ρεύμα/αέριο. */
+    case Recheck = 'recheck';
+
+    /** Κινητή. */
+    case Debt = 'debt';
 
     /** ΠΛΗΡΩΤΕΑ. Εδώ και μόνο εδώ κλειδώνει προμήθεια. */
     case Active = 'active';
 
+    /** Κινητή. */
+    case ForReview = 'for_review';
+
+    /** Κινητή: απόρριψη φορητότητας. */
+    case MnpReject = 'mnp_reject';
+
     /**
-     * Ήταν ενεργή και σταμάτησε.
-     *
-     * Δεν είναι ακύρωση: η προμήθεια που πληρώθηκε μένει πληρωμένη, γιατί η
-     * σύμβαση όντως δούλεψε. Κρατάει το παλιό slug επίτηδες -- σημαίνει ήδη
-     * ακριβώς αυτό, και μια μετονομασία θα μεγάλωνε το diff χωρίς κέρδος.
+     * Τέλος, για κάθε λόγο. Αντικαθιστά τις παλιές Διακοπή, Ακυρώθηκε από
+     * εμάς και Ακυρώθηκε από πελάτη.
      */
-    case Terminated = 'terminated';
-
-    /** Ακυρώθηκε με δική μας ευθύνη/απόφαση (πολιτική αποδοχής, δικαιολογητικά, δέσμευση). */
-    case CancelledByUs = 'cancelled_by_us';
-
-    /** Ακυρώθηκε επειδή το γύρισε ο πελάτης (μετάνιωσε, retention). */
-    case CancelledByCustomer = 'cancelled_by_customer';
+    case Cancelled = 'cancelled';
 
     public function label(): string
     {
         return match ($this) {
-            self::Draft               => 'Πρόχειρο',
-            self::Presale             => 'Presale',
-            self::Registration        => 'Καταχώρηση',
-            self::AwaitingSignature   => 'Αναμονή υπογραφής',
-            self::AwaitingSim         => 'Αναμονή παράδοσης SIM',
-            self::Finalisation        => 'Οριστικοποίηση',
-            self::Active              => 'Ενεργός',
-            self::Terminated          => 'Διακοπή',
-            self::CancelledByUs       => 'Ακυρώθηκε από εμάς',
-            self::CancelledByCustomer => 'Ακυρώθηκε από πελάτη',
+            self::Draft             => 'Πρόχειρο',
+            self::Presale           => 'Presale',
+            self::Registration      => 'Καταχώρηση',
+            self::AwaitingSignature => 'Αναμονή υπογραφής',
+            self::ToFinalisation    => 'Προς οριστικοποίηση',
+            self::SignatureComplete => 'Ολοκλήρωση υπογραφής',
+            self::AwaitingSim       => 'Αναμονή παράδοσης SIM',
+            self::SimDelivered      => 'Παράδοση SIM',
+            self::Finalisation      => 'Οριστικοποίηση',
+            self::ThalisConfirmed   => 'Επιβεβαίωση ΘΑΛΗΣ',
+            self::ThalisRejected    => 'Απόρριψη ΘΑΛΗΣ',
+            self::PendingIssue      => 'Εκκρεμότητα',
+            self::Recheck           => 'Επανέλεγχος',
+            self::Debt              => 'Οφειλή',
+            self::Active            => 'Ενεργός',
+            self::ForReview         => 'For review',
+            self::MnpReject         => 'MP reject',
+            self::Cancelled         => 'Ακυρώθηκε',
         };
+    }
+
+    /**
+     * Ανήκει η κατάσταση στη λίστα αυτού του είδους αίτησης;
+     *
+     * @param string $track `StatusTrack::POWER`, `GAS` ή `MOBILE`.
+     */
+    public function appliesTo(string $track): bool
+    {
+        return match ($this) {
+            self::ToFinalisation, self::Recheck => $track !== StatusTrack::MOBILE,
+            self::ThalisConfirmed, self::ThalisRejected => $track === StatusTrack::POWER,
+            self::SignatureComplete, self::AwaitingSim, self::SimDelivered,
+            self::Debt, self::ForReview, self::MnpReject => $track === StatusTrack::MOBILE,
+            default => true,
+        };
+    }
+
+    /**
+     * Οι καταστάσεις μιας λίστας, με τη σειρά του χαρτιού.
+     *
+     * @return list<self>
+     */
+    public static function forTrack(string $track): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            static fn (self $s): bool => $s->appliesTo($track)
+        ));
     }
 
     /** Τέλος διαδρομής: καμία μετάβαση δεν βγαίνει από εδώ. */
     public function isTerminal(): bool
     {
-        return match ($this) {
-            self::Terminated, self::CancelledByUs, self::CancelledByCustomer => true,
-            default => false,
-        };
+        return $this === self::Cancelled;
     }
 
-    /**
-     * Μία, και μόνο μία.
-     *
-     * Ήταν τρεις (`routed`, `active`, `resolved`) και αυτό ήταν λάθος: η
-     * `routed` σήμαινε «φύγαμε προς τον πάροχο» και η `resolved` «λύθηκε το
-     * εμπόδιο» -- καμία από τις δύο δεν σημαίνει ότι η σύμβαση δούλεψε.
-     */
+    /** Πληρωτέα είναι μόνο η Ενεργός. */
     public function isPayable(): bool
     {
         return $this === self::Active;
     }
 
-    /** Οι δύο ακυρώσεις μαζί -- και οι δύο απαιτούν λόγο. */
     public function isCancellation(): bool
     {
-        return $this === self::CancelledByUs || $this === self::CancelledByCustomer;
+        return $this === self::Cancelled;
+    }
+
+    /** Ούτε πρόχειρο, ούτε Ενεργός, ούτε τέλος: οι καταστάσεις της δουλειάς. */
+    public function isIntermediate(): bool
+    {
+        return ! in_array($this, [self::Draft, self::Active, self::Cancelled], true);
+    }
+
+    /**
+     * Τα slugs των ενδιάμεσων, για ερωτήματα SQL και λίστες «σε εξέλιξη».
+     *
+     * @return list<string>
+     */
+    public static function intermediateValues(): array
+    {
+        $out = [];
+
+        foreach (self::cases() as $case) {
+            if ($case->isIntermediate()) {
+                $out[] = $case->value;
+            }
+        }
+
+        return $out;
     }
 
     /**
      * Έξοδος από την πληρωτέα κατάσταση, προς οποιαδήποτε κατεύθυνση.
      *
-     * Ζει εδώ και όχι σαν `if` στον controller επειδή είναι ο ορισμός που
-     * φυλάει το δεύτερο επίπεδο δικαιώματος (`ecrm_exit_active`): *«το να
-     * αλλάξει από ενεργός δεν μπορεί να γίνει έτσι απλά από έναν πωλητή --
-     * πρέπει να γίνει από υπεύθυνο, ώστε να αποφύγουμε αυτό το οικονομικό
-     * πρόβλημα»*. Ένας ορισμός, ένα σημείο να αλλάξει, και τα tests τον
-     * ρωτούν κατευθείαν.
-     *
-     * Και η ΔΙΑΚΟΠΗ μετράει ως έξοδος. Είναι νόμιμο τέλος ζωής, αλλά κλείνει
-     * μια σύμβαση που έχει ήδη πληρώσει προμήθεια -- δεν το κάνει όποιος να
-     * 'ναι.
+     * Φυλάει το δεύτερο επίπεδο δικαιώματος (`ecrm_exit_active`): η αλλαγή
+     * μιας Ενεργού κοστίζει χρήματα, οπότε δεν την κάνει όποιος να 'ναι. Και
+     * η ακύρωση μιας Ενεργού (η παλιά Διακοπή) μετράει ως έξοδος.
      */
     public static function exitsActive(self $from, self $to): bool
     {
@@ -146,70 +209,53 @@ enum ContractStatus: string
     }
 
     /**
-     * Πού μπορεί να πάει από εδώ.
+     * Πού μπορεί να πάει από εδώ, χωρίς να ξέρουμε το είδος της αίτησης.
      *
-     * Ο γράφος έχει τρία είδη ακμών, και αξίζει να ξεχωρίζουν διαβάζοντας:
+     * - Από το πρόχειρο: μόνο υποβολή ή ακύρωση.
+     * - Από κάθε ενδιάμεση: σε κάθε άλλη ενδιάμεση, στην Ενεργό, ή ακύρωση.
+     * - Από την Ενεργό: πίσω σε ενδιάμεση για διόρθωση, ή ακύρωση. Και τα δύο
+     *   θέλουν το `ecrm_exit_active`.
+     * - Από την ακύρωση: πουθενά.
      *
-     * 1. **Εμπρός** -- η κανονική ροή, ένα βήμα τη φορά.
-     * 2. **Πίσω** -- διόρθωση του back office (Κ7). Υπάρχουν επειδή η
-     *    πραγματικότητα δεν προχωράει πάντα προς τα εμπρός: βρέθηκε ότι
-     *    λείπει χαρτί μετά την καταχώρηση, ήρθε λάθος SIM, στάλθηκε λάθος
-     *    σύνδεσμος. Χωρίς αυτές ο μόνος τρόπος διόρθωσης θα ήταν απευθείας
-     *    UPDATE στη βάση, που δεν αφήνει ίχνος.
-     * 3. **Ακύρωση** -- από κάθε μη τερματική κατάσταση, στα δύο είδη.
-     *
-     * Δύο απουσίες που είναι σκόπιμες:
-     *
-     * - **Καμία επιστροφή στο `draft`.** Το πρόχειρο είναι πριν την υποβολή·
-     *   μια αίτηση που υποβλήθηκε δεν ξαναγίνεται ανυπόβλητη.
-     * - **Καμία ακύρωση από την `active`.** Σύμβαση που δούλεψε δεν
-     *   «ακυρώνεται» -- διακόπτεται. Ο `CancellationGate` το επιβάλλει ήδη
-     *   και για το ιστορικό (σύμβαση που ΥΠΗΡΞΕ ενεργή), κάτι που ο γράφος
-     *   από μόνος του δεν μπορεί να ξέρει· εδώ κλείνει απλώς η μπροστινή
-     *   πόρτα.
+     * Κανένα βήμα πίσω στο πρόχειρο. Ποιες ενδιάμεσες ανήκουν σε ποιο είδος
+     * το φιλτράρει το `allowedNextFor()`.
      *
      * @return list<self>
      */
     public function allowedNext(): array
     {
-        $cancellations = [self::CancelledByUs, self::CancelledByCustomer];
+        if ($this === self::Draft) {
+            return [self::Presale, self::Cancelled];
+        }
 
-        return match ($this) {
-            self::Draft => [self::Presale, ...$cancellations],
+        if ($this === self::Cancelled) {
+            return [];
+        }
 
-            self::Presale => [self::Registration, ...$cancellations],
+        $out = [];
 
-            // Πίσω στο presale: το back office άνοιξε τον φάκελο και βρήκε
-            // ότι κάτι λείπει ή δεν ισχύει.
-            self::Registration => [self::AwaitingSignature, self::Presale, ...$cancellations],
+        foreach (self::cases() as $case) {
+            if ($case === $this || $case === self::Draft) {
+                continue;
+            }
 
-            // Δύο μπροστινοί δρόμοι, και ποιος ισχύει το λέει η ίδια η
-            // αίτηση: με κινητή περνάει από το SIM, χωρίς κινητή πάει
-            // κατευθείαν στην οριστικοποίηση (Κ2). Ο γράφος δεν ξέρει τι
-            // περιέχει η σύμβαση -- επιτρέπει και τα δύο, και ο κώδικας που
-            // προωθεί αυτόματα διαλέγει.
-            self::AwaitingSignature => [
-                self::AwaitingSim,
-                self::Finalisation,
-                self::Registration,
-                ...$cancellations,
-            ],
+            $out[] = $case;
+        }
 
-            self::AwaitingSim => [self::Finalisation, self::AwaitingSignature, ...$cancellations],
+        return $out;
+    }
 
-            self::Finalisation => [
-                self::Active,
-                self::AwaitingSim,
-                self::AwaitingSignature,
-                ...$cancellations,
-            ],
-
-            // Μπροστά η διακοπή, πίσω η οριστικοποίηση για διόρθωση. Και τα
-            // δύο περνούν από το `ecrm_exit_active` -- βλ. exitsActive().
-            self::Active => [self::Terminated, self::Finalisation],
-
-            self::Terminated, self::CancelledByUs, self::CancelledByCustomer => [],
-        };
+    /**
+     * Ίδιο με το `allowedNext()`, μόνο με τις καταστάσεις της λίστας του.
+     *
+     * @return list<self>
+     */
+    public function allowedNextFor(string $track): array
+    {
+        return array_values(array_filter(
+            $this->allowedNext(),
+            static fn (self $s): bool => $s->appliesTo($track)
+        ));
     }
 
     public function canMoveTo(self $target): bool
