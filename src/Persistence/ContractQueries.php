@@ -320,11 +320,67 @@ final class ContractQueries
                  LEFT JOIN %i cu ON cu.id = c.customer_id
                  LEFT JOIN %i p  ON p.id  = c.provider_id
                  WHERE c.end_date IS NOT NULL
-                   AND c.status NOT IN ('cancelled_by_us', 'cancelled_by_customer', 'draft')
+                   AND c.status NOT IN ('cancelled', 'draft')
                    AND DATEDIFF(c.end_date, NOW()) <= %d{$clause}
                  ORDER BY c.end_date ASC
                  LIMIT 300",
                 [$this->table, $customers, $providers, $withinDays, ...$params]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
+     * Αιτήσεις για τον AlfrAId, χωρίς κανένα προσωπικό στοιχείο.
+     *
+     * Δεν γίνεται join με τους πελάτες: ό,τι δεν διαβάζεται δεν μπορεί να
+     * διαρρεύσει στο API. Το `extra_json` έρχεται μόνο για να κριθεί ποια
+     * λίστα καταστάσεων ισχύει (`StatusTrack`) και πετιέται πριν φτιαχτεί το
+     * κείμενο (`ContractBrief`), γιατί περιέχει στοιχεία του δεύτερου
+     * προσώπου στα COMBO.
+     *
+     * Με κωδικούς: μόνο αυτές οι αιτήσεις. Χωρίς: οι ανοιχτές (όχι Ενεργός,
+     * Ακυρώθηκε ή Πρόχειρο), όσο περισσότερο ακίνητη τόσο πιο πάνω.
+     *
+     * @param list<string> $codes
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function forAssistant(UserScope $scope, array $codes = [], int $limit = 15): array
+    {
+        global $wpdb;
+
+        [$clause, $scopeParams] = ScopeClause::forScope($scope, 'c');
+
+        $params = [$this->table, Tables::name(Tables::PROVIDERS), Tables::name(Tables::PROGRAMS)];
+
+        if ($codes !== []) {
+            $where  = 'c.code IN (' . implode(',', array_fill(0, count($codes), '%s')) . ')';
+            $params = [...$params, ...$codes];
+            $order  = 'c.code ASC';
+        } else {
+            $where = "c.status NOT IN ('active', 'cancelled', 'draft')";
+            $order = 'c.updated_at ASC';
+        }
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.id, c.code, c.status, c.energy_type, c.activation_type, c.extra_json,
+                        c.created_at, c.signed_at IS NOT NULL AS signed,
+                        DATEDIFF(NOW(), c.updated_at) AS idle_days,
+                        p.name AS provider_name, g.name AS program_name
+                 FROM %i c
+                 LEFT JOIN %i p ON p.id = c.provider_id
+                 LEFT JOIN %i g ON g.id = c.program_id
+                 WHERE {$where}{$clause}
+                 ORDER BY {$order}
+                 LIMIT " . max(1, $limit),
+                [...$params, ...$scopeParams]
             ),
             ARRAY_A
         );
