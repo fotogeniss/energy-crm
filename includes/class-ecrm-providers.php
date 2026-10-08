@@ -111,6 +111,10 @@ class ECRM_Providers {
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaCatalogue::added() as $code => $plan ) {
 						$starters[] = [ $plan['label'], $code, $plan['energy'], $plan['priceType'], null, null ];
 					}
+					// (309) Τα Picasso S/M/L, οικιακά και επαγγελματικά.
+					foreach ( \EnergyCRM\Domain\Forms\ProtergiaPicassoPlans::all() as $code => $plan ) {
+						$starters[] = [ $plan['label'], $code, 'power', '', null, null, $plan['category'] ];
+					}
 				} elseif ( $row['slug'] === 'volton' ) {
 					// Η Volton δίνει 23 προγράμματα, σε ρεύμα ΚΑΙ σε αέριο, και σε
 					// τρεις κατηγορίες. Το γενικό «Σταθερό Οικιακό» δεν αντιστοιχεί
