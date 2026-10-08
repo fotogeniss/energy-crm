@@ -122,6 +122,7 @@ class ECRM_Admin {
 			'sanitize_callback' => [ __CLASS__, 'sanitize_api_key' ],
 		] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'claude_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
+		register_setting( 'ecrm_settings', ECRM_PREFIX . 'claude_chat_model', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'doc_kind_ai', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'company_name', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'ecrm_settings', ECRM_PREFIX . 'company_info', [ 'sanitize_callback' => 'sanitize_textarea_field' ] );
@@ -210,6 +211,7 @@ class ECRM_Admin {
 		}
 		$secrets = \EnergyCRM\Services::secrets();
 		$model   = ECRM_Extractor::model();
+		$chat_model = (string) get_option( ECRM_PREFIX . 'claude_chat_model', '' );
 		$masked  = $secrets->mask( 'claude_api_key' );
 		$pinned  = $secrets->isPinned( 'claude_api_key' );
 		$theme   = \EnergyCRM\Infrastructure\ThemePreference::forUser( get_current_user_id() );
@@ -248,7 +250,15 @@ class ECRM_Admin {
 						<td>
 							<input type="text" id="ecrm_model" name="<?php echo esc_attr( ECRM_PREFIX . 'claude_model' ); ?>"
 								value="<?php echo esc_attr( $model ); ?>" class="regular-text" placeholder="<?php echo esc_attr( ECRM_Extractor::DEFAULT_MODEL ); ?>">
-							<p class="description">Προεπιλογή: <code><?php echo esc_html( ECRM_Extractor::DEFAULT_MODEL ); ?></code></p>
+							<p class="description">Για την ανάγνωση εγγράφων. Προεπιλογή: <code><?php echo esc_html( ECRM_Extractor::DEFAULT_MODEL ); ?></code></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="ecrm_chat_model">Μοντέλο chat (AlfrAId)</label></th>
+						<td>
+							<input type="text" id="ecrm_chat_model" name="<?php echo esc_attr( ECRM_PREFIX . 'claude_chat_model' ); ?>"
+								value="<?php echo esc_attr( $chat_model ); ?>" class="regular-text" placeholder="<?php echo esc_attr( ECRM_Extractor::DEFAULT_CHAT_MODEL ); ?>">
+							<p class="description">Για τις απαντήσεις του AlfrAId. Προεπιλογή: <code><?php echo esc_html( ECRM_Extractor::DEFAULT_CHAT_MODEL ); ?></code>. Αν οι απαντήσεις δεν σε καλύπτουν, γράψε εδώ το ίδιο μοντέλο με πάνω.</p>
 						</td>
 					</tr>
 					<tr>

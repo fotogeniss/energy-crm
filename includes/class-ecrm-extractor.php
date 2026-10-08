@@ -32,6 +32,19 @@ class ECRM_Extractor {
 	 */
 	const DEFAULT_MODEL = 'claude-sonnet-5';
 
+	/**
+	 * Μοντέλο για το chat του AlfrAId και της Βάσης Γνώσης.
+	 *
+	 * Απαντά σε σύντομες ερωτήσεις πάνω σε κείμενο που του δίνουμε, χωρίς
+	 * όραση και χωρίς JSON που πρέπει να βγει σωστό στο γράμμα. Το Haiku
+	 * αρκεί και κοστίζει πολύ λιγότερο. Η εξαγωγή εγγράφων μένει στο
+	 * DEFAULT_MODEL, γιατί εκεί η ακρίβεια πάνω στα στοιχεία μετράει.
+	 */
+	/** Μεγάλη πλευρά εικόνας (px) πάνω από την οποία μικραίνει πριν σταλεί. */
+	const MAX_IMAGE_EDGE = 1568;
+
+	const DEFAULT_CHAT_MODEL = 'claude-haiku-4-5';
+
 	/** Fields we expect back. Keep in sync with the customers table + form. */
 	public static function fields(): array {
 		return [
@@ -352,6 +365,12 @@ PROMPT;
 		if ( false === $raw ) {
 			return null;
 		}
+
+		// Φωτογραφία κινητού: 4000+ px που το API θα μίκραινε ούτως ή άλλως.
+		// Μικραίνει εδώ, ώστε να μη ταξιδεύουν 5 MB base64 για κάθε έγγραφο.
+		if ( in_array( $mime, [ 'image/jpeg', 'image/png', 'image/webp' ], true ) ) {
+			[ $raw, $mime ] = self::shrink_image( $raw, $mime );
+		}
 		$b64 = base64_encode( $raw );
 
 		// PDFs go as a "document" block; images as "image".
@@ -371,6 +390,68 @@ PROMPT;
 		}
 
 		return null;
+	}
+
+	/**
+	 * Μικραίνει εικόνα που η μεγάλη της πλευρά ξεπερνά το MAX_IMAGE_EDGE.
+	 *
+	 * Το API μικραίνει μόνο του ό,τι ξεπερνά ~1568 px, άρα ούτε ευκρίνεια
+	 * χάνεται ούτε tokens γλιτώνουν· κερδίζουμε μεταφορά και χρόνο. Σε ό,τι
+	 * δεν είναι σίγουρο (χωρίς GD, αποτυχία, εικόνα που δεν μεγαλώνει ή
+	 * δεν μικραίνει) επιστρέφεται το αρχικό όπως ήταν.
+	 *
+	 * @return array{0:string,1:string} [bytes, mime]
+	 */
+	public static function shrink_image( string $raw, string $mime ): array {
+		if ( ! function_exists( 'imagecreatefromstring' ) ) {
+			return [ $raw, $mime ];
+		}
+
+		$size = @getimagesizefromstring( $raw ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		if ( ! is_array( $size ) || max( $size[0], $size[1] ) <= self::MAX_IMAGE_EDGE ) {
+			return [ $raw, $mime ];
+		}
+
+		$src = @imagecreatefromstring( $raw ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		if ( ! $src ) {
+			return [ $raw, $mime ];
+		}
+
+		// Η επανακωδικοποίηση πετάει το EXIF, άρα η στροφή της φωτογραφίας
+		// του κινητού πρέπει να εφαρμοστεί εδώ, αλλιώς το έγγραφο φτάνει πλάγιο.
+		if ( 'image/jpeg' === $mime && function_exists( 'exif_read_data' ) ) {
+			$exif  = @exif_read_data( 'data://image/jpeg;base64,' . base64_encode( $raw ) ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+			$angle = [ 3 => 180, 6 => -90, 8 => 90 ][ (int) ( $exif['Orientation'] ?? 1 ) ] ?? 0;
+			if ( 0 !== $angle ) {
+				$rotated = imagerotate( $src, $angle, 0 );
+				if ( $rotated ) {
+					$src = $rotated;
+				}
+			}
+		}
+
+		$w     = imagesx( $src );
+		$h     = imagesy( $src );
+		$ratio = self::MAX_IMAGE_EDGE / max( $w, $h );
+		$dst   = imagecreatetruecolor( max( 1, (int) round( $w * $ratio ) ), max( 1, (int) round( $h * $ratio ) ) );
+		if ( ! $dst ) {
+			return [ $raw, $mime ];
+		}
+
+		// Λευκό φόντο: το διάφανο PNG/WebP θα έβγαινε μαύρο σε JPEG.
+		imagefill( $dst, 0, 0, (int) imagecolorallocate( $dst, 255, 255, 255 ) );
+		imagecopyresampled( $dst, $src, 0, 0, 0, 0, imagesx( $dst ), imagesy( $dst ), $w, $h );
+
+		ob_start();
+		$ok  = imagejpeg( $dst, null, 85 );
+		$out = (string) ob_get_clean();
+
+		// Να μην επιστρέψουμε κάτι μεγαλύτερο από αυτό που πήραμε.
+		if ( ! $ok || '' === $out || strlen( $out ) >= strlen( $raw ) ) {
+			return [ $raw, $mime ];
+		}
+
+		return [ $out, 'image/jpeg' ];
 	}
 
 	// ---------------------------------------------------------------------
@@ -418,6 +499,11 @@ PROMPT;
 	// ---------------------------------------------------------------------
 	public static function api_key(): string {
 		return \EnergyCRM\Services::secrets()->get( 'claude_api_key' );
+	}
+
+	public static function chat_model(): string {
+		$m = (string) get_option( ECRM_PREFIX . 'claude_chat_model', '' );
+		return $m !== '' ? $m : self::DEFAULT_CHAT_MODEL;
 	}
 
 	public static function model(): string {

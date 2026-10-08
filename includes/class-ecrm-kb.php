@@ -111,7 +111,7 @@ class ECRM_KB {
 			. "=== ΒΑΣΗ ΓΝΩΣΗΣ ===\n" . $context;
 
 		$body = [
-			'model'      => ECRM_Extractor::model(),
+			'model'      => ECRM_Extractor::chat_model(),
 			'max_tokens' => 1024,
 			'system'     => $system,
 			'messages'   => [ [ 'role' => 'user', 'content' => mb_substr( $q, 0, 2000 ) ] ],
