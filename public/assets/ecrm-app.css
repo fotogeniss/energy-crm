@@ -1791,3 +1791,229 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-ptbl__cnt b { color: var(--ink); }
 .ecrm-ptbl__bar { height: 5px; border-radius: 3px; background: var(--line-soft); margin-top: 4px; width: 90px; overflow: hidden; }
 .ecrm-ptbl__bar i { display: block; height: 100%; background: var(--amber); }
+
+
+/* ============================================================
+   (311) Συμβάσεις στο κινητό: ο πίνακας γίνεται κάρτες
+   ============================================================
+   Ο πίνακας είχε ελάχιστο πλάτος 560px σε οθόνη 360px: η στήλη «Κατάσταση»
+   και το κουμπί της γραμμής έβγαιναν έξω, και το άνοιγμα της αίτησης
+   (γραμμή πίνακα με colspan) κοβόταν δεξιά (screenshot ιδιοκτήτη, 13/10).
+   Εδώ η ΙΔΙΑ σήμανση ξαναδιατάσσεται σε κάρτα με CSS grid -- χωρίς δεύτερο
+   markup, άρα ό,τι ήδη δουλεύει (άνοιγμα, επιλογή, κουμπιά) μένει ίδιο.
+   Μόνο στον πίνακα συμβάσεων (`.ecrm-table--cards`): οι άλλοι δέκα πίνακες
+   δεν αλλάζουν. Σχέδιο: έγκριση ιδιοκτήτη 13/10, mockup 3 οθονών. */
+
+/* Χρώμα κατάστασης για τα badges του νέου μοντέλου (05/10). Ίδιες
+   οικογένειες με τα παλιά: αναμονή = μπλε, εκκρεμότητα = πορτοκαλί,
+   ενεργός = πράσινο, απόρριψη = κόκκινο. Έξω από media query, ώστε να
+   ισχύει και στον πίνακα του υπολογιστή. */
+.ecrm-badge--presale, .ecrm-badge--registration { background: var(--st-new-bg); color: var(--st-new); }
+.ecrm-badge--awaiting_signature, .ecrm-badge--awaiting_sim { background: var(--st-asig-bg); color: var(--st-asig); }
+.ecrm-badge--signature_complete, .ecrm-badge--sim_delivered { background: var(--st-signed-bg); color: var(--st-signed); }
+.ecrm-badge--to_finalisation, .ecrm-badge--pending_issue, .ecrm-badge--recheck,
+.ecrm-badge--debt, .ecrm-badge--for_review { background: var(--st-pending-bg); color: var(--st-pending); }
+.ecrm-badge--finalisation, .ecrm-badge--thalis_confirmed { background: var(--st-proc-bg); color: var(--st-proc); }
+.ecrm-badge--thalis_rejected, .ecrm-badge--mnp_reject { background: var(--st-cancel-bg); color: var(--st-cancel); }
+
+@media (max-width: 767px) {
+	.ecrm-content { padding-bottom: 140px; }   /* η τελευταία κάρτα να μη μένει κάτω από το κουμπί του AlfrAId */
+
+	.ecrm-tablewrap .ecrm-table.ecrm-table--cards { display: block; min-width: 0; width: 100%; }
+	.ecrm-table--cards thead { display: none; }
+	.ecrm-table--cards tbody { display: block; }
+	.ecrm-table--cards td { display: block; padding: 0; border: 0; background: none; }
+	/* Στο hover ΜΟΝΟ το φόντο. Στο κινητό η κάρτα που πάτησες μένει σε
+	   :hover, και όταν εδώ υπήρχε και «padding: 0», μηδένιζε το κενό του
+	   ονόματος (νικούσε λόγω ειδικότητας): το όνομα περνούσε κάτω από τον
+	   πάροχο μόνο σε ανοιχτή κάρτα (screenshots ιδιοκτήτη, 14/10). */
+	.ecrm-table--cards tbody tr:hover td { background: none; }
+
+	/* χρώμα λωρίδας ανά κατάσταση */
+	.ecrm-table--cards tr { --card-st: var(--st-draft); }
+	.ecrm-table--cards tr[data-status="presale"], .ecrm-table--cards tr[data-status="registration"] { --card-st: var(--st-new); }
+	.ecrm-table--cards tr[data-status="awaiting_signature"], .ecrm-table--cards tr[data-status="awaiting_sim"] { --card-st: var(--st-asig); }
+	.ecrm-table--cards tr[data-status="signature_complete"], .ecrm-table--cards tr[data-status="sim_delivered"] { --card-st: var(--st-signed); }
+	.ecrm-table--cards tr[data-status="to_finalisation"], .ecrm-table--cards tr[data-status="pending_issue"],
+	.ecrm-table--cards tr[data-status="recheck"], .ecrm-table--cards tr[data-status="debt"],
+	.ecrm-table--cards tr[data-status="for_review"] { --card-st: var(--st-pending); }
+	.ecrm-table--cards tr[data-status="finalisation"], .ecrm-table--cards tr[data-status="thalis_confirmed"] { --card-st: var(--st-proc); }
+	.ecrm-table--cards tr[data-status="active"] { --card-st: var(--st-active); }
+	.ecrm-table--cards tr[data-status="thalis_rejected"], .ecrm-table--cards tr[data-status="mnp_reject"],
+	.ecrm-table--cards tr[data-status="cancelled"] { --card-st: var(--st-cancel); }
+
+	/* η κάρτα */
+	.ecrm-table--cards tr.ecrm-rowlink {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto auto;
+		align-items: center;
+		gap: 0 10px;
+		margin-top: 10px;
+		padding: 14px 10px 12px 14px;
+		background: var(--surface);
+		border: 1px solid var(--line-card);
+		border-left: 4px solid var(--card-st);
+		border-radius: 14px;
+	}
+	/* Θέσεις με αριθμούς γραμμών, ΟΧΙ grid-template-areas: τα ονόματα σε
+	   εισαγωγικά τα χαλάνε minifiers/cache plugins, και τότε όλα τα κελιά
+	   πέφτουν το ένα πάνω στο άλλο (screenshot ιδιοκτήτη, 14/10). */
+	.ecrm-table--cards .ecrm-c-cust { grid-column: 1 / -1; grid-row: 1; min-width: 0; padding-right: 86px; }
+	/* Ο πάροχος πάνω δεξιά, έξω από το πλέγμα: αν έπιανε στήλη, θα φάρδαινε
+	   και τη στήλη του βέλους από κάτω και θα έκοβε την κατάσταση. */
+	.ecrm-table--cards tr.ecrm-rowlink { position: relative; }
+	.ecrm-table--cards .ecrm-c-prov { position: absolute; top: 14px; right: 10px; max-width: 80px; }
+	.ecrm-table--cards .ecrm-c-status { grid-column: 1; grid-row: 2; margin-top: 10px; min-width: 0; display: flex; align-items: center; }
+	/* Όταν δεν χωράει (π.χ. σε επιλογή), το badge κόβεται με «…» αντί να πέσει πάνω στον χρόνο. */
+	.ecrm-table--cards .ecrm-c-status .ecrm-badge { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+	.ecrm-table--cards .ecrm-c-status .ecrm-sigpill { flex: 0 0 auto; }
+	.ecrm-table--cards td.ecrm-cell-date { display: block; grid-column: 2; grid-row: 2; text-align: right; white-space: nowrap; margin-top: 10px; padding-left: 8px; }
+	.ecrm-table--cards .ecrm-expandcol { grid-column: 3; grid-row: 2; width: auto; margin-top: 4px; margin-bottom: -4px; }
+	.ecrm-table--cards .ecrm-rowactcol { grid-column: 1 / -1; grid-row: 3; text-align: initial; white-space: normal; margin-top: 10px; }
+	/* Το τετράγωνο επιλογής ΜΟΝΟ σε επιλογή πολλών· !important γιατί σε
+	   κινητό εμφανιζόταν μόνιμα κάτω από την κατάσταση (14/10). */
+	.ecrm-table--cards:not(.is-selecting) .ecrm-checkcol { display: none !important; }
+	/* Παροχή/τιμολόγιο και Συνεργάτης: μόνο στην ανοιχτή κάρτα, ρητά εδώ. */
+	.ecrm-table.ecrm-table--cards td.ecrm-col-sec:not(.ecrm-cell-date) { display: none; }
+
+	.ecrm-table--cards .ecrm-cell-cust { display: flex; align-items: center; gap: 12px; }
+	.ecrm-table--cards .ecrm-cell-mark--cust { width: 40px; height: 40px; flex: 0 0 40px; font-size: var(--fs-13); }
+	/* Το όνομα σπάει σε γραμμές ΠΑΝΤΑ, χωρίς -webkit-line-clamp: στο κινητό
+	   του ιδιοκτήτη έμενε σε μία γραμμή και περνούσε κάτω από τον πάροχο. */
+	.ecrm-table--cards .ecrm-c-cust, .ecrm-table--cards .ecrm-cell-cust,
+	.ecrm-table--cards .ecrm-person, .ecrm-table--cards .ecrm-person > * { white-space: normal; }
+	.ecrm-table--cards .ecrm-cell-cust { width: 100%; }
+	.ecrm-table--cards .ecrm-cell-cust .ecrm-person { flex: 1 1 0; min-width: 0; max-width: 100%; }
+	.ecrm-table--cards .ecrm-person strong {
+		display: block; width: 100%; max-height: 2.6em; overflow: hidden; white-space: normal !important;
+		font-size: var(--fs-14); font-weight: 800; line-height: 1.25; overflow-wrap: break-word; word-break: break-word;
+	}
+	.ecrm-table--cards .ecrm-person > span { font-size: var(--fs-12); line-height: 1.35; margin-top: 2px; }
+	.ecrm-table--cards .ecrm-sub-sep { display: none; }
+	.ecrm-table--cards .ecrm-sub-code { display: block; }
+	.ecrm-table--cards .ecrm-cell-logo { width: auto; max-width: 78px; height: 26px; }
+	.ecrm-table--cards .ecrm-cell-date div:first-child { display: none; }
+	.ecrm-table--cards .ecrm-cell-date .ecrm-muted { font-size: var(--fs-12); overflow: hidden; text-overflow: ellipsis; }
+	.ecrm-table--cards .ecrm-badge { font-size: var(--fs-12); padding: 4px 10px; }
+
+	/* κουμπί ανοίγματος: «+» / «×» γίνεται βέλος */
+	.ecrm-table--cards .ecrm-expand {
+		width: 36px; height: 36px; padding: 0; border: 0; background: none; box-shadow: none;
+		font-size: var(--fs-9); color: transparent; display: block; position: relative; overflow: hidden;
+	}
+	.ecrm-table--cards .ecrm-expand::before {
+		content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -7px 0 0 -5px;
+		border-right: 2px solid var(--faint); border-bottom: 2px solid var(--faint);
+		transform: rotate(45deg); transition: transform .15s;
+	}
+	.ecrm-table--cards .ecrm-expand.is-open { background: none; border-color: transparent; }
+	.ecrm-table--cards .ecrm-expand.is-open::before { transform: rotate(-135deg); margin-top: -1px; border-color: var(--accent-ink); }
+
+	/* κουμπί επόμενου βήματος: μεγάλο· το «ήσυχο» (Άνοιγμα, Παρακολούθηση) κρύβεται,
+	   γιατί το πάτημα της κάρτας ανοίγει ήδη την αίτηση */
+	.ecrm-table--cards .ecrm-rowact {
+		width: 100%; min-height: 44px; border-radius: 12px; font-size: var(--fs-14); font-weight: 800;
+		color: var(--accent-ink); background: var(--accent-wash); border: 1px solid var(--accent-soft);
+	}
+	.ecrm-table--cards .ecrm-rowactcol:has(.is-quiet) { display: none; }
+
+	/* ανοιχτή κάρτα: η γραμμή και το πάνελ γίνονται ένα κουτί */
+	.ecrm-table--cards tr.ecrm-rowlink:has(+ .ecrm-exprow:not([hidden])) {
+		border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent;
+	}
+	.ecrm-table--cards tr.ecrm-exprow { display: block; margin: 0; background: var(--surface);
+		border: 1px solid var(--line-card); border-top: 1px dashed var(--line); border-left: 4px solid var(--card-st);
+		border-radius: 0 0 14px 14px; }
+	.ecrm-table--cards tr.ecrm-exprow[hidden] { display: none; }
+	.ecrm-table--cards .ecrm-expaccent { display: none; }
+	.ecrm-table--cards .ecrm-exppanel { padding: 4px 14px 14px 12px; }
+	.ecrm-table--cards .ecrm-expbanner { display: none; }   /* η κατάσταση φαίνεται ήδη στην κάρτα */
+	.ecrm-table--cards .ecrm-expcards { grid-template-columns: 1fr; gap: 0; }
+	.ecrm-table--cards .ecrm-expcards .ecrm-card { border: 0; background: none; box-shadow: none; padding: 8px 0 2px; margin: 0; }
+	.ecrm-table--cards .ecrm-tr { padding: 9px 0; }
+	.ecrm-table--cards .ecrm-tr b { min-width: 0; overflow-wrap: anywhere; }
+	.ecrm-table--cards .ecrm-expactions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+	.ecrm-table--cards .ecrm-expactions .ecrm-btn { min-height: 44px; justify-content: center; }
+	.ecrm-table--cards .ecrm-expactions .ecrm-btn--primary { grid-column: 1 / -1; }
+
+	/* επιλογή πολλών: εμφανίζεται μόνο όταν ξεκινήσει με παρατεταμένο πάτημα.
+	   Το τετράγωνο μπαίνει ΣΤΗ ΘΕΣΗ του αρχικού του πελάτη και το πλέγμα δεν
+	   αλλάζει καθόλου: η πρώτη εκδοχή μετακινούσε στήλες και στο κινητό το
+	   τετράγωνο κατέληγε κάτω από την κατάσταση (screenshot ιδιοκτήτη, 14/10). */
+	.ecrm-table--cards.is-selecting .ecrm-checkcol {
+		display: grid !important; place-items: center; position: absolute !important; z-index: 1;
+		left: 14px; top: 14px; width: 40px; height: 40px; grid-column: auto; grid-row: auto;
+	}
+	.ecrm-table--cards.is-selecting .ecrm-cell-mark--cust { visibility: hidden; }
+	.ecrm-table--cards .ecrm-rowcheck { width: 24px; height: 24px; accent-color: var(--amber); }
+	.ecrm-table--cards tr.ecrm-rowlink:has(.ecrm-rowcheck:checked) { border-top-color: var(--amber); border-right-color: var(--amber); border-bottom-color: var(--amber); box-shadow: 0 0 0 3px var(--accent-wash); }
+
+	/* μπάρα μαζικών ενεργειών: κολλημένη πάνω από το κάτω μενού, και το κουμπί
+	   του AlfrAId κρύβεται όσο είναι ανοιχτή ώστε να μην την καλύπτει */
+	.ecrm-bulkbar {
+		position: fixed; left: 10px; right: 10px; bottom: 76px; z-index: 46; max-height: 55vh; overflow-y: auto;
+		border-radius: 16px; padding: 10px 12px; margin: 0;
+		display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center;
+	}
+	.ecrm-bulkbar[hidden] { display: none; }
+	.ecrm-bulkbar .ecrm-bulkbar__n { grid-column: 1; grid-row: 1; margin: 0; }
+	.ecrm-bulkbar [data-bulk-clear] { grid-column: 2; grid-row: 1; }
+	.ecrm-bulkbar select { grid-column: 1; width: 100%; min-width: 0; min-height: 40px; }
+	.ecrm-bulkbar [data-bulk-apply-status], .ecrm-bulkbar [data-bulk-apply-assign] { grid-column: 2; }
+	.ecrm-bulkbar [data-bulk-export] { grid-column: 1; }
+	.ecrm-bulkbar [data-bulk-delete] { grid-column: 2; }
+	.ecrm-bulkbar .ecrm-btn { min-height: 40px; justify-content: center; white-space: nowrap; }
+	body:has(.ecrm-bulkbar:not([hidden])) .ecrm-litsa { display: none; }
+
+	/* «Δικά μου / Ομάδας»: ποτέ σε δύο γραμμές ούτε κομμένο (screenshot
+	   ιδιοκτήτη, 14/10). Ο διακόπτης κρατά το πλάτος του· τα υπόλοιπα κουμπιά
+	   μοιράζονται ό,τι μένει ή πάνε από κάτω. Ισχύει σε όλες τις οθόνες που τον έχουν. */
+	.ecrm-head__actions { flex-wrap: wrap; gap: 8px; }
+	.ecrm-scope { flex: 0 0 auto; }
+	.ecrm-scope__b { white-space: nowrap; min-height: 40px; padding: 7px 16px; }
+	.ecrm-head__actions > .ecrm-btn { flex: 1 1 auto; justify-content: center; white-space: nowrap; }
+
+	/* Εργασίες: η ημερομηνία πάει κάτω από τον τίτλο· δίπλα του τον
+	   στρίμωχνε σε μία λέξη ανά γραμμή (έλεγχος 360px, 14/10). */
+	.ecrm-task { flex-wrap: wrap; }
+	.ecrm-task__due { order: 1; flex: 1 1 100%; text-align: left; padding-left: 52px; margin-top: -4px; }
+
+	/* ---- Έλεγχος όλων των οθονών σε 360px, 14/10 ---- */
+
+	/* Πλακίδια (Αρχική, καρτέλα πελάτη): δύο ανά σειρά αντί για ένα, αλλιώς
+	   τέσσερα νούμερα έπιαναν ολόκληρη οθόνη. */
+	.ecrm-kpis--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+	/* Φίλτρα σταδίου στους Υποψηφίους: τα chips είναι φτιαγμένα για σκούρο
+	   πάνελ (Βάση Γνώσης) και στο ανοιχτό φόντο φαίνονταν σαν σκέτο κείμενο. */
+	.ecrm-leadstages .ecrm-chip2 { border-color: var(--line); background: var(--surface); color: var(--muted); min-height: 36px; }
+	.ecrm-leadstages .ecrm-chip2.is-on { background: var(--amber); color: var(--on-accent); border-color: var(--amber); }
+
+	/* Ειδοποιήσεις: σε όλο το πλάτος, κάτω από τη μπάρα, αντί για στενό
+	   κουτί κολλημένο αριστερά. */
+	.ecrm-bellpanel { position: fixed; top: 64px; left: 8px; right: 8px; width: auto; max-width: none; max-height: calc(100vh - 160px); overflow-y: auto; }
+
+	/* Το κουμπί του AlfrAId κάτω από μενού, ειδοποιήσεις και παράθυρα (ήταν
+	   πάνω από όλα), και κρυμμένο όσο γράφεις σε πεδίο, γιατί κάλυπτε τη
+	   δεξιά άκρη των πεδίων. */
+	.ecrm-litsa { z-index: 15; }   /* κάτω από την πάνω μπάρα (20), όπου ζουν οι ειδοποιήσεις */
+	.ecrm-litsa[data-open="1"] { z-index: 70; }
+	body:has(.ecrm-content :is(input, textarea, select):focus) .ecrm-litsa:not([data-open="1"]) { display: none; }
+	/* Το συρτάρι του μενού πάνω από την κάτω μπάρα, αλλιώς τα τελευταία
+	   στοιχεία του έμεναν από κάτω της. */
+	.ecrm-sidebar { z-index: 50; }
+
+	/* «Κάλεσε / Viber / Email» είναι σύνδεσμοι: χωρίς υπογράμμιση, σαν κουμπιά. */
+	.ecrm-expactions a.ecrm-btn { text-decoration: none; }
+
+	/* Όσο είναι ανοιχτή η μπάρα επιλογής, η λίστα αφήνει χώρο από κάτω. */
+	body:has(.ecrm-bulkbar:not([hidden])) .ecrm-content { padding-bottom: 260px; }
+
+	/* σελιδοποίηση: σε δύο γραμμές αντί να σπρώχνει τη σελίδα πλάγια */
+	.ecrm-pager { flex-wrap: wrap; justify-content: center; }
+	.ecrm-pager__nav { flex: 1 1 100%; justify-content: space-between; }
+	.ecrm-pager__b, .ecrm-pager__pos { white-space: nowrap; }
+	.ecrm-pager__b { padding: 8px 10px; min-height: 40px; }
+}
+
+.ecrm-sub-code { white-space: nowrap; }
