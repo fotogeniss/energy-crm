@@ -44,7 +44,11 @@ import { api, esc } from '@energy-crm/util';
 			return;
 		}
 		body.innerHTML = history.map(function (m) {
-			return '<div class="ecrm-msg ecrm-msg--' + (m.role === 'user' ? 'me' : 'bot') + '">' + esc(m.content).replace(/\n/g, '<br>') + '</div>';
+			var html = esc(m.content);
+			// Ο AlfrAId απαντά με **έντονα**· χωρίς αυτό τα αστεράκια φαίνονταν
+			// σκέτα (έλεγχος κινητού, 14/10). Μόνο έντονα, μετά το escape.
+			if (m.role !== 'user') { html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>'); }
+			return '<div class="ecrm-msg ecrm-msg--' + (m.role === 'user' ? 'me' : 'bot') + '">' + html.replace(/\n/g, '<br>') + '</div>';
 		}).join('') + (busy ? '<div class="ecrm-msg ecrm-msg--bot ecrm-msg--typing"><span></span><span></span><span></span></div>' : '');
 		body.scrollTop = body.scrollHeight;
 	}

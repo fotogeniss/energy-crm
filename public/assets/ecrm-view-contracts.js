@@ -97,7 +97,11 @@ function expandPanel(c, view) {
 	var viberNum = (phone || '').replace(/[^0-9+]/g, '');
 	if (viberNum && viberNum.charAt(0) !== '+') { viberNum = '+30' + viberNum.replace(/^0+/, ''); }
 	var actions = '<div class="ecrm-expactions">' +
-		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-exp-edit>' + svgIcon('edit') + ' Προβολή / Επεξεργασία</button>' +
+		// Η καρτέλα της αίτησης (κατάσταση, ιστορικό, PDF). Στο κινητό το
+		// πάτημα της κάρτας την ανοίγει εδώ αντί να πάει στην καρτέλα, οπότε
+		// χωρίς αυτό το κουμπί δεν υπήρχε δρόμος για αλλαγή κατάστασης (14/10).
+		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-exp-open>Καρτέλα · αλλαγή κατάστασης</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-exp-edit>' + svgIcon('edit') + ' Επεξεργασία</button>' +
 		(phone ? '<a class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" href="tel:' + esc(phone) + '">' + svgIcon('phone') + ' Κάλεσε</a>' : '') +
 		(viberNum ? '<a class="ecrm-btn ecrm-btn--viber ecrm-btn--sm" href="viber://chat?number=' + encodeURIComponent(viberNum) + '" target="_blank" rel="noopener">' + svgIcon('viber') + ' Viber</a>' : '') +
 		(email ? '<a class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" href="mailto:' + esc(email) + '">' + svgIcon('mail') + ' Email</a>' : '') +
@@ -113,6 +117,8 @@ function expandPanel(c, view) {
 }
 
 function bindExpand(box, c, view) {
+	var open = box.querySelector('[data-exp-open]');
+	if (open) open.addEventListener('click', function () { openDetail(c.id); });
 	var edit = box.querySelector('[data-exp-edit]');
 	if (edit) edit.addEventListener('click', function () { openEdit(c); });
 	var del = box.querySelector('[data-exp-del]');
@@ -204,11 +210,17 @@ function person(main, sub, cls) {
  * οθόνης ή ένας περαστικός τους παίρνει όλους μαζί. Τα τέσσερα ψηφία αρκούν
  * για να αναγνωρίσει ο συνεργάτης τη γραμμή του. */
 function subLine(r) {
-	var bits = [];
 	var afm  = r.afm ? String(r.afm) : '';
-	if (afm)    bits.push('ΑΦΜ ' + (afm.length > 4 ? '••••' + afm.slice(-4) : afm));
-	if (r.code) bits.push('#' + r.code);
-	return bits.join(' · ');
+	var out  = afm ? esc('ΑΦΜ ' + (afm.length > 4 ? '••••' + afm.slice(-4) : afm)) : '';
+	// Ο κωδικός δεν σπάει στη μέση, και στο κινητό πάει σε δική του γραμμή
+	// (βλ. .ecrm-sub-code / .ecrm-sub-sep στο ecrm-app.css). Επιστρέφει HTML,
+	// ήδη escaped, για το personHtml().
+	if (r.code) out += (out ? '<span class="ecrm-sub-sep"> · </span>' : '') + '<span class="ecrm-sub-code">#' + esc(r.code) + '</span>';
+	return out;
+}
+
+function personHtml(main, subHtml) {
+	return '<span class="ecrm-person"><strong>' + esc(main || '—') + '</strong><span>' + (subHtml || '—') + '</span></span>';
 }
 
 /* Η μία λέξη που λέει τι χρειάζεται η γραμμή — και κυρίως ΠΟΙΟΣ έχει τη μπάλα.
@@ -272,11 +284,11 @@ function renderContracts(view, d) {
 			: '<span class="ecrm-cell-mark" style="--h:' + tint(r.provider_name || r.provider_slug || '') + '">' + esc(initials(r.provider_name || '·')) + '</span>';
 		var cust = '<span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(name) + '">' + esc(initials(name)) + '</span>';
 		var act = primaryAction(r.status);
-		return '<tr class="ecrm-rowlink" data-id="' + r.id + '">' +
+		return '<tr class="ecrm-rowlink" data-id="' + r.id + '" data-status="' + esc(r.status) + '">' +
 			'<td class="ecrm-checkcol"><input type="checkbox" class="ecrm-rowcheck" data-cid="' + r.id + '"></td>' +
 			'<td class="ecrm-expandcol"><button type="button" class="ecrm-expand" data-expand="' + r.id + '" aria-label="Λεπτομέρειες">+</button></td>' +
-			'<td><span class="ecrm-cell-cust">' + cust + person(name, subLine(r)) + '</span></td>' +
-			'<td><span class="ecrm-cell-prov">' + prov + person(r.provider_name, r.program_name) + '</span></td>' +
+			'<td class="ecrm-c-cust"><span class="ecrm-cell-cust">' + cust + personHtml(name, subLine(r)) + '</span></td>' +
+			'<td class="ecrm-c-prov"><span class="ecrm-cell-prov">' + prov + person(r.provider_name, r.program_name) + '</span></td>' +
 			(showOwner ? '<td class="ecrm-col-sec"><span class="ecrm-cell-owner">' + esc(r.partner_name || '—') + '</span></td>' : '') +
 			'<td class="ecrm-col-sec">' + person(r.supply_number, r.invoice_code, 'ecrm-mono') + '</td>' +
 			// 3β-Γ, 04/09: πλήθος «1/2» δίπλα στο status badge, ΜΟΝΟ όταν η
@@ -284,7 +296,7 @@ function renderContracts(view, d) {
 			// όταν ολοκληρωθούν, το status το λέει ήδη (π.χ. «Υπογράφηκε»),
 			// δεύτερη σήμανση θα ήταν διπλή πληροφορία. Κάθε άλλη σύμβαση
 			// (η συντριπτική πλειοψηφία) δεν βλέπει τίποτα νέο εδώ.
-			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(stLabel) + '</span>' +
+			'<td class="ecrm-c-status"><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(stLabel) + '</span>' +
 			(r.signatures && !r.signatures.complete
 				? '<span class="ecrm-sigpill" title="Υπογραφές: ' + r.signatures.collected.length + ' από ' + r.signatures.required.length + '">' + r.signatures.collected.length + '/' + r.signatures.required.length + '</span>'
 				: '') +
@@ -292,7 +304,7 @@ function renderContracts(view, d) {
 			'<td class="ecrm-cell-date ecrm-col-sec"><div>' + fmtDate(r.updated_at) + '</div><div class="ecrm-muted">' + timeAgo(r.updated_at) + '</div></td>' +
 			'<td class="ecrm-rowactcol"><button type="button" class="ecrm-rowact' + (act.quiet ? ' is-quiet' : '') + '">' + esc(act.txt) + '</button></td>' +
 			'</tr>' +
-			'<tr class="ecrm-exprow" data-exprow="' + r.id + '" hidden><td class="ecrm-expaccent" data-status="' + esc(r.status) + '"></td><td colspan="' + (showOwner ? 8 : 7) + '"><div class="ecrm-exppanel" data-exppanel="' + r.id + '"><div class="ecrm-loading">Φόρτωση…</div></div></td></tr>';
+			'<tr class="ecrm-exprow" data-exprow="' + r.id + '" data-status="' + esc(r.status) + '" hidden><td class="ecrm-expaccent" data-status="' + esc(r.status) + '"></td><td colspan="' + (showOwner ? 8 : 7) + '"><div class="ecrm-exppanel" data-exppanel="' + r.id + '"><div class="ecrm-loading">Φόρτωση…</div></div></td></tr>';
 	}).join('');
 
 	var table = total
@@ -303,8 +315,8 @@ function renderContracts(view, d) {
 			(scope() === 'team' ? '<select class="ecrm-input ecrm-input--sm" data-bulk-assign><option value="">— Ανάθεση σε… —</option></select><button type="button" class="ecrm-btn ecrm-btn--sm" data-bulk-apply-assign>Ανάθεση</button>' : '') +
 			(can('ecrm_export_data') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-export><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Export επιλογής</button>' : '') +
 			(can('ecrm_delete_contract') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--danger" data-bulk-delete><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' : '') +
-			'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-clear>Καθαρισμός</button></div>' +
-			'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-table--rich"><thead><tr>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-clear>Ακύρωση</button></div>' +
+			'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-table--rich ecrm-table--cards"><thead><tr>' +
 			'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πελάτης</th><th>Πάροχος / πρόγραμμα</th>' +
 			(showOwner ? '<th class="ecrm-col-sec">Συνεργάτης</th>' : '') +
 			'<th class="ecrm-col-sec">Παροχή / τιμολόγιο</th><th>Κατάσταση</th><th class="ecrm-col-sec">Ενημέρωση</th><th></th>' +
@@ -390,19 +402,65 @@ function renderContracts(view, d) {
 			.catch(function () { toast('Σφάλμα δικτύου.', false); });
 	});
 
+	// Κινητό (<768px): ο πίνακας γίνεται κάρτες. Πάτημα σε κάρτα την ανοίγει
+	// στη θέση της· το κουμπί της γραμμής και το «Προβολή / Επεξεργασία»
+	// ανοίγουν την καρτέλα. Παρατεταμένο πάτημα ξεκινά επιλογή πολλών.
+	function isMobile() { return window.matchMedia('(max-width: 767px)').matches; }
+	function toggleExpand(id) {
+		var row = view.querySelector('[data-exprow="' + id + '"]');
+		var b = view.querySelector('[data-expand="' + id + '"]');
+		if (!row || !b) return;
+		row.hidden = !row.hidden;
+		b.textContent = row.hidden ? '+' : '×';
+		b.classList.toggle('is-open', !row.hidden);
+		if (!row.hidden) loadExpand(id, view);
+	}
+	var pressTimer = null, pressFired = false, pressX = 0, pressY = 0;
+	function cancelPress() { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } }
 	view.querySelectorAll('.ecrm-rowlink').forEach(function (tr) {
-		tr.addEventListener('click', function () { openDetail(this.getAttribute('data-id')); });
+		tr.addEventListener('click', function () {
+			var id = this.getAttribute('data-id');
+			if (pressFired) { pressFired = false; return; }
+			if (!isMobile()) { openDetail(id); return; }
+			var cb = this.querySelector('.ecrm-rowcheck');
+			if (view.querySelector('.ecrm-table--cards.is-selecting') && cb) { cb.checked = !cb.checked; refreshBar(); return; }
+			toggleExpand(id);
+		});
+		tr.addEventListener('touchstart', function (e) {
+			if (!isMobile() || !e.touches || e.touches.length !== 1) return;
+			pressFired = false;
+			pressX = e.touches[0].clientX; pressY = e.touches[0].clientY;
+			var cb = this.querySelector('.ecrm-rowcheck');
+			cancelPress();
+			pressTimer = setTimeout(function () {
+				pressTimer = null; pressFired = true;
+				var tbl = view.querySelector('.ecrm-table--cards');
+				if (tbl) tbl.classList.add('is-selecting');
+				if (cb) { cb.checked = true; refreshBar(); }
+				if (navigator.vibrate) { try { navigator.vibrate(15); } catch (er) {} }
+			}, 500);
+		}, { passive: true });
+		tr.addEventListener('touchmove', function (e) {
+			var t = e.touches && e.touches[0];
+			if (t && (Math.abs(t.clientX - pressX) > 8 || Math.abs(t.clientY - pressY) > 8)) cancelPress();
+		}, { passive: true });
+		tr.addEventListener('touchend', cancelPress);
+		tr.addEventListener('touchcancel', cancelPress);
+		// Το μενού «κράτα πατημένο» του browser δεν πρέπει να πετάγεται πάνω στην επιλογή.
+		tr.addEventListener('contextmenu', function (e) { if (isMobile()) e.preventDefault(); });
+	});
+	view.querySelectorAll('.ecrm-rowact').forEach(function (b) {
+		b.addEventListener('click', function (e) {
+			if (!isMobile()) return;
+			e.stopPropagation();
+			var tr = this.closest('.ecrm-rowlink');
+			if (tr) openDetail(tr.getAttribute('data-id'));
+		});
 	});
 	view.querySelectorAll('[data-expand]').forEach(function (b) {
 		b.addEventListener('click', function (e) {
 			e.stopPropagation();
-			var id = this.getAttribute('data-expand');
-			var row = view.querySelector('[data-exprow="' + id + '"]');
-			if (!row) return;
-			row.hidden = !row.hidden;
-			this.textContent = row.hidden ? '+' : '×';
-			this.classList.toggle('is-open', !row.hidden);
-			if (!row.hidden) loadExpand(id, view);
+			toggleExpand(this.getAttribute('data-expand'));
 		});
 	});
 	view.querySelectorAll('[data-page]').forEach(function (b) {
@@ -420,12 +478,19 @@ function renderContracts(view, d) {
 	view.querySelectorAll('[data-scope]').forEach(function (b) { b.addEventListener('click', function () { setScope(this.getAttribute('data-scope')); contractsState.page = 1; loadContracts(); }); });
 
 	// ---- bulk selection & actions ----
+	// Διάγνωση εμφάνισης στο κινητό: ?ecrmdiag=1 στη διεύθυνση δείχνει τι
+	// βλέπει ο browser (πλάτος, εκδόσεις αρχείων, στυλ της πρώτης κάρτας).
+	// Μόνο ανάγνωση, κανένα προσωπικό στοιχείο.
+	if (/[?&]ecrmdiag=1/.test(location.search)) { showDiag(view); }
+
 	var bar = view.querySelector('[data-bulkbar]');
 	function selectedIds() { return Array.prototype.slice.call(view.querySelectorAll('.ecrm-rowcheck:checked')).map(function (c) { return +c.getAttribute('data-cid'); }); }
 	function refreshBar() {
 		if (!bar) return;
 		var ids = selectedIds();
 		bar.hidden = ids.length === 0;
+		var cards = view.querySelector('.ecrm-table--cards');
+		if (cards && ids.length === 0) cards.classList.remove('is-selecting');
 		var n = bar.querySelector('[data-bulk-n]'); if (n) n.textContent = ids.length;
 		syncCheckAll();
 	}
@@ -535,6 +600,19 @@ function renderContracts(view, d) {
 				onConfirm: function () { runBulk({ action: 'delete', ids: ids }, 'Διαγράφηκαν'); },
 			});
 		});
+		// Στο κινητό η επιλογή κλείνει και με πάτημα έξω από τις κάρτες και
+		// τη μπάρα (ο ιδιοκτήτης δεν έβρισκε πώς να την ακυρώσει, 14/10). Ένας
+		// listener ανά οθόνη: το view μένει ίδιο, μόνο το περιεχόμενο ξαναγράφεται.
+		if (!view.__ecrmSelOutside) {
+			view.__ecrmSelOutside = true;
+			document.addEventListener('click', function (e) {
+				var cards = view.querySelector('.ecrm-table--cards.is-selecting');
+				if (!cards || !isMobile()) return;
+				if (e.target.closest && (e.target.closest('.ecrm-rowlink') || e.target.closest('[data-bulkbar]') || e.target.closest('.ecrm-modal, .ecrm-dialog'))) return;
+				var clr = view.querySelector('[data-bulk-clear]');
+				if (clr) clr.click();
+			});
+		}
 		var bc = bar.querySelector('[data-bulk-clear]');
 		if (bc) bc.addEventListener('click', function () {
 			view.querySelectorAll('.ecrm-rowcheck').forEach(function (c) { c.checked = false; });
@@ -542,4 +620,37 @@ function renderContracts(view, d) {
 			refreshBar();
 		});
 	}
+}
+
+function showDiag(view) {
+	var tr = view.querySelector('tr.ecrm-rowlink');
+	var st = function (sel) {
+		var el = sel === ':scope' ? tr : (tr && tr.querySelector(sel));
+		if (!el) { return '—'; }
+		var cs = getComputedStyle(el);
+		return cs.display + ' ' + cs.position + ' ws:' + cs.whiteSpace + ' w:' + Math.round(el.getBoundingClientRect().width);
+	};
+	var css = Array.prototype.map.call(document.styleSheets, function (x) { return x.href || ''; })
+		.filter(function (h) { return h.indexOf('ecrm-app.css') > -1; })[0] || '—';
+	var tbl = view.querySelector('.ecrm-table');
+	var lines = [
+		'w=' + window.innerWidth + ' dpr=' + window.devicePixelRatio,
+		'css ' + css.split('?')[1],
+		'table ' + (tbl ? tbl.className : '—'),
+		'tr ' + st(':scope') ,
+		'chk ' + st('.ecrm-checkcol'),
+		'cust ' + st('.ecrm-c-cust'),
+		'name ' + st('.ecrm-c-cust strong'),
+		'prov ' + st('.ecrm-c-prov'),
+		'has() ' + (CSS.supports && CSS.supports('selector(:has(a))')),
+		navigator.userAgent
+	];
+	var old = document.getElementById('ecrm-diag');
+	if (old) { old.remove(); }
+	var box = document.createElement('pre');
+	box.id = 'ecrm-diag';
+	box.style.cssText = 'position:fixed;left:6px;right:6px;top:70px;z-index:99999;background:#000;color:#0f0;font:11px/1.4 monospace;padding:8px;white-space:pre-wrap;border-radius:8px';
+	box.textContent = lines.join('\n');
+	box.addEventListener('click', function () { box.remove(); });
+	document.body.appendChild(box);
 }
