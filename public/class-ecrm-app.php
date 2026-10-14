@@ -204,6 +204,17 @@ class ECRM_App {
 					 * σημείο ελέγχου.
 					 */
 					?>
+					<?php
+					/*
+					 * (312) Στο κινητό ο διακόπτης του topbar κρύβεται για να χωρέσει
+					 * ο AlfrAId· η εναλλαγή εμφάνισης ζει εδώ, μόνο σε κινητό. Ίδιο
+					 * data-theme-toggle, το πιάνει το querySelectorAll του ecrm-app.js.
+					 */
+					?>
+					<button type="button" class="ecrm-nav__item ecrm-nav__theme" data-theme-toggle>
+						<span class="ecrm-nav__icon"><?php echo self::icon( 'moon' ); // phpcs:ignore ?></span>
+						<span class="ecrm-nav__txt">Φωτεινή / σκούρα εμφάνιση</span>
+					</button>
 					<?php if ( current_user_can( 'manage_options' ) ) : ?>
 					<a class="ecrm-nav__item" href="<?php echo esc_url( admin_url( 'admin.php?page=energy-crm' ) ); ?>" title="Ρυθμίσεις (WP Admin)">
 						<span class="ecrm-nav__icon"><?php echo self::icon( 'gear' ); // phpcs:ignore ?></span>
@@ -298,6 +309,15 @@ class ECRM_App {
 							<span class="ecrm-themesw__knob"></span>
 						</button>
 						<span class="ecrm-live"><span class="ecrm-live__dot"></span> Live</span>
+						<?php
+						/*
+						 * (312) AlfrAId στην πάνω μπάρα, μόνο σε κινητό: το στρογγυλό
+						 * κουμπί που αιωρούνταν κάτω δεξιά κάλυπτε κουμπιά και πεδία.
+						 * Ανοίγει το ίδιο πάνελ (ecrm-litsa.js, data-litsa-open).
+						 * Μακέτα: εγκρίθηκε από τον ιδιοκτήτη 14/10.
+						 */
+						?>
+						<button type="button" class="ecrm-topai" data-litsa-open aria-label="Άνοιγμα βοηθού AlfrAId" title="AlfrAId"><?php echo self::alfraid_icon(); // phpcs:ignore ?></button>
 						<div class="ecrm-bellwrap">
 							<button type="button" class="ecrm-bell" data-bell aria-label="Ειδοποιήσεις">
 								<?php echo self::icon( 'bell' ); // phpcs:ignore ?>

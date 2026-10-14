@@ -57,7 +57,15 @@ import { api, esc } from '@energy-crm/util';
 		var open = root.getAttribute('data-open') === '1';
 		root.setAttribute('data-open', open ? '0' : '1');
 		if (!open) {
-			loadHistory(function () { render(); setTimeout(function () { input.focus(); }, 50); });
+			loadHistory(function () {
+				render();
+				// Στο κινητό ΟΧΙ αυτόματο focus: άνοιγε αμέσως το πληκτρολόγιο και
+				// έκρυβε τη μισή συνομιλία (ιδιοκτήτης, 14/10). Εκεί το πληκτρολόγιο
+				// ανοίγει μόνο όταν πατηθεί το πεδίο. Στον υπολογιστή μένει όπως ήταν.
+				if (!window.matchMedia('(max-width: 767px)').matches) {
+					setTimeout(function () { input.focus(); }, 50);
+				}
+			});
 		}
 	}
 
@@ -105,6 +113,12 @@ import { api, esc } from '@energy-crm/util';
 	var clearBtn = root.querySelector('[data-litsa-clear]');
 
 	root.querySelectorAll('[data-litsa-toggle]').forEach(function (b) { b.addEventListener('click', toggle); });
+	// (312) Το κουμπί της πάνω μπάρας (κινητό) ζει έξω από το #ecrm-litsa.
+	document.querySelectorAll('[data-litsa-open]').forEach(function (b) { b.addEventListener('click', toggle); });
+	// Στο κινητό το ανοιχτό πάνελ έχει σκούρο φόντο γύρω του: πάτημα εκεί το κλείνει.
+	root.addEventListener('click', function (e) {
+		if (e.target === root && root.getAttribute('data-open') === '1') { toggle(); }
+	});
 	sendBtn.addEventListener('click', send);
 	if (clearBtn) { clearBtn.addEventListener('click', clearHistory); }
 	input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); send(); } });
