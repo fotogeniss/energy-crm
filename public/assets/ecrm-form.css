@@ -1189,6 +1189,11 @@
 	margin-bottom: 12px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line);
 	border-radius: var(--radius);
 }
+/* (317) Το display:flex παραπάνω νικούσε το [hidden] του browser, οπότε ο
+ * διακόπτης φαινόταν σε ΚΑΘΕ πάροχο και το «Πάνω στο έντυπο» άνοιγε άδειο
+ * κουτί χωρίς εικόνα (screenshot ιδιοκτήτη, Orizon, 15/10). Ίδιο gotcha με
+ * .ecrm-wstep[hidden]· το σχόλιο από πάνω το υποσχόταν, ο κανόνας έλειπε. */
+.ecrm-docsw[hidden] { display: none; }
 .ecrm-docsw__label { font-size: var(--fs-13); font-weight: 700; color: var(--ink); }
 .ecrm-docsw__tabs { display: flex; gap: 2px; background: var(--surface-sunk); border-radius: 9px; padding: 3px; }
 .ecrm-docsw__tab {
@@ -1207,6 +1212,17 @@
  * πραγματικό έντυπο Protergia πριν αλλάξει ο κώδικας. */
 .ecrm-docbox { position: relative; max-width: 760px; margin: 0 auto; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
 .ecrm-docbox img { display: block; width: 100%; height: auto; }
+/* (317) Πολλές σελίδες, η μία κάτω από την άλλη, με τον αριθμό τους. */
+.ecrm-docpages { display: flex; flex-direction: column; gap: 14px; }
+.ecrm-docpage__n { display: block; max-width: 760px; margin: 0 auto 4px; font-size: var(--fs-11-5); font-weight: 700; color: var(--muted); }
+.ecrm-docbox[hidden], .ecrm-docpage[hidden] { display: none; }
+/* Το έντυπο στήνεται σε 760px και κλιμακώνεται ολόκληρο από τη JS (docFit):
+ * το .ecrm-docscale κρατά το ΠΡΑΓΜΑΤΙΚΟ μέγεθος μετά την κλίμακα, ώστε η
+ * σελίδα να πιάνει σωστό χώρο. Κάτω από ένα όριο δεν μικραίνει άλλο και
+ * κυλά οριζόντια (κινητό), αντί τα κουτιά να γίνουν αδύνατα στο γράψιμο. */
+.ecrm-docpages { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.ecrm-docscale { position: relative; margin: 0 auto; }
+.ecrm-docscale > .ecrm-docbox { max-width: none; margin: 0; transform-origin: 0 0; }
 .ecrm-docoverlay__hint { font-size: var(--fs-11-5); color: var(--muted); text-align: center; margin: 10px 0 0; }
 
 /* Θέση σε % πάνω στην εικόνα -- υπολογίζεται από τα mm του JSON, το
@@ -1215,7 +1231,11 @@
  * έντυπο). */
 .ecrm-docfld { position: absolute; transform: translate(0, -50%); }
 .ecrm-docfld__i {
-	font-family: inherit; font-size: var(--fs-10-5); padding: 2px 4px; min-width: 56px;
+	/* (317) Πλάτος από το .ecrm-docfld (ως το επόμενο κουτί της γραμμής),
+	 * ύψος 12px: οι πυκνότερες γραμμές των εντύπων απέχουν 3,3 mm = 12px σε
+	 * πλάτος 760px. */
+	box-sizing: border-box; width: 100%; height: 12px; line-height: 10px;
+	font-family: inherit; font-size: var(--fs-10-5); padding: 0 3px; min-width: 0;
 	border: 1px solid var(--p300); border-radius: 3px; background: var(--accent-wash); color: var(--accent-ink);
 	font-weight: 700; outline: none;
 }
@@ -1234,9 +1254,10 @@
  * εκτύπωσης, μια κάθετη στοίβα θα μετατόπιζε το πάνω κουτί μακριά από
  * τη γραμμή του χαρτιού. */
 .ecrm-docfld--multi { display: flex; gap: 3px; }
-.ecrm-docfld--multi .ecrm-docfld__i { min-width: 44px; }
-.ecrm-docfld--multi .ecrm-docfld__i:first-child { flex: 2; }
-.ecrm-docfld--multi .ecrm-docfld__i:last-child { flex: 1; }
+/* Το πρώτο παιδί είναι το .ecrm-docfld__tag, οπότε το :first-child δεν
+ * έπιανε ποτέ το πρώτο input (317)· το «+» το πιάνει. */
+.ecrm-docfld--multi .ecrm-docfld__i { min-width: 0; width: auto; flex: 1 1 0; }
+.ecrm-docfld--multi .ecrm-docfld__tag + .ecrm-docfld__i { flex: 2 1 0; }
 
 /* (289) Σειρά που την κρύβει ο πάροχος (π.χ. «Τιμολόγιο» στην Protergia).
  * Το display της .ecrm-row θα νικούσε το [hidden] του browser -- ίδιο gotcha

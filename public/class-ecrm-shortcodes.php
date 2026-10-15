@@ -921,10 +921,11 @@ class ECRM_Shortcodes {
 			     ό,τι όψη κι αν βλέπει ο χρήστης. -->
 			<section class="ecrm-card ecrm-docoverlay" data-doc-overlay hidden>
 				<div class="ecrm-step"><span class="ecrm-step__n"><svg class="ecrm-i ecrm-i--step" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span> Πάνω στο έντυπο</div>
-				<div class="ecrm-docbox" data-docoverlay-box>
-					<img data-docoverlay-img alt="Έντυπο αίτησης">
-				</div>
-				<p class="ecrm-docoverlay__hint">Μόνο τα πεδία που τυπώνονται σε αυτή τη σελίδα εμφανίζονται εδώ· τα υπόλοιπα μένουν στην «Κλασική φόρμα».</p>
+				<!-- (317) Μία .ecrm-docbox ανά σελίδα του εντύπου που έχει πεδία· τις
+				     χτίζει η JS (buildDocOverlay), γιατί ο αριθμός σελίδων είναι
+				     του εντύπου, όχι της φόρμας. -->
+				<div class="ecrm-docpages" data-docoverlay-pages></div>
+				<p class="ecrm-docoverlay__hint" data-docoverlay-hint>Εμφανίζονται οι σελίδες του εντύπου που έχουν πεδία. Ό,τι δεν έχει θέση εδώ (επιλογές, πρόγραμμα, υπογραφές) μένει στην «Κλασική φόρμα».</p>
 			</section>
 
 			<?php

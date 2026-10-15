@@ -815,6 +815,9 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		// εδώ (docOverlaySupported), όχι στο backend, ώστε να ανοίγει σε
 		// επόμενους παρόχους χωρίς αλλαγή στο REST.
 		//
+		// (317) Άνοιξε και σε Volton/Orizon, και δείχνει ΟΛΕΣ τις σελίδες που
+		// έχουν πεδία, όχι μόνο την 1η. Το παρακάτω «μόνο σελίδα 1» ίσχυε ως τότε.
+		//
 		// Μόνο σελίδα 1 προς το παρόν, και μόνο πεδία με ΑΚΡΙΒΩΣ ένα .ecrm-input
 		// από πίσω -- ένα πεδίο εντύπου όπως το «Ονοματεπώνυμο» που αντιστοιχεί
 		// σε ΔΥΟ inputs (Όνομα+Επίθετο) δεν έχει ξεκάθαρο ένα κουτί να πάει,
@@ -822,9 +825,46 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		var docOverlayBuilt = null; // template key που είναι ήδη χτισμένο, ή null
 		var docSlots = []; // [{ input, target }]
 
+		// (317) Ανοίγει και σε Volton και Orizon (ζητήθηκε 15/10: «είναι πολύ
+		// χρήσιμο, μου λένε οι χρήστες»). Οι υπόλοιποι πάροχοι μένουν κλειστοί
+		// μέχρι να ελεγχθούν τα έντυπά τους ένα-ένα.
+		var DOC_OVERLAY_PROVIDERS = /^(protergia|volton|orizon)_/;
+
 		function docOverlaySupported(d) {
-			return !!(d && /^protergia/.test(d.template || '') && d.positions
+			return !!(d && DOC_OVERLAY_PROVIDERS.test(d.template || '') && d.positions
 				&& d.positions.fields && Object.keys(d.positions.fields).length && d.positions.pageSize);
+		}
+
+		// (317) Μια θέση στο template.json είναι ΕΙΤΕ ένα {page,x,y} ΕΙΤΕ λίστα
+		// από αυτά, όταν το ίδιο στοιχείο τυπώνεται σε πολλά σημεία (π.χ. το
+		// ονοματεπώνυμο στη σελ. 1, 10 και 11 της Orizon). Η πρώτη γραφή
+		// διάβαζε το `pos.x` πάνω στη λίστα → undefined → NaN%, και το κουτί
+		// κατέληγε πάνω-αριστερά. Εδώ: το ΠΡΩΤΟ σημείο κειμένου (όχι «check»
+		// -- εκείνα είναι κουκκίδες επιλογής, όχι κουτιά για γράψιμο), με τη
+		// μικρότερη σελίδα. Ένα κουτί ανά στοιχείο, όσες σελίδες κι αν το
+		// ξανατυπώνουν: η τιμή είναι μία.
+		function docFirstSpot(pos) {
+			var list = Array.isArray(pos) ? pos : [pos];
+			var best = null;
+			list.forEach(function (p) {
+				if (!p || p.check || typeof p.x !== 'number' || typeof p.y !== 'number') return;
+				var page = parseInt(p.page, 10) || 1;
+				if (!best || page < best.page) best = { page: page, x: p.x, y: p.y };
+			});
+			return best;
+		}
+
+		// Κλειδιά που υπάρχουν στο template.json αλλά η εκτύπωση ΔΕΝ γεμίζει
+		// (ECRM_FormFill, σχόλιο 04/09 για το «_etiketa»). Κουτί εδώ θα έλεγε
+		// ψέματα: ό,τι γραφτεί δεν θα βγει στο χαρτί.
+		var DOC_NOT_PRINTED = { dieuthynsi_apostolis_etiketa: 1 };
+
+		// Μόνο πεδία όπου γράφει κανείς κείμενο. Ένα checkbox (π.χ. η
+		// συναίνεση) ή ένα file πίσω από κουτί κειμένου θα έπαιρνε τιμή που
+		// δεν καταλαβαίνει.
+		var DOC_TEXT_TYPES = { text: 1, email: 1, tel: 1, number: 1, date: 1, search: 1, url: 1, '': 1 };
+		function docWritable(t) {
+			return !!(t && t.tagName === 'INPUT' && DOC_TEXT_TYPES[(t.getAttribute('type') || '').toLowerCase()]);
 		}
 
 		// ΔΙΟΡΘΩΘΗΚΕ 30/08 (screenshot ιδιοκτήτη μέσα στο πραγματικό έντυπο --
@@ -895,7 +935,7 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 			root.querySelectorAll('.ecrm-docsw__tab').forEach(function (t) {
 				t.classList.toggle('is-on', t.getAttribute('data-docview') === view);
 			});
-			if (view === 'doc') syncDocOverlayValues();
+			if (view === 'doc') { syncDocOverlayValues(); docFit(); }
 		}
 
 		root.querySelectorAll('.ecrm-docsw__tab').forEach(function (tab) {
@@ -903,41 +943,90 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		});
 
 		function buildDocOverlay(d) {
-			var box = root.querySelector('[data-doc-overlay] [data-docoverlay-box]');
-			var img = root.querySelector('[data-doc-overlay] [data-docoverlay-img]');
-			if (!box || !img) return;
+			var pagesEl = root.querySelector('[data-doc-overlay] [data-docoverlay-pages]');
+			var hint = root.querySelector('[data-doc-overlay] [data-docoverlay-hint]');
+			if (!pagesEl) return;
 
-			box.querySelectorAll('.ecrm-docfld').forEach(function (n) { n.remove(); });
+			pagesEl.innerHTML = '';
 			docSlots = [];
-
-			// (284) Κάθε πάροχος έχει δικό του φάκελο· το `folder` το στέλνει ο
-			// server (FormTemplates::provider), δεν το μαντεύει η JS.
-			img.src = (ECRM.formsUrl || '') + (d.folder ? d.folder + '/' : '') + d.template + '-1.jpg';
+			if (hint) {
+				if (!hint.getAttribute('data-def')) hint.setAttribute('data-def', hint.textContent);
+				hint.textContent = hint.getAttribute('data-def');
+			}
 
 			var pw = d.positions.pageSize.w, ph = d.positions.pageSize.h;
 			var fields = d.positions.fields;
+			var boxes = {}; // σελίδα -> .ecrm-docbox, χτίζεται μόνο αν έχει πεδίο
+			var placed = []; // { page, x, y, wrap, n } για τον υπολογισμό πλάτους
+
+			function pageBox(page) {
+				if (boxes[page]) return boxes[page];
+				var wrap = document.createElement('div');
+				wrap.className = 'ecrm-docpage';
+				var n = document.createElement('span');
+				n.className = 'ecrm-docpage__n';
+				n.textContent = 'Σελίδα ' + page;
+				// (317) Το έντυπο στήνεται ΠΑΝΤΑ σε πλάτος DOC_W και μετά
+				// κλιμακώνεται ολόκληρο (docFit). Έτσι γράμματα, κουτιά και
+				// χαρτί μικραίνουν μαζί και οι σειρές του χαρτιού (ως 3,3 mm η
+				// μία από την άλλη) δεν πέφτουν η μία πάνω στην άλλη σε στενή
+				// στήλη -- όπως έπεφταν όταν μίκραινε μόνο η εικόνα.
+				var scale = document.createElement('div');
+				scale.className = 'ecrm-docscale';
+				var box = document.createElement('div');
+				box.className = 'ecrm-docbox';
+				box.style.width = DOC_W + 'px';
+				var img = document.createElement('img');
+				img.alt = 'Έντυπο αίτησης, σελίδα ' + page;
+				img.loading = page === 1 ? 'eager' : 'lazy';
+				// Εικόνα που δεν φόρτωσε = σελίδα χωρίς υπόβαθρο, όπου τα κουτιά
+				// θα αιωρούνταν στο κενό. Κρύβεται ολόκληρη· τα πεδία της είναι
+				// ούτως ή άλλως και στην «Κλασική φόρμα».
+				img.addEventListener('load', docFit);
+				img.addEventListener('error', function () {
+					wrap.hidden = true;
+					var anyLeft = Array.prototype.some.call(pagesEl.children, function (c) { return !c.hidden; });
+					if (!anyLeft && hint) hint.textContent = 'Δεν φόρτωσε το έντυπο — συμπλήρωσε από την «Κλασική φόρμα».';
+				});
+				// (284) Κάθε πάροχος έχει δικό του φάκελο· το `folder` το στέλνει ο
+				// server (FormTemplates::provider), δεν το μαντεύει η JS.
+				img.src = (ECRM.formsUrl || '') + (d.folder ? d.folder + '/' : '') + d.template + '-' + page + '.jpg';
+				box.appendChild(img);
+				scale.appendChild(box);
+				wrap.appendChild(n);
+				wrap.appendChild(scale);
+				boxes[page] = box;
+				return box;
+			}
 
 			Object.keys(fields).forEach(function (fillKey) {
-				var pos = fields[fillKey];
-				if ((pos.page || 1) !== 1) return; // σελίδα 1 μόνο προς το παρόν
+				if (DOC_NOT_PRINTED[fillKey]) return;
+				var spot = docFirstSpot(fields[fillKey]);
+				if (!spot) return;
 
 				var names = docOverlayInputNames(fillKey, d);
-				if (!names.length || names.length > 2) return; // άγνωστο, ή πολύ σύνθετο για v1
+				// (317) Ως 4 κουτιά δίπλα-δίπλα: μια ολόκληρη διεύθυνση σε μία
+				// γραμμή του χαρτιού (Οδός · Αριθμός · Τ.Κ · Πόλη, π.χ. Volton
+				// ρεύμα) δεν έχει άλλο σημείο να γραφτεί.
+				if (!names.length || names.length > 4) return;
 
 				var targets = names.map(function (n) {
 					var field = root.querySelector('[data-for="' + n + '"]');
 					return field ? field.querySelector('.ecrm-input') : null;
 				});
-				// Κάθε input πρέπει να υπάρχει ΚΑΙ να είναι πραγματικό <input> --
-				// ένα από τα δύο σαν <select> (π.χ. dropdown) αναιρεί όλη τη
-				// σύνθετη θέση, όχι μόνο το ένα κουτί.
-				if (targets.some(function (t) { return !t || t.tagName !== 'INPUT'; })) return;
+				// Κάθε input πρέπει να υπάρχει ΚΑΙ να δέχεται κείμενο -- ένα από τα
+				// δύο σαν <select> ή checkbox αναιρεί όλη τη σύνθετη θέση.
+				if (!targets.every(docWritable)) return;
 
 				var multi = names.length > 1;
 				var wrap = document.createElement('div');
 				wrap.className = 'ecrm-docfld' + (multi ? ' ecrm-docfld--multi' : '');
-				wrap.style.left = (pos.x / pw * 100) + '%';
-				wrap.style.top  = (pos.y / ph * 100) + '%';
+				wrap.style.left = (spot.x / pw * 100) + '%';
+				// Η εκτύπωση γράφει με baseline στο y + 2,5 mm (ECRM_FormFill::
+				// BASELINE)· το μέσο του τυπωμένου κειμένου πέφτει περίπου στο
+				// y + 1,2 mm. Εκεί κεντράρεται το κουτί, για να δείχνει ΑΚΡΙΒΩΣ
+				// πού θα βγει η τιμή στο χαρτί.
+				wrap.style.top  = ((spot.y + 1.2) / ph * 100) + '%';
 
 				var tag = document.createElement('span');
 				tag.className = 'ecrm-docfld__tag';
@@ -948,10 +1037,14 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 					var placeholder = multi ? docOverlayInputLabel(names[i], d) : docFieldLabel(fillKey, d);
 
 					var input = document.createElement('input');
-					input.type = 'text';
+					// Ίδιος τύπος με το πραγματικό πεδίο: μια ημερομηνία γραμμένη
+					// «12/03/1980» σε <input type=date> σβήνεται σιωπηλά.
+					var ttype = (target.getAttribute('type') || 'text').toLowerCase();
+					input.type = (ttype === 'date' || ttype === 'number' || ttype === 'email' || ttype === 'tel') ? ttype : 'text';
 					input.className = 'ecrm-docfld__i';
 					input.value = target.value || '';
 					input.placeholder = placeholder;
+					input.setAttribute('aria-label', placeholder);
 
 					input.addEventListener('input', function () {
 						target.value = input.value;
@@ -965,9 +1058,82 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 					docSlots.push({ input: input, target: target });
 				});
 
-				box.appendChild(wrap);
+				pageBox(spot.page).appendChild(wrap);
+				placed.push({ page: spot.page, x: spot.x, y: spot.y, wrap: wrap, names: names });
+			});
+
+			// Πλάτος κάθε κουτιού: ως το επόμενο κουτί της ίδιας γραμμής του
+			// χαρτιού, ή ως το δεξί περιθώριο. Χωρίς αυτό κάθε input έπαιρνε
+			// το προεπιλεγμένο πλάτος του browser και σκέπαζε το διπλανό.
+			// Όταν υπάρχει επόμενο κουτί, πριν από αυτό είναι τυπωμένη η ετικέτα
+			// του («Α.Φ.Μ.:», «ΠΟΛΗ:»), που δεν πρέπει να σκεπαστεί: αφήνεται
+			// χώρος DOC_CAPTION mm. Τα σύντομα στοιχεία (Τ.Κ, ημερομηνία,
+			// εγγύηση) έχουν δικό τους μέγιστο, όσο χρειάζεται η τιμή τους.
+			var DOC_CAPTION = 9;
+			function docMaxMm(names) {
+				if (names.every(function (n) { return /postal_code$/.test(n); })) return 17;
+				if (names.every(function (n) { return /date$/.test(n); })) return 30;
+				if (names.every(function (n) { return n === 'guarantee'; })) return 26;
+				return names.length > 2 ? 96 : 58;
+			}
+			// Εμπόδια στη γραμμή: ΟΛΑ τα σημεία του εντύπου, και όσα δεν έχουν
+			// κουτί εδώ (κουκκίδες επιλογής, πεδία που λείπουν από τη φόρμα) --
+			// κι εκείνα έχουν τυπωμένη ετικέτα που δεν πρέπει να σκεπαστεί.
+			var obstacles = [];
+			Object.keys(fields).forEach(function (k) {
+				(Array.isArray(fields[k]) ? fields[k] : [fields[k]]).forEach(function (p) {
+					if (p && typeof p.x === 'number' && typeof p.y === 'number') {
+						obstacles.push({ page: parseInt(p.page, 10) || 1, x: p.x, y: p.y });
+					}
+				});
+			});
+			placed.forEach(function (a) {
+				var limit = pw - 8, next = false;
+				obstacles.forEach(function (b) {
+					if (b.page !== a.page || b.x <= a.x + 2) return;
+					if (Math.abs(b.y - a.y) < 2.6 && b.x < limit) { limit = b.x; next = true; }
+				});
+				var gap = limit - a.x;
+				// Η ετικέτα του επόμενου μπορεί να είναι μακριά («Α.Δ.Τ./ΑΡ.
+				// ΔΙΑΒΑΤΗΡΙΟΥ:» = 26 mm): το κουτί παίρνει το πολύ το 45% του
+				// κενού ως εκεί, και ποτέ τα τελευταία DOC_CAPTION mm.
+				var room = next ? Math.min(gap - DOC_CAPTION, gap * 0.45) : gap - 1.2;
+				var max = docMaxMm(a.names);
+				var min = max === 30 ? 28 : (next ? 8 : 14);
+				var w = Math.max(min, Math.min(max, room));
+				a.wrap.style.width = (w / pw * 100) + '%';
+			});
+
+			// Οι σελίδες με τη σειρά τους, όχι με τη σειρά που εμφανίστηκαν τα
+			// πεδία στο JSON.
+			Object.keys(boxes).map(Number).sort(function (a, b) { return a - b; }).forEach(function (p) {
+				pagesEl.appendChild(boxes[p].parentNode.parentNode);
+			});
+			docFit();
+		}
+
+		// Η κλίμακα του εντύπου: όσο χωράει η στήλη, ποτέ πάνω από 1. Κάτω
+		// από DOC_MIN δεν μικραίνει άλλο (θα γινόταν αδύνατο να γράψεις)· η
+		// σελίδα τότε κυλά οριζόντια (CSS: .ecrm-docpages overflow-x).
+		var DOC_W = 760, DOC_MIN = 0.7;
+		function docFit() {
+			var pagesEl = root.querySelector('[data-docoverlay-pages]');
+			var sec = root.querySelector('[data-doc-overlay]');
+			if (!pagesEl || !sec || sec.hidden) return;
+			var avail = pagesEl.clientWidth;
+			if (!avail) return;
+			var k = Math.max(DOC_MIN, Math.min(1, avail / DOC_W));
+			pagesEl.querySelectorAll('.ecrm-docscale').forEach(function (sc) {
+				var box = sc.firstChild;
+				var ratio = 297 / 210;
+				var img = box && box.querySelector('img');
+				if (img && img.naturalWidth) ratio = img.naturalHeight / img.naturalWidth;
+				box.style.transform = k === 1 ? '' : 'scale(' + k + ')';
+				sc.style.width = (DOC_W * k) + 'px';
+				sc.style.height = (DOC_W * ratio * k) + 'px';
 			});
 		}
+		window.addEventListener('resize', docFit);
 
 		function syncDocOverlayValues() {
 			docSlots.forEach(function (s) {

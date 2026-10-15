@@ -30,6 +30,8 @@ w.ECRM = { rest: 'http://x/wp-json/ecrm/v1', nonce: 'n', userId: 7 };
    μια μετέπειτα αντικατάσταση δεν θα το άγγιζε ποτέ και ο έλεγχος θα
    «περνούσε» ελέγχοντας τον εαυτό του. */
 var postMode = 'refuse';
+/* (317) Τι απαντά το /forms/fields· null = το κοινό άδειο σώμα. */
+var fieldsBody = null;
 w.fetch = function (url, opts) {
 	if (opts && opts.method === 'POST' && /\/contracts$/.test(url)) {
 		posts.push(JSON.parse(opts.body));
@@ -41,6 +43,9 @@ w.fetch = function (url, opts) {
 		// αποθηκεύσεις να είναι συγκρίσιμες (το doSave γράφει contract_id
 		// μόνο σε επιτυχία).
 		return Promise.resolve({ json: function () { return Promise.resolve({ ok: false, error: 'stub' }); } });
+	}
+	if (fieldsBody && /\/forms\/fields/.test(url)) {
+		return Promise.resolve({ json: function () { return Promise.resolve(fieldsBody); } });
 	}
 	const body = { ok: true, rows: [], programs: [], entries: [], matches: [], fields: {} };
 	if (/\/providers/.test(url)) {
@@ -269,6 +274,75 @@ const step = function () {
 		fins.length === 2 && fins[0].payload.client_request_id !== fins[1].payload.client_request_id,
 		JSON.stringify(fins.map(function (f) { return f.payload.client_request_id; })));
 	postMode = 'accept';
+
+	console.log('\n10. (317) «Πάνω στο έντυπο»: Volton/Orizon, λίστες θέσεων, πολλές σελίδες');
+	/* Το form.html δεν έχει τα πεδία που τυπώνει η PHP ($ecrm_field) --
+	   μπαίνουν εδώ όσα χρειάζεται ο έλεγχος, με το ίδιο σχήμα markup. */
+	function addField(name, type) {
+		var host = root.querySelector('[data-classic-view]');
+		var f = w.document.createElement('div');
+		f.className = 'ecrm-field'; f.setAttribute('data-for', name);
+		f.innerHTML = '<span class="ecrm-field__label">' + name + '</span><input class="ecrm-input" name="' + name + '" type="' + type + '">';
+		host.appendChild(f);
+		return f.querySelector('input');
+	}
+	const tAfm = addField('afm_t', 'text'), tStreet = addField('street_t', 'text'), tNo = addField('street_no_t', 'text');
+	const tBirth = addField('birth_t', 'date'), tConsent = addField('consent_t', 'checkbox');
+	fieldsBody = {
+		ok: true, template: 'volton_he', folder: 'volton', fields: {}, main_inputs: [],
+		positions: { pageSize: { w: 210, h: 297 }, fields: {
+			// λίστα: το ΠΡΩΤΟ σημείο στη μικρότερη σελίδα κερδίζει
+			afm_pelati: [{ page: 3, x: 50, y: 50 }, { page: 2, x: 40, y: 80 }],
+			odos_arithmos_katoikias: { page: 2, x: 20, y: 90 },
+			imerominia_gennisis: { page: 2, x: 100, y: 90 },
+			synainesi: { page: 2, x: 10, y: 10 },
+			typos_pelati_idiotis: { page: 2, x: 30, y: 30, check: true },
+			dieuthynsi_apostolis_etiketa: { page: 4, x: 10, y: 10 }
+		} },
+		column_inputs: {
+			afm_pelati: ['afm_t'], odos_arithmos_katoikias: ['street_t', 'street_no_t'],
+			imerominia_gennisis: ['birth_t'], synainesi: ['consent_t'], typos_pelati_idiotis: ['afm_t'],
+			dieuthynsi_apostolis_etiketa: ['street_t']
+		}
+	};
+	w.ECRMForm.reset();
+	w.ECRM.formsUrl = '/f/';
+	q('.ecrm-provider').click();
+	await tick();
+	/* Άλλο querystring από τους προηγούμενους ελέγχους, αλλιώς απαντά η
+	   cache της φόρμας (provFieldsCache) με το παλιό, άδειο σώμα. */
+	q('[data-field="energy_type"] [data-val="gas"]').click();
+	await tick(); await tick(); await tick();
+	const sw = q('[data-docsw]');
+	ok('ο διακόπτης φαίνεται για Volton', sw && sw.hidden === false);
+	const pages = qa('.ecrm-docpage');
+	ok('μία σελίδα: η 2, όπου είναι όλα τα κουτιά (όχι η 3 της λίστας, όχι η 4 του «_etiketa»)',
+		pages.length === 1 && /Σελίδα 2/.test(pages[0].textContent), pages.map(function (p) { return p.textContent; }).join('|'));
+	ok('η εικόνα είναι της σελίδας 2', pages[0] && /volton\/volton_he-2\.jpg$/.test(pages[0].querySelector('img').getAttribute('src')),
+		pages[0] && pages[0].querySelector('img').getAttribute('src'));
+	const flds = qa('.ecrm-docfld');
+	ok('3 κουτιά: ΑΦΜ, Οδός+Αριθμός, ημερομηνία (όχι checkbox, όχι κουκκίδα)', flds.length === 3, String(flds.length));
+	ok('καμία θέση NaN', flds.every(function (f) { return !/NaN|undefined/.test(f.style.left + f.style.top + f.style.width); }));
+	const afmBox = flds.filter(function (f) { return f.querySelector('input').placeholder === 'afm_t'; })[0];
+	ok('το ΑΦΜ στη θέση του 2ου σημείου της λίστας (x=40)', afmBox && Math.abs(parseFloat(afmBox.style.left) - 40 / 210 * 100) < 0.01,
+		afmBox && afmBox.style.left);
+	const dateBox = qa('.ecrm-docfld__i').filter(function (i) { return i.type === 'date'; });
+	ok('η ημερομηνία μένει <input type=date>', dateBox.length === 1);
+	const multi = flds.filter(function (f) { return f.classList.contains('ecrm-docfld--multi'); })[0];
+	ok('Οδός + Αριθμός = δύο κουτιά στο ίδιο σημείο', multi && multi.querySelectorAll('input').length === 2);
+	afmBox.querySelector('input').value = '094014201';
+	afmBox.querySelector('input').dispatchEvent(new w.Event('input', { bubbles: true }));
+	ok('ό,τι γράφεται στο έντυπο πάει στο πραγματικό πεδίο', tAfm.value === '094014201', tAfm.value);
+	ok('κανένα κουτί δεν δένεται σε checkbox', !qa('.ecrm-docfld__i').some(function (x) { return x.placeholder === 'consent_t'; }));
+
+	fieldsBody = Object.assign({}, fieldsBody, { template: 'nrg_he', folder: 'nrg' });
+	w.ECRMForm.reset();
+	q('.ecrm-provider').click();
+	await tick();
+	q('[data-field="energy_type"] [data-val="mobile"]').click();
+	await tick(); await tick(); await tick();
+	ok('NRG (μη ελεγμένος πάροχος): ο διακόπτης μένει κρυφός', q('[data-docsw]').hidden === true);
+	fieldsBody = null;
 
 	console.log('\n' + (fails ? '✗ ΑΠΟΤΥΧΙΕΣ: ' + fails : '✓ ΟΛΑ ΠΕΡΑΣΑΝ') + '  (' + passes + ' έλεγχοι)');
 	process.exit(fails ? 1 : 0);
