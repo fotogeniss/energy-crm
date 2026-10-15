@@ -98,7 +98,24 @@ var OFFLINE_HTML = '<!doctype html><html lang="el"><head><meta charset="utf-8"><
 	+ '<body><div><b>Χωρίς σύνδεση</b><p>Η εφαρμογή δεν έχει ανοίξει ακόμα σε αυτό το κινητό με σύνδεση. Άνοιξέ την μία φορά με internet και μετά θα ανοίγει και χωρίς.</p>'
 	+ '<button onclick="location.reload()">Δοκίμασε ξανά</button></div></body></html>';
 
-function handleNavigation(req) {
+/* (313b) Μαζί με το κέλυφος κρατιέται ΚΑΙ ο κατάλογος παρόχων, με το nonce
+ * που μόλις τυπώθηκε στη σελίδα. Πριν, η αντιγραφή γινόταν μόνο αν η σελίδα
+ * πρόφταινε να ζητήσει /providers (4" μετά το άνοιγμα): στο κινητό του
+ * ιδιοκτήτη η εφαρμογή άνοιξε offline αλλά «Δεν φόρτωσαν οι πάροχοι» (15/10). */
+function cacheProvidersFrom(html) {
+	var rest = /"rest":"([^"]+)"/.exec(html);
+	var nonce = /"nonce":"([A-Za-z0-9]+)"/.exec(html);
+	if (!rest || !nonce) { return Promise.resolve(); }
+	var base = rest[1].replace(/\\\//g, '/').replace(/\/$/, '');
+	return fetch(base + '/providers', { credentials: 'same-origin', headers: { 'X-WP-Nonce': nonce[1] } })
+		.then(function (res) {
+			if (!res || !res.ok) { return; }
+			return caches.open(SHELL_CACHE).then(function (cache) { return cache.put(PROVIDERS_KEY, res); });
+		})
+		.catch(function () {});
+}
+
+function handleNavigation(req, event) {
 	var url = new URL(req.url);
 
 	// Έξοδος: ό,τι κρατήθηκε για τον χρήστη σβήνεται.
@@ -121,7 +138,9 @@ function handleNavigation(req) {
 					'Content-Type': 'text/html; charset=utf-8',
 					'X-ECRM-Cached-At': String(Date.now())
 				} });
-				return cache.put(shellKey(url), copy).then(function () { return res; });
+				var both = cache.put(shellKey(url), copy).then(function () { return cacheProvidersFrom(html); });
+				if (event && event.waitUntil) { event.waitUntil(both); }
+				return res;
 			});
 		}).catch(function () { return res; });
 	}).catch(function () {
@@ -193,7 +212,7 @@ self.addEventListener('fetch', function (event) {
 	var url;
 	try { url = new URL(req.url); } catch (e) { return; }
 	if (url.origin !== self.location.origin) { return; }
-	if (req.mode === 'navigate' && !isNoCachePage(url)) { event.respondWith(handleNavigation(req)); return; }
+	if (req.mode === 'navigate' && !isNoCachePage(url)) { event.respondWith(handleNavigation(req, event)); return; }
 	if (req.mode === 'navigate' && url.pathname.indexOf('/wp-login.php') !== -1 && url.searchParams.get('action') === 'logout') {
 		event.respondWith(handleNavigation(req)); return;
 	}
