@@ -243,6 +243,33 @@ const step = function () {
 		forgotten && lastPost && forgotten.id === lastPost.client_request_id,
 		String(forgotten && forgotten.id) + ' vs ' + String(lastPost && lastPost.client_request_id));
 
+	console.log('\n9γ. (316) οριστικοποίηση χωρίς δίκτυο: η φόρμα πάει σε νέα αίτηση');
+	w.ECRMForm.reset();
+	q('.ecrm-provider').click();
+	await tick();
+	root.querySelector('[name="afm"]').value = '094014201';
+	w.__queued.length = 0; w.__toasts.length = 0;
+	postMode = 'offline';
+	q('[data-finalize]').click();
+	await tick(); await tick(); await tick();
+	const fin = w.__queued.filter(function (e) { return e.what === 'contract'; })[0];
+	ok('η οριστικοποίηση μπήκε στην ουρά', !!fin && fin.payload.status === 'presale', JSON.stringify(w.__queued));
+	ok('η φόρμα καθάρισε', root.querySelector('[name="afm"]').value === '', root.querySelector('[name="afm"]').value);
+	ok('και γύρισε στο βήμα 1', step() === '1', 'ορατά: ' + step());
+	ok('δεν μένει «μη αποθηκευμένο»', w.ECRMForm.isDirty() === false);
+	ok('ο συνεργάτης έμαθε ότι θα σταλεί αυτόματα',
+		w.__toasts.some(function (t) { return /αυτόματα/.test(t.msg); }), JSON.stringify(w.__toasts));
+	q('.ecrm-provider').click();
+	await tick();
+	root.querySelector('[name="afm"]').value = '094014201';
+	q('[data-finalize]').click();
+	await tick(); await tick(); await tick();
+	const fins = w.__queued.filter(function (e) { return e.what === 'contract'; });
+	ok('η επόμενη αίτηση παίρνει ΝΕΟ κλειδί (όχι αντικατάσταση της πρώτης)',
+		fins.length === 2 && fins[0].payload.client_request_id !== fins[1].payload.client_request_id,
+		JSON.stringify(fins.map(function (f) { return f.payload.client_request_id; })));
+	postMode = 'accept';
+
 	console.log('\n' + (fails ? '✗ ΑΠΟΤΥΧΙΕΣ: ' + fails : '✓ ΟΛΑ ΠΕΡΑΣΑΝ') + '  (' + passes + ' έλεγχοι)');
 	process.exit(fails ? 1 : 0);
 })();

@@ -106,6 +106,11 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		location.reload();
 		return true;
 	}
+	// (316) Ποτέ ξαναφόρτωση πάνω σε φόρμα που γράφεται: θα χανόταν ό,τι δεν
+	// έχει αποθηκευτεί ακόμα.
+	function formBusy() {
+		try { return !!(window.ECRMForm && window.ECRMForm.isDirty()); } catch (e) { return false; }
+	}
 
 	var offlineEl = app.querySelector('#ecrm-offline');
 	var wasOffline = !navigator.onLine;
@@ -119,8 +124,7 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		// σε κάθε φόρτωση σελίδας (ήδη online) θα ήταν θόρυβος χωρίς νόημα.
 		if (wasOffline) { toast('Η σύνδεση επανήλθε.'); }
 		wasOffline = false;
-		if (fromShell) { if (reloadFresh()) { return; } }
-		drainQueue();
+		autoSend(true);
 	});
 	window.addEventListener('offline', function () {
 		wasOffline = true;
@@ -161,7 +165,8 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 			// τίποτα να το ανανεώσει. Το ΜΟΝΟ που δουλεύει είναι νέα φόρτωση
 			// σελίδας, που ξανατυπώνει nonce όσο ζει η σύνδεση του χρήστη.
 			// Λέγεται όπως είναι· η σιωπηλή απόρριψη απαγορεύεται ρητά (§2Δ).
-			if (rep.auth) {
+			// (316) Αν η φόρμα δεν γράφεται, η ανανέωση γίνεται μόνη της.
+			if (rep.auth && !(!formBusy() && reloadFresh())) {
 				toast('Ανανέωσε τη σελίδα για να σταλούν οι αιτήσεις που περιμένουν.', false);
 			}
 
@@ -174,6 +179,50 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 			return rep;
 		});
 	}
+
+	// ---- (316) αυτόματη αποστολή --------------------------------------------
+	// Screenshot ιδιοκτήτη, 15/10: η αίτηση έφυγε μόνο όταν πάτησε «Στείλε
+	// τώρα». Το 'online' μόνο του δεν φτάνει: στο κινητό έρχεται πριν δουλέψει
+	// πραγματικά το δίκτυο (η πρώτη προσπάθεια αποτυγχάνει), δεν έρχεται καθόλου
+	// όσο η εφαρμογή είναι στο παρασκήνιο, και το navigator.onLine λέει «ναι» σε
+	// WiFi χωρίς ίντερνετ -- οπότε οι 5 προσπάθειες (MAX_ATTEMPTS) καίγονταν σε
+	// λίγα λεπτά και η αυτόματη αποστολή σταματούσε για πάντα.
+	// Τώρα: όσο υπάρχει κάτι στην ουρά, ξαναδοκιμάζει με αυξανόμενη αναμονή
+	// (15″ → 5′ το πολύ) και αμέσως όταν γυρίσει το δίκτυο ή ανοίξει η εφαρμογή.
+	// Το retryNow() μηδενίζει τον μετρητή· το όριο ενάντια στο σφυροκόπημα του
+	// server είναι πλέον η αναμονή. Ό,τι ΑΡΝΗΘΗΚΕ ο server δεν ξαναστέλνεται.
+	var AUTO_MIN = 15000, AUTO_MAX = 300000;
+	var autoDelay = AUTO_MIN, autoTimer = null, autoBusy = false;
+	function autoSchedule() {
+		clearTimeout(autoTimer);
+		autoTimer = setTimeout(function () { autoTimer = null; autoSend(false); }, autoDelay);
+	}
+	function autoSend(now) {
+		if (now) { autoDelay = AUTO_MIN; }
+		if (autoBusy) { return; }
+		clearTimeout(autoTimer); autoTimer = null;
+		autoBusy = true;
+		queueCount().then(function (n) {
+			if (!n) { autoDelay = AUTO_MIN; return null; }
+			if (!navigator.onLine) { autoSchedule(); return null; }
+			// Από αντίγραφο: φρέσκια σελίδα (φρέσκο nonce) αδειάζει εκείνη.
+			if (fromShell && !formBusy() && reloadFresh()) { return null; }
+
+			return retryNow().then(function (rep) {
+				if (rep && rep.sent) {
+					toast(rep.sent === 1 ? 'Στάλθηκε 1 αίτηση σε αναμονή.' : 'Στάλθηκαν ' + rep.sent + ' αιτήσεις σε αναμονή.');
+				}
+				if (rep && rep.auth && !formBusy() && reloadFresh()) { return; }
+				autoDelay = (rep && rep.sent) ? AUTO_MIN : Math.min(autoDelay * 2, AUTO_MAX);
+
+				return queueCount().then(function (left) { if (left) { autoSchedule(); } });
+			});
+		}).catch(function () { autoSchedule(); }).then(function () { autoBusy = false; });
+	}
+	document.addEventListener('visibilitychange', function () {
+		if (document.visibilityState === 'visible') { autoSend(true); }
+	});
+	window.addEventListener('focus', function () { autoSend(true); });
 
 	if (queueBtn) {
 		queueBtn.addEventListener('click', function (e) {
@@ -271,8 +320,12 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		});
 	}
 
+	var lastQueueN = 0;
 	onQueueChange(function (n) {
 		paintQueue(n);
+		// Μόλις μπει κάτι καινούργιο, ξεκινά ο κύκλος αποστολής.
+		if (n > lastQueueN && !autoTimer && !autoBusy) { autoSchedule(); }
+		lastQueueN = n;
 		// Το πάνελ ξαναζωγραφίζεται μόνο όσο είναι ανοιχτό -- ίδια λογική με
 		// το loadBell() παρακάτω (κλειστό πάνελ = καμία δουλειά μέχρι το
 		// επόμενο άνοιγμα).
@@ -293,11 +346,14 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		// Από αντίγραφο και με σύνδεση (π.χ. το δίκτυο κόλλησε μια στιγμή):
 		// ξαναφόρτωση αντί για άδειασμα με πιθανώς παλιό nonce.
 		if (fromShell) {
-			if (navigator.onLine) { setTimeout(reloadFresh, 3000); }
+			if (navigator.onLine) { setTimeout(function () { autoSend(true); }, 3000); }
+			else { autoSchedule(); }
 			return null;
 		}
 
-		return drainQueue();
+		return drainQueue().then(function () {
+			return queueCount().then(function (n) { if (n) { autoSchedule(); } });
+		});
 	}).catch(function () {});
 
 	// (313) Ο κατάλογος παρόχων για τη φόρμα χωρίς σύνδεση: ένα GET στο
