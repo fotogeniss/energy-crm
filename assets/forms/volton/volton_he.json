@@ -45,13 +45,15 @@
   "arithmos_aitisis": {
    "page": 1,
    "x": 33.7,
-   "y": 47.8
+   "y": 47.8,
+   "maxw": 11
   },
   "imerominia_aitisis": {
    "page": 1,
    "x": 66.2,
    "y": 47.8,
-   "size": 7
+   "size": 7,
+   "maxw": 12.4
   },
   "onoma_programmatos": {
    "page": 1,
@@ -172,11 +174,18 @@
    "x": 96.2,
    "y": 187.5
   },
-  "kad": {
-   "page": 1,
-   "x": 19.4,
-   "y": 193.2
-  },
+  "kad": [
+   {
+    "page": 1,
+    "x": 19.4,
+    "y": 193.2
+   },
+   {
+    "page": 1,
+    "x": 18.5,
+    "y": 84.8
+   }
+  ],
   "onomateponymo_ekprosopou": {
    "page": 1,
    "x": 41.8,

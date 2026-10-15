@@ -778,7 +778,15 @@ class ECRM_FormFill {
 						$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, 'X' );
 						continue;
 					}
-					$pdf->SetFont( 'DejaVu', '', (float) ( $pos['size'] ?? 8.5 ) );
+					$size = \EnergyCRM\Domain\Forms\TextFit::size(
+						$pos,
+						(float) ( $pos['size'] ?? 8.5 ),
+						static function ( float $pt ) use ( $pdf, $val ): float {
+							$pdf->SetFont( 'DejaVu', '', $pt );
+							return (float) $pdf->GetStringWidth( (string) $val );
+						}
+					);
+					$pdf->SetFont( 'DejaVu', '', $size );
 					$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, (string) $val );
 				}
 			}
