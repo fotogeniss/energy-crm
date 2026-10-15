@@ -277,6 +277,12 @@ final class DashboardRepository
 
         $limit = max(1, min(20, $limit));
 
+        // Τα placeholders βγαίνουν από το ίδιο το NEEDS_ME. Ήταν γραμμένα με το
+        // χέρι (τρία), και όταν η (304) έβαλε πέντε καταστάσεις, η τέταρτη τιμή
+        // έπεφτε στο LIMIT: «LIMIT 'pending_issue'» = LIMIT 0, η «Χρειάζεται
+        // ενέργεια» της Αρχικής έμενε πάντα άδεια (integration, 15/10).
+        $in = implode(', ', array_fill(0, count(self::NEEDS_ME), '%s'));
+
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
@@ -284,7 +290,7 @@ final class DashboardRepository
                 'SELECT c.id, c.code, c.status, c.customer_id, c.updated_at, p.name provider,
                         DATEDIFF(UTC_TIMESTAMP(), c.updated_at) days
                  FROM %i c LEFT JOIN %i p ON p.id = c.provider_id
-                 WHERE c.partner_user_id = %d AND c.status IN (%s, %s, %s)
+                 WHERE c.partner_user_id = %d AND c.status IN (' . $in . ')
                  ORDER BY c.updated_at ASC LIMIT %d',
                 [
                     Tables::name(Tables::CONTRACTS),
