@@ -22,6 +22,12 @@
 *.neon   text eol=lf
 *.txt    text eol=lf
 
+# Windows batch: ΠΑΝΤΑ CRLF. Με LF το cmd.exe χάνει τα όρια των γραμμών μέσα
+# στα UTF-8 ελληνικά των σχολίων και τα εκτελεί σαν εντολές («'στο' is not
+# recognized…») -- έτσι έσπαγε το tools\test-db.cmd (15/10).
+*.cmd    text eol=crlf
+*.bat    text eol=crlf
+
 # Form backgrounds and anything else git must not touch a byte of.
 *.png    binary
 *.jpg    binary
