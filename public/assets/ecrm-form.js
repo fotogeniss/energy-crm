@@ -843,13 +843,27 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		// -- εκείνα είναι κουκκίδες επιλογής, όχι κουτιά για γράψιμο), με τη
 		// μικρότερη σελίδα. Ένα κουτί ανά στοιχείο, όσες σελίδες κι αν το
 		// ξανατυπώνουν: η τιμή είναι μία.
+		// `when` (317): «company» / «not_company» -- ίδιος κανόνας με το
+		// ECRM_FormFill::placement_applies(), ώστε το κουτί να είναι εκεί που
+		// θα τυπωθεί η τιμή ΓΙΑ ΑΥΤΟΝ τον τύπο πελάτη.
+		function docWhenOk(p) {
+			if (!p.when) return true;
+			var company = state.customer_type === 'company';
+			if (p.when === 'company') return company;
+			if (p.when === 'not_company') return !company;
+			return false;
+		}
+
 		function docFirstSpot(pos) {
 			var list = Array.isArray(pos) ? pos : [pos];
 			var best = null;
 			list.forEach(function (p) {
 				if (!p || p.check || typeof p.x !== 'number' || typeof p.y !== 'number') return;
+				if (!docWhenOk(p)) return;
 				var page = parseInt(p.page, 10) || 1;
-				if (!best || page < best.page) best = { page: page, x: p.x, y: p.y };
+				// Ίδια σελίδα: το ψηλότερο σημείο (το κύριο τμήμα του εντύπου είναι
+				// πάνω, οι επαναλήψεις -- π.χ. ΚΑΔ εγκατάστασης -- πιο κάτω).
+				if (!best || page < best.page || (page === best.page && p.y < best.y)) best = { page: page, x: p.x, y: p.y };
 			});
 			return best;
 		}
@@ -1167,9 +1181,12 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 
 			sw.hidden = false;
 
-			if (docOverlayBuilt !== d.template) {
+			// Ο τύπος πελάτη μπαίνει στο κλειδί: εταιρεία και ιδιώτης γράφουν
+			// σε ΔΙΑΦΟΡΕΤΙΚΑ τμήματα του ίδιου εντύπου (volton_fa, «when»).
+			var builtKey = d.template + '|' + (state.customer_type === 'company' ? 'c' : 'p');
+			if (docOverlayBuilt !== builtKey) {
 				buildDocOverlay(d);
-				docOverlayBuilt = d.template;
+				docOverlayBuilt = builtKey;
 			} else {
 				syncDocOverlayValues();
 			}

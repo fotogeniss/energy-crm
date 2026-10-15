@@ -767,6 +767,7 @@ class ECRM_FormFill {
 
 				foreach ( self::placements( $placements ) as $pos ) {
 					if ( (int) ( $pos['page'] ?? 1 ) !== $p ) { continue; }
+					if ( ! \EnergyCRM\Domain\Forms\PlacementCondition::applies( $pos, $values ) ) { continue; }
 					if ( ! empty( $pos['check'] ) ) {
 						// Size/bold are per-field opt-ins (default: 10, regular —
 						// unchanged from before this existed) so that turning one

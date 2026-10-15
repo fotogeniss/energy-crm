@@ -49,8 +49,9 @@
   },
   "imerominia_aitisis": {
    "page": 1,
-   "x": 67.5,
-   "y": 47.8
+   "x": 66.2,
+   "y": 47.8,
+   "size": 7
   },
   "onoma_programmatos": {
    "page": 1,
@@ -97,37 +98,37 @@
   },
   "diarkeia_aoristou": {
    "page": 1,
-   "x": 25.9,
+   "x": 24.6,
    "y": 238.6,
    "check": true
   },
   "diarkeia_6_mines": {
    "page": 1,
-   "x": 44.6,
+   "x": 43.6,
    "y": 238.6,
    "check": true
   },
   "diarkeia_12_mines": {
    "page": 1,
-   "x": 65.3,
+   "x": 63.3,
    "y": 238.6,
    "check": true
   },
   "diarkeia_18_mines": {
    "page": 1,
-   "x": 85.1,
+   "x": 83.0,
    "y": 238.6,
    "check": true
   },
   "diarkeia_24_mines": {
    "page": 1,
-   "x": 104.3,
+   "x": 102.4,
    "y": 238.6,
    "check": true
   },
   "diarkeia_36_mines": {
    "page": 1,
-   "x": 125.0,
+   "x": 123.2,
    "y": 238.6,
    "check": true
   },
@@ -175,6 +176,11 @@
    "page": 1,
    "x": 19.4,
    "y": 193.2
+  },
+  "onomateponymo_ekprosopou": {
+   "page": 1,
+   "x": 41.8,
+   "y": 70.1
   }
  },
  "sig": {
