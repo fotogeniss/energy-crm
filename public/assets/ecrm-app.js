@@ -92,6 +92,21 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 	// αναξιόπιστο (π.χ. συνδεδεμένος σε LAN χωρίς πραγματικό internet δείχνει
 	// online) αλλά φθηνό και σωστό στη μεγάλη πλειοψηφία -- «σήκωσε/έπεσε το
 	// wifi/δεδομένα», που είναι το πραγματικό σενάριο εδώ.
+	// (313) Η σελίδα ανοίχτηκε από το αντίγραφο του service worker (χωρίς
+	// σύνδεση). Το nonce της μπορεί να είναι παλιό, οπότε η ουρά ΔΕΝ αδειάζει
+	// από εδώ: μόλις υπάρξει σύνδεση η σελίδα ξαναφορτώνει από το δίκτυο και
+	// αδειάζει εκείνη, με φρέσκο nonce. Δες ecrm-sw.js (313).
+	var fromShell = document.documentElement.hasAttribute('data-ecrm-offline-shell');
+	function reloadFresh() {
+		try {
+			var last = Number(sessionStorage.getItem('ecrm-shell-reload') || 0);
+			if (Date.now() - last < 30000) { return false; }
+			sessionStorage.setItem('ecrm-shell-reload', String(Date.now()));
+		} catch (e) {}
+		location.reload();
+		return true;
+	}
+
 	var offlineEl = app.querySelector('#ecrm-offline');
 	var wasOffline = !navigator.onLine;
 	function paintOnline() {
@@ -104,6 +119,7 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		// σε κάθε φόρτωση σελίδας (ήδη online) θα ήταν θόρυβος χωρίς νόημα.
 		if (wasOffline) { toast('Η σύνδεση επανήλθε.'); }
 		wasOffline = false;
+		if (fromShell) { if (reloadFresh()) { return; } }
 		drainQueue();
 	});
 	window.addEventListener('offline', function () {
@@ -274,8 +290,22 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 				: n + ' αιτήσεις σε αναμονή έληξαν και διαγράφηκαν — δεν στάλθηκαν.', false);
 		}
 
+		// Από αντίγραφο και με σύνδεση (π.χ. το δίκτυο κόλλησε μια στιγμή):
+		// ξαναφόρτωση αντί για άδειασμα με πιθανώς παλιό nonce.
+		if (fromShell) {
+			if (navigator.onLine) { setTimeout(reloadFresh, 3000); }
+			return null;
+		}
+
 		return drainQueue();
 	}).catch(function () {});
+
+	// (313) Ο κατάλογος παρόχων για τη φόρμα χωρίς σύνδεση: ένα GET στο
+	// παρασκήνιο, ώστε το service worker να έχει αντίγραφο ακόμα κι αν ο
+	// συνεργάτης δεν άνοιξε ποτέ τη «Νέα αίτηση» με σύνδεση σε αυτό το κινητό.
+	if (navigator.onLine && !fromShell && 'serviceWorker' in navigator) {
+		setTimeout(function () { fetch(api('/providers'), { headers: H() }).catch(function () {}); }, 4000);
+	}
 
 	// ---- εμφάνιση: ανοιχτό / σκούρο -----------------------------------------
 	// Το data-theme το γράφει ήδη η PHP στο ίδιο το .ecrm, οπότε εδώ μένει μόνο
@@ -551,8 +581,11 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 	});
 
 	// Initial view: respect a #hash so links are copy/paste-able and bookmarkable.
+	// (313) Χωρίς σύνδεση και χωρίς #hash, ανοίγει κατευθείαν η «Νέα αίτηση»:
+	// οι λίστες θέλουν σύνδεση, η αίτηση όχι (μπαίνει στην ουρά).
 	(function () {
 		var v = (location.hash || '').slice(1);
+		if (!v && !navigator.onLine) v = 'new-contract';
 		if (VIEWS.indexOf(v) < 0) v = 'dashboard';
 		suppressHash = true; go(v); suppressHash = false;
 	})();
