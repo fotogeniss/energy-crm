@@ -84,7 +84,8 @@
     "x": 82.8,
     "y": 91.5,
     "size": 7,
-    "when": "not_company"
+    "when": "not_company",
+    "maxw": 15.5
    },
    {
     "page": 1,
@@ -110,13 +111,15 @@
     "page": 1,
     "x": 159.3,
     "y": 94.8,
-    "when": "not_company"
+    "when": "not_company",
+    "maxw": 39
    },
    {
     "page": 1,
     "x": 95.5,
     "y": 123.5,
-    "when": "company"
+    "when": "company",
+    "maxw": 22
    }
   ],
   "arithmos_aitisis": {
@@ -296,25 +299,29 @@
   "poli_apostolis": {
    "page": 1,
    "x": 19.0,
-   "y": 250.1
+   "y": 250.1,
+   "maxw": 15.5
   },
   "odos_apostolis": {
    "page": 1,
    "x": 44.0,
    "y": 250.1,
-   "size": 7
+   "size": 7,
+   "maxw": 3.8
   },
   "arithmos_odou_apostolis": {
    "page": 1,
    "x": 53.2,
    "y": 250.1,
-   "size": 7.5
+   "size": 7.5,
+   "maxw": 7
   },
   "tk_apostolis": {
    "page": 1,
    "x": 66.4,
    "y": 250.1,
-   "size": 7.5
+   "size": 7.5,
+   "maxw": 6.7
   },
   "nomos_apostolis": {
    "page": 1,
