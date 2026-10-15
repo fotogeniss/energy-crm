@@ -19,8 +19,8 @@
   },
   "afm_pelati": {
    "page": 1,
-   "x": 74.0,
-   "y": 143.9
+   "x": 67.7,
+   "y": 80.2
   },
   "doy_pelati": {
    "page": 1,
@@ -79,20 +79,20 @@
   },
   "typos_pelati_etaireia": {
    "page": 1,
-   "x": 22.3,
-   "y": 54.6,
+   "x": 20.9,
+   "y": 55.2,
    "check": true
   },
   "typos_pelati_idiotis": {
    "page": 1,
-   "x": 38.8,
-   "y": 54.6,
+   "x": 37.3,
+   "y": 55.2,
    "check": true
   },
   "typos_pelati_atomiki": {
    "page": 1,
-   "x": 71.4,
-   "y": 54.6,
+   "x": 70.1,
+   "y": 55.2,
    "check": true
   },
   "diarkeia_aoristou": {
@@ -170,11 +170,6 @@
    "page": 1,
    "x": 96.2,
    "y": 187.5
-  },
-  "odos_arithmos_katoikias": {
-   "page": 1,
-   "x": 25.9,
-   "y": 160.7
   },
   "kad": {
    "page": 1,

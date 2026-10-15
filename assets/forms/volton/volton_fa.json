@@ -4,73 +4,68 @@
  "fields": {
   "onomateponymo_pelati": {
    "page": 1,
-   "x": 35.9,
-   "y": 176.8
+   "x": 35.5,
+   "y": 84.5
   },
   "odos_arithmos_katoikias": {
    "page": 1,
-   "x": 85.3,
-   "y": 250.4
+   "x": 25.2,
+   "y": 88.2
   },
   "afm_pelati": {
    "page": 1,
-   "x": 133.9,
-   "y": 83.9
+   "x": 20.5,
+   "y": 91.4
   },
   "tilefono_pelati": {
    "page": 1,
-   "x": 26.9,
-   "y": 94.7
+   "x": 25.7,
+   "y": 94.9
   },
   "tk_katoikias": {
    "page": 1,
-   "x": 105.7,
-   "y": 195.5
+   "x": 92.5,
+   "y": 88.1
   },
   "poli_katoikias": {
    "page": 1,
-   "x": 146.6,
-   "y": 195.5
+   "x": 133.2,
+   "y": 88.1
   },
   "doy_pelati": {
    "page": 1,
-   "x": 83.5,
+   "x": 82.8,
    "y": 91.5
   },
   "adt_pelati": {
    "page": 1,
-   "x": 146.5,
-   "y": 109.9
+   "x": 134.6,
+   "y": 91.5
   },
   "kinito_pelati": {
    "page": 1,
-   "x": 134.2,
-   "y": 183.7
+   "x": 111.8,
+   "y": 94.8
   },
   "email_pelati": {
    "page": 1,
-   "x": 160.1,
-   "y": 94.7
+   "x": 159.3,
+   "y": 94.8
   },
   "arithmos_aitisis": {
    "page": 1,
-   "x": 169.2,
+   "x": 168.5,
    "y": 63.3
   },
   "kodikos_synergati": {
    "page": 1,
-   "x": 138.8,
-   "y": 68.4
+   "x": 137.8,
+   "y": 68.1
   },
   "imerominia_aitisis": {
    "page": 2,
-   "x": 42.0,
-   "y": 233.0
-  },
-  "dieuthynsi_paroxis": {
-   "page": 1,
-   "x": 38.9,
-   "y": 195.3
+   "x": 26.8,
+   "y": 236.3
   },
   "hkasp": {
    "page": 1,
@@ -94,85 +89,85 @@
   },
   "onomateponymo_epikoinonias": {
    "page": 1,
-   "x": 35,
+   "x": 35.0,
    "y": 176.6
   },
   "afm_epikoinonias": {
    "page": 1,
-   "x": 21,
+   "x": 21.0,
    "y": 179.9
   },
   "adt_epikoinonias": {
    "page": 1,
-   "x": 96,
+   "x": 96.0,
    "y": 179.9
   },
   "tilefono_epikoinonias": {
    "page": 1,
-   "x": 27,
+   "x": 27.0,
    "y": 183.5
   },
   "kinito_epikoinonias": {
    "page": 1,
-   "x": 87,
+   "x": 87.0,
    "y": 183.5
   },
   "email_epikoinonias": {
    "page": 1,
-   "x": 134,
+   "x": 134.0,
    "y": 183.5
   },
   "typos_pelati_etaireia": {
    "page": 1,
-   "x": 26,
-   "y": 48.5,
+   "x": 34.1,
+   "y": 48.3,
    "check": true
   },
   "typos_pelati_idiotis": {
    "page": 1,
-   "x": 59,
-   "y": 48.5,
+   "x": 68.6,
+   "y": 48.3,
    "check": true
   },
   "typos_pelati_atomiki": {
    "page": 1,
-   "x": 108,
-   "y": 48.5,
+   "x": 114.2,
+   "y": 48.3,
    "check": true
   },
   "diarkeia_aoristou": {
    "page": 1,
-   "x": 35,
-   "y": 263,
+   "x": 41.5,
+   "y": 263.2,
    "check": true
   },
   "diarkeia_12_mines": {
    "page": 1,
-   "x": 62,
-   "y": 263,
+   "x": 64.0,
+   "y": 263.2,
    "check": true
   },
   "diarkeia_18_mines": {
    "page": 1,
-   "x": 84,
-   "y": 263,
+   "x": 86.5,
+   "y": 263.2,
    "check": true
   },
   "diarkeia_24_mines": {
    "page": 1,
-   "x": 107,
-   "y": 263,
+   "x": 109.1,
+   "y": 263.2,
    "check": true
   },
   "topos_aitisis": {
    "page": 2,
-   "x": 30.0,
-   "y": 230.0
+   "x": 18.8,
+   "y": 231.2
   },
   "eponymia_etaireias": {
    "page": 1,
-   "x": 38.8,
-   "y": 109.9
+   "x": 38.0,
+   "y": 109.4
   },
   "teleftaia_endeixi_metriti": {
    "page": 1,
@@ -181,19 +176,64 @@
   },
   "onomateponymo_ekprosopou": {
    "page": 1,
-   "x": 36.2,
-   "y": 176.8
+   "x": 41.2,
+   "y": 116.3
   },
   "idiotita_idioktitis": {
    "page": 1,
-   "x": 12.6,
-   "y": 229.1,
+   "x": 65.5,
+   "y": 229.6,
    "check": true
   },
   "kad": {
    "page": 1,
    "x": 17.5,
    "y": 235.9
+  },
+  "odos_paroxis": {
+   "page": 1,
+   "x": 37.8,
+   "y": 194.9
+  },
+  "arithmos_odou_paroxis": {
+   "page": 1,
+   "x": 79.4,
+   "y": 194.9
+  },
+  "tk_paroxis": {
+   "page": 1,
+   "x": 105.2,
+   "y": 194.9
+  },
+  "poli_paroxis": {
+   "page": 1,
+   "x": 146.0,
+   "y": 194.9
+  },
+  "poli_apostolis": {
+   "page": 1,
+   "x": 19.0,
+   "y": 250.1
+  },
+  "odos_apostolis": {
+   "page": 1,
+   "x": 44.0,
+   "y": 250.1
+  },
+  "arithmos_odou_apostolis": {
+   "page": 1,
+   "x": 53.2,
+   "y": 250.1
+  },
+  "tk_apostolis": {
+   "page": 1,
+   "x": 66.4,
+   "y": 250.1
+  },
+  "nomos_apostolis": {
+   "page": 1,
+   "x": 84.9,
+   "y": 250.1
   }
  },
  "sig": {
