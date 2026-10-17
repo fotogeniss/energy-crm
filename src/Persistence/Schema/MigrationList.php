@@ -44,6 +44,7 @@ use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusVocabulary;
 use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusesToPaperLists;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaCatalogue2026;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaPicasso;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaBizCatalogue2026;
 use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
 use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
 use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
@@ -111,6 +112,7 @@ final class MigrationList
             new MigrateStatusesToPaperLists(),
             new SeedProtergiaCatalogue2026(),
             new SeedProtergiaPicasso(),
+            new SeedProtergiaBizCatalogue2026(),
         ];
     }
 }

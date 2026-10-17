@@ -1023,6 +1023,13 @@ class ECRM_Shortcodes {
 						</select>
 					</label>
 					<?php $ecrm_field( 'agreed_power', 'Συμφωνημένη Ισχύς (kVA)', 'text', true ); ?>
+					<?php // (319) Τα έντυπα Protergia έχουν «ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Μονοφασική / Τριφασική» δίπλα στα kVA. ?>
+					<label class="ecrm-field" data-for="supply_phases" data-when-energy="power">
+						<span class="ecrm-field__label">Φάσεις Παροχής</span>
+						<select name="supply_phases" class="ecrm-input" data-extra="1">
+							<option value="">—</option><option value="single">Μονοφασική</option><option value="three">Τριφασική</option>
+						</select>
+					</label>
 					<?php $ecrm_field( 'day_indication', 'Ένδειξη Ημέρας', 'text', true ); ?>
 					<label class="ecrm-field" data-for="meter_position">
 						<span class="ecrm-field__label">Θέση Μετρητή</span>
@@ -1317,6 +1324,21 @@ class ECRM_Shortcodes {
 					// συναίνεση που δεν τη ζήτησες δεν μπορείς να τη σημειώσεις.
 					$ecrm_yesno( 'survey_consent', 'Δέχεται τηλεφωνικές έρευνες ικανοποίησης πελατών;', 'power,gas' );
 					$ecrm_yesno( 'waive_withdrawal', 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;', 'power,gas' );
+					// (319) Β1/Β2 της «Αποδοχής όρων» Protergia, με τις λέξεις του χαρτιού.
+					?>
+					<label class="ecrm-field" data-for="terms_notice" data-when-energy="power">
+						<span class="ecrm-field__label">Ενημέρωση για αλλαγή όρων</span>
+						<select name="terms_notice" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<option value="post">Ταχυδρομικώς (δωρεάν)</option>
+							<option value="email">Με e-mail</option>
+							<option value="with_bill">Μαζί με τον λογαριασμό (δωρεάν)</option>
+							<option value="registered">Με συστημένη επιστολή (με χρέωση)</option>
+							<option value="phone">Τηλεφωνικά</option>
+							<option value="bill_note">Σύντομη ειδοποίηση στον λογαριασμό</option>
+						</select>
+					</label>
+					<?php
 					// (269): ίδια περίπτωση με το 'no_marketing_calls' παραπάνω -- το
 					// orizon_mobile.json τυπώνει τη δήλωση καταλόγου στη σελ.6, οπότε
 					// πλέον ΚΑΙ mobile.

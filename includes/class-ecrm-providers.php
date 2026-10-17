@@ -99,6 +99,10 @@ class ECRM_Providers {
 					// (283) Και τα τρία επαγγελματικά, ένα έντυπο το καθένα -- με
 					// έβδομο στοιχείο την κατηγορία, όπως η Volton παρακάτω.
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaBizPlans::all() as $code => $plan ) {
+						// (319) Το Γ21 Value Sure 12 3.0 δεν πουλιέται πια.
+						if ( \EnergyCRM\Domain\Forms\ProtergiaBizCatalogue::isRetired( $code ) ) {
+							continue;
+						}
 						$starters[] = [ $plan['label'], $code, 'power', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'], 'business' ];
 					}
 					// (285) Και τα δύο τιμολόγια φυσικού αερίου, ένα έντυπο το καθένα.
@@ -114,6 +118,10 @@ class ECRM_Providers {
 					// (309) Τα Picasso S/M/L, οικιακά και επαγγελματικά.
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaPicassoPlans::all() as $code => $plan ) {
 						$starters[] = [ $plan['label'], $code, 'power', '', null, null, $plan['category'] ];
+					}
+					// (319) Τα επαγγελματικά «1/2/3» της λίστας της Protergia.
+					foreach ( \EnergyCRM\Domain\Forms\ProtergiaBizCatalogue::all() as $code => $plan ) {
+						$starters[] = [ $plan['label'], $code, $plan['energy'], $plan['priceType'], null, null, 'business' ];
 					}
 				} elseif ( $row['slug'] === 'volton' ) {
 					// Η Volton δίνει 23 προγράμματα, σε ρεύμα ΚΑΙ σε αέριο, και σε

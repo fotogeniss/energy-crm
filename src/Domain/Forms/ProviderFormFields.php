@@ -55,6 +55,8 @@ final class ProviderFormFields
         'ypovoli_ilektronika', 'ypovoli_taxydromika',
         // (285) Φ.Α. Protergia Single Value: Αυτόνομο/Κοινόχρηστο από την κατηγορία της σύμβασης.
         'fa_aftonomo', 'fa_koinoxristo',
+        // (319) Όρος Θ των οικιακών Protergia: τσεκάρεται πάντα, δεν το ρωτά κανείς.
+        'protergia_oros_th',
 
         // Κινητή τηλεφωνία -- έλειπαν εντελώς από εδώ (214). Τα τρία έντυπα
         // Orizon (family/combo/mobile) τα τυπώνουν ήδη μέσω του
@@ -132,6 +134,11 @@ final class ProviderFormFields
         'anotato_orio'               => ['anotato_orio'],
         'arithmos_koinoxristou'      => ['ar_koinoxristou'],
         'isxis_paroxis'              => ['agreed_power'],
+        // (319) Protergia: «ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ» -- ένα dropdown, δύο κουτιά.
+        'fasi_monofasiki'            => ['supply_phases'],
+        'fasi_trifasiki'             => ['supply_phases'],
+        // (319) Παρατηρήσεις: ειδική κατηγορία (ΚΟΤ) και Promotion, μία γραμμή το καθένα.
+        'paratiriseis'               => ['eidiki_katigoria', 'promotion'],
         'teleftaia_endeixi_metriti'  => ['day_indication'],
         'poso_eggiisis'              => ['guarantee'],
         'ipistamenos_promitheftis'   => ['previous_provider'],
@@ -179,6 +186,13 @@ final class ProviderFormFields
         'synainesi_erevnas_nai'      => ['survey_consent'],
         'synainesi_erevnas_oxi'      => ['survey_consent'],
         'enarksi_stin_ypanaxorisi'   => ['waive_withdrawal'],
+        // (319) Β1/Β2 της «Αποδοχής όρων» Protergia: έξι κουτιά, μία ερώτηση.
+        'enimerosi_oron_taxydromika' => ['terms_notice'],
+        'enimerosi_oron_email'       => ['terms_notice'],
+        'enimerosi_oron_logariasmos' => ['terms_notice'],
+        'enimerosi_oron_systimeni'   => ['terms_notice'],
+        'enimerosi_oron_tilefonika'  => ['terms_notice'],
+        'enimerosi_oron_eidopoiisi'  => ['terms_notice'],
         'mi_katachorisi_katalogous'  => ['no_directory_listing'],
     ];
 
@@ -292,6 +306,7 @@ final class ProviderFormFields
         'ypovoli_taxydromika'            => [],
         'fa_aftonomo'                    => [],
         'fa_koinoxristo'                 => [],
+        'protergia_oros_th'              => [],
 
         // Κινητή τηλεφωνία (214) -- ίδιο σχόλιο με το FROM_COLUMNS παραπάνω.
         'arithmos_kinitou'               => ['mobile_msisdn'],
@@ -399,6 +414,8 @@ final class ProviderFormFields
         'mobile_bill_cap_use' => 'Θέλει ανώτατο όριο λογαριασμού (κινητή);',
         'ar_koinoxristou'    => 'Αρ. Κοινόχρηστου Μετρητή',
         'agreed_power'       => 'Συμφωνημένη Ισχύς (kVA)',
+        'supply_phases'      => 'Φάσεις Παροχής',
+        'promotion'          => 'Promotion',
         'day_indication'     => 'Τελευταία Ένδειξη Μετρητή',
         'guarantee'          => 'Εγγύηση (€)',
         'previous_provider'  => 'Υφιστάμενος Προμηθευτής',
@@ -445,6 +462,7 @@ final class ProviderFormFields
         'gdpr_rights_ack'  => 'Ενημερώθηκε για δικαίωμα ανάκλησης συναίνεσης & καταγγελίας (dpa.gr);',
         'group_data_consent' => 'Συναινεί στην επεξεργασία δεδομένων από τον όμιλο;',
         'survey_consent'     => 'Δέχεται τηλεφωνικές έρευνες ικανοποίησης πελατών;',
+        'terms_notice'       => 'Πώς θέλει να ενημερώνεται για αλλαγή όρων;',
         'waive_withdrawal'   => 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;',
         'no_directory_listing' => 'Να ΜΗΝ καταχωρηθεί στους τηλεφωνικούς καταλόγους;',
     ];
@@ -472,7 +490,7 @@ final class ProviderFormFields
      * @var list<string>
      */
     private const NON_PERSONAL_INPUTS = [
-        'anotato_orio', 'ar_koinoxristou', 'agreed_power', 'day_indication', 'guarantee',
+        'anotato_orio', 'ar_koinoxristou', 'agreed_power', 'supply_phases', 'day_indication', 'guarantee',
         'previous_provider', 'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method', 'bill_delivery',
         'subsidy_type', 'base_price', 'offer_price', 'price_after',
         'request_type', 'mobile_offer', 'mobile_bill_cap', 'mobile_bill_cap_use',
@@ -508,6 +526,8 @@ final class ProviderFormFields
         'capacity_role', 'meter_position', 'meter_reading_type', 'payment_method',
         'bill_cap', 'no_marketing_calls', 'group_data_consent', 'survey_consent',
         'waive_withdrawal', 'no_directory_listing',
+        // (319) Φάσεις παροχής και τρόπος ενημέρωσης για αλλαγή όρων.
+        'supply_phases', 'terms_notice',
         // (268) Σελ.5 -- ίδιο σκεπτικό: καταγράφουν ΤΙ επέλεξε ο πελάτης,
         // δεν ταυτοποιούν κανέναν.
         'orizon_marketing_consent', 'volton_marketing_consent', 'promo_after_termination',

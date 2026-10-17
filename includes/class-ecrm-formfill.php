@@ -71,6 +71,13 @@ class ECRM_FormFill {
 			&& \EnergyCRM\Domain\Forms\ProtergiaBizPlans::exists( $program ) ) {
 			return \EnergyCRM\Domain\Forms\ProtergiaBizPlans::templateKey( $program );
 		}
+		// (319) Τα 13 επαγγελματικά του ProtergiaBizCatalogue δεν έχουν δικό
+		// τους φύλλο: γενικό επαγγελματικό, ΚΑΙ για πελάτη περασμένο ως ιδιώτη
+		// (ίδιος κανόνας με το (283) από πάνω).
+		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power'
+			&& \EnergyCRM\Domain\Forms\ProtergiaBizCatalogue::isPower( $program ) ) {
+			return \EnergyCRM\Domain\Forms\ProtergiaBizCatalogue::TEMPLATE;
+		}
 		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power' && ! $biz ) {
 			// Ένα τιμολόγιο, ένα έντυπο. Όταν η σύμβαση δεν κρατάει κάποιο από
 			// τα τέσσερα (παλιές συμβάσεις, ή πρόγραμμα που έφτιαξε ο χρήστης),
@@ -431,6 +438,9 @@ class ECRM_FormFill {
 			'poso_eggiisis'             => $xg( 'guarantee' ),
 			'teleftaia_endeixi_metriti' => $xg( 'day_indication' ),
 			'isxis_paroxis'             => $xg( 'agreed_power' ),
+			// (319) «ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Μονοφασική / Τριφασική».
+			'fasi_monofasiki'           => ( $xg( 'supply_phases' ) === 'single' ? 'X' : '' ),
+			'fasi_trifasiki'            => ( $xg( 'supply_phases' ) === 'three'  ? 'X' : '' ),
 			'epaggelma_pelati'          => $xg( 'activity' ),
 
 			// Checkboxes (engine stamps 'X' when the value is non-empty).
@@ -577,6 +587,23 @@ class ECRM_FormFill {
 			'synainesi_erevnas_nai'   => ( $xg( 'survey_consent' ) === 'yes' ? 'X' : '' ),
 			'synainesi_erevnas_oxi'   => ( $xg( 'survey_consent' ) === 'no'  ? 'X' : '' ),
 			'enarksi_stin_ypanaxorisi' => ( $xg( 'waive_withdrawal' ) === 'yes' ? 'X' : '' ),
+			// (319) Protergia οικιακά, όρος Θ (έναρξη μέσα στην περίοδο
+			// υπαναχώρησης): ρητή εντολή ιδιοκτήτη να τσεκάρεται ΠΑΝΤΑ, όποιες
+			// κι αν είναι οι άλλες επιλογές. Μόνο τα οικιακά φύλλα Protergia
+			// έχουν θέση γι' αυτό το κλειδί.
+			'protergia_oros_th'       => 'X',
+			// (319) «Ενημέρωση σε περίπτωση τροποποίησης των όρων» (Β1/Β2 της
+			// σελίδας «Αποδοχή όρων» Protergia): ένα dropdown, έξι κουτιά.
+			'enimerosi_oron_taxydromika' => ( $xg( 'terms_notice' ) === 'post'       ? 'X' : '' ),
+			'enimerosi_oron_email'       => ( $xg( 'terms_notice' ) === 'email'      ? 'X' : '' ),
+			'enimerosi_oron_logariasmos' => ( $xg( 'terms_notice' ) === 'with_bill'  ? 'X' : '' ),
+			'enimerosi_oron_systimeni'   => ( $xg( 'terms_notice' ) === 'registered' ? 'X' : '' ),
+			'enimerosi_oron_tilefonika'  => ( $xg( 'terms_notice' ) === 'phone'      ? 'X' : '' ),
+			'enimerosi_oron_eidopoiisi'  => ( $xg( 'terms_notice' ) === 'bill_note'  ? 'X' : '' ),
+			// (319) Παρατηρήσεις: ΚΟΤ/ειδική κατηγορία και Promotion, μία γραμμή
+			// το καθένα (επιλογή ιδιοκτήτη). Η ΚΟΤ ΔΕΝ γράφεται πια δίπλα στην
+			// «Κατηγορία Παροχής».
+			'paratiriseis'            => \EnergyCRM\Domain\Forms\Remarks::lines( $xg( 'eidiki_katigoria' ), $xg( 'promotion' ) ),
 			// Μονό κουτί, όχι Ναι/Όχι: το έντυπο γράφει «Δηλώνω ότι ΔΕΝ
 			// επιθυμώ», οπότε το X σημαίνει άρνηση καταχώρησης.
 			'mi_katachorisi_katalogous' => ( $xg( 'no_directory_listing' ) === 'yes' ? 'X' : '' ),
@@ -778,16 +805,23 @@ class ECRM_FormFill {
 						$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, 'X' );
 						continue;
 					}
-					$size = \EnergyCRM\Domain\Forms\TextFit::size(
-						$pos,
-						(float) ( $pos['size'] ?? 8.5 ),
-						static function ( float $pt ) use ( $pdf, $val ): float {
-							$pdf->SetFont( 'DejaVu', '', $pt );
-							return (float) $pdf->GetStringWidth( (string) $val );
-						}
-					);
-					$pdf->SetFont( 'DejaVu', '', $size );
-					$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE, (string) $val );
+					// (319) Πολλές γραμμές μόνο όπου η θέση δηλώνει διάστιχο
+					// (`lh`, mm)· αλλού μια τιμή με αλλαγή γραμμής τυπώνεται
+					// σε μία γραμμή, όπως πριν.
+					$line_h = (float) ( $pos['lh'] ?? 0 );
+					$lines  = \EnergyCRM\Domain\Forms\Remarks::split( (string) $val, $line_h > 0 );
+					foreach ( $lines as $n => $line ) {
+						$size = \EnergyCRM\Domain\Forms\TextFit::size(
+							$pos,
+							(float) ( $pos['size'] ?? 8.5 ),
+							static function ( float $pt ) use ( $pdf, $line ): float {
+								$pdf->SetFont( 'DejaVu', '', $pt );
+								return (float) $pdf->GetStringWidth( $line );
+							}
+						);
+						$pdf->SetFont( 'DejaVu', '', $size );
+						$pdf->Text( (float) $pos['x'], (float) $pos['y'] + self::BASELINE + $n * $line_h, $line );
+					}
 				}
 			}
 

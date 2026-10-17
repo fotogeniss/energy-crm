@@ -267,10 +267,81 @@
    "x": 36.0,
    "y": 237.7
   },
-  "eidiki_katigoria": {
+  "fasi_monofasiki": {
    "page": 1,
-   "x": 140.0,
-   "y": 232.7
+   "x": 128.0,
+   "y": 248.4,
+   "check": true
+  },
+  "fasi_trifasiki": {
+   "page": 1,
+   "x": 157.5,
+   "y": 248.4,
+   "check": true
+  },
+  "apostoli_logariasmou_entypo": {
+   "page": 3,
+   "x": 77.9,
+   "y": 125.7,
+   "check": true,
+   "size": 9
+  },
+  "apostoli_logariasmou_email": {
+   "page": 3,
+   "x": 94.1,
+   "y": 125.7,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_taxydromika": {
+   "page": 3,
+   "x": 37.3,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_email": {
+   "page": 3,
+   "x": 53.4,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_logariasmos": {
+   "page": 3,
+   "x": 94.5,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_systimeni": {
+   "page": 3,
+   "x": 138.7,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_tilefonika": {
+   "page": 3,
+   "x": 24.4,
+   "y": 144.8,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_eidopoiisi": {
+   "page": 3,
+   "x": 123.3,
+   "y": 144.8,
+   "check": true,
+   "size": 9
+  },
+  "paratiriseis": {
+   "page": 3,
+   "x": 27.5,
+   "y": 232.1,
+   "size": 6,
+   "lh": 1.9,
+   "maxw": 170
   }
  },
  "sigs": [
@@ -332,6 +403,16 @@
   "topos_imerominia_aitisis": "ΗΜΕΡΟΜΗΝΙΑ/ΤΟΠΟΣ",
   "synainesi_omilou_nai": "ΝΑΙ",
   "synainesi_erevnas_nai": "ΝΑΙ",
-  "eidiki_katigoria": "ΕΙΔΙΚΗ ΚΑΤΗΓΟΡΙΑ"
+  "fasi_monofasiki": "ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Μονοφασική",
+  "fasi_trifasiki": "ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Τριφασική",
+  "apostoli_logariasmou_entypo": "Αποστολή λογαριασμού: Ταχυδρομικώς",
+  "apostoli_logariasmou_email": "Αποστολή λογαριασμού: Με e-mail",
+  "enimerosi_oron_taxydromika": "Αλλαγή όρων: Ταχυδρομικώς, δωρεάν",
+  "enimerosi_oron_email": "Αλλαγή όρων: Με e-mail",
+  "enimerosi_oron_logariasmos": "Αλλαγή όρων: Μαζί με τον λογαριασμό",
+  "enimerosi_oron_systimeni": "Αλλαγή όρων: Με συστημένη επιστολή",
+  "enimerosi_oron_tilefonika": "Αλλαγή όρων: Τηλεφωνικά",
+  "enimerosi_oron_eidopoiisi": "Αλλαγή όρων: Ειδοποίηση στον λογαριασμό",
+  "paratiriseis": "ΠΑΡΑΤΗΡΗΣΕΙΣ"
  }
 }
