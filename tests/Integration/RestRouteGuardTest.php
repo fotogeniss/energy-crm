@@ -374,9 +374,33 @@ final class RestRouteGuardTest extends IntegrationTestCase
     {
         return (string) preg_replace_callback(
             '#\(\?P<[^>]+>([^)]*)\)#',
-            static fn (array $match): string => str_contains($match[1], '\d') ? '1' : 'sample',
+            static fn (array $match): string => self::sampleSegment($match[1]),
             $route
         );
+    }
+
+    /**
+     * The first value that satisfies the placeholder's own pattern.
+     *
+     * This used to be '1' when the pattern had a \d and 'sample' otherwise.
+     * site-intake/{ref} wants 8 to 64 characters and 'sample' has six, so the
+     * path matched no route and WordPress answered 404 before the guard ever
+     * ran (310). The old pick still comes first, so no other route changes;
+     * a pattern none of these satisfy keeps 'sample' and shows up as a 404.
+     */
+    private static function sampleSegment(string $pattern): string
+    {
+        $candidates = str_contains($pattern, '\d')
+            ? ['1', 'sample1234']
+            : ['sample', 'sample1234', '1'];
+
+        foreach ($candidates as $candidate) {
+            if (preg_match('#^(?:' . $pattern . ')$#', $candidate) === 1) {
+                return $candidate;
+            }
+        }
+
+        return 'sample';
     }
 
     /**

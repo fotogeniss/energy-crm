@@ -39,6 +39,8 @@ class ECRM_Leads {
 		// Το 'link' γράφεται ΜΟΝΟ από το ECRM_Intake, δηλαδή από τον ίδιο τον
 		// πελάτη μέσα από τον δημόσιο σύνδεσμο του πωλητή. Ξεχωρίζει από το
 		// 'chatbot' επίτηδες: εδώ ξέρεις ποιος πωλητής τον έφερε.
-		return [ 'phone' => 'Τηλέφωνο', 'link' => 'Από τον σύνδεσμό μου', 'chatbot' => 'Chatbot', 'referral' => 'Σύσταση', 'walk_in' => 'Επίσκεψη', 'social' => 'Social', 'other' => 'Άλλο' ];
+		// Το 'site' γράφεται ΜΟΝΟ από το SiteIntakeController (310): αίτηση από
+		// το site σύγκρισης τιμών, με υπογραφή του server του site.
+		return [ 'phone' => 'Τηλέφωνο', 'link' => 'Από τον σύνδεσμό μου', 'site' => 'Από το site', 'chatbot' => 'Chatbot', 'referral' => 'Σύσταση', 'walk_in' => 'Επίσκεψη', 'social' => 'Social', 'other' => 'Άλλο' ];
 	}
 }

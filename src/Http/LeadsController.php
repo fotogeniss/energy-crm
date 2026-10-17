@@ -22,6 +22,9 @@ use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\LeadRepository;
+use EnergyCRM\Persistence\ProviderRepository;
+use EnergyCRM\SiteIntake\Domain\SiteLeadPrefill;
+use EnergyCRM\SiteIntake\Persistence\SiteLeadRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -32,6 +35,9 @@ final class LeadsController implements Controller
         private readonly LeadRepository $leads,
         private readonly ContractRepository $contracts,
         private readonly CustomerRepository $customers,
+        // Προαιρετικά: μόνο για υποψηφίους από το site σύγκρισης τιμών (310).
+        private readonly ?SiteLeadRepository $siteLeads = null,
+        private readonly ?ProviderRepository $providers = null,
     ) {
     }
 
@@ -191,19 +197,28 @@ final class LeadsController implements Controller
         $hasLetters     = preg_match('/\p{L}/u', (string) $lead['name']) === 1;
         [$first, $last] = $hasLetters ? self::splitName((string) $lead['name']) : ['', ''];
 
+        // Υποψήφιος από το site σύγκρισης τιμών (310): ξέρουμε ήδη ΑΦΜ,
+        // διεύθυνση, αριθμό παροχής, κατηγορία και πάροχο. Μπαίνουν τώρα, ώστε ο
+        // πωλητής να μην τα ξαναγράψει. Για κάθε άλλον υποψήφιο: κενά, όπως πριν.
+        $site = $this->siteLeads?->privateData($lead);
+
         $customerId = $this->customers->create([
             'customer_type' => 'individual',
             'first_name'    => $first,
             'last_name'     => $last,
             'mobile'        => (string) $lead['phone'],
             'email'         => (string) $lead['email'],
-        ]);
+        ] + ($site !== null ? SiteLeadPrefill::customer($site) : []));
 
         $energy = in_array($lead['energy_type'], ['power', 'gas', 'mobile'], true)
             ? (string) $lead['energy_type']
             : 'power';
 
-        $contractId = $this->contracts->create([
+        $fromSite = $site !== null
+            ? SiteLeadPrefill::contract($site, $this->providers?->active() ?? [])
+            : [];
+
+        $contractId = $this->contracts->create($fromSite + [
             'customer_id'   => $customerId ?: null,
             'energy_type'   => $energy,
             'category'      => 'home',
@@ -249,6 +264,12 @@ final class LeadsController implements Controller
         // και όχι πριν: αν χανόταν η διεκδίκηση, ο πρόχειρος διαγράφεται και τα
         // αρχεία θα είχαν μετακομίσει σε σύμβαση που δεν υπάρχει πια.
         ECRM_Files::attach_lead_to_contract($id, $contractId);
+
+        // Τα στοιχεία του site ζουν πια στον πελάτη και στη σύμβαση. Δεύτερο,
+        // ξεχασμένο αντίγραφο ΑΦΜ/διεύθυνσης στον υποψήφιο δεν κρατάμε.
+        if ($site !== null) {
+            $this->siteLeads?->forgetPrivateData($id);
+        }
 
         return new WP_REST_Response(['ok' => true, 'contract_id' => $contractId], 200);
     }

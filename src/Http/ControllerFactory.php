@@ -37,6 +37,7 @@ use EnergyCRM\Providers\Http\ProviderStatusMapController;
 use EnergyCRM\Providers\Persistence\ProviderStatusMapRepository;
 use EnergyCRM\Providers\Persistence\UsualChoiceRepository;
 use EnergyCRM\Services;
+use EnergyCRM\SiteIntake\Http\SiteIntakeController;
 
 final class ControllerFactory
 {
@@ -144,7 +145,21 @@ final class ControllerFactory
                 Services::customerNotes(),
                 Services::customerEvents()
             ),
-            new LeadsController($scope, Services::leads(), Services::contracts(), Services::customers()),
+            new LeadsController(
+                $scope,
+                Services::leads(),
+                Services::contracts(),
+                Services::customers(),
+                Services::siteLeads(),
+                Services::providers(),
+            ),
+
+            // Αιτήσεις από το site σύγκρισης τιμών (310). Χωρίς login: υπογραφή HMAC.
+            new SiteIntakeController(
+                Services::siteIntakeConfig(),
+                Services::siteLeads(),
+                Services::notifications(),
+            ),
             new TeamController(
                 $scope,
                 Services::team(),

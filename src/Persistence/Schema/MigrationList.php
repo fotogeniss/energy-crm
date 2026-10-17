@@ -27,6 +27,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddCustomerPhoneIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddGuaranteeRuleForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddIntakeColumns;
+use EnergyCRM\Persistence\Schema\Migrations\AddSiteIntakeColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddPayoutAmountColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProviderRefColumn;
@@ -112,6 +113,7 @@ final class MigrationList
             new MigrateStatusesToPaperLists(),
             new SeedProtergiaCatalogue2026(),
             new SeedProtergiaPicasso(),
+            new AddSiteIntakeColumns(),
             new SeedProtergiaBizCatalogue2026(),
         ];
     }
