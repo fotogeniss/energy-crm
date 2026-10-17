@@ -254,11 +254,11 @@ class ECRM_Admin {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="ecrm_chat_model">Μοντέλο chat (AlfrAId)</label></th>
+						<th scope="row"><label for="ecrm_chat_model">Μοντέλο chat (AIde)</label></th>
 						<td>
 							<input type="text" id="ecrm_chat_model" name="<?php echo esc_attr( ECRM_PREFIX . 'claude_chat_model' ); ?>"
 								value="<?php echo esc_attr( $chat_model ); ?>" class="regular-text" placeholder="<?php echo esc_attr( ECRM_Extractor::DEFAULT_CHAT_MODEL ); ?>">
-							<p class="description">Για τις απαντήσεις του AlfrAId. Προεπιλογή: <code><?php echo esc_html( ECRM_Extractor::DEFAULT_CHAT_MODEL ); ?></code>. Αν οι απαντήσεις δεν σε καλύπτουν, γράψε εδώ το ίδιο μοντέλο με πάνω.</p>
+							<p class="description">Για τις απαντήσεις του AIde. Προεπιλογή: <code><?php echo esc_html( ECRM_Extractor::DEFAULT_CHAT_MODEL ); ?></code>. Αν οι απαντήσεις δεν σε καλύπτουν, γράψε εδώ το ίδιο μοντέλο με πάνω.</p>
 						</td>
 					</tr>
 					<tr>
