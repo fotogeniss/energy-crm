@@ -51,6 +51,7 @@ class ECRM_App {
 		$role_label = 'ΣΥΝΕΡΓΑΤΗΣ';
 		if ( in_array( 'ecrm_seller', (array) $user->roles, true ) ) { $role_label = 'ΠΩΛΗΤΗΣ'; }
 		elseif ( user_can( $user, 'manage_options' ) ) { $role_label = 'ADMIN'; }
+		elseif ( in_array( \EnergyCRM\Access\Roles::BACKOFFICE, (array) $user->roles, true ) ) { $role_label = 'BACK OFFICE'; }
 
 		$parts = preg_split( '/\s+/', trim( (string) $user->display_name ) );
 		$initials = '';

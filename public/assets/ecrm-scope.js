@@ -15,7 +15,17 @@
  * σε κάποιον δεδομένα συναδέλφων του χωρίς να το έχει ζητήσει σε αυτή τη
  * συνεδρία. */
 
-var current = 'own';
+/* (318) Εξαίρεση: το Back office. Βλέπει όλη την εταιρεία ως δουλειά του και
+ * δεν έχει δικές του αιτήσεις, οπότε το «Δικά μου» θα άνοιγε πάντα άδειο.
+ * Μόνο αν έχει ecrm_view_all ΚΑΙ δεν είναι διαχειριστής -- ο διαχειριστής
+ * κρατά την προεπιλογή του όπως ήταν. Τα caps είναι μόνο παρουσίαση· ο
+ * server κρίνει ξανά τι επιστρέφει. */
+function initialScope() {
+	var cfg = typeof window !== 'undefined' ? window.ECRM : undefined;
+	return cfg && cfg.caps && cfg.caps.ecrm_view_all && !cfg.isAdmin ? 'team' : 'own';
+}
+
+var current = initialScope();
 
 /** @return {'own'|'team'} */
 export function scope() {

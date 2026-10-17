@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_Notifications;
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Partner\PerformanceTier;
 use DateTimeImmutable;
@@ -104,7 +105,25 @@ final class DashboardController implements Controller
             ],
 
             // Τα τέσσερα πλακίδια, 25/08/2026 — δες DashboardRepository::tiles().
-            'tiles'       => $this->dashboard->tiles($actor, $monthStart),
+            'tiles'       => $this->tilesFor($actor, $monthStart),
         ], 200);
+    }
+
+    /**
+     * (318) Χωρίς `VIEW_COMMISSIONS` (Back office) το πλακίδιο «Κλεισμένες»
+     * έρχεται χωρίς ποσό: το κλειδί λείπει, και η οθόνη δεν γράφει
+     * «→ € προμήθεια». Ο αριθμός των συμβάσεων μένει.
+     *
+     * @return array<string, int|float>
+     */
+    private function tilesFor(int $actor, string $monthStart): array
+    {
+        $tiles = $this->dashboard->tiles($actor, $monthStart);
+
+        if (! current_user_can(Capability::VIEW_COMMISSIONS)) {
+            unset($tiles['closed_month_commission']);
+        }
+
+        return $tiles;
     }
 }

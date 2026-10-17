@@ -600,6 +600,7 @@ class ECRM_DB {
 		return [
 			'ecrm_partner'   => 'Συνεργάτης',
 			'ecrm_seller'    => 'Πωλητής',
+			'ecrm_backoffice' => 'Back office',
 			'ecrm_registrar' => 'Καταχωρητής',
 		];
 	}

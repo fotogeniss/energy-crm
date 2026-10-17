@@ -93,8 +93,13 @@ final class ProviderVisibility
         return $this->forScope($scope)->filter($this->providers->activeIds());
     }
 
+    /**
+     * (318) Και το Back office (`ecrm_view_all`): ίδια απάντηση με τον
+     * WordPressScopeResolver, ώστε η καρτέλα μέλους να λέει ό,τι ισχύει στα
+     * αιτήματά του (εκεί περνά από forScope(), που είναι ήδη «χωρίς όριο»).
+     */
     private function isAdministrator(int $userId): bool
     {
-        return user_can($userId, 'manage_options');
+        return user_can($userId, 'manage_options') || user_can($userId, Capability::VIEW_ALL);
     }
 }

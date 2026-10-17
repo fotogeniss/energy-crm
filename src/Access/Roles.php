@@ -10,6 +10,11 @@
  *
  * The reading behind it:
  *   Συνεργάτης — runs a downline. Everything except site administration.
+ *   Back office — (318) processes every application of the company, like
+ *                the administrator, but sees NO money: no commissions, no
+ *                payouts, no amounts in the statistics. No MANAGE_TEAM: a
+ *                member created by the Back office would become ITS downline
+ *                and pay commission upwards to it.
  *   Πωλητής    — sells. Owns leads and contracts, sees their own commission,
  *                can delete their own work, cannot reassign someone else's
  *                (that moves money between people, not just a record).
@@ -44,12 +49,13 @@ namespace EnergyCRM\Access;
 
 final class Roles
 {
-    public const PARTNER   = 'ecrm_partner';
-    public const SELLER    = 'ecrm_seller';
-    public const REGISTRAR = 'ecrm_registrar';
+    public const PARTNER    = 'ecrm_partner';
+    public const SELLER     = 'ecrm_seller';
+    public const BACKOFFICE = 'ecrm_backoffice';
+    public const REGISTRAR  = 'ecrm_registrar';
 
     /** Bump whenever matrix() changes, so live sites pick the change up. */
-    private const VERSION = '6';
+    private const VERSION = '7';
 
     private const VERSION_OPTION = 'ecrm_roles_version';
 
@@ -94,6 +100,26 @@ final class Roles
                     Capability::ASSIGN_CONTRACT,
                     Capability::MANAGE_TEAM,
                     Capability::VIEW_COMMISSIONS,
+                    Capability::MANAGE_LEADS,
+                    Capability::IMPORT_DATA,
+                    Capability::EXPORT_DATA,
+                    Capability::VIEW_ANALYTICS,
+                ],
+            ],
+            // (318) Back office: όλες οι αιτήσεις (VIEW_ALL), κανένα ποσό.
+            // ΧΩΡΙΣ VIEW_COMMISSIONS -- αυτό κρύβει Προμήθειες, Εκκαθαρίσεις
+            // και κάθε ποσό σε Αρχική/Στατιστικά/καρτέλα/εξαγωγή.
+            // ΧΩΡΙΣ MANAGE_TEAM -- βλ. σχόλιο στην κορυφή.
+            self::BACKOFFICE => [
+                'label'        => 'Back office',
+                'capabilities' => [
+                    Capability::USE_CRM,
+                    Capability::VIEW_ALL,
+                    Capability::CREATE_CONTRACT,
+                    Capability::EDIT_CONTRACT,
+                    Capability::DELETE_CONTRACT,
+                    Capability::CHANGE_STATUS,
+                    Capability::ASSIGN_CONTRACT,
                     Capability::MANAGE_LEADS,
                     Capability::IMPORT_DATA,
                     Capability::EXPORT_DATA,

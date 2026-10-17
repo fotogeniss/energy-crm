@@ -88,6 +88,9 @@ function kpiCards(k) {
 	var m = k.month || { month: 0, prev: 0 };
 	var s = k.success || { payable: 0, settled: 0 };
 	var g = k.sign || { avg: null, sample: 0 };
+	// (318) null = ο θεατής δεν έχει δικαίωμα προμηθειών (Back office): ο
+	// server δεν έστειλε ποσά, και το πλακίδιο «Προμήθεια» δεν μπαίνει.
+	var money = k.commission !== null;
 	var c = k.commission || { total: 0, unpaid: 0, count: 0 };
 
 	// ΠΡΟΣΟΧΗ: prev === 0 σημαίνει «καμία τον προηγούμενο μήνα», ΟΧΙ «δεν
@@ -124,14 +127,16 @@ function kpiCards(k) {
 			(g.sample < MIN_SAMPLE ? ' — μικρό δείγμα' : '');
 	}
 
-	return '<div class="ecrm-kpis ecrm-kpis--4">' +
+	return '<div class="ecrm-kpis' + (money ? ' ecrm-kpis--4' : '') + '">' +
 		kpi('Συμβάσεις μήνα', m.month + deltaChip(m.month, m.prev), esc(monthFoot)) +
 		kpi('Επιτυχία', rate, esc(rateFoot)) +
 		kpi('Μέσος χρόνος ως υπογραφή', days, esc(daysFoot)) +
-		kpi('Προμήθεια', euro(c.total),
-			c.unpaid > 0
-				? esc(euro(c.unpaid) + ' δεν έχει πληρωθεί ακόμη')
-				: (c.count ? 'όλα πληρωμένα' : 'καμία πληρωτέα σύμβαση')) +
+		(money
+			? kpi('Προμήθεια', euro(c.total),
+				c.unpaid > 0
+					? esc(euro(c.unpaid) + ' δεν έχει πληρωθεί ακόμη')
+					: (c.count ? 'όλα πληρωμένα' : 'καμία πληρωτέα σύμβαση'))
+			: '') +
 		'</div>';
 }
 
@@ -271,6 +276,8 @@ function renderPartner(view, d, memberId, prov) {
 	var statuses = d.statuses || {};
 	var down = d.downline || [];
 	var commRows = d.commission_rows || [];
+	// (318) null = χωρίς δικαίωμα προμηθειών· η κάρτα δεν μπαίνει καθόλου.
+	var showComm = d.commission_rows !== null;
 
 	// .ecrm-kv και όχι .ecrm-dl: εκεί το <dt> είναι μικρό κεφαλαίο ΕΤΙΚΕΤΑ και
 	// το <dd> η τιμή — δηλαδή το όνομα του ανθρώπου θα γινόταν ψιλό γκρι label
@@ -335,8 +342,10 @@ function renderPartner(view, d, memberId, prov) {
 		// Ίδιο σχήμα γραμμής με CommissionsController::index(), όχι νέο
 		// υπολογισμό -- το πλακίδιο πάνω και αυτή η κάρτα πάντα συμφωνούν
 		// γιατί περνούν από το ίδιο CommissionAmount::of() (task 04).
-		'<div class="ecrm-card"><div class="ecrm-step">Προμήθεια · ανά σύμβαση</div>' +
-		commissionRows(commRows) + '</div>' +
+		(showComm
+			? '<div class="ecrm-card"><div class="ecrm-step">Προμήθεια · ανά σύμβαση</div>' +
+				commissionRows(commRows) + '</div>'
+			: '') +
 		'</div>' +
 
 		'<div class="ecrm-pgrid__side">' +

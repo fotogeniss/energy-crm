@@ -64,8 +64,10 @@ final class UserScope
     }
 
     /**
-     * Unrestricted. Reserved for `manage_options`; still carries an actor id so
-     * that audit trails record who acted.
+     * Unrestricted. Reserved for `manage_options` and, since (318), for the
+     * Back office (`ecrm_view_all`); still carries an actor id so that audit
+     * trails record who acted. It is about what is VISIBLE, never about money:
+     * commissions are gated separately by `ecrm_view_commissions`.
      */
     public static function forAdministrator(int $actorId): self
     {
