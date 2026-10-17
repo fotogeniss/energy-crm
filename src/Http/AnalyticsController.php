@@ -50,7 +50,9 @@ final class AnalyticsController implements Controller
     public function index(WP_REST_Request $request): WP_REST_Response
     {
         $scope   = $this->scopes->forCurrentUser();
-        $canTeam = current_user_can(Capability::MANAGE_TEAM);
+        // (318) Το Back office δεν διαχειρίζεται ομάδα, αλλά βλέπει όλη την
+        // εταιρεία· η προβολή «Ομάδας» είναι γι' αυτό η χρήσιμη.
+        $canTeam = current_user_can(Capability::MANAGE_TEAM) || current_user_can(Capability::VIEW_ALL);
         $asTeam  = $request['scope'] === 'team' && $canTeam;
 
         if (! $asTeam) {
@@ -86,7 +88,9 @@ final class AnalyticsController implements Controller
             // (ώρα Ελλάδας) την 1η Ιανουαρίου -- ίδια κλάση σφάλματος με τα ήδη
             // διορθωμένα σημεία, εύρημα ελέγχου ασφαλείας/λογικής (26/08/2026).
             'monthly'     => array_values($this->analytics->monthlyTotals($scope, (int) current_time('Y'))),
-            'leaderboard' => $asTeam ? $this->leaderboard($scope) : [],
+            'leaderboard' => $asTeam
+                ? $this->leaderboard($scope, current_user_can(Capability::VIEW_COMMISSIONS))
+                : [],
         ], 200);
     }
 
@@ -129,9 +133,13 @@ final class AnalyticsController implements Controller
      * large ones are not the same achievement, and ranking by volume would push
      * people towards the wrong work.
      *
-     * @return list<array{name: string, count: int, amount: float}>
+     * (318) Χωρίς `VIEW_COMMISSIONS` (Back office) η κατάταξη γίνεται με το
+     * πλήθος και η γραμμή ΔΕΝ έχει `amount` -- ούτε μηδέν, ώστε η οθόνη να
+     * ξέρει να κρύψει τη στήλη αντί να γράψει «0 €».
+     *
+     * @return list<array{name: string, count: int, amount?: float}>
      */
-    private function leaderboard(UserScope $scope): array
+    private function leaderboard(UserScope $scope, bool $withAmounts): array
     {
         $totals = [];
 
@@ -140,6 +148,10 @@ final class AnalyticsController implements Controller
 
             $totals[$partner] ??= ['count' => 0, 'amount' => 0.0];
             $totals[$partner]['count']++;
+
+            if (! $withAmounts) {
+                continue;
+            }
 
             // Το ίδιο ερώτημα που κάνουν η οθόνη Προμήθειες και η βεβαίωση:
             // ό,τι έχει σφραγιστεί σε παρτίδα μετράει με το ποσό που
@@ -153,18 +165,24 @@ final class AnalyticsController implements Controller
             );
         }
 
-        uasort($totals, static fn (array $a, array $b): int => $b['amount'] <=> $a['amount']);
+        $key = $withAmounts ? 'amount' : 'count';
+        uasort($totals, static fn (array $a, array $b): int => $b[$key] <=> $a[$key]);
 
         $board = [];
 
         foreach (array_slice($totals, 0, self::LEADERBOARD_SIZE, true) as $partner => $total) {
             $user = get_userdata($partner);
 
-            $board[] = [
-                'name'   => $user ? $user->display_name : '#' . $partner,
-                'count'  => $total['count'],
-                'amount' => round($total['amount'], 2),
+            $line = [
+                'name'  => $user ? $user->display_name : '#' . $partner,
+                'count' => $total['count'],
             ];
+
+            if ($withAmounts) {
+                $line['amount'] = round($total['amount'], 2);
+            }
+
+            $board[] = $line;
         }
 
         return $board;

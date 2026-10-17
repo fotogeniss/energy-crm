@@ -59,7 +59,10 @@ final class WordPressScopeResolver implements ScopeResolver
 
     private function resolve(int $userId): UserScope
     {
-        if (user_can($userId, 'manage_options')) {
+        // (318) Το Back office βλέπει ό,τι ο διαχειριστής: όλες τις αιτήσεις,
+        // όχι ένα «δίκτυο». Μόνο η ορατότητα· τα χρήματα κρίνονται χωριστά από
+        // το VIEW_COMMISSIONS, που το Back office δεν έχει.
+        if (user_can($userId, 'manage_options') || user_can($userId, Capability::VIEW_ALL)) {
             return UserScope::forAdministrator($userId);
         }
 

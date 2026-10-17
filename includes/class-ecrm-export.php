@@ -97,6 +97,11 @@ class ECRM_Export {
 			return $ts ? gmdate( 'd/m/Y', $ts ) : '';
 		};
 
+		// (318) Το Back office (χωρίς δικαίωμα προμηθειών) δεν βλέπει αν μια
+		// σύμβαση εκκαθαρίστηκε. Η στήλη ΜΕΝΕΙ, κενή: το φύλλο έχει σταθερή
+		// διάταξη και όποιος το διαβάζει μετρά στήλες.
+		$money = current_user_can( \EnergyCRM\Access\Capability::VIEW_COMMISSIONS );
+
 		$out = [];
 		foreach ( (array) $rows as $r ) {
 			$client = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
@@ -119,7 +124,7 @@ class ECRM_Export {
 				$partner,
 				$pid ? ( $names[ $pid ] ?? '' ) : '',
 				$r['mobile'],
-				! empty( $r['payout_id'] ) ? 'ΝΑΙ' : 'ΟΧΙ',
+				$money ? ( ! empty( $r['payout_id'] ) ? 'ΝΑΙ' : 'ΟΧΙ' ) : '',
 				'', // ΜΗΝΑΣ ΕΚΚΑΘΑΡΙΣΗΣ
 				'', // ΗΜΕΡΟΜΗΝΙΑ THALIS
 				$fmt( $r['start_date'] ),

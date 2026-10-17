@@ -34,6 +34,16 @@ final class Capability
     public const EXPORT_DATA      = 'ecrm_export_data';
     public const VIEW_ANALYTICS   = 'ecrm_view_analytics';
 
+    /**
+     * (318) Βλέπει τις αιτήσεις ΟΛΗΣ της εταιρείας, όπως ο διαχειριστής, χωρίς
+     * να είναι διαχειριστής WordPress. Είναι το δικαίωμα του Back office.
+     *
+     * Αλλάζει ΜΟΝΟ το «τι βλέπει» (WordPressScopeResolver). Δεν δίνει
+     * wp-admin, ρυθμίσεις, διαγραφή υπογεγραμμένων ή προμήθειες· αυτά μένουν
+     * σε `manage_options` και `VIEW_COMMISSIONS` αντίστοιχα.
+     */
+    public const VIEW_ALL = 'ecrm_view_all';
+
     private function __construct()
     {
     }
@@ -58,6 +68,7 @@ final class Capability
             self::IMPORT_DATA,
             self::EXPORT_DATA,
             self::VIEW_ANALYTICS,
+            self::VIEW_ALL,
         ];
     }
 }

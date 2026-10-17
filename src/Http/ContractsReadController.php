@@ -21,6 +21,7 @@ use ECRM_Docs;
 use ECRM_Files;
 use ECRM_Messaging;
 use ECRM_Tracking;
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractStatus;
@@ -113,6 +114,12 @@ final class ContractsReadController implements Controller
 
         if ($row === null) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
+        }
+
+        // (318) Το Back office βλέπει τη σύμβαση, όχι την πληρωμή της: σε
+        // ποια εκκαθάριση μπήκε και με τι ποσό είναι στοιχεία προμήθειας.
+        if (! current_user_can(Capability::VIEW_COMMISSIONS)) {
+            unset($row['payout_id'], $row['payout_amount']);
         }
 
         $row['events'] = $this->withActorNames($this->events->forContract($id));

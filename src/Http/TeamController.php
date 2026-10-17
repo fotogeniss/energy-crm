@@ -265,6 +265,11 @@ final class TeamController implements Controller
         $roles = Roles::matrix();
         $role  = $this->crmRoleOf($user);
 
+        // (318) Το Back office βλέπει κάθε καρτέλα (VIEW_ALL) αλλά κανένα
+        // ποσό: χωρίς VIEW_COMMISSIONS τα δύο πεδία έρχονται null και η
+        // οθόνη κρύβει το πλακίδιο και την κάρτα «Προμήθεια · ανά σύμβαση».
+        $money = current_user_can(Capability::VIEW_COMMISSIONS);
+
         return new WP_REST_Response([
             'ok'     => true,
             'member' => [
@@ -281,10 +286,10 @@ final class TeamController implements Controller
                 'month'      => $counts,
                 'success'    => $success,
                 'sign'       => $sign,
-                'commission' => $this->commissionTotals($scope, $member),
+                'commission' => $money ? $this->commissionTotals($scope, $member) : null,
             ],
             'recent'          => $this->recent($scope, $member),
-            'commission_rows' => $this->commissionRows($scope, $member),
+            'commission_rows' => $money ? $this->commissionRows($scope, $member) : null,
             'downline'        => $this->downline($member),
             'statuses'        => ContractStatus::labels(),
         ], 200);
