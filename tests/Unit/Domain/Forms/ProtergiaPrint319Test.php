@@ -54,16 +54,20 @@ final class ProtergiaPrint319Test extends TestCase
     {
         $f = $this->fields($tpl);
 
-        foreach (['isxis_paroxis', 'fasi_monofasiki', 'fasi_trifasiki', 'metrisi_imerisia',
-            'metrisi_imerisia_nyxterini', 'metrisi_tilemetroumeni', 'poso_eggiisis'] as $key) {
+        foreach (
+            ['isxis_paroxis', 'fasi_monofasiki', 'fasi_trifasiki', 'metrisi_imerisia',
+            'metrisi_imerisia_nyxterini', 'metrisi_tilemetroumeni', 'poso_eggiisis'] as $key
+        ) {
             self::assertArrayHasKey($key, $f, "{$tpl}: λείπει το {$key}");
         }
 
-        foreach (['apostoli_logariasmou_entypo', 'apostoli_logariasmou_email',
+        foreach (
+            ['apostoli_logariasmou_entypo', 'apostoli_logariasmou_email',
             'enimerosi_oron_taxydromika', 'enimerosi_oron_email', 'enimerosi_oron_logariasmos',
             'enimerosi_oron_systimeni', 'enimerosi_oron_tilefonika', 'enimerosi_oron_eidopoiisi',
             'synainesi_omilou_nai', 'synainesi_omilou_oxi', 'synainesi_erevnas_nai',
-            'synainesi_erevnas_oxi', 'paratiriseis'] as $key) {
+            'synainesi_erevnas_oxi', 'paratiriseis'] as $key
+        ) {
             self::assertArrayHasKey($key, $f, "{$tpl}: λείπει το {$key}");
             self::assertSame($terms, $this->first($f[$key])['page'], "{$tpl}: το {$key} όχι στη σελίδα όρων");
         }
@@ -148,7 +152,8 @@ final class ProtergiaPrint319Test extends TestCase
         $existing = array_merge(ProtergiaBizPlans::codes(), array_keys(ProtergiaPicassoPlans::all()));
 
         self::assertCount(15, ProtergiaBizCatalogue::all());
-        self::assertCount(13, array_filter(array_keys(ProtergiaBizCatalogue::all()), [ProtergiaBizCatalogue::class, 'isPower']));
+        $power = array_filter(array_keys(ProtergiaBizCatalogue::all()), [ProtergiaBizCatalogue::class, 'isPower']);
+        self::assertCount(13, $power);
 
         foreach (ProtergiaBizCatalogue::all() as $code => $plan) {
             self::assertLessThanOrEqual(32, strlen($code), "{$code}: δεν χωράει στο programs.code");
@@ -164,13 +169,16 @@ final class ProtergiaPrint319Test extends TestCase
         self::assertTrue(ProtergiaBizCatalogue::isRetired(ProtergiaBizPlans::SURE_12));
         self::assertFalse(ProtergiaBizCatalogue::isRetired(ProtergiaBizPlans::SIMPLE_2));
         self::assertFalse(ProtergiaBizCatalogue::isPower('protergia_epag_gas_flex'));
-        self::assertFileExists(dirname(__DIR__, 4) . '/assets/forms/protergia/' . ProtergiaBizCatalogue::TEMPLATE . '.json');
+        self::assertFileExists(
+            dirname(__DIR__, 4) . '/assets/forms/protergia/' . ProtergiaBizCatalogue::TEMPLATE . '.json'
+        );
     }
 
     /** @return array<string, mixed> */
     private function fields(string $tpl): array
     {
-        $map = json_decode((string) file_get_contents(dirname(__DIR__, 4) . '/assets/forms/protergia/' . $tpl . '.json'), true);
+        $path = dirname(__DIR__, 4) . '/assets/forms/protergia/' . $tpl . '.json';
+        $map  = json_decode((string) file_get_contents($path), true);
 
         return $map['fields'];
     }
