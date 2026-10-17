@@ -211,10 +211,126 @@
    "y": 25.9,
    "check": true
   },
-  "eidiki_katigoria": {
+  "fasi_monofasiki": {
    "page": 1,
-   "x": 100.0,
-   "y": 232.5
+   "x": 128.0,
+   "y": 247.7,
+   "check": true
+  },
+  "fasi_trifasiki": {
+   "page": 1,
+   "x": 157.5,
+   "y": 247.7,
+   "check": true
+  },
+  "isxis_paroxis": {
+   "page": 1,
+   "x": 55.0,
+   "y": 247.5
+  },
+  "poso_eggiisis": {
+   "page": 2,
+   "x": 46.0,
+   "y": 151.9
+  },
+  "apostoli_logariasmou_entypo": {
+   "page": 4,
+   "x": 77.9,
+   "y": 125.7,
+   "check": true,
+   "size": 9
+  },
+  "apostoli_logariasmou_email": {
+   "page": 4,
+   "x": 94.1,
+   "y": 125.7,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_taxydromika": {
+   "page": 4,
+   "x": 37.3,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_email": {
+   "page": 4,
+   "x": 53.4,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_logariasmos": {
+   "page": 4,
+   "x": 94.5,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_systimeni": {
+   "page": 4,
+   "x": 138.7,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_tilefonika": {
+   "page": 4,
+   "x": 24.4,
+   "y": 144.8,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_eidopoiisi": {
+   "page": 4,
+   "x": 123.3,
+   "y": 144.8,
+   "check": true,
+   "size": 9
+  },
+  "synainesi_omilou_nai": {
+   "page": 4,
+   "x": 51.3,
+   "y": 197.8,
+   "check": true,
+   "size": 9
+  },
+  "synainesi_omilou_oxi": {
+   "page": 4,
+   "x": 62.0,
+   "y": 197.8,
+   "check": true,
+   "size": 9
+  },
+  "synainesi_erevnas_nai": {
+   "page": 4,
+   "x": 67.4,
+   "y": 207.8,
+   "check": true,
+   "size": 9
+  },
+  "synainesi_erevnas_oxi": {
+   "page": 4,
+   "x": 77.4,
+   "y": 207.8,
+   "check": true,
+   "size": 9
+  },
+  "protergia_oros_th": {
+   "page": 4,
+   "x": 54.7,
+   "y": 215.0,
+   "check": true,
+   "size": 9
+  },
+  "paratiriseis": {
+   "page": 4,
+   "x": 27.5,
+   "y": 238.9,
+   "size": 6,
+   "lh": 1.9,
+   "maxw": 170
   }
  },
  "sigs": [
@@ -255,6 +371,20 @@
   "imerominia_aitisis": "ΗΜΕΡΟΜΗΝΊΑ ΥΠΟΒΟΛΉΣ ΑΊΤΗΣΗΣ",
   "metrisi_imerisia": "ΜΕΤΡΗΣΗ",
   "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης",
-  "eidiki_katigoria": "ΕΙΔΙΚΗ ΚΑΤΗΓΟΡΙΑ"
+  "fasi_monofasiki": "ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Μονοφασική",
+  "fasi_trifasiki": "ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Τριφασική",
+  "isxis_paroxis": "ΙΣΧΥΣ ΠΑΡΟΧΗΣ (kVA)",
+  "poso_eggiisis": "ΕΓΓΥΗΣΗ (€)",
+  "apostoli_logariasmou_entypo": "Αποστολή λογαριασμού: Ταχυδρομικώς",
+  "apostoli_logariasmou_email": "Αποστολή λογαριασμού: Με e-mail",
+  "enimerosi_oron_taxydromika": "Αλλαγή όρων: Ταχυδρομικώς, δωρεάν",
+  "enimerosi_oron_email": "Αλλαγή όρων: Με e-mail",
+  "enimerosi_oron_logariasmos": "Αλλαγή όρων: Μαζί με τον λογαριασμό",
+  "enimerosi_oron_systimeni": "Αλλαγή όρων: Με συστημένη επιστολή",
+  "enimerosi_oron_tilefonika": "Αλλαγή όρων: Τηλεφωνικά",
+  "enimerosi_oron_eidopoiisi": "Αλλαγή όρων: Ειδοποίηση στον λογαριασμό",
+  "synainesi_omilou_nai": "ΝΑΙ",
+  "synainesi_erevnas_nai": "ΝΑΙ",
+  "paratiriseis": "ΠΑΡΑΤΗΡΗΣΕΙΣ"
  }
 }

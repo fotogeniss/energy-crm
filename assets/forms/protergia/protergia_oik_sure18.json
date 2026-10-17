@@ -270,10 +270,74 @@
    "check": true,
    "size": 9
   },
-  "eidiki_katigoria": {
+  "fasi_monofasiki": {
    "page": 1,
-   "x": 100.0,
-   "y": 232.5
+   "x": 128.0,
+   "y": 247.5,
+   "check": true
+  },
+  "fasi_trifasiki": {
+   "page": 1,
+   "x": 157.5,
+   "y": 247.5,
+   "check": true
+  },
+  "enimerosi_oron_taxydromika": {
+   "page": 3,
+   "x": 37.3,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_email": {
+   "page": 3,
+   "x": 53.4,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_logariasmos": {
+   "page": 3,
+   "x": 94.5,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_systimeni": {
+   "page": 3,
+   "x": 138.7,
+   "y": 137.0,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_tilefonika": {
+   "page": 3,
+   "x": 24.4,
+   "y": 144.8,
+   "check": true,
+   "size": 9
+  },
+  "enimerosi_oron_eidopoiisi": {
+   "page": 3,
+   "x": 123.3,
+   "y": 144.8,
+   "check": true,
+   "size": 9
+  },
+  "protergia_oros_th": {
+   "page": 3,
+   "x": 54.7,
+   "y": 215.0,
+   "check": true,
+   "size": 9
+  },
+  "paratiriseis": {
+   "page": 3,
+   "x": 27.5,
+   "y": 239.0,
+   "size": 6,
+   "lh": 1.9,
+   "maxw": 170
   }
  },
  "sigs": [
@@ -329,6 +393,14 @@
   "pliromi_pagia_entoli": "Πάγια εντολή εξόφλησης",
   "apostoli_logariasmou_entypo": "Αποστολή λογαριασμού: Ταχυδρομικώς",
   "apostoli_logariasmou_email": "Αποστολή λογαριασμού: Με e-mail",
-  "eidiki_katigoria": "ΕΙΔΙΚΗ ΚΑΤΗΓΟΡΙΑ"
+  "fasi_monofasiki": "ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Μονοφασική",
+  "fasi_trifasiki": "ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Τριφασική",
+  "enimerosi_oron_taxydromika": "Αλλαγή όρων: Ταχυδρομικώς, δωρεάν",
+  "enimerosi_oron_email": "Αλλαγή όρων: Με e-mail",
+  "enimerosi_oron_logariasmos": "Αλλαγή όρων: Μαζί με τον λογαριασμό",
+  "enimerosi_oron_systimeni": "Αλλαγή όρων: Με συστημένη επιστολή",
+  "enimerosi_oron_tilefonika": "Αλλαγή όρων: Τηλεφωνικά",
+  "enimerosi_oron_eidopoiisi": "Αλλαγή όρων: Ειδοποίηση στον λογαριασμό",
+  "paratiriseis": "ΠΑΡΑΤΗΡΗΣΕΙΣ"
  }
 }
