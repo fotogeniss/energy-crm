@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AlfrAId Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --n0:#fff;--n50:#f8f8f6;--n100:#f1f1ee;--n200:#dedcd7;--n300:#c6c4bd;--n500:#6e6c66;--n600:#5c5a55;--n700:#42413d;--n800:#2a2926;--n900:#1a1a18;
+  --p50:#edfbed;--p100:#d4f5d4;--p300:#6bdd6d;--p400:#16c217;--p500:#12a413;--p700:#0b6b0c;--on-accent:#0b3d0c;
+  --ink:var(--n800);--muted:var(--n500);--line:var(--n200);--bg:var(--n50);--surface:var(--n0);
+  --page:#ecebe7;--card:#fff;--txt:#2a2926;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--page:#121211;--card:#1a1a18;--txt:#f1f1ee;--muted:#a3a099;--line:#33322e;--bg:#151514;--surface:#1a1a18;--ink:#f1f1ee;--n100:#262623;--p50:#12240f;--p700:#6bdd6d}
+}
+:root[data-theme="dark"]{--page:#121211;--card:#1a1a18;--txt:#f1f1ee;--muted:#a3a099;--line:#33322e;--bg:#151514;--surface:#1a1a18;--ink:#f1f1ee;--n100:#262623;--p50:#12240f;--p700:#6bdd6d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--txt);font-family:Manrope,system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
+.lead{color:var(--muted);margin:0 0 28px;font-size:14px}
+h2{font-size:15px;margin:36px 0 12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.col{flex:1 1 360px;min-width:0}
+.tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-bottom:10px}
+.tag--now{background:#fbe4e1;color:#9b2b1c}.tag--new{background:var(--p100);color:var(--on-accent)}
+.notes{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;font-size:13.5px;margin-top:14px}
+.notes li{margin:4px 0}
+.notes b{color:var(--txt)}
+
+/* ---------- ΣΗΜΕΡΑ (αντίγραφο του ecrm-app.css) ---------- */
+.old{width:360px;max-width:100%;height:560px;border:1px solid var(--n200);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;background:#fff;box-shadow:0 30px 60px -20px rgba(10,31,61,.4);color:#2a2926}
+.old__head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(135deg,#121211,#1a1a18);color:#fff}
+.old__id{display:flex;align-items:center;gap:10px}
+.old__av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#16c217,#6bdd6d);display:grid;place-items:center}
+.old__id strong{display:block;font-size:15px}.old__id span{font-size:11px;color:#c6c4bd}
+.old__body{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#f8f8f6}
+.old__msg{max-width:82%;padding:9px 13px;border-radius:14px;font-size:13.5px;line-height:1.5}
+.old__me{align-self:flex-end;background:#1a1a18;color:#fff;border-bottom-right-radius:4px}
+.old__bot{align-self:flex-start;background:#fff;border:1px solid #dedcd7;border-bottom-left-radius:4px}
+.old__foot{display:flex;gap:8px;padding:12px;border-top:1px solid #dedcd7;background:#fff}
+.old__in{flex:1;height:40px;border:1.5px solid #dedcd7;border-radius:10px;padding:0 12px;font:inherit;font-size:14px;color:#6e6c66;display:flex;align-items:center}
+.old__send{width:40px;height:40px;border-radius:10px;background:#1a1a18;display:grid;place-items:center}
+
+/* ---------- ΠΡΟΤΑΣΗ ---------- */
+.ai{width:380px;max-width:100%;height:560px;border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;background:var(--surface);box-shadow:0 24px 48px -24px rgba(20,20,18,.35);color:var(--ink)}
+.ai__head{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 16px;border-bottom:1px solid var(--line)}
+.ai__av{width:30px;height:30px;border-radius:9px;background:var(--p50);display:grid;place-items:center;flex:0 0 30px}
+.ai__av svg{width:20px;height:18px;fill:var(--p700)}
+.ai__name{font-weight:800;font-size:14.5px;line-height:1.2}
+.ai__sub{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.ai__dot{width:6px;height:6px;border-radius:50%;background:var(--p400)}
+.ai__btns{margin-left:auto;display:flex;gap:2px}
+.ai__ib{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--muted)}
+.ai__ib:hover{background:var(--n100)}
+.ai__ib svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ai__body{flex:1;overflow:auto;padding:18px 16px;display:flex;flex-direction:column;gap:16px}
+.ai__me{align-self:flex-end;max-width:85%;background:var(--n100);color:var(--ink);padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:13.5px}
+.ai__bot{font-size:13.5px;line-height:1.6;color:var(--ink)}
+.ai__bot p{margin:0 0 8px}.ai__bot p:last-child{margin:0}
+.ai__bot h4{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:12px 0 4px}
+.ai__bot ol,.ai__bot ul{margin:4px 0 8px;padding-left:20px}
+.ai__bot li{margin:3px 0;padding-left:2px}
+.ai__bot li::marker{color:var(--muted);font-weight:700}
+.ai__bot .ui{display:inline-block;font-weight:700;font-size:12.5px;background:var(--n100);border:1px solid var(--line);border-radius:6px;padding:0 6px;line-height:1.55}
+.ai__bot .code{font-weight:700;color:var(--p700)}
+.ai__think{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.ai__think svg{width:16px;height:16px;fill:var(--p400);animation:tw 1.2s ease-in-out infinite}
+@keyframes tw{50%{transform:scale(1.3) rotate(20deg);opacity:.6}}
+.ai__foot{padding:10px 12px 12px;border-top:1px solid var(--line)}
+.ai__field{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:14px;padding:4px 4px 4px 14px;background:var(--surface)}
+.ai__field:focus-within{border-color:var(--p400)}
+.ai__ph{flex:1;font-size:14px;color:var(--muted)}
+.ai__go{width:34px;height:34px;border-radius:10px;background:var(--p400);display:grid;place-items:center}
+.ai__go svg{width:16px;height:16px;stroke:var(--on-accent);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ai__hint{font-size:11px;color:var(--muted);margin-top:6px;text-align:center}
+.ai__empty{margin:auto 0;text-align:left}
+.ai__empty h3{font-size:17px;margin:0 0 4px;letter-spacing:-.01em}
+.ai__empty p{margin:0 0 14px;color:var(--muted);font-size:13px}
+.chips{display:flex;flex-direction:column;gap:8px}
+.chip{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;font-weight:600;color:var(--ink);background:var(--surface)}
+.chip svg{width:16px;height:16px;stroke:var(--p500);fill:none;stroke-width:1.8;flex:0 0 16px}
+.phone{width:340px;max-width:100%;height:640px;border-radius:34px;border:8px solid #1a1a18;overflow:hidden;background:var(--surface)}
+.phone .ai{width:100%;height:100%;border:0;border-radius:0;box-shadow:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>AlfrAId: πρόταση για νέα εμφάνιση</h1>
+<p class="lead">Mockup πριν αλλάξει ο κώδικας. Αριστερά: όπως είναι σήμερα στο gdg-ts.gr, με την πραγματική απάντηση που έδωσε στις 17/10. Δεξιά: η πρόταση.</p>
+
+<h2>1 · Η ίδια ερώτηση, σε υπολογιστή</h2>
+<div class="row">
+ <div class="col">
+  <span class="tag tag--now">Σήμερα</span>
+  <div class="old">
+   <div class="old__head"><div class="old__id"><span class="old__av"><svg width="26" height="22" viewBox="1.5 0.8 21.5 18.8" fill="#0b3d0c"><rect x="2.5" y="16.2" width="19" height="2.6" rx="1.3"/><path d="M6.6 16.4V6.2a1.2 1.2 0 011.2-1.2h8.4a1.2 1.2 0 011.2 1.2v10.2z"/><path fill="#fff" d="M18.6 1.6L19.61 4.19L22.2 5.2L19.61 6.21L18.6 8.8L17.59 6.21L15 5.2L17.59 4.19z"/></svg></span><div><strong>AlfrAId</strong><span>βοηθός CRM</span></div></div><span style="color:#c6c4bd">🗑 ✕</span></div>
+   <div class="old__body">
+    <div class="old__msg old__me">Πώς καταχωρώ νέα αίτηση ρεύματος για επιχείρηση;</div>
+    <div class="old__msg old__bot">Καλό! Για <strong>νέα αίτηση ρεύματος επιχείρησης</strong>, πατάς <strong>«Νέα Σύμβαση»</strong> και ακολουθείς τα βήματα:<br><br>## Τα κρίσιμα πρώτα βήματα<br><br>1. <strong>Διάλεξε πάροχο</strong> (π.χ. ΔΕΗ, Volton, NRG, Enerwave κ.λπ.)<br>2. <strong>Διάλεξε πρόγραμμα</strong> — η φόρμα κρύβει/δείχνει τα πεδία…<br>3. <strong>Διάλεξε τύπο</strong>: Φ.Α. ή Ν.Π. — για επιχείρηση είναι Ν.Π.<br><br>## Συμπλήρωση<br><br>- <strong>ΑΦΜ και ΑΔΤ σωστά</strong> — αυτά κολλάνε τις αιτήσεις<br>- <strong>Τηλέφωνο που απαντάει</strong><br>- <strong>Διεύθυνση παροχής</strong><br><br>## Ανέβασμα εγγράφων<br><br>Πατάς <strong>«AI Εξαγωγή»</strong> και σύρεις…<br><br>## Τέλος<br><br>Πατάς <strong>«Οριστικοποίηση»</strong>…<br><br>Κάτι άλλο που θέλεις να ξέρεις;</div>
+   </div>
+   <div class="old__foot"><div class="old__in">Ρώτησέ με κάτι…</div><div class="old__send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 12l16-8-6 16-2.5-6z"/></svg></div></div>
+  </div>
+ </div>
+ <div class="col">
+  <span class="tag tag--new">Πρόταση</span>
+  <div class="ai">
+   <div class="ai__head">
+    <span class="ai__av"><svg viewBox="1.5 0.8 21.5 18.8"><rect x="2.5" y="16.2" width="19" height="2.6" rx="1.3"/><path d="M6.6 16.4V6.2a1.2 1.2 0 011.2-1.2h8.4a1.2 1.2 0 011.2 1.2v10.2z"/><path d="M18.6 1.6L19.61 4.19L22.2 5.2L19.61 6.21L18.6 8.8L17.59 6.21L15 5.2L17.59 4.19z"/></svg></span>
+    <div><div class="ai__name">AlfrAId</div><div class="ai__sub"><span class="ai__dot"></span>Βλέπει τις αιτήσεις σου, όχι στοιχεία πελατών</div></div>
+    <div class="ai__btns"><span class="ai__ib" title="Νέα συνομιλία"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="ai__ib" title="Κλείσιμο"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span></div>
+   </div>
+   <div class="ai__body">
+    <div class="ai__me">Πώς καταχωρώ νέα αίτηση ρεύματος για επιχείρηση;</div>
+    <div class="ai__bot">
+     <p>Από το μενού <span class="ui">Νέα αίτηση</span>:</p>
+     <ol>
+      <li>Διάλεξε <b>Ρεύμα</b>, πάροχο και πρόγραμμα. Για επιχείρηση πάρε επαγγελματικό πρόγραμμα.</li>
+      <li>Στον τύπο πελάτη βάλε <b>Εταιρεία</b>: ζητάει επωνυμία, ΑΦΜ, ΚΑΔ και νόμιμο εκπρόσωπο.</li>
+      <li>Ανέβασε ταυτότητα εκπροσώπου και λογαριασμό ρεύματος. Τα στοιχεία συμπληρώνονται μόνα τους, εσύ τα ελέγχεις.</li>
+      <li>Πάτα <span class="ui">Οριστικοποίηση</span> για να φύγει η αίτηση.</li>
+     </ol>
+     <p>Προσοχή στο ΑΦΜ και στον αριθμό παροχής. Εκεί κολλάνε οι περισσότερες αιτήσεις.</p>
+    </div>
+    <div class="ai__me">Τι σημαίνει «Επιστροφή από πάροχο»;</div>
+    <div class="ai__think"><svg viewBox="15 1.6 7.2 7.2"><path d="M18.6 1.6L19.61 4.19L22.2 5.2L19.61 6.21L18.6 8.8L17.59 6.21L15 5.2L17.59 4.19z"/></svg>Ψάχνει…</div>
+   </div>
+   <div class="ai__foot"><div class="ai__field"><span class="ai__ph">Ρώτα για αιτήσεις, καταστάσεις, χαρτιά…</span><span class="ai__go"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
+  </div>
+ </div>
+</div>
+<div class="notes"><ul>
+ <li><b>Μορφοποίηση που αποδίδεται σωστά:</b> αριθμημένα βήματα, κουκκίδες, έντονα. Σήμερα αποδίδονται μόνο τα έντονα, γι' αυτό φαίνονται «##», «1.» και «-» ως σκέτο κείμενο.</li>
+ <li><b>Ονόματα μενού όπως στην οθόνη:</b> «Νέα αίτηση» και όχι «Νέα Σύμβαση», σε γκρι πλαισιάκι ώστε να ξεχωρίζουν σαν κουμπί. Οι οδηγίες του AlfrAId γράφουν ακόμα «Νέα Σύμβαση» και ένα κουμπί «AI Εξαγωγή». Θα τις ευθυγραμμίσω με τα πραγματικά μενού.</li>
+ <li><b>Σύντομες απαντήσεις:</b> χωρίς «Καλό!», χωρίς επικεφαλίδες, χωρίς «Κάτι άλλο;». Το πολύ 4–5 βήματα.</li>
+ <li><b>Ανοιχτή κεφαλίδα</b> στη θέση της μαύρης λωρίδας, με μικρό τετράγωνο σήμα και μια γραμμή που λέει τι βλέπει (GDPR).</li>
+ <li><b>Οι απαντήσεις του χωρίς συννεφάκι</b>, ως καθαρό κείμενο σε όλο το πλάτος. Συννεφάκι, ανοιχτό γκρι, έχουν μόνο οι δικές σου ερωτήσεις.</li>
+ <li><b>«Ψάχνει…»</b> με τον σπινθήρα να παλμεύει, στη θέση των τριών τελειών.</li>
+ <li><b>Πεδίο με το κουμπί μέσα</b>, πράσινο βέλος. Η «Διαγραφή» (κάδος) γίνεται «Νέα συνομιλία» (+), χωρίς παράθυρο επιβεβαίωσης του browser.</li>
+</ul></div>
+
+<h2>2 · Πρώτο άνοιγμα (χωρίς συνομιλία) και κινητό</h2>
+<div class="row">
+ <div class="col">
+  <span class="tag tag--now">Σήμερα</span>
+  <div class="old" style="height:420px">
+   <div class="old__head"><div class="old__id"><span class="old__av"></span><div><strong>AlfrAId</strong><span>βοηθός CRM</span></div></div></div>
+   <div class="old__body"><div class="old__msg old__bot" style="max-width:100%;border-radius:12px">Γεια! Είμαι ο <strong>AlfrAId</strong> ☺<br>Ρώτησέ με πώς να καταχωρίσεις σύμβαση, πώς δουλεύει η AI εξαγωγή, ή πόσες εκκρεμότητες έχεις.</div></div>
+   <div class="old__foot"><div class="old__in">Ρώτησέ με κάτι…</div><div class="old__send"></div></div>
+  </div>
+ </div>
+ <div class="col">
+  <span class="tag tag--new">Πρόταση · κινητό</span>
+  <div class="phone"><div class="ai">
+   <div class="ai__head">
+    <span class="ai__av"><svg viewBox="1.5 0.8 21.5 18.8"><rect x="2.5" y="16.2" width="19" height="2.6" rx="1.3"/><path d="M6.6 16.4V6.2a1.2 1.2 0 011.2-1.2h8.4a1.2 1.2 0 011.2 1.2v10.2z"/><path d="M18.6 1.6L19.61 4.19L22.2 5.2L19.61 6.21L18.6 8.8L17.59 6.21L15 5.2L17.59 4.19z"/></svg></span>
+    <div><div class="ai__name">AlfrAId</div><div class="ai__sub"><span class="ai__dot"></span>Βλέπει τις αιτήσεις σου</div></div>
+    <div class="ai__btns"><span class="ai__ib"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span></div>
+   </div>
+   <div class="ai__body">
+    <div class="ai__empty">
+     <h3>Καλησπέρα, Κωνσταντίνε</h3>
+     <p>Ρώτα με για τις αιτήσεις σου ή για το πώς γίνεται κάτι στο CRM.</p>
+     <div class="chips">
+      <span class="chip"><svg viewBox="0 0 24 24"><path d="M12 8v5"/><circle cx="12" cy="16.5" r=".4"/><path d="M10.3 3.8 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/></svg>Ποιες αιτήσεις μου έχουν κολλήσει;</span>
+      <span class="chip"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>Τι χαρτιά θέλει η Protergia για επιχείρηση;</span>
+      <span class="chip"><svg viewBox="0 0 24 24"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>Τι σημαίνει «Οριστικοποίηση»;</span>
+     </div>
+    </div>
+   </div>
+   <div class="ai__foot"><div class="ai__field"><span class="ai__ph">Ρώτα κάτι…</span><span class="ai__go"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></div>
+  </div></div>
+ </div>
+</div>
+<div class="notes"><ul>
+ <li><b>Στη θέση του «Γεια! Είμαι ο AlfrAId ☺»:</b> χαιρετισμός με το όνομα του χρήστη και 3 έτοιμες ερωτήσεις που πατιούνται. Έτσι ο πωλητής βλέπει αμέσως σε τι χρησιμεύει.</li>
+ <li><b>Στο κινητό</b> το πάνελ πιάνει όλη την οθόνη, όπως και σήμερα, με την ίδια ανοιχτή εμφάνιση.</li>
+ <li><b>Δεν αλλάζει:</b> το καπέλο ως σήμα, το πράσινο κουμπί κάτω δεξιά και στην πάνω μπάρα, το ιστορικό στον server και το ότι δεν βλέπει στοιχεία πελατών.</li>
+</ul></div>
+</div>
+</body>
+</html>

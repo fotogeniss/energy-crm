@@ -312,13 +312,13 @@ class ECRM_App {
 						<span class="ecrm-live"><span class="ecrm-live__dot"></span> Live</span>
 						<?php
 						/*
-						 * (312) AlfrAId στην πάνω μπάρα, μόνο σε κινητό: το στρογγυλό
+						 * (312) Ο βοηθός (AIde, πρώην AlfrAId) στην πάνω μπάρα, μόνο σε κινητό: το στρογγυλό
 						 * κουμπί που αιωρούνταν κάτω δεξιά κάλυπτε κουμπιά και πεδία.
 						 * Ανοίγει το ίδιο πάνελ (ecrm-litsa.js, data-litsa-open).
 						 * Μακέτα: εγκρίθηκε από τον ιδιοκτήτη 14/10.
 						 */
 						?>
-						<button type="button" class="ecrm-topai" data-litsa-open aria-label="Άνοιγμα βοηθού AlfrAId" title="AlfrAId"><?php echo self::alfraid_icon(); // phpcs:ignore ?></button>
+						<button type="button" class="ecrm-topai" data-litsa-open aria-label="Άνοιγμα βοηθού AIde" title="AIde"><?php echo self::aide_icon(); // phpcs:ignore ?></button>
 						<div class="ecrm-bellwrap">
 							<button type="button" class="ecrm-bell" data-bell aria-label="Ειδοποιήσεις">
 								<?php echo self::icon( 'bell' ); // phpcs:ignore ?>
@@ -438,23 +438,31 @@ class ECRM_App {
 				<?php endforeach; ?>
 			</nav>
 
-			<!-- Λίτσα assistant -->
+			<!-- (320) AIde, ο βοηθός (πρώην Λίτσα / AlfrAId). Οι κλάσεις και τα
+			     data-litsa-* μένουν: τα χρησιμοποιούν το ecrm-litsa.js και το
+			     «Ρώτα τον AIde» της καρτέλας αίτησης. Μακέτα: docs/UI-ALFRAID.html. -->
 			<div class="ecrm-litsa" id="ecrm-litsa" data-open="0">
-				<button type="button" class="ecrm-litsa__fab" data-litsa-toggle aria-label="Άνοιγμα βοηθού AlfrAId">
-					<span class="ecrm-litsa__fab-ico"><?php echo self::alfraid_icon(); // phpcs:ignore ?></span>
+				<button type="button" class="ecrm-litsa__fab" data-litsa-toggle aria-label="Άνοιγμα βοηθού AIde">
+					<span class="ecrm-litsa__fab-ico"><?php echo self::aide_icon(); // phpcs:ignore ?></span>
 				</button>
-				<div class="ecrm-litsa__panel" role="dialog" aria-label="Βοηθός AlfrAId">
+				<div class="ecrm-litsa__panel" role="dialog" aria-label="Βοηθός AIde">
 					<div class="ecrm-litsa__head">
-						<div class="ecrm-litsa__id"><span class="ecrm-litsa__avatar"><?php echo self::alfraid_icon(); // phpcs:ignore ?></span><div><strong>AlfrAId</strong><span class="ecrm-litsa__sub">βοηθός CRM</span></div></div>
+						<span class="ecrm-litsa__avatar"><?php echo self::aide_icon(); // phpcs:ignore ?></span>
+						<div class="ecrm-litsa__id">
+							<strong>AIde <span class="ecrm-litsa__role">· Βοηθός CRM</span></strong>
+							<span class="ecrm-litsa__sub"><span class="ecrm-litsa__dot"></span>Βλέπει τις αιτήσεις σου, όχι στοιχεία πελατών</span>
+						</div>
 						<div class="ecrm-litsa__headbtns">
-							<button type="button" class="ecrm-litsa__clear" data-litsa-clear aria-label="Διαγραφή συνομιλίας" title="Διαγραφή συνομιλίας"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg></button>
-							<button type="button" class="ecrm-litsa__x" data-litsa-toggle aria-label="Κλείσιμο">✕</button>
+							<button type="button" class="ecrm-litsa__hbtn" data-litsa-clear aria-label="Νέα συνομιλία" title="Νέα συνομιλία"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+							<button type="button" class="ecrm-litsa__hbtn" data-litsa-toggle aria-label="Κλείσιμο" title="Κλείσιμο"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 						</div>
 					</div>
 					<div class="ecrm-litsa__body" data-litsa-body></div>
 					<div class="ecrm-litsa__foot">
-						<input type="text" class="ecrm-litsa__input" data-litsa-input placeholder="Ρώτησέ με κάτι…" autocomplete="off">
-						<button type="button" class="ecrm-litsa__send" data-litsa-send aria-label="Αποστολή"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6z"/></svg></button>
+						<div class="ecrm-litsa__field">
+							<input type="text" class="ecrm-litsa__input" data-litsa-input placeholder="Ρώτα για αιτήσεις, καταστάσεις, χαρτιά…" autocomplete="off" aria-label="Ερώτηση προς τον AIde">
+							<button type="button" class="ecrm-litsa__send" data-litsa-send aria-label="Αποστολή"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -522,12 +530,13 @@ class ECRM_App {
 	}
 
 	/**
-	 * Το σήμα του AlfrAId: ημίψηλο καπέλο μπάτλερ με σπινθήρα. Χωριστό από το
-	 * icon() γιατί είναι γεμάτο σχήμα, όχι γραμμή, και τα χρώματά του ζουν στο
-	 * CSS (.ecrm-alfraid*), όχι εδώ.
+	 * (320) Το σήμα του AIde: κεραυνός (ενέργεια) με σπίθα (AI). Επιλογή Β του
+	 * docs/UI-AIDE-SIMA.html, εγκεκριμένη από τον ιδιοκτήτη 17/10. Αντικαθιστά
+	 * το καπέλο του AlfrAId. Χωριστό από το icon() γιατί είναι γεμάτο σχήμα,
+	 * όχι γραμμή· το χρώμα (currentColor) το δίνει το CSS (.ecrm-aide*).
 	 */
-	public static function alfraid_icon(): string {
-		return '<svg class="ecrm-alfraid" viewBox="1.5 0.8 21.5 18.8" aria-hidden="true"><rect x="2.5" y="16.2" width="19" height="2.6" rx="1.3"/><path d="M6.6 16.4V6.2a1.2 1.2 0 011.2-1.2h8.4a1.2 1.2 0 011.2 1.2v10.2z"/><rect class="ecrm-alfraid__band" x="6.6" y="12.4" width="10.8" height="2.2"/><path class="ecrm-alfraid__spark" d="M18.6 1.6L19.61 4.19L22.2 5.2L19.61 6.21L18.6 8.8L17.59 6.21L15 5.2L17.59 4.19z"/></svg>';
+	public static function aide_icon(): string {
+		return '<svg class="ecrm-aide" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.4 2.2 4.6 13.3c-.3.4 0 .9.5.9h5.6l-1.6 7.1c-.1.6.6.9 1 .5l8.8-11.1c.3-.4 0-.9-.5-.9h-5.6l1.6-7.1c.1-.6-.6-.9-1-.5z"/><path class="ecrm-aide__spark" d="M19.6 1.6l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>';
 	}
 
 	/** Inline SVG icon set (stroke, currentColor). */

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIde Logo Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--page:#ecebe7;--card:#fff;--txt:#2a2926;--muted:#6e6c66;--line:#dedcd7;--g:#16c217;--g2:#6bdd6d;--gw:#edfbed;--gd:#0b6b0c;--on:#0b3d0c;--dark:#1a1a18}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--page:#121211;--card:#1a1a18;--txt:#f1f1ee;--muted:#a3a099;--line:#33322e;--gw:#12240f;--gd:#6bdd6d}}
+:root[data-theme="dark"]{--page:#121211;--card:#1a1a18;--txt:#f1f1ee;--muted:#a3a099;--line:#33322e;--gw:#12240f;--gd:#6bdd6d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--txt);font-family:Manrope,system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}.lead{color:var(--muted);font-size:14px;margin:0 0 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+.opt h2{font-size:16px;margin:0 0 2px}.opt p{font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5}
+.hero{display:grid;place-items:center;height:150px;border-radius:14px;background:var(--gw);margin-bottom:16px}
+.hero svg{width:84px;height:84px;color:var(--gd)}
+.uses{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.fab{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));display:grid;place-items:center;box-shadow:0 12px 28px -8px rgba(22,194,23,.45)}
+.fab svg{width:28px;height:28px;color:var(--on)}
+.av{width:30px;height:30px;border-radius:9px;background:var(--gw);display:grid;place-items:center}
+.av svg{width:19px;height:19px;color:var(--gd)}
+.top{width:40px;height:40px;border-radius:12px;background:var(--g);display:grid;place-items:center}
+.top svg{width:22px;height:22px;color:var(--on)}
+.dk{height:60px;padding:0 16px;border-radius:12px;background:var(--dark);display:flex;align-items:center;gap:10px;color:#f1f1ee;font-weight:800;font-size:15px}
+.dk svg{width:22px;height:22px;color:var(--g)}
+.tiny svg{width:16px;height:16px;color:var(--txt)}
+.lbl{font-size:11px;color:var(--muted);text-align:center;margin-top:4px}
+.u{display:flex;flex-direction:column;align-items:center}
+.word{display:flex;align-items:center;gap:8px;margin-top:16px;font-weight:800;font-size:18px}
+.word svg{width:22px;height:22px;color:var(--gd)}
+.word span{font-weight:600;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+ <!-- Α: συννεφάκι με σπίθα -->
+ <symbol id="s-a" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M6 3.5h12a3.5 3.5 0 0 1 3.5 3.5v7.5A3.5 3.5 0 0 1 18 18h-5.2l-4.6 3.4c-.5.4-1.2 0-1.2-.6V18H6a3.5 3.5 0 0 1-3.5-3.5V7A3.5 3.5 0 0 1 6 3.5zM12 6.3l1.25 3.2 3.2 1.25-3.2 1.25L12 15.2l-1.25-3.2-3.2-1.25 3.2-1.25z"/></symbol>
+ <!-- Β: κεραυνός + σπίθα -->
+ <symbol id="s-b" viewBox="0 0 24 24"><path fill="currentColor" d="M13.4 2.2 4.6 13.3c-.3.4 0 .9.5.9h5.6l-1.6 7.1c-.1.6.6.9 1 .5l8.8-11.1c.3-.4 0-.9-.5-.9h-5.6l1.6-7.1c.1-.6-.6-.9-1-.5z"/><path fill="currentColor" d="M19.6 1.6l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
+ <!-- Γ: μονόγραμμα «ai» με σπίθα για τελεία -->
+ <symbol id="s-c" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="8.6" cy="14.4" r="4.6"/><path d="M13.2 10v9"/><path d="M18.6 11.5V19"/></g><path fill="currentColor" d="M18.6 3.2l.95 2.45 2.45.95-2.45.95-.95 2.45-.95-2.45-2.45-.95 2.45-.95z"/></symbol>
+</svg>
+
+<div class="wrap">
+<h1>AIde: τρία σήματα</h1>
+<p class="lead">Κάθε σήμα σε μεγάλο μέγεθος και στις θέσεις του CRM: κουμπί κάτω δεξιά (60px), κεφαλίδα του παραθύρου (30px), πάνω μπάρα στο κινητό (40px), σκούρο φόντο και μικρό μέγεθος 16px. Γεμάτα σχήματα, ώστε να διαβάζονται και πολύ μικρά.</p>
+<div class="grid">
+
+<div class="opt"><h2>Α · Συννεφάκι με σπίθα</h2><p>Συνομιλία (συννεφάκι) και τεχνητή νοημοσύνη (σπίθα). Το πιο άμεσο: «εδώ μιλάς με τον βοηθό».</p>
+ <div class="hero"><svg><use href="#s-a"/></svg></div>
+ <div class="uses">
+  <div class="u"><div class="fab"><svg><use href="#s-a"/></svg></div><div class="lbl">κουμπί</div></div>
+  <div class="u"><div class="av"><svg><use href="#s-a"/></svg></div><div class="lbl">κεφαλίδα</div></div>
+  <div class="u"><div class="top"><svg><use href="#s-a"/></svg></div><div class="lbl">πάνω μπάρα</div></div>
+  <div class="u tiny"><svg><use href="#s-a"/></svg><div class="lbl">16px</div></div>
+ </div>
+ <div class="dk" style="margin-top:14px"><svg><use href="#s-a"/></svg>AIde</div>
+</div>
+
+<div class="opt"><h2>Β · Κεραυνός με σπίθα</h2><p>Ενέργεια (κεραυνός) και AI (σπίθα). Δένει με το Energy CRM, ξεχωρίζει από τους γενικούς βοηθούς.</p>
+ <div class="hero"><svg><use href="#s-b"/></svg></div>
+ <div class="uses">
+  <div class="u"><div class="fab"><svg><use href="#s-b"/></svg></div><div class="lbl">κουμπί</div></div>
+  <div class="u"><div class="av"><svg><use href="#s-b"/></svg></div><div class="lbl">κεφαλίδα</div></div>
+  <div class="u"><div class="top"><svg><use href="#s-b"/></svg></div><div class="lbl">πάνω μπάρα</div></div>
+  <div class="u tiny"><svg><use href="#s-b"/></svg><div class="lbl">16px</div></div>
+ </div>
+ <div class="dk" style="margin-top:14px"><svg><use href="#s-b"/></svg>AIde</div>
+</div>
+
+<div class="opt"><h2>Γ · Μονόγραμμα «ai»</h2><p>Τα γράμματα a και i, με τη σπίθα στη θέση της τελείας του i. Λέει το όνομα, σαν λογότυπο εταιρείας.</p>
+ <div class="hero"><svg><use href="#s-c"/></svg></div>
+ <div class="uses">
+  <div class="u"><div class="fab"><svg><use href="#s-c"/></svg></div><div class="lbl">κουμπί</div></div>
+  <div class="u"><div class="av"><svg><use href="#s-c"/></svg></div><div class="lbl">κεφαλίδα</div></div>
+  <div class="u"><div class="top"><svg><use href="#s-c"/></svg></div><div class="lbl">πάνω μπάρα</div></div>
+  <div class="u tiny"><svg><use href="#s-c"/></svg><div class="lbl">16px</div></div>
+ </div>
+ <div class="dk" style="margin-top:14px"><svg><use href="#s-c"/></svg>AIde</div>
+</div>
+
+</div>
+</div>
+</body>
+</html>
