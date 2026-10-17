@@ -252,7 +252,8 @@ final class PersonalDataEraser
     {
         return $this->redactRows(
             Tables::LEADS,
-            'name = %s, phone = NULL, email = NULL, notes = NULL, interest = NULL, lost_reason = NULL',
+            'name = %s, phone = NULL, email = NULL, notes = NULL, interest = NULL, lost_reason = NULL,'
+                . ' site_data = NULL',
             'contract_id',
             $contractIds,
             [self::REDACTED]

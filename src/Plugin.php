@@ -25,6 +25,7 @@ use EnergyCRM\Admin\MonitoringPage;
 use EnergyCRM\Admin\PrivacyTools;
 use EnergyCRM\Http\ControllerFactory;
 use EnergyCRM\Http\Router;
+use EnergyCRM\SiteIntake\Admin\SiteIntakePage;
 use EnergyCRM\Infrastructure\DocumentExposureCheck;
 use EnergyCRM\Infrastructure\DocumentProtection;
 use EnergyCRM\Infrastructure\DocumentsSweep;
@@ -195,6 +196,9 @@ final class Plugin
                 Services::analytics(),
                 Services::scopeResolver()
             )))->register();
+
+            // Η σύνδεση με το site σύγκρισης τιμών (310): χρήστης, μυστικό, διεύθυνση.
+            (new SiteIntakePage(Services::siteIntakeConfig()))->register();
 
             (new PrivacyTools(
                 new PersonalDataExporter(),

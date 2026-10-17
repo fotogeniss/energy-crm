@@ -108,6 +108,10 @@ final class Services
 
     private static ?ProviderRepository $providers = null;
 
+    private static ?\EnergyCRM\SiteIntake\Persistence\SiteLeadRepository $siteLeads = null;
+
+    private static ?\EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig $siteIntakeConfig = null;
+
     private static ?ProviderGrantRepository $providerGrants = null;
 
     private static ?ProviderVisibility $providerVisibility = null;
@@ -335,6 +339,19 @@ final class Services
     public static function leads(): LeadRepository
     {
         return self::$leads ??= new LeadRepository();
+    }
+
+    /** Οι υποψήφιοι από το site σύγκρισης τιμών (CHANGELOG (310)). */
+    public static function siteLeads(): \EnergyCRM\SiteIntake\Persistence\SiteLeadRepository
+    {
+        return self::$siteLeads ??= new \EnergyCRM\SiteIntake\Persistence\SiteLeadRepository(
+            new \EnergyCRM\Infrastructure\FieldCipher(wp_salt('secure_auth'))
+        );
+    }
+
+    public static function siteIntakeConfig(): \EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig
+    {
+        return self::$siteIntakeConfig ??= new \EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig(self::secrets());
     }
 
     public static function events(): EventRepository
