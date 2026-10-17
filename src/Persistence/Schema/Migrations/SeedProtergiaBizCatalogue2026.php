@@ -29,7 +29,7 @@ final class SeedProtergiaBizCatalogue2026 implements Migration
 
     public function description(): string
     {
-        return 'Protergia: 13 επαγγελματικά ρεύματος (Επαγγελματικό 1/2/3), 2 επαγγελματικά αερίου, απενεργοποίηση Γ21 Value Sure 12 3.0';
+        return 'Protergia: 13 επαγγελματικά ρεύματος, 2 αερίου, απενεργοποίηση Γ21 Value Sure 12 3.0';
     }
 
     public function apply(SchemaInspector $schema): void

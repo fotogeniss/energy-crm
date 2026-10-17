@@ -42,7 +42,11 @@ final class BackOfficeRoleTest extends TestCase
                 continue;
             }
 
-            self::assertNotContains(Capability::VIEW_ALL, $definition['capabilities'], "Ο ρόλος {$slug} πήρε VIEW_ALL.");
+            self::assertNotContains(
+                Capability::VIEW_ALL,
+                $definition['capabilities'],
+                "Ο ρόλος {$slug} πήρε VIEW_ALL."
+            );
         }
     }
 
