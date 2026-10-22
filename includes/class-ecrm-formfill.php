@@ -71,9 +71,14 @@ class ECRM_FormFill {
 			&& \EnergyCRM\Domain\Forms\ProtergiaBizPlans::exists( $program ) ) {
 			return \EnergyCRM\Domain\Forms\ProtergiaBizPlans::templateKey( $program );
 		}
-		// (319) Τα 13 επαγγελματικά του ProtergiaBizCatalogue δεν έχουν δικό
-		// τους φύλλο: γενικό επαγγελματικό, ΚΑΙ για πελάτη περασμένο ως ιδιώτη
-		// (ίδιος κανόνας με το (283) από πάνω).
+		// (322) Τα 13 επαγγελματικά του ProtergiaBizCatalogue και τα 9
+		// επαγγελματικά Picasso έχουν πια το δικό τους φύλλο (έντυπα Protergia
+		// 22/10), ΚΑΙ για πελάτη περασμένο ως ιδιώτη (κανόνας (283)).
+		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power'
+			&& \EnergyCRM\Domain\Forms\ProtergiaBizSheets::templateKey( $program ) !== '' ) {
+			return \EnergyCRM\Domain\Forms\ProtergiaBizSheets::templateKey( $program );
+		}
+		// (319) Ό,τι άλλο του καταλόγου (κανένα σήμερα): γενικό επαγγελματικό.
 		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power'
 			&& \EnergyCRM\Domain\Forms\ProtergiaBizCatalogue::isPower( $program ) ) {
 			return \EnergyCRM\Domain\Forms\ProtergiaBizCatalogue::TEMPLATE;
@@ -92,6 +97,14 @@ class ECRM_FormFill {
 		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'gas'
 			&& \EnergyCRM\Domain\Forms\ProtergiaGasPlans::exists( $program ) ) {
 			return \EnergyCRM\Domain\Forms\ProtergiaGasPlans::templateKey( $program );
+		}
+		// (321) Τα τέσσερα κυμαινόμενα (οικιακά και επαγγελματικά Flex /
+		// Standard) έχουν πια δικό τους φύλλο, από τα έντυπα που έστειλε η
+		// Protergia 22/10. Ως τώρα έπεφταν στο protergia_fa, το οικιακό Value
+		// Gas Sure με σταθερή τιμή.
+		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'gas'
+			&& \EnergyCRM\Domain\Forms\ProtergiaGasSheets::templateKey( $program ) !== '' ) {
+			return \EnergyCRM\Domain\Forms\ProtergiaGasSheets::templateKey( $program );
 		}
 		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'gas' )   { return 'protergia_fa'; }
 		if ( $has( 'nrg' ) && $e === 'power' )                            { return $biz ? 'nrg_he_biz' : 'nrg_he'; }
@@ -592,6 +605,26 @@ class ECRM_FormFill {
 			// κι αν είναι οι άλλες επιλογές. Μόνο τα οικιακά φύλλα Protergia
 			// έχουν θέση γι' αυτό το κλειδί.
 			'protergia_oros_th'       => 'X',
+			// (321) Φύλλα αερίου Protergia 2026 -- κανόνες της ίδιας (21-22/10),
+			// βλ. ProtergiaGasSheets. Τα σταθερά (διάρκεια, «Εμπορικό», όροι
+			// που τικάρονται πάντα) υπάρχουν ΜΟΝΟ στους χάρτες αυτών των φύλλων.
+			'fa_typos_metriti'             => \EnergyCRM\Domain\Forms\ProtergiaGasSheets::meterType( $xg( 'gas_meter_type' ) ),
+			'fa_arithmos_paroxis_revmatos' => trim( $xg( 'gas_power_supply_number' ) ),
+			'fa_diarkeia'                  => \EnergyCRM\Domain\Forms\ProtergiaGasSheets::DURATION,
+			'fa_paratiriseis'              => \EnergyCRM\Domain\Forms\ProtergiaGasSheets::remarks(
+				(string) ( $c['program_code'] ?? '' ),
+				(string) ( $c['program_name'] ?? '' ),
+				$xg( 'promotion' )
+			),
+			'fa_eggiisi_1os_logariasmos'   => ( $xg( 'payment_method' ) === 'manual' ? 'X' : '' ),
+			'fa_logariasmos_email'         => ( $xg( 'bill_delivery' ) === 'email' ? 'X' : '' ),
+			'fa_emporiko'                  => 'X',
+			'fa_oros_panta'                => 'X',
+			'adt_ekprosopou'               => $xg( 'rep_id' ),
+			'nomimos_ekprosopos_ypografi'  => \EnergyCRM\Domain\Forms\ProtergiaGasSheets::legalRepCaption(
+				(string) ( $c['customer_type'] ?? '' ),
+				$rep_name
+			),
 			// (319) «Ενημέρωση σε περίπτωση τροποποίησης των όρων» (Β1/Β2 της
 			// σελίδας «Αποδοχή όρων» Protergia): ένα dropdown, έξι κουτιά.
 			'enimerosi_oron_taxydromika' => ( $xg( 'terms_notice' ) === 'post'       ? 'X' : '' ),
@@ -779,13 +812,14 @@ class ECRM_FormFill {
 		$h = (float) ( $map['page_h'] ?? 297 );
 		$orient = ( $w > $h ) ? 'L' : 'P';
 
-		$p       = 1;
 		$ink_tmp = [];
 		// (284) Ο $dir είναι η βάση assets/forms/· κάθε πάροχος έχει τον
 		// φάκελό του, και τη διαδρομή τη λέει μόνο το FormTemplates.
-		while ( file_exists( \EnergyCRM\Domain\Forms\FormTemplates::pagePath( $dir, $key, $p ) ) ) {
+		// (322) Μαζί με τις κοινές σελίδες του `tail` (ΓΟΣ), αριθμημένες συνέχεια.
+		foreach ( \EnergyCRM\Domain\Forms\FormTemplates::pagePaths( $dir, $key, $map ) as $i => $page_img ) {
+			$p = $i + 1;
 			$pdf->AddPage( $orient, [ $w, $h ] );
-			$pdf->Image( \EnergyCRM\Domain\Forms\FormTemplates::pagePath( $dir, $key, $p ), 0, 0, $w, $h );
+			$pdf->Image( $page_img, 0, 0, $w, $h );
 
 			$pdf->SetTextColor( 0, 0, 0 );
 			foreach ( $map['fields'] as $field => $placements ) {
@@ -878,7 +912,6 @@ class ECRM_FormFill {
 				// αρχείο να μην πάρει το ίδιο όνομα όσο ζει η cache του tFPDF.
 				if ( $ink !== null ) { $ink_tmp[] = $ink; }
 			}
-			$p++;
 		}
 
 		foreach ( $ink_tmp as $t ) { @unlink( $t ); }

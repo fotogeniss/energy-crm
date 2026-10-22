@@ -69,6 +69,55 @@ final class FormTemplates
     }
 
     /**
+     * Όλα τα υπόβαθρα ενός εντύπου, με τη σειρά που τυπώνονται.
+     *
+     * (322) Πρώτα οι δικές του σελίδες (`<key>-1.jpg` …), μετά -- αν ο χάρτης
+     * δηλώνει `"tail"` -- οι σελίδες ενός κοινού συνόλου εικόνων
+     * (`<tail>-1.jpg` …), αριθμημένες συνέχεια. Έτσι οι Γενικοί Όροι που
+     * είναι ίδιοι σε εννέα φύλλα (Picasso 2.0) κάθονται μία φορά στον δίσκο,
+     * όχι εννέα. Το `tail` δεν είναι έντυπο (δεν έχει χάρτη) και πρέπει να
+     * είναι του ίδιου παρόχου: ποτέ διαδρομή έξω από τον φάκελό του.
+     *
+     * @param array<string, mixed> $map
+     *
+     * @return list<string>
+     */
+    public static function pagePaths(string $formsDir, string $key, array $map): array
+    {
+        $out = [];
+
+        for ($p = 1; is_file(self::pagePath($formsDir, $key, $p)); $p++) {
+            $out[] = self::pagePath($formsDir, $key, $p);
+        }
+
+        $tail = self::tail($key, $map);
+
+        for ($p = 1; $tail !== '' && is_file(self::pagePath($formsDir, $tail, $p)); $p++) {
+            $out[] = self::pagePath($formsDir, $tail, $p);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Το κοινό σύνολο σελίδων που ακολουθεί, ή ''.
+     *
+     * @param array<string, mixed> $map
+     */
+    public static function tail(string $key, array $map): string
+    {
+        $tail = $map['tail'] ?? '';
+
+        if (! is_string($tail) || $tail === '' || $tail === $key) {
+            return '';
+        }
+
+        $provider = self::provider($tail);
+
+        return $provider !== '' && $provider === self::provider($key) ? $tail : '';
+    }
+
+    /**
      * Κάθε κλειδί εντύπου που υπάρχει στον δίσκο, ταξινομημένο.
      *
      * Μόνο όσα κάθονται στον φάκελο του ΣΩΣΤΟΥ παρόχου: ένα

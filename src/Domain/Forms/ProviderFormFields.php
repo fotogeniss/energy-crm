@@ -57,6 +57,9 @@ final class ProviderFormFields
         'fa_aftonomo', 'fa_koinoxristo',
         // (319) Όρος Θ των οικιακών Protergia: τσεκάρεται πάντα, δεν το ρωτά κανείς.
         'protergia_oros_th',
+        // (321) Φύλλα αερίου Protergia 2026: σταθερά της ίδιας της Protergia --
+        // 12 μήνες, «Εμπορικό» στο επαγγελματικό, όροι που τικάρονται πάντα.
+        'fa_diarkeia', 'fa_emporiko', 'fa_oros_panta',
 
         // Κινητή τηλεφωνία -- έλειπαν εντελώς από εδώ (214). Τα τρία έντυπα
         // Orizon (family/combo/mobile) τα τυπώνουν ήδη μέσω του
@@ -194,6 +197,14 @@ final class ProviderFormFields
         'enimerosi_oron_tilefonika'  => ['terms_notice'],
         'enimerosi_oron_eidopoiisi'  => ['terms_notice'],
         'mi_katachorisi_katalogous'  => ['no_directory_listing'],
+        // (321) Φύλλα αερίου Protergia 2026.
+        'fa_typos_metriti'             => ['gas_meter_type'],
+        'fa_arithmos_paroxis_revmatos' => ['gas_power_supply_number'],
+        'fa_paratiriseis'              => ['promotion'],
+        'fa_eggiisi_1os_logariasmos'   => ['payment_method'],
+        'fa_logariasmos_email'         => ['bill_delivery'],
+        'adt_ekprosopou'               => ['rep_id'],
+        'nomimos_ekprosopos_ypografi'  => ['rep_first_name', 'rep_last_name'],
     ];
 
     /**
@@ -307,6 +318,9 @@ final class ProviderFormFields
         'fa_aftonomo'                    => [],
         'fa_koinoxristo'                 => [],
         'protergia_oros_th'              => [],
+        'fa_diarkeia'                    => [],
+        'fa_emporiko'                    => [],
+        'fa_oros_panta'                  => [],
 
         // Κινητή τηλεφωνία (214) -- ίδιο σχόλιο με το FROM_COLUMNS παραπάνω.
         'arithmos_kinitou'               => ['mobile_msisdn'],
@@ -465,6 +479,10 @@ final class ProviderFormFields
         'terms_notice'       => 'Πώς θέλει να ενημερώνεται για αλλαγή όρων;',
         'waive_withdrawal'   => 'Θέλει άμεση έναρξη, παραιτούμενος από το δικαίωμα υπαναχώρησης;',
         'no_directory_listing' => 'Να ΜΗΝ καταχωρηθεί στους τηλεφωνικούς καταλόγους;',
+        // (321) Αέριο Protergia.
+        'gas_meter_type'          => 'Τύπος Μετρητή',
+        'gas_power_supply_number' => 'Αριθμός Παροχής Ρεύματος (Power + Gas)',
+        'rep_id'                  => 'Αρ. Ταυτότητας Νόμιμου Εκπροσώπου',
     ];
 
     /**
@@ -510,6 +528,10 @@ final class ProviderFormFields
         // προγράμματος `combo_mobile_plan` -- προϊοντική επιλογή, όχι
         // προσωπικό δεδομένο, ίδιος λόγος με το `mobile_offer`.
         'combo_mobile_same', 'combo_mobile_plan', 'combo_mobile_offer',
+        // (321) Ο τύπος μετρητή (G4, G6…) περιγράφει τον μετρητή, όχι πρόσωπο.
+        // Ο αριθμός παροχής ρεύματος ΟΧΙ: δένεται σε διεύθυνση, ίδιος λόγος
+        // με το `combo_supply_number`.
+        'gas_meter_type',
     ];
 
     /**
@@ -535,6 +557,8 @@ final class ProviderFormFields
         'gdpr_rights_ack',
         // (293) Σελ.3 orizon_mobile -- ΝΑΙ/ΟΧΙ ανώτατου ορίου κινητής.
         'mobile_bill_cap_use',
+        // (321) Τύπος μετρητή αερίου: λίστα του πίνακα εγγυήσεων Protergia.
+        'gas_meter_type',
     ];
 
     private function __construct()

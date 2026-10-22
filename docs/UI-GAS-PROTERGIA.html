@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Protergia Gas Form</title>
+<link rel="stylesheet" href="ecrm-form.css">
+<style>
+body{margin:0;background:#ecebe7;font-family:Manrope,system-ui,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:22px;margin:0 0 4px;color:#2a2926}.lead{color:#6e6c66;font-size:14px;margin:0 0 22px;line-height:1.5}
+.new{position:relative}
+.new .ecrm-input{border-color:#16c217;box-shadow:0 0 0 3px #edfbed}
+.badge{display:inline-block;margin-left:6px;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:#d4f5d4;color:#0b3d0c;padding:1px 6px;border-radius:99px;vertical-align:middle}
+.help{font-size:12px;color:#6e6c66;margin-top:2px;line-height:1.4}
+.box{background:#fff;border:1px solid #dedcd7;border-radius:16px;padding:18px 20px;margin-top:18px;font-size:13.5px;color:#2a2926;line-height:1.55}
+.box h2{font-size:15px;margin:0 0 8px}
+.box table{width:100%;border-collapse:collapse;font-size:13px}
+.box td,.box th{border-top:1px solid #eceae5;padding:7px 8px;text-align:left;vertical-align:top}
+.box th{color:#6e6c66;font-weight:700;font-size:12px}
+.sig{display:inline-block;border-top:1px solid #2a2926;padding-top:4px;margin-top:26px;font-size:12px;min-width:280px}
+.sig b{display:block;font-size:11px;letter-spacing:.02em}
+</style></head><body>
+<div class="wrap">
+<h1>Αίτηση φυσικού αερίου Protergia: τι αλλάζει</h1>
+<p class="lead">Mockup πριν από τον κώδικα. Στην οθόνη προστίθενται ΜΟΝΟ δύο πεδία, μόνο όταν η αίτηση είναι φυσικό αέριο (πράσινο περίγραμμα). Όλα τα υπόλοιπα που ζήτησε η Protergia βγαίνουν αυτόματα από πεδία που ήδη συμπληρώνεις.</p>
+
+<div class="ecrm" style="max-width:none">
+<section class="ecrm-card">
+ <div class="ecrm-step"><span class="ecrm-step__n">6</span> Στοιχεία Μετρητή</div>
+ <div class="ecrm-grid">
+  <label class="ecrm-field"><span class="ecrm-field__label">Αριθμός Παροχής / ΗΚΑΣΠ</span><input class="ecrm-input" value="GR000000000000001"></label>
+  <label class="ecrm-field"><span class="ecrm-field__label">Αριθμός Μετρητή</span><input class="ecrm-input" value="M0000001"></label>
+  <label class="ecrm-field new"><span class="ecrm-field__label">Τύπος Μετρητή <span class="badge">νέο</span></span>
+   <select class="ecrm-input"><option>—</option><option>G2,5</option><option selected>G4</option><option>G6</option><option>G10</option><option>G16</option><option>G25</option><option>G40</option><option>G65</option><option>G100</option><option>G160</option></select>
+   <span class="help">Τυπώνεται στο «Τύπος μετρητή». Από τον πίνακα εγγυήσεων της Protergia.</span></label>
+  <label class="ecrm-field"><span class="ecrm-field__label">Υφιστάμενος Προμηθευτής</span><input class="ecrm-input" value="ΔΕΠΑ"></label>
+  <label class="ecrm-field"><span class="ecrm-field__label">Ιδιότητα</span><select class="ecrm-input"><option>Ιδιοκτήτης</option></select></label>
+  <label class="ecrm-field new"><span class="ecrm-field__label">Αριθμός Παροχής Ρεύματος (Power + Gas) <span class="badge">νέο</span></span>
+   <input class="ecrm-input" placeholder="π.χ. 1 23456789-01">
+   <span class="help">Μόνο αν ο πελάτης έχει ή παίρνει και ρεύμα Protergia. Αν υπογράφονται ταυτόχρονα και δεν είναι γνωστός ακόμα, μένει κενό και γράφεται αργότερα.</span></label>
+ </div>
+</section>
+</div>
+
+<div class="box">
+<h2>Τι τυπώνεται αυτόματα στο έντυπο (χωρίς νέο πεδίο)</h2>
+<table>
+<tr><th>Σημείο εντύπου</th><th>Από πού</th><th>Παράδειγμα</th></tr>
+<tr><td>Φύλλο που τυπώνεται</td><td>Πρόγραμμα + τύπος πελάτη</td><td>Value Gas Flex οικιακό → ΕΟ.1250-2_98 · επαγγελματικό → _99 · Value Gas Standard → _95 / _97</td></tr>
+<tr><td>Οικιακό Αυτόνομο / Κοινόχρηστο</td><td>Κατηγορία (Οικιακό / Κοινόχρηστο)</td><td>Κοινόχρηστο → τικ «Οικιακό Κοινόχρηστο»</td></tr>
+<tr><td>Αριθμός παροχής (ενότητα ρεύματος)</td><td>Το νέο πεδίο Power + Gas</td><td>Κενό αν δεν δόθηκε· ΠΟΤΕ ξανά ο ΗΚΑΣΠ</td></tr>
+<tr><td>Διάρκεια ισχύος τιμολογίου / Διάρκεια σύμβασης</td><td>Σταθερά (Protergia, 22/10)</td><td>12 μήνες / 12 μήνες</td></tr>
+<tr><td>Παρατηρήσεις</td><td>Πρόγραμμα + Promotion (χωρίς ΚΟΤ)</td><td>Value Gas Flex · Μηδενική εγγύηση</td></tr>
+<tr><td>Καταβολή εγγύησης με τον 1ο λογαριασμό / Πάγια εντολή</td><td>Τρόπος Πληρωμής</td><td>Μετρητά → τικ «1ο λογαριασμό» · Πάγια → τικ «Πάγια εντολή»</td></tr>
+<tr><td>Ευάλωτος πελάτης, «Άλλο»</td><td>—</td><td>Πάντα κενά</td></tr>
+<tr><td>Όροι Ε΄ / ΣΤ΄</td><td>Συναινέσεις (ήδη στη φόρμα)</td><td>ΝΑΙ ή ΟΧΙ κατά την απάντηση</td></tr>
+<tr><td>Όρος Ι΄</td><td>Τρόπος Αποστολής Λογαριασμού</td><td>Email → τικ · Ταχυδρομικώς / Και τα δύο → κενό</td></tr>
+<tr><td>Όροι Ζ΄ και ΙΑ΄</td><td>Σταθερά</td><td>Πάντα τικ</td></tr>
+<tr><td>Επωνυμία, Γ.Ε.ΜΗ., ΚΑΔ, Νόμιμος εκπρόσωπος</td><td>Στοιχεία εταιρείας (ήδη στη φόρμα)</td><td>Μόνο στα επαγγελματικά φύλλα</td></tr>
+</table>
+</div>
+
+<div class="box">
+<h2>Υπογραφή εταιρείας (ΟΕ, ΕΕ, ΑΕ, ΕΠΕ, ΙΚΕ…)</h2>
+<p style="margin:0">Όταν ο τύπος πελάτη είναι <b>Εταιρεία</b>, κάτω από κάθε υπογραφή του εντύπου τυπώνεται ολογράφως το όνομα του εκπροσώπου. Στην <b>Ατομική επιχείρηση</b> δεν μπαίνει, όπως ζήτησε η Protergia.</p>
+<div class="sig"><i style="color:#6e6c66">(υπογραφή)</i><b>ΚΑΠΕΤΑΝΑΚΗΣ ΜΙΧΑΗΛ - ΝΟΜΙΜΟΣ ΕΚΠΡΟΣΩΠΟΣ</b></div>
+</div>
+</div></body></html>

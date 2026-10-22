@@ -988,6 +988,30 @@ class ECRM_Shortcodes {
 				<div class="ecrm-grid">
 					<?php $ecrm_field( 'supply_number', 'Αριθμός Παροχής / ΗΚΑΣΠ' ); ?>
 					<?php $ecrm_field( 'meter_number', 'Αριθμός Μετρητή' ); ?>
+					<?php
+					// (321) Αέριο Protergia: «Τύπος μετρητή» στο έντυπο, με τις τιμές
+					// του πίνακα εγγυήσεων ΦΑ (Version 16). Λίστα, γιατί η Protergia
+					// δέχεται μόνο αυτές. Mockup: docs/UI-GAS-PROTERGIA.html.
+					?>
+					<label class="ecrm-field" data-for="gas_meter_type" data-when-energy="gas">
+						<span class="ecrm-field__label">Τύπος Μετρητή</span>
+						<select name="gas_meter_type" class="ecrm-input" data-extra="1">
+							<option value="">—</option>
+							<?php foreach ( \EnergyCRM\Domain\Forms\ProtergiaGasSheets::METER_TYPES as $ecrm_meter ) : ?>
+								<option value="<?php echo esc_attr( $ecrm_meter ); ?>"><?php echo esc_html( $ecrm_meter ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</label>
+					<?php
+					// (321) Power + Gas: ο αριθμός παροχής ΡΕΥΜΑΤΟΣ του πελάτη, για την
+					// ενότητα «Στοιχεία παροχής ηλεκτρικής ενέργειας» του εντύπου
+					// αερίου. Προαιρετικό: όταν ρεύμα και αέριο υπογράφονται μαζί και
+					// δεν είναι ακόμα γνωστός, μένει κενό (Protergia, 22/10).
+					?>
+					<label class="ecrm-field" data-for="gas_power_supply_number" data-when-energy="gas">
+						<span class="ecrm-field__label">Αριθμός Παροχής Ρεύματος (Power + Gas)</span>
+						<input type="text" name="gas_power_supply_number" class="ecrm-input" data-extra="1" autocomplete="off" placeholder="Μόνο αν έχει ή παίρνει και ρεύμα Protergia">
+					</label>
 					<?php $ecrm_field( 'region_code', 'Κωδ. Περιφέρειας', 'text', true ); ?>
 					<?php $ecrm_field( 'successor_no', 'Διάδοχος', 'text', true ); ?>
 					<?php $ecrm_field( 'meter_activity', 'Δραστηριότητα', 'text', true ); ?>

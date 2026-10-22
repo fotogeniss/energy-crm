@@ -96,6 +96,31 @@ final class FormTemplatesTest extends TestCase
     }
 
     /**
+     * (322) Το `tail`: κοινές σελίδες μετά τις δικές του, μόνο του ίδιου
+     * παρόχου -- ποτέ διαδρομή έξω από τον φάκελο ή το ίδιο το έντυπο.
+     */
+    public function testATailIsOnlyAnotherSetOfTheSameProvider(): void
+    {
+        self::assertSame('protergia_gos_x', FormTemplates::tail('protergia_a', ['tail' => 'protergia_gos_x']));
+        self::assertSame('', FormTemplates::tail('protergia_a', ['tail' => 'volton_gos']));
+        self::assertSame('', FormTemplates::tail('protergia_a', ['tail' => '../protergia_x']));
+        self::assertSame('', FormTemplates::tail('protergia_a', ['tail' => 'protergia_a']));
+        self::assertSame('', FormTemplates::tail('protergia_a', ['tail' => ['protergia_x']]));
+        self::assertSame('', FormTemplates::tail('protergia_a', []));
+    }
+
+    public function testATailFollowsTheOwnPagesNumberedOn(): void
+    {
+        $dir   = self::formsDir();
+        $pages = FormTemplates::pagePaths($dir, 'protergia_pic_b_s1', ['tail' => 'protergia_gos_pic_b']);
+
+        self::assertCount(8, $pages);
+        self::assertSame(FormTemplates::pagePath($dir, 'protergia_pic_b_s1', 4), $pages[3]);
+        self::assertSame(FormTemplates::pagePath($dir, 'protergia_gos_pic_b', 1), $pages[4]);
+        self::assertCount(4, FormTemplates::pagePaths($dir, 'protergia_pic_b_s1', []));
+    }
+
+    /**
      * Τα έντυπα που τυπώνονται σήμερα, ονομαστικά -- λίστα παραγόμενη από
      * τον δίσκο θα συμφωνούσε με ό,τι βρει, ακόμα κι αν η μετακίνηση
      * «έχασε» ένα.
@@ -110,7 +135,19 @@ final class FormTemplatesTest extends TestCase
                 'orizon_combo', 'orizon_family', 'orizon_mobile', 'orizon_portability',
                 'protergia_epag_seasonal', 'protergia_epag_simple2', 'protergia_epag_sure12',
                 'protergia_fa', 'protergia_fa_single', 'protergia_fa_sure', 'protergia_he', 'protergia_he_biz',
+                // (321) Αέριο Protergia, Οκτώβριος 2026.
+                'protergia_fa_oik_standard', 'protergia_fa_oik_flex',
+                'protergia_fa_epag_standard', 'protergia_fa_epag_flex',
                 'protergia_oik_bright', 'protergia_oik_lite2', 'protergia_oik_sure12', 'protergia_oik_sure18',
+                // (322) Επαγγελματικά ρεύματος Protergia, Οκτώβριος 2026.
+                'protergia_epag1_balance_12m', 'protergia_epag1_standard2', 'protergia_epag1_dynamic_one',
+                'protergia_epag1_special', 'protergia_epag2_power2', 'protergia_epag2_standard2',
+                'protergia_epag2_simple2', 'protergia_epag2_dynamic_one', 'protergia_epag2_special',
+                'protergia_epag3_sure12m_2', 'protergia_epag3_standard2', 'protergia_epag3_simple2',
+                'protergia_epag3_special',
+                'protergia_pic_b_s1', 'protergia_pic_b_s2', 'protergia_pic_b_s3',
+                'protergia_pic_b_m1', 'protergia_pic_b_m2', 'protergia_pic_b_m3',
+                'protergia_pic_b_l1', 'protergia_pic_b_l2', 'protergia_pic_b_l3',
                 'volton_fa', 'volton_he', 'zenith_he',
             ] as $key
         ) {

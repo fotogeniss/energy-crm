@@ -46,6 +46,11 @@ final class StandingOrderCoordinateTest extends TestCase
             ['nrg_he_biz'],
             ['nrg_fa'],
             ['protergia_fa'],
+            // (321) Τα φύλλα αερίου Protergia του Οκτωβρίου 2026.
+            ['protergia_fa_oik_standard'],
+            ['protergia_fa_oik_flex'],
+            ['protergia_fa_epag_standard'],
+            ['protergia_fa_epag_flex'],
             // Added 2026-08-13, after the box was found empty on a real print.
             ['protergia_he'],
             ['protergia_he_biz'],

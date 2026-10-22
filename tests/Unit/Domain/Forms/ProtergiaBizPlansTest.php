@@ -100,6 +100,11 @@ final class ProtergiaBizPlansTest extends TestCase
             $out = [];
 
             foreach ($map['fields'] as $key => $entry) {
+                // (322) Λεζάντα «ΝΟΜΙΜΟΣ ΕΚΠΡΟΣΩΠΟΣ» και Αρ. ΓΕΜΗ μπήκαν στα
+                // φύλλα που πουλιούνται· το Sure 12 3.0 είναι αποσυρμένο (319).
+                if (in_array($key, ['nomimos_ekprosopos_ypografi', 'gemi'], true)) {
+                    continue;
+                }
                 $list = isset($entry[0]) ? $entry : [$entry];
                 $kept = array_values(array_filter($list, static fn (array $e): bool => $e['page'] !== 2));
 

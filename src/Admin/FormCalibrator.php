@@ -96,10 +96,7 @@ final class FormCalibrator
                 continue;
             }
 
-            $pages = 0;
-            while (file_exists(FormTemplates::pagePath($this->formsDir(), $key, $pages + 1))) {
-                $pages++;
-            }
+            $pages = count(FormTemplates::pagePaths($this->formsDir(), $key, $map));
 
             $found[$key] = ['fields' => count($map['fields'] ?? []), 'pages' => $pages];
         }
@@ -150,16 +147,12 @@ final class FormCalibrator
         $pdf->SetAutoPageBreak(false);
         $pdf->SetFont('Arial', '', 5);
 
-        $page = 1;
-
-        while (file_exists(FormTemplates::pagePath($this->formsDir(), $key, $page))) {
+        foreach (FormTemplates::pagePaths($this->formsDir(), $key, $map) as $i => $image) {
             $pdf->AddPage($orient, [$width, $height]);
-            $pdf->Image(FormTemplates::pagePath($this->formsDir(), $key, $page), 0, 0, $width, $height);
+            $pdf->Image($image, 0, 0, $width, $height);
 
             $this->drawGrid($pdf, $width, $height);
-            $this->drawFields($pdf, $map['fields'] ?? [], $page);
-
-            $page++;
+            $this->drawFields($pdf, $map['fields'] ?? [], $i + 1);
         }
 
         return $pdf;
