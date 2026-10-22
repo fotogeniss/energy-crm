@@ -27,19 +27,54 @@ import { api, esc } from '@energy-crm/util';
 	var busy = false;
 
 	// Οι έτοιμες ερωτήσεις της άδειας οθόνης. Μόνο πράγματα που ο βοηθός
-	// ΜΠΟΡΕΙ να απαντήσει με όσα του δίνονται (αιτήσεις, οδηγίες εφαρμογής,
-	// καταστάσεις) -- όχι χαρτιά ανά πάροχο, που θέλουν τη Βάση Γνώσης.
-	var CHIP_Q = [
-		'Ποιες αιτήσεις μου έχουν κολλήσει;',
-		'Πώς καταχωρώ νέα αίτηση;',
-		'Τι σημαίνει «Οριστικοποίηση»;'
+	// ΜΠΟΡΕΙ να απαντήσει με όσα του δίνονται (αιτήσεις και νούμερα του
+	// χρήστη, οδηγίες εφαρμογής, καταστάσεις) -- όχι χαρτιά ανά πάροχο, που
+	// θέλουν τη Βάση Γνώσης.
+	//
+	// (320b) Τρεις κάθε φορά από τη λίστα, και ΟΧΙ οι ίδιες με την
+	// προηγούμενη συζήτηση (ιδιοκτήτης, 17/10: «σε κάθε νέα συζήτηση να μη
+	// βγάζει τις ίδιες»). [ερώτηση, σχήμα από το ICO].
+	var POOL = [
+		['Ποιες αιτήσεις μου έχουν κολλήσει;', 0],
+		['Ποια αίτησή μου έχει τις περισσότερες μέρες χωρίς αλλαγή;', 0],
+		['Τι λείπει από τις αιτήσεις μου σε «Εκκρεμότητα»;', 0],
+		['Ποιες αιτήσεις μου περιμένουν υπογραφή;', 3],
+		['Πώς καταχωρώ νέα αίτηση;', 1],
+		['Πώς δουλεύει η «Εξαγωγή με AI»;', 1],
+		['Πώς προσθέτω πωλητή στην ομάδα μου;', 4],
+		['Πόσες αιτήσεις έκανα αυτόν τον μήνα;', 5],
+		['Τι σημαίνει «Οριστικοποίηση»;', 2],
+		['Τι σημαίνει «Presale»;', 2],
+		['Ποια είναι η διαφορά «Οριστικοποίηση» και «Ενεργός»;', 2],
+		['Πότε κλειδώνει η προμήθειά μου;', 6]
 	];
-	// Σταθερά σχήματα (ίδια με τα icon() του μενού: Εκκρεμότητες, Νέα αίτηση, pulse).
-	var CHIP_ICO = [
+	// Σταθερά σχήματα, ίδια με τα icon() του μενού: Εκκρεμότητες, Νέα αίτηση,
+	// pulse, υπογραφή, Η ομάδα μου, Στατιστικά, Προμήθειες.
+	var ICO = [
 		'<path d="M12 8v5"/><path d="M12 16.5v.01"/><path d="M10.3 3.8 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/>',
 		'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v5"/><path d="M9.5 14.5h5"/>',
-		'<path d="M3 12h4l2 6 4-14 2 8h6"/>'
+		'<path d="M3 12h4l2 6 4-14 2 8h6"/>',
+		'<path d="M3 17c3-1 4-6 6-6s1 5 3 5 2-3 4-3 2 2 5 2"/><path d="M3 21h18"/>',
+		'<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 6.2a3 3 0 0 1 0 5.6"/><path d="M18.5 20a6 6 0 0 0-3-5.1"/>',
+		'<path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/>',
+		'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.6a4 4 0 1 0 0 6.8"/><path d="M7.5 10.8h6"/><path d="M7.5 13.2h6"/>'
 	];
+	var shown = [];
+	var lastShown = [];
+
+	// Τρεις τυχαίες, χωρίς καμία από την προηγούμενη τριάδα.
+	function pickChips() {
+		var cand = [];
+		for (var i = 0; i < POOL.length; i++) {
+			if (lastShown.indexOf(i) === -1) { cand.push(i); }
+		}
+		for (var j = cand.length - 1; j > 0; j--) {
+			var k = Math.floor(Math.random() * (j + 1));
+			var t = cand[j]; cand[j] = cand[k]; cand[k] = t;
+		}
+		shown = cand.slice(0, 3);
+		lastShown = shown.slice();
+	}
 	var SPARK = '<svg class="ecrm-litsa__spark" viewBox="17.1 1.6 5 5" aria-hidden="true"><path d="M19.6 1.6l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>';
 
 	function headers() { return { 'Content-Type': 'application/json', 'X-WP-Nonce': ECRM.nonce }; }
@@ -113,13 +148,14 @@ import { api, esc } from '@energy-crm/util';
 	}
 
 	function emptyState() {
+		if (!shown.length) { pickChips(); }
 		return '<div class="ecrm-litsa__empty">' +
 			'<h3>Πώς να βοηθήσω;</h3>' +
 			'<p>Ρώτα με για τις αιτήσεις σου ή για το πώς γίνεται κάτι στο CRM.</p>' +
 			'<div class="ecrm-litsa__chips">' +
-			CHIP_Q.map(function (q, i) {
-				return '<button type="button" class="ecrm-litsa__chip" data-litsa-ask="' + i + '">' +
-					'<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true">' + CHIP_ICO[i] + '</svg>' + esc(q) + '</button>';
+			shown.map(function (n) {
+				return '<button type="button" class="ecrm-litsa__chip" data-litsa-ask="' + n + '">' +
+					'<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true">' + ICO[POOL[n][1]] + '</svg>' + esc(POOL[n][0]) + '</button>';
 			}).join('') +
 			'</div></div>';
 	}
@@ -181,10 +217,11 @@ import { api, esc } from '@energy-crm/util';
 			.catch(function () { busy = false; history.push({ role: 'assistant', content: 'Σφάλμα δικτύου. Δοκίμασε ξανά.' }); render(); });
 	}
 
-	// (320) «Νέα συνομιλία» αντί για «Διαγραφή συνομιλίας», χωρίς confirm():
-	// η συνομιλία δεν είναι επιχειρηματικό δεδομένο, ο χρήστης θέλει απλώς
-	// καθαρή οθόνη, και το παράθυρο του browser ήταν το πιο «πρόχειρο»
-	// κομμάτι του πάνελ (μακέτα docs/UI-ALFRAID.html, εγκρίθηκε 17/10).
+	// «Διαγραφή συνομιλίας» (κάδος), χωρίς confirm(): η συνομιλία δεν είναι
+	// επιχειρηματικό δεδομένο, και το παράθυρο του browser ήταν το πιο
+	// «πρόχειρο» κομμάτι του πάνελ. (320) είχε γίνει «Νέα συνομιλία» (+)·
+	// (320b) ο ιδιοκτήτης προτίμησε τον κάδο. Μετά τη διαγραφή βγαίνουν
+	// άλλες τρεις έτοιμες ερωτήσεις.
 	function clearHistory() {
 		if (!history.length || busy) return;
 		fetch(api('/assistant/history/clear'), { method: 'POST', headers: headers() })
@@ -192,7 +229,7 @@ import { api, esc } from '@energy-crm/util';
 			// αν αποτύχει το server-side clear, δεν υπάρχει λόγος να το δει ο
 			// χρήστης· θα ξαναδοκιμαστεί φυσικά στην επόμενη clearHistory().
 			.catch(function () {})
-			.finally(function () { history = []; render(); });
+			.finally(function () { history = []; shown = []; render(); });
 	}
 
 	var clearBtn = root.querySelector('[data-litsa-clear]');
@@ -208,9 +245,9 @@ import { api, esc } from '@energy-crm/util';
 	body.addEventListener('click', function (e) {
 		var chip = e.target.closest('[data-litsa-ask]');
 		if (!chip) return;
-		var q = CHIP_Q[Number(chip.getAttribute('data-litsa-ask'))];
-		if (!q) return;
-		input.value = q;
+		var entry = POOL[Number(chip.getAttribute('data-litsa-ask'))];
+		if (!entry) return;
+		input.value = entry[0];
 		send();
 	});
 	sendBtn.addEventListener('click', send);

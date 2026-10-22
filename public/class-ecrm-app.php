@@ -453,7 +453,7 @@ class ECRM_App {
 							<span class="ecrm-litsa__sub"><span class="ecrm-litsa__dot"></span>Βλέπει τις αιτήσεις σου, όχι στοιχεία πελατών</span>
 						</div>
 						<div class="ecrm-litsa__headbtns">
-							<button type="button" class="ecrm-litsa__hbtn" data-litsa-clear aria-label="Νέα συνομιλία" title="Νέα συνομιλία"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+							<button type="button" class="ecrm-litsa__hbtn" data-litsa-clear aria-label="Διαγραφή συνομιλίας" title="Διαγραφή συνομιλίας"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg></button>
 							<button type="button" class="ecrm-litsa__hbtn" data-litsa-toggle aria-label="Κλείσιμο" title="Κλείσιμο"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 						</div>
 					</div>
