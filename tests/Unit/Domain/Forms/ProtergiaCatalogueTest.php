@@ -9,8 +9,10 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Unit\Domain\Forms;
 
 use EnergyCRM\Domain\Forms\ProtergiaBizPlans;
+use EnergyCRM\Domain\Forms\ProtergiaBizSheets;
 use EnergyCRM\Domain\Forms\ProtergiaCatalogue;
 use EnergyCRM\Domain\Forms\ProtergiaGasPlans;
+use EnergyCRM\Domain\Forms\ProtergiaGasSheets;
 use EnergyCRM\Domain\Forms\ProtergiaHomePlans;
 use PHPUnit\Framework\TestCase;
 
@@ -61,6 +63,25 @@ final class ProtergiaCatalogueTest extends TestCase
     {
         foreach (ProtergiaCatalogue::added() as $code => $plan) {
             self::assertContains($plan['priceType'], ['', 'fixed', 'variable', 'special', 'dynamic'], $code);
+        }
+    }
+
+    /**
+     * (324) Όσα περιμένουν έντυπο είναι προγράμματα του καταλόγου, χωρίς
+     * δικό τους φύλλο ακόμα -- όταν αποκτήσουν, πρέπει να βγουν από τη λίστα.
+     */
+    public function testPlansAwaitingASheetAreCataloguePlansWithoutOne(): void
+    {
+        self::assertSame(
+            ['protergia_gas_sure2', 'protergia_power_gas_fa', 'protergia_power_gas_he'],
+            ProtergiaCatalogue::AWAITING_SHEET
+        );
+
+        foreach (ProtergiaCatalogue::AWAITING_SHEET as $code) {
+            self::assertArrayHasKey($code, ProtergiaCatalogue::added(), $code);
+            self::assertSame('', ProtergiaGasSheets::templateKey($code), $code . ' έχει πια φύλλο');
+            self::assertSame('', ProtergiaBizSheets::templateKey($code), $code . ' έχει πια φύλλο');
+            self::assertFalse(ProtergiaCatalogue::isRetired($code), $code);
         }
     }
 }

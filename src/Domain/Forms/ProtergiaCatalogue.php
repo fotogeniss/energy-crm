@@ -148,6 +148,21 @@ final class ProtergiaCatalogue
         ProtergiaGasPlans::SINGLE,
     ];
 
+    /**
+     * (324) Σε αναμονή εντύπου: ανενεργά ώσπου να στείλει η Protergia το
+     * φύλλο τους. Ως τότε θα τύπωναν το γενικό έντυπο -- στο αέριο το
+     * `protergia_fa`, με τυπωμένο τον πίνακα τιμών του παλιού Value Gas Sure
+     * (9,90 €/μήνα, 41,90 €/MWh) -- δηλαδή ο πελάτης θα υπέγραφε τιμές άλλου
+     * προγράμματος. Το Power+Gas βγαίνει και στις δύο μεριές (δύο αιτήσεις,
+     * ένα πρόγραμμα). Μόλις έρθει το φύλλο: δικός του χάρτης, και το
+     * πρόγραμμα ξαναενεργοποιείται από τη σελίδα Παρόχων.
+     */
+    public const AWAITING_SHEET = [
+        'protergia_gas_sure2',
+        'protergia_power_gas_fa',
+        'protergia_power_gas_he',
+    ];
+
     private function __construct()
     {
     }
