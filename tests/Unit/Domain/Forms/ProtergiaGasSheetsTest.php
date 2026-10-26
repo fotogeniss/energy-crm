@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Unit\Domain\Forms;
 
+use EnergyCRM\Domain\Forms\FormTemplates;
 use EnergyCRM\Domain\Forms\ProtergiaGasSheets;
 use EnergyCRM\Domain\Forms\ProviderFormFields;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -56,12 +57,46 @@ final class ProtergiaGasSheetsTest extends TestCase
         self::assertFileDoesNotExist(self::dir() . $tpl . '-' . ($pages + 1) . '.jpg');
 
         $map = $this->map($tpl);
-        self::assertCount(1, $map['sigs']);
+        self::assertCount(2, $map['sigs']);
         self::assertSame($pages, $map['sigs'][0]['page']);
         // Η υπογραφή ακουμπά τη γραμμή «Υπογραφή / Σφραγίδα Πελάτη».
         $line = $home ? 315.1 : 316.9;
         self::assertEqualsWithDelta($line, $map['sigs'][0]['y'] + $map['sigs'][0]['fit_h'], 0.5);
-        self::assertSame($pages, $map['fields']['nomimos_ekprosopos_ypografi']['page']);
+        self::assertSame($pages, $map['fields']['nomimos_ekprosopos_ypografi'][0]['page']);
+    }
+
+    /**
+     * (323) Οι Γενικοί Όροι μετά την αίτηση, σε A4, υπογεγραμμένοι στην
+     * ΤΕΛΕΥΤΑΙΑ τους σελίδα («ΥΠΟΓΡΑΦΗ / ΣΦΡΑΓΙΔΑ ΠΕΛΑΤΗ», γραμμή 282,7 mm)
+     * -- με τη λεζάντα του νόμιμου εκπροσώπου από κάτω.
+     */
+    #[DataProvider('sheets')]
+    public function testTheGeneralTermsFollowAndAreSignedOnTheirLastPage(string $tpl, bool $home, int $pages): void
+    {
+        $map  = $this->map($tpl);
+        $tail = 'protergia_gos_' . substr($tpl, strlen('protergia_'));
+
+        self::assertSame($tail, $map['tail']);
+        self::assertSame([210.0, 297.0], [$map['tail_w'], $map['tail_h']]);
+        self::assertSame([210.0, 330.1], [$map['page_w'], $map['page_h']]);
+
+        $all = FormTemplates::pages(dirname(self::dir()), $tpl, $map);
+        self::assertCount($pages + 3, $all);
+        self::assertSame(FormTemplates::pagePath(dirname(self::dir()), $tail, 3), $all[$pages + 2]['path']);
+        self::assertSame(330.1, $all[$pages - 1]['h']);
+        self::assertSame(297.0, $all[$pages]['h']);
+
+        $last = $pages + 3;
+        $sig  = $map['sigs'][1];
+        self::assertSame($last, $sig['page']);
+        self::assertEqualsWithDelta(282.7, $sig['y'] + $sig['fit_h'], 0.5);
+        self::assertGreaterThanOrEqual(112.0, $sig['x']);
+        self::assertLessThanOrEqual(151.2, $sig['x'] + $sig['w']);
+
+        $caption = $map['fields']['nomimos_ekprosopos_ypografi'][1];
+        self::assertSame($last, $caption['page']);
+        self::assertGreaterThan(286.6, $caption['y'], 'κάτω από την ετικέτα');
+        self::assertLessThan(297.0 - 3.0, $caption['y'] + 2.5, 'μέσα στη σελίδα');
     }
 
     #[DataProvider('sheets')]

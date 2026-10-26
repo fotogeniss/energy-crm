@@ -15,6 +15,8 @@ Standard). Μόνη διαφορά Flex/Standard: η υπογραφή είναι
 
 Χρειάζεται pdfplumber. Με --write γράφει assets/forms/protergia/<key>.json
 και τις σελίδες <key>-N.jpg (150 dpi, ίδια ανάλυση με τα υπόλοιπα).
+(323) Και τους ΓΟΣ κάθε φύλλου ως protergia_gos_<φύλλο>-N.jpg· με
+--maps-only δεν ξαναγράφει τις εικόνες της αίτησης.
 """
 
 from __future__ import annotations
@@ -38,6 +40,20 @@ SOURCES = {
     'protergia_fa_epag_standard': ('aitisi_epaggelmatiko_value-gas-standard.pdf', 'biz', 2),
     'protergia_fa_epag_flex':     ('aitisi_business_value-gas-flex.pdf', 'biz', 3),
 }
+
+# (323) Οι Γενικοί Όροι κάθε φύλλου. Η Protergia (26/10): «αποτελούν τη
+# συνέχεια του συμβολαίου [...] και πρέπει να υπογράφονται στην τελευταία
+# σελίδα στο αντίστοιχο πεδίο ΥΠΟΓΡΑΦΗ / ΣΦΡΑΓΙΔΑ ΠΕΛΑΤΗ». Τυπώνονται μετά
+# την αίτηση ως `tail` (A4, ενώ η αίτηση είναι 210×330). Η «Προσφορά
+# προμήθειας» του Standard είναι πληροφοριακή, χωρίς υπογραφή: δεν τυπώνεται.
+GOS = {
+    'protergia_fa_oik_standard':  'gos_oikiako_autonomo_koinoxristo_value-gas-standard.pdf',
+    'protergia_fa_oik_flex':      'gos-oikiako-autonomo-koinoxristo-value-gas-flex.pdf',
+    'protergia_fa_epag_standard': 'gos_epaggelmatiko_value-gas-standard.pdf',
+    'protergia_fa_epag_flex':     'gos_business_value-gas-flex.pdf',
+}
+GOS_SIG_W, GOS_SIG_FIT = 36, 11.0   # όπως στους ΓΟΣ ρεύματος (322)
+LAT = str.maketrans('HIAOETKXMBPNYZ', 'ΗΙΑΟΕΤΚΧΜΒΡΝΥΖ')
 
 # (κλειδί, ετικέτα, top ετικέτας σε mm, όριο δεξιά). Το top είναι ΑΝΑΦΟΡΑ:
 # το script ψάχνει την ετικέτα στο PDF και αποτυγχάνει αν δεν τη βρει ±1 mm.
@@ -224,22 +240,74 @@ def build(pdf_path: Path, layout: str, sig_page: int) -> dict:
     }
 
 
+def gos_sig(pdf_path: Path) -> dict:
+    """Η γραμμή πάνω από το «ΥΠΟΓΡΑΦΗ / ΣΦΡΑΓΙΔΑ ΠΕΛΑΤΗ» της ΤΕΛΕΥΤΑΙΑΣ σελίδας."""
+    pdf = pdfplumber.open(str(pdf_path))
+    pg = pdf.pages[-1]
+    ws = pg.extract_words()
+    hits = []
+    for j, w in enumerate(ws):
+        if not w['text'].translate(LAT).startswith('ΥΠΟΓΡΑΦΗ'):
+            continue
+        row = ' '.join(x['text'].translate(LAT) for x in ws[j:j + 5] if abs(x['top'] - w['top']) < 2)
+        if 'ΣΦΡΑΓΙΔΑ ΠΕΛΑΤΗ' in row:
+            hits.append(w)
+    if len(hits) != 1:
+        raise SystemExit(f'{pdf_path.name}: «ΥΠΟΓΡΑΦΗ / ΣΦΡΑΓΙΔΑ ΠΕΛΑΤΗ» {len(hits)} φορές στην τελευταία σελίδα')
+    x0, top = hits[0]['x0'] * MM, hits[0]['top'] * MM
+    edges = [e for e in pg.edges if e['orientation'] == 'h' and (e['x1'] - e['x0']) * MM > 20
+             and top - 9 < e['top'] * MM < top - 0.3 and e['x0'] * MM - 5 < x0 < e['x1'] * MM]
+    if len(edges) != 1:
+        raise SystemExit(f'{pdf_path.name}: {len(edges)} γραμμές πάνω από την υπογραφή πελάτη')
+    e = edges[0]
+    return {
+        'pages': len(pdf.pages),
+        'w': round(pdf.pages[0].width * MM, 1), 'h': round(pdf.pages[0].height * MM, 1),
+        'x0': e['x0'] * MM, 'x1': e['x1'] * MM, 'line': e['top'] * MM, 'label': top,
+    }
+
+
+def add_gos(m: dict, key: str, g: dict, own_pages: int) -> None:
+    """ΓΟΣ ως `tail`: υπογραφή πάνω στη γραμμή, λεζάντα εταιρείας κάτω από την ετικέτα."""
+    page = own_pages + g['pages']
+    x = round(g['x0'] + 1.0, 1)
+    w = min(GOS_SIG_W, round(g['x1'] - g['x0'] - 2.0, 1))
+    m['tail'] = 'protergia_gos_' + key.removeprefix('protergia_')
+    m['tail_w'], m['tail_h'] = g['w'], g['h']
+    m['sigs'].append({'page': page, 'x': x, 'y': round(g['line'] + 0.3 - GOS_SIG_FIT, 1),
+                      'w': w, 'h': 0, 'fit_h': GOS_SIG_FIT})
+    cap = m['fields']['nomimos_ekprosopos_ypografi']
+    m['fields']['nomimos_ekprosopos_ypografi'] = (cap if isinstance(cap, list) else [cap]) + [
+        {'page': page, 'x': round(g['x0'], 1), 'y': round(g['label'] + 2.1, 1), 'size': 6.0,
+         'maxw': round(RIGHT - 2.0 - g['x0'], 1)},
+    ]
+
+
+def jpegs(pdf: Path, key: str, out: Path) -> None:
+    subprocess.run(['pdftoppm', '-r', '150', '-jpeg', '-jpegopt', 'quality=85', str(pdf), str(out / key)], check=True)
+    # pdftoppm γράφει key-1.jpg / key-01.jpg ανάλογα με το πλήθος σελίδων
+    for p in sorted(out.glob(f'{key}-0*.jpg')):
+        p.rename(out / f'{key}-{int(p.stem.rsplit("-", 1)[1])}.jpg')
+
+
 def main() -> None:
     src = Path(sys.argv[1])
     write = '--write' in sys.argv
+    app_images = '--maps-only' not in sys.argv      # (323) οι αιτήσεις δεν άλλαξαν
     out = Path(__file__).resolve().parent.parent / 'assets' / 'forms' / 'protergia'
     for key, (name, layout, sig_page) in SOURCES.items():
         m = build(src / name, layout, sig_page)
+        own = len(pdfplumber.open(str(src / name)).pages)
+        g = gos_sig(src / GOS[key])
+        add_gos(m, key, g, own)
+        print(f'{key:28} αίτηση {own} σελ. + ΓΟΣ {g["pages"]} ({g["w"]}x{g["h"]}) · υπογραφές {[s["page"] for s in m["sigs"]]}')
         if not write:
-            print(key, json.dumps(m, ensure_ascii=False)[:300], '…')
             continue
         (out / f'{key}.json').write_text(json.dumps(m, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
-        subprocess.run(['pdftoppm', '-r', '150', '-jpeg', '-jpegopt', 'quality=85', str(src / name), str(out / key)], check=True)
-        # pdftoppm γράφει key-1.jpg / key-01.jpg ανάλογα με το πλήθος σελίδων
-        for p in sorted(out.glob(f'{key}-0*.jpg')):
-            p.rename(out / f'{key}-{int(p.stem.rsplit("-", 1)[1])}.jpg')
+        if app_images:
+            jpegs(src / name, key, out)
+        jpegs(src / GOS[key], m['tail'], out)
         print('ok', key)
-
 
 if __name__ == '__main__':
     main()

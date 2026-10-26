@@ -121,6 +121,32 @@ final class FormTemplatesTest extends TestCase
     }
 
     /**
+     * (323) Κάθε σελίδα με το δικό της χαρτί: οι δικές του από `page_w`/
+     * `page_h`, του `tail` από `tail_w`/`tail_h` -- κι όπου αυτά λείπουν ή
+     * είναι άκυρα, ίδιο χαρτί με τις δικές του, όπως ως τώρα.
+     */
+    public function testEachPageCarriesItsOwnPaperSize(): void
+    {
+        $dir = self::formsDir();
+        $tail = 'protergia_gos_pic_b';
+        $map  = ['page_w' => 210.0, 'page_h' => 330.1, 'tail' => $tail, 'tail_w' => 210, 'tail_h' => 297];
+
+        $pages = FormTemplates::pages($dir, 'protergia_pic_b_s1', $map);
+        self::assertCount(8, $pages);
+        $own = FormTemplates::pagePath($dir, 'protergia_pic_b_s1', 4);
+        self::assertSame(['path' => $own, 'w' => 210.0, 'h' => 330.1], $pages[3]);
+        $first = FormTemplates::pagePath($dir, $tail, 1);
+        self::assertSame(['path' => $first, 'w' => 210.0, 'h' => 297.0], $pages[4]);
+
+        $same = FormTemplates::pages($dir, 'protergia_pic_b_s1', ['tail' => $tail, 'tail_h' => '297']);
+        self::assertSame(297.0, $same[7]['h']);
+        self::assertSame(210.0, $same[7]['w']);
+
+        $bad = FormTemplates::pages($dir, 'protergia_pic_b_s1', ['page_h' => 300.0, 'tail' => $tail, 'tail_h' => -1]);
+        self::assertSame(300.0, $bad[7]['h']);
+    }
+
+    /**
      * Τα έντυπα που τυπώνονται σήμερα, ονομαστικά -- λίστα παραγόμενη από
      * τον δίσκο θα συμφωνούσε με ό,τι βρει, ακόμα κι αν η μετακίνηση
      * «έχασε» ένα.

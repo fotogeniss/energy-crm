@@ -284,13 +284,22 @@
    "check": true,
    "size": 6.5
   },
-  "nomimos_ekprosopos_ypografi": {
-   "page": 2,
-   "x": 8.0,
-   "y": 319.2,
-   "size": 7.0,
-   "maxw": 100.0
-  }
+  "nomimos_ekprosopos_ypografi": [
+   {
+    "page": 2,
+    "x": 8.0,
+    "y": 319.2,
+    "size": 7.0,
+    "maxw": 100.0
+   },
+   {
+    "page": 5,
+    "x": 112.0,
+    "y": 288.6,
+    "size": 6.0,
+    "maxw": 86.0
+   }
+  ]
  },
  "sigs": [
   {
@@ -300,6 +309,14 @@
    "w": 46,
    "h": 0,
    "fit_h": 14.0
+  },
+  {
+   "page": 5,
+   "x": 113.0,
+   "y": 272.0,
+   "w": 36,
+   "h": 0,
+   "fit_h": 11.0
   }
  ],
  "labels": {
@@ -332,5 +349,8 @@
   "fa_diarkeia": "Διάρκεια ισχύος τιμολογίου*",
   "poso_eggiisis": "Ποσό εγγύησης (€)",
   "fa_paratiriseis": "Παρατηρήσεις"
- }
+ },
+ "tail": "protergia_gos_fa_oik_standard",
+ "tail_w": 210.0,
+ "tail_h": 297.0
 }

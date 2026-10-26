@@ -100,6 +100,46 @@ final class FormTemplates
     }
 
     /**
+     * Τα υπόβαθρα μαζί με το μέγεθος χαρτιού της κάθε σελίδας, σε mm.
+     *
+     * (323) Οι αιτήσεις αερίου της Protergia είναι 210×330, οι Γενικοί Όροι
+     * τους A4. Με ένα μέγεθος για όλο το έντυπο οι Όροι θα τεντώνονταν κατά
+     * 11% στο ύψος. Οι δικές του σελίδες παίρνουν `page_w`/`page_h`, του
+     * `tail` τα `tail_w`/`tail_h` -- κι όπου αυτά λείπουν, τα ίδια με τις
+     * δικές του (όπως ως τώρα).
+     *
+     * @param array<string, mixed> $map
+     *
+     * @return list<array{path: string, w: float, h: float}>
+     */
+    public static function pages(string $formsDir, string $key, array $map): array
+    {
+        $w  = self::mm($map['page_w'] ?? null, 210.0);
+        $h  = self::mm($map['page_h'] ?? null, 297.0);
+        $tw = self::mm($map['tail_w'] ?? null, $w);
+        $th = self::mm($map['tail_h'] ?? null, $h);
+
+        $own = 0;
+        while (is_file(self::pagePath($formsDir, $key, $own + 1))) {
+            $own++;
+        }
+
+        $out = [];
+        foreach (self::pagePaths($formsDir, $key, $map) as $i => $path) {
+            $tail  = $i >= $own;
+            $out[] = ['path' => $path, 'w' => $tail ? $tw : $w, 'h' => $tail ? $th : $h];
+        }
+
+        return $out;
+    }
+
+    /** Θετικός αριθμός από τον χάρτη, αλλιώς η προεπιλογή. */
+    private static function mm(mixed $value, float $default): float
+    {
+        return (is_int($value) || is_float($value)) && $value > 0 ? (float) $value : $default;
+    }
+
+    /**
      * Το κοινό σύνολο σελίδων που ακολουθεί, ή ''.
      *
      * @param array<string, mixed> $map

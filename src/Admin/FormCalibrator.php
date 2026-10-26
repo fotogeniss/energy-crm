@@ -147,11 +147,13 @@ final class FormCalibrator
         $pdf->SetAutoPageBreak(false);
         $pdf->SetFont('Arial', '', 5);
 
-        foreach (FormTemplates::pagePaths($this->formsDir(), $key, $map) as $i => $image) {
-            $pdf->AddPage($orient, [$width, $height]);
-            $pdf->Image($image, 0, 0, $width, $height);
+        // (323) Κάθε σελίδα με το δικό της μέγεθος: οι ΓΟΣ μπορεί να είναι A4
+        // πίσω από αίτηση άλλου μεγέθους.
+        foreach (FormTemplates::pages($this->formsDir(), $key, $map) as $i => $page) {
+            $pdf->AddPage($page['w'] > $page['h'] ? 'L' : 'P', [$page['w'], $page['h']]);
+            $pdf->Image($page['path'], 0, 0, $page['w'], $page['h']);
 
-            $this->drawGrid($pdf, $width, $height);
+            $this->drawGrid($pdf, $page['w'], $page['h']);
             $this->drawFields($pdf, $map['fields'] ?? [], $i + 1);
         }
 

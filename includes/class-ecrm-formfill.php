@@ -808,18 +808,17 @@ class ECRM_FormFill {
 	 * @param array<string, string> $sig_roles ρόλος => διαδρομή εικόνας
 	 */
 	private static function draw_pages( $pdf, string $dir, string $key, array $map, array $values, ?string $sig_path, array $sig_roles = [] ): void {
-		$w = (float) ( $map['page_w'] ?? 210 );
-		$h = (float) ( $map['page_h'] ?? 297 );
-		$orient = ( $w > $h ) ? 'L' : 'P';
-
 		$ink_tmp = [];
 		// (284) Ο $dir είναι η βάση assets/forms/· κάθε πάροχος έχει τον
 		// φάκελό του, και τη διαδρομή τη λέει μόνο το FormTemplates.
 		// (322) Μαζί με τις κοινές σελίδες του `tail` (ΓΟΣ), αριθμημένες συνέχεια.
-		foreach ( \EnergyCRM\Domain\Forms\FormTemplates::pagePaths( $dir, $key, $map ) as $i => $page_img ) {
+		// (323) Κάθε σελίδα με το δικό της χαρτί: ΓΟΣ A4 πίσω από αίτηση 210×330.
+		foreach ( \EnergyCRM\Domain\Forms\FormTemplates::pages( $dir, $key, $map ) as $i => $page ) {
 			$p = $i + 1;
-			$pdf->AddPage( $orient, [ $w, $h ] );
-			$pdf->Image( $page_img, 0, 0, $w, $h );
+			$w = $page['w'];
+			$h = $page['h'];
+			$pdf->AddPage( ( $w > $h ) ? 'L' : 'P', [ $w, $h ] );
+			$pdf->Image( $page['path'], 0, 0, $w, $h );
 
 			$pdf->SetTextColor( 0, 0, 0 );
 			foreach ( $map['fields'] as $field => $placements ) {
