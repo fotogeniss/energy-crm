@@ -78,6 +78,13 @@ class ECRM_FormFill {
 			&& \EnergyCRM\Domain\Forms\ProtergiaBizSheets::templateKey( $program ) !== '' ) {
 			return \EnergyCRM\Domain\Forms\ProtergiaBizSheets::templateKey( $program );
 		}
+		// (325) Τα οικιακά του καταλόγου: δικό τους φύλλο (έντυπα Protergia
+		// 29/10), και για πελάτη περασμένο ως εταιρεία -- ίδιος κανόνας (283).
+		// Αλλιώς έπεφταν στο protergia_he, την αίτηση του Picasso Small.
+		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power'
+			&& \EnergyCRM\Domain\Forms\ProtergiaHomeSheets::templateKey( $program ) !== '' ) {
+			return \EnergyCRM\Domain\Forms\ProtergiaHomeSheets::templateKey( $program );
+		}
 		// (319) Ό,τι άλλο του καταλόγου (κανένα σήμερα): γενικό επαγγελματικό.
 		if ( ( $has( 'protergia' ) || $has( 'metlen' ) ) && $e === 'power'
 			&& \EnergyCRM\Domain\Forms\ProtergiaBizCatalogue::isPower( $program ) ) {

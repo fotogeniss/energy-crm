@@ -15,7 +15,8 @@
  *
  * Έντυπο: (322) τα 9 επαγγελματικά έχουν δικό τους φύλλο, ένα ανά πακέτο
  * (Picasso 2.0 Small/Medium/Large, έντυπα Protergia 22/10· `ProtergiaBizSheets`).
- * Τα οικιακά δεν έχουν ακόμα και τυπώνουν το γενικό `protergia_he`.
+ * (325) Οικιακά: η Protergia έστειλε μόνο το Small 39,90 (`ProtergiaHomeSheets`)·
+ * τα άλλα 8 περιμένουν έντυπο και είναι ανενεργά (`ProtergiaCatalogue::AWAITING_SHEET`).
  *
  * Τα Picasso 2.0 / Picasso 2.0 Student της 306 μένουν όπως είναι.
  *

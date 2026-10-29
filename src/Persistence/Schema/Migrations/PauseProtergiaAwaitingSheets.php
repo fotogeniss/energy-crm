@@ -2,7 +2,8 @@
 
 /**
  * Απενεργοποιεί τα προγράμματα Protergia που δεν έχουν ακόμα δικό τους
- * έντυπο (Value Gas Sure 2.0, Power+Gas). Γιατί: `ProtergiaCatalogue::AWAITING_SHEET`.
+ * έντυπο (Value Gas Sure 2.0, Power+Gas). Γιατί: `ProtergiaCatalogue::AWAITING_SHEET`
+ * και, για το Power+Gas που τελικά δεν είναι πρόγραμμα, `NOT_A_PROGRAM`.
  *
  * Μόνο απενεργοποίηση: τίποτα δεν σβήνεται, οι αιτήσεις που ήδη έχουν
  * γίνει με αυτά μένουν και τυπώνονται όπως πριν. Τρέχει μία φορά· όταν
@@ -16,7 +17,6 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Persistence\Schema\Migrations;
 
-use EnergyCRM\Domain\Forms\ProtergiaCatalogue;
 use EnergyCRM\Persistence\Schema\Migration;
 use EnergyCRM\Persistence\Schema\SchemaInspector;
 use EnergyCRM\Persistence\Tables;
@@ -56,7 +56,9 @@ final class PauseProtergiaAwaitingSheets implements Migration
             return;
         }
 
-        foreach (ProtergiaCatalogue::AWAITING_SHEET as $code) {
+        // Λίστα γραμμένη εδώ, όχι από το ProtergiaCatalogue: η μετάβαση
+        // κάνει ό,τι έκανε όταν πρωτοέτρεξε, ακόμα κι αν η λίστα εκεί αλλάξει.
+        foreach (['protergia_gas_sure2', 'protergia_power_gas_fa', 'protergia_power_gas_he'] as $code) {
             $wpdb->update($programs, ['active' => 0], ['provider_id' => $providerId, 'code' => $code]);
         }
     }

@@ -14,6 +14,8 @@ use EnergyCRM\Domain\Forms\ProtergiaCatalogue;
 use EnergyCRM\Domain\Forms\ProtergiaGasPlans;
 use EnergyCRM\Domain\Forms\ProtergiaGasSheets;
 use EnergyCRM\Domain\Forms\ProtergiaHomePlans;
+use EnergyCRM\Domain\Forms\ProtergiaHomeSheets;
+use EnergyCRM\Domain\Forms\ProtergiaPicassoPlans;
 use PHPUnit\Framework\TestCase;
 
 final class ProtergiaCatalogueTest extends TestCase
@@ -67,21 +69,38 @@ final class ProtergiaCatalogueTest extends TestCase
     }
 
     /**
-     * (324) Όσα περιμένουν έντυπο είναι προγράμματα του καταλόγου, χωρίς
-     * δικό τους φύλλο ακόμα -- όταν αποκτήσουν, πρέπει να βγουν από τη λίστα.
+     * (324)/(325) Όσα περιμένουν έντυπο είναι προγράμματα του καταλόγου ή
+     * οικιακά Picasso, χωρίς δικό τους φύλλο ακόμα -- όταν αποκτήσουν,
+     * πρέπει να βγουν από τη λίστα.
      */
     public function testPlansAwaitingASheetAreCataloguePlansWithoutOne(): void
     {
-        self::assertSame(
-            ['protergia_gas_sure2', 'protergia_power_gas_fa', 'protergia_power_gas_he'],
-            ProtergiaCatalogue::AWAITING_SHEET
-        );
+        $picasso = array_keys(ProtergiaPicassoPlans::all());
 
         foreach (ProtergiaCatalogue::AWAITING_SHEET as $code) {
-            self::assertArrayHasKey($code, ProtergiaCatalogue::added(), $code);
+            self::assertTrue(
+                array_key_exists($code, ProtergiaCatalogue::added()) || in_array($code, $picasso, true),
+                $code
+            );
             self::assertSame('', ProtergiaGasSheets::templateKey($code), $code . ' έχει πια φύλλο');
             self::assertSame('', ProtergiaBizSheets::templateKey($code), $code . ' έχει πια φύλλο');
+            self::assertSame('', ProtergiaHomeSheets::templateKey($code), $code . ' έχει πια φύλλο');
             self::assertFalse(ProtergiaCatalogue::isRetired($code), $code);
+        }
+
+        self::assertContains('protergia_gas_sure2', ProtergiaCatalogue::AWAITING_SHEET);
+        self::assertContains('protergia_value_bright2', ProtergiaCatalogue::AWAITING_SHEET);
+        self::assertNotContains('protergia_pic_h_s1', ProtergiaCatalogue::AWAITING_SHEET, 'το S 39,90 έχει φύλλο');
+    }
+
+    /** (325) Protergia 29/10: το Power+Gas δεν είναι πρόγραμμα, ούτε περιμένει έντυπο. */
+    public function testPowerPlusGasIsNotAProgram(): void
+    {
+        self::assertSame(['protergia_power_gas_fa', 'protergia_power_gas_he'], ProtergiaCatalogue::NOT_A_PROGRAM);
+
+        foreach (ProtergiaCatalogue::NOT_A_PROGRAM as $code) {
+            self::assertArrayHasKey($code, ProtergiaCatalogue::added());
+            self::assertNotContains($code, ProtergiaCatalogue::AWAITING_SHEET);
         }
     }
 }

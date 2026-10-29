@@ -56,6 +56,7 @@ use EnergyCRM\Persistence\Schema\Migrations\SeedProviderGrants;
 use EnergyCRM\Persistence\Schema\Migrations\DedupeProgramsByCode;
 use EnergyCRM\Persistence\Schema\Migrations\SeedVoltonPlans;
 use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaAwaitingSheets;
+use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaHomeAwaitingSheets;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
 use EnergyCRM\Persistence\Schema\Migrations\RetargetContractListIndexToUpdatedAt;
 use EnergyCRM\Persistence\Schema\Migrations\WidenEncryptedColumns;
@@ -117,6 +118,7 @@ final class MigrationList
             new AddSiteIntakeColumns(),
             new SeedProtergiaBizCatalogue2026(),
             new PauseProtergiaAwaitingSheets(),
+            new PauseProtergiaHomeAwaitingSheets(),
         ];
     }
 }

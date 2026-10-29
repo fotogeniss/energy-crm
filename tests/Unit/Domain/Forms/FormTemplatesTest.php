@@ -174,6 +174,10 @@ final class FormTemplatesTest extends TestCase
                 'protergia_pic_b_s1', 'protergia_pic_b_s2', 'protergia_pic_b_s3',
                 'protergia_pic_b_m1', 'protergia_pic_b_m2', 'protergia_pic_b_m3',
                 'protergia_pic_b_l1', 'protergia_pic_b_l2', 'protergia_pic_b_l3',
+                // (325) Οικιακά ρεύματος Protergia, αποστολή 29/10/2026.
+                'protergia_oik_sure4_12m', 'protergia_oik_balance_12m', 'protergia_oik_standard2',
+                'protergia_oik_special', 'protergia_oik_student_plan', 'protergia_oik_dynamic_one',
+                'protergia_oik_picasso_s1',
                 'volton_fa', 'volton_he', 'zenith_he',
             ] as $key
         ) {
