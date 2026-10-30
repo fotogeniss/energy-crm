@@ -1,0 +1,56 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Έλεγχος πριν την αποστολή</title>
+<style>
+:root{--bg:#f8f8f6;--card:#fff;--ink:#2a2926;--mu:#6e6c66;--line:#dedcd7;--acc:#0b690c;--accw:#eafaea;--accb:#16c217;--warn:#ab5506;--warnw:#fcf2ec;--bad:#c32b47;--badw:#fdeaea}
+@media (prefers-color-scheme:dark){:root{--bg:#111110;--card:#1a1a18;--ink:#f1f1ee;--mu:#a3a099;--line:#33322e;--acc:#6bdd6d;--accw:#12240f;--warn:#ffb682;--warnw:#3f322a;--bad:#fb8a91;--badw:#423030}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Manrope,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:860px;margin:0 auto;padding:24px 16px 60px}h1{font-size:23px;margin:0 0 6px}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:30px 0 8px}
+p{margin:0 0 12px}.d{color:var(--mu)}
+.dlg{max-width:520px;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:0 12px 40px #0002;padding:16px}
+.dlg h3{margin:0 0 4px;font-size:17px}.eb{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--acc);text-transform:uppercase}
+.grp{margin-top:12px}.grp b{display:block;font-size:12.5px;margin-bottom:4px}
+ul{margin:0;padding:0;list-style:none}li{display:grid;grid-template-columns:20px 1fr auto;gap:6px;padding:6px 0;border-top:1px solid var(--line);align-items:center;font-size:13.5px}
+li:first-child{border-top:0}
+.ok{color:var(--acc);font-weight:800}.wa{color:var(--warn);font-weight:800}.bad{color:var(--bad);font-weight:800}
+.lnk{font-size:12px;font-weight:700;color:var(--acc);text-decoration:underline}
+.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);border-radius:9px;padding:8px 12px;font:700 13px inherit;background:transparent;color:var(--ink)}
+.btn.p{background:var(--accb);border-color:var(--accb);color:#0b3d0c}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-top:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}th{color:var(--mu);font-size:12px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+</style></head><body><div class="w">
+<h1>#8 · Έλεγχος πριν την αποστολή</h1>
+<p class="d">Σήμερα η «Οριστικοποίηση» σταματά μόνο σε τέσσερα πράγματα: πάροχος, συναίνεση GDPR, ΑΦΜ και διπλοεγγραφή. Ό,τι άλλο λείπει, το βλέπει ο πάροχος, ή το back office όταν ανοίξει το PDF με κενά κουτιά. Με το πάτημα «Οριστικοποίηση» θα εμφανίζεται μία λίστα με ό,τι λείπει, μόνο όταν λείπει κάτι.</p>
+
+<h2>1 · Όταν λείπουν πράγματα</h2>
+<div class="dlg">
+<div class="eb">Πριν την αποστολή</div>
+<h3>Λείπουν 4 πράγματα</h3>
+<p class="d" style="margin:0">Η αίτηση μπορεί να φύγει και έτσι, αλλά ο πάροχος μάλλον θα τη γυρίσει πίσω.</p>
+<div class="grp"><b>Δικαιολογητικά (αλλαγή παρόχου)</b><ul>
+<li><span class="ok">✓</span><span>Ταυτότητα/Διαβατήριο</span><span></span></li>
+<li><span class="bad">✕</span><span>Λογαριασμός παρόχου</span><span class="lnk">Πρόσθεσε</span></li>
+</ul></div>
+<div class="grp"><b>Κενά στο έντυπο της Protergia</b><ul>
+<li><span class="wa">!</span><span>Τύπος μετρητή</span><span class="lnk">Συμπλήρωσε</span></li>
+<li><span class="wa">!</span><span>Α.Δ.Τ.</span><span class="lnk">Συμπλήρωσε</span></li>
+<li><span class="wa">!</span><span>Email <span class="d">(λογαριασμός με email)</span></span><span class="lnk">Συμπλήρωσε</span></li>
+</ul></div>
+<div class="grp"><b>Φωτογραφίες</b><ul>
+<li><span class="wa">!</span><span>IMG_221512.jpg: κρατήθηκε θολή</span><span class="lnk">Δες</span></li>
+</ul></div>
+<div class="foot"><button class="btn">Οριστικοποίηση έτσι</button><button class="btn p">Διόρθωσε</button></div>
+</div>
+<p class="d" style="margin-top:8px">Το «Διόρθωσε» κλείνει τη λίστα και πηγαίνει στο πρώτο κενό. Τα «Συμπλήρωσε» και «Πρόσθεσε» πηγαίνουν στο αντίστοιχο πεδίο. Τα τέσσερα σημερινά μπλοκαρίσματα μένουν όπως είναι. Η λίστα δεν μπλοκάρει τίποτα άλλο.</p>
+
+<h2>2 · Όταν δεν λείπει τίποτα</h2>
+<p class="d">Καμία λίστα και κανένα επιπλέον κλικ: η αίτηση φεύγει όπως σήμερα.</p>
+
+<h2>Από πού βγαίνει κάθε γραμμή</h2>
+<div class="c"><table>
+<tr><th>Ομάδα</th><th>Πηγή</th></tr>
+<tr><td>Δικαιολογητικά</td><td>Τα απαιτούμενα του είδους αίτησης (ίδια λίστα με την καρτέλα αίτησης και την πύλη πληρωμής), απέναντι σε ό,τι έχει επιλεγεί στη φόρμα και ό,τι έχει ήδη ανέβει.</td></tr>
+<tr><td>Κενά στο έντυπο</td><td>Από τα πεδία που τυπώνει το έντυπο του παρόχου, μόνο τα βασικά: ονοματεπώνυμο/επωνυμία, ΑΦΜ, ΔΟΥ, Α.Δ.Τ., διεύθυνση, κινητό, αρ. παροχής, τύπος μετρητή, εκπρόσωπος· email όταν ο λογαριασμός πάει με email. Μόνο όσα φαίνονται στη φόρμα.</td></tr>
+<tr><td>Φωτογραφίες</td><td>Όσες ο έλεγχος του #7 βρήκε θολές ή σκοτεινές και κρατήθηκαν.</td></tr>
+</table></div>
+</div></body></html>

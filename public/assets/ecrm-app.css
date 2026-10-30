@@ -2189,3 +2189,15 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 
 /* (340) Έλεγχος φωτογραφίας στα έγγραφα της καρτέλας αίτησης. */
 .ecrm-docup__qa { grid-column: 1 / -1; margin-top: 2px; padding: 6px 9px; border-radius: 6px; background: var(--st-pending-bg); color: var(--st-pending); font-size: var(--fs-12); font-weight: 700; }
+
+/* (341) Έλεγχος πριν την αποστολή -- docs/UI-PRESEND-CHECK.html. */
+.ecrm-pf__grp { margin-top: 12px; }
+.ecrm-pf__grp > b { display: block; font-size: var(--fs-12-5); margin-bottom: 4px; }
+.ecrm-pf ul { list-style: none; margin: 0; padding: 0; }
+.ecrm-pf li { display: grid; grid-template-columns: 20px 1fr auto; gap: 6px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: var(--fs-13-5); }
+.ecrm-pf li:first-child { border-top: 0; }
+.ecrm-pf__m { font-weight: 800; }
+.ecrm-pf__m.is-ok { color: var(--st-resolved); }
+.ecrm-pf__m.is-bad { color: var(--st-cancel); }
+.ecrm-pf__m.is-warn { color: var(--st-pending); }
+.ecrm-pf__go { border: 0; background: transparent; padding: 0; font: inherit; font-size: var(--fs-12); font-weight: 700; color: var(--accent-ink); text-decoration: underline; cursor: pointer; }

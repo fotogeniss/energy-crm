@@ -4,6 +4,7 @@ import { energyLabel } from '@energy-crm/format';
 import { openCustomerContracts } from '@energy-crm/navigate';
 import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 import { checkPhoto } from '@energy-crm/photo-check';
+import { openDialog } from '@energy-crm/dialog';
 
 /* Energy CRM — New Contract form behaviour.
  * Exposes window.ECRMForm.init(rootEl) so it can run standalone OR inside the
@@ -623,7 +624,7 @@ import { checkPhoto } from '@energy-crm/photo-check';
 			if (!card) return;
 
 			var name = providerName();
-			if (!name) { card.hidden = true; applyTemplateFilter([]); refreshDocOverlay(null); return; }
+			if (!name) { card.hidden = true; setPrinted(null); applyTemplateFilter([]); refreshDocOverlay(null); return; }
 
 			var qs = '?provider=' + encodeURIComponent(name) +
 				'&energy=' + encodeURIComponent(state.energy_type || 'power') +
@@ -780,7 +781,21 @@ import { checkPhoto } from '@energy-crm/photo-check';
 			});
 		}
 
+		// (341) Τι τυπώνει το έντυπο του παρόχου, για τον «Έλεγχο πριν την
+		// αποστολή»: τα πεδία της κύριας φόρμας (main_inputs) και τα έξτρα του.
+		var printed = { names: [], labels: {} };
+		function setPrinted(d) {
+			var names = (d && d.main_inputs) ? d.main_inputs.slice() : [];
+			var labels = {};
+			Object.keys((d && d.fields) || {}).forEach(function (n) {
+				if (names.indexOf(n) < 0) names.push(n);
+				labels[n] = d.fields[n].label || '';
+			});
+			printed = { names: names, labels: labels };
+		}
+
 		function paintProviderFields(card, d) {
+			setPrinted(d);
 			var grid = card.querySelector('[data-provform-grid]');
 			var names = Object.keys(d.fields || {});
 
@@ -3031,7 +3046,141 @@ import { checkPhoto } from '@energy-crm/photo-check';
 			checkCustomerMatch();
 		});
 
-		function save(status, btn) {
+		/* ---- (341) Έλεγχος πριν την αποστολή -- docs/UI-PRESEND-CHECK.html ----
+		 *
+		 * Μετά τα τέσσερα σημερινά σταματήματα (πάροχος, GDPR, ΑΦΜ) και πριν τη
+		 * διπλοεγγραφή: δικαιολογητικά, κενά πεδία του εντύπου, θολές
+		 * φωτογραφίες που κρατήθηκαν. ΔΕΝ μπλοκάρει -- «Οριστικοποίηση έτσι».
+		 * Όταν δεν λείπει τίποτα, δεν φαίνεται καθόλου. */
+		function shownInForm(el) {
+			for (var n = el; n && n !== root && !n.hasAttribute('data-wstep'); n = n.parentElement) {
+				if (n.hidden || n.style.display === 'none' || n.classList.contains('is-offform')) return false;
+			}
+			return true;
+		}
+
+		// Από όσα τυπώνει το έντυπο, μόνο όσα ο πάροχος ΠΑΝΤΑ χρειάζεται.
+		// Μετρημένο 31/10: το έντυπο Gas Sure 2.0 τυπώνει 40 πεδία, ανάμεσά τους
+		// σταθερό τηλέφωνο, διεύθυνση αλληλογραφίας «αν διαφέρει», πρόσωπο
+		// επικοινωνίας -- κενά εκεί είναι φυσιολογικά και θα έκαναν τη λίστα
+		// θόρυβο. Τα στοιχεία εταιρείας/εκπροσώπου μετράνε μόνο όταν φαίνονται.
+		var ESSENTIAL = ['first_name', 'last_name', 'company_name', 'afm', 'doy', 'adt', 'street', 'street_no',
+			'postal_code', 'city', 'mobile', 'supply_number', 'gas_meter_type', 'rep_first_name', 'rep_last_name'];
+
+		function emptyPrinted() {
+			var out = [];
+			var wanted = ESSENTIAL.slice();
+			// Λογαριασμός με email: χωρίς email ο πελάτης δεν θα τον πάρει ποτέ.
+			if (/^(email|both)$/.test(readField('bill_delivery'))) wanted.push('email');
+			printed.names.filter(function (n) { return wanted.indexOf(n) > -1; }).forEach(function (n) {
+				var f = root.querySelector('.ecrm-field[data-for="' + n + '"]');
+				if (!f || !shownInForm(f)) return;
+				var input = f.querySelector('[name="' + n + '"]');
+				// Chips, checkboxes: δεν έχουν «κενό» που να κρίνεται εδώ.
+				if (!input || input.type === 'checkbox' || input.type === 'radio' || input.type === 'hidden') return;
+				if (String(input.value || '').trim()) return;
+				var lab = f.querySelector('.ecrm-field__label');
+				out.push({ label: (lab && lab.textContent.trim()) || printed.labels[n] || n, el: f });
+			});
+			return out;
+		}
+
+		function requiredDocs() {
+			var qs = '?activation_type=' + encodeURIComponent(state.activation_type || '') +
+				'&energy_type=' + encodeURIComponent(state.energy_type || '') +
+				'&contract_id=' + (state.contract_id || 0);
+			return fetch(api('/docs/required') + qs, { headers: headers() })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (!d || !d.ok) return [];
+					var have = (d.present || []).slice();
+					state.files.forEach(function (f) { have.push(f.kind); });
+					// Σε κινητή, «λογαριασμός παρόχου» είναι ο λογαριασμός τηλεφωνίας (ECRM_Docs::checklist).
+					if (state.energy_type === 'mobile' && have.indexOf('telecom_bill') > -1) have.push('provider_bill');
+					return (d.required || []).map(function (r) { return { label: r.label, ok: have.indexOf(r.kind) > -1 }; });
+				})
+				// Χωρίς σύνδεση η λίστα δεν ξέρει τι απαιτείται: δεν λέει τίποτα.
+				.catch(function () { return []; });
+		}
+
+		function goToField(el) {
+			var step = el.closest('[data-wstep]');
+			if (step) goStep(parseInt(step.getAttribute('data-wstep'), 10), false);
+			setTimeout(function () {
+				if (el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+				var i = el.querySelector('input:not([type=hidden]), select, textarea, button') || el;
+				if (i.focus) i.focus();
+			}, 60);
+		}
+
+		function preflight(proceed) {
+			var drop = q('[data-drop]');
+			var fields = emptyPrinted();
+			var photos = state.files.filter(function (f) {
+				return f.kept && f.check && f.check.problems && f.check.problems.length;
+			});
+
+			requiredDocs().then(function (docs) {
+				var missingDocs = docs.filter(function (d) { return !d.ok; });
+				var count = missingDocs.length + fields.length + photos.length;
+				if (!count) { proceed(); return; }
+
+				var targets = [];
+				function row(mark, cls, text, target, action) {
+					var go = '';
+					if (target) { targets.push(target); go = '<button type="button" class="ecrm-pf__go" data-pf-go="' + (targets.length - 1) + '">' + esc(action) + '</button>'; }
+					return '<li><span class="ecrm-pf__m ' + cls + '">' + mark + '</span><span>' + esc(text) + '</span>' + go + '</li>';
+				}
+
+				var body = '';
+				if (missingDocs.length) {
+					body += '<div class="ecrm-pf__grp"><b>Δικαιολογητικά</b><ul>' + docs.map(function (d) {
+						return d.ok ? row('✓', 'is-ok', d.label) : row('✕', 'is-bad', d.label, drop, 'Πρόσθεσε');
+					}).join('') + '</ul></div>';
+				}
+				if (fields.length) {
+					body += '<div class="ecrm-pf__grp"><b>Κενά στο έντυπο του παρόχου</b><ul>' + fields.map(function (f) {
+						return row('!', 'is-warn', f.label, f.el, 'Συμπλήρωσε');
+					}).join('') + '</ul></div>';
+				}
+				if (photos.length) {
+					body += '<div class="ecrm-pf__grp"><b>Φωτογραφίες</b><ul>' + photos.map(function (f) {
+						return row('!', 'is-warn', f.file.name + ': ' + f.check.problems[0].text.split('.')[0].toLowerCase(), q('[data-filelist]'), 'Δες');
+					}).join('') + '</ul></div>';
+				}
+
+				// Σελίδα χωρίς το κέλυφος (shortcode φόρμας μόνο): ο διάλογος θέλει
+				// το #ecrm-app. Εκεί αρκεί ένα confirm με την ίδια λίστα.
+				if (!document.getElementById('ecrm-app')) {
+					var lines = missingDocs.map(function (d) { return '• ' + d.label; })
+						.concat(fields.map(function (f) { return '• ' + f.label; }))
+						.concat(photos.map(function (f) { return '• ' + f.file.name; }));
+					if (confirm('Λείπουν:\n' + lines.join('\n') + '\n\nΟριστικοποίηση έτσι;')) proceed();
+					return;
+				}
+
+				var dlg = openDialog({
+					eyebrow: 'Πριν την αποστολή',
+					title: count === 1 ? 'Λείπει 1 πράγμα' : 'Λείπουν ' + count + ' πράγματα',
+					lead: 'Η αίτηση μπορεί να φύγει και έτσι, αλλά ο πάροχος μάλλον θα τη γυρίσει πίσω.',
+					body: '<div class="ecrm-pf">' + body + '</div>',
+					cancel: 'Οριστικοποίηση έτσι',
+					confirm: 'Διόρθωσε',
+					onConfirm: function (ov, close) { close(); if (targets[0]) goToField(targets[0]); },
+				});
+				var anyway = dlg.el.querySelector('.ecrm-modal__bar [data-x]');
+				if (anyway) anyway.addEventListener('click', proceed);
+				dlg.el.querySelectorAll('[data-pf-go]').forEach(function (b) {
+					b.addEventListener('click', function () {
+						var t = targets[parseInt(b.getAttribute('data-pf-go'), 10)];
+						dlg.close();
+						if (t) goToField(t);
+					});
+				});
+			});
+		}
+
+		function save(status, btn, checked) {
 			if (status === 'presale' && !state.provider_id) { toast('Διάλεξε πάροχο πρώτα.', false); return; }
 			// GDPR: consent required to finalize.
 			var consentEl = q('[data-consent]');
@@ -3056,6 +3205,11 @@ import { checkPhoto } from '@energy-crm/photo-check';
 			if (status === 'presale' && afmv && !validAfm(afmv)) {
 				toast('Μη έγκυρο ΑΦΜ — διόρθωσέ το πριν την οριστικοποίηση.', false);
 				fieldNote(afmEl, 'Μη έγκυρο ΑΦΜ (έλεγχος ψηφίου).', 'err');
+				return;
+			}
+			// (341) Έλεγχος πριν την αποστολή, μία φορά ανά πάτημα.
+			if (status === 'presale' && !checked) {
+				preflight(function () { save(status, btn, true); });
 				return;
 			}
 			// Duplicate check on finalize: warn if same ΑΦΜ or παροχή already exists.

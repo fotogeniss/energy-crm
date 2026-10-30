@@ -149,6 +149,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/queue',
 			'@energy-crm/ai-docs',
 			'@energy-crm/photo-check',
+			'@energy-crm/dialog',
 		],
 		'@energy-crm/photo-check'      => [],
 		'@energy-crm/app'              => [
