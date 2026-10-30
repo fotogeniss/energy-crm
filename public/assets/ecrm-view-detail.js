@@ -195,6 +195,9 @@ function maskIp(ip) {
 
 function renderDetail(view, d) {
 	var c = d.contract, statuses = d.statuses || {}, acts = d.activation_types || {};
+	// (339) Για την «Αναφορά προβλήματος»: ποια αίτηση ήταν ανοιχτή.
+	view.setAttribute('data-contract-id', String(c.id || ''));
+	view.setAttribute('data-contract-code', String(c.code || ''));
 	var name = c.company_name || ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || '—';
 	var energy = energyLabel(c.energy_type);
 

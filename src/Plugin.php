@@ -178,6 +178,8 @@ final class Plugin
 
         // (336) Τιμές κυμαινόμενων που παλιώνουν -> ειδοποίηση στους διαχειριστές.
         Services::stalePriceNotice()->register();
+        // (339) Οι κλειστές αναφορές σβήνονται μετά από 12 μήνες.
+        Services::ticketRetention()->register();
 
         // Επίπεδο ΣΤ (docs/OFFLINE-MODEL.md §2ΣΤ): ο ζωντανός έλεγχος
         // διπλοεγγραφής (/customers/check) μπορεί να μην τρέξει ποτέ πριν

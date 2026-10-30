@@ -239,6 +239,14 @@ final class ControllerFactory
                 Services::customerEvents(),
                 Services::providers(),
             ),
+            // (339) Αναφορές προβλημάτων.
+            new TicketsController(
+                $scope,
+                Services::tickets(),
+                Services::ticketAttachments(),
+                Services::ticketNotices(),
+                Services::team(),
+            ),
             // (338) Κολλημένες αιτήσεις.
             new StuckController($scope, Services::statusDwell(), Services::team()),
             // (332) Σωστό μέγεθος Picasso.

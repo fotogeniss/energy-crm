@@ -57,6 +57,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-team'        => 'ecrm-view-team.js',
 		'@energy-crm/view-team-live'   => 'ecrm-view-team-live.js',
 		'@energy-crm/view-escalations' => 'ecrm-view-escalations.js',
+		'@energy-crm/tickets'          => 'ecrm-tickets.js',
 		// Ειχε ξεχαστει απο εδω στο (243) -- το ecrm-app.js το εισαγε, ο
 		// browser δεν μπορουσε να λυσει το bare specifier χωρις καταχωρηση, και
 		// πεταγε ΟΛΟΚΛΗΡΟ το ecrm-app.js: καθε οθονη εμενε στο «Φορτωση…».
@@ -126,6 +127,12 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-team'        => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-team-live'   => [ '@energy-crm/util', '@energy-crm/format' ],
 		'@energy-crm/view-escalations' => [ '@energy-crm/util', '@energy-crm/navigate' ],
+		'@energy-crm/tickets'          => [
+			'@energy-crm/util',
+			'@energy-crm/format',
+			'@energy-crm/dialog',
+			'@energy-crm/navigate',
+		],
 		'@energy-crm/view-documents'   => [
 			'@energy-crm/util',
 			'@energy-crm/format',
@@ -165,6 +172,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/view-partner',
 			'@energy-crm/view-team-live',
 			'@energy-crm/view-escalations',
+			'@energy-crm/tickets',
 		],
 		'@energy-crm/litsa'            => [ '@energy-crm/util' ],
 	];
@@ -286,6 +294,8 @@ class ECRM_Shortcodes {
 			// ως partner_user_id -- και δεν αντικαθιστά κανέναν έλεγχο: ο
 			// server επιβάλλει το UserScope ξανά, όπως πάντα.
 			'userId'   => get_current_user_id(),
+			// (339) Μπαίνει στα τεχνικά κάθε αναφοράς προβλήματος.
+			'version'  => ECRM_VERSION,
 		] );
 	}
 

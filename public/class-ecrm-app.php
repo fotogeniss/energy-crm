@@ -140,6 +140,17 @@ class ECRM_App {
 			\EnergyCRM\Services::team()
 		) )->find( \EnergyCRM\Services::scopeResolver()->forCurrentUser() ) );
 		$navMore[] = [ 'view' => 'escalations', 'label' => 'Κολλημένες αιτήσεις', 'icon' => 'flag', 'badge' => $stuck_ct ];
+
+		// (339) Αναφορές προβλημάτων. Αριθμός μόνο για τον διαχειριστή: οι νέες
+		// που περιμένουν να τις δει. Οι άλλοι μαθαίνουν τις απαντήσεις στο καμπανάκι.
+		$is_admin   = current_user_can( 'manage_options' );
+		$tickets_ct = $is_admin ? (int) ( \EnergyCRM\Services::tickets()->counts( null )['new'] ?? 0 ) : 0;
+		$navMore[]  = [
+			'view'  => 'tickets',
+			'label' => $is_admin || current_user_can( \EnergyCRM\Access\Capability::MANAGE_TEAM ) ? 'Αναφορές' : 'Οι αναφορές μου',
+			'icon'  => 'report',
+			'badge' => $tickets_ct,
+		];
 		if ( current_user_can( \EnergyCRM\Access\Capability::VIEW_ANALYTICS ) ) {
 			$navMore[] = [ 'view' => 'analytics', 'label' => 'Στατιστικά', 'icon' => 'analytics' ];
 		}
@@ -322,6 +333,13 @@ class ECRM_App {
 						 */
 						?>
 						<button type="button" class="ecrm-topai" data-litsa-open aria-label="Άνοιγμα βοηθού AIde" title="AIde"><?php echo self::aide_icon(); // phpcs:ignore ?></button>
+						<?php
+						/*
+						 * (339) Αναφορά προβλήματος από όποια οθόνη (ecrm-tickets.js,
+						 * data-report-open). docs/UI-TICKETS.html, εγκρίθηκε 30/10.
+						 */
+						?>
+						<button type="button" class="ecrm-bell" data-report-open aria-label="Αναφορά προβλήματος" title="Αναφορά προβλήματος (Ctrl+Shift+B)"><?php echo self::icon( 'report' ); // phpcs:ignore ?></button>
 						<div class="ecrm-bellwrap">
 							<button type="button" class="ecrm-bell" data-bell aria-label="Ειδοποιήσεις">
 								<?php echo self::icon( 'bell' ); // phpcs:ignore ?>
@@ -396,6 +414,7 @@ class ECRM_App {
 					<section class="ecrm-view" data-view="analytics"><div class="ecrm-loading">Φόρτωση…</div></section>
 					<section class="ecrm-view" data-view="teamlive"><div class="ecrm-loading">Φόρτωση…</div></section>
 					<section class="ecrm-view" data-view="escalations"><div class="ecrm-loading">Φόρτωση…</div></section>
+					<section class="ecrm-view" data-view="tickets"><div class="ecrm-loading">Φόρτωση…</div></section>
 
 					<!-- Προσφορά / Calculator -->
 					<section class="ecrm-view" data-view="calc"><div class="ecrm-loading">Φόρτωση…</div></section>
@@ -559,6 +578,7 @@ class ECRM_App {
 			'analytics' => '<path d="M4 20V4"/><path d="M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/>',
 			'pulse'     => '<path d="M3 12h4l2 6 4-14 2 8h6"/>',
 			'flag'      => '<path d="M5 21V4"/><path d="M5 4h13l-3 4.5L18 13H5"/>',
+			'report'    => '<path d="M4 4h16v12H9l-5 4z"/><path d="M12 7.5v4"/><path d="M12 14v.01"/>',
 			'tasks'     => '<path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4V2.5"/><path d="M16 4V2.5"/>',
 			'calc'      => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M8 16h.01"/><path d="M12 16h.01"/><path d="M16 16h.01"/>',
 			'book'      => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',

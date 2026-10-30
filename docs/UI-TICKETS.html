@@ -1,0 +1,124 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Αναφορές προβλημάτων</title>
+<style>
+:root{--bg:#f8f8f6;--card:#fff;--ink:#2a2926;--mu:#6e6c66;--line:#dedcd7;--acc:#0b690c;--accw:#eafaea;--accb:#16c217;--warn:#ab5506;--warnw:#fcf2ec;--bad:#c32b47;--badw:#fdeaea;--blue:#0062a8;--bluew:#ebf0fb;--chrome:#171715}
+@media (prefers-color-scheme:dark){:root{--bg:#111110;--card:#1a1a18;--ink:#f1f1ee;--mu:#a3a099;--line:#33322e;--acc:#6bdd6d;--accw:#12240f;--warn:#ffb682;--warnw:#3f322a;--bad:#fb8a91;--badw:#423030;--blue:#8cc4f2;--bluew:#1d2733}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Manrope,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:900px;margin:0 auto;padding:24px 16px 60px}h1{font-size:23px;margin:0 0 6px}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:32px 0 8px}
+p{margin:0 0 12px}.d{color:var(--mu)}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.top{display:flex;align-items:center;gap:10px;background:var(--chrome);color:#fff;border-radius:12px;padding:10px 14px}
+.top .s{flex:1;background:#ffffff14;border-radius:8px;padding:6px 10px;color:#a8a69f;font-size:13px}
+.ib{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:#ffffff0f;position:relative;font-size:16px}
+.ib.hl{outline:2px solid var(--accb)}
+.ib i{position:absolute;top:-4px;right:-4px;background:var(--bad);color:#fff;font:800 10px/1 inherit;border-radius:999px;padding:3px 5px;font-style:normal}
+.tip{font-size:12px;color:var(--mu);margin-top:6px}
+.dlg{max-width:520px;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:0 12px 40px #0002;padding:16px}
+.dlg h3{margin:0 0 4px;font-size:17px}
+label.f{display:block;margin:12px 0 0}label.f span{display:block;font-size:12px;color:var(--mu);margin-bottom:4px;font-weight:700}
+.ta{border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:84px;color:var(--mu)}
+.chk{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13.5px}.box{width:16px;height:16px;border:1.5px solid var(--line);border-radius:4px}
+.ctx{margin-top:12px;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px}
+.ctx b{display:block;font-size:12px;color:var(--mu);margin-bottom:4px}
+.ctx div{display:grid;grid-template-columns:96px 1fr;gap:2px 8px}.ctx div span:nth-child(odd){color:var(--mu)}
+.att{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);border-radius:8px;padding:7px 12px;font:700 13px inherit;background:transparent;color:var(--ink)}
+.btn.p{background:var(--accb);border-color:var(--accb);color:#0b3d0c}
+.thumb{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px}
+.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.gd{font-size:12px;color:var(--mu);margin-top:8px;border-left:3px solid var(--line);padding-left:8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.tab{border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:700;background:var(--card)}.tab.on{background:var(--accb);border-color:var(--accb);color:#0b3d0c}.tab small{opacity:.7}
+.r{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;border-top:1px solid var(--line);padding:10px 2px}.r:first-child{border-top:0}
+.st{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;white-space:nowrap}
+.s-new{background:var(--bluew);color:var(--blue)}.s-wip{background:var(--warnw);color:var(--warn)}.s-ok{background:var(--accw);color:var(--acc)}.s-no{background:#eee;color:#555}
+@media (prefers-color-scheme:dark){.s-no{background:#2b2b28;color:#bbb}}
+.tt{font-weight:800}.mt{font-size:12px;color:var(--mu)}
+.urg{color:var(--bad);font-weight:800;font-size:11.5px}
+.rt{text-align:right;font-size:12px;color:var(--mu)}
+.thr{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+.msg{display:grid;grid-template-columns:30px 1fr;gap:8px;margin-bottom:10px}
+.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;background:var(--line)}
+.av.adm{background:var(--accb);color:#0b3d0c}
+.bub{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}.bub small{display:block;color:var(--mu);font-size:11.5px;margin-bottom:2px}
+.sys{font-size:12px;color:var(--mu);text-align:center;margin:8px 0}
+.act{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-top:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}th{color:var(--mu);font-size:12px}
+.y{color:var(--acc);font-weight:800}.no{color:var(--mu)}
+</style></head><body><div class="w">
+<h1>Αναφορές προβλημάτων</h1>
+<p class="d">Όποιος βρει κάτι στραβό το αναφέρει από την οθόνη που βρίσκεται, με δύο κλικ. Το CRM συμπληρώνει μόνο του τα τεχνικά (ποια οθόνη, ποια αίτηση, ποια συσκευή, τα πρόσφατα σφάλματα), οπότε ο πωλητής γράφει μόνο τι είδε. Εσύ τα βλέπεις όλα σε μία λίστα, απαντάς και κλείνεις. Ο υπεύθυνος καταστήματος βλέπει όσα έστειλαν οι πωλητές του.</p>
+
+<h2>1 · Το κουμπί, σε κάθε οθόνη</h2>
+<div class="top"><span style="font-weight:800">Energy CRM</span><span class="s">Αναζήτηση…</span><span class="ib hl" title="Αναφορά προβλήματος">⚑</span><span class="ib">🔔<i>2</i></span><span class="ib">ΜΚ</span></div>
+<p class="tip">Δίπλα στο καμπανάκι, στην πάνω μπάρα. Είναι ορατό και στο κινητό. Συντόμευση στον υπολογιστή: Ctrl + Shift + B.</p>
+
+<h2>2 · Η φόρμα αναφοράς</h2>
+<div class="dlg">
+<h3>Αναφορά προβλήματος</h3>
+<p class="d" style="margin:0">Γράψε τι έκανες και τι είδες. Τα τεχνικά τα στέλνουμε εμείς.</p>
+<label class="f"><span>Τι πήγε στραβά; *</span><div class="ta">Πάτησα «Εκτύπωση αίτησης» και το PDF βγήκε χωρίς υπογραφή στη σελ. 3…</div></label>
+<div class="chk"><span class="box"></span>Με σταματάει, δεν μπορώ να συνεχίσω τη δουλειά</div>
+<div class="att"><button class="btn">📷 Επισύναψη εικόνας</button><span class="thumb">🖼 screenshot-1.png · 240 KB ✕</span></div>
+<div class="ctx"><b>Στέλνεται αυτόματα</b><div>
+<span>Οθόνη</span><span>Αίτηση EC-2026-0412 · βήμα «Υπογραφές»</span>
+<span>Χρήστης</span><span>Μαρία Κ. · Πωλητής · κατάστημα Χαλάνδρι</span>
+<span>Συσκευή</span><span>Android · Chrome 130 · 412×915</span>
+<span>Έκδοση</span><span>338</span>
+<span>Σφάλματα</span><span>2 στα τελευταία 10 λεπτά (μόνο το μήνυμα, όχι δεδομένα)</span>
+</div></div>
+<div class="gd">Η εικόνα μπορεί να δείχνει στοιχεία πελάτη. Φυλάγεται στον ίδιο προστατευμένο φάκελο με τα έγγραφα, τη βλέπει μόνο ο διαχειριστής και <b>σβήνεται μόλις κλείσει η αναφορά</b>.</div>
+<div class="foot"><button class="btn">Άκυρο</button><button class="btn p">Αποστολή</button></div>
+</div>
+
+<h2>3 · Λίστα, ο διαχειριστής βλέπει όλες</h2>
+<div class="c">
+<div class="tabs"><span class="tab on">Ανοιχτές <small>5</small></span><span class="tab">Νέα <small>3</small></span><span class="tab">Σε εξέλιξη <small>2</small></span><span class="tab">Λύθηκε <small>41</small></span><span class="tab">Δεν είναι πρόβλημα <small>6</small></span></div>
+<div>
+<div class="r"><span class="st s-new">Νέο</span><div><div class="tt">Το PDF βγήκε χωρίς υπογραφή στη σελ. 3 <span class="urg">· με σταματάει</span></div><div class="mt">#58 · Μαρία Κ. (Χαλάνδρι) · Αίτηση EC-2026-0412 · 📷 1</div></div><div class="rt">πριν 12′</div></div>
+<div class="r"><span class="st s-new">Νέο</span><div><div class="tt">Δεν βρίσκω το Gas Sure 2.0 στη λίστα</div><div class="mt">#57 · Νίκος Τ. (Μαρούσι) · Νέα αίτηση</div></div><div class="rt">πριν 1 ώρα</div></div>
+<div class="r"><span class="st s-wip">Σε εξέλιξη</span><div><div class="tt">Η αναζήτηση ΑΦΜ δεν φέρνει διεύθυνση</div><div class="mt">#55 · Γιάννης Π. · Πελάτες · 💬 3</div></div><div class="rt">χθες</div></div>
+</div></div>
+<p class="d">Ο υπεύθυνος βλέπει την ίδια λίστα με τις αναφορές των πωλητών του και τις δικές του. Ο πωλητής βλέπει μόνο τις δικές του, κάτω από το μενού «Οι αναφορές μου».</p>
+
+<h2>4 · Μία αναφορά</h2>
+<div class="c">
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="st s-wip">Σε εξέλιξη</span><b style="font-size:16px">#58 · Το PDF βγήκε χωρίς υπογραφή στη σελ. 3</b></div>
+<div class="mt" style="margin-top:4px">Μαρία Κ. · Πωλητής · Χαλάνδρι · 30/10 22:14 · <u>Άνοιγμα αίτησης EC-2026-0412</u></div>
+<div class="ctx"><b>Τεχνικά</b><div>
+<span>Οθόνη</span><span>Αίτηση EC-2026-0412 · «Υπογραφές»</span>
+<span>Συσκευή</span><span>Android · Chrome 130 · 412×915</span>
+<span>Έκδοση</span><span>338</span>
+<span>Σφάλματα</span><span>TypeError: sig is undefined (ecrm-sign.js:214) ×2</span>
+<span>Εικόνα</span><span>🖼 screenshot-1.png (μόνο για διαχειριστή)</span>
+</div></div>
+<div class="thr">
+<div class="msg"><span class="av">ΜΚ</span><div class="bub"><small>Μαρία Κ. · 22:14</small>Πάτησα «Εκτύπωση αίτησης» και το PDF βγήκε χωρίς υπογραφή στη σελ. 3. Ο πελάτης έχει υπογράψει.</div></div>
+<div class="sys">Ο Κωνσταντίνος άλλαξε την κατάσταση σε «Σε εξέλιξη» · 22:20</div>
+<div class="msg"><span class="av adm">Κ</span><div class="bub"><small>Κωνσταντίνος · 22:21</small>Το βρήκα, φτιάχνεται απόψε. Μέχρι τότε ξαναπάτα «Εκτύπωση» μετά από ανανέωση της σελίδας.</div></div>
+</div>
+<div class="ta" style="min-height:44px">Γράψε απάντηση…</div>
+<div class="act"><button class="btn p">Απάντηση</button><button class="btn">Σε εξέλιξη</button><button class="btn">✓ Λύθηκε</button><button class="btn">Δεν είναι πρόβλημα</button></div>
+<p class="tip">Τα κουμπιά κατάστασης τα έχει μόνο ο διαχειριστής. Σε «Λύθηκε» ο πωλητής βλέπει «Δεν λύθηκε;», που ξανανοίγει την αναφορά για 14 μέρες.</p>
+</div>
+
+<h2>5 · Ειδοποιήσεις (καμπανάκι, όχι email)</h2>
+<div class="c"><table>
+<tr><th>Πότε</th><th>Ποιος ειδοποιείται</th></tr>
+<tr><td>Νέα αναφορά</td><td>Διαχειριστής. Ο υπεύθυνος μόνο όταν είναι «με σταματάει».</td></tr>
+<tr><td>Απάντηση</td><td>Ο άλλος στη συζήτηση (αυτός που ανέφερε ή ο διαχειριστής)</td></tr>
+<tr><td>Αλλαγή κατάστασης</td><td>Αυτός που ανέφερε</td></tr>
+</table></div>
+
+<h2>Ποιος τι κάνει</h2>
+<div class="c"><table>
+<tr><th>Ρόλος</th><th>Αναφέρει</th><th>Βλέπει</th><th>Απαντά</th><th>Αλλάζει κατάσταση</th></tr>
+<tr><td>Διαχειριστής</td><td class="y">Ναι</td><td>όλες</td><td class="y">Ναι</td><td class="y">Ναι</td></tr>
+<tr><td>Υπεύθυνος / συνεργάτης</td><td class="y">Ναι</td><td>δικές του + της ομάδας του</td><td class="y">Ναι</td><td class="no">Όχι</td></tr>
+<tr><td>Back office</td><td class="y">Ναι</td><td>δικές του</td><td class="y">στις δικές του</td><td class="no">Όχι</td></tr>
+<tr><td>Πωλητής</td><td class="y">Ναι</td><td>δικές του</td><td class="y">στις δικές του</td><td class="no">Όχι</td></tr>
+</table></div>
+
+<h2>GDPR</h2>
+<p class="d">Η εικόνα μένει στον προστατευμένο φάκελο εγγράφων (όχι κρυπτογραφημένη, όπως και τα έγγραφα: ο server αρνείται την απευθείας πρόσβαση) και σβήνεται αμέσως όταν η αναφορά γίνει «Λύθηκε» ή «Δεν είναι πρόβλημα». Αν ξανανοίξει, η εικόνα δεν επιστρέφει. Από την κονσόλα κρατάμε μόνο το μήνυμα σφάλματος και το αρχείο:γραμμή, κομμένα στους 300 χαρακτήρες, όχι τιμές από τη φόρμα. Το κείμενο της αναφοράς το γράφει ο χρήστης· αν γράψει ΑΦΜ ή τηλέφωνο, κρύβεται αυτόματα πριν αποθηκευτεί. Οι κλειστές αναφορές σβήνονται μετά από 12 μήνες. Δεν υπάρχει cache.</p>
+<p class="d"><b>Αργότερα (όχι τώρα):</b> κουμπί «Άνοιγμα στο GitHub» που φτιάχνει issue με τίτλο, περιγραφή και τεχνικά, χωρίς εικόνα και χωρίς ονόματα.</p>
+</div></body></html>

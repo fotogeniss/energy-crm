@@ -36,6 +36,8 @@ final class Tables
     public const REQUEST_KEYS       = 'request_keys';
     public const SIGNATURES         = 'signatures';
     public const TASKS              = 'tasks';
+    public const TICKETS            = 'tickets';
+    public const TICKET_COMMENTS    = 'ticket_comments';
 
     private function __construct()
     {
@@ -76,6 +78,9 @@ final class Tables
             self::NOTIFICATIONS,
             self::DELETION_LOG,
             self::REQUEST_KEYS,
+            // (339) Αναφορές προβλημάτων.
+            self::TICKETS,
+            self::TICKET_COMMENTS,
         ];
     }
 

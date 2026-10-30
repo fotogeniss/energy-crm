@@ -15,6 +15,7 @@ use ECRM_Notifications;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Infrastructure\StalePriceNotice;
+use EnergyCRM\Infrastructure\TicketNotices;
 use EnergyCRM\Persistence\NotificationRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -89,9 +90,7 @@ final class NotificationsController implements Controller
                 'read'        => ! empty($row['read_at']),
                 'created_at'  => $row['created_at'],
                 // (336) Ειδοποίηση χωρίς σύμβαση που οδηγεί σε σελίδα διαχείρισης.
-                'link'        => $row['type'] === StalePriceNotice::TYPE
-                    ? admin_url('admin.php?page=energy-crm-providers')
-                    : '',
+                'link'        => self::link((string) $row['type']),
             ],
             $this->notifications->recentFor($scope->actorId())
         );
@@ -99,6 +98,21 @@ final class NotificationsController implements Controller
         $data['unread'] = $this->notifications->unreadCount($scope->actorId());
 
         return new WP_REST_Response($data, 200);
+    }
+
+    /**
+     * Ειδοποίηση χωρίς σύμβαση που οδηγεί αλλού: (336) σελίδα τιμών,
+     * (339) η αναφορά προβλήματος μέσα στο CRM (`#tickets/{id}`).
+     */
+    private static function link(string $type): string
+    {
+        if ($type === StalePriceNotice::TYPE) {
+            return admin_url('admin.php?page=energy-crm-providers');
+        }
+
+        $ticket = TicketNotices::ticketOf($type);
+
+        return $ticket > 0 ? '#tickets/' . $ticket : '';
     }
 
     public function markRead(WP_REST_Request $request): WP_REST_Response

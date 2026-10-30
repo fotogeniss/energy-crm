@@ -21,6 +21,7 @@
  *                    αριθμοί, καμία σύνδεση με πρόσωπο (23/DB_VERSION)
  *   request_keys   — idempotency στη δημιουργία σύμβασης: ένα uuid ανά πρόθεση
  *                    δημιουργίας, δεσμευμένο πριν γραφτεί οτιδήποτε (24/DB_VERSION)
+ *   tickets, ticket_comments — αναφορές προβλημάτων και η συζήτησή τους (339)
  *
  * Designed so future sessions can bolt on: network/team, commissions, mail.
  *
@@ -563,6 +564,43 @@ class ECRM_DB {
 			PRIMARY KEY (id),
 			UNIQUE KEY partner_request (partner_user_id, request_key),
 			KEY contract_id (contract_id)
+		) {$charset};" );
+
+		/* --- tickets / ticket_comments (339) ---------------------------------
+		 * Αναφορές προβλημάτων από τους χρήστες (docs/UI-TICKETS.html). ΧΩΡΙΣ
+		 * στήλη contract_id: η αίτηση από την οποία έγινε η αναφορά ζει μέσα
+		 * στο `context` (JSON), γιατί η αναφορά αφορά την εφαρμογή και όχι τον
+		 * πελάτη -- δεν ανήκει στην εξαγωγή/διαγραφή του (PersonalDataTables)
+		 * και σβήνεται μόνη της 12 μήνες μετά το κλείσιμο (TicketRetention).
+		 * Η εικόνα (`attachment_path`) σβήνεται μόλις κλείσει η αναφορά.
+		 * Ίδιοι πίνακες και στη μετάβαση 0052 (CreateTicketTables).
+		 */
+		dbDelta( "CREATE TABLE {$p}tickets (
+			id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			user_id         BIGINT UNSIGNED NOT NULL,
+			status          VARCHAR(20) NOT NULL DEFAULT 'new',
+			urgent          TINYINT(1) NOT NULL DEFAULT 0,
+			body            TEXT NOT NULL,
+			context         TEXT NULL,
+			attachment_path VARCHAR(255) NULL,
+			attachment_mime VARCHAR(40) NULL,
+			created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			closed_at       DATETIME NULL,
+			PRIMARY KEY (id),
+			KEY user_id (user_id),
+			KEY status (status)
+		) {$charset};" );
+
+		dbDelta( "CREATE TABLE {$p}ticket_comments (
+			id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			ticket_id  BIGINT UNSIGNED NOT NULL,
+			user_id    BIGINT UNSIGNED NOT NULL,
+			kind       VARCHAR(12) NOT NULL DEFAULT 'comment',
+			body       TEXT NOT NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY ticket_id (ticket_id)
 		) {$charset};" );
 
 	}

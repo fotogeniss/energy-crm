@@ -36,6 +36,9 @@ use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\DuplicateFollowUp;
 use EnergyCRM\Infrastructure\RejectionFollowUp;
 use EnergyCRM\Infrastructure\StalePriceNotice;
+use EnergyCRM\Infrastructure\TicketAttachments;
+use EnergyCRM\Infrastructure\TicketNotices;
+use EnergyCRM\Infrastructure\TicketRetention;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Infrastructure\DocumentKindReview;
@@ -71,6 +74,7 @@ use EnergyCRM\Persistence\TaskRepository;
 use EnergyCRM\Persistence\UnprotectedDocuments;
 use EnergyCRM\Persistence\TeamActivityRepository;
 use EnergyCRM\Persistence\TeamRepository;
+use EnergyCRM\Persistence\TicketRepository;
 use EnergyCRM\Providers\Persistence\ProviderGrantRepository;
 
 final class Services
@@ -164,6 +168,12 @@ final class Services
     private static ?ActivationTerm $activationTerm = null;
 
     private static ?StalePriceNotice $stalePriceNotice = null;
+
+    private static ?TicketRepository $tickets = null;
+
+    private static ?TicketAttachments $ticketAttachments = null;
+
+    private static ?TicketNotices $ticketNotices = null;
 
     private static ?DuplicateFollowUp $duplicateFollowUp = null;
 
@@ -433,6 +443,26 @@ final class Services
     public static function stalePriceNotice(): StalePriceNotice
     {
         return self::$stalePriceNotice ??= new StalePriceNotice(self::providers(), self::notifications());
+    }
+
+    public static function tickets(): TicketRepository
+    {
+        return self::$tickets ??= new TicketRepository();
+    }
+
+    public static function ticketAttachments(): TicketAttachments
+    {
+        return self::$ticketAttachments ??= new TicketAttachments(new DocumentStorage(\ECRM_Files::dir()));
+    }
+
+    public static function ticketNotices(): TicketNotices
+    {
+        return self::$ticketNotices ??= new TicketNotices(self::notifications(), self::network());
+    }
+
+    public static function ticketRetention(): TicketRetention
+    {
+        return new TicketRetention(self::tickets(), self::ticketAttachments());
     }
 
     public static function activationTerm(): ActivationTerm

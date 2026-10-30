@@ -40,6 +40,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddTrackKeyColumn;
 use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerEventsTable;
 use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerNotesTable;
 use EnergyCRM\Persistence\Schema\Migrations\CreateRequestKeysTable;
+use EnergyCRM\Persistence\Schema\Migrations\CreateTicketTables;
 use EnergyCRM\Persistence\Schema\Migrations\DedupeProgramsByCode;
 use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
@@ -129,6 +130,7 @@ final class MigrationList
             new AddProgramExitFees(),
             new RepriceProtergiaPicasso(),
             new ActivateProtergiaGasSure2(),
+            new CreateTicketTables(),
         ];
     }
 }

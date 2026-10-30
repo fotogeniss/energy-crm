@@ -22,6 +22,7 @@ import { openPartner } from '@energy-crm/view-partner';
 import { openCustomerCard } from '@energy-crm/view-customer-card';
 import { loadTeamLive } from '@energy-crm/view-team-live';
 import { loadEscalations } from '@energy-crm/view-escalations';
+import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 
 /* Energy CRM — το κέλυφος, και μόνο αυτό.
  *
@@ -46,7 +47,7 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 
 	// ---- routing ----------------------------------------------------------
 	var loaded = {};
-	var VIEWS = ['dashboard','new-contract','leads','contracts','pending','documents','tasks','customers','renewals','network','team','commissions','calc','kb','teamlive','escalations','analytics','import'];
+	var VIEWS = ['dashboard','new-contract','leads','contracts','pending','documents','tasks','customers','renewals','network','team','commissions','calc','kb','teamlive','escalations','tickets','analytics','import'];
 	var suppressHash = false;
 	function go(view) {
 		app.setAttribute('data-view', view);
@@ -66,6 +67,7 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		if (view === 'analytics') loadAnalytics();
 		if (view === 'teamlive') loadTeamLive();
 		if (view === 'escalations') loadEscalations();
+		if (view === 'tickets') loadTickets();
 		if (view === 'calc') loadCalc();
 		if (view === 'kb') loadKB();
 		if (view === 'training') loadTraining();
@@ -564,7 +566,13 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 			b.addEventListener('click', function () { bellPanel.hidden = true; openDetail(this.getAttribute('data-bell-open')); });
 		});
 		bellPanel.querySelectorAll('[data-bell-link]').forEach(function (b) {
-			b.addEventListener('click', function () { bellPanel.hidden = true; window.location.href = this.getAttribute('data-bell-link'); });
+			b.addEventListener('click', function () {
+				bellPanel.hidden = true;
+				var link = this.getAttribute('data-bell-link');
+				// (339) Σύνδεσμος μέσα στο CRM (#tickets/58): χωρίς ξαναφόρτωμα.
+				if (link.charAt(0) === '#') { route(link.slice(1), true); return; }
+				window.location.href = link;
+			});
 		});
 
 		// Ρητό αίτημα ιδιοκτήτη (06/09): «μόλις πατήσω το καμπανάκι να φεύγουν»
@@ -636,11 +644,22 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 
 		// ---- boot -------------------------------------------------------------
 	// Back/forward navigation via URL hash.
-	window.addEventListener('popstate', function () {
-		var v = (location.hash || '').slice(1);
+	// (339) `#tickets/58`: η οθόνη «Αναφορές» ανοιχτή σε μία αναφορά -- ο
+	// σύνδεσμος της ειδοποίησης στο καμπανάκι.
+	function route(hash, push) {
+		var v = hash || '';
+		var ticket = /^tickets\/(\d+)$/.exec(v);
+		if (ticket) {
+			if (push) { try { history.pushState({ v: v }, '', '#' + v); } catch (e) {} }
+			suppressHash = true; go('tickets'); suppressHash = false;
+			openTicket(ticket[1]);
+			return;
+		}
 		if (VIEWS.indexOf(v) < 0) v = 'dashboard';
 		suppressHash = true; go(v); suppressHash = false;
-	});
+	}
+	window.addEventListener('popstate', function () { route((location.hash || '').slice(1), false); });
+	initTickets();
 
 	// Initial view: respect a #hash so links are copy/paste-able and bookmarkable.
 	// (313) Χωρίς σύνδεση και χωρίς #hash, ανοίγει κατευθείαν η «Νέα αίτηση»:
@@ -648,7 +667,6 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 	(function () {
 		var v = (location.hash || '').slice(1);
 		if (!v && !navigator.onLine) v = 'new-contract';
-		if (VIEWS.indexOf(v) < 0) v = 'dashboard';
-		suppressHash = true; go(v); suppressHash = false;
+		route(v, false);
 	})();
 })();
