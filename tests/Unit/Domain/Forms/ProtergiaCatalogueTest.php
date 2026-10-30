@@ -88,7 +88,7 @@ final class ProtergiaCatalogueTest extends TestCase
             self::assertFalse(ProtergiaCatalogue::isRetired($code), $code);
         }
 
-        self::assertContains('protergia_gas_sure2', ProtergiaCatalogue::AWAITING_SHEET);
+        self::assertNotContains('protergia_gas_sure2', ProtergiaCatalogue::AWAITING_SHEET, 'ήρθε 30/10 (337)');
         self::assertContains('protergia_value_bright2', ProtergiaCatalogue::AWAITING_SHEET);
         self::assertNotContains('protergia_pic_h_s1', ProtergiaCatalogue::AWAITING_SHEET, 'το S 39,90 έχει φύλλο');
     }

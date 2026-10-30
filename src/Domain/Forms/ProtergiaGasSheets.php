@@ -55,6 +55,8 @@ final class ProtergiaGasSheets
         'protergia_gas_standard'      => 'protergia_fa_oik_standard',
         'protergia_epag_gas_flex'     => 'protergia_fa_epag_flex',
         'protergia_epag_gas_standard' => 'protergia_fa_epag_standard',
+        // (337) Αίτηση + ΓΟΣ σε ένα A4 έξι σελίδων (Protergia, 30/10/2026).
+        'protergia_gas_sure2'         => 'protergia_fa_oik_sure2',
     ];
 
     /** Το όνομα του προγράμματος όπως το γράφει η Protergia στα δικά της έντυπα. */

@@ -161,7 +161,6 @@ final class ProtergiaCatalogue
      * στάλθηκε. Τα 8 οικιακά Picasso εκτός του S 39,90: στάλθηκε μόνο αυτό.
      */
     public const AWAITING_SHEET = [
-        'protergia_gas_sure2',
         'protergia_value_bright2',
         'protergia_pic_h_s2',
         'protergia_pic_h_s3',

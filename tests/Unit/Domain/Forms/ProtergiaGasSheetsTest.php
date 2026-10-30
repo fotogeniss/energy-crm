@@ -34,8 +34,10 @@ final class ProtergiaGasSheetsTest extends TestCase
         self::assertSame('protergia_fa_epag_flex', ProtergiaGasSheets::templateKey('protergia_epag_gas_flex'));
         self::assertSame('protergia_fa_epag_standard', ProtergiaGasSheets::templateKey('protergia_epag_gas_standard'));
 
-        // Χωρίς δικό τους έντυπο ακόμα: μένουν στο protergia_fa.
-        self::assertSame('', ProtergiaGasSheets::templateKey('protergia_gas_sure2'));
+        // (337) Το σταθερό ήρθε 30/10: αίτηση και ΓΟΣ σε ένα A4.
+        self::assertSame('protergia_fa_oik_sure2', ProtergiaGasSheets::templateKey('protergia_gas_sure2'));
+
+        // Χωρίς δικό του έντυπο: μένει στο protergia_fa.
         self::assertSame('', ProtergiaGasSheets::templateKey('protergia_power_gas_fa'));
     }
 
@@ -254,6 +256,63 @@ final class ProtergiaGasSheetsTest extends TestCase
         self::assertSame('', ProtergiaGasSheets::legalRepCaption('sole_prop', 'Μιχάλης Καπετανάκης'));
         self::assertSame('', ProtergiaGasSheets::legalRepCaption('individual', 'Μιχάλης Καπετανάκης'));
         self::assertSame('', ProtergiaGasSheets::legalRepCaption('company', '  '));
+    }
+
+    /**
+     * (337) Value Gas Sure 2.0: αίτηση (σελ. 1-3) και ΓΟΣ (σελ. 4-6) σε ένα A4
+     * έξι σελίδων, χωρίς χωριστό tail. Η σελ. 1 είναι η σελ. 1 του Standard σε
+     * 0,9· οι συναινέσεις όμως ξαναστοιχίστηκαν, άρα μετρήθηκαν χωριστά
+     * (κέντρα των οβάλ, mm, από το PDF της Protergia σε 300 dpi).
+     */
+    public function testValueGasSure2SignsTheApplicationAndTheTerms(): void
+    {
+        $tpl = 'protergia_fa_oik_sure2';
+        $map = $this->map($tpl);
+
+        for ($p = 1; $p <= 6; $p++) {
+            self::assertFileExists(self::dir() . "{$tpl}-{$p}.jpg");
+        }
+        self::assertFileDoesNotExist(self::dir() . $tpl . '-7.jpg');
+        self::assertArrayNotHasKey('tail', $map);
+        self::assertSame([210.0, 297.0], [(float) $map['page_w'], (float) $map['page_h']]);
+        self::assertCount(6, FormTemplates::pages(dirname(self::dir()), $tpl, $map));
+
+        // «Υπογραφή / Σφραγίδα Πελάτη»: σελ. 3 γραμμή 283,4 (x 17,8-63,0)· σελ. 6 γραμμή 282,4 (x 112-151).
+        foreach ([[3, 283.4, 17.8, 63.0], [6, 282.4, 112.0, 151.0]] as $i => [$page, $line, $x0, $x1]) {
+            $sig = $map['sigs'][$i];
+            self::assertSame($page, $sig['page']);
+            self::assertEqualsWithDelta($line, $sig['y'] + $sig['fit_h'], 0.5);
+            self::assertGreaterThanOrEqual($x0, $sig['x']);
+            self::assertLessThanOrEqual($x1, $sig['x'] + $sig['w']);
+            self::assertSame($page, $map['fields']['nomimos_ekprosopos_ypografi'][$i]['page']);
+            self::assertGreaterThan($line + 4.0, $map['fields']['nomimos_ekprosopos_ypografi'][$i]['y']);
+        }
+
+        // Μόνο αυτόνομη θέρμανση.
+        self::assertArrayNotHasKey('fa_koinoxristo', $map['fields']);
+
+        $ovals = [
+            'synainesi_omilou_nai'  => [[92.9, 199.2]],
+            'synainesi_omilou_oxi'  => [[100.2, 199.2]],
+            'synainesi_erevnas_nai' => [[169.5, 202.6]],
+            'synainesi_erevnas_oxi' => [[181.1, 202.6]],
+            'fa_logariasmos_email'  => [[43.9, 211.4]],
+            'fa_oros_panta'         => [[190.7, 204.4], [171.6, 217.0]],
+        ];
+
+        foreach ($ovals as $key => $list) {
+            $f      = $map['fields'][$key];
+            $places = isset($f[0]) ? $f : [$f];
+            self::assertCount(count($list), $places, $key);
+
+            foreach ($list as $i => [$cx, $cy]) {
+                $p    = $places[$i];
+                $size = (float) ($p['size'] ?? 10);
+                // Κέντρο του Χ: μισό πλάτος δεξιά του x, μισό ύψος πάνω από τη βάση.
+                self::assertEqualsWithDelta($cx, $p['x'] + 0.1208 * $size, 0.6, "{$key} οριζόντια");
+                self::assertEqualsWithDelta($cy, $p['y'] + 2.5 - 0.1285 * $size, 0.6, "{$key} κάθετα");
+            }
+        }
     }
 
     private static function dir(): string

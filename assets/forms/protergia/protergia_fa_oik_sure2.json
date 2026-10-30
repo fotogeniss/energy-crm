@@ -1,0 +1,347 @@
+{
+ "page_w": 210.0,
+ "page_h": 297.0,
+ "sigs": [
+  {
+   "page": 3,
+   "x": 18.0,
+   "y": 269.4,
+   "w": 45,
+   "h": 0,
+   "fit_h": 14.0
+  },
+  {
+   "page": 6,
+   "x": 112.5,
+   "y": 271.4,
+   "w": 38,
+   "h": 0,
+   "fit_h": 11.0
+  }
+ ],
+ "fields": {
+  "onomateponymo_pelati": {
+   "page": 1,
+   "x": 35.1,
+   "y": 44.3,
+   "maxw": 109.8
+  },
+  "adt_pelati": {
+   "page": 1,
+   "x": 162.2,
+   "y": 44.3,
+   "maxw": 27.5
+  },
+  "odos_arithmos_katoikias": {
+   "page": 1,
+   "x": 29.4,
+   "y": 48.3,
+   "maxw": 115.5
+  },
+  "tk_katoikias": {
+   "page": 1,
+   "x": 150.1,
+   "y": 48.3,
+   "maxw": 17.8
+  },
+  "poli_katoikias": {
+   "page": 1,
+   "x": 174.8,
+   "y": 48.3,
+   "maxw": 14.8
+  },
+  "afm_pelati": {
+   "page": 1,
+   "x": 25.6,
+   "y": 52.3,
+   "maxw": 35.6
+  },
+  "doy_pelati": {
+   "page": 1,
+   "x": 68.4,
+   "y": 52.3,
+   "maxw": 42.1
+  },
+  "epaggelma_pelati": {
+   "page": 1,
+   "x": 122.6,
+   "y": 52.3,
+   "maxw": 67.0
+  },
+  "tilefono_pelati": {
+   "page": 1,
+   "x": 30.0,
+   "y": 56.3,
+   "maxw": 31.2
+  },
+  "kinito_pelati": {
+   "page": 1,
+   "x": 118.5,
+   "y": 56.3,
+   "maxw": 26.4
+  },
+  "email_pelati": {
+   "page": 1,
+   "x": 152.8,
+   "y": 56.3,
+   "maxw": 36.9
+  },
+  "onomateponymo_epikoinonias": {
+   "page": 1,
+   "x": 35.1,
+   "y": 68.5,
+   "maxw": 154.6
+  },
+  "tilefono_epikoinonias": {
+   "page": 1,
+   "x": 29.0,
+   "y": 72.5,
+   "maxw": 32.1
+  },
+  "kinito_epikoinonias": {
+   "page": 1,
+   "x": 69.2,
+   "y": 72.5,
+   "maxw": 40.6
+  },
+  "email_epikoinonias": {
+   "page": 1,
+   "x": 117.7,
+   "y": 72.5,
+   "maxw": 72.0
+  },
+  "odos_arithmos_apostolis": {
+   "page": 1,
+   "x": 29.4,
+   "y": 81.0,
+   "maxw": 43.6
+  },
+  "tk_apostolis": {
+   "page": 1,
+   "x": 78.3,
+   "y": 81.0,
+   "maxw": 31.5
+  },
+  "poli_apostolis": {
+   "page": 1,
+   "x": 116.7,
+   "y": 81.0,
+   "maxw": 73.0
+  },
+  "odos_arithmos_paroxis": {
+   "page": 1,
+   "x": 37.9,
+   "y": 111.7,
+   "maxw": 35.1
+  },
+  "tk_paroxis": {
+   "page": 1,
+   "x": 78.2,
+   "y": 111.7,
+   "maxw": 31.5
+  },
+  "poli_paroxis": {
+   "page": 1,
+   "x": 116.6,
+   "y": 111.7,
+   "maxw": 73.1
+  },
+  "hkasp": {
+   "page": 1,
+   "x": 26.4,
+   "y": 119.5,
+   "maxw": 83.2
+  },
+  "fa_typos_metriti": {
+   "page": 1,
+   "x": 125.7,
+   "y": 119.5,
+   "maxw": 64.0
+  },
+  "ipistamenos_promitheftis": {
+   "page": 1,
+   "x": 44.7,
+   "y": 123.4,
+   "maxw": 65.0
+  },
+  "teleftaia_endeixi_metriti": {
+   "page": 1,
+   "x": 139.6,
+   "y": 123.4,
+   "maxw": 50.1
+  },
+  "fa_arithmos_paroxis_revmatos": {
+   "page": 1,
+   "x": 36.5,
+   "y": 134.7,
+   "maxw": 153.2
+  },
+  "fa_diarkeia": [
+   {
+    "page": 1,
+    "x": 45.1,
+    "y": 152.7,
+    "maxw": 27.9
+   },
+   {
+    "page": 1,
+    "x": 93.6,
+    "y": 152.7,
+    "maxw": 96.1
+   }
+  ],
+  "poso_eggiisis": {
+   "page": 1,
+   "x": 37.2,
+   "y": 156.3,
+   "maxw": 35.7
+  },
+  "fa_paratiriseis": {
+   "page": 1,
+   "x": 33.3,
+   "y": 159.9,
+   "maxw": 156.4,
+   "size": 8.0
+  },
+  "idiotita_idioktitis": {
+   "page": 1,
+   "x": 53.4,
+   "y": 60.6,
+   "check": true
+  },
+  "idiotita_misthotis": {
+   "page": 1,
+   "x": 97.7,
+   "y": 60.6,
+   "check": true
+  },
+  "pliromi_pagia_entoli": {
+   "page": 1,
+   "x": 137.5,
+   "y": 86.2,
+   "check": true
+  },
+  "energopoiisi_nea_syndesi": {
+   "page": 1,
+   "x": 59.9,
+   "y": 127.4,
+   "check": true
+  },
+  "energopoiisi_epanasyndesi": {
+   "page": 1,
+   "x": 149.7,
+   "y": 127.4,
+   "check": true
+  },
+  "fa_aftonomo": {
+   "page": 1,
+   "x": 40.7,
+   "y": 146.7,
+   "check": true
+  },
+  "fa_eggiisi_1os_logariasmos": {
+   "page": 1,
+   "x": 128.5,
+   "y": 156.5,
+   "check": true
+  },
+  "synainesi_omilou_nai": {
+   "page": 1,
+   "x": 92.1,
+   "y": 197.5,
+   "check": true,
+   "size": 6.5
+  },
+  "synainesi_omilou_oxi": {
+   "page": 1,
+   "x": 99.4,
+   "y": 197.5,
+   "check": true,
+   "size": 6.5
+  },
+  "synainesi_erevnas_nai": {
+   "page": 1,
+   "x": 168.7,
+   "y": 200.9,
+   "check": true,
+   "size": 6.5
+  },
+  "synainesi_erevnas_oxi": {
+   "page": 1,
+   "x": 180.3,
+   "y": 200.9,
+   "check": true,
+   "size": 6.5
+  },
+  "fa_oros_panta": [
+   {
+    "page": 1,
+    "x": 189.9,
+    "y": 202.7,
+    "check": true,
+    "size": 6.5
+   },
+   {
+    "page": 1,
+    "x": 170.8,
+    "y": 215.3,
+    "check": true,
+    "size": 6.5
+   }
+  ],
+  "fa_logariasmos_email": {
+   "page": 1,
+   "x": 43.1,
+   "y": 209.7,
+   "check": true,
+   "size": 6.5
+  },
+  "nomimos_ekprosopos_ypografi": [
+   {
+    "page": 3,
+    "x": 17.0,
+    "y": 289.0,
+    "size": 7.0,
+    "maxw": 90.0
+   },
+   {
+    "page": 6,
+    "x": 111.0,
+    "y": 291.0,
+    "size": 6.0,
+    "maxw": 86.0
+   }
+  ]
+ },
+ "labels": {
+  "onomateponymo_pelati": "Ονοματεπώνυμο",
+  "adt_pelati": "ΑΔΤ (ή αρ. Διαβ.)",
+  "odos_arithmos_katoikias": "Διεύθυνση",
+  "tk_katoikias": "Τ.Κ.",
+  "poli_katoikias": "Πόλη",
+  "afm_pelati": "Α.Φ.Μ.",
+  "doy_pelati": "Δ.Ο.Υ.",
+  "epaggelma_pelati": "Επάγγελμα",
+  "tilefono_pelati": "Τηλ. Οικίας",
+  "kinito_pelati": "Κινητό",
+  "email_pelati": "E-mail",
+  "onomateponymo_epikoinonias": "Ονοματεπώνυμο",
+  "tilefono_epikoinonias": "Τηλέφωνο",
+  "kinito_epikoinonias": "Κινητό",
+  "email_epikoinonias": "E-mail",
+  "odos_arithmos_apostolis": "Διεύθυνση",
+  "tk_apostolis": "Τ.Κ.",
+  "poli_apostolis": "Πόλη",
+  "odos_arithmos_paroxis": "Διεύθυνση ακινήτου",
+  "tk_paroxis": "Τ.Κ.",
+  "poli_paroxis": "Πόλη",
+  "hkasp": "ΗΚΑΣΠ",
+  "fa_typos_metriti": "Τύπος μετρητή",
+  "ipistamenos_promitheftis": "Υφιστάμενος προμηθευτής",
+  "teleftaia_endeixi_metriti": "Τελευταία ένδειξη μετρητή (m3)",
+  "fa_arithmos_paroxis_revmatos": "Αριθμός παροχής",
+  "fa_diarkeia": "Διάρκεια ισχύος τιμολογίου*",
+  "poso_eggiisis": "Ποσό εγγύησης (€)",
+  "fa_paratiriseis": "Παρατηρήσεις"
+ }
+}
