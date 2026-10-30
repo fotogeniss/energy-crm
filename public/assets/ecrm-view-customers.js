@@ -94,7 +94,7 @@ function loadCrossSell(view) {
 				var acts = c.draft_id
 					? '<button type="button" class="ecrm-btn ecrm-btn--sm" data-xs-draft="' + esc(c.draft_id) + '">Άνοιγμα πρόχειρου</button>'
 					: (c.phone ? '<a class="ecrm-btn ecrm-btn--sm" href="tel:' + esc(String(c.phone).replace(/[^\d+]/g, '')) + '">📞 Κλήση</a>' : '') +
-						'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--companion" data-xs-add="' + c.contract_id + '">' + plus + '</button>' +
+						(c.twin ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--companion" data-xs-add="' + c.contract_id + '">' + plus + '</button>' : '') +
 						'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-xs-snooze="' + c.id + '">Όχι τώρα</button>';
 				return '<div class="ecrm-xsell__row"><div><div class="ecrm-xsell__nm"><a href="#" data-open-customer="' + c.id + '">' + esc(c.name) + '</a>' +
 					' <span class="ecrm-xsell__pill">' + esc(has) + '</span>' +

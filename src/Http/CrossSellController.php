@@ -21,6 +21,7 @@ use EnergyCRM\Domain\Customer\CrossSell;
 use EnergyCRM\Persistence\CrossSellQueries;
 use EnergyCRM\Persistence\CustomerEventRepository;
 use EnergyCRM\Persistence\CustomerRepository;
+use EnergyCRM\Persistence\ProviderRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -31,6 +32,7 @@ final class CrossSellController implements Controller
         private readonly CrossSellQueries $queries,
         private readonly CustomerRepository $customers,
         private readonly CustomerEventRepository $events,
+        private readonly ProviderRepository $providers,
     ) {
     }
 
@@ -77,8 +79,18 @@ final class CrossSellController implements Controller
         $city     = (string) $request['city'];
         $category = (string) $request['category'];
 
+        // Η δίδυμη αίτηση μένει στον ίδιο πάροχο (326): χωρίς πρόγραμμα της
+        // ενέργειας που λείπει, το «+ Αέριο» δεν οδηγεί πουθενά και κρύβεται.
+        $offering = [];
+
+        foreach ($this->providers->activePrograms() as $program) {
+            if ((string) $program['energy_type'] === $want) {
+                $offering[(int) $program['provider_id']] = true;
+            }
+        }
+
         $rows = array_map(
-            static function (array $row): array {
+            static function (array $row) use ($offering): array {
                 $name = $row['company_name']
                     ?: trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
 
@@ -90,6 +102,7 @@ final class CrossSellController implements Controller
                     'category'     => (string) ($row['category'] ?? ''),
                     'contract_id'  => (int) $row['contract_id'],
                     'draft_id'     => $row['draft_id'] !== null ? (int) $row['draft_id'] : null,
+                    'twin'         => isset($offering[(int) $row['provider_id']]),
                     'active_since' => $row['active_since'],
                 ];
             },

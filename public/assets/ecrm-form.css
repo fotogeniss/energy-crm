@@ -1313,3 +1313,4 @@
 .ecrm-fit__btn { grid-column: 2; justify-self: start; border: 1px solid var(--st-pending); background: var(--surface); color: var(--st-pending); border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: var(--fs-12); cursor: pointer; }
 .ecrm-fit__btn[hidden] { display: none; }
 @media (max-width: 600px) { .ecrm-fit { grid-template-columns: 1fr; } .ecrm-fit__btn { grid-column: 1; } }
+.ecrm-actbanner[hidden] { display: none; }

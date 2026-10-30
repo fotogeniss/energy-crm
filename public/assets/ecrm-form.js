@@ -261,6 +261,22 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		function applyEnergyType() {
 			applyChipScope('data-when-energy', state.energy_type || 'power');
 			applyComboFromVolton();
+			applyCompanionAvailability();
+		}
+
+		// (334) «Πρόσθεσε και αέριο / ρεύμα» μόνο όταν ο πάροχος της αίτησης
+		// έχει ενεργό πρόγραμμα της άλλης ενέργειας. Ως τώρα το κουμπί φαινόταν
+		// πάντα και ο server απαντούσε 422 -- επιλογή που δεν οδηγεί πουθενά.
+		// `hidden`, όχι style.display: το style.display το κρατά το
+		// data-when-energy (ίδιο σκεπτικό με το applyComboFromVolton()).
+		function applyCompanionAvailability() {
+			var energy = state.energy_type || 'power';
+			var other = energy === 'power' ? 'gas' : (energy === 'gas' ? 'power' : '');
+			var pid = +state.provider_id || 0;
+			var offers = !!other && pid > 0 && (programsCache || []).some(function (g) {
+				return +g.provider_id === pid && g.energy_type === other;
+			});
+			qa('[data-act="companion"]').forEach(function (el) { el.hidden = !offers; });
 		}
 
 		// Η κάρτα «6γ» (COMBO Volton+Orizon από αίτηση ρεύματος, Στάδιο 4,
@@ -599,6 +615,7 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 
 		function refreshProviderFields() {
 			applyComboFromVolton();
+			applyCompanionAvailability();
 			applyInvoiceCodeRow();
 
 			var card = root.querySelector('[data-provider-fields]');
