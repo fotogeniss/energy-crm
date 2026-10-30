@@ -63,4 +63,39 @@ final class ContractTerm
         // rolls forward the way PHP rolls it — February has no 31st.
         return $from->modify('+' . $months . ' months')->format('Y-m-d');
     }
+
+    /** (330) Η διάρκεια όταν η αίτηση δεν γράφει: 12 μήνες σε όλα τα τιμολόγια ρεύματος/αερίου. */
+    public const DEFAULT_ENERGY_MONTHS = 12;
+
+    /**
+     * (330) Τι γράφεται όταν μια αίτηση ρεύματος/αερίου γίνεται «Ενεργή».
+     *
+     * Η υπενθύμιση ανανέωσης (`ECRM_Tasks::generate_renewal_reminders()`) και η
+     * λίστα «Ανανεώσεις» διαβάζουν μόνο `end_date`, και αυτό υπολογιζόταν μόνο
+     * αν ο πωλητής έγραφε έναρξη και διάρκεια στη φόρμα -- που στη φόρμα δεν
+     * τα ξέρει ακόμα: η έναρξη είναι η μέρα που ενεργοποιεί ο πάροχος. Μια
+     * σύμβαση χωρίς λήξη δεν εμφανιζόταν ποτέ για ανανέωση.
+     *
+     * Ό,τι έγραψε ο άνθρωπος μένει: λήξη γραμμένη → τίποτα· έναρξη γραμμένη →
+     * κρατιέται· διάρκεια γραμμένη → κρατιέται. Λείπει έναρξη → σήμερα. Λείπει
+     * διάρκεια → 12.
+     *
+     * @return array{start_date: string, term_months: int, end_date: string}|null null = τίποτα να γραφτεί.
+     */
+    public static function onActivation(?string $start, ?int $months, ?string $end, string $today): ?array
+    {
+        if (trim((string) $end) !== '') {
+            return null;
+        }
+
+        $start  = trim((string) $start) !== '' ? substr(trim((string) $start), 0, 10) : $today;
+        $months = $months !== null && $months > 0 ? $months : self::DEFAULT_ENERGY_MONTHS;
+        $until  = self::endDate($start, $months);
+
+        if ($until === null) {
+            return null;
+        }
+
+        return ['start_date' => $start, 'term_months' => $months, 'end_date' => $until];
+    }
 }

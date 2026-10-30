@@ -14,53 +14,56 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Persistence\Schema;
 
+use EnergyCRM\Persistence\Schema\Migrations\AddComboEnergyContactColumns;
+use EnergyCRM\Persistence\Schema\Migrations\AddComboMobileContactColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddContractAddresses;
 use EnergyCRM\Persistence\Schema\Migrations\AddContractListIndexes;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerAfmIndex;
-use EnergyCRM\Persistence\Schema\Migrations\AddComboEnergyContactColumns;
-use EnergyCRM\Persistence\Schema\Migrations\AddComboMobileContactColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerContactPhoneColumn;
-use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerEventsTable;
-use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerNotesTable;
-use EnergyCRM\Persistence\Schema\Migrations\CreateRequestKeysTable;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerPhoneIndex;
-use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
-use EnergyCRM\Persistence\Schema\Migrations\AddGuaranteeRuleForeignKeys;
-use EnergyCRM\Persistence\Schema\Migrations\AddIntakeColumns;
-use EnergyCRM\Persistence\Schema\Migrations\AddSiteIntakeColumns;
-use EnergyCRM\Persistence\Schema\Migrations\AddPayoutAmountColumn;
-use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
-use EnergyCRM\Persistence\Schema\Migrations\AddProviderRefColumn;
-use EnergyCRM\Persistence\Schema\Migrations\AddProviderStatusMapColumn;
-use EnergyCRM\Persistence\Schema\Migrations\AddSupplyNumberIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddEventStatusIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddFileExpiryColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddFileKindSourceColumns;
+use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
+use EnergyCRM\Persistence\Schema\Migrations\AddGuaranteeRuleForeignKeys;
+use EnergyCRM\Persistence\Schema\Migrations\AddIntakeColumns;
+use EnergyCRM\Persistence\Schema\Migrations\AddPayoutAmountColumn;
+use EnergyCRM\Persistence\Schema\Migrations\AddProgramCodeColumn;
+use EnergyCRM\Persistence\Schema\Migrations\AddProgramExitFees;
+use EnergyCRM\Persistence\Schema\Migrations\AddProgramPricingColumns;
+use EnergyCRM\Persistence\Schema\Migrations\AddProviderRefColumn;
+use EnergyCRM\Persistence\Schema\Migrations\AddProviderStatusMapColumn;
+use EnergyCRM\Persistence\Schema\Migrations\AddSiteIntakeColumns;
+use EnergyCRM\Persistence\Schema\Migrations\AddSupplyNumberIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddTrackKeyColumn;
+use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerEventsTable;
+use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerNotesTable;
+use EnergyCRM\Persistence\Schema\Migrations\CreateRequestKeysTable;
+use EnergyCRM\Persistence\Schema\Migrations\DedupeProgramsByCode;
 use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureLegacyColumns;
 use EnergyCRM\Persistence\Schema\Migrations\FixProviderEnergyTypes;
 use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusVocabulary;
 use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusesToPaperLists;
-use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaCatalogue2026;
-use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaPicasso;
-use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaBizCatalogue2026;
 use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
-use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
-use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
-use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaBizPlans;
-use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaGasPlans;
-use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaHomePlans;
-use EnergyCRM\Persistence\Schema\Migrations\SeedProviderGrants;
-use EnergyCRM\Persistence\Schema\Migrations\DedupeProgramsByCode;
-use EnergyCRM\Persistence\Schema\Migrations\SeedVoltonPlans;
 use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaAwaitingSheets;
 use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaHomeAwaitingSheets;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
 use EnergyCRM\Persistence\Schema\Migrations\RetargetContractListIndexToUpdatedAt;
-use EnergyCRM\Persistence\Schema\Migrations\WidenEncryptedColumns;
+use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
+use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaBizCatalogue2026;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaBizPlans;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaCatalogue2026;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaGasPlans;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaHomePlans;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaPicasso;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaPrices2026;
+use EnergyCRM\Persistence\Schema\Migrations\SeedProviderGrants;
+use EnergyCRM\Persistence\Schema\Migrations\SeedVoltonPlans;
 use EnergyCRM\Persistence\Schema\Migrations\WidenCustomerPhoneColumn;
+use EnergyCRM\Persistence\Schema\Migrations\WidenEncryptedColumns;
 
 final class MigrationList
 {
@@ -119,6 +122,9 @@ final class MigrationList
             new SeedProtergiaBizCatalogue2026(),
             new PauseProtergiaAwaitingSheets(),
             new PauseProtergiaHomeAwaitingSheets(),
+            new AddProgramPricingColumns(),
+            new SeedProtergiaPrices2026(),
+            new AddProgramExitFees(),
         ];
     }
 }

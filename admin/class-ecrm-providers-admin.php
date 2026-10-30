@@ -23,6 +23,8 @@ class ECRM_Providers_Admin {
 		add_action( 'admin_post_ecrm_delete_provider', [ __CLASS__, 'delete_provider' ] );
 		add_action( 'admin_post_ecrm_save_program',    [ __CLASS__, 'save_program' ] );
 		add_action( 'admin_post_ecrm_delete_program',  [ __CLASS__, 'delete_program' ] );
+		add_action( 'admin_post_ecrm_program_price',   [ __CLASS__, 'update_price' ] );
+		add_action( 'admin_post_ecrm_program_exit',    [ __CLASS__, 'update_exit' ] );
 		add_action( 'admin_enqueue_scripts',           [ __CLASS__, 'assets' ] );
 	}
 
@@ -95,6 +97,8 @@ JS;
 			'provider_deleted' => 'Ο πάροχος διαγράφηκε.',
 			'program_saved'    => 'Το πρόγραμμα αποθηκεύτηκε.',
 			'program_deleted'  => 'Το πρόγραμμα διαγράφηκε.',
+			'price_saved'      => 'Η τιμή αποθηκεύτηκε με σημερινή ημερομηνία.',
+			'exit_saved'       => 'Η ρήτρα αποχώρησης αποθηκεύτηκε.',
 		];
 		if ( isset( $map[ $m ] ) ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $map[ $m ] ) . '</p></div>';
@@ -182,9 +186,9 @@ JS;
 		$cats = [ 'home' => 'Οικιακό', 'business' => 'Επαγγελματικό', 'communal' => 'Κοινόχρηστο' ];
 		$pts  = [ 'fixed' => 'Σταθερό', 'special' => 'Ειδικό', 'variable' => 'Κυμαινόμενο', 'dynamic' => 'Δυναμικό' ];
 
-		echo '<hr><h2>Προγράμματα παρόχου</h2><table class="widefat striped"><thead><tr><th>Όνομα</th><th>Είδος</th><th>Κατηγορία</th><th>Τύπος</th><th>€/kWh</th><th>Πάγιο</th><th>Ενεργό</th><th></th></tr></thead><tbody>';
+		echo '<hr><h2>Προγράμματα παρόχου</h2><table class="widefat striped"><thead><tr><th>Όνομα</th><th>Είδος</th><th>Κατηγορία</th><th>Τύπος</th><th>Τιμή (€/kWh · πάγιο €/μήνα)</th><th>Ενημέρωση</th><th>Ρήτρα αποχώρησης (€, 1ος…12ος μήνας)</th><th>Ενεργό</th><th></th></tr></thead><tbody>';
 		if ( ! $rows ) {
-			echo '<tr><td colspan="8">Δεν υπάρχουν προγράμματα ακόμα.</td></tr>';
+			echo '<tr><td colspan="9">Δεν υπάρχουν προγράμματα ακόμα.</td></tr>';
 		}
 		foreach ( (array) $rows as $g ) {
 			echo '<tr>';
@@ -192,8 +196,9 @@ JS;
 			echo '<td>' . ( ECRM_DB::energy_label( (string) $g['energy_type'] ) ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- energy_label() returns one of three literal labels and falls back to a literal; the stored value never reaches the page.
 			echo '<td>' . esc_html( $cats[ $g['category'] ] ?? $g['category'] ) . '</td>';
 			echo '<td>' . esc_html( $pts[ $g['price_type'] ] ?? $g['price_type'] ) . '</td>';
-			echo '<td>' . ( $g['price_kwh'] !== null && $g['price_kwh'] !== '' ? esc_html( number_format( (float) $g['price_kwh'], 5 ) ) : '—' ) . '</td>';
-			echo '<td>' . ( $g['fixed_charge'] !== null && $g['fixed_charge'] !== '' ? esc_html( number_format( (float) $g['fixed_charge'], 2 ) ) . '€' : '—' ) . '</td>';
+			echo '<td>' . self::price_cell( $g, $provider_id ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- price_cell() escapes every value it prints.
+			echo '<td>' . self::updated_cell( $g ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- updated_cell() escapes every value it prints.
+			echo '<td>' . self::exit_cell( $g, $provider_id ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- exit_cell() escapes every value it prints.
 			echo '<td>' . ( $g['active'] ? '✔' : '—' ) . '</td>';
 			echo '<td><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" onsubmit="return confirm(\'Διαγραφή προγράμματος;\');" style="display:inline">';
 			wp_nonce_field( 'ecrm_delete_program' );
@@ -222,6 +227,87 @@ JS;
 			<?php submit_button( 'Προσθήκη προγράμματος' ); ?>
 		</form>
 		<?php
+	}
+
+	/**
+	 * (328) Η τιμή του προγράμματος, επεξεργάσιμη στη θέση της.
+	 *
+	 * Ως τώρα η σελίδα δεν είχε επεξεργασία προγράμματος -- μόνο προσθήκη και
+	 * διαγραφή --, άρα η τιμή ενός κυμαινόμενου δεν άλλαζε ποτέ. Η πρόταση
+	 * από λογαριασμό συγκρίνει ό,τι γράφει εδώ, και τα κυμαινόμενα αλλάζουν
+	 * κάθε μήνα. Κλιμακωτά και πακέτα δεν έχουν μία τιμή: δείχνουν τον κανόνα.
+	 */
+	private static function price_cell( array $g, int $provider_id ): string {
+		if ( ! in_array( (string) $g['energy_type'], [ 'power', 'gas' ], true ) ) {
+			return '—';
+		}
+
+		$rule = \EnergyCRM\Domain\Pricing\ProgramPricing::rule( $g );
+
+		if ( 'tiered' === $rule['kind'] ) {
+			$parts = [];
+			foreach ( $rule['tiers'] as $tier ) {
+				$parts[] = ( null === $tier[0] ? 'μετά' : 'έως ' . (int) $tier[0] . ' kWh' ) . ': ' . number_format( (float) $tier[1], 4, ',', '' );
+			}
+			return '<span class="description">Κλιμακωτό /30 ημ. · </span>' . esc_html( implode( ' · ', $parts ) . ' · πάγιο ' . number_format( (float) $rule['fixed'], 2, ',', '' ) . ' €' );
+		}
+
+		if ( 'package' === $rule['kind'] ) {
+			return '<span class="description">Πακέτο · </span>' . esc_html(
+				number_format( (float) $rule['package_kwh'], 0, ',', '.' ) . ' kWh/έτος · προμήθεια '
+				. number_format( (float) $rule['supply_month'], 2, ',', '' ) . ' €/μήνα · πάνω από το πακέτο '
+				. number_format( (float) $rule['excess_kwh'], 3, ',', '' ) . ' €/kWh'
+			);
+		}
+
+		$price = ( null !== $g['price_kwh'] && '' !== $g['price_kwh'] ) ? (string) (float) $g['price_kwh'] : '';
+		$fixed = ( null !== $g['fixed_charge'] && '' !== $g['fixed_charge'] ) ? (string) (float) $g['fixed_charge'] : '';
+
+		ob_start();
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:flex;gap:4px;align-items:center">';
+		wp_nonce_field( 'ecrm_program_price' );
+		echo '<input type="hidden" name="action" value="ecrm_program_price">';
+		echo '<input type="hidden" name="id" value="' . (int) $g['id'] . '"><input type="hidden" name="provider_id" value="' . (int) $provider_id . '">';
+		echo '<input type="number" step="0.00001" min="0" name="price_kwh" value="' . esc_attr( $price ) . '" placeholder="€/kWh" style="width:90px">';
+		echo '<input type="number" step="0.01" min="0" name="fixed_charge" value="' . esc_attr( $fixed ) . '" placeholder="πάγιο" style="width:70px">';
+		echo '<button class="button button-small">Αποθήκευση</button></form>';
+		if ( ! empty( $rule['note'] ) ) {
+			echo '<span class="description">' . esc_html( (string) $rule['note'] ) . '</span>';
+		}
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * (331) Η ρήτρα πρόωρης αποχώρησης -- τη λέει το «Τι λέω στον πελάτη».
+	 * Δώδεκα ποσά χωρισμένα με κόμμα· κενό = χωρίς ρήτρα.
+	 */
+	private static function exit_cell( array $g, int $provider_id ): string {
+		if ( ! in_array( (string) $g['energy_type'], [ 'power', 'gas' ], true ) ) {
+			return '—';
+		}
+		$fees = isset( $g['exit_fees'] ) ? json_decode( (string) $g['exit_fees'], true ) : null;
+		$text = is_array( $fees ) ? implode( ', ', array_map( 'intval', $fees ) ) : '';
+
+		ob_start();
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:flex;gap:4px;align-items:center">';
+		wp_nonce_field( 'ecrm_program_exit' );
+		echo '<input type="hidden" name="action" value="ecrm_program_exit">';
+		echo '<input type="hidden" name="id" value="' . (int) $g['id'] . '"><input type="hidden" name="provider_id" value="' . (int) $provider_id . '">';
+		echo '<input type="text" name="exit_fees" value="' . esc_attr( $text ) . '" placeholder="π.χ. 180, 180, …, 0" style="width:220px">';
+		echo '<button class="button button-small">Αποθήκευση</button></form>';
+		return (string) ob_get_clean();
+	}
+
+	private static function updated_cell( array $g ): string {
+		$date = isset( $g['price_updated'] ) ? (string) $g['price_updated'] : '';
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}/', $date ) ) {
+			return '—';
+		}
+		$label = esc_html( wp_date( 'd/m/Y', (int) strtotime( substr( $date, 0, 10 ) . ' 12:00:00' ) ) );
+		if ( \EnergyCRM\Domain\Pricing\ProgramPricing::isStale( $g, current_time( 'Y-m-d' ) ) ) {
+			return '<span style="color:#b32d2e">' . $label . ' · πάνω από ' . (int) \EnergyCRM\Domain\Pricing\ProgramPricing::STALE_DAYS . ' μέρες</span>';
+		}
+		return $label;
 	}
 
 	// ---------------------------------------------------------------------
@@ -308,6 +394,57 @@ JS;
 			$wpdb->insert( ECRM_DB::table( 'programs' ), $data );
 		}
 		self::back( 'program_saved', $provider );
+	}
+
+	/**
+	 * (328) Νέα τιμή προγράμματος -- η ημερομηνία γράφεται μόνη της.
+	 */
+	public static function update_price(): void {
+		self::guard( 'ecrm_program_price' );
+		global $wpdb;
+		$id       = (int) ( $_POST['id'] ?? 0 );
+		$provider = (int) ( $_POST['provider_id'] ?? 0 );
+		$num      = static function ( string $key ): ?float {
+			$raw = isset( $_POST[ $key ] ) ? str_replace( ',', '.', sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) ) : '';
+			return ( '' !== $raw && is_numeric( $raw ) && (float) $raw >= 0 ) ? (float) $raw : null;
+		};
+		if ( $id ) {
+			$wpdb->update(
+				ECRM_DB::table( 'programs' ),
+				[
+					'price_kwh'     => $num( 'price_kwh' ),
+					'fixed_charge'  => $num( 'fixed_charge' ),
+					'price_updated' => current_time( 'Y-m-d' ),
+				],
+				[ 'id' => $id, 'provider_id' => $provider ]
+			);
+		}
+		self::back( 'price_saved', $provider );
+	}
+
+	/**
+	 * (331) Νέα ρήτρα αποχώρησης. Κενό σβήνει τη ρήτρα.
+	 */
+	public static function update_exit(): void {
+		self::guard( 'ecrm_program_exit' );
+		global $wpdb;
+		$id       = (int) ( $_POST['id'] ?? 0 );
+		$provider = (int) ( $_POST['provider_id'] ?? 0 );
+		$raw      = isset( $_POST['exit_fees'] ) ? sanitize_text_field( wp_unslash( $_POST['exit_fees'] ) ) : '';
+		$fees     = [];
+		foreach ( preg_split( '/[\s,;]+/', $raw, -1, PREG_SPLIT_NO_EMPTY ) ?: [] as $part ) {
+			if ( is_numeric( $part ) && (float) $part >= 0 ) {
+				$fees[] = (int) round( (float) $part );
+			}
+		}
+		if ( $id ) {
+			$wpdb->update(
+				ECRM_DB::table( 'programs' ),
+				[ 'exit_fees' => $fees ? (string) wp_json_encode( $fees ) : null ],
+				[ 'id' => $id, 'provider_id' => $provider ]
+			);
+		}
+		self::back( 'exit_saved', $provider );
 	}
 
 	public static function delete_program(): void {

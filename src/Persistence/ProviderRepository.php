@@ -66,7 +66,7 @@ final class ProviderRepository
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 'SELECT id, provider_id, name, code, energy_type, category,
-                        price_type, price_kwh, fixed_charge
+                        price_type, price_kwh, fixed_charge, pricing, price_updated, exit_fees
                  FROM %i WHERE active = 1 ORDER BY sort_order, name',
                 Tables::name(Tables::PROGRAMS)
             ),

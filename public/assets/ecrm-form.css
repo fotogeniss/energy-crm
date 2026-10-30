@@ -609,6 +609,7 @@
 .ecrm-guarantee-suggest { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: var(--fs-12); flex-wrap: wrap; }
 .ecrm-guarantee-suggest[hidden] { display: none; }
 .ecrm-guarantee-suggest__amt { color: var(--accent-ink); font-weight: 700; }
+.ecrm-guarantee-suggest__why { color: var(--muted); font-size: var(--fs-11-5); }
 /* Η επιβεβαίωση μετά το «Χρήση» ζει στο ίδιο κουτί -- αλλάζει μόνο το
  * κείμενο (βλ. ecrm-form.js), όχι το layout, ώστε να μη χοροπηδά η φόρμα. */
 .ecrm-guarantee-suggest.is-used { color: var(--accent-ink); font-weight: 600; }
@@ -661,6 +662,13 @@
 	color: var(--st-new); background: var(--st-new-bg); padding: 1px 5px; border-radius: 5px; line-height: 1.5;
 }
 .ecrm-field.scan-mark .ecrm-input { border-color: var(--st-new); }
+/* (327) Σήμανση ΑΑΔΕ -- το μητρώο, ούτε μαντεψιά (AI) ούτε barcode (SCAN). */
+.ecrm-field.aade-mark .ecrm-field__label { display: flex; align-items: center; gap: 6px; }
+.ecrm-field.aade-mark .ecrm-field__label::after {
+	content: "ΑΑΔΕ"; font-size: var(--fs-10); font-weight: 800; letter-spacing: .04em;
+	color: var(--st-active); background: var(--st-active-bg); padding: 1px 5px; border-radius: 5px; line-height: 1.5;
+}
+.ecrm-field.aade-mark .ecrm-input { border-color: var(--st-active); }
 @keyframes ecrm-pulse-scan { 0% { box-shadow: 0 0 0 0 rgba(0,114,183,.4); } 100% { box-shadow: 0 0 0 8px rgba(0,114,183,0); } }
 
 /* Το κουμπί σάρωσης -- ίδιο μοτίβο με .ecrm-input-btn (ΑΦΜ), ίδια απόκρυψη σε
@@ -960,6 +968,17 @@
  * (screenshot ιδιοκτήτη 25/08, κουμπί αναζήτησης ΑΦΜ). */
 .ecrm-input-btn { border: 1px solid var(--line); border-left: none; background: var(--bg); border-radius: 0 8px 8px 0; padding: 0 12px; cursor: pointer; font-size: var(--fs-13); color: var(--muted); }
 .ecrm-input-btn:hover { background: var(--surface-track); color: var(--ink); }
+/* (327) Το κουμπί του ΑΦΜ γράφει και από πού ψάχνει. */
+.ecrm-input-btn--text { display: inline-flex; align-items: center; gap: 5px; font-weight: 800; font-size: var(--fs-11-5); color: var(--ink); white-space: nowrap; }
+/* (327) Το αποτέλεσμα της αναζήτησης ΑΦΜ, κάτω από ΑΦΜ / Δ.Ο.Υ. */
+.ecrm-afmres { border: 1px solid var(--line); border-radius: 12px; padding: 10px 13px; margin: 2px 0 12px; font-size: var(--fs-12-5); line-height: 1.5; background: var(--surface); color: var(--ink); }
+.ecrm-afmres[hidden] { display: none; }
+.ecrm-afmres.is-ok { border-color: var(--st-active); background: var(--st-active-bg); }
+.ecrm-afmres.is-warn { border-color: var(--st-cancel); background: var(--st-cancel-bg); }
+.ecrm-afmres__h { font-weight: 800; }
+.ecrm-afmres.is-ok .ecrm-afmres__h { color: var(--st-active); }
+.ecrm-afmres.is-warn .ecrm-afmres__h { color: var(--st-cancel); }
+.ecrm-afmres__s { color: var(--muted); }
 
 /* sync bars (PSS green "ίδια στοιχεία" toggles) */
 .ecrm-syncbar { display: flex; align-items: center; gap: 9px; background: var(--st-routed-bg); border: 1px solid var(--st-routed); color: var(--st-routed); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: var(--fs-13); font-weight: 600; cursor: pointer; }
@@ -994,6 +1013,9 @@
 .ecrm-actbanner--dark .ecrm-actbanner__ic { background: rgba(255,255,255,.14); }
 .ecrm-actbanner--outline { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .ecrm-actbanner--outline .ecrm-actbanner__ic { background: var(--surface-sunk); }
+/* (326) «+ Αέριο / + Ρεύμα στον ίδιο πελάτη» -- το χρώμα του αερίου στις κατηγορίες. */
+.ecrm-actbanner--companion { background: var(--cat-teal-bg); color: var(--ink); border: 1px solid var(--cat-teal); }
+.ecrm-actbanner--companion .ecrm-actbanner__ic { background: var(--surface); color: var(--cat-teal); }
 
 /* --- Field validation feedback --- */
 .ecrm-input.is-invalid { border-color: var(--st-cancel) !important; box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
@@ -1263,3 +1285,20 @@
  * με .ecrm-wstep[hidden]. Συνυπάρχει με το inline style.display του
  * data-when-energy: κρυμμένη αν την κρύβει έστω ένα από τα δύο. */
 .ecrm-row[hidden] { display: none; }
+
+/* (331) «Τι λέω στον πελάτη» -- docs/UI-SALES-SCRIPT.html */
+.ecrm-say { border: 1px solid var(--cat-teal); background: var(--cat-teal-bg); border-radius: 12px; padding: 12px 14px; margin: 4px 0 14px; }
+.ecrm-say[hidden] { display: none; }
+.ecrm-say__h { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: var(--fs-14); color: var(--cat-teal); margin-bottom: 6px; }
+.ecrm-say__h small { margin-left: auto; font-weight: 600; font-size: var(--fs-11-5); color: var(--muted); }
+.ecrm-say__list { list-style: none; margin: 0; padding: 0; }
+.ecrm-say__list li { display: grid; grid-template-columns: 20px 1fr; gap: 6px; padding: 6px 0; border-top: 1px solid var(--line); font-size: var(--fs-13); color: var(--ink); line-height: 1.5; }
+.ecrm-say__list li:first-child { border-top: 0; }
+.ecrm-say__list li > span:first-child { font-weight: 800; }
+.ecrm-say__list li.is-ok > span:first-child { color: var(--st-active); }
+.ecrm-say__list li.is-warn > span:first-child { color: var(--st-pending); }
+.ecrm-say__list b { font-weight: 800; }
+.ecrm-say__note { font-size: var(--fs-12-5); color: var(--muted); border-left: 3px solid var(--line-mid); padding: 4px 10px; margin: 6px 0; }
+.ecrm-say__note[hidden] { display: none; }
+.ecrm-say__copy { margin-top: 8px; border: 1px solid var(--cat-teal); background: transparent; color: var(--cat-teal); border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: var(--fs-12); cursor: pointer; }
+.ecrm-say__copy:hover { background: var(--surface); }

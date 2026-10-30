@@ -31,6 +31,7 @@ use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractDocuments;
+use EnergyCRM\Infrastructure\ActivationTerm;
 use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\DuplicateFollowUp;
 use EnergyCRM\Infrastructure\RejectionFollowUp;
@@ -158,6 +159,8 @@ final class Services
     private static ?ContractLifecycle $lifecycle = null;
 
     private static ?RejectionFollowUp $rejectionFollowUp = null;
+
+    private static ?ActivationTerm $activationTerm = null;
 
     private static ?DuplicateFollowUp $duplicateFollowUp = null;
 
@@ -379,6 +382,12 @@ final class Services
         return self::$secrets ??= new SecretStore();
     }
 
+    /** (327) Η αναζήτηση μητρώου της ΑΑΔΕ. */
+    public static function aade(): \EnergyCRM\Infrastructure\AadeClient
+    {
+        return new \EnergyCRM\Infrastructure\AadeClient(self::secrets());
+    }
+
     public static function contracts(): ContractRepository
     {
         return self::$contracts ??= new ContractRepository();
@@ -416,6 +425,11 @@ final class Services
             self::payouts(),
             self::paperworkGate(),
         );
+    }
+
+    public static function activationTerm(): ActivationTerm
+    {
+        return self::$activationTerm ??= new ActivationTerm(self::contractTransitions());
     }
 
     public static function rejectionFollowUp(): RejectionFollowUp

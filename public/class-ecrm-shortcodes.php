@@ -109,7 +109,7 @@ class ECRM_Shortcodes {
 		],
 		'@energy-crm/view-renewals'    => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-tasks'       => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
-		'@energy-crm/view-calc'        => [ '@energy-crm/util' ],
+		'@energy-crm/view-calc'        => [ '@energy-crm/util', '@energy-crm/navigate' ],
 		'@energy-crm/view-customers'   => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-customer-card' => [
 			'@energy-crm/util',
@@ -468,6 +468,13 @@ class ECRM_Shortcodes {
 				<div class="ecrm-row">
 					<span class="ecrm-row__label">Πρόγραμμα</span>
 					<select class="ecrm-select" data-program data-field="program_id"><option value="">—</option></select>
+				</div>
+				<?php // (331) «Τι λέω στον πελάτη» -- γεμίζει το ecrm-form.js (refreshSalesScript). Mockup docs/UI-SALES-SCRIPT.html. ?>
+				<div class="ecrm-say" data-sales-script hidden>
+					<div class="ecrm-say__h"><span>💬 Τι λέω στον πελάτη</span><small data-sales-script-label></small></div>
+					<ul class="ecrm-say__list" data-sales-script-lines></ul>
+					<div class="ecrm-say__note" data-sales-script-note hidden>Τρέχουσα τιμή δεν έχει καταχωρηθεί: ο διαχειριστής τη γράφει στη σελίδα Παρόχων.</div>
+					<button type="button" class="ecrm-say__copy" data-sales-script-copy>Αντιγραφή για Viber / SMS</button>
 				</div>
 
 				<div class="ecrm-row">
@@ -859,11 +866,13 @@ class ECRM_Shortcodes {
 				<div class="ecrm-grid">
 					<label class="ecrm-field" data-for="afm">
 						<span class="ecrm-field__label">ΑΦΜ <abbr title="Υποχρεωτικό για να προχωρήσει η αίτηση πέρα από το πρόχειρο">*</abbr></span>
-						<span class="ecrm-input-wrap"><input type="text" name="afm" class="ecrm-input" autocomplete="off"><button type="button" class="ecrm-input-btn" data-afm-search aria-label="Αναζήτηση ΑΦΜ"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button></span>
+						<span class="ecrm-input-wrap"><input type="text" name="afm" class="ecrm-input" autocomplete="off"><button type="button" class="ecrm-input-btn ecrm-input-btn--text" data-afm-search aria-label="Στοιχεία επιχείρησης από την ΑΑΔΕ"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg> ΑΑΔΕ</button></span>
 					</label>
 					<?php $ecrm_field( 'adt', 'Α.Δ.Τ / Διαβατήριο', 'text', false, '', '', 'off', 'individual,sole_prop' ); ?>
 					<?php $ecrm_field( 'doy', 'Δ.Ο.Υ' ); ?>
 				</div>
+				<?php // (327) Αποτέλεσμα της αναζήτησης ΑΦΜ (ΑΑΔΕ / VIES) -- το γεμίζει το ecrm-form.js. ?>
+				<div class="ecrm-afmres" data-afm-result hidden></div>
 
 				<!-- εταιρεία -->
 				<div class="ecrm-grid" data-when="company,sole_prop">
@@ -1437,6 +1446,16 @@ class ECRM_Shortcodes {
 				<button type="button" class="ecrm-actbanner ecrm-actbanner--outline" data-act="livelink">
 					<span class="ecrm-actbanner__ic"><svg class="ecrm-i ecrm-i--banner" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg></span>
 					<span class="ecrm-actbanner__tx"><b>Δημιουργία συνδέσμου για live υπογραφή</b><span>Σύνδεσμος για υπογραφή επί τόπου ή αποστολή με μήνυμα</span></span>
+				</button>
+				<?php
+				// (326) «+ Αέριο / + Ρεύμα στον ίδιο πελάτη» -- mockup
+				// docs/UI-ADD-GAS.html. Φτιάχνει (ή βρίσκει) τη δίδυμη αίτηση
+				// στον ίδιο πελάτη και πάροχο και την ανοίγει εδώ, έτοιμη.
+				?>
+				<button type="button" class="ecrm-actbanner ecrm-actbanner--companion" data-act="companion" data-when-energy="power,gas">
+					<span class="ecrm-actbanner__ic"><svg class="ecrm-i ecrm-i--banner" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+					<span class="ecrm-actbanner__tx" data-when-energy="power"><b>Πρόσθεσε και αέριο στον ίδιο πελάτη</b><span>Νέα αίτηση αερίου με τα στοιχεία του πελάτη και τον αριθμό παροχής ρεύματος ήδη συμπληρωμένα</span></span>
+					<span class="ecrm-actbanner__tx" data-when-energy="gas"><b>Πρόσθεσε και ρεύμα στον ίδιο πελάτη</b><span>Νέα αίτηση ρεύματος με τα στοιχεία του πελάτη ήδη συμπληρωμένα</span></span>
 				</button>
 			</div>
 

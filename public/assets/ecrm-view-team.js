@@ -63,7 +63,13 @@ function renderTeam(view, d, flash) {
 		'<span><a href="#" class="ecrm-plink" data-pall>Ολοι</a><a href="#" class="ecrm-plink" data-pnone>Κανένας</a></span></div>' +
 		'<div data-newprov-chips></div>' +
 		'<div class="ecrm-hint" data-newprov-hint hidden>Βλέπεις μόνο όσους παρόχους έχεις κι εσύ.</div>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-add-member>+ Προσθήκη</button>' +
+		// Το κουμπί ΔΕΝ είναι πια ένα μικρό «+ Προσθήκη» κολλημένο κάτω από τα
+		// chips: διαβαζόταν σαν «πρόσθεσε πάροχο», όχι σαν «φτιάξε τον
+		// λογαριασμό» (αναφορά ιδιοκτήτη 21/09, δύο φορές: «πού είναι το
+		// κουμπί;»). Δική του γραμμή, κανονικό μέγεθος, ρητό ρήμα.
+		'<div class="ecrm-addform__foot">' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-add-member>Δημιουργία πωλητή</button>' +
+		'<span class="ecrm-hint">Θα του σταλεί email με σύνδεσμο για να ορίσει κωδικό.</span></div>' +
 		'<div class="ecrm-ai-status" data-member-msg></div></div>'
 	) : '';
 
@@ -149,6 +155,10 @@ function renderTeam(view, d, flash) {
 	});
 	var addBtn = view.querySelector('[data-add-member]');
 	if (addBtn) addBtn.addEventListener('click', function () { addMember(view, this); });
+	// Enter σε όνομα/email = το ίδιο κουμπί.
+	view.querySelectorAll('[data-addwrap] .ecrm-input').forEach(function (el) {
+		el.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && addBtn && !addBtn.disabled) { ev.preventDefault(); addBtn.click(); } });
+	});
 }
 function teamOp(id, op) {
 	fetch(api('/team/' + id), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ op: op }) })

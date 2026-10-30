@@ -1,6 +1,16 @@
-/* Energy CRM — quote calculator: current cost against the offer. */
+/* Energy CRM — quote calculator: current cost against the offer.
+ *
+ * (328) Πάνω από τον χειροκίνητο υπολογισμό: η πρόταση από λογαριασμό. Ο
+ * πωλητής ανεβάζει τον λογαριασμό, το AI διαβάζει κατανάλωση και τιμές
+ * (POST /bill/read), και ο server κατατάσσει όλα τα προγράμματα με τιμή
+ * (GET /bill/compare) -- οι κανόνες κλιμακίων και πακέτων ζουν σε ένα σημείο,
+ * το Domain\Pricing\ProgramPricing. Ο λογαριασμός μένει στη μνήμη της
+ * σελίδας: ανεβαίνει στον server μόνο αν πατηθεί «Νέα αίτηση με αυτό», μαζί
+ * με την αίτηση. Mockup: docs/UI-BILL-ADVISOR.html.
+ */
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { openEdit } from '@energy-crm/navigate';
 
 var calcData = null;
 export function loadCalc() {
@@ -18,7 +28,9 @@ function renderCalc(view) {
 	view.innerHTML =
 		'<header class="ecrm-head"><div class="ecrm-eyebrow">Εργαλείο πώλησης</div><h2 class="ecrm-title">Υπολογισμός Προσφοράς</h2>' +
 		'<p class="ecrm-sub">Εκτίμηση ετήσιου κόστους & οφέλους έναντι του τρέχοντος παρόχου</p></header>' +
+		advisorMarkup() +
 		'<div class="ecrm-card"><div class="ecrm-calc">' +
+			'<div class="ecrm-calc__h">Χειροκίνητος υπολογισμός · ένα πρόγραμμα</div>' +
 			'<div class="ecrm-calc__grid">' +
 				'<label class="ecrm-field"><span>Ετήσια κατανάλωση (kWh)</span><input type="number" class="ecrm-input" data-c="consumption" placeholder="π.χ. 3500"></label>' +
 				'<label class="ecrm-field"><span>Όνομα πελάτη (προαιρετικό)</span><input type="text" class="ecrm-input" data-c="customer"></label>' +
@@ -39,6 +51,8 @@ function renderCalc(view) {
 			'<div class="ecrm-calc__actions"><button type="button" class="ecrm-btn ecrm-btn--primary" data-calc-pdf><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> PDF Προσφοράς</button></div>' +
 			'<p class="ecrm-hint">Η εκτίμηση αφορά χρέωση ενέργειας + πάγιο. Ρυθμιζόμενες χρεώσεις, φόροι και δημοτικά τέλη είναι κοινά μεταξύ παρόχων και δεν υπολογίζονται.</p>' +
 		'</div></div>';
+
+	wireAdvisor(view);
 
 	var get = function (k) { var el = view.querySelector('[data-c="' + k + '"]'); return el ? el.value : ''; };
 	var num = function (k) { return parseFloat(get(k)) || 0; };
@@ -102,4 +116,310 @@ function renderCalc(view) {
 			.catch(function () { toast('Σφάλμα δικτύου.', false); })
 			.finally(function () { b.disabled = false; b.textContent = t; });
 	});
+}
+
+// ---------------------------------------------------------------------
+// (328) Πρόταση από λογαριασμό
+// ---------------------------------------------------------------------
+
+var ICON_DOC = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg>';
+var ICON_NEW = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+var ICON_CAM = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+
+// Ο λογαριασμός και ό,τι διάβασε το AI για τον πελάτη. Μόνο στη μνήμη της
+// σελίδας -- φεύγουν με την ανανέωση ή με νέο λογαριασμό.
+var advisor = { file: null, customer: null, result: null, timer: null };
+
+function money(v) {
+	return Math.round(v).toLocaleString('el-GR') + ' €';
+}
+
+function num4(v) {
+	return (+v).toLocaleString('el-GR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+}
+
+function advisorMarkup() {
+	return '<div class="ecrm-card ecrm-bill">' +
+		'<div class="ecrm-bill__step">1 · Ο λογαριασμός</div>' +
+		'<div class="ecrm-bill__drop" data-bill-drop>' +
+			'<b>Φωτογραφία ή PDF του λογαριασμού ρεύματος / αερίου</b>' +
+			'<span>Το AI διαβάζει κατανάλωση, περίοδο, τιμή προμήθειας και πάγιο</span>' +
+			'<div class="ecrm-bill__picks">' +
+				'<button type="button" class="ecrm-btn" data-bill-cam>' + ICON_CAM + ' Φωτογραφία</button>' +
+				'<button type="button" class="ecrm-btn" data-bill-pick>' + ICON_DOC + ' Επιλογή αρχείου</button>' +
+			'</div>' +
+			'<input type="file" accept="image/*" capture="environment" data-bill-camera hidden>' +
+			'<input type="file" accept="application/pdf,image/jpeg,image/png" data-bill-file hidden>' +
+			'<label class="ecrm-bill__consent"><input type="checkbox" data-bill-consent> ' +
+				'<span>Ο πελάτης ενημερώθηκε ότι ο λογαριασμός του διαβάζεται από υπηρεσία τεχνητής νοημοσύνης για τον υπολογισμό της προσφοράς.</span></label>' +
+			'<div class="ecrm-bill__status" data-bill-status></div>' +
+		'</div>' +
+		'<div data-bill-read hidden>' +
+			'<div class="ecrm-bill__step">Διαβάστηκε από τον λογαριασμό · διόρθωσε αν χρειάζεται</div>' +
+			'<div class="ecrm-bill__read">' +
+				readField('Πάροχος σήμερα', '<input type="text" class="ecrm-input" data-b="provider_name">') +
+				readField('Ενέργεια', '<select class="ecrm-input" data-b="energy_type"><option value="power">Ρεύμα</option><option value="gas">Φυσικό αέριο</option></select>') +
+				readField('Κατηγορία', '<select class="ecrm-input" data-b="category"><option value="home">Οικιακό</option><option value="business">Επαγγελματικό</option></select>') +
+				readField('Περίοδος (ημέρες)', '<input type="number" min="1" class="ecrm-input" data-b="period_days">') +
+				readField('Κατανάλωση περιόδου (kWh)', '<input type="number" min="0" class="ecrm-input" data-b="kwh">') +
+				readField('Ανά έτος (kWh)', '<input type="number" min="0" class="ecrm-input" data-b="annual_kwh">') +
+				readField('Τιμή προμήθειας €/kWh', '<input type="number" step="0.0001" min="0" class="ecrm-input" data-b="price_kwh">') +
+				readField('Πάγιο €/μήνα', '<input type="number" step="0.01" min="0" class="ecrm-input" data-b="fixed_month">') +
+			'</div>' +
+		'</div>' +
+		'<div data-bill-rank hidden></div>' +
+	'</div>';
+}
+
+function readField(label, input) {
+	return '<label class="ecrm-field"><span>' + esc(label) + '</span>' + input + '</label>';
+}
+
+function wireAdvisor(view) {
+	var q = function (sel) { return view.querySelector(sel); };
+	var fileIn = q('[data-bill-file]'), camIn = q('[data-bill-camera]');
+
+	q('[data-bill-pick]').addEventListener('click', function () { fileIn.click(); });
+	q('[data-bill-cam]').addEventListener('click', function () { camIn.click(); });
+	[fileIn, camIn].forEach(function (inp) {
+		inp.addEventListener('change', function () {
+			if (inp.files && inp.files[0]) { readBill(view, inp.files[0]); }
+			inp.value = '';
+		});
+	});
+
+	var drop = q('[data-bill-drop]');
+	drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('is-over'); });
+	drop.addEventListener('dragleave', function () { drop.classList.remove('is-over'); });
+	drop.addEventListener('drop', function (e) {
+		e.preventDefault(); drop.classList.remove('is-over');
+		if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) { readBill(view, e.dataTransfer.files[0]); }
+	});
+
+	view.querySelectorAll('[data-b]').forEach(function (el) {
+		el.addEventListener('input', function () {
+			var k = el.getAttribute('data-b');
+			// Η εκτίμηση έτους ακολουθεί την περίοδο, εκτός αν τη γράψει ο ίδιος.
+			if (k === 'kwh' || k === 'period_days') {
+				var kwh = +bval(view, 'kwh'), days = +bval(view, 'period_days');
+				if (kwh > 0 && days > 0) { q('[data-b="annual_kwh"]').value = Math.round(kwh * 365 / days); }
+			}
+			scheduleCompare(view);
+		});
+		el.addEventListener('change', function () { scheduleCompare(view); });
+	});
+
+	// Επιστροφή στην οθόνη: ό,τι είχε διαβαστεί μένει.
+	if (advisor.result) { fillRead(view, advisor.result); compare(view); }
+}
+
+function bval(view, k) {
+	var el = view.querySelector('[data-b="' + k + '"]');
+	return el ? el.value : '';
+}
+
+function status(view, text, bad) {
+	var el = view.querySelector('[data-bill-status]');
+	el.textContent = text || '';
+	el.className = 'ecrm-bill__status' + (bad ? ' is-bad' : '');
+}
+
+function readBill(view, file) {
+	if (!view.querySelector('[data-bill-consent]').checked) {
+		status(view, 'Τσέκαρε πρώτα ότι ο πελάτης ενημερώθηκε.', true);
+		return;
+	}
+	if (!/\.(pdf|jpe?g|png)$/i.test(file.name) && ['application/pdf', 'image/jpeg', 'image/png'].indexOf(file.type) < 0) {
+		status(view, 'Μόνο PDF, JPG ή PNG.', true);
+		return;
+	}
+
+	advisor.file = file; advisor.customer = null; advisor.result = null;
+	status(view, 'Διαβάζω τον λογαριασμό…');
+
+	var fd = new FormData();
+	fd.append('file', file);
+	fd.append('consent', '1');
+
+	fetch(api('/bill/read'), { method: 'POST', headers: H(), body: fd })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) { status(view, (d && d.error) || 'Ο λογαριασμός δεν διαβάστηκε.', true); return; }
+			advisor.customer = d.customer || {};
+			advisor.result = Object.assign({}, d.bill || {}, { annual_kwh: d.annual_kwh });
+			status(view, 'Διαβάστηκε: ' + file.name);
+			fillRead(view, advisor.result);
+			compare(view);
+		})
+		.catch(function () { status(view, 'Σφάλμα δικτύου.', true); });
+}
+
+function fillRead(view, b) {
+	view.querySelector('[data-bill-read]').hidden = false;
+	['provider_name', 'period_days', 'kwh', 'annual_kwh', 'price_kwh', 'fixed_month'].forEach(function (k) {
+		var el = view.querySelector('[data-b="' + k + '"]');
+		if (el) { el.value = b[k] != null ? b[k] : ''; el.classList.toggle('is-missing', b[k] == null); }
+	});
+	view.querySelector('[data-b="energy_type"]').value = b.energy_type || 'power';
+	view.querySelector('[data-b="category"]').value = b.category || 'home';
+}
+
+function scheduleCompare(view) {
+	clearTimeout(advisor.timer);
+	advisor.timer = setTimeout(function () { compare(view); }, 350);
+}
+
+function compare(view) {
+	var box = view.querySelector('[data-bill-rank]');
+	var kwh = +bval(view, 'annual_kwh');
+	if (!(kwh > 0)) { box.hidden = false; box.innerHTML = '<div class="ecrm-bill__miss">Συμπλήρωσε κατανάλωση για να γίνει η σύγκριση.</div>'; return; }
+
+	var qs = '?kwh=' + encodeURIComponent(kwh) +
+		'&energy=' + encodeURIComponent(bval(view, 'energy_type')) +
+		'&category=' + encodeURIComponent(bval(view, 'category')) +
+		'&price_kwh=' + encodeURIComponent(+bval(view, 'price_kwh') || 0) +
+		'&fixed_month=' + encodeURIComponent(+bval(view, 'fixed_month') || 0);
+
+	fetch(api('/bill/compare') + qs, { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) { box.hidden = false; box.innerHTML = '<div class="ecrm-bill__miss">Η σύγκριση απέτυχε.</div>'; return; }
+			renderRank(view, d);
+		})
+		.catch(function () { box.hidden = false; box.innerHTML = '<div class="ecrm-bill__miss">Σφάλμα δικτύου.</div>'; });
+}
+
+// «Protergia · Protergia Picasso» όχι: τα ονόματα του καταλόγου έχουν ήδη τον πάροχο.
+function withProvider(provider, name) {
+	if (!provider || String(name).toLowerCase().indexOf(String(provider).toLowerCase()) === 0) { return name; }
+	return provider + ' · ' + name;
+}
+
+var TYPE_LABEL = { fixed: 'Σταθερό', variable: 'Κυμαινόμενο', dynamic: 'Δυναμικό', special: 'Ειδικό' };
+
+function ruleText(r) {
+	var rule = r.rule || {};
+	var dt = r.price_updated ? r.price_updated.split('-').reverse().join('/') : '';
+	var parts = [];
+	if (rule.kind === 'tiered') {
+		parts.push((rule.tiers || []).map(function (t) {
+			return (t[0] == null ? 'μετά ' : 'έως ' + t[0] + ' kWh ') + num4(t[1]);
+		}).join(' · ') + ' €/kWh ανά 30 ημ.');
+		parts.push('πάγιο ' + (+rule.fixed).toFixed(2).replace('.', ',') + ' €');
+	} else if (rule.kind === 'package') {
+		parts.push('πακέτο ' + (+rule.package_kwh).toLocaleString('el-GR') + ' kWh/έτος · προμήθεια ' + (+rule.supply_month).toFixed(2).replace('.', ',') + ' €/μήνα');
+		parts.push('πάνω από το πακέτο ' + num4(rule.excess_kwh) + ' €/kWh');
+	} else {
+		parts.push(num4(rule.price_kwh) + ' €/kWh');
+		parts.push('πάγιο ' + (+rule.fixed).toFixed(2).replace('.', ',') + ' €');
+	}
+	if (rule.note) { parts.push(rule.note); }
+	if (dt) { parts.push('τιμή ' + dt); }
+	return parts.join(' · ');
+}
+
+function renderRank(view, d) {
+	var box = view.querySelector('[data-bill-rank]');
+	box.hidden = false;
+	advisor.ranked = d.ranked || [];
+
+	var head = '<div class="ecrm-bill__step">2 · Τι συμφέρει</div>' +
+		'<div class="ecrm-bill__cur"><span>Σύγκριση για <b>' + Math.round(d.annual_kwh).toLocaleString('el-GR') + ' kWh/έτος</b> · μόνο ενέργεια + πάγιο</span>' +
+		(d.current_annual != null ? '<span>Σήμερα: <b>' + money(d.current_annual) + '/έτος</b></span>' : '<span>Χωρίς τιμή σήμερα · μόνο κόστος</span>') + '</div>';
+
+	var rows = (d.ranked || []).map(function (r, i) {
+		var save = r.saving;
+		var sv = save == null
+			? '<b>' + money(r.annual) + '</b><span>/έτος</span>'
+			: '<b class="' + (save >= 0 ? '' : 'is-neg') + '">' + (save >= 0 ? '−' : '+') + money(Math.abs(save)) + '/έτος</b>' +
+				'<span>' + money(r.annual) + '/έτος · ' + (save >= 0 ? '−' : '+') + Math.abs(r.saving_pct).toLocaleString('el-GR') + '%</span>';
+		var kind = r.rule && r.rule.kind === 'package' ? 'Πακέτο' : (r.rule && r.rule.kind === 'tiered' ? 'Κλιμακωτό' : (TYPE_LABEL[r.price_type] || ''));
+		return '<div class="ecrm-bill__rank' + (i === 0 ? ' is-best' : '') + '">' +
+			'<div class="ecrm-bill__n">' + (i + 1) + '</div>' +
+			'<div><div class="ecrm-bill__nm">' + esc(withProvider(r.provider, r.name)) +
+				(kind ? ' <span class="ecrm-bill__pill' + (r.price_type === 'fixed' ? ' is-fx' : ' is-vr') + '">' + esc(kind) + '</span>' : '') +
+				(r.stale ? ' <span class="ecrm-bill__pill is-old">παλιά τιμή — έλεγξέ τη</span>' : '') + '</div>' +
+				'<div class="ecrm-bill__mt">' + esc(ruleText(r)) + '</div></div>' +
+			'<div class="ecrm-bill__sv">' + sv + '</div>' +
+			'<div class="ecrm-bill__acts">' +
+				'<button type="button" class="ecrm-btn ecrm-btn--primary" data-bill-apply="' + i + '">' + ICON_NEW + ' Νέα αίτηση με αυτό</button>' +
+				'<button type="button" class="ecrm-btn" data-bill-pdf="' + i + '">' + ICON_DOC + ' PDF προσφοράς</button>' +
+			'</div></div>';
+	}).join('');
+
+	if (!rows) { rows = '<div class="ecrm-bill__miss">Κανένα ενεργό πρόγραμμα αυτής της κατηγορίας δεν έχει καταχωρημένη τιμή.</div>'; }
+
+	var un = d.unpriced || [];
+	var miss = un.length
+		? '<details class="ecrm-bill__miss"><summary>' + un.length + (un.length === 1 ? ' πρόγραμμα' : ' προγράμματα') + ' χωρίς καταχωρημένη τιμή δεν συγκρίνονται. Ποια είναι →</summary><ul>' +
+			un.map(function (u) { return '<li>' + esc(withProvider(u.provider, u.name)) + '</li>'; }).join('') +
+			'</ul><p>Η τιμή τους μπαίνει στη σελίδα «Πάροχοι & Προγράμματα».</p></details>'
+		: '';
+
+	box.innerHTML = head + rows + miss +
+		'<p class="ecrm-hint">Ρυθμιζόμενες χρεώσεις, ΥΚΩ, φόροι και δημοτικά είναι ίδια σε όλους τους παρόχους και δεν υπολογίζονται. Κλιμακωτά και πακέτα υπολογίζονται με τον κανόνα τους· στα πακέτα δεν υπολογίζεται επιστροφή για κατανάλωση κάτω από το πακέτο.</p>';
+
+	box.querySelectorAll('[data-bill-apply]').forEach(function (b) {
+		b.addEventListener('click', function () { applyProgram(view, advisor.ranked[+b.getAttribute('data-bill-apply')]); });
+	});
+	box.querySelectorAll('[data-bill-pdf]').forEach(function (b) {
+		b.addEventListener('click', function () { quotePdf(view, advisor.ranked[+b.getAttribute('data-bill-pdf')], b, d); });
+	});
+}
+
+function applyProgram(view, r) {
+	if (!r) { return; }
+	var cust = advisor.customer || {};
+	var c = {};
+	Object.keys(cust).forEach(function (k) { if (cust[k] != null && cust[k] !== '') { c[k] = cust[k]; } });
+	c.provider_id = r.provider_id;
+	c.program_id = r.id;
+	c.energy_type = bval(view, 'energy_type');
+	c.category = bval(view, 'category');
+	if (r.price_type) { c.price_type = r.price_type; }
+	if (!c.customer_type) { c.customer_type = 'individual'; }
+
+	var file = advisor.file;
+	openEdit(c);
+	// Η φόρμα ανοίγει σε επόμενο tick (openEdit → setTimeout 30)· ο
+	// λογαριασμός μπαίνει στα έγγραφά της μετά από αυτό.
+	setTimeout(function () {
+		if (!window.ECRMForm) { return; }
+		if (file && window.ECRMForm.attach) { window.ECRMForm.attach([file], 'provider_bill'); }
+		// (331) Η εξοικονόμηση πάει στο «Τι λέω στον πελάτη» της φόρμας.
+		if (window.ECRMForm.advice) { window.ECRMForm.advice({ program_id: r.id, saving: r.saving }); }
+	}, 80);
+}
+
+function quotePdf(view, r, btn, d) {
+	if (!r) { return; }
+	var rule = r.rule || {};
+	var kwh = d.annual_kwh;
+	// Το PDF δείχνει τιμή και πάγιο: για κλιμάκια/πακέτα η ισοδύναμη μέση
+	// τιμή που δίνει το ίδιο ετήσιο κόστος.
+	var fixed = rule.kind === 'flat' ? +rule.fixed : (rule.kind === 'tiered' ? +rule.fixed : 0);
+	var price = rule.kind === 'flat' ? +rule.price_kwh : (kwh > 0 ? (r.annual - 12 * fixed) / kwh : 0);
+	var body = {
+		consumption: kwh,
+		current_price: +bval(view, 'price_kwh') || 0,
+		current_fixed: +bval(view, 'fixed_month') || 0,
+		offered_price: Math.round(price * 100000) / 100000,
+		offered_fixed: fixed,
+		customer_name: advisor.customer ? [advisor.customer.last_name, advisor.customer.first_name].filter(Boolean).join(' ') || advisor.customer.company_name || '' : '',
+		provider_name: r.provider,
+		program_name: r.name
+	};
+	var t = btn.innerHTML; btn.disabled = true; btn.textContent = 'Δημιουργία…';
+	fetch(api('/quote/pdf'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(body) })
+		.then(function (res) { return res.json(); })
+		.then(function (out) {
+			if (!out || !out.ok) { toast((out && out.error) || 'Αποτυχία.', false); return; }
+			var bin = atob(out.b64), arr = new Uint8Array(bin.length);
+			for (var i = 0; i < bin.length; i++) { arr[i] = bin.charCodeAt(i); }
+			var url = URL.createObjectURL(new Blob([arr], { type: out.mime || 'application/pdf' }));
+			var a = document.createElement('a'); a.href = url; a.download = out.filename || 'prosfora.pdf'; document.body.appendChild(a); a.click(); a.remove();
+			setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+		})
+		.catch(function () { toast('Σφάλμα δικτύου.', false); })
+		.finally(function () { btn.disabled = false; btn.innerHTML = t; });
 }

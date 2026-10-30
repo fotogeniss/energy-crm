@@ -168,6 +168,115 @@ class ECRM_Extractor {
 	}
 
 	/**
+	 * (328) Ένας λογαριασμός ρεύματος/αερίου για την πρόταση προγράμματος.
+	 *
+	 * Ξεχωριστό από την extract(): εκείνη γεμίζει πεδία πελάτη και ο
+	 * ExtractionController τα γράφει σε αίτηση. Εδώ δεν γράφεται τίποτα --
+	 * η πρόταση τρέχει ΠΡΙΝ υπάρξει αίτηση, και αν δεν γίνει αίτηση δεν
+	 * μένει ίχνος. Ζητά επιπλέον κατανάλωση, περίοδο και τιμές, που η
+	 * extract() δεν διαβάζει. Τα στοιχεία πελάτη επιστρέφονται για να
+	 * γεμίσουν τη φόρμα ΑΝ ο πωλητής πατήσει «Νέα αίτηση με αυτό».
+	 *
+	 * Οι αριθμοί επιστρέφονται ωμοί· τους καθαρίζει το Domain\Pricing\BillReading.
+	 *
+	 * @param array $file ['path'=>abs path, 'mime'=>mime]
+	 * @return array{ok:bool, bill?:array, customer?:array, error?:string}
+	 */
+	public static function read_bill( array $file ): array {
+		$api_key = self::api_key();
+		if ( empty( $api_key ) ) {
+			return [ 'ok' => false, 'error' => 'Δεν έχει οριστεί Claude API key. Ρυθμίσεις → Energy CRM.' ];
+		}
+
+		$block = self::file_to_block( $file );
+		if ( ! $block ) {
+			return [ 'ok' => false, 'error' => 'Το αρχείο δεν διαβάστηκε (μόνο PDF/JPG/PNG).' ];
+		}
+
+		$resp = wp_remote_post( self::API_URL, [
+			'timeout' => 30,
+			'headers' => [
+				'content-type'      => 'application/json',
+				'x-api-key'         => $api_key,
+				'anthropic-version' => self::API_VER,
+			],
+			'body'    => wp_json_encode( [
+				'model'      => self::model(),
+				'max_tokens' => 2048,
+				'messages'   => [
+					[
+						'role'    => 'user',
+						'content' => [
+							[ 'type' => 'text', 'text' => self::bill_prompt() ],
+							$block,
+						],
+					],
+				],
+			] ),
+		] );
+
+		if ( is_wp_error( $resp ) ) {
+			return [ 'ok' => false, 'error' => 'Σφάλμα σύνδεσης: ' . $resp->get_error_message() ];
+		}
+
+		$code = wp_remote_retrieve_response_code( $resp );
+		$json = json_decode( wp_remote_retrieve_body( $resp ), true );
+
+		if ( 200 !== $code ) {
+			$msg = $json['error']['message'] ?? ( 'HTTP ' . $code );
+			return [ 'ok' => false, 'error' => 'Claude API: ' . $msg ];
+		}
+
+		$text = '';
+		foreach ( ( $json['content'] ?? [] ) as $blk ) {
+			if ( 'text' === ( $blk['type'] ?? '' ) ) {
+				$text .= $blk['text'];
+			}
+		}
+
+		$data = self::parse_json( $text );
+		if ( null === $data ) {
+			return [ 'ok' => false, 'error' => 'Δεν επιστράφηκε έγκυρο JSON.' ];
+		}
+
+		return [
+			'ok'       => true,
+			'bill'     => is_array( $data['bill'] ?? null ) ? $data['bill'] : [],
+			'customer' => self::normalize( is_array( $data['customer'] ?? null ) ? $data['customer'] : [] ),
+		];
+	}
+
+	private static function bill_prompt(): string {
+		$keys = implode( ', ', self::fields() );
+		return <<<PROMPT
+Είσαι βοηθός πωλητή ενέργειας στην Ελλάδα. Θα σου δοθεί φωτογραφία ή PDF ενός λογαριασμού ρεύματος ή φυσικού αερίου. Διάβασέ τον για να συγκριθεί με άλλα προγράμματα.
+
+Επέστρεψε ΜΟΝΟ ένα JSON object, χωρίς markdown και χωρίς κείμενο πριν ή μετά, με δύο κλειδιά:
+- "bill": {energy_type, provider_name, category, period_from, period_to, period_days, kwh, price_kwh, fixed_month}
+- "customer": με κλειδιά ακριβώς αυτά: {$keys}
+
+Κανόνες για το "bill":
+- energy_type: "power" για ρεύμα, "gas" για φυσικό αέριο.
+- provider_name: ο πάροχος που εξέδωσε τον λογαριασμό (π.χ. ΔΕΗ, Ήρων, Elpedison, Protergia, ΕΠΑ Αττικής).
+- category: "home" αν είναι οικιακό τιμολόγιο (Γ1, Γ1Ν, οικιακό), "business" αν είναι επαγγελματικό (Γ21, Γ22, Γ23, επαγγελματικό).
+- period_from / period_to: η περίοδος κατανάλωσης, YYYY-MM-DD. period_days: οι ημέρες της περιόδου, αν γράφονται.
+- kwh: η κατανάλωση της περιόδου σε kWh, ως αριθμός. Αν υπάρχουν ημερήσια και νυχτερινή, το άθροισμα. Στο αέριο, η κατανάλωση σε kWh (όχι m³).
+- price_kwh: η τιμή ΠΡΟΜΗΘΕΙΑΣ ενέργειας ανά kWh σε €, ΠΡΙΝ από ΦΠΑ, μετά από τυχόν έκπτωση συνέπειας που εφαρμόστηκε στον λογαριασμό. ΟΧΙ ρυθμιζόμενες χρεώσεις (ΑΔΜΗΕ, ΔΕΔΔΗΕ, ΥΚΩ, ΕΤΜΕΑΡ), ΟΧΙ φόροι. Αν η τιμή γράφεται σε €/MWh, γύρισέ την σε €/kWh. Αν δεν γράφεται ανά kWh αλλά υπάρχει «Χρέωση Προμήθειας» σε € και η κατανάλωση, υπολόγισε χρέωση ενέργειας / kWh.
+- fixed_month: το πάγιο προμήθειας σε € ανά μήνα, χωρίς ΦΠΑ. Αν γράφεται για όλη την περίοδο, διαίρεσέ το με τους μήνες της περιόδου.
+- Ό,τι δεν γράφεται καθαρά: null. Οι αριθμοί ως JSON αριθμοί με τελεία για υποδιαστολή.
+
+Κανόνες για το "customer":
+- Τα στοιχεία του ΠΕΛΑΤΗ, όχι του παρόχου (αγνόησε επωνυμία, ΑΦΜ και διεύθυνση της εταιρείας στην κεφαλίδα).
+- Το όνομα γράφεται ΕΠΩΝΥΜΟ ΟΝΟΜΑ ΠΑΤΡΩΝΥΜΟ. supply_number: ο αριθμός παροχής. Διεύθυνση: της παροχής, σπασμένη σε street, street_no, city, region, postal_code.
+- customer_type: "individual", "sole_prop" ή "company" (Α.Ε., Ε.Π.Ε., Ι.Κ.Ε., Ο.Ε., Ε.Ε. → company και company_name).
+- Ό,τι δεν υπάρχει στον λογαριασμό: null. ΜΗΝ μαντεύεις.
+
+Παράδειγμα:
+{"bill":{"energy_type":"power","provider_name":"ΔΕΗ","category":"home","period_from":"2026-07-20","period_to":"2026-09-20","period_days":62,"kwh":640,"price_kwh":0.149,"fixed_month":5.0},"customer":{"customer_type":"individual","last_name":"ΠΑΠΑΔΟΠΟΥΛΟΣ","first_name":"ΓΕΩΡΓΙΟΣ","supply_number":"1 23456789 01 2","street":"ΕΡΜΟΥ","street_no":"15","city":"ΑΘΗΝΑ","postal_code":"10563"}}
+PROMPT;
+	}
+
+	/**
 	 * Τι ΕΙΝΑΙ το κάθε αρχείο -- όχι τι γράφει μέσα.
 	 *
 	 * Ξεχωριστή μέθοδος από την extract(), όχι επιπλέον κλειδί στο fields():

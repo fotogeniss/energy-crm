@@ -56,4 +56,21 @@ final class ContractTermTest extends TestCase
         self::assertNull(ContractTerm::endDate('   ', 12));
         self::assertSame('2027-03-03', ContractTerm::endDate('2026-03-03', 12, '  '));
     }
+
+    public function testActivationWithoutATermStartsTodayForTwelveMonths(): void
+    {
+        self::assertSame(
+            ['start_date' => '2026-10-30', 'term_months' => 12, 'end_date' => '2027-10-30'],
+            ContractTerm::onActivation(null, null, null, '2026-10-30')
+        );
+    }
+
+    public function testActivationKeepsWhatTheAgentTyped(): void
+    {
+        self::assertSame(
+            ['start_date' => '2026-11-01', 'term_months' => 24, 'end_date' => '2028-11-01'],
+            ContractTerm::onActivation('2026-11-01 00:00:00', 24, '', '2026-10-30')
+        );
+        self::assertNull(ContractTerm::onActivation('2026-11-01', 12, '2027-06-30', '2026-10-30'));
+    }
 }

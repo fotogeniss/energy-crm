@@ -94,6 +94,38 @@ final class GuaranteeSuggestRouteTest extends IntegrationTestCase
         self::assertSame(110.0, $data['amount']);
     }
 
+    public function testProtergiaGasTakesTheAmountFromTheMeterTable(): void
+    {
+        global $wpdb;
+
+        $seller = $this->makeCrmUser(Roles::SELLER);
+        $table  = Tables::name(Tables::PROVIDERS);
+        $id     = (int) $wpdb->get_var($wpdb->prepare('SELECT id FROM %i WHERE slug = %s', $table, 'protergia'));
+
+        if ($id <= 0) {
+            $wpdb->insert($table, ['slug' => 'protergia', 'name' => 'Protergia']);
+            $id = (int) $wpdb->insert_id;
+        }
+
+        // Ένας παλιός κανόνας «αέριο → 999» δεν νικά τον πίνακα της Protergia.
+        $this->makeRule(['provider_id' => $id, 'energy_type' => 'gas', 'amount' => 999]);
+        wp_set_current_user($seller);
+
+        $request = new WP_REST_Request('GET', self::ROUTE);
+        $request->set_query_params([
+            'provider_id' => $id, 'energy_type' => 'gas', 'category' => 'business',
+            'meter_type' => 'G6', 'payment_method' => 'manual',
+        ]);
+        $data = rest_do_request($request)->get_data();
+
+        self::assertSame(300.0, $data['amount']);
+        self::assertStringContainsString('G6', $data['reason']);
+
+        // Χωρίς μετρητή: αποφασίζουν πάλι οι κανόνες.
+        $request->set_query_params(['provider_id' => $id, 'energy_type' => 'gas', 'category' => 'business']);
+        self::assertSame(999.0, rest_do_request($request)->get_data()['amount']);
+    }
+
     public function testAnAnonymousRequestIsRejected(): void
     {
         wp_set_current_user(0);

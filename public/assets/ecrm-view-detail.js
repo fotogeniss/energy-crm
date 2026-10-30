@@ -477,6 +477,10 @@ function renderDetail(view, d) {
 		( c.status !== 'active' && c.status !== 'cancelled'
 			? '<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>'
 			: '' ) +
+		// (326) «+ Αέριο / + Ρεύμα στον ίδιο πελάτη»: το γεμίζει η
+		// fillCompanion() μόλις απαντήσει το /companion -- κουμπί, ή σύνδεσμος
+		// αν η δίδυμη αίτηση υπάρχει ήδη.
+		( c.energy_type === 'power' || c.energy_type === 'gas' ? '<div data-companion-slot></div>' : '' ) +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +
 		(c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-track="' + esc(c.track_url) + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg> Σύνδεσμος παρακολούθησης</button>' : '') +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-task-new="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέα εργασία</button>' +
@@ -494,6 +498,8 @@ function renderDetail(view, d) {
 				.catch(function () { toast('Σφάλμα δικτύου.', false); });
 		});
 	});
+
+	fillCompanion(view, c);
 
 	var dEdit = view.querySelector('[data-detail-edit]');
 	if (dEdit) dEdit.addEventListener('click', function () { openEdit(c); });
@@ -1233,4 +1239,54 @@ function downloadBinary(path, btn, busy, idle) {
 		})
 		.catch(function (err) { toast((err && err.message) || 'Σφάλμα δικτύου.', false); })
 		.finally(function () { btn.disabled = false; btn.innerHTML = idle || t; });
+}
+
+/**
+ * (326) Η δίδυμη αίτηση (αέριο από ρεύμα, ρεύμα από αέριο). Mockup:
+ * docs/UI-ADD-GAS.html. Αν υπάρχει ήδη, σύνδεσμος προς αυτήν· αν ο πάροχος
+ * δεν έχει προγράμματα του άλλου είδους, τίποτα.
+ */
+function fillCompanion(view, c) {
+	var slot = view.querySelector('[data-companion-slot]');
+	if (!slot) return;
+	var gas = c.energy_type === 'power';
+	var label = gas ? 'Αέριο' : 'Ρεύμα';
+	fetch(api('/contracts/' + c.id + '/companion'), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) return;
+			if (d.existing) {
+				var ex = d.existing;
+				slot.innerHTML = '<button type="button" class="ecrm-companion-link" data-companion-open="' + esc(ex.id) + '">' +
+					'<span>' + esc(label) + ': <b>' + esc(ex.code) + '</b>' + (ex.program_name ? ' · ' + esc(ex.program_name) : '') + '</span>' +
+					'<span class="ecrm-companion-link__go">Άνοιγμα →</span></button>';
+				slot.querySelector('[data-companion-open]').addEventListener('click', function () { openDetail(ex.id); });
+				return;
+			}
+			if (!d.available) return;
+			slot.innerHTML = '<button type="button" class="ecrm-btn ecrm-btn--companion" data-companion-add>' +
+				'<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true">' + (gas
+					? '<path d="M12 3c3 4 5 6.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-5 .5 1.5 1.5 2.5 3 3 0-3-1-5.5 0-8z"/>'
+					: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>') +
+				'</svg> + ' + esc(label) + ' στον ίδιο πελάτη</button>';
+			slot.querySelector('[data-companion-add]').addEventListener('click', function () {
+				var btn = this; btn.disabled = true;
+				addCompanion(c.id).finally(function () { btn.disabled = false; });
+			});
+		})
+		.catch(function () { /* χωρίς σύνδεση: απλώς δεν εμφανίζεται */ });
+}
+
+/** Φτιάχνει (ή βρίσκει) τη δίδυμη αίτηση και την ανοίγει στη φόρμα. */
+export function addCompanion(id) {
+	return fetch(api('/contracts/' + id + '/companion'), { method: 'POST', headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok || !d.contract_id) { toast((d && d.error) || 'Αποτυχία.', false); return; }
+			toast(d.existing ? 'Υπάρχει ήδη: ' + (d.code || '') + ' — άνοιξε για επεξεργασία.' : 'Δημιουργήθηκε ' + (d.code || '') + ' — συμπλήρωσε πρόγραμμα και μετρητή.');
+			return fetch(api('/contracts/' + d.contract_id), { headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (dd) { openEdit(dd.contract || dd); });
+		})
+		.catch(function () { toast('Σφάλμα δικτύου.', false); });
 }

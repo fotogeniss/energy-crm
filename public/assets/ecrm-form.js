@@ -10,7 +10,7 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 (function () {
 	'use strict';
 
-	var _editFn = null, _resetFn = null, _isDirtyFn = null;
+	var _editFn = null, _resetFn = null, _isDirtyFn = null, _attachFn = null, _adviceFn = null;
 
 	// Force fresh data: never serve our API calls from cache.
 	var _origFetch = window.fetch.bind(window);
@@ -1203,6 +1203,23 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		(function () {
 			var el = root.querySelector('[name="agreed_power"]');
 			if (el) { el.addEventListener('input', refreshGuaranteeSuggestion); el.addEventListener('change', refreshGuaranteeSuggestion); }
+			// (329) Ο πίνακας ΦΑ αλλάζει με τον μετρητή και την πάγια εντολή.
+			['gas_meter_type', 'payment_method'].forEach(function (n) {
+				var sel = root.querySelector('[name="' + n + '"]');
+				if (sel) { sel.addEventListener('change', refreshGuaranteeSuggestion); }
+			});
+		})();
+
+		// (331) Αντιγραφή του «Τι λέω» -- δεν στέλνει τίποτα μόνη της.
+		(function () {
+			var btn = q('[data-sales-script-copy]');
+			if (!btn) return;
+			btn.addEventListener('click', function () {
+				if (!salesScriptPlain) return;
+				if (navigator.clipboard) {
+					navigator.clipboard.writeText(salesScriptPlain).then(function () { toast('Αντιγράφηκε.'); }, function () { prompt('Αντιγραφή:', salesScriptPlain); });
+				} else { prompt('Αντιγραφή:', salesScriptPlain); }
+			});
 		})();
 
 		// «Χρήση»: η ΜΟΝΗ πράξη που γράφει στο πεδίο. Δένεται μία φορά -- το
@@ -1607,6 +1624,11 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		// διαφορετικές απαντήσεις σκόπιμα -- δες GuaranteeMatch (210) για γιατί.
 		var guaranteeSuggestT;
 		var guaranteeSuggestAmount = null;
+		function fieldVal(name) {
+			var el = root.querySelector('[name="' + name + '"]');
+			return el ? el.value : '';
+		}
+
 		function refreshGuaranteeSuggestion() {
 			var box = q('[data-guarantee-suggest]');
 			var text = q('[data-guarantee-suggest-text]');
@@ -1618,6 +1640,7 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 			if (!state.provider_id) {
 				box.hidden = true; box.classList.remove('is-used');
 				guaranteeSuggestAmount = null;
+				refreshSalesScript();
 				return;
 			}
 
@@ -1628,23 +1651,70 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 					'&program_id=' + (state.program_id || 0) +
 					'&energy_type=' + encodeURIComponent(state.energy_type || 'power') +
 					'&category=' + encodeURIComponent(state.category || 'home') +
-					'&agreed_power=' + encodeURIComponent(powerEl ? powerEl.value : '');
+					'&agreed_power=' + encodeURIComponent(powerEl ? powerEl.value : '') +
+					// (329) Αέριο: ο πίνακας ΦΑ θέλει μετρητή, πληρωμή και είδος αίτησης.
+					'&meter_type=' + encodeURIComponent(fieldVal('gas_meter_type')) +
+					'&payment_method=' + encodeURIComponent(fieldVal('payment_method')) +
+					'&activation_type=' + encodeURIComponent(state.activation_type || '');
 
 				fetch(api('/guarantee/suggest') + qs, { headers: headers() })
 					.then(function (r) { return r.json(); })
 					.then(function (d) {
 						box.classList.remove('is-used');
+						// (329) Ο πίνακας ΦΑ μπορεί να πει «δεν προβλέπεται»: χωρίς
+						// ποσό αλλά με λόγο -- φαίνεται, χωρίς κουμπί «Χρήση».
+						var why = d && d.reason ? ' <span class="ecrm-guarantee-suggest__why">' + esc(d.reason) + '</span>' : '';
+						if (d && d.ok && (d.amount === null || d.amount === undefined) && d.reason) {
+							guaranteeSuggestAmount = null;
+							text.innerHTML = why; btn.hidden = true; box.hidden = false; return;
+						}
 						if (!d || !d.ok || d.amount === null || d.amount === undefined) {
 							box.hidden = true; guaranteeSuggestAmount = null; return;
 						}
 						guaranteeSuggestAmount = d.amount;
 						text.innerHTML = 'Πρόταση: <span class="ecrm-guarantee-suggest__amt">' +
-							fmtEuro(d.amount) + ' €</span>';
+							fmtEuro(d.amount) + ' €</span>' + why;
 						btn.hidden = false;
 						box.hidden = false;
 					})
-					.catch(function () { box.hidden = true; guaranteeSuggestAmount = null; });
+					.catch(function () { box.hidden = true; guaranteeSuggestAmount = null; })
+					// (331) Η εγγύηση μπαίνει στο «Τι λέω στον πελάτη».
+					.then(refreshSalesScript, refreshSalesScript);
 			}, 400);
+		}
+
+		// (331) «Τι λέω στον πελάτη». Οι γραμμές έρχονται από τον server
+		// (Domain\Sales\SalesScript) για να λέγονται πάντα ίδια· εδώ μόνο
+		// escape και **έντονα** → <b>.
+		var salesScriptSeq = 0, salesScriptPlain = '';
+		function refreshSalesScript() {
+			var box = q('[data-sales-script]');
+			if (!box) return;
+			var pid = state.program_id;
+			if (!pid || ['power', 'gas'].indexOf(state.energy_type) < 0) { box.hidden = true; return; }
+
+			var advice = state.advice && +state.advice.program_id === +pid ? state.advice.saving : '';
+			var qs = '?payment_method=' + encodeURIComponent(fieldVal('payment_method')) +
+				'&guarantee=' + encodeURIComponent(guaranteeSuggestAmount == null ? '' : guaranteeSuggestAmount) +
+				'&saving=' + encodeURIComponent(advice == null ? '' : advice);
+			var seq = ++salesScriptSeq;
+
+			fetch(api('/programs/' + pid + '/script') + qs, { headers: headers() })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (seq !== salesScriptSeq) return;
+					if (!d || !d.ok || !d.lines || !d.lines.length) { box.hidden = true; return; }
+					q('[data-sales-script-label]').textContent = d.label || '';
+					q('[data-sales-script-lines]').innerHTML = d.lines.map(function (l) {
+						var html = esc(l.text).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+						return '<li class="is-' + (l.tone === 'warn' ? 'warn' : 'ok') + '"><span aria-hidden="true">' +
+							(l.tone === 'warn' ? '!' : '✓') + '</span><span>' + html + '</span></li>';
+					}).join('');
+					q('[data-sales-script-note]').hidden = !d.missing_price;
+					salesScriptPlain = d.plain || '';
+					box.hidden = false;
+				})
+				.catch(function () { if (seq === salesScriptSeq) box.hidden = true; });
 		}
 
 		function fmtEuro(n) {
@@ -1930,6 +2000,7 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		function resetForm() {
 			dirty = false;
 			state.contract_id = 0; state.customer_id = 0; state.extracted_json = null;
+			state.advice = null;
 			state.request_id = requestId();
 			// (279) Αν το άνοιγμα μιας επεξεργασίας φάρδυνε προσωρινά τη λίστα
 			// (ensureProviderVisible()) για να δείξει έναν πάροχο που ο χρήστης
@@ -1992,6 +2063,7 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 			state.wmax = 1; goStep(1, false);
 		}
 
+		_adviceFn = function (a) { state.advice = a || null; refreshSalesScript(); };
 		_editFn = applyEdit; _resetFn = resetForm; _isDirtyFn = function () { return dirty; };
 
 		// dropzone
@@ -2141,6 +2213,18 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		var extractionRunning = false;
 		var extractedFor = '';
 		var autoTimer = null;
+		var skipAutoOnce = false;
+
+		// (328) «Νέα αίτηση με αυτό» από την πρόταση: ο λογαριασμός μπαίνει
+		// στα έγγραφα με το σωστό είδος, χωρίς να ξαναδιαβαστεί.
+		_attachFn = function (files, kind) {
+			var list = Array.prototype.slice.call(files || []);
+			if (!list.length) return;
+			skipAutoOnce = true;
+			addFiles(list);
+			state.files.forEach(function (item) { if (kind && list.indexOf(item.file) > -1) { item.kind = kind; } });
+			renderFiles();
+		};
 
 		// Identity of the current document set, so an automatic pass never
 		// repeats over files it has already read.
@@ -2156,6 +2240,10 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		function scheduleExtraction() {
 			clearTimeout(autoTimer);
 			if (!state.files.length || shrinking > 0) return;
+			// (328) Λογαριασμός που ήρθε από την πρόταση: τον έχει ήδη διαβάσει
+			// το AI και τα πεδία είναι γεμάτα. Δεύτερη αυτόματη ανάγνωση θα
+			// πλήρωνε ξανά για τα ίδια· το κουμπί μένει για όποιον τη θέλει.
+			if (skipAutoOnce) { skipAutoOnce = false; extractedFor = filesSignature(); return; }
 			if (filesSignature() === extractedFor) return;
 			// Long enough for someone dropping three files in a row to end up
 			// with one reading rather than three.
@@ -2566,8 +2654,8 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		// ετικέτα δεν προσθέτει τίποτα πια. Ένας delegated listener στη ρίζα,
 		// όχι ένας ανά πεδίο, γιατί τα πεδία που γεμίζει το AI αλλάζουν κάθε φορά.
 		root.addEventListener('input', function (e) {
-			var field = e.target.closest && e.target.closest('.ecrm-field.ai-mark, .ecrm-field.scan-mark');
-			if (field) { field.classList.remove('ai-mark'); field.classList.remove('scan-mark'); }
+			var field = e.target.closest && e.target.closest('.ecrm-field.ai-mark, .ecrm-field.scan-mark, .ecrm-field.aade-mark');
+			if (field) { field.classList.remove('ai-mark'); field.classList.remove('scan-mark'); field.classList.remove('aade-mark'); }
 		});
 
 		// Supply / billing address: ticked means "same as the customer's", and
@@ -2595,34 +2683,82 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		// με το χέρι.
 
 		// ΑΦΜ lookup via EU VIES (auto-fills επωνυμία + διεύθυνση).
+		/*
+		 * (327) Αναζήτηση ΑΦΜ: ΑΑΔΕ πρώτα (Δ.Ο.Υ., νομική μορφή, Κ.Α.Δ.,
+		 * δραστηριότητα, διεύθυνση, αν είναι ενεργή), VIES αν λείπουν οι
+		 * κωδικοί ή η ΑΑΔΕ δεν απαντά -- αποφασίζει ο server. Mockup:
+		 * docs/UI-AFM-AADE.html. Γεμίζει ΜΟΝΟ άδεια πεδία (ως τις 30/10 η
+		 * επωνυμία σβηνόταν πάντα) και τα σημαδεύει «ΑΑΔΕ» ώσπου να τα αγγίξει
+		 * ο πωλητής. Ό,τι είχε γράψει και διαφέρει μένει, με σημείωση.
+		 */
 		var afmBtn = root.querySelector('[data-afm-search]');
+		var afmResult = q('[data-afm-result]');
+		function showAfmResult(kind, head, sub) {
+			if (!afmResult) return;
+			afmResult.hidden = false;
+			afmResult.className = 'ecrm-afmres is-' + kind;
+			afmResult.innerHTML = '<div class="ecrm-afmres__h">' + esc(head) + '</div>' + (sub ? '<div class="ecrm-afmres__s">' + esc(sub) + '</div>' : '');
+		}
 		if (afmBtn) afmBtn.addEventListener('click', function () {
 			var afm = readField('afm');
-			if (!afm || !validAfm(afm)) { toast('Δώσε έγκυρο ΑΦΜ πρώτα.', false); fieldNote(afmEl, 'Μη έγκυρο ΑΦΜ.', 'err'); return; }
-			var b = this; b.disabled = true; var t = b.textContent; b.textContent = '...';
+			if (!afm || !validAfm(afm)) {
+				fieldNote(afmEl, 'Μη έγκυρο ΑΦΜ.', 'err');
+				showAfmResult('warn', 'Μη έγκυρο ΑΦΜ', 'Το ψηφίο ελέγχου δεν ταιριάζει — μάλλον λάθος πληκτρολόγηση. Δεν έγινε αναζήτηση.');
+				return;
+			}
+			var b = this; b.disabled = true;
 			fetch(api('/lookup/afm') + '?afm=' + encodeURIComponent(afm), { headers: headers(false) })
 				.then(function (r) { return r.json(); })
 				.then(function (d) {
-					if (!d || !d.ok) { toast((d && d.error) || 'Αποτυχία αναζήτησης.', false); return; }
-					if (!d.valid) { toast('Το ΑΦΜ δεν βρέθηκε ενεργό στο μητρώο VIES.', false); return; }
-					function fill(name, val) { var el = root.querySelector('[name="' + name + '"]'); if (el && val && !el.value) el.value = val; }
-					if (d.name) {
-						// reveal company fields by triggering the existing chip handler
-						var chip = root.querySelector('.ecrm-chips[data-field="customer_type"] .ecrm-chip[data-val="company"]');
-						if (chip) chip.click();
-						var ce = root.querySelector('[name="company_name"]');
-						if (ce) ce.value = d.name;
+					if (!d || !d.ok) { showAfmResult('warn', 'Η αναζήτηση απέτυχε', (d && d.error) || 'Συμπλήρωσε τα στοιχεία με το χέρι.'); return; }
+					if (!d.valid) {
+						showAfmResult('warn', 'Το ΑΦΜ δεν βρέθηκε', d.source === 'aade' ? 'Η ΑΑΔΕ δεν έχει επιχείρηση με αυτό το ΑΦΜ.' : 'Δεν βρέθηκε ενεργό στο μητρώο VIES.');
+						return;
 					}
-					if (d.parsed) {
-						fill('street', d.parsed.street);
-						fill('street_no', d.parsed.street_no);
-						fill('postal_code', d.parsed.postal_code);
-						fill('city', d.parsed.city);
+					var fields = d.fields || {};
+					// Φυσικό πρόσωπο → εταιρεία, ώστε να φανούν τα πεδία της. Η
+					// ατομική επιχείρηση μένει ατομική: έχει ήδη τα ίδια πεδία.
+					if (fields.company_name) {
+						var on = root.querySelector('.ecrm-chips[data-field="customer_type"] .ecrm-chip.is-on');
+						if (!on || on.getAttribute('data-val') === 'individual') {
+							var chip = root.querySelector('.ecrm-chips[data-field="customer_type"] .ecrm-chip[data-val="company"]');
+							if (chip) chip.click();
+						}
 					}
-					toast('Βρέθηκε: ' + (d.name || 'έγκυρο ΑΦΜ') + (d.address ? ' — ' + d.address : ''));
+					var filled = 0, kept = [];
+					Object.keys(fields).forEach(function (name) {
+						var input = root.querySelector('.ecrm-input[name="' + name + '"]');
+						if (!input || !fields[name]) return;
+						var field = input.closest('.ecrm-field');
+						var cur = input.value.trim();
+						if (cur !== '') {
+							if (cur.toUpperCase() !== String(fields[name]).toUpperCase()) {
+								kept.push((field && field.querySelector('.ecrm-field__label') ? field.querySelector('.ecrm-field__label').textContent.replace('*', '').trim() : name));
+								fieldNote(input, 'Το είχες γράψει — δεν άλλαξε (' + (d.source === 'aade' ? 'ΑΑΔΕ' : 'VIES') + ': ' + fields[name] + ')', 'warn');
+							}
+							return;
+						}
+						input.value = fields[name];
+						input.dispatchEvent(new Event('input', { bubbles: true }));
+						if (field) {
+							field.classList.remove('ai-mark', 'scan-mark');
+							field.classList.add(d.source === 'aade' ? 'aade-mark' : 'ai-mark');
+						}
+						filled++;
+					});
+					var src = d.source === 'aade' ? 'την ΑΑΔΕ' : 'το VIES';
+					var sub = filled ? 'Συμπληρώθηκαν ' + filled + ' πεδία από ' + src : 'Κανένα άδειο πεδίο για συμπλήρωση';
+					if (kept.length) sub += ' · κρατήθηκε όπως το έγραψες: ' + kept.join(', ');
+					if (d.note) sub = d.note + ' ' + sub;
+					var warnings = d.warnings || [];
+					if (warnings.length) {
+						showAfmResult('warn', '⚠ ' + warnings[0], (d.name ? d.name + ' · ' : '') + sub);
+					} else {
+						showAfmResult(d.source === 'aade' ? 'ok' : 'plain', (d.source === 'aade' ? '✓ Ενεργή επιχείρηση · ' : 'Από VIES · ') + (d.name || afm), sub);
+					}
 				})
-				.catch(function () { toast('Σφάλμα δικτύου.', false); })
-				.finally(function () { b.disabled = false; b.textContent = t; });
+				.catch(function () { showAfmResult('warn', 'Σφάλμα δικτύου', 'Συμπλήρωσε τα στοιχεία με το χέρι ή δοκίμασε ξανά.'); })
+				.finally(function () { b.disabled = false; });
 		});
 
 		// --- Live validation: ΑΦΜ check digit + soft supply check ---
@@ -2994,6 +3130,27 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 				.catch(function () { btn.style.opacity = ''; toast('Σφάλμα δικτύου.', false); });
 		}
 
+		// (326) Η δίδυμη αίτηση (αέριο από ρεύμα, ρεύμα από αέριο): ο server
+		// τη φτιάχνει -- ή επιστρέφει την υπάρχουσα -- και ανοίγει εδώ, στη
+		// θέση της τρέχουσας, που μόλις αποθηκεύτηκε από το ensureSaved().
+		function addCompanion(btn) {
+			var id = state.contract_id;
+			btn.disabled = true;
+			fetch(api('/contracts/' + id + '/companion'), { method: 'POST', headers: headers(true) })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (!d || !d.ok || !d.contract_id) { throw new Error((d && d.error) || 'Αποτυχία.'); }
+					toast(d.existing
+						? 'Υπάρχει ήδη: ' + (d.code || '') + ' -- άνοιξε για επεξεργασία.'
+						: 'Δημιουργήθηκε ' + (d.code || '') + ' -- συμπλήρωσε πρόγραμμα και μετρητή.');
+					return fetch(api('/contracts/' + d.contract_id), { headers: headers(false) })
+						.then(function (r) { return r.json(); })
+						.then(function (dd) { applyEdit(dd.contract || dd); });
+				})
+				.catch(function (e) { toast((e && e.message) || 'Σφάλμα δικτύου.', false); })
+				.finally(function () { btn.disabled = false; });
+		}
+
 		qa('[data-act]').forEach(function (b) {
 			b.addEventListener('click', function () {
 				var act = this.getAttribute('data-act'); var btn = this;
@@ -3002,6 +3159,7 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 					if (act === 'pdf') openPdf(btn, win);
 					else if (act === 'email') sendSignEmail(btn);
 					else if (act === 'livelink') makeLiveLink(btn);
+					else if (act === 'companion') addCompanion(btn);
 				});
 			});
 		});
@@ -3011,6 +3169,9 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		init: initForm,
 		edit: function (c) { if (_editFn) _editFn(c); },
 		reset: function () { if (_resetFn) _resetFn(); },
+		attach: function (files, kind) { if (_attachFn) _attachFn(files, kind); },
+		// (331) Η εξοικονόμηση από την «Πρόταση από λογαριασμό», για το «Τι λέω».
+		advice: function (a) { if (_adviceFn) _adviceFn(a); },
 		// Το κλείσιμο/άνοιγμα άλλης σύμβασης ενώ η φόρμα έχει αχρωμάτιστες
 		// αλλαγές (dirty) περνάει από εδώ πριν καλέσει reset()/edit() πάνω
 		// της -- βλ. ecrm-app.js, τα δύο σημεία που καλούν reset() για να

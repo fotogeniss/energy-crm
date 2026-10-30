@@ -52,7 +52,9 @@ function renderNetwork(view, partners, flash) {
 		'<span><a href="#" class="ecrm-plink" data-pall>Ολοι</a><a href="#" class="ecrm-plink" data-pnone>Κανένας</a></span></div>' +
 		'<div data-newprov-chips></div>' +
 		'<div class="ecrm-hint" data-newprov-hint hidden>Βλέπεις μόνο όσους παρόχους έχεις κι εσύ.</div>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-invite>+ Πρόσκληση</button>' +
+		'<div class="ecrm-addform__foot">' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-invite>Δημιουργία υποσυνεργάτη</button>' +
+		'<span class="ecrm-hint">Θα του σταλεί email με σύνδεσμο για να ορίσει κωδικό.</span></div>' +
 		'<div class="ecrm-ai-status" data-invite-msg></div></div>';
 
 	view.innerHTML = head + (flash ? '<div class="ecrm-import-banner is-ok">' + esc(flash) + '</div>' : '') + bodyCard + inviteForm + '<div class="ecrm-card" data-bulkwrap hidden></div>';
@@ -104,6 +106,9 @@ function renderNetwork(view, partners, flash) {
 		renderBulk(w, loadProviders);
 	});
 	var inv = view.querySelector('[data-invite]');
+	view.querySelectorAll('[data-invitewrap] .ecrm-input').forEach(function (el) {
+		el.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && inv && !inv.disabled) { ev.preventDefault(); inv.click(); } });
+	});
 	if (inv) inv.addEventListener('click', function () {
 		var b = this;
 		var get = function (f) { var el = view.querySelector('[data-nf="' + f + '"]'); return el ? el.value.trim() : ''; };

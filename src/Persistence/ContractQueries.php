@@ -162,6 +162,65 @@ final class ContractQueries
     }
 
     /**
+     * (326) Η δίδυμη αίτηση: ίδιος πελάτης, ίδιος πάροχος, το άλλο είδος
+     * ενέργειας, όχι ακυρωμένη. Για να μη φτιάξει ο πωλητής δεύτερη κατά
+     * λάθος -- η καρτέλα δείχνει σύνδεσμο αντί για κουμπί.
+     *
+     * @return array{id: int, code: string, status: string, program_name: string}|null
+     */
+    public function companion(
+        UserScope $scope,
+        int $customerId,
+        int $providerId,
+        string $energy,
+        int $excludeId
+    ): ?array {
+        global $wpdb;
+
+        if ($customerId <= 0 || $providerId <= 0 || $energy === '') {
+            return null;
+        }
+
+        [$clause, $scopeParams] = ScopeClause::forScope($scope, 'c');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var array<string, mixed>|null $row */
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT c.id, c.code, c.status, g.name AS program_name
+                 FROM %i c
+                 LEFT JOIN %i g ON g.id = c.program_id
+                 WHERE c.customer_id = %d AND c.provider_id = %d AND c.energy_type = %s
+                   AND c.status <> 'cancelled' AND c.id <> %d{$clause}
+                 ORDER BY c.id DESC
+                 LIMIT 1",
+                [
+                    $this->table,
+                    Tables::name(Tables::PROGRAMS),
+                    $customerId,
+                    $providerId,
+                    $energy,
+                    $excludeId,
+                    ...$scopeParams,
+                ]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        if (! $row) {
+            return null;
+        }
+
+        return [
+            'id'           => (int) $row['id'],
+            'code'         => (string) ($row['code'] ?? ''),
+            'status'       => (string) ($row['status'] ?? ''),
+            'program_name' => (string) ($row['program_name'] ?? ''),
+        ];
+    }
+
+    /**
      * Συμβάσεις που έχουν τουλάχιστον ένα ανεβασμένο έγγραφο -- για την οθόνη
      * «Έγγραφα» (243), που δείχνει ΤΙ έχει ανέβει και τι έχει διαβαστεί, όχι
      * μόνο τι λείπει (αυτό το κάνει ήδη το ECRM_Notifications::missing_docs_for()).

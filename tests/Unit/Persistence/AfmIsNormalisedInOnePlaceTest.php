@@ -36,6 +36,10 @@ final class AfmIsNormalisedInOnePlaceTest extends TestCase
             'normalize_phone(): τηλέφωνο, όχι ΑΦΜ. Άλλη έννοια, άλλοι κανόνες '
             . '(κωδικός χώρας, μήκος), και δεν μπαίνει σε blind index.',
 
+        'src/Domain/Customer/AadeRegistry.php' =>
+            'kad(): Κ.Α.Δ. (κωδικός δραστηριότητας) από την απάντηση της ΑΑΔΕ, '
+            . 'όχι ΑΦΜ -- κρατά τα ψηφία για να βάλει τελείες ανά δύο (327).',
+
         'src/Domain/Address/PostalLookup.php' =>
             'digits(): Ταχυδρομικός Κώδικας, όχι ΑΦΜ. Κόβει μη-ψηφία για να πάρει '
             . 'το 5ψήφιο ΤΚ από ελεύθερο κείμενο (CHANGELOG (216)) -- δεν αγγίζει '

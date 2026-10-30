@@ -65,6 +65,19 @@ final class HealthChecks
             }),
         ];
 
+        // (327) Οι ειδικοί κωδικοί της ΑΑΔΕ για την αναζήτηση ΑΦΜ. Χωρίς αυτούς
+        // δεν σπάει τίποτα: η αναζήτηση πέφτει στο VIES (επωνυμία, διεύθυνση).
+        $aade = \EnergyCRM\Services::aade();
+        $calls = $aade->callsThisMonth() . ' αναζητήσεις αυτόν τον μήνα.';
+        $state = $aade->configured() ? $aade->isPinned() : null;
+        $out[] = self::row('Μυστικά', 'Κωδικοί ΑΑΔΕ (αναζήτηση μητρώου)', $state, match (true) {
+            ! $aade->configured() => 'Λείπουν. Η αναζήτηση ΑΦΜ χρησιμοποιεί μόνο το VIES (επωνυμία, διεύθυνση). '
+                . 'Βάλε ECRM_AADE_USERNAME / ECRM_AADE_PASSWORD (ειδικοί κωδικοί ΑΑΔΕ) στο wp-config.php.',
+            $aade->isPinned()     => 'Καρφωμένοι εκτός βάσης. ' . $calls,
+            default               => 'Αποθηκευμένοι κρυπτογραφημένοι στη ΒΑΣΗ. Προτίμησε σταθερές στο wp-config.php. '
+                . $calls,
+        });
+
         // Το wp-config μπορεί να ζει ένα επίπεδο πάνω από τον web root· το
         // WordPress το ψάχνει και εκεί. Τότε δεν το σερβίρει ποτέ ο server.
         $inRoot = file_exists(ABSPATH . 'wp-config.php');

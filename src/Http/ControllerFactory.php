@@ -123,6 +123,15 @@ final class ControllerFactory
                 Services::events(),
                 Services::providerVisibility(),
             ),
+            // (326) «+ Αέριο / + Ρεύμα στον ίδιο πελάτη».
+            new CompanionController(
+                $scope,
+                Services::contracts(),
+                $queries,
+                Services::events(),
+                Services::providerVisibility(),
+                Services::providers(),
+            ),
 
             // Signing. Ο σύνδεσμος ΕΙΝΑΙ το tracking URL — δεν υπάρχει δεύτερο
             // token να λήξει ή να διαρρεύσει, και ο SigningController που
@@ -217,9 +226,18 @@ final class ControllerFactory
                 Services::customers(),
                 Services::leads()
             ),
-            new VatLookupController(),
+            new VatLookupController(Services::aade()),
+            // (331) «Τι λέω στον πελάτη».
+            new SalesScriptController($scope, Services::providerVisibility(), Services::providers()),
+            // (328) Πρόταση προγράμματος από λογαριασμό.
+            new BillAdvisorController(
+                Services::extractionGate(),
+                $scope,
+                Services::providerVisibility(),
+                Services::providers(),
+            ),
             new QuoteController(),
-            new GuaranteeSuggestController(new GuaranteeRuleRepository()),
+            new GuaranteeSuggestController(new GuaranteeRuleRepository(), Services::providers()),
             new PostalSuggestController(),
         ];
     }

@@ -48,6 +48,56 @@ final class ContractTransitions
     }
 
     /**
+     * (330) Είδος ενέργειας και διάρκεια -- για το `ActivationTerm`.
+     *
+     * @return array{energy_type: string, start_date: ?string, term_months: ?int, end_date: ?string}|null
+     */
+    public function termOf(int $contractId): ?array
+    {
+        global $wpdb;
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT energy_type, start_date, term_months, end_date FROM %i WHERE id = %d',
+                $this->table,
+                $contractId
+            ),
+            ARRAY_A
+        );
+
+        if (! is_array($row)) {
+            return null;
+        }
+
+        return [
+            'energy_type' => (string) ($row['energy_type'] ?? ''),
+            'start_date'  => self::date($row['start_date'] ?? null),
+            'term_months' => (int) ($row['term_months'] ?? 0) > 0 ? (int) $row['term_months'] : null,
+            'end_date'    => self::date($row['end_date'] ?? null),
+        ];
+    }
+
+    /**
+     * (330) Γράφει έναρξη, διάρκεια και λήξη.
+     *
+     * @param array{start_date: string, term_months: int, end_date: string} $term
+     */
+    public function writeTerm(int $contractId, array $term): void
+    {
+        global $wpdb;
+
+        $wpdb->update($this->table, $term, ['id' => $contractId]);
+    }
+
+    /** Η MySQL μπορεί να δώσει «0000-00-00» για κενή ημερομηνία. */
+    private static function date(mixed $value): ?string
+    {
+        $value = is_string($value) ? trim($value) : '';
+
+        return $value === '' || str_starts_with($value, '0000') ? null : $value;
+    }
+
+    /**
      * Ποια λίστα καταστάσεων ισχύει για τη σύμβαση (`StatusTrack`), ή null
      * όταν δεν υπάρχει τέτοια σύμβαση.
      */

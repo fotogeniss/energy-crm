@@ -390,6 +390,11 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-drail { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 76px; }
 .ecrm-drail__acts { display: flex; flex-direction: column; gap: 8px; }
 .ecrm-drail__acts .ecrm-btn { width: 100%; justify-content: flex-start; }
+/* (326) Η δίδυμη αίτηση: κουμπί, ή σύνδεσμος όταν υπάρχει ήδη. */
+.ecrm-btn--companion { background: var(--cat-teal-bg); border: 1px solid var(--cat-teal); color: var(--cat-teal); }
+.ecrm-companion-link { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px; background: var(--cat-teal-bg); color: var(--ink); font: inherit; font-size: var(--fs-12-5); text-align: left; cursor: pointer; }
+.ecrm-companion-link b { color: var(--cat-teal); }
+.ecrm-companion-link__go { margin-left: auto; color: var(--cat-teal); font-weight: 800; white-space: nowrap; }
 .ecrm-rcard.is-ok { border-color: var(--accent-soft); background: var(--accent-wash); }
 /* Η κάρτα audit ΔΕΝ παίρνει την πράσινη πλύση, και το λάθος το είδα σε
    screenshot αφού το είχα ήδη γράψει. Το --accent-wash σημαίνει ΕΝΑ πράγμα σε
@@ -1028,6 +1033,47 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-calc__save span { font-size:var(--fs-14); font-weight:600; }
 .ecrm-calc__save strong { font-size:var(--fs-26); } .ecrm-calc__save small { font-size:var(--fs-15); opacity:.8; }
 .ecrm-calc__actions { margin-top:16px; }
+/* (328) Πρόταση από λογαριασμό -- docs/UI-BILL-ADVISOR.html */
+.ecrm-bill__step { font-weight:800; font-size:var(--fs-11); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:4px 0 10px; }
+.ecrm-bill__drop { border:2px dashed var(--line-strong); border-radius:14px; padding:18px; text-align:center; background:var(--surface); margin-bottom:14px; }
+.ecrm-bill__drop.is-over { border-color:var(--accent-deep); background:var(--accent-wash); }
+.ecrm-bill__drop > b { display:block; font-weight:800; font-size:var(--fs-15); color:var(--ink); }
+.ecrm-bill__drop > span { font-size:var(--fs-12-5); color:var(--muted); }
+.ecrm-bill__picks { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+.ecrm-bill__consent { display:flex; gap:8px; align-items:flex-start; font-size:var(--fs-12); color:var(--muted); margin-top:12px; text-align:left; cursor:pointer; }
+.ecrm-bill__consent input { margin-top:2px; }
+.ecrm-bill__status { font-size:var(--fs-12-5); color:var(--accent-ink); margin-top:8px; min-height:1em; }
+.ecrm-bill__status.is-bad { color:var(--st-cancel); }
+.ecrm-bill__read { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px 10px; margin-bottom:14px; }
+.ecrm-bill__read .ecrm-field { display:flex; flex-direction:column; gap:4px; }
+.ecrm-bill__read .ecrm-field > span { font-size:var(--fs-11); font-weight:700; color:var(--muted); }
+.ecrm-bill__read .is-missing { border-color:var(--st-pending); background:var(--st-pending-bg); }
+.ecrm-bill__cur { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:var(--fs-12-5); color:var(--muted); padding:4px 2px 10px; border-bottom:1px solid var(--line-soft); margin-bottom:10px; }
+.ecrm-bill__cur b { color:var(--ink); }
+.ecrm-bill__rank { border:1px solid var(--line-card); border-radius:12px; padding:12px 14px; margin-bottom:8px; display:grid; grid-template-columns:28px 1fr auto; gap:10px 12px; align-items:center; background:var(--surface); }
+.ecrm-bill__rank.is-best { border-color:var(--amber); box-shadow:0 0 0 3px var(--accent-wash-2); }
+.ecrm-bill__n { width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font-weight:800; font-size:var(--fs-13); background:var(--surface-sunk); color:var(--ink); }
+.ecrm-bill__rank.is-best .ecrm-bill__n { background:var(--amber); color:var(--on-accent); }
+.ecrm-bill__nm { font-weight:800; font-size:var(--fs-14); color:var(--ink); line-height:1.3; }
+.ecrm-bill__mt { font-size:var(--fs-12); color:var(--muted); margin-top:2px; }
+.ecrm-bill__sv { text-align:right; }
+.ecrm-bill__sv b { display:block; font-weight:800; font-size:var(--fs-16); color:var(--st-active); }
+.ecrm-bill__sv b.is-neg { color:var(--st-cancel); }
+.ecrm-bill__sv span { font-size:var(--fs-11-5); color:var(--muted); }
+.ecrm-bill__acts { grid-column:2 / 4; display:flex; gap:8px; flex-wrap:wrap; }
+.ecrm-bill__pill { display:inline-block; border-radius:999px; padding:1px 8px; font-weight:800; font-size:var(--fs-10); margin-left:4px; vertical-align:middle; }
+.ecrm-bill__pill.is-fx { background:var(--st-new-bg); color:var(--st-new); }
+.ecrm-bill__pill.is-vr { background:var(--st-pending-bg); color:var(--st-pending); }
+.ecrm-bill__pill.is-old { background:var(--st-cancel-bg); color:var(--st-cancel); }
+.ecrm-bill__miss { font-size:var(--fs-12-5); color:var(--muted); padding:10px 2px; }
+.ecrm-bill__miss summary { cursor:pointer; color:var(--cat-teal); font-weight:800; }
+.ecrm-bill__miss ul { margin:8px 0 6px 18px; padding:0; }
+@media (max-width:700px) {
+	.ecrm-bill__read { grid-template-columns:1fr 1fr; }
+	.ecrm-bill__rank { grid-template-columns:28px 1fr; }
+	.ecrm-bill__sv { grid-column:2; text-align:left; }
+	.ecrm-bill__acts { grid-column:1 / 3; }
+}
 @media (max-width:640px){ .ecrm-calc__grid, .ecrm-calc__cols, .ecrm-calc__cmp { grid-template-columns:1fr; } }
 
 /* GDPR consent chip (detail) */
