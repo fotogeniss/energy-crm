@@ -58,6 +58,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-team-live'   => 'ecrm-view-team-live.js',
 		'@energy-crm/view-escalations' => 'ecrm-view-escalations.js',
 		'@energy-crm/tickets'          => 'ecrm-tickets.js',
+		'@energy-crm/photo-check'      => 'ecrm-photo-check.js',
 		// Ειχε ξεχαστει απο εδω στο (243) -- το ecrm-app.js το εισαγε, ο
 		// browser δεν μπορουσε να λυσει το bare specifier χωρις καταχωρηση, και
 		// πεταγε ΟΛΟΚΛΗΡΟ το ecrm-app.js: καθε οθονη εμενε στο «Φορτωση…».
@@ -85,6 +86,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/navigate',
 			'@energy-crm/dialog',
 			'@energy-crm/ai-docs',
+			'@energy-crm/photo-check',
 		],
 		'@energy-crm/view-contracts'   => [
 			'@energy-crm/util',
@@ -146,7 +148,9 @@ class ECRM_Shortcodes {
 			'@energy-crm/navigate',
 			'@energy-crm/queue',
 			'@energy-crm/ai-docs',
+			'@energy-crm/photo-check',
 		],
+		'@energy-crm/photo-check'      => [],
 		'@energy-crm/app'              => [
 			'@energy-crm/util',
 			'@energy-crm/navigate',

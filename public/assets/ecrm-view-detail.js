@@ -13,6 +13,7 @@ import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint } from '@energy-
 import { go, openEdit } from '@energy-crm/navigate';
 import { confirmTyped, confirmTypedWithReason, openDialog } from '@energy-crm/dialog';
 import { storedForAi } from '@energy-crm/ai-docs';
+import { checkPhoto } from '@energy-crm/photo-check';
 
 function copyText(text) {
 	text = String(text == null ? '' : text);
@@ -1024,6 +1025,19 @@ function renderDetail(view, d) {
 		docupRows.innerHTML = out;
 		var rows = docupRows.querySelectorAll('[data-docup-row]');
 		for (var r = 0; r < rows.length; r++) { syncRowExpiry(rows[r]); bindRowExpiry(rows[r]); }
+
+		// (340) Έλεγχος φωτογραφίας: εδώ μόνο προειδοποίηση κάτω από τη γραμμή
+		// -- ο πωλητής διαλέγει άλλη εικόνα ή ανεβάζει όπως είναι.
+		Array.prototype.forEach.call(files, function (file, n) {
+			checkPhoto(file).then(function (res) {
+				var row = docupRows.querySelector('[data-docup-row="' + n + '"]');
+				if (!row || !res.problems.length || docupFile.files[n] !== file) return;
+				var note = document.createElement('div');
+				note.className = 'ecrm-docup__qa';
+				note.textContent = res.problems.map(function (p) { return p.text; }).join(' ');
+				row.appendChild(note);
+			});
+		});
 	}
 
 	function syncRowExpiry(row) {

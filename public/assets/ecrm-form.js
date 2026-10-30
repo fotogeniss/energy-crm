@@ -3,6 +3,7 @@ import { enqueueContract, enqueueFiles, forget } from '@energy-crm/queue';
 import { energyLabel } from '@energy-crm/format';
 import { openCustomerContracts } from '@energy-crm/navigate';
 import { firstPages, storedForAi } from '@energy-crm/ai-docs';
+import { checkPhoto } from '@energy-crm/photo-check';
 
 /* Energy CRM — New Contract form behaviour.
  * Exposes window.ECRMForm.init(rootEl) so it can run standalone OR inside the
@@ -2214,7 +2215,15 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		// firstPages() / storedForAi(): στο AI πάνε μόνο οι πρώτες σελίδες
 		// των PDF. Ζουν στο ecrm-ai-docs.js, κοινά με την καρτέλα και τα leads.
 
-		function addFiles(fileList) {
+		// (340) Έλεγχος φωτογραφίας: «θολή / σκοτεινή / μικρή» με «Ξαναβγάλε
+		// την» ή «Κράτα την». `retakeAt`: ποια γραμμή αντικαθιστά η επόμενη
+		// λήψη. `fromCamera`: η τελευταία προσθήκη ήρθε από την κάμερα, άρα
+		// δείχνεται το «Επόμενη σελίδα». docs/UI-SCAN-QUALITY.html.
+		var retakeAt = -1;
+		var fromCamera = false;
+
+		function addFiles(fileList, camera) {
+			fromCamera = !!camera;
 			var accepted = Array.prototype.filter.call(fileList, function (f) {
 				return /\.(pdf|jpe?g|png)$/i.test(f.name)
 					|| ['application/pdf', 'image/jpeg', 'image/png'].indexOf(f.type) > -1;
@@ -2225,14 +2234,27 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 			// Shrinking is asynchronous, so the list is drawn twice: once with
 			// the originals so the agent sees them land, once when they are
 			// ready. Without the first pass the drop zone looks broken.
-			accepted.forEach(function (f) { state.files.push({ file: f, kind: guessKind(f.name) }); });
+			accepted.forEach(function (f, n) {
+				var item = { file: f, kind: guessKind(f.name) };
+				// «Ξαναβγάλε την»: η νέα λήψη μπαίνει στη θέση της παλιάς, με το
+				// είδος που είχε ήδη διαλέξει ο πωλητής.
+				if (camera && n === 0 && retakeAt > -1 && state.files[retakeAt]) {
+					item.kind = state.files[retakeAt].kind;
+					state.files.splice(retakeAt, 1, item);
+				} else {
+					state.files.push(item);
+				}
+			});
+			retakeAt = -1;
 			shrinking += accepted.length;
 			renderFiles();
 
 			Promise.all(accepted.map(function (f) {
-				return Promise.all([shrink(f), firstPages(f)]).then(function (r) {
+				// Ο έλεγχος στο ΑΡΧΙΚΟ αρχείο: το «μικρή» αφορά τη λήψη, όχι το
+				// αντίγραφο που μίκρυνε το shrink().
+				return Promise.all([shrink(f), firstPages(f), checkPhoto(f)]).then(function (r) {
 					var entry = state.files.filter(function (i) { return i.file === f; })[0];
-					if (entry) { entry.file = r[0]; entry.forAi = r[1]; }
+					if (entry) { entry.file = r[0]; entry.forAi = r[1]; entry.check = r[2]; }
 					shrinking--;
 				});
 			})).then(renderFiles);
@@ -2260,9 +2282,38 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 				// The name of a file the user just picked themselves, so this was
 				// only ever self-inflicted — but an unescaped name is an unescaped
 				// name, and the guard test does not grant exceptions for intent.
+				var qa = '';
+				var problems = item.check && item.check.problems ? item.check.problems : [];
+				if (problems.length && !item.kept) {
+					li.classList.add('has-qa');
+					qa = '<div class="ecrm-fileitem__qa" role="status">' +
+						problems.map(function (p) { return '<b>' + esc(p.text) + '</b>'; }).join(' ') +
+						'<span class="ecrm-fileitem__qabar">' +
+						(camera ? '<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-qa-retake="' + i + '">Ξαναβγάλε την</button>' : '') +
+						'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-qa-keep="' + i + '">Κράτα την όπως είναι</button>' +
+						'</span></div>';
+				} else if (item.check && item.check.checked && !problems.length) {
+					li.classList.add('has-ok');
+					qa = '<span class="ecrm-fileitem__ok">✓ Ευανάγνωστη</span>';
+				}
 				li.innerHTML = '<span class="ecrm-fileitem__name">' + esc(item.file.name) + '</span>' + kindSel +
-					'<button type="button" class="ecrm-fileitem__rm" data-i="' + i + '">✕</button>';
+					'<button type="button" class="ecrm-fileitem__rm" data-i="' + i + '">✕</button>' + qa;
 				ul.appendChild(li);
+			});
+			// «Επόμενη σελίδα»: μετά από λήψη, η κάμερα ξανά με ένα πάτημα (πίσω
+			// όψη ταυτότητας, δεύτερη σελίδα λογαριασμού).
+			if (camera && fromCamera && state.files.length && state.files.length < 10) {
+				var next = document.createElement('li');
+				next.className = 'ecrm-fileitem ecrm-fileitem--next';
+				next.innerHTML = '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-next-page>Επόμενη σελίδα</button>';
+				ul.appendChild(next);
+				next.querySelector('[data-next-page]').addEventListener('click', function () { retakeAt = -1; camera.click(); });
+			}
+			ul.querySelectorAll('[data-qa-retake]').forEach(function (b) {
+				b.addEventListener('click', function () { retakeAt = parseInt(this.getAttribute('data-qa-retake'), 10); camera.click(); });
+			});
+			ul.querySelectorAll('[data-qa-keep]').forEach(function (b) {
+				b.addEventListener('click', function () { state.files[this.getAttribute('data-qa-keep')].kept = true; renderFiles(); });
 			});
 			// Changing what a document *is* changes how it should be read, so
 			// it re-arms the automatic pass exactly like adding a file does.
@@ -2281,8 +2332,12 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		// Ίδιο addFiles() με το κανονικό input — η φωτογραφία περνά από το ίδιο
 		// shrink() πριν ανέβει, όπως κάθε άλλο αρχείο.
 		if (camera && cameraBtn) {
-			cameraBtn.addEventListener('click', function () { camera.click(); });
-			camera.addEventListener('change', function () { addFiles(this.files); this.value = ''; });
+			cameraBtn.addEventListener('click', function () { retakeAt = -1; camera.click(); });
+			camera.addEventListener('change', function () {
+				// Ακύρωση της κάμερας: καμία αντικατάσταση δεν εκκρεμεί πια.
+				if (!this.files || !this.files.length) { retakeAt = -1; return; }
+				addFiles(this.files, true); this.value = '';
+			});
 		}
 		['dragenter', 'dragover'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('is-drag'); }); });
 		['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('is-drag'); }); });

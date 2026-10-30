@@ -1,0 +1,57 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Έλεγχος φωτογραφίας</title>
+<style>
+:root{--bg:#f8f8f6;--card:#fff;--ink:#2a2926;--mu:#6e6c66;--line:#dedcd7;--acc:#0b690c;--accw:#eafaea;--accb:#16c217;--warn:#ab5506;--warnw:#fcf2ec;--bad:#c32b47;--badw:#fdeaea}
+@media (prefers-color-scheme:dark){:root{--bg:#111110;--card:#1a1a18;--ink:#f1f1ee;--mu:#a3a099;--line:#33322e;--acc:#6bdd6d;--accw:#12240f;--warn:#ffb682;--warnw:#3f322a;--bad:#fb8a91;--badw:#423030}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Manrope,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:860px;margin:0 auto;padding:24px 16px 60px}h1{font-size:23px;margin:0 0 6px}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:30px 0 8px}
+p{margin:0 0 12px}.d{color:var(--mu)}
+.phone{max-width:380px;border:1px solid var(--line);border-radius:22px;background:var(--card);padding:14px}
+.btn{border:1px solid var(--line);border-radius:9px;padding:8px 12px;font:700 13px inherit;background:transparent;color:var(--ink)}
+.btn.p{background:var(--accb);border-color:var(--accb);color:#0b3d0c}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.file{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px}
+.th{width:52px;height:38px;border-radius:6px;background:linear-gradient(135deg,#c8c6c0,#e9e8e4)}
+.th.blur{filter:blur(2px)}.th.dark{background:linear-gradient(135deg,#3a3936,#5a5853)}
+.nm{font-weight:700;font-size:13px}.mt{font-size:12px;color:var(--mu)}
+.ok{color:var(--acc);font-weight:800}
+.qa{border:1px solid var(--warn);background:var(--warnw);border-radius:10px;padding:10px 12px;margin-top:8px}
+.qa b{color:var(--warn)}
+.qa.bad{border-color:var(--bad);background:var(--badw)}.qa.bad b{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-top:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}th{color:var(--mu);font-size:12px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+</style></head><body><div class="w">
+<h1>#7 · Σάρωση: έλεγχος φωτογραφίας τη στιγμή της λήψης</h1>
+<p class="d">Ο πωλητής βγάζει ταυτότητα και λογαριασμό με το κινητό. Αν η φωτογραφία είναι θολή, σκοτεινή ή καμένη από φλας, το καταλαβαίνει μέρες μετά, όταν ο πάροχος απορρίψει την αίτηση. Τότε ο πελάτης έχει φύγει. Ο έλεγχος γίνεται στο κινητό αμέσως μετά τη λήψη, όσο ο πελάτης είναι ακόμα μπροστά του: χωρίς AI, χωρίς ανέβασμα, σε κλάσματα του δευτερολέπτου.</p>
+
+<h2>1 · Καλή φωτογραφία, τίποτα δεν αλλάζει</h2>
+<div class="phone">
+<div class="file"><span class="th"></span><div><div class="nm">Ταυτότητα · μπροστά</div><div class="mt"><span class="ok">✓ Ευανάγνωστη</span> · 310 KB</div></div></div>
+<div class="row"><button class="btn p">📷 Επόμενη σελίδα</button><button class="btn">Τέλος</button></div>
+</div>
+<p class="d" style="margin-top:8px">Μετά από κάθε λήψη, το «Επόμενη σελίδα» ανοίγει ξανά την κάμερα: πίσω όψη ταυτότητας, δεύτερη σελίδα λογαριασμού, χωρίς να ψάχνεις το κουμπί.</p>
+
+<h2>2 · Θολή</h2>
+<div class="phone">
+<div class="file"><span class="th blur"></span><div><div class="nm">Λογαριασμός · σελ. 1</div><div class="mt">1,1 MB</div></div></div>
+<div class="qa bad"><b>Η φωτογραφία είναι θολή.</b> Ο πάροχος μάλλον θα την απορρίψει. Κράτα το κινητό σταθερό και πάτα στην οθόνη για εστίαση.
+<div class="row"><button class="btn p">📷 Ξαναβγάλε την</button><button class="btn">Κράτα την όπως είναι</button></div></div>
+</div>
+
+<h2>3 · Σκοτεινή ή καμένη</h2>
+<div class="phone">
+<div class="file"><span class="th dark"></span><div><div class="nm">Ταυτότητα · πίσω</div><div class="mt">640 KB</div></div></div>
+<div class="qa"><b>Πολύ σκοτεινή.</b> Πήγαινε κοντά σε φως, χωρίς φλας πάνω στην πλαστικοποίηση.
+<div class="row"><button class="btn p">📷 Ξαναβγάλε την</button><button class="btn">Κράτα την όπως είναι</button></div></div>
+</div>
+
+<h2>Τι ελέγχεται</h2>
+<div class="c"><table>
+<tr><th>Έλεγχος</th><th>Πώς</th><th>Μήνυμα</th></tr>
+<tr><td>Θολή</td><td>ευκρίνεια ακμών (διασπορά Laplacian) σε μικρό αντίγραφο</td><td>«θολή»</td></tr>
+<tr><td>Σκοτεινή</td><td>μέση φωτεινότητα πολύ χαμηλή</td><td>«πολύ σκοτεινή»</td></tr>
+<tr><td>Καμένη</td><td>μεγάλο κομμάτι εντελώς λευκό (φλας, αντανάκλαση)</td><td>«αντανάκλαση»</td></tr>
+<tr><td>Μικρή</td><td>κάτω από 800 px στη μικρή πλευρά</td><td>«πολύ μικρή, βγάλ' την πιο κοντά»</td></tr>
+</table></div>
+<p class="d" style="margin-top:10px">Ισχύει για φωτογραφίες από κάμερα και για εικόνες από τη συλλογή, στη «Νέα αίτηση», στα έγγραφα της καρτέλας αίτησης και στα leads. Τα PDF δεν ελέγχονται. Το «Κράτα την όπως είναι» δεν μπλοκάρει ποτέ: απόφαση του πωλητή. Τα όρια ρυθμίζονται μετά από δοκιμή με πραγματικές φωτογραφίες σας, και θα σου στείλω τα νούμερα πριν το commit.</p>
+</div></body></html>

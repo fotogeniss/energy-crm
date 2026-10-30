@@ -550,6 +550,15 @@
 .ecrm-kind { height: 32px; border: 1px solid var(--line); border-radius: 6px; font-family: inherit; font-size: var(--fs-12); padding: 0 6px; }
 .ecrm-fileitem__rm { width: 28px; height: 28px; border: none; background: var(--st-cancel-bg); color: var(--err); border-radius: 6px; cursor: pointer; font-size: var(--fs-13); }
 .ecrm-fileitem__rm:hover { background: var(--st-cancel-bg); }
+/* (340) Έλεγχος φωτογραφίας -- docs/UI-SCAN-QUALITY.html. */
+.ecrm-fileitem.has-qa, .ecrm-fileitem.has-ok { flex-wrap: wrap; }
+.ecrm-fileitem.has-qa { border-color: var(--st-pending); }
+.ecrm-fileitem .ecrm-fileitem__name { min-width: 0; }
+.ecrm-fileitem__qa { flex: 1 1 100%; background: var(--st-pending-bg); border-radius: 6px; padding: 8px 10px; font-size: var(--fs-12-5); }
+.ecrm-fileitem__qa b { color: var(--st-pending); font-weight: 700; }
+.ecrm-fileitem__qabar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.ecrm-fileitem__ok { flex: 1 1 100%; font-size: var(--fs-12); font-weight: 700; color: var(--st-resolved); }
+.ecrm-fileitem--next { border-style: dashed; justify-content: center; }
 
 .ecrm-ai-status { margin-top: 10px; font-size: var(--fs-13); color: var(--amber-bright); min-height: 18px; }
 

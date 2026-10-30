@@ -2186,3 +2186,6 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-tk-msg small { display: block; color: var(--muted); font-size: var(--fs-11-5); margin-bottom: 2px; white-space: normal; }
 .ecrm-tk-sys { text-align: center; font-size: var(--fs-12); color: var(--muted); }
 .ecrm-tk-act { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+
+/* (340) Έλεγχος φωτογραφίας στα έγγραφα της καρτέλας αίτησης. */
+.ecrm-docup__qa { grid-column: 1 / -1; margin-top: 2px; padding: 6px 9px; border-radius: 6px; background: var(--st-pending-bg); color: var(--st-pending); font-size: var(--fs-12); font-weight: 700; }
