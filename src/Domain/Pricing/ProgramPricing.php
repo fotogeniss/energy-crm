@@ -80,12 +80,24 @@ final class ProgramPricing
             && is_numeric($rule['supply_month'] ?? null)
             && is_numeric($rule['excess_kwh'] ?? null)
         ) {
-            return self::withNote([
+            $package = [
                 'kind'         => 'package',
                 'package_kwh'  => (float) $rule['package_kwh'],
                 'supply_month' => (float) $rule['supply_month'],
                 'excess_kwh'   => (float) $rule['excess_kwh'],
-            ], $note);
+            ];
+
+            // (332) Η οικογένεια πακέτων, για την εκκαθάριση με Πακέτο Αναφοράς.
+            $family = PackageFit::family($rule['family'] ?? null);
+
+            if ($family !== [] && is_numeric($rule['unit_kwh'] ?? null)) {
+                $package['family']    = $family;
+                $package['unit_kwh']  = (float) $rule['unit_kwh'];
+                $package['family_id'] = is_string($rule['family_id'] ?? null) ? $rule['family_id'] : '';
+                $package['code']      = is_string($rule['code'] ?? null) ? $rule['code'] : '';
+            }
+
+            return self::withNote($package, $note);
         }
 
         $price = self::num($program['price_kwh'] ?? null);
@@ -122,6 +134,10 @@ final class ProgramPricing
                 return round(self::tiered($tiers, $kwh) + self::PERIODS_PER_YEAR * (float) $rule['fixed'], 2);
 
             case 'package':
+                if (isset($rule['family'])) {
+                    return PackageFit::annualSupply($rule, $kwh);
+                }
+
                 $excess = max(0.0, $kwh - (float) $rule['package_kwh']);
 
                 return round(12 * (float) $rule['supply_month'] + $excess * (float) $rule['excess_kwh'], 2);

@@ -229,6 +229,8 @@ final class ControllerFactory
             new VatLookupController(Services::aade()),
             // (331) «Τι λέω στον πελάτη».
             new SalesScriptController($scope, Services::providerVisibility(), Services::providers()),
+            // (332) Σωστό μέγεθος Picasso.
+            new PackageFitController($scope, Services::providerVisibility(), Services::providers()),
             // (328) Πρόταση προγράμματος από λογαριασμό.
             new BillAdvisorController(
                 Services::extractionGate(),

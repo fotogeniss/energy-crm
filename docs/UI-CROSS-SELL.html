@@ -1,0 +1,44 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Δώσε του και αέριο</title>
+<style>
+:root{--bg:#f8f8f6;--card:#fff;--ink:#2a2926;--mu:#6e6c66;--line:#dedcd7;--acc:#0b690c;--accw:#eafaea;--accb:#16c217;--teal:#007a79;--tealw:#e3f4f3;--warn:#ab5506;--warnw:#fcf2ec}
+@media (prefers-color-scheme:dark){:root{--bg:#111110;--card:#1a1a18;--ink:#f1f1ee;--mu:#a3a099;--line:#33322e;--acc:#6bdd6d;--accw:#12240f;--teal:#5ec0be;--tealw:#333535;--warn:#ffb682;--warnw:#3f322a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Manrope,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:900px;margin:0 auto;padding:24px 16px 60px}h1{font-size:23px;margin:0 0 6px}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:28px 0 8px}
+.d{color:var(--mu);margin:0 0 12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.tab{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:700;font-size:12.5px;background:var(--card)}
+.tab.on{background:var(--accb);border-color:var(--accb);color:#0b1a0b}.tab small{opacity:.7;margin-left:4px}
+.flt{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.flt .i{border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--card);font-size:13px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.nm{font-weight:800}.mt{font-size:12px;color:var(--mu)}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:10.5px;font-weight:800;margin-left:6px}
+.pw{background:var(--warnw);color:var(--warn)}.gs{background:var(--tealw);color:var(--teal)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.b{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:700 12px inherit;background:transparent;color:var(--ink)}
+.b.gas{border-color:var(--teal);color:var(--teal);background:var(--tealw)}
+@media(max-width:600px){.row{grid-template-columns:1fr}.acts{justify-content:flex-start}}
+.note{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--mu)}
+.note b{color:var(--ink)}
+</style></head><body><div class="w">
+<h1>«Δώσε του και αέριο / ρεύμα»</h1>
+<p class="d">Πελάτες που έχουν ενεργή σύμβαση ρεύματος χωρίς αέριο, ή το αντίστροφο, σε μία λίστα για τηλέφωνο. Μπαίνει ως καρτέλα στους «Πελάτες». Ο πωλητής βλέπει τους δικούς του, ο υπεύθυνος όλη την ομάδα του.</p>
+
+<div class="tabs"><span class="tab">Όλοι οι πελάτες</span><span class="tab on">Χωρίς αέριο<small>23</small></span><span class="tab">Χωρίς ρεύμα<small>5</small></span></div>
+<div class="flt"><span class="i">Πόλη: όλες ▾</span><span class="i">Κατηγορία: όλες ▾</span><span class="i">Ταξινόμηση: πιο πρόσφατη ενεργοποίηση ▾</span></div>
+
+<div class="row"><div><div class="nm">ΠΑΠΑΔΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ <span class="pill pw">Ρεύμα · Protergia</span></div>
+<div class="mt">Θεσσαλονίκη · Οικιακό · ενεργή από 12/09/2026 · 69xx xxx 123</div></div>
+<div class="acts"><button class="b">📞 Κλήση</button><button class="b gas">＋ Αέριο</button><button class="b">Όχι τώρα</button></div></div>
+
+<div class="row"><div><div class="nm">ΚΑΦΕ ΑΡΩΜΑ Ι.Κ.Ε. <span class="pill pw">Ρεύμα · Protergia</span></div>
+<div class="mt">Λάρισα · Επαγγελματικό · ενεργή από 03/10/2026 · 2410 xxx xxx</div></div>
+<div class="acts"><button class="b">📞 Κλήση</button><button class="b gas">＋ Αέριο</button><button class="b">Όχι τώρα</button></div></div>
+
+<div class="row"><div><div class="nm">ΝΙΚΟΛΑΟΥ ΜΑΡΙΑ <span class="pill pw">Ρεύμα · Protergia</span> <span class="pill gs">αίτηση αερίου σε πρόχειρο</span></div>
+<div class="mt">Αθήνα · Οικιακό · ενεργή από 20/08/2026</div></div>
+<div class="acts"><button class="b">Άνοιγμα πρόχειρου</button></div></div>
+
+<h2>Τι κάνουν τα κουμπιά</h2>
+<p class="d"><b>＋ Αέριο / ＋ Ρεύμα</b>: η ίδια δίδυμη αίτηση με το #1 (326). Ανοίγει έτοιμη με τα στοιχεία του πελάτη και τον αριθμό παροχής ρεύματος. Αν υπάρχει ήδη πρόχειρη, ανοίγει αυτή. <b>Όχι τώρα</b>: ο πελάτης φεύγει από τη λίστα για 90 μέρες, με προαιρετική σημείωση («δεν έχει δίκτυο αερίου», «δεν ενδιαφέρεται»), που μπαίνει στο ιστορικό του πελάτη.</p>
+<div class="note"><b>Τι δεν κάνει:</b> δεν ξέρει αν η διεύθυνση έχει δίκτυο φυσικού αερίου. Γι' αυτό υπάρχει φίλτρο πόλης και η σημείωση «δεν έχει δίκτυο». Δεν στέλνει μηνύματα στον πελάτη μόνο του.</div>
+</div></body></html>

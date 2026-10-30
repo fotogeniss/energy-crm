@@ -469,6 +469,13 @@ class ECRM_Shortcodes {
 					<span class="ecrm-row__label">Πρόγραμμα</span>
 					<select class="ecrm-select" data-program data-field="program_id"><option value="">—</option></select>
 				</div>
+				<?php // (332) Σωστό μέγεθος Picasso -- ecrm-form.js (refreshPackageFit). Mockup docs/UI-PICASSO-SIZE.html. ?>
+				<div class="ecrm-fit" data-package-fit hidden>
+					<label class="ecrm-fit__kwh"><span>Κατανάλωση / έτος (kWh)</span>
+						<input type="number" min="0" step="1" class="ecrm-input" data-package-fit-kwh></label>
+					<div class="ecrm-fit__msg" data-package-fit-msg></div>
+					<button type="button" class="ecrm-fit__btn" data-package-fit-switch hidden></button>
+				</div>
 				<?php // (331) «Τι λέω στον πελάτη» -- γεμίζει το ecrm-form.js (refreshSalesScript). Mockup docs/UI-SALES-SCRIPT.html. ?>
 				<div class="ecrm-say" data-sales-script hidden>
 					<div class="ecrm-say__h"><span>💬 Τι λέω στον πελάτη</span><small data-sales-script-label></small></div>

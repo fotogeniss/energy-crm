@@ -401,7 +401,6 @@ JS;
 	 */
 	public static function update_price(): void {
 		self::guard( 'ecrm_program_price' );
-		global $wpdb;
 		$id       = (int) ( $_POST['id'] ?? 0 );
 		$provider = (int) ( $_POST['provider_id'] ?? 0 );
 		$num      = static function ( string $key ): ?float {
@@ -409,15 +408,7 @@ JS;
 			return ( '' !== $raw && is_numeric( $raw ) && (float) $raw >= 0 ) ? (float) $raw : null;
 		};
 		if ( $id ) {
-			$wpdb->update(
-				ECRM_DB::table( 'programs' ),
-				[
-					'price_kwh'     => $num( 'price_kwh' ),
-					'fixed_charge'  => $num( 'fixed_charge' ),
-					'price_updated' => current_time( 'Y-m-d' ),
-				],
-				[ 'id' => $id, 'provider_id' => $provider ]
-			);
+			\EnergyCRM\Services::providers()->updatePrice( $id, $provider, $num( 'price_kwh' ), $num( 'fixed_charge' ), current_time( 'Y-m-d' ) );
 		}
 		self::back( 'price_saved', $provider );
 	}
@@ -427,7 +418,6 @@ JS;
 	 */
 	public static function update_exit(): void {
 		self::guard( 'ecrm_program_exit' );
-		global $wpdb;
 		$id       = (int) ( $_POST['id'] ?? 0 );
 		$provider = (int) ( $_POST['provider_id'] ?? 0 );
 		$raw      = isset( $_POST['exit_fees'] ) ? sanitize_text_field( wp_unslash( $_POST['exit_fees'] ) ) : '';
@@ -438,11 +428,7 @@ JS;
 			}
 		}
 		if ( $id ) {
-			$wpdb->update(
-				ECRM_DB::table( 'programs' ),
-				[ 'exit_fees' => $fees ? (string) wp_json_encode( $fees ) : null ],
-				[ 'id' => $id, 'provider_id' => $provider ]
-			);
+			\EnergyCRM\Services::providers()->updateExitFees( $id, $provider, $fees );
 		}
 		self::back( 'exit_saved', $provider );
 	}

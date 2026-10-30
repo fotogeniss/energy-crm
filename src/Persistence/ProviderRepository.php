@@ -75,4 +75,39 @@ final class ProviderRepository
 
         return $rows;
     }
+
+    /**
+     * (328) Νέα τιμή προγράμματος από τη σελίδα Παρόχων, με ημερομηνία.
+     */
+    public function updatePrice(
+        int $programId,
+        int $providerId,
+        ?float $priceKwh,
+        ?float $fixedCharge,
+        string $date
+    ): void {
+        global $wpdb;
+
+        $wpdb->update(
+            Tables::name(Tables::PROGRAMS),
+            ['price_kwh' => $priceKwh, 'fixed_charge' => $fixedCharge, 'price_updated' => $date],
+            ['id' => $programId, 'provider_id' => $providerId]
+        );
+    }
+
+    /**
+     * (331) Ρήτρα αποχώρησης, € ανά μήνα· κενή λίστα τη σβήνει.
+     *
+     * @param list<int> $fees
+     */
+    public function updateExitFees(int $programId, int $providerId, array $fees): void
+    {
+        global $wpdb;
+
+        $wpdb->update(
+            Tables::name(Tables::PROGRAMS),
+            ['exit_fees' => $fees === [] ? null : (string) json_encode($fees)],
+            ['id' => $programId, 'provider_id' => $providerId]
+        );
+    }
 }

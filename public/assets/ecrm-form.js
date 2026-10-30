@@ -1210,6 +1210,20 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 			});
 		})();
 
+		// (332) Κατανάλωση και «Αλλαγή σε …» του σωστού μεγέθους Picasso.
+		(function () {
+			var kwhEl = q('[data-package-fit-kwh]'), btn = q('[data-package-fit-switch]');
+			var t = null;
+			if (kwhEl) { kwhEl.addEventListener('input', function () { clearTimeout(t); t = setTimeout(refreshPackageFit, 350); }); }
+			if (!btn) return;
+			btn.addEventListener('click', function () {
+				var sel = q('[data-program]');
+				if (!packageFitTarget || !sel) return;
+				sel.value = String(packageFitTarget);
+				sel.dispatchEvent(new Event('change', { bubbles: true }));
+			});
+		})();
+
 		// (331) Αντιγραφή του «Τι λέω» -- δεν στέλνει τίποτα μόνη της.
 		(function () {
 			var btn = q('[data-sales-script-copy]');
@@ -1683,11 +1697,53 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 			}, 400);
 		}
 
+		// (332) Σωστό μέγεθος Picasso. Ο server ξέρει ποιο είναι το Πακέτο
+		// Αναφοράς (Domain\Pricing\PackageFit)· εδώ μόνο το μήνυμα και η αλλαγή.
+		var packageFitSeq = 0, packageFitTarget = null;
+		function refreshPackageFit() {
+			var box = q('[data-package-fit]');
+			if (!box) return;
+			var pid = state.program_id, kwhEl = q('[data-package-fit-kwh]');
+			if (!pid || state.energy_type !== 'power') { box.hidden = true; return; }
+			if (state.advice && state.advice.kwh && !kwhEl.value) { kwhEl.value = Math.round(state.advice.kwh); }
+			var kwh = +kwhEl.value || 0, seq = ++packageFitSeq;
+
+			fetch(api('/programs/' + pid + '/package-fit') + '?kwh=' + encodeURIComponent(kwh), { headers: headers() })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (seq !== packageFitSeq) return;
+					if (!d || !d.ok || !d.applies) { box.hidden = true; return; }
+					box.hidden = false;
+					var msg = q('[data-package-fit-msg]'), btn = q('[data-package-fit-switch]');
+					packageFitTarget = null; btn.hidden = true;
+					if (!kwh) { msg.textContent = 'Γράψε την κατανάλωση του χρόνου για να δεις αν ταιριάζει το μέγεθος.'; return; }
+					if (d.fits) {
+						msg.innerHTML = 'Για ' + Math.round(kwh).toLocaleString('el-GR') + ' kWh το <b>' + esc(d.chosen) + ' €</b> είναι το σωστό πακέτο.';
+						box.classList.add('is-ok'); return;
+					}
+					box.classList.remove('is-ok');
+					var s = d.settlement;
+					msg.innerHTML = 'Για ' + Math.round(kwh).toLocaleString('el-GR') + ' kWh το σωστό πακέτο είναι <b>' + esc(d.reference.label) + ' €</b>. ' +
+						'Με το ' + esc(d.chosen) + ' € ' + (s >= 0
+							? 'θα πληρώνει λιγότερο τον μήνα, αλλά στην εκκαθάριση θα του έρθουν περίπου <b>+' + fmtEuro(s) + ' €</b> τον χρόνο.'
+							: 'θα πληρώνει περισσότερο τον μήνα και θα του επιστρέφονται περίπου <b>' + fmtEuro(-s) + ' €</b> τον χρόνο.');
+					if (d.reference.program_id) {
+						packageFitTarget = d.reference.program_id;
+						btn.textContent = 'Αλλαγή σε ' + d.reference.label + ' €';
+						btn.hidden = false;
+					} else {
+						msg.innerHTML += ' <span class="ecrm-fit__na">Το ' + esc(d.reference.label) + ' € δεν έχει ακόμα έντυπο.</span>';
+					}
+				})
+				.catch(function () { if (seq === packageFitSeq) box.hidden = true; });
+		}
+
 		// (331) «Τι λέω στον πελάτη». Οι γραμμές έρχονται από τον server
 		// (Domain\Sales\SalesScript) για να λέγονται πάντα ίδια· εδώ μόνο
 		// escape και **έντονα** → <b>.
 		var salesScriptSeq = 0, salesScriptPlain = '';
 		function refreshSalesScript() {
+			refreshPackageFit();
 			var box = q('[data-sales-script]');
 			if (!box) return;
 			var pid = state.program_id;
@@ -2001,6 +2057,7 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 			dirty = false;
 			state.contract_id = 0; state.customer_id = 0; state.extracted_json = null;
 			state.advice = null;
+			var fitKwh = q('[data-package-fit-kwh]'); if (fitKwh) fitKwh.value = '';
 			state.request_id = requestId();
 			// (279) Αν το άνοιγμα μιας επεξεργασίας φάρδυνε προσωρινά τη λίστα
 			// (ensureProviderVisible()) για να δείξει έναν πάροχο που ο χρήστης

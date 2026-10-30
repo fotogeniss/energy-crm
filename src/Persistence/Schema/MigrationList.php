@@ -50,6 +50,7 @@ use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
 use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaAwaitingSheets;
 use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaHomeAwaitingSheets;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
+use EnergyCRM\Persistence\Schema\Migrations\RepriceProtergiaPicasso;
 use EnergyCRM\Persistence\Schema\Migrations\RetargetContractListIndexToUpdatedAt;
 use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
 use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
@@ -125,6 +126,7 @@ final class MigrationList
             new AddProgramPricingColumns(),
             new SeedProtergiaPrices2026(),
             new AddProgramExitFees(),
+            new RepriceProtergiaPicasso(),
         ];
     }
 }

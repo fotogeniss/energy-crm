@@ -38,17 +38,27 @@ final class ProtergiaPrices2026
 
     private const BIZ_EXCESS = 0.129;
 
-    /** Ίδια πακέτα kWh σε οικιακά και επαγγελματικά, άλλες χρεώσεις. */
+    /** Μοναδιαία Σταθερή Τιμή Προμήθειας Picasso (οικιακά / επαγγελματικά). */
+    private const HOME_UNIT = 0.174;
+
+    private const BIZ_UNIT = 0.189;
+
+    /**
+     * Ίδια πακέτα kWh σε οικιακά και επαγγελματικά, άλλες χρεώσεις:
+     * [kWh/έτος, προμήθεια οικ. €/μήνα, προμήθεια επαγ. €/μήνα, πάγιο Picasso οικ., πάγιο Picasso επαγ.].
+     * Το «πάγιο Picasso» είναι το ποσό του μήνα (προμήθεια + ρυθμιζόμενες)·
+     * με αυτό γίνεται η εκκαθάριση με το Πακέτο Αναφοράς (332).
+     */
     private const PACKAGES = [
-        's1' => [1325, 21.50, 21.01],
-        's2' => [1875, 29.71, 33.81],
-        's3' => [2700, 42.03, 48.51],
-        'm1' => [3550, 57.27, 62.12],
-        'm2' => [4600, 73.86, 82.92],
-        'm3' => [6000, 97.00, 107.32],
-        'l1' => [11000, 173.22, 187.32],
-        'l2' => [15300, 231.27, 260.13],
-        'l3' => [20200, 303.46, 340.53],
+        's1' => [1325, 21.50, 21.01, 39.90, 49.90],
+        's2' => [1875, 29.71, 33.81, 49.90, 64.90],
+        's3' => [2700, 42.03, 48.51, 64.90, 82.90],
+        'm1' => [3550, 57.27, 62.12, 82.90, 99.90],
+        'm2' => [4600, 73.86, 82.92, 102.90, 124.90],
+        'm3' => [6000, 97.00, 107.32, 134.90, 154.90],
+        'l1' => [11000, 173.22, 187.32, 259.90, 254.90],
+        'l2' => [15300, 231.27, 260.13, 359.90, 344.90],
+        'l3' => [20200, 303.46, 340.53, 479.90, 444.90],
     ];
 
     private function __construct()
@@ -102,15 +112,27 @@ final class ProtergiaPrices2026
             'protergia_epag3_sure12m_2' => self::flat(0.1999, 0.0, 'με έκπτωση συνέπειας· χωρίς: 0,269 €/kWh'),
         ];
 
-        foreach (self::PACKAGES as $size => [$kwh, $home, $biz]) {
-            $out['protergia_pic_h_' . $size] = self::package($kwh, $home, self::HOME_EXCESS);
-            $out['protergia_pic_b_' . $size] = self::package($kwh, $biz, self::BIZ_EXCESS);
+        $home = self::family('h');
+        $biz  = self::family('b');
+
+        foreach (array_keys(self::PACKAGES) as $size) {
+            $out['protergia_pic_h_' . $size] = self::homePackage('protergia_pic_h_' . $size, $home, 'protergia_pic_h');
+            $out['protergia_pic_b_' . $size] = self::package(
+                'protergia_pic_b_' . $size,
+                $biz,
+                'protergia_pic_b',
+                self::BIZ_UNIT,
+                self::BIZ_EXCESS
+            );
         }
 
         // Picasso 2.0 και Student: «ίδια χωρίς διαφοροποίηση» με το S 39,90
-        // (Protergia 29/10, βλ. ProtergiaHomeSheets).
-        $out['protergia_picasso2']         = $out['protergia_pic_h_s1'];
-        $out['protergia_picasso2_student'] = $out['protergia_pic_h_s1'];
+        // (Protergia 29/10, βλ. ProtergiaHomeSheets). Το Picasso 2.0 είναι το
+        // ίδιο πρόγραμμα με το S 39,90 -- ίδια οικογένεια. Το Student μόνο
+        // για φοιτητές: δική του οικογένεια, ώστε η πρόταση να μην το κρύβει.
+        $out['protergia_picasso2']         = self::homePackage('protergia_pic_h_s1', $home, 'protergia_pic_h');
+        $student                           = 'protergia_picasso2_student';
+        $out['protergia_picasso2_student'] = self::homePackage('protergia_pic_h_s1', $home, $student);
 
         return $out;
     }
@@ -145,18 +167,59 @@ final class ProtergiaPrices2026
     }
 
     /**
+     * @param list<array{code: string, label: string, kwh: int, supply_month: float, price: float}> $family
      * @return array{price_kwh: null, fixed_charge: null, pricing: array<string, mixed>}
      */
-    private static function package(int $kwh, float $supplyMonth, float $excess): array
+    private static function homePackage(string $code, array $family, string $familyId): array
     {
+        return self::package($code, $family, $familyId, self::HOME_UNIT, self::HOME_EXCESS);
+    }
+
+    /**
+     * Τα εννιά πακέτα της κατηγορίας, μικρότερο πρώτο.
+     *
+     * @return list<array{code: string, label: string, kwh: int, supply_month: float, price: float}>
+     */
+    private static function family(string $category): array
+    {
+        $out = [];
+
+        foreach (self::PACKAGES as $size => [$kwh, $homeSupply, $bizSupply, $homePrice, $bizPrice]) {
+            $price  = $category === 'h' ? $homePrice : $bizPrice;
+            $out[] = [
+                'code'         => 'protergia_pic_' . $category . '_' . $size,
+                'label'        => strtoupper($size[0]) . ' ' . number_format($price, 2, ',', ''),
+                'kwh'          => $kwh,
+                'supply_month' => $category === 'h' ? $homeSupply : $bizSupply,
+                'price'        => $price,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<array{code: string, label: string, kwh: int, supply_month: float, price: float}> $family
+     * @return array{price_kwh: null, fixed_charge: null, pricing: array<string, mixed>}
+     */
+    private static function package(string $code, array $family, string $familyId, float $unit, float $excess): array
+    {
+        $own = array_values(array_filter($family, static fn (array $p): bool => $p['code'] === $code))[0];
+
         return [
             'price_kwh'    => null,
             'fixed_charge' => null,
             'pricing'      => [
                 'kind'         => 'package',
-                'package_kwh'  => $kwh,
-                'supply_month' => $supplyMonth,
+                'package_kwh'  => $own['kwh'],
+                'supply_month' => $own['supply_month'],
                 'excess_kwh'   => $excess,
+                // (332) Εκκαθάριση με Πακέτο Αναφοράς: η οικογένεια, η
+                // μοναδιαία τιμή για την υπολειπόμενη, και ποιο είναι αυτό.
+                'unit_kwh'     => $unit,
+                'family_id'    => $familyId,
+                'code'         => $code,
+                'family'       => $family,
             ],
         ];
     }

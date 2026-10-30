@@ -47,7 +47,12 @@ final class ProtergiaPrices2026Test extends TestCase
         $all = ProtergiaPrices2026::all();
 
         self::assertSame($all['protergia_pic_h_s1'], $all['protergia_picasso2']);
-        self::assertSame($all['protergia_pic_h_s1'], $all['protergia_picasso2_student']);
+        // (332) Ίδιες τιμές με το S 39,90, αλλά δική του οικογένεια: μόνο για
+        // φοιτητές, και η πρόταση δεν πρέπει να το κρύβει μέσα στα Picasso.
+        $student = $all['protergia_picasso2_student']['pricing'];
+        self::assertSame('protergia_picasso2_student', $student['family_id']);
+        $student['family_id'] = 'protergia_pic_h';
+        self::assertSame($all['protergia_pic_h_s1']['pricing'], $student);
         self::assertSame(1325, $all['protergia_pic_h_s1']['pricing']['package_kwh']);
         self::assertSame(21.50, $all['protergia_pic_h_s1']['pricing']['supply_month']);
     }

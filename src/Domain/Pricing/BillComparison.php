@@ -65,6 +65,7 @@ final class BillComparison
 
             $ranked[] = [
                 'id'            => $id,
+                'code'          => (string) ($program['code'] ?? ''),
                 'provider_id'   => (int) ($program['provider_id'] ?? 0),
                 'provider'      => $provider,
                 'name'          => (string) ($program['name'] ?? ''),
@@ -80,12 +81,75 @@ final class BillComparison
             ];
         }
 
+        $ranked = self::onePerPackageFamily($ranked, $annualKwh);
+
         usort(
             $ranked,
             static fn (array $a, array $b): int => [$a['annual'], $a['name']] <=> [$b['annual'], $b['name']]
         );
 
         return ['ranked' => $ranked, 'unpriced' => $unpriced];
+    }
+
+    /**
+     * (332) Μία γραμμή ανά οικογένεια πακέτων (Picasso), με το σωστό μέγεθος.
+     *
+     * Μετά την εκκαθάριση όλα τα μεγέθη κοστίζουν το ίδιο τον χρόνο (PackageFit),
+     * άρα εννιά γραμμές Picasso θα έμοιαζαν με εννιά προγράμματα. Μένει το
+     * Πακέτο Αναφοράς· αν δεν είναι ενεργό (περιμένει έντυπο), το πλησιέστερο
+     * ενεργό, με `fit.reference_available = false` για να το πει η οθόνη.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private static function onePerPackageFamily(array $rows, float $annualKwh): array
+    {
+        $out    = [];
+        $groups = [];
+
+        foreach ($rows as $row) {
+            $familyId = $row['rule']['kind'] === 'package' ? (string) ($row['rule']['family_id'] ?? '') : '';
+
+            if ($familyId === '') {
+                $out[] = $row;
+                continue;
+            }
+
+            $groups[$familyId][] = $row;
+        }
+
+        foreach ($groups as $members) {
+            $ref = PackageFit::reference($members[0]['rule']['family'], $annualKwh);
+
+            if ($ref === null) {
+                continue;
+            }
+
+            usort(
+                $members,
+                static fn (array $a, array $b): int => abs($a['rule']['package_kwh'] - $ref['kwh'])
+                    <=> abs($b['rule']['package_kwh'] - $ref['kwh'])
+            );
+
+            $best = $members[0];
+            $fit  = PackageFit::fit($best['rule'], $annualKwh);
+
+            $best['fit'] = [
+                'reference_code'      => $ref['code'],
+                'reference_label'     => $ref['label'],
+                'reference_available' => $best['code'] === $ref['code'],
+                'chosen_label'        => $fit !== null && $fit['chosen'] !== null ? $fit['chosen']['label'] : '',
+                'settlement'          => $fit !== null ? $fit['settlement'] : 0.0,
+                'sizes'               => array_map(
+                    static fn (array $p): array => ['code' => $p['code'], 'label' => $p['label']],
+                    $best['rule']['family']
+                ),
+            ];
+
+            $out[] = $best;
+        }
+
+        return $out;
     }
 
     /**

@@ -1302,3 +1302,14 @@
 .ecrm-say__note[hidden] { display: none; }
 .ecrm-say__copy { margin-top: 8px; border: 1px solid var(--cat-teal); background: transparent; color: var(--cat-teal); border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: var(--fs-12); cursor: pointer; }
 .ecrm-say__copy:hover { background: var(--surface); }
+
+/* (332) Σωστό μέγεθος Picasso -- docs/UI-PICASSO-SIZE.html */
+.ecrm-fit { border: 1px solid var(--st-pending); background: var(--st-pending-bg); border-radius: 12px; padding: 10px 12px; margin: 4px 0 10px; display: grid; grid-template-columns: 170px 1fr; gap: 6px 12px; align-items: center; font-size: var(--fs-13); color: var(--ink); }
+.ecrm-fit.is-ok { border-color: var(--st-active); background: var(--st-active-bg); }
+.ecrm-fit[hidden] { display: none; }
+.ecrm-fit__kwh span { display: block; font-size: var(--fs-11); font-weight: 700; color: var(--muted); margin-bottom: 3px; }
+.ecrm-fit__msg b { font-weight: 800; }
+.ecrm-fit__na { color: var(--muted); }
+.ecrm-fit__btn { grid-column: 2; justify-self: start; border: 1px solid var(--st-pending); background: var(--surface); color: var(--st-pending); border-radius: 8px; padding: 6px 10px; font-weight: 700; font-size: var(--fs-12); cursor: pointer; }
+.ecrm-fit__btn[hidden] { display: none; }
+@media (max-width: 600px) { .ecrm-fit { grid-template-columns: 1fr; } .ecrm-fit__btn { grid-column: 1; } }

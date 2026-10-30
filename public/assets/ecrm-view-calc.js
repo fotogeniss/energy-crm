@@ -295,6 +295,23 @@ function withProvider(provider, name) {
 	return provider + ' · ' + name;
 }
 
+// (332) Picasso: ποιο μέγεθος ταιριάζει. Το κόστος του χρόνου είναι ίδιο σε
+// όλα (εκκαθάριση με Πακέτο Αναφοράς)· αλλάζει η μηνιαία δόση.
+function fitBlock(r, kwh) {
+	var f = r.fit;
+	if (!f) { return ''; }
+	var bars = (f.sizes || []).map(function (sz) {
+		return '<span class="ecrm-bill__size' + (sz.code === f.reference_code ? ' is-on' : '') + '">' + esc(sz.label) + '</span>';
+	}).join('');
+	var head = 'Για <b>' + Math.round(kwh).toLocaleString('el-GR') + ' kWh τον χρόνο</b> ταιριάζει το <b>' + esc(f.reference_label) + ' €</b>.';
+	if (!f.reference_available) {
+		head += ' Δεν έχει ακόμα έντυπο· η πλησιέστερη διαθέσιμη επιλογή είναι το ' + esc(f.chosen_label) + ' €, και η διαφορά θα έρχεται στην εκκαθάριση (' +
+			(f.settlement >= 0 ? '+' : '−') + money(Math.abs(f.settlement)) + '/έτος).';
+	}
+	return '<div class="ecrm-bill__fit">' + head + '<div class="ecrm-bill__sizes">' + bars + '</div>' +
+		'<span>Με μικρότερο πακέτο πληρώνει λιγότερο τον μήνα και η διαφορά έρχεται στην εκκαθάριση· με μεγαλύτερο, του επιστρέφεται. Το σύνολο του χρόνου είναι ίδιο.</span></div>';
+}
+
 var TYPE_LABEL = { fixed: 'Σταθερό', variable: 'Κυμαινόμενο', dynamic: 'Δυναμικό', special: 'Ειδικό' };
 
 function ruleText(r) {
@@ -341,6 +358,7 @@ function renderRank(view, d) {
 				(r.stale ? ' <span class="ecrm-bill__pill is-old">παλιά τιμή — έλεγξέ τη</span>' : '') + '</div>' +
 				'<div class="ecrm-bill__mt">' + esc(ruleText(r)) + '</div></div>' +
 			'<div class="ecrm-bill__sv">' + sv + '</div>' +
+			fitBlock(r, d.annual_kwh) +
 			'<div class="ecrm-bill__acts">' +
 				'<button type="button" class="ecrm-btn ecrm-btn--primary" data-bill-apply="' + i + '">' + ICON_NEW + ' Νέα αίτηση με αυτό</button>' +
 				'<button type="button" class="ecrm-btn" data-bill-pdf="' + i + '">' + ICON_DOC + ' PDF προσφοράς</button>' +
@@ -367,6 +385,10 @@ function renderRank(view, d) {
 	});
 }
 
+function d0kwh(view) {
+	return +bval(view, 'annual_kwh') || 0;
+}
+
 function applyProgram(view, r) {
 	if (!r) { return; }
 	var cust = advisor.customer || {};
@@ -387,7 +409,7 @@ function applyProgram(view, r) {
 		if (!window.ECRMForm) { return; }
 		if (file && window.ECRMForm.attach) { window.ECRMForm.attach([file], 'provider_bill'); }
 		// (331) Η εξοικονόμηση πάει στο «Τι λέω στον πελάτη» της φόρμας.
-		if (window.ECRMForm.advice) { window.ECRMForm.advice({ program_id: r.id, saving: r.saving }); }
+		if (window.ECRMForm.advice) { window.ECRMForm.advice({ program_id: r.id, saving: r.saving, kwh: d0kwh(view) }); }
 	}, 80);
 }
 

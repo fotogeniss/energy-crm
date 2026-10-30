@@ -57,6 +57,33 @@ final class BillComparisonTest extends TestCase
         self::assertNull(BillComparison::currentAnnual(0, 0.15, 5.0));
     }
 
+    public function testPicassoSizesBecomeOneRowWithTheRightSize(): void
+    {
+        $rows = [];
+
+        foreach (['protergia_pic_b_s1', 'protergia_pic_b_m1', 'protergia_pic_b_l3'] as $i => $code) {
+            $price  = \EnergyCRM\Domain\Pricing\ProtergiaPrices2026::all()[$code];
+            $rows[] = [
+                'id' => 10 + $i, 'code' => $code, 'provider_id' => 1, 'name' => $code, 'energy_type' => 'power',
+                'category' => 'business', 'price_type' => 'fixed', 'price_kwh' => null, 'fixed_charge' => null,
+                'pricing' => json_encode($price['pricing']), 'price_updated' => '2026-10-29',
+            ];
+        }
+
+        $out = BillComparison::rank($rows, [], 3770, null, 'power', 'business', '2026-10-30');
+
+        self::assertCount(1, $out['ranked']);
+        self::assertSame('protergia_pic_b_m1', $out['ranked'][0]['code']);
+        self::assertTrue($out['ranked'][0]['fit']['reference_available']);
+        self::assertSame('M 99,90', $out['ranked'][0]['fit']['reference_label']);
+
+        // Χωρίς το Medium ενεργό: το πλησιέστερο, και η οθόνη το λέει.
+        $out = BillComparison::rank([$rows[0], $rows[2]], [], 3770, null, 'power', 'business', '2026-10-30');
+        self::assertSame('protergia_pic_b_s1', $out['ranked'][0]['code']);
+        self::assertFalse($out['ranked'][0]['fit']['reference_available']);
+        self::assertSame(600.0, $out['ranked'][0]['fit']['settlement']);
+    }
+
     /** @return list<array<string, mixed>> */
     private function programs(): array
     {
