@@ -204,6 +204,8 @@ var FIELD_LABEL = {
 	afm: 'Α.Φ.Μ.', doy: 'Δ.Ο.Υ.', adt: 'Α.Δ.Τ.', birth_date: 'Ημ. Γέννησης',
 	street: 'Οδός', street_no: 'Αριθμός', postal_code: 'Τ.Κ.', city: 'Πόλη', region: 'Περιοχή',
 	phone: 'Τηλέφωνο', mobile: 'Κινητό', email: 'Email',
+	// (333) «Όχι τώρα» της λίστας «Χωρίς αέριο / Χωρίς ρεύμα».
+	cross_sell_gas: 'Πρόταση αερίου', cross_sell_power: 'Πρόταση ρεύματος',
 };
 
 function stepHead(title, attr) {

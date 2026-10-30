@@ -31,6 +31,7 @@ namespace EnergyCRM\Http;
 
 use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Infrastructure\TeamInvite;
+use EnergyCRM\Persistence\CrossSellQueries;
 use EnergyCRM\Persistence\GuaranteeRuleRepository;
 use EnergyCRM\Providers\Http\ProviderAccessController;
 use EnergyCRM\Providers\Http\ProviderStatusMapController;
@@ -229,6 +230,8 @@ final class ControllerFactory
             new VatLookupController(Services::aade()),
             // (331) «Τι λέω στον πελάτη».
             new SalesScriptController($scope, Services::providerVisibility(), Services::providers()),
+            // (333) «Δώσε του και αέριο / ρεύμα».
+            new CrossSellController($scope, new CrossSellQueries(), Services::customers(), Services::customerEvents()),
             // (332) Σωστό μέγεθος Picasso.
             new PackageFitController($scope, Services::providerVisibility(), Services::providers()),
             // (328) Πρόταση προγράμματος από λογαριασμό.
