@@ -537,7 +537,10 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		if (notifs.length) {
 			html += '<div class="ecrm-bellpanel__head"><b>Ειδοποιήσεις</b><span>' + (unread ? unread + ' νέες' : '') + '</span></div>';
 			html += '<div class="ecrm-bellpanel__list">' + notifs.slice(0, 10).map(function (n) {
-				return '<button type="button" class="ecrm-bellitem' + (n.read ? '' : ' is-stale') + '" data-bell-open="' + n.contract_id + '">' +
+				// (336) Ειδοποίηση με σύνδεσμο (π.χ. τιμές προς ενημέρωση): ανοίγει τη
+				// σελίδα, όχι καρτέλα σύμβασης -- δεν έχει σύμβαση.
+				var target = n.link ? 'data-bell-link="' + esc(n.link) + '"' : 'data-bell-open="' + n.contract_id + '"';
+				return '<button type="button" class="ecrm-bellitem' + (n.read ? '' : ' is-stale') + '" ' + target + '>' +
 					'<span class="ecrm-bellitem__dot ecrm-badge--processing"></span>' +
 					'<span class="ecrm-bellitem__main"><span class="ecrm-bellitem__name">' + esc(n.title) + '</span>' +
 					'<span class="ecrm-bellitem__meta">' + esc(n.body || '') + '</span></span></button>';
@@ -559,6 +562,9 @@ import { loadEscalations } from '@energy-crm/view-escalations';
 		bellPanel.innerHTML = html;
 		bellPanel.querySelectorAll('[data-bell-open]').forEach(function (b) {
 			b.addEventListener('click', function () { bellPanel.hidden = true; openDetail(this.getAttribute('data-bell-open')); });
+		});
+		bellPanel.querySelectorAll('[data-bell-link]').forEach(function (b) {
+			b.addEventListener('click', function () { bellPanel.hidden = true; window.location.href = this.getAttribute('data-bell-link'); });
 		});
 
 		// Ρητό αίτημα ιδιοκτήτη (06/09): «μόλις πατήσω το καμπανάκι να φεύγουν»

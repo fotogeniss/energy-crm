@@ -14,6 +14,7 @@ namespace EnergyCRM\Http;
 use ECRM_Notifications;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Infrastructure\StalePriceNotice;
 use EnergyCRM\Persistence\NotificationRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -87,6 +88,10 @@ final class NotificationsController implements Controller
                 'body'        => $row['body'],
                 'read'        => ! empty($row['read_at']),
                 'created_at'  => $row['created_at'],
+                // (336) Ειδοποίηση χωρίς σύμβαση που οδηγεί σε σελίδα διαχείρισης.
+                'link'        => $row['type'] === StalePriceNotice::TYPE
+                    ? admin_url('admin.php?page=energy-crm-providers')
+                    : '',
             ],
             $this->notifications->recentFor($scope->actorId())
         );

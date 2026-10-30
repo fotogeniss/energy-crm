@@ -35,6 +35,7 @@ use EnergyCRM\Infrastructure\ActivationTerm;
 use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\DuplicateFollowUp;
 use EnergyCRM\Infrastructure\RejectionFollowUp;
+use EnergyCRM\Infrastructure\StalePriceNotice;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Infrastructure\DocumentKindReview;
@@ -161,6 +162,8 @@ final class Services
     private static ?RejectionFollowUp $rejectionFollowUp = null;
 
     private static ?ActivationTerm $activationTerm = null;
+
+    private static ?StalePriceNotice $stalePriceNotice = null;
 
     private static ?DuplicateFollowUp $duplicateFollowUp = null;
 
@@ -425,6 +428,11 @@ final class Services
             self::payouts(),
             self::paperworkGate(),
         );
+    }
+
+    public static function stalePriceNotice(): StalePriceNotice
+    {
+        return self::$stalePriceNotice ??= new StalePriceNotice(self::providers(), self::notifications());
     }
 
     public static function activationTerm(): ActivationTerm
