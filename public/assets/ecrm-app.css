@@ -1235,7 +1235,9 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 
 /* --- Global search (topbar) --- */
 .ecrm-gsearch { position:relative; flex:1; max-width:520px; margin:0 18px; }
-.ecrm-gsearch > input { width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 14px; font-size:var(--fs-14); background:var(--bg); outline:none; }
+.ecrm-gsearch > input { width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 14px; font-size:var(--fs-14); background:var(--bg); color:var(--ink); outline:none; }
+/* (335) Χωρίς `color` το κείμενο έπαιρνε το μαύρο του browser και στο σκούρο θέμα δεν διαβαζόταν (εύρημα ιδιοκτήτη 30/10). */
+.ecrm-gsearch > input::placeholder { color:var(--muted); }
 .ecrm-gsearch > input:focus { background:var(--surface); border-color:var(--line-mid); }
 .ecrm-gsearch__results { position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:0 16px 40px -16px rgba(0,0,0,.3); z-index:60; max-height:420px; overflow:auto; overscroll-behavior-y: contain; }
 .ecrm-gsearch__row { display:flex; flex-direction:column; gap:3px; width:100%; text-align:left; border:0; background:transparent; border-bottom:1px solid var(--line-soft); padding:10px 14px; cursor:pointer; }
@@ -2137,3 +2139,11 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-xsell__pill.is-draft { background:var(--cat-teal-bg); color:var(--cat-teal); }
 .ecrm-xsell__acts { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
 @media (max-width:600px) { .ecrm-xsell__row { grid-template-columns:1fr; } .ecrm-xsell__acts { justify-content:flex-start; } }
+
+/* (335) Ανανέωση με πρόταση -- docs/UI-RENEWAL-OFFER.html */
+.ecrm-renew-offer td { padding-top:0 !important; border-top:0 !important; }
+.ecrm-renew-offer__in { display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; font-size:var(--fs-12-5); color:var(--ink); padding:2px 0 8px; }
+.ecrm-renew-offer__in b { font-weight:800; }
+.ecrm-renew-offer__save { color:var(--st-active); font-weight:800; }
+.ecrm-renew-offer__kwh { display:inline-flex; gap:6px; align-items:center; }
+.ecrm-renew-offer__kwh .ecrm-input { width:120px; }

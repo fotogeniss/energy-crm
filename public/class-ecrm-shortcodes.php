@@ -1005,6 +1005,12 @@ class ECRM_Shortcodes {
 					<?php $ecrm_field( 'supply_number', 'Αριθμός Παροχής / ΗΚΑΣΠ' ); ?>
 					<?php $ecrm_field( 'meter_number', 'Αριθμός Μετρητή' ); ?>
 					<?php
+					// (335) Ετήσια κατανάλωση: για τη σύγκριση στην ανανέωση και το μέγεθος
+					// Picasso. Δεν τυπώνεται. Γεμίζει μόνη της από την «Πρόταση από
+					// λογαριασμό». Mockup: docs/UI-RENEWAL-OFFER.html.
+					$ecrm_field( 'annual_kwh', 'Ετήσια κατανάλωση (kWh)', 'number', true, 'π.χ. 3500', 'power,gas' );
+					?>
+					<?php
 					// (321) Αέριο Protergia: «Τύπος μετρητή» στο έντυπο, με τις τιμές
 					// του πίνακα εγγυήσεων ΦΑ (Version 16). Λίστα, γιατί η Protergia
 					// δέχεται μόνο αυτές. Mockup: docs/UI-GAS-PROTERGIA.html.

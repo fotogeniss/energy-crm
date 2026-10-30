@@ -18,11 +18,14 @@ namespace EnergyCRM\Http;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ProviderVisibility;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractTerm;
 use EnergyCRM\Domain\Contract\ExtraFields;
+use EnergyCRM\Domain\Pricing\RenewalOffer;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\EventRepository;
+use EnergyCRM\Persistence\ProviderRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -55,6 +58,7 @@ final class RenewalsController implements Controller
         private readonly ContractQueries $queries,
         private readonly EventRepository $events,
         private readonly ProviderVisibility $providerAccess,
+        private readonly ?ProviderRepository $providers = null,
     ) {
     }
 
@@ -83,7 +87,22 @@ final class RenewalsController implements Controller
             'methods'             => 'POST',
             'callback'            => [$this, 'renew'],
             'permission_callback' => Guards::crmUser(),
-            'args'                => ['id' => ['type' => 'integer', 'required' => true]],
+            'args'                => [
+                'id'         => ['type' => 'integer', 'required' => true],
+                // (335) «Ανανέωση με αυτό»: το πρόγραμμα της πρότασης.
+                'program_id' => ['type' => 'integer', 'default' => 0, 'minimum' => 0],
+            ],
+        ]);
+
+        // (335) Η ετήσια κατανάλωση, γραμμένη από τη λίστα «Λήξεις».
+        register_rest_route(Router::NAMESPACE, '/contracts/(?P<id>\d+)/annual-kwh', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'annualKwh'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => [
+                'id'  => ['type' => 'integer', 'required' => true],
+                'kwh' => ['type' => 'number', 'required' => true, 'minimum' => 1, 'maximum' => 10000000],
+            ],
         ]);
     }
 
@@ -102,7 +121,7 @@ final class RenewalsController implements Controller
         return new WP_REST_Response([
             'ok'   => true,
             'days' => (int) $request['days'],
-            'rows' => $this->queries->expiring($scope, (int) $request['days']),
+            'rows' => $this->withOffers($this->queries->expiring($scope, (int) $request['days']), $scope),
         ], 200);
     }
 
@@ -133,6 +152,17 @@ final class RenewalsController implements Controller
         }
 
         $draft = $this->carriedForward($source);
+
+        // (335) «Ανανέωση με αυτό»: άλλο πρόγραμμα, ίδιας ενέργειας, ενεργό, από
+        // πάροχο που βλέπει ο δράστης. Οτιδήποτε άλλο αγνοείται και η ανανέωση
+        // μένει στο πρόγραμμα που είχε -- ποτέ μισή αλλαγή.
+        $offered = $this->offeredProgram((int) $request['program_id'], $source, $scope);
+
+        if ($offered !== null) {
+            $draft['provider_id'] = (int) $offered['provider_id'];
+            $draft['program_id']  = (int) $offered['id'];
+            $draft['price_type']  = $offered['price_type'] ?: ($draft['price_type'] ?? null);
+        }
 
         $months = (int) ($source['term_months'] ?? 0);
         $start  = $this->nextTermStart((string) ($source['end_date'] ?? ''));
@@ -182,6 +212,106 @@ final class RenewalsController implements Controller
             'start_date'  => $draft['start_date'],
             'end_date'    => $draft['end_date'],
         ], 200);
+    }
+
+    public function annualKwh(WP_REST_Request $request): WP_REST_Response
+    {
+        try {
+            $scope = $this->scopes->forCurrentUser();
+        } catch (NotAuthenticated) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Απαιτείται σύνδεση.'], 401);
+        }
+
+        $id       = (int) $request['id'];
+        $contract = $this->contracts->find($id, $scope);
+
+        if ($contract === null) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
+        }
+
+        $extra               = (array) json_decode((string) ($contract['extra_json'] ?? ''), true);
+        $extra['annual_kwh'] = (string) (int) round((float) $request['kwh']);
+
+        $this->contracts->update($id, $scope, ['extra_json' => ExtraFields::toJson($extra)]);
+
+        return new WP_REST_Response(['ok' => true], 200);
+    }
+
+    /**
+     * (335) Η πρόταση για κάθε σύμβαση που λήγει. Το `extra_json` χρειάζεται
+     * μόνο για την κατανάλωση και ΔΕΝ φεύγει προς τον browser.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private function withOffers(array $rows, UserScope $scope): array
+    {
+        $programs = [];
+        $current  = [];
+
+        if ($this->providers !== null) {
+            $access   = $this->providerAccess->forScope($scope);
+            $programs = array_values(array_filter(
+                $this->providers->activePrograms(),
+                static fn (array $row): bool => $access->allows((int) $row['provider_id'])
+            ));
+            $current  = $this->providers->programsByIds(array_map(
+                static fn (array $row): int => (int) ($row['program_id'] ?? 0),
+                $rows
+            ));
+        }
+
+        $today = current_time('Y-m-d');
+
+        return array_map(
+            static function (array $row) use ($programs, $current, $today): array {
+                $kwh = RenewalOffer::kwhFrom($row['extra_json'] ?? null);
+                unset($row['extra_json']);
+
+                $energy = (string) ($row['energy_type'] ?? '');
+
+                $row['annual_kwh'] = $kwh;
+                $row['offer']      = in_array($energy, ['power', 'gas'], true) && $kwh !== null
+                    ? RenewalOffer::for(
+                        $current[(int) ($row['program_id'] ?? 0)] ?? null,
+                        $programs,
+                        $kwh,
+                        $energy,
+                        (string) ($row['category'] ?? ''),
+                        $today
+                    )
+                    : null;
+                $row['program_name'] = (string) (($current[(int) ($row['program_id'] ?? 0)] ?? [])['name'] ?? '');
+
+                return $row;
+            },
+            $rows
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $source
+     * @return array<string, mixed>|null
+     */
+    private function offeredProgram(int $programId, array $source, UserScope $scope): ?array
+    {
+        if ($programId <= 0 || $this->providers === null) {
+            return null;
+        }
+
+        $access = $this->providerAccess->forScope($scope);
+
+        foreach ($this->providers->activePrograms() as $program) {
+            if (
+                (int) $program['id'] === $programId
+                && (string) $program['energy_type'] === (string) ($source['energy_type'] ?? '')
+                && $access->allows((int) $program['provider_id'])
+            ) {
+                return $program;
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -110,4 +110,48 @@ final class ProviderRepository
             ['id' => $programId, 'provider_id' => $providerId]
         );
     }
+
+    /**
+     * (335) Προγράμματα με id, ενεργά ή όχι -- το πρόγραμμα μιας σύμβασης που
+     * λήγει μπορεί να έχει αποσυρθεί, και η τιμή του χρειάζεται για σύγκριση.
+     *
+     * @param list<int> $ids
+     * @return array<int, array<string, mixed>> id => γραμμή
+     */
+    public function programsByIds(array $ids): array
+    {
+        global $wpdb;
+
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            static fn (int $id): bool => $id > 0
+        )));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT id, provider_id, name, code, energy_type, category,
+                        price_type, price_kwh, fixed_charge, pricing, price_updated, exit_fees
+                 FROM %i WHERE id IN ({$placeholders})",
+                [Tables::name(Tables::PROGRAMS), ...$ids]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        $out = [];
+
+        foreach ($rows as $row) {
+            $out[(int) $row['id']] = $row;
+        }
+
+        return $out;
+    }
 }

@@ -123,6 +123,7 @@ final class ControllerFactory
                 $queries,
                 Services::events(),
                 Services::providerVisibility(),
+                Services::providers(),
             ),
             // (326) «+ Αέριο / + Ρεύμα στον ίδιο πελάτη».
             new CompanionController(

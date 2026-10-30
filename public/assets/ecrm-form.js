@@ -1231,7 +1231,14 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 		(function () {
 			var kwhEl = q('[data-package-fit-kwh]'), btn = q('[data-package-fit-switch]');
 			var t = null;
-			if (kwhEl) { kwhEl.addEventListener('input', function () { clearTimeout(t); t = setTimeout(refreshPackageFit, 350); }); }
+			if (kwhEl) {
+				kwhEl.addEventListener('input', function () {
+					// (335) Ό,τι γράφεται εδώ είναι η ετήσια κατανάλωση της αίτησης.
+					var f = root.querySelector('[name="annual_kwh"]');
+					if (f) { f.value = kwhEl.value; }
+					clearTimeout(t); t = setTimeout(refreshPackageFit, 350);
+				});
+			}
 			if (!btn) return;
 			btn.addEventListener('click', function () {
 				var sel = q('[data-program]');
@@ -1723,6 +1730,7 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 			var pid = state.program_id, kwhEl = q('[data-package-fit-kwh]');
 			if (!pid || state.energy_type !== 'power') { box.hidden = true; return; }
 			if (state.advice && state.advice.kwh && !kwhEl.value) { kwhEl.value = Math.round(state.advice.kwh); }
+			if (!kwhEl.value && fieldVal('annual_kwh')) { kwhEl.value = fieldVal('annual_kwh'); }
 			var kwh = +kwhEl.value || 0, seq = ++packageFitSeq;
 
 			fetch(api('/programs/' + pid + '/package-fit') + '?kwh=' + encodeURIComponent(kwh), { headers: headers() })
@@ -2137,7 +2145,13 @@ import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 			state.wmax = 1; goStep(1, false);
 		}
 
-		_adviceFn = function (a) { state.advice = a || null; refreshSalesScript(); };
+		_adviceFn = function (a) {
+			state.advice = a || null;
+			// (335) Η κατανάλωση της πρότασης μένει στην αίτηση (annual_kwh).
+			var kwhField = root.querySelector('[name="annual_kwh"]');
+			if (kwhField && a && a.kwh && !kwhField.value) { kwhField.value = Math.round(a.kwh); }
+			refreshSalesScript();
+		};
 		_editFn = applyEdit; _resetFn = resetForm; _isDirtyFn = function () { return dirty; };
 
 		// dropzone

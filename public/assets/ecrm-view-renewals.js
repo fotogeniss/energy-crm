@@ -55,7 +55,7 @@ function renderRenewals(view, d) {
 			'<td class="ecrm-col-sec">' + (r.end_date ? fmtDate(r.end_date) : '—') + '</td>' +
 			'<td><span class="ecrm-agepill ' + cls + '">' + pill + '</span></td>' +
 			'<td><button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-renew="' + r.id + '">' + svgIcon('edit') + ' Ανανέωση</button></td>' +
-			'</tr>';
+			'</tr>' + offerRow(r);
 	}).join('');
 	var table = rows.length
 		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th class="ecrm-col-sec">Κωδικός</th><th class="ecrm-col-sec">Πάροχος</th><th class="ecrm-col-sec">Λήξη</th><th>Κατάσταση</th><th></th></tr></thead><tbody>' + body + '</tbody></table></div>'
@@ -69,22 +69,72 @@ function renderRenewals(view, d) {
 
 	view.querySelectorAll('[data-rscope]').forEach(function (b) { b.addEventListener('click', function () { renewState.scope = this.getAttribute('data-rscope'); loadRenewals(); }); });
 	view.querySelectorAll('[data-renew]').forEach(function (b) {
+		b.addEventListener('click', function () { renew(this, this.getAttribute('data-renew'), 0); });
+	});
+	view.querySelectorAll('[data-renew-offer]').forEach(function (b) {
+		b.addEventListener('click', function () { renew(this, this.getAttribute('data-renew-offer'), +this.getAttribute('data-program')); });
+	});
+	view.querySelectorAll('[data-kwh-save]').forEach(function (b) {
 		b.addEventListener('click', function () {
-			var id = this.getAttribute('data-renew'); var btn = this; btn.disabled = true;
-			fetch(api('/contracts/' + id + '/renew'), { method: 'POST', headers: H(true) })
+			var id = this.getAttribute('data-kwh-save');
+			var input = view.querySelector('[data-kwh-for="' + id + '"]');
+			var kwh = Math.round(+(input && input.value) || 0);
+			if (kwh <= 0) { toast('Γράψε την κατανάλωση του χρόνου σε kWh.', false); return; }
+			var btn = this; btn.disabled = true;
+			fetch(api('/contracts/' + id + '/annual-kwh'), {
+				method: 'POST',
+				headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+				body: JSON.stringify({ kwh: kwh })
+			})
 				.then(function (r) { return r.json(); })
-				.then(function (d) {
-					btn.disabled = false;
-					if (d && d.ok && d.contract_id) {
-						toast('Δημιουργήθηκε ανανέωση — άνοιξε για επεξεργασία.');
-						// load the new draft into the form
-						fetch(api('/contracts/' + d.contract_id), { headers: H() })
-							.then(function (r) { return r.json(); })
-							.then(function (dd) { var c = dd.contract || dd; openEdit(c); })
-							.catch(function () { toast('Η ανανέωση δημιουργήθηκε, αλλά απέτυχε το άνοιγμα για επεξεργασία — βρες τη στη λίστα.', false); });
-					} else { toast((d && d.error) || 'Αποτυχία.', false); }
-				})
+				.then(function (d) { if (d && d.ok) { loadRenewals(); } else { btn.disabled = false; toast((d && d.error) || 'Αποτυχία.', false); } })
 				.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
 		});
 	});
+}
+
+// (335) Η πρόταση κάτω από τη σύμβαση. Mockup: docs/UI-RENEWAL-OFFER.html.
+function offerRow(r) {
+	if (['power', 'gas'].indexOf(r.energy_type) < 0) { return ''; }
+	var money = function (v) { return Math.round(v).toLocaleString('el-GR') + ' €'; };
+	var inner;
+	if (r.annual_kwh == null) {
+		inner = '<span class="ecrm-muted">Δεν ξέρουμε την κατανάλωσή του.</span>' +
+			'<span class="ecrm-renew-offer__kwh"><input type="number" min="1" class="ecrm-input" placeholder="kWh / έτος" data-kwh-for="' + esc(r.id) + '">' +
+			'<button type="button" class="ecrm-btn ecrm-btn--sm" data-kwh-save="' + esc(r.id) + '">Σύγκρινε</button></span>';
+	} else if (r.offer && r.offer.state === 'cheaper' && r.offer.best) {
+		var o = r.offer;
+		inner = 'Φθηνότερο σήμερα για ' + Math.round(r.annual_kwh).toLocaleString('el-GR') + ' kWh: <b>' + esc(o.best.name) + '</b>' +
+			(o.saving != null && o.saving > 0
+				? ' <span class="ecrm-renew-offer__save">−' + money(o.saving) + '/έτος</span> <span class="ecrm-muted">(' + money(o.best_annual) + ' αντί ' + money(o.current_annual) + ')</span>'
+				: ' <span class="ecrm-muted">(' + money(o.best_annual) + '/έτος· η σημερινή τιμή του προγράμματός του δεν είναι γνωστή)</span>') +
+			' <button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-renew-offer="' + esc(r.id) + '" data-program="' + esc(o.best.id) + '">Ανανέωση με αυτό</button>';
+	} else if (r.offer && r.offer.state === 'best') {
+		inner = '<span class="ecrm-muted">✓ Το πρόγραμμά του είναι ήδη το φθηνότερο για ' + Math.round(r.annual_kwh).toLocaleString('el-GR') + ' kWh.</span>';
+	} else {
+		inner = '<span class="ecrm-muted">Δεν υπάρχει πρόγραμμα με πρόσφατη τιμή για σύγκριση.</span>';
+	}
+	return '<tr class="ecrm-renew-offer"><td colspan="6"><div class="ecrm-renew-offer__in">' + inner + '</div></td></tr>';
+}
+
+function renew(btn, id, programId) {
+	btn.disabled = true;
+	fetch(api('/contracts/' + id + '/renew'), {
+		method: 'POST',
+		headers: Object.assign({ 'Content-Type': 'application/json' }, H(true)),
+		body: JSON.stringify(programId ? { program_id: programId } : {})
+	})
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			btn.disabled = false;
+			if (d && d.ok && d.contract_id) {
+				toast('Δημιουργήθηκε ανανέωση — άνοιξε για επεξεργασία.');
+				// load the new draft into the form
+				fetch(api('/contracts/' + d.contract_id), { headers: H() })
+					.then(function (r) { return r.json(); })
+					.then(function (dd) { var c = dd.contract || dd; openEdit(c); })
+					.catch(function () { toast('Η ανανέωση δημιουργήθηκε, αλλά απέτυχε το άνοιγμα για επεξεργασία — βρες τη στη λίστα.', false); });
+			} else { toast((d && d.error) || 'Αποτυχία.', false); }
+		})
+		.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
 }
