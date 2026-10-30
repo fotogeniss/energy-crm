@@ -43,6 +43,34 @@ final class TeamRepository
         return $users;
     }
 
+    /**
+     * (338) id => εμφανιζόμενο όνομα, σε ένα ερώτημα.
+     *
+     * @param list<int> $ids
+     * @return array<int, string>
+     */
+    public function displayNames(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            static fn (int $id): bool => $id > 0
+        )));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        /** @var list<WP_User> $users */
+        $users = get_users(['include' => $ids, 'fields' => ['ID', 'display_name']]);
+        $out   = [];
+
+        foreach ($users as $user) {
+            $out[(int) $user->ID] = (string) $user->display_name;
+        }
+
+        return $out;
+    }
+
     public function reportsDirectlyTo(int $memberId, int $managerId): bool
     {
         return (int) get_user_meta($memberId, self::PARENT_META, true) === $managerId;

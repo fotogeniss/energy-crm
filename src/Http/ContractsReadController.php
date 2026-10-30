@@ -27,6 +27,7 @@ use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\SignatureRoles;
 use EnergyCRM\Domain\Contract\StatusTrack;
+use EnergyCRM\Domain\Contract\StuckRule;
 use EnergyCRM\Domain\Document\SystemKind;
 use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Persistence\ContractDetails;
@@ -272,18 +273,15 @@ final class ContractsReadController implements Controller
             return null;
         }
 
-        // Διπλάσιο από το συνηθισμένο. Απλό να εξηγηθεί σε άνθρωπο, και δεν
-        // χτυπάει για μία μέρα καθυστέρηση. Το +1 κρατά την κάρτα σιωπηλή όταν
-        // ο συνήθης χρόνος είναι μηδέν μέρες — αλλιώς κάθε αυθημερόν κατάσταση
-        // θα ήταν «εκτός του συνηθισμένου» από το πρώτο εικοσιτετράωρο.
-        if ($days < max(2 * $typical['days'], $typical['days'] + 1)) {
-            return null;
-        }
+        // Διπλάσιο από το συνηθισμένο (Domain\Contract\StuckRule, ίδιος κανόνας
+        // με τη λίστα «Κολλημένες αιτήσεις»). Χωρίς όριο ασφαλείας: η κάρτα
+        // σιωπά όταν δεν υπάρχει σύγκριση.
+        $verdict = StuckRule::judge($days, $typical, null);
 
-        return [
-            'days'    => $days,
-            'typical' => $typical['days'],
-            'sample'  => $typical['sample'],
+        return $verdict === null ? null : [
+            'days'    => $verdict['days'],
+            'typical' => (int) $verdict['typical'],
+            'sample'  => $verdict['sample'],
         ];
     }
 

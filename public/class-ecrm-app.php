@@ -130,13 +130,16 @@ class ECRM_App {
 		if ( current_user_can( \EnergyCRM\Access\Capability::MANAGE_TEAM ) ) {
 			// Ήταν 'Ομάδα Live' — «live» έμεινε αμετάφραστο (κανόνας 4).
 			$navMore[] = [ 'view' => 'teamlive', 'label' => 'Ομάδα τώρα', 'icon' => 'pulse' ];
-			// Νέο 31/08: το «Της ομάδας σου» section του email digest (197),
-			// τώρα και σαν δική του οθόνη -- ίδιο capability, ίδιος λόγος:
-			// μόνο όποιος διαχειρίζεται ομάδα έχει «της ομάδας σου» να δει.
-			// Ο ιδιοκτήτης το ζήτησε ρητά μέσα στο CRM, όχι μόνο σε email
-			// («δεν υπάρχει λόγος να στέλνονται mail και μαλακίες»).
-			$navMore[] = [ 'view' => 'escalations', 'label' => 'Καθυστερήσεις ομάδας', 'icon' => 'flag' ];
 		}
+		// (338) Ήταν «Καθυστερήσεις ομάδας», μόνο για υπεύθυνους (31/08). Τώρα
+		// «Κολλημένες αιτήσεις» για όλους, ο καθένας στο scope του, με τον
+		// κανόνα της κάρτας «Γιατί κάθεται» (docs/UI-STUCK-LIST.html).
+		$stuck_ct = count( ( new \EnergyCRM\Http\StuckController(
+			\EnergyCRM\Services::scopeResolver(),
+			\EnergyCRM\Services::statusDwell(),
+			\EnergyCRM\Services::team()
+		) )->find( \EnergyCRM\Services::scopeResolver()->forCurrentUser() ) );
+		$navMore[] = [ 'view' => 'escalations', 'label' => 'Κολλημένες αιτήσεις', 'icon' => 'flag', 'badge' => $stuck_ct ];
 		if ( current_user_can( \EnergyCRM\Access\Capability::VIEW_ANALYTICS ) ) {
 			$navMore[] = [ 'view' => 'analytics', 'label' => 'Στατιστικά', 'icon' => 'analytics' ];
 		}

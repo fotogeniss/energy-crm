@@ -1,79 +1,120 @@
-/* Energy CRM — ομάδα · καθυστερήσεις: αδρανείς συμβάσεις της ομάδας.
+/* Energy CRM — «Κολλημένες αιτήσεις» (338).
  *
- * Ίδια δεδομένα με το «Της ομάδας σου» section του email digest (197) —
- * `GET /team/escalations`, πάνω στο ίδιο `ECRM_Notifications::escalations()`.
- * Ο λόγος που υπάρχει και εδώ, όχι μόνο στο mail: 31/08, ο ιδιοκτήτης —
- * «δεν υπάρχει λόγος να στέλνονται mail και μαλακίες, τα θέλουμε όλα στο
- * CRM». Το email digest ΔΕΝ αγγίζεται από αυτή τη δουλειά, μένει όπως είναι·
- * απλώς η ίδια πληροφορία γίνεται τώρα ορατή και μέσα στην εφαρμογή.
+ * Ήταν «Καθυστερήσεις ομάδας» (31/08): μόνο για υπεύθυνους, με «μέρες χωρίς
+ * καμία αλλαγή» και ένα όριο για όλα. Τώρα `GET /stuck`: ο κανόνας της κάρτας
+ * «Γιατί κάθεται» (μέρες στην ίδια κατάσταση, διπλάσιο από το συνηθισμένο
+ * του παρόχου) για όλους, ο καθένας στο scope του. Mockup docs/UI-STUCK-LIST.html.
  *
- * Ομαδοποίηση ανά συνεργάτη γίνεται εδώ, στο frontend — ο server επιστρέφει
- * flat λίστα (ίδιο σχήμα με needsAttention()/attention_extra), το group-by
- * είναι παρουσίαση, όχι δεδομένο.
+ * Το `group` το λέει ο server: `provider` για όποιον βλέπει όλη την εταιρεία
+ * (back office, διαχειριστής), `owner` για τον υπεύθυνο, `none` για τον
+ * πωλητή. Η ομαδοποίηση είναι παρουσίαση και γίνεται εδώ.
  *
- * Δεν έχει auto-refresh σαν το view-team-live: εκείνο δείχνει «τώρα»
- * (online/offline), αυτό δείχνει αδράνεια μερών ημερών — ένα ξαναφόρτωμα σε
- * κάθε άνοιγμα της οθόνης είναι αρκετό.
+ * Το email digest (`/team/escalations`) δεν αλλάζει.
  */
 
 import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
 import { openDetail } from '@energy-crm/navigate';
 
+var state = { data: null, provider: '' };
+
 export function loadEscalations() {
 	var view = viewEl('escalations');
 	view.innerHTML = '<div class="ecrm-card"><div class="ecrm-loading">Φόρτωση…</div></div>';
 
-	fetch(api('/team/escalations'), { headers: H() })
+	fetch(api('/stuck'), { headers: H() })
 		.then(function (r) { return r.json(); })
 		.then(function (d) {
 			if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">' + esc((d && d.error) || 'Σφάλμα.') + '</div></div>'; return; }
-			renderEscalations(view, d);
+			state.data = d;
+			state.provider = '';
+			render(view);
 		})
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
 }
 
-/* Ομαδοποίηση με διατήρηση σειράς εμφάνισης: το πρώτο όνομα που συναντάμε
- * ανοίγει την ομάδα του, ώστε η σειρά της οθόνης να ακολουθεί τη σειρά που
- * ήδη έστειλε ο server (πιο αδρανείς πρώτα — ίδιο ORDER BY με το digest). */
-function groupByOwner(rows) {
-	var order = [], byOwner = {};
-	(rows || []).forEach(function (r) {
-		var key = r.owner_name || '—';
-		if (!byOwner[key]) { byOwner[key] = []; order.push(key); }
-		byOwner[key].push(r);
+/* Ομαδοποίηση με διατήρηση σειράς: ο server στέλνει πιο παλιά πρώτα, άρα
+ * πρώτη ομάδα είναι αυτή με την πιο κολλημένη αίτηση. */
+function groupBy(rows, key) {
+	var order = [], by = {};
+	rows.forEach(function (r) {
+		var k = r[key] || '—';
+		if (!by[k]) { by[k] = []; order.push(k); }
+		by[k].push(r);
 	});
-	return order.map(function (name) { return { name: name, rows: byOwner[name] }; });
+	return order.map(function (name) { return { name: name, rows: by[name] }; });
 }
 
-function renderEscalations(view, d) {
-	var groups = groupByOwner(d.rows);
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 
-	if (!groups.length) {
-		view.innerHTML = '<header class="ecrm-head"><div class="ecrm-eyebrow">Ομάδα</div><h2 class="ecrm-title">Καθυστερήσεις</h2>' +
-			'<p class="ecrm-sub">Συμβάσεις της ομάδας σου χωρίς κίνηση πάνω από ' + (Number(d.days) || 0) + ' ημέρες.</p></header>' +
-			'<div class="ecrm-card"><div class="ecrm-empty">Καμία σύμβαση της ομάδας δεν είναι αδρανής αυτή τη στιγμή.</div></div>';
+function rowHTML(r, group) {
+	var days = Number(r.days) || 0;
+	var meta = ['#' + (r.code || '')];
+	if (group !== 'provider') meta.push(r.provider);
+	if (r.program) meta.push(r.program);
+	if (group === 'provider') meta.push('πωλητής ' + r.owner_name);
+	var cmp = r.compared
+		? 'συνήθως ' + (Number(r.typical) || 0)
+		: 'χωρίς σύγκριση · όριο ' + (Number(r.limit) || 0);
+	// Κόκκινο από το τριπλάσιο του συνηθισμένου (ή 1,5 × όριο), αλλιώς πορτοκαλί.
+	var critical = r.compared ? days >= 3 * Math.max(1, Number(r.typical) || 0) : days >= 1.5 * (Number(r.limit) || 0);
+
+	return '<div class="ecrm-mgrrow" data-mgr-go="' + esc(r.id) + '">' +
+		'<span class="ecrm-mgrrow__badge"><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || r.status) + '</span></span>' +
+		'<span class="ecrm-mgrrow__m"><b>' + esc(r.customer || '—') + '</b><small>' + esc(meta.join(' · ')) + '</small></span>' +
+		'<span class="ecrm-mgrrow__age' + (critical ? ' is-critical' : '') + '">' + esc(plural(days, 'μέρα', 'μέρες')) +
+		'<small>' + esc(cmp) + '</small></span>' +
+		'</div>';
+}
+
+function render(view) {
+	var d = state.data;
+	var all = d.rows || [];
+	var group = d.group || 'none';
+	var sub = { provider: 'Όλη η εταιρεία', owner: 'Της ομάδας σου', none: 'Δικές σου' }[group] || '';
+	var head = '<header class="ecrm-head"><div class="ecrm-eyebrow">' + esc(sub) + '</div><h2 class="ecrm-title">Κολλημένες αιτήσεις</h2>' +
+		'<p class="ecrm-sub">Αιτήσεις που κάθονται στην ίδια κατάσταση πάνω από το διπλάσιο του συνηθισμένου για τον πάροχο.</p></header>';
+
+	if (!all.length) {
+		view.innerHTML = head + '<div class="ecrm-card"><div class="ecrm-empty">Καμία κολλημένη αίτηση αυτή τη στιγμή.</div></div>';
 		return;
 	}
 
-	var body = groups.map(function (g) {
-		var rows = g.rows.map(function (r) {
-			var age = Number(r.age_days) || 0;
-			return '<div class="ecrm-mgrrow" data-mgr-go="' + esc(r.id) + '">' +
-				'<span class="ecrm-mgrrow__badge"><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || r.status) + '</span></span>' +
-				'<span class="ecrm-mgrrow__m"><b>' + esc(r.customer || '—') + '</b><small>#' + esc(r.code || '') + '</small></span>' +
-				'<span class="ecrm-mgrrow__age' + (age >= 14 ? ' is-critical' : '') + '">' + age + (age === 1 ? ' ημέρα' : ' ημέρες') + '</span>' +
-				'</div>';
+	var tabs = '';
+	var rows = all;
+
+	if (group === 'provider') {
+		var providers = groupBy(all, 'provider');
+		tabs = '<div class="ecrm-xsell__tabs">' +
+			'<button type="button" class="ecrm-xsell__tab' + (state.provider === '' ? ' is-on' : '') + '" data-stuck-prov="">Όλες <small>' + all.length + '</small></button>' +
+			providers.map(function (p) {
+				return '<button type="button" class="ecrm-xsell__tab' + (state.provider === p.name ? ' is-on' : '') + '" data-stuck-prov="' + esc(p.name) + '">' +
+					esc(p.name) + ' <small>' + p.rows.length + '</small></button>';
+			}).join('') + '</div>';
+		if (state.provider !== '') {
+			rows = all.filter(function (r) { return r.provider === state.provider; });
+		}
+	}
+
+	var body;
+	if (group === 'none') {
+		body = '<div class="ecrm-mgrgroup">' + rows.map(function (r) { return rowHTML(r, group); }).join('') + '</div>';
+	} else {
+		body = groupBy(rows, group === 'provider' ? 'provider' : 'owner_name').map(function (g) {
+			return '<div class="ecrm-mgrgroup"><div class="ecrm-mgrgroup__head">' +
+				'<span class="ecrm-mgrgroup__name">' + esc(g.name) + '</span>' +
+				'<span class="ecrm-mgrgroup__n">' + esc(plural(g.rows.length, 'αίτηση', 'αιτήσεις')) + '</span>' +
+				'</div>' + g.rows.map(function (r) { return rowHTML(r, group); }).join('') + '</div>';
 		}).join('');
+	}
 
-		return '<div class="ecrm-mgrgroup"><div class="ecrm-mgrgroup__head">' +
-			'<span class="ecrm-mgrgroup__name">' + esc(g.name) + '</span>' +
-			'<span class="ecrm-mgrgroup__n">' + g.rows.length + (g.rows.length === 1 ? ' σύμβαση' : ' συμβάσεις') + '</span>' +
-			'</div>' + rows + '</div>';
-	}).join('');
+	view.innerHTML = head + tabs + '<div class="ecrm-card">' + body + '</div>';
 
-	view.innerHTML = '<header class="ecrm-head"><div class="ecrm-eyebrow">Ομάδα</div><h2 class="ecrm-title">Καθυστερήσεις</h2>' +
-		'<p class="ecrm-sub">Συμβάσεις της ομάδας σου χωρίς κίνηση πάνω από ' + (Number(d.days) || 0) + ' ημέρες — ίδια λίστα με το email digest.</p></header>' +
-		'<div class="ecrm-card">' + body + '</div>';
+	view.querySelectorAll('[data-stuck-prov]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			state.provider = b.getAttribute('data-stuck-prov') || '';
+			render(view);
+		});
+	});
 
 	// Ίδιο μοτίβο με το attentionHTML() του dashboard: το κλικ ανοίγει την
 	// ίδια τη σύμβαση, μέσω openDetail() και όχι με δικό του route.

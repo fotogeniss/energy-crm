@@ -47,6 +47,8 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Persistence;
 
+use EnergyCRM\Access\UserScope;
+
 final class StatusDwellRepository
 {
     /**
@@ -106,6 +108,60 @@ final class StatusDwellRepository
         );
 
         return null === $days ? null : (int) $days;
+    }
+
+    /**
+     * (338) Οι ανοιχτές αιτήσεις του scope με τις μέρες στην τρέχουσα κατάσταση.
+     *
+     * Ίδιο μέτρημα με το `daysInStatus()`, σε ένα ερώτημα για όλη τη λίστα.
+     * `dwell` null όταν δεν υπάρχει γεγονός εισόδου (βλ. daysInStatus()).
+     * Η απόφαση «κόλλησε;» δεν είναι εδώ: Domain\Contract\StuckRule.
+     *
+     * @param list<string> $statuses
+     * @return list<array<string, mixed>>
+     */
+    public function openWithDwell(UserScope $scope, array $statuses, int $limit = 2000): array
+    {
+        global $wpdb;
+
+        if ($statuses === []) {
+            return [];
+        }
+
+        [$scopeSql, $scopeIds] = ScopeClause::forScope($scope, 'c');
+
+        $in = implode(',', array_fill(0, count($statuses), '%s'));
+
+        // Ο κατάλογος IN και το scope είναι μόνο placeholders.
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.id, c.code, c.status, c.provider_id, c.partner_user_id,
+                        pv.name AS provider_name, pg.name AS program_name,
+                        cu.first_name, cu.last_name, cu.company_name,
+                        DATEDIFF(NOW(), ( SELECT MAX(e.created_at) FROM %i e
+                                           WHERE e.contract_id = c.id AND e.to_status = c.status )) AS dwell
+                   FROM %i c
+                   LEFT JOIN %i cu ON cu.id = c.customer_id
+                   LEFT JOIN %i pv ON pv.id = c.provider_id
+                   LEFT JOIN %i pg ON pg.id = c.program_id
+                  WHERE c.status IN ({$in}){$scopeSql}
+                  ORDER BY c.id
+                  LIMIT %d",
+                Tables::name(Tables::EVENTS),
+                Tables::name(Tables::CONTRACTS),
+                Tables::name(Tables::CUSTOMERS),
+                Tables::name(Tables::PROVIDERS),
+                Tables::name(Tables::PROGRAMS),
+                ...$statuses,
+                ...$scopeIds,
+                ...[max(1, $limit)]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable
+
+        return is_array($rows) ? array_values($rows) : [];
     }
 
     /**

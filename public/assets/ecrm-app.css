@@ -1729,10 +1729,14 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-mgrrow__m small { display: block; color: var(--muted); font-size: var(--fs-12); margin-top: 2px; }
 .ecrm-mgrrow__age { flex: 0 0 96px; text-align: right; font-size: var(--fs-12-5); font-weight: 700; color: var(--st-pending); }
 .ecrm-mgrrow__age.is-critical { color: var(--st-cancel); }
+/* (338) «συνήθως 4» / «χωρίς σύγκριση · όριο 10» κάτω από τις μέρες. */
+.ecrm-mgrrow__age small { display: block; font-weight: 600; font-size: var(--fs-11); color: var(--muted); }
 
 @media (max-width: 620px) {
 	.ecrm-attnx__kind { display: none; }
-	.ecrm-mgrrow { flex-wrap: wrap; }
+	.ecrm-mgrrow { flex-wrap: wrap; row-gap: 6px; }
+	/* (338) Όνομα σε όλο το πλάτος, κατάσταση και μέρες από κάτω. */
+	.ecrm-mgrrow__m { flex: 1 1 100%; order: -1; }
 	.ecrm-mgrrow__age { flex: 0 0 auto; margin-left: auto; }
 }
 
