@@ -126,7 +126,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/navigate',
 			'@energy-crm/dialog',
 		],
-		'@energy-crm/view-dashboard'   => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
+		'@energy-crm/view-dashboard'   => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate', '@energy-crm/dialog' ],
 		'@energy-crm/view-import'      => [ '@energy-crm/util' ],
 		'@energy-crm/view-kb'          => [ '@energy-crm/util' ],
 		'@energy-crm/view-training'    => [ '@energy-crm/util' ],

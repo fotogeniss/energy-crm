@@ -18,10 +18,13 @@ namespace EnergyCRM\Http;
 use ECRM_Notifications;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Partner\PerformanceTier;
 use DateTimeImmutable;
 use DateTimeZone;
 use EnergyCRM\Persistence\DashboardRepository;
+use EnergyCRM\Persistence\StoreRepository;
+use EnergyCRM\Persistence\TargetRepository;
 use WP_REST_Response;
 
 final class DashboardController implements Controller
@@ -29,6 +32,8 @@ final class DashboardController implements Controller
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly DashboardRepository $dashboard,
+        private readonly ?StoreRepository $store = null,
+        private readonly ?TargetRepository $targets = null,
     ) {
     }
 
@@ -106,7 +111,30 @@ final class DashboardController implements Controller
 
             // Τα τέσσερα πλακίδια, 25/08/2026 — δες DashboardRepository::tiles().
             'tiles'       => $this->tilesFor($actor, $monthStart),
+
+            // (345) Ο στόχος αιτήσεων του μήνα, αν του έχει μπει. Ίδιο «μήνας»
+            // με την καρτέλα «Κατάστημα»: αιτήσεις που στάλθηκαν, όχι πρόχειρα.
+            'target'      => $this->targetFor($actor),
         ], 200);
+    }
+
+    /** @return array{target: int, done: int}|null */
+    private function targetFor(int $actor): ?array
+    {
+        if ($this->store === null || $this->targets === null) {
+            return null;
+        }
+
+        $month  = $this->store->calendar()['month'];
+        $target = $this->targets->forMonth($month, [$actor])[$actor] ?? null;
+
+        if ($target === null) {
+            return null;
+        }
+
+        $done = $this->store->contractStats(UserScope::forSelf($actor))[$actor]['month'] ?? 0;
+
+        return ['target' => $target, 'done' => $done];
     }
 
     /**

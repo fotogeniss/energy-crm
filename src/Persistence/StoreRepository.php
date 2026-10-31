@@ -191,6 +191,228 @@ final class StoreRepository
     }
 
     /**
+     * (345) Ο τρέχων μήνας, η μέρα του και πόσες μέρες έχει -- από το ρολόι
+     * της βάσης, το ίδιο που γράφει τα created_at.
+     *
+     * @return array{month: string, day: int, days: int}
+     */
+    public function calendar(): array
+    {
+        global $wpdb;
+
+        $row = $wpdb->get_row(
+            'SELECT LEFT(CURDATE(), 7) AS month, DAY(CURDATE()) AS day, DAY(LAST_DAY(CURDATE())) AS days',
+            ARRAY_A
+        );
+
+        return [
+            'month' => (string) ($row['month'] ?? ''),
+            'day'   => (int) ($row['day'] ?? 1),
+            'days'  => (int) ($row['days'] ?? 30),
+        ];
+    }
+
+    /**
+     * (345) Ένας ημερολογιακός μήνας ανά πωλητή: αιτήσεις που στάλθηκαν
+     * (δημιουργήθηκαν μέσα στον μήνα, όχι πρόχειρα), όσες έγιναν ενεργές και
+     * όσες απορρίφθηκαν/ακυρώθηκαν μέσα στον μήνα.
+     *
+     * @param string       $start  Y-m-01
+     * @param list<string> $lost   Καταστάσεις απόρριψης/ακύρωσης.
+     *
+     * @return array<int, array{applications: int, activated: int, lost: int}>
+     */
+    public function monthByOwner(UserScope $scope, string $start, array $lost): array
+    {
+        global $wpdb;
+
+        [$clause, $params] = ScopeClause::forScope($scope, 'c');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT c.partner_user_id uid, COUNT(*) n
+                 FROM %i c
+                 WHERE c.partner_user_id IS NOT NULL AND c.status <> 'draft'
+                   AND c.created_at >= %s AND c.created_at < %s + INTERVAL 1 MONTH{$clause}
+                 GROUP BY c.partner_user_id",
+                [Tables::name(Tables::CONTRACTS), $start, $start, ...$params]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        $range     = 'e.created_at >= %s AND e.created_at < %s + INTERVAL 1 MONTH';
+        $activated = $this->eventCounts($scope, "e.to_status = 'active' AND {$range}", [$start, $start]);
+        $lostBy    = [];
+
+        if ($lost !== []) {
+            $in     = implode(',', array_fill(0, count($lost), '%s'));
+            $lostBy = $this->eventCounts(
+                $scope,
+                "e.to_status IN ({$in}) AND ( e.from_status IS NULL OR e.from_status <> 'draft' ) AND {$range}",
+                [...$lost, $start, $start]
+            );
+        }
+
+        $out = [];
+
+        foreach ((array) $rows as $row) {
+            $out[(int) $row['uid']] = ['applications' => (int) $row['n'], 'activated' => 0, 'lost' => 0];
+        }
+
+        foreach ($activated as $uid => $n) {
+            $out[$uid] = ($out[$uid] ?? ['applications' => 0, 'activated' => 0, 'lost' => 0]);
+            $out[$uid]['activated'] = $n;
+        }
+
+        foreach ($lostBy as $uid => $n) {
+            $out[$uid] = ($out[$uid] ?? ['applications' => 0, 'activated' => 0, 'lost' => 0]);
+            $out[$uid]['lost'] = $n;
+        }
+
+        return $out;
+    }
+
+    /**
+     * (345) Αιτήσεις και ενεργοποιήσεις του μήνα ανά πάροχο.
+     *
+     * @param string $start Y-m-01
+     *
+     * @return list<array{name: string, applications: int, activated: int}>
+     */
+    public function monthByProvider(UserScope $scope, string $start): array
+    {
+        global $wpdb;
+
+        [$clause, $params] = ScopeClause::forScope($scope, 'c');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT COALESCE(p.name, '') name,
+                        SUM( c.status <> 'draft' AND c.created_at >= %s AND c.created_at < %s + INTERVAL 1 MONTH )
+                            applications,
+                        SUM( EXISTS ( SELECT 1 FROM %i e WHERE e.contract_id = c.id AND e.type = 'status_change'
+                                      AND e.to_status = 'active'
+                                      AND e.created_at >= %s AND e.created_at < %s + INTERVAL 1 MONTH ) ) activated
+                 FROM %i c
+                 LEFT JOIN %i p ON p.id = c.provider_id
+                 WHERE c.partner_user_id IS NOT NULL{$clause}
+                 GROUP BY name
+                 HAVING applications > 0 OR activated > 0
+                 ORDER BY applications DESC, name ASC",
+                [
+                    $start,
+                    $start,
+                    Tables::name(Tables::EVENTS),
+                    $start,
+                    $start,
+                    Tables::name(Tables::CONTRACTS),
+                    Tables::name(Tables::PROVIDERS),
+                    ...$params,
+                ]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        $out = [];
+
+        foreach ((array) $rows as $row) {
+            $out[] = [
+                'name'         => (string) $row['name'] !== '' ? (string) $row['name'] : '—',
+                'applications' => (int) $row['applications'],
+                'activated'    => (int) $row['activated'],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * (345) Υποψήφιοι του μήνα: πόσοι ήρθαν, πόσοι έγιναν αίτηση, πόσοι από QR.
+     *
+     * @param string $start Y-m-01
+     *
+     * @return array{leads: int, converted: int, qr: int}
+     */
+    public function monthLeads(UserScope $scope, string $start): array
+    {
+        global $wpdb;
+
+        [$clause, $params] = ScopeClause::forScope($scope, 'l');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT COUNT(*) leads, SUM( l.contract_id IS NOT NULL ) converted, SUM( l.source = 'qr' ) qr
+                 FROM %i l
+                 WHERE l.created_at >= %s AND l.created_at < %s + INTERVAL 1 MONTH{$clause}",
+                [Tables::name(Tables::LEADS), $start, $start, ...$params]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return [
+            'leads'     => (int) ($row['leads'] ?? 0),
+            'converted' => (int) ($row['converted'] ?? 0),
+            'qr'        => (int) ($row['qr'] ?? 0),
+        ];
+    }
+
+    /**
+     * (345) Οι λόγοι απόρριψης/ακύρωσης ενός μήνα, ο συχνότερος πρώτος.
+     *
+     * @param string       $start Y-m-01
+     * @param list<string> $statuses
+     *
+     * @return list<array{reason: string, count: int}>
+     */
+    public function monthReasons(UserScope $scope, string $start, array $statuses): array
+    {
+        global $wpdb;
+
+        if ($statuses === []) {
+            return [];
+        }
+
+        [$clause, $params] = ScopeClause::forScope($scope, 'c');
+        $in                = implode(',', array_fill(0, count($statuses), '%s'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT COALESCE(e.reason, '') reason, COUNT(DISTINCT e.contract_id) n
+                 FROM %i e JOIN %i c ON c.id = e.contract_id
+                 WHERE e.type = 'status_change' AND e.to_status IN ({$in})
+                   AND ( e.from_status IS NULL OR e.from_status <> 'draft' )
+                   AND e.created_at >= %s AND e.created_at < %s + INTERVAL 1 MONTH{$clause}
+                 GROUP BY reason ORDER BY n DESC, reason ASC",
+                [
+                    Tables::name(Tables::EVENTS),
+                    Tables::name(Tables::CONTRACTS),
+                    ...$statuses,
+                    $start,
+                    $start,
+                    ...$params,
+                ]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        $out = [];
+
+        foreach ((array) $rows as $row) {
+            $out[] = ['reason' => (string) $row['reason'], 'count' => (int) $row['n']];
+        }
+
+        return $out;
+    }
+
+    /**
      * Αιτήσεις ανά πωλητή που πέρασαν από μια αλλαγή κατάστασης.
      *
      * @param string       $where  SQL με placeholders για τα $values.

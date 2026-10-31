@@ -42,6 +42,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddTrackKeyColumn;
 use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerEventsTable;
 use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerNotesTable;
 use EnergyCRM\Persistence\Schema\Migrations\CreateRequestKeysTable;
+use EnergyCRM\Persistence\Schema\Migrations\CreateTargetsTable;
 use EnergyCRM\Persistence\Schema\Migrations\CreateTicketTables;
 use EnergyCRM\Persistence\Schema\Migrations\DedupeProgramsByCode;
 use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
@@ -135,6 +136,7 @@ final class MigrationList
             new CreateTicketTables(),
             new AddEventReasonColumn(),
             new AddTaskKindColumn(),
+            new CreateTargetsTable(),
         ];
     }
 }

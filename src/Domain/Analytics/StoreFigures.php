@@ -34,6 +34,28 @@ final class StoreFigures
     }
 
     /**
+     * (345) Πίσω από τον ρυθμό του μήνα: λιγότερα από το κομμάτι του στόχου
+     * που αντιστοιχεί στις μέρες που πέρασαν. Στις 15 ενός 30ήμερου μήνα,
+     * κάτω από το μισό. Χωρίς στόχο, ποτέ.
+     */
+    public static function behindPace(int $done, ?int $target, int $day, int $daysInMonth): bool
+    {
+        if ($target === null || $target <= 0 || $daysInMonth <= 0) {
+            return false;
+        }
+
+        $day = max(0, min($day, $daysInMonth));
+
+        return $done * $daysInMonth < $target * $day;
+    }
+
+    /** (345) Ποσοστό του στόχου, στρογγυλεμένο· null χωρίς στόχο. */
+    public static function ofTarget(int $done, ?int $target): ?int
+    {
+        return $target === null || $target <= 0 ? null : (int) round($done * 100 / $target);
+    }
+
+    /**
      * Πόσα ανά κλειδί (πωλητή ή πάροχο), τα περισσότερα πρώτα.
      *
      * Ισοπαλία: αλφαβητικά, ώστε η σειρά να μην αλλάζει από φόρτωση σε φόρτωση.

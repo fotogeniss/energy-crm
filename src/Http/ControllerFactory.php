@@ -34,6 +34,7 @@ use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Persistence\CrossSellQueries;
 use EnergyCRM\Persistence\GuaranteeRuleRepository;
 use EnergyCRM\Persistence\StoreRepository;
+use EnergyCRM\Persistence\TargetRepository;
 use EnergyCRM\Providers\Http\ProviderAccessController;
 use EnergyCRM\Providers\Http\ProviderStatusMapController;
 use EnergyCRM\Providers\Persistence\ProviderStatusMapRepository;
@@ -198,7 +199,7 @@ final class ControllerFactory
             new TeamActivityController($scope, Services::teamActivity()),
 
             // Reporting.
-            new DashboardController($scope, Services::dashboard()),
+            new DashboardController($scope, Services::dashboard(), new StoreRepository(), new TargetRepository()),
             new CommissionsController($scope, Services::commissions()),
             new PayoutsController($scope, Services::payouts()),
             new AnalyticsController($scope, Services::analytics()),
@@ -261,6 +262,8 @@ final class ControllerFactory
                 Services::team(),
                 $queries,
                 $stuck,
+                new TargetRepository(),
+                Services::storeMonthReport(),
             ),
             // (332) Σωστό μέγεθος Picasso.
             new PackageFitController($scope, Services::providerVisibility(), Services::providers()),

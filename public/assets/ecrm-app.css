@@ -2236,3 +2236,23 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 
 /* (344) «Ανανέωση» μέσα στην εργασία «Κλήση ανανέωσης». */
 .ecrm-task__act { margin-top: 6px; }
+
+/* (345) Στόχοι και μηνιαία αναφορά στο «Κατάστημα». */
+.ecrm-step--row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ecrm-storemonthbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.ecrm-storemonths__older { width: auto; max-width: 220px; }
+.ecrm-tgtcol { min-width: 190px; }
+.ecrm-tgt { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.ecrm-tgt__track { flex: 1; min-width: 60px; height: 7px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.ecrm-tgt__fill { display: block; height: 100%; background: var(--st-active); }
+.ecrm-tgt.is-behind .ecrm-tgt__fill { background: var(--st-pending); }
+.ecrm-storeok { color: var(--st-active); font-weight: 800; }
+.ecrm-storewarn { color: var(--st-pending); font-weight: 800; }
+.ecrm-tgtdlg__months { margin-bottom: 10px; }
+.ecrm-tgtdlg__in { width: 84px; text-align: right; }
+.ecrm-tgtdlg__note { font-size: var(--fs-12-5); margin: 10px 0 0; }
+.ecrm-tgtdlg__note .ecrm-linkbtn { color: var(--accent-ink); }
+@media (max-width: 620px) {
+	.ecrm-tgtcol { min-width: 150px; }
+	.ecrm-tgt__track { min-width: 36px; }
+}

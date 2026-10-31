@@ -14,6 +14,7 @@ namespace EnergyCRM\Http;
 use ECRM_Notifications;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Infrastructure\MonthlyStoreReport;
 use EnergyCRM\Infrastructure\StalePriceNotice;
 use EnergyCRM\Infrastructure\TicketNotices;
 use EnergyCRM\Persistence\NotificationRepository;
@@ -108,6 +109,11 @@ final class NotificationsController implements Controller
     {
         if ($type === StalePriceNotice::TYPE) {
             return admin_url('admin.php?page=energy-crm-providers');
+        }
+
+        // (345) Η μηνιαία αναφορά: η Αρχική, όπου είναι η καρτέλα «Κατάστημα».
+        if (str_starts_with($type, MonthlyStoreReport::TYPE_PREFIX)) {
+            return '#dashboard';
         }
 
         $ticket = TicketNotices::ticketOf($type);

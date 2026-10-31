@@ -606,6 +606,22 @@ class ECRM_DB {
 			KEY ticket_id (ticket_id)
 		) {$charset};" );
 
+		/*
+		 * (345) Στόχοι αιτήσεων ανά πωλητή και μήνα («YYYY-MM»). Ένας ανά
+		 * πωλητή και μήνα. Ίδιος πίνακας και στη μετάβαση 0055.
+		 */
+		dbDelta( "CREATE TABLE {$p}targets (
+			id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			user_id      BIGINT UNSIGNED NOT NULL,
+			month        CHAR(7) NOT NULL,
+			applications INT UNSIGNED NOT NULL,
+			set_by       BIGINT UNSIGNED NULL,
+			updated_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY user_month (user_id, month),
+			KEY month (month)
+		) {$charset};" );
+
 	}
 
 	/**

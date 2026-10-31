@@ -350,6 +350,10 @@ class ECRM_Notifications {
 
 	public static function init(): void {
 		add_action( self::CRON_HOOK, [ __CLASS__, 'run_digest' ] );
+		// (345) Την 1η του μήνα, η μηνιαία αναφορά καταστήματος.
+		add_action( self::CRON_HOOK, static function (): void {
+			\EnergyCRM\Services::monthlyStoreReport()->run();
+		} );
 
 		// Αυτοπρογραμματισμός, όπως κάνουν Retention, DocumentProtection και
 		// PiiBackfill. Η schedule() καλούνταν ΜΟΝΟ από την ενεργοποίηση, οπότε

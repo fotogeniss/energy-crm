@@ -37,6 +37,8 @@ use EnergyCRM\Infrastructure\DuplicateFollowUp;
 use EnergyCRM\Infrastructure\RejectionFollowUp;
 use EnergyCRM\Infrastructure\RenewalCalls;
 use EnergyCRM\Infrastructure\RenewalOffers;
+use EnergyCRM\Infrastructure\MonthlyStoreReport;
+use EnergyCRM\Infrastructure\StoreMonthReport;
 use EnergyCRM\Infrastructure\StalePriceNotice;
 use EnergyCRM\Infrastructure\TicketAttachments;
 use EnergyCRM\Infrastructure\TicketNotices;
@@ -63,6 +65,8 @@ use EnergyCRM\Persistence\DashboardRepository;
 use EnergyCRM\Persistence\DeletionLogRepository;
 use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\RenewalCallRepository;
+use EnergyCRM\Persistence\StoreRepository;
+use EnergyCRM\Persistence\TargetRepository;
 use EnergyCRM\Persistence\StatusDwellRepository;
 use EnergyCRM\Persistence\DocumentStorage;
 use EnergyCRM\Persistence\FileRepository;
@@ -289,6 +293,23 @@ final class Services
     public static function teamActivity(): TeamActivityRepository
     {
         return self::$teamActivity ??= new TeamActivityRepository(self::network());
+    }
+
+    /** (345) Η μηνιαία αναφορά καταστήματος, για οθόνη και email. */
+    public static function storeMonthReport(): StoreMonthReport
+    {
+        return new StoreMonthReport(new StoreRepository(), new TargetRepository(), self::teamActivity(), self::team());
+    }
+
+    /** (345) Το email/ειδοποίηση της 1ης του μήνα. */
+    public static function monthlyStoreReport(): MonthlyStoreReport
+    {
+        return new MonthlyStoreReport(
+            new StoreRepository(),
+            self::storeMonthReport(),
+            self::scopeResolver(),
+            self::notifications()
+        );
     }
 
     /** (344) Η καθημερινή «Κλήση ανανέωσης». */

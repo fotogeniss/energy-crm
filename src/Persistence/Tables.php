@@ -38,6 +38,7 @@ final class Tables
     public const TASKS              = 'tasks';
     public const TICKETS            = 'tickets';
     public const TICKET_COMMENTS    = 'ticket_comments';
+    public const TARGETS            = 'targets';
 
     private function __construct()
     {
@@ -81,6 +82,7 @@ final class Tables
             // (339) Αναφορές προβλημάτων.
             self::TICKETS,
             self::TICKET_COMMENTS,
+            self::TARGETS,
         ];
     }
 

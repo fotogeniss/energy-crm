@@ -46,4 +46,20 @@ final class StoreFiguresTest extends TestCase
         self::assertSame([['name' => '—', 'count' => 1]], StoreFigures::split(['']));
         self::assertSame([], StoreFigures::split([]));
     }
+
+    /** (345) Στις 15 ενός 30ήμερου μήνα, κάτω από τον μισό στόχο = πίσω. */
+    public function testBehindPaceComparesWithTheDaysGone(): void
+    {
+        self::assertTrue(StoreFigures::behindPace(19, 40, 15, 30));
+        self::assertFalse(StoreFigures::behindPace(20, 40, 15, 30));
+        self::assertFalse(StoreFigures::behindPace(0, null, 15, 30));
+        self::assertFalse(StoreFigures::behindPace(0, 40, 0, 30), 'Πρώτη μέρα, τίποτα δεν έχει περάσει.');
+    }
+
+    public function testShareOfTarget(): void
+    {
+        self::assertSame(78, StoreFigures::ofTarget(31, 40));
+        self::assertNull(StoreFigures::ofTarget(31, null));
+        self::assertNull(StoreFigures::ofTarget(31, 0));
+    }
 }
