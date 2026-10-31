@@ -8,6 +8,7 @@ import { fmtDate } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
 import { storedForAi } from '@energy-crm/ai-docs';
+import { qrPosterHtml } from '@energy-crm/qr-poster';
 
 var leadsState = { stage: '', q: '', editing: null, showForm: false };
 export function loadLeads() {
@@ -107,16 +108,21 @@ function renderLeads(view, d) {
 	 * αλλιώς κάθε φόρτωση της οθόνης θα παρήγαγε κλειδί σε πωλητές που δεν
 	 * πρόκειται να τον χρησιμοποιήσουν ποτέ. */
 	var linkBox = view.querySelector('[data-mylinkbox]');
+	var linkOwner = { name: '', company: '' };
 	function paintLink(url) {
 		if (!url) { linkBox.hidden = true; return; }
 		linkBox.innerHTML =
 			'<div class="ecrm-mylink__hd">Στείλε αυτόν τον σύνδεσμο στον πελάτη</div>' +
 			'<div class="ecrm-mylink__row"><code class="ecrm-mylink__url">' + esc(url) + '</code>' +
-			'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--primary" data-lcopy>Αντιγραφή</button></div>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--primary" data-lcopy>Αντιγραφή</button>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--sm" data-lposter>QR code</button></div>' +
 			'<div class="ecrm-mylink__note">Ο πελάτης γράφει όνομα και κινητό και ανεβάζει τα έγγραφά του. ' +
 			'Εμφανίζεται εδώ ως υποψήφιος, με τα αρχεία μέσα. ' +
 			'<button type="button" class="ecrm-linkbtn" data-lrevoke>Ακύρωση αυτού του συνδέσμου</button></div>';
 		linkBox.hidden = false;
+		linkBox.querySelector('[data-lposter]').addEventListener('click', function () {
+			if (!openQrPoster(url, linkOwner)) { toast('Ο browser μπλόκαρε το νέο παράθυρο. Επίτρεψέ το και ξαναπάτα.', false); }
+		});
 		linkBox.querySelector('[data-lcopy]').addEventListener('click', function () {
 			var ok = false;
 			try { ok = document.execCommand && window.getSelection && (function () {
@@ -133,7 +139,7 @@ function renderLeads(view, d) {
 			}
 		});
 		linkBox.querySelector('[data-lrevoke]').addEventListener('click', function () {
-			if (!window.confirm('Ο παλιός σύνδεσμος θα πάψει να δουλεύει αμέσως, και σε όποιον τον έχεις ήδη στείλει. Να συνεχίσω;')) { return; }
+			if (!window.confirm('Ο παλιός σύνδεσμος θα πάψει να δουλεύει αμέσως, σε όποιον τον έχεις ήδη στείλει και στις τυπωμένες αφίσες με QR. Να συνεχίσω;')) { return; }
 			fetch(api('/intake/link/revoke'), { method: 'POST', headers: H() })
 				.then(function (r) { return r.json(); })
 				.then(function (res) {
@@ -150,6 +156,7 @@ function renderLeads(view, d) {
 			.then(function (r) { return r.json(); })
 			.then(function (res) {
 				if (!res || !res.ok || !res.url) { toast('Δεν ήταν δυνατή η δημιουργία συνδέσμου.', false); return; }
+				linkOwner = { name: res.name || '', company: res.company || '' };
 				paintLink(res.url);
 			})
 			.catch(function () { toast('Σφάλμα δικτύου.', false); });
@@ -510,4 +517,15 @@ function openHandoff(leadId, lead, onAbort) {
 
 		return dlg;
 	});
+}
+
+/* (344) Η αφίσα με το QR, σε νέο παράθυρο για εκτύπωση. Ο σύνδεσμος παίρνει
+ * `via=qr`, ώστε ο υποψήφιος να γραφτεί «Από QR καταστήματος». */
+function openQrPoster(url, owner) {
+	var target = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'via=qr';
+	var page = URL.createObjectURL(new Blob([qrPosterHtml(target, owner || {})], { type: 'text/html' }));
+	var win = window.open(page, '_blank');
+	// Το παράθυρο έχει ήδη φορτώσει τη σελίδα· το blob δεν χρειάζεται μετά.
+	setTimeout(function () { URL.revokeObjectURL(page); }, 60000);
+	return !!win;
 }

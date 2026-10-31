@@ -8,7 +8,7 @@ import { loadDocuments, setDocumentsFilter } from '@energy-crm/view-documents';
 import { loadCommissions } from '@energy-crm/view-commissions';
 import { loadAnalytics } from '@energy-crm/view-analytics';
 import { loadLeads } from '@energy-crm/view-leads';
-import { loadRenewals, setRenewalsScope } from '@energy-crm/view-renewals';
+import { loadRenewals, renewContract, setRenewalsScope } from '@energy-crm/view-renewals';
 import { setScope } from '@energy-crm/scope';
 import { loadTasks } from '@energy-crm/view-tasks';
 import { loadCalc } from '@energy-crm/view-calc';
@@ -643,6 +643,7 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 		openCustomerContracts: function (q) { setContractsFilter('', q); go('contracts'); },
 		// (342) Από την κάρτα «Γιατί χάνουμε αιτήσεις» των Στατιστικών.
 		openReasonContracts: function (reason, label) { setContractsReason(reason, label); go('contracts'); },
+		renewContract: renewContract,
 		// (343) Τα «Δες» της καρτέλας «Κατάστημα»: η υπάρχουσα οθόνη, στο «Ομάδας».
 		openStoreList: function (kind) {
 			setScope('team');

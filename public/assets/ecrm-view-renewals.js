@@ -123,6 +123,11 @@ function offerRow(r) {
 	return '<tr class="ecrm-renew-offer"><td colspan="6"><div class="ecrm-renew-offer__in">' + inner + '</div></td></tr>';
 }
 
+/* (344) Και από την εργασία «Κλήση ανανέωσης», μέσω του κελύφους. */
+export function renewContract(id, btn) {
+	renew(btn || { disabled: false }, id, 0);
+}
+
 function renew(btn, id, programId) {
 	btn.disabled = true;
 	fetch(api('/contracts/' + id + '/renew'), {

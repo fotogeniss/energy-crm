@@ -5,7 +5,7 @@
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { fmtDate } from '@energy-crm/format';
-import { openDetail } from '@energy-crm/navigate';
+import { openDetail, renewContract } from '@energy-crm/navigate';
 
 var tasksState = { filter: 'open', scope: 'own' };
 var taskTeamCache = null;
@@ -126,7 +126,11 @@ function renderTasks(view, d) {
 			prioDot +
 			'<div class="ecrm-task__body"><div class="ecrm-task__title">' + esc(t.title) + '</div>' +
 			(sub ? '<div class="ecrm-task__sub">' + sub + '</div>' : '') +
-			(t.note ? '<div class="ecrm-task__note">' + esc(t.note) + '</div>' : '') + '</div>' +
+			(t.note ? '<div class="ecrm-task__note">' + esc(t.note) + '</div>' : '') +
+			// (344) Η «Κλήση ανανέωσης» ανοίγει τη φόρμα προσυμπληρωμένη, όπως οι Λήξεις.
+			(t.kind === 'renewal_call' && t.contract_id && !done
+				? '<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm ecrm-task__act" data-task-renew="' + esc(t.contract_id) + '">Ανανέωση</button>'
+				: '') + '</div>' +
 			'<div class="ecrm-task__due">' + taskDue(t) + '</div>' +
 			'<button type="button" class="ecrm-task__rm" data-task-del="' + t.id + '" aria-label="Διαγραφή">✕</button>' +
 			'</li>';
@@ -141,6 +145,7 @@ function renderTasks(view, d) {
 	// wiring
 	view.querySelectorAll('[data-tfilter]').forEach(function (b) { b.addEventListener('click', function () { tasksState.filter = this.getAttribute('data-tfilter'); loadTasks(); }); });
 	view.querySelectorAll('[data-tscope]').forEach(function (b) { b.addEventListener('click', function () { tasksState.scope = this.getAttribute('data-tscope'); loadTasks(); }); });
+	view.querySelectorAll('[data-task-renew]').forEach(function (b) { b.addEventListener('click', function () { renewContract(+this.getAttribute('data-task-renew'), this); }); });
 	view.querySelectorAll('[data-task-open]').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); openDetail(+this.getAttribute('data-task-open')); }); });
 
 	var addBtn = view.querySelector('[data-task-add]');

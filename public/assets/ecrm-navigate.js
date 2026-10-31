@@ -109,6 +109,14 @@ export function openStoreList(kind) {
 	}
 }
 
+/* (344) «Ανανέωση» από την εργασία «Κλήση ανανέωσης»: ίδια ροή με το κουμπί
+ * των Λήξεων (νέο πρόχειρο από την παλιά σύμβαση, ανοιχτό στη φόρμα). */
+export function renewContract(contractId, button) {
+	if (typeof handlers.renewContract === 'function') {
+		handlers.renewContract(contractId, button);
+	}
+}
+
 export function openEdit(contract) {
 	if (typeof handlers.openEdit === 'function') {
 		handlers.openEdit(contract);

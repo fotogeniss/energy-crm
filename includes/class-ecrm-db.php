@@ -345,6 +345,7 @@ class ECRM_DB {
 			customer_id  BIGINT UNSIGNED NULL,
 			assigned_to  BIGINT UNSIGNED NOT NULL,
 			created_by   BIGINT UNSIGNED NULL,
+			kind         VARCHAR(24) NULL,
 			title        VARCHAR(255) NOT NULL,
 			note         TEXT NULL,
 			due_at       DATETIME NULL,

@@ -37,6 +37,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddProviderRefColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddProviderStatusMapColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddSiteIntakeColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddSupplyNumberIndex;
+use EnergyCRM\Persistence\Schema\Migrations\AddTaskKindColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddTrackKeyColumn;
 use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerEventsTable;
 use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerNotesTable;
@@ -133,6 +134,7 @@ final class MigrationList
             new ActivateProtergiaGasSure2(),
             new CreateTicketTables(),
             new AddEventReasonColumn(),
+            new AddTaskKindColumn(),
         ];
     }
 }

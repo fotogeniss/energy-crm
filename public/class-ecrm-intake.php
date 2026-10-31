@@ -147,9 +147,16 @@ class ECRM_Intake {
 	// --- Ο σύνδεσμος, από την πλευρά του πωλητή -------------------------------
 
 	public static function rest_link( WP_REST_Request $req ): WP_REST_Response {
-		$uid = get_current_user_id();
+		$uid  = get_current_user_id();
+		$user = get_userdata( $uid );
 
-		return new WP_REST_Response( [ 'ok' => true, 'url' => self::url( $uid ) ], 200 );
+		// (344) Όνομα και εταιρεία για την κάτω γραμμή της αφίσας με το QR.
+		return new WP_REST_Response( [
+			'ok'      => true,
+			'url'     => self::url( $uid ),
+			'name'    => $user ? (string) $user->display_name : '',
+			'company' => class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '',
+		], 200 );
 	}
 
 	public static function rest_revoke( WP_REST_Request $req ): WP_REST_Response {
@@ -176,6 +183,9 @@ class ECRM_Intake {
 		$p       = $req->get_json_params() ?: $req->get_params();
 		$phone   = self::phone( (string) ( $p['phone'] ?? '' ) );
 		$consent = ! empty( $p['consent'] );
+		// (344) Από την αφίσα με το QR: ίδιος σύνδεσμος, άλλη πηγή, ώστε να
+		// φαίνεται αν η αφίσα φέρνει κόσμο. Μόνο αυτές οι δύο τιμές.
+		$source  = ( ( $p['via'] ?? '' ) === 'qr' ) ? 'qr' : 'link';
 
 		/*
 		 * Το όνομα ΔΕΝ ζητιέται από τον πελάτη -- είναι τυπωμένο πάνω στην
@@ -227,7 +237,7 @@ class ECRM_Intake {
 		 */
 		$existing = (int) $wpdb->get_var( $wpdb->prepare(
 			"SELECT id FROM {$lt}
-			  WHERE partner_user_id = %d AND phone = %s AND source = 'link'
+			  WHERE partner_user_id = %d AND phone = %s AND source IN ('link', 'qr')
 			    AND stage = 'new' AND contract_id IS NULL
 			    AND created_at > ( NOW() - INTERVAL 12 HOUR )
 			  ORDER BY id DESC LIMIT 1",
@@ -243,7 +253,7 @@ class ECRM_Intake {
 			'partner_user_id' => $uid,
 			'name'            => $name,
 			'phone'           => $phone,
-			'source'          => 'link',
+			'source'          => $source,
 			'stage'           => 'new',
 			'consent_at'      => current_time( 'mysql' ),
 			'consent_ip'      => \EnergyCRM\Infrastructure\RequestIp::current(),
@@ -414,6 +424,8 @@ class ECRM_Intake {
 			: '#c2f04a';
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '';
 		$rest    = esc_url_raw( rest_url( \EnergyCRM\Http\Router::NAMESPACE . '/intake/' . $token ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- ίδια δημόσια σελίδα· μόνο η τιμή 'qr' περνά.
+		$via     = ( isset( $_GET['via'] ) && 'qr' === $_GET['via'] ) ? 'qr' : '';
 
 		nocache_headers();
 		header( 'Content-Type: text/html; charset=utf-8' );
@@ -507,6 +519,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	<script>
 	(function () {
 		var REST = <?php echo wp_json_encode( $rest ); ?>;
+		var VIA = <?php echo wp_json_encode( $via ); ?>;
 
 		/* ΚΑΜΙΑ μνήμη συνεδρίας εδώ, και είναι απόφαση.
 		 *
@@ -644,7 +657,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 			fetch(REST, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ phone: phone, consent: true })
+				body: JSON.stringify({ phone: phone, consent: true, via: VIA })
 			})
 				.then(function (r) { return r.json(); })
 				.then(function (d) {

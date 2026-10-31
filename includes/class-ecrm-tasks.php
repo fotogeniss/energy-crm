@@ -101,47 +101,16 @@ class ECRM_Tasks {
 	}
 
 	/**
-	 * Create callback tasks for contracts approaching their end_date.
-	 * Idempotent: marks generated tasks with note='auto_renewal' and skips
-	 * contracts that already have an open one.
+	 * «Κλήση ανανέωσης» για συμβάσεις που λήγουν μέσα στις επόμενες
+	 * `renewal_reminder_days` (προεπιλογή 30) μέρες.
+	 *
+	 * (344) Η δουλειά έγινε EnergyCRM\Infrastructure\RenewalCalls. Η παλιά
+	 * εκδοχή εδώ έλεγχε μόνο ανοιχτές εργασίες, οπότε μια κλήση που είχε
+	 * ολοκληρωθεί ξαναφτιαχνόταν κάθε πρωί μέχρι τη λήξη.
 	 */
 	public static function generate_renewal_reminders(): void {
-		global $wpdb;
 		$days = class_exists( 'ECRM_Admin' ) ? (int) ECRM_Admin::get( 'renewal_reminder_days', 30 ) : 30;
-		if ( $days <= 0 ) { return; }
-
-		$ct = ECRM_DB::table( 'contracts' );
-		$t  = ECRM_DB::table( 'tasks' );
-		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.id, c.code, c.customer_id, c.partner_user_id, c.end_date,
-			        DATEDIFF(c.end_date, CURDATE()) AS days_left
-			 FROM {$ct} c
-			 WHERE c.end_date IS NOT NULL
-			   AND c.end_date >= CURDATE()
-			   AND c.end_date <= DATE_ADD(CURDATE(), INTERVAL %d DAY)
-			   AND c.status <> 'cancelled'
-			   AND c.partner_user_id IS NOT NULL
-			   AND NOT EXISTS (
-			       SELECT 1 FROM {$t} t WHERE t.contract_id = c.id AND t.status='open' AND t.note='auto_renewal'
-			   )
-			 LIMIT 500",
-			$days
-		), ARRAY_A );
-
-		foreach ( $rows as $r ) {
-			$left = (int) $r['days_left'];
-			$wpdb->insert( $t, [
-				'contract_id' => (int) $r['id'],
-				'customer_id' => $r['customer_id'] ? (int) $r['customer_id'] : null,
-				'assigned_to' => (int) $r['partner_user_id'],
-				'created_by'  => 0,
-				'title'       => sprintf( 'Λήξη σύμβασης %s σε %d ημέρες — επανάκληση ανανέωσης', $r['code'], max( 0, $left ) ),
-				'note'        => 'auto_renewal',
-				'due_at'      => $r['end_date'] . ' 10:00:00',
-				'priority'    => ( $left <= 7 ) ? 'high' : 'normal',
-				'status'      => 'open',
-			] );
-		}
+		\EnergyCRM\Services::renewalCalls()->run( $days );
 	}
 
 	/**

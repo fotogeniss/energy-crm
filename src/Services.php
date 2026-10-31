@@ -35,6 +35,8 @@ use EnergyCRM\Infrastructure\ActivationTerm;
 use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\DuplicateFollowUp;
 use EnergyCRM\Infrastructure\RejectionFollowUp;
+use EnergyCRM\Infrastructure\RenewalCalls;
+use EnergyCRM\Infrastructure\RenewalOffers;
 use EnergyCRM\Infrastructure\StalePriceNotice;
 use EnergyCRM\Infrastructure\TicketAttachments;
 use EnergyCRM\Infrastructure\TicketNotices;
@@ -60,6 +62,7 @@ use EnergyCRM\Persistence\CustomerNoteRepository;
 use EnergyCRM\Persistence\DashboardRepository;
 use EnergyCRM\Persistence\DeletionLogRepository;
 use EnergyCRM\Persistence\EventRepository;
+use EnergyCRM\Persistence\RenewalCallRepository;
 use EnergyCRM\Persistence\StatusDwellRepository;
 use EnergyCRM\Persistence\DocumentStorage;
 use EnergyCRM\Persistence\FileRepository;
@@ -286,6 +289,15 @@ final class Services
     public static function teamActivity(): TeamActivityRepository
     {
         return self::$teamActivity ??= new TeamActivityRepository(self::network());
+    }
+
+    /** (344) Η καθημερινή «Κλήση ανανέωσης». */
+    public static function renewalCalls(): RenewalCalls
+    {
+        return new RenewalCalls(
+            new RenewalCallRepository(),
+            new RenewalOffers(self::providerVisibility(), self::providers())
+        );
     }
 
     public static function analytics(): AnalyticsRepository

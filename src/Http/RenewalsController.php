@@ -21,7 +21,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractTerm;
 use EnergyCRM\Domain\Contract\ExtraFields;
-use EnergyCRM\Domain\Pricing\RenewalOffer;
+use EnergyCRM\Infrastructure\RenewalOffers;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\EventRepository;
@@ -246,47 +246,9 @@ final class RenewalsController implements Controller
      */
     private function withOffers(array $rows, UserScope $scope): array
     {
-        $programs = [];
-        $current  = [];
-
-        if ($this->providers !== null) {
-            $access   = $this->providerAccess->forScope($scope);
-            $programs = array_values(array_filter(
-                $this->providers->activePrograms(),
-                static fn (array $row): bool => $access->allows((int) $row['provider_id'])
-            ));
-            $current  = $this->providers->programsByIds(array_map(
-                static fn (array $row): int => (int) ($row['program_id'] ?? 0),
-                $rows
-            ));
-        }
-
-        $today = current_time('Y-m-d');
-
-        return array_map(
-            static function (array $row) use ($programs, $current, $today): array {
-                $kwh = RenewalOffer::kwhFrom($row['extra_json'] ?? null);
-                unset($row['extra_json']);
-
-                $energy = (string) ($row['energy_type'] ?? '');
-
-                $row['annual_kwh'] = $kwh;
-                $row['offer']      = in_array($energy, ['power', 'gas'], true) && $kwh !== null
-                    ? RenewalOffer::for(
-                        $current[(int) ($row['program_id'] ?? 0)] ?? null,
-                        $programs,
-                        $kwh,
-                        $energy,
-                        (string) ($row['category'] ?? ''),
-                        $today
-                    )
-                    : null;
-                $row['program_name'] = (string) (($current[(int) ($row['program_id'] ?? 0)] ?? [])['name'] ?? '');
-
-                return $row;
-            },
-            $rows
-        );
+        // (344) Ο υπολογισμός ζει στο Infrastructure\RenewalOffers, κοινός με
+        // την καθημερινή «Κλήση ανανέωσης».
+        return (new RenewalOffers($this->providerAccess, $this->providers))->attach($rows, $scope);
     }
 
     /**

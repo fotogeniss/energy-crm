@@ -2233,3 +2233,6 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	font-family: inherit; font-size: var(--fs-12-5); font-weight: 600; color: var(--navy-soft); cursor: pointer; white-space: nowrap; }
 .ecrm-storedo__a:hover { border-color: var(--line-strong); color: var(--navy); }
 .ecrm-storebad { color: var(--st-cancel); font-weight: 800; }
+
+/* (344) «Ανανέωση» μέσα στην εργασία «Κλήση ανανέωσης». */
+.ecrm-task__act { margin-top: 6px; }

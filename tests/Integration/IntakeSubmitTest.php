@@ -189,6 +189,26 @@ final class IntakeSubmitTest extends IntegrationTestCase
         );
     }
 
+    /** (344) Από την αφίσα με το QR: ίδιος σύνδεσμος, πηγή «qr». */
+    public function testASubmissionFromThePosterIsMarkedQr(): void
+    {
+        $partner = $this->makeCrmUser(Roles::SELLER);
+
+        $this->submit($partner, ['phone' => '6912345678', 'consent' => true, 'via' => 'qr']);
+
+        self::assertSame('qr', $this->findLead($partner)['source'] ?? null);
+    }
+
+    /** (344) Μόνο το 'qr' αλλάζει την πηγή· ό,τι άλλο μένει «link». */
+    public function testAnyOtherViaStaysLink(): void
+    {
+        $partner = $this->makeCrmUser(Roles::SELLER);
+
+        $this->submit($partner, ['phone' => '6912345678', 'consent' => true, 'via' => 'site']);
+
+        self::assertSame('link', $this->findLead($partner)['source'] ?? null);
+    }
+
     /** @param array<string, mixed> $body */
     private function submit(int $partner, array $body): \WP_REST_Response
     {

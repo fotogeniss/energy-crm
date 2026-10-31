@@ -60,6 +60,8 @@ class ECRM_Shortcodes {
 		'@energy-crm/tickets'          => 'ecrm-tickets.js',
 		'@energy-crm/photo-check'      => 'ecrm-photo-check.js',
 		'@energy-crm/close-reason'     => 'ecrm-close-reason.js',
+		'@energy-crm/qr'               => 'ecrm-qr.js',
+		'@energy-crm/qr-poster'        => 'ecrm-qr-poster.js',
 		// Ειχε ξεχαστει απο εδω στο (243) -- το ecrm-app.js το εισαγε, ο
 		// browser δεν μπορουσε να λυσει το bare specifier χωρις καταχωρηση, και
 		// πεταγε ΟΛΟΚΛΗΡΟ το ecrm-app.js: καθε οθονη εμενε στο «Φορτωση…».
@@ -112,6 +114,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/navigate',
 			'@energy-crm/dialog',
 			'@energy-crm/ai-docs',
+			'@energy-crm/qr-poster',
 		],
 		'@energy-crm/view-renewals'    => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-tasks'       => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
@@ -156,6 +159,8 @@ class ECRM_Shortcodes {
 		],
 		'@energy-crm/photo-check'      => [],
 		'@energy-crm/close-reason'     => [ '@energy-crm/util', '@energy-crm/dialog' ],
+		'@energy-crm/qr'               => [],
+		'@energy-crm/qr-poster'        => [ '@energy-crm/util', '@energy-crm/qr' ],
 		'@energy-crm/app'              => [
 			'@energy-crm/util',
 			'@energy-crm/navigate',
