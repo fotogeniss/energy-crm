@@ -99,6 +99,45 @@ final class AnalyticsRepository
     }
 
     /**
+     * (342) Απορρίψεις και ακυρώσεις των τελευταίων N ημερών, ανά λόγο και πάροχο.
+     *
+     * Μετριέται το ΓΕΓΟΝΟΣ (status_change με to_status απόρριψη/ακύρωση), όχι
+     * η τωρινή κατάσταση: μια αίτηση που απορρίφθηκε και ξαναμπήκε μετράει
+     * ακόμα, γιατί ο λόγος που απορρίφθηκε συνέβη. `reason` κενό = χωρίς λόγο
+     * (πριν το 342, εισαγωγή Excel).
+     *
+     * @param list<string> $statuses
+     * @return list<array<string, mixed>> reason, provider, c
+     */
+    public function lostReasons(UserScope $scope, array $statuses, int $days = 90): array
+    {
+        if ($statuses === []) {
+            return [];
+        }
+
+        [$clause, $params] = $this->scopeClause($scope, 'ct');
+        $in = implode(',', array_fill(0, count($statuses), '%s'));
+
+        return $this->rows(
+            "SELECT COALESCE(ev.reason, '') AS reason, COALESCE(p.name, '') AS provider, COUNT(*) c
+             FROM %i ev
+             JOIN %i ct ON ct.id = ev.contract_id
+             LEFT JOIN %i p ON p.id = ct.provider_id
+             WHERE ev.type = 'status_change' AND ev.to_status IN ({$in})
+               AND ev.created_at >= NOW() - INTERVAL %d DAY{$clause}
+             GROUP BY reason, provider ORDER BY c DESC",
+            [
+                Tables::name(Tables::EVENTS),
+                Tables::name(Tables::CONTRACTS),
+                Tables::name(Tables::PROVIDERS),
+                ...$statuses,
+                max(1, $days),
+                ...$params,
+            ]
+        );
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function byEnergyType(UserScope $scope): array

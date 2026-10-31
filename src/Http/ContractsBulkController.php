@@ -24,6 +24,7 @@ use ECRM_Export;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\CloseReason;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\DeletionGate;
@@ -86,6 +87,9 @@ final class ContractsBulkController implements Controller
                 // μόνο στη JS θα άφηνε το API να απορρίπτει απολύτως λογικό
                 // payload, και ο επόμενος client θα το ξαναέτρωγε.
                 'value' => ['type' => ['string', 'integer'], 'default' => ''],
+                // (342) Λόγος απόρριψης/ακύρωσης για όλες μαζί (CloseReason).
+                'reason' => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_key'],
+                'note'   => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_textarea_field'],
             ],
         ]);
     }
@@ -112,7 +116,13 @@ final class ContractsBulkController implements Controller
         }
 
         return match ($action) {
-            'status' => $this->changeStatus($rows, (string) $request['value'], $scope),
+            'status' => $this->changeStatus(
+                $rows,
+                (string) $request['value'],
+                $scope,
+                (string) $request['reason'],
+                (string) $request['note']
+            ),
             'delete' => $this->delete($rows, $scope),
             'assign' => $this->assign($rows, (int) $request['value'], $scope),
             'export' => $this->export($rows, $scope),
@@ -129,14 +139,43 @@ final class ContractsBulkController implements Controller
     /**
      * @param list<array<string, mixed>> $rows
      */
-    private function changeStatus(array $rows, string $to, UserScope $scope): WP_REST_Response
-    {
+    private function changeStatus(
+        array $rows,
+        string $to,
+        UserScope $scope,
+        string $reason = '',
+        string $note = ''
+    ): WP_REST_Response {
         $actorId = $scope->actorId();
         $target = ContractStatus::tryFromSlug($to);
 
         if ($target === null) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Μη έγκυρη κατάσταση.'], 400);
         }
+
+        // (342) Ένας λόγος για όλες, ίδιος κανόνας με τη μεμονωμένη αλλαγή.
+        // Δεν ζητείται μόνο όταν όλες είναι πρόχειρα που πετιούνται.
+        $allDrafts = array_reduce(
+            $rows,
+            static fn (bool $carry, array $row): bool => $carry
+                && (string) $row['status'] === ContractStatus::Draft->value,
+            true
+        );
+        $problem   = CloseReason::problem(
+            $target->value,
+            $reason,
+            $note,
+            $allDrafts ? ContractStatus::Draft->value : ''
+        );
+
+        if ($problem !== null) {
+            return new WP_REST_Response([
+                'ok'      => false,
+                'error'   => $problem,
+                'reasons' => CloseReason::for($target->value),
+            ], 422);
+        }
+
 
         // Ο ειδικός φύλακας για μαζικό «Υπογράφηκε» αφαιρέθηκε στις 07/09
         // μαζί με την κατάσταση. Η `PaperworkGate` καλύπτει και αυτή τη
@@ -203,7 +242,8 @@ final class ContractsBulkController implements Controller
             $moved = $this->lifecycle->moveTo($id, $target->value, [
                 'user_id' => $actorId,
                 'from'    => $from,
-                'message' => 'Μαζική αλλαγή κατάστασης',
+                'message' => 'Μαζική αλλαγή κατάστασης' . (trim($note) !== '' ? ': ' . trim($note) : ''),
+                'reason'  => CloseReason::required($target->value, $from) && $reason !== '' ? $reason : null,
             ]);
 
             $moved ? $updated++ : $skipped++;

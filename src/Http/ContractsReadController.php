@@ -24,6 +24,7 @@ use ECRM_Tracking;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\CloseReason;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\SignatureRoles;
 use EnergyCRM\Domain\Contract\StatusTrack;
@@ -75,6 +76,8 @@ final class ContractsReadController implements Controller
                     'default'           => '',
                     'sanitize_callback' => 'sanitize_text_field',
                 ],
+                // (342) Λόγος απόρριψης/ακύρωσης, από την κάρτα των Στατιστικών.
+                'reason' => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_key'],
             ],
         ]);
 
@@ -97,7 +100,9 @@ final class ContractsReadController implements Controller
         $rows = $this->queries->search(
             $scope,
             (string) $request['status'],
-            trim((string) $request['q'])
+            trim((string) $request['q']),
+            200,
+            (string) $request['reason']
         );
 
         return new WP_REST_Response([
@@ -470,6 +475,9 @@ final class ContractsReadController implements Controller
         foreach ($events as $index => $event) {
             $uid = (int) ($event['user_id'] ?? 0);
             $events[$index]['actor'] = $uid > 0 ? ($names[$uid] ?? '—') : 'Σύστημα';
+            // (342) Ο λόγος απόρριψης/ακύρωσης ως ετικέτα, όπου υπάρχει.
+            $reason = (string) ($event['reason'] ?? '');
+            $events[$index]['reason_label'] = $reason !== '' ? CloseReason::label($reason) : '';
         }
 
         return $events;

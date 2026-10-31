@@ -22,6 +22,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddContractListIndexes;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerAfmIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerContactPhoneColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddCustomerPhoneIndex;
+use EnergyCRM\Persistence\Schema\Migrations\AddEventReasonColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddEventStatusIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddFileExpiryColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddFileKindSourceColumns;
@@ -131,6 +132,7 @@ final class MigrationList
             new RepriceProtergiaPicasso(),
             new ActivateProtergiaGasSure2(),
             new CreateTicketTables(),
+            new AddEventReasonColumn(),
         ];
     }
 }

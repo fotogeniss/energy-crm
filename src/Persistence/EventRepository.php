@@ -43,7 +43,7 @@ final class EventRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT type, from_status, to_status, message, user_id, created_at
+                'SELECT type, from_status, to_status, message, reason, user_id, created_at
                  FROM %i WHERE contract_id = %d ORDER BY created_at DESC',
                 $this->table,
                 $contractId
@@ -80,6 +80,8 @@ final class EventRepository
             'from_status' => $this->orNull($details['from_status'] ?? null),
             'to_status'   => $this->orNull($details['to_status'] ?? null),
             'message'     => $this->orNull($details['message'] ?? null),
+            // (342) Κωδικός λόγου απόρριψης/ακύρωσης· null σε κάθε άλλο γεγονός.
+            'reason'      => $this->orNull($details['reason'] ?? null),
         ]);
     }
 

@@ -14,6 +14,7 @@ import { go, openEdit } from '@energy-crm/navigate';
 import { confirmTyped, confirmTypedWithReason, openDialog } from '@energy-crm/dialog';
 import { storedForAi } from '@energy-crm/ai-docs';
 import { checkPhoto } from '@energy-crm/photo-check';
+import { pickReason } from '@energy-crm/close-reason';
 
 function copyText(text) {
 	text = String(text == null ? '' : text);
@@ -254,6 +255,8 @@ function renderDetail(view, d) {
 			 * κώδικας, το μήνυμα το γράφει άνθρωπος ή πάροχος -- δεν πρέπει να
 			 * μοιάζουν το ίδιο πράγμα. */
 			var note = (e.type === 'status_change' && e.message) ? e.message : '';
+			// (342) Ο λόγος απόρριψης/ακύρωσης, δίπλα στο «από → προς».
+			if (e.reason_label) label += ' · ' + e.reason_label;
 			var who = e.actor
 				? (e.actor === 'Σύστημα'
 					? '<div class="ecrm-timeline__who"><span class="ecrm-timeline__whoname is-sys">' + esc(e.actor) + '</span></div>'
@@ -496,10 +499,15 @@ function renderDetail(view, d) {
 		b.addEventListener('click', function () {
 			var to = this.getAttribute('data-status');
 			if (to === c.status) return;
-			fetch(api('/contracts/' + c.id + '/status'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ status: to }) })
-				.then(function (r) { return r.json(); })
-				.then(function (res) { if (res && res.ok) { toast('Κατάσταση: ' + (statuses[to] || to)); openDetail(c.id); } else { toast((res && res.error) || 'Αποτυχία αλλαγής.', false); } })
-				.catch(function () { toast('Σφάλμα δικτύου.', false); });
+			// (342) Απόρριψη/ακύρωση: πρώτα ο λόγος. Άκυρο = καμία αλλαγή.
+			// Πρόχειρο που πετιέται: χωρίς λόγο (CloseReason::required()).
+			(c.status === 'draft' ? Promise.resolve({ reason: '', note: '' }) : pickReason(to, statuses[to] || to, 1)).then(function (picked) {
+				if (!picked) return;
+				fetch(api('/contracts/' + c.id + '/status'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ status: to, reason: picked.reason, message: picked.note }) })
+					.then(function (r) { return r.json(); })
+					.then(function (res) { if (res && res.ok) { toast('Κατάσταση: ' + (statuses[to] || to)); openDetail(c.id); } else { toast((res && res.error) || 'Αποτυχία αλλαγής.', false); } })
+					.catch(function () { toast('Σφάλμα δικτύου.', false); });
+			});
 		});
 	});
 

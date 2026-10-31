@@ -88,6 +88,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Infrastructure;
 
+use EnergyCRM\Domain\Contract\CloseReason;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractDetails;
@@ -115,10 +116,10 @@ final class RejectionFollowUp
     /** Ίδιο σημείο σύνδεσης με τον ContractNotices. */
     public function register(): void
     {
-        add_action(ContractLifecycle::STATUS_CHANGED, [$this, 'onStatusChanged'], 10, 2);
+        add_action(ContractLifecycle::STATUS_CHANGED, [$this, 'onStatusChanged'], 10, 4);
     }
 
-    public function onStatusChanged(int $contractId, string $to): void
+    public function onStatusChanged(int $contractId, string $to, string $from = '', string $reason = ''): void
     {
         $status = ContractStatus::tryFromSlug($to);
 
@@ -148,7 +149,12 @@ final class RejectionFollowUp
             'customer_id' => null,
             'assigned_to' => $owner,
             'created_by'  => null,
-            'title'       => trim($status->label() . ' — ' . $code),
+            // (342) Ο λόγος, όταν δόθηκε: «Απόρριψη ΘΑΛΗΣ: στοιχεία δεν ταιριάζουν».
+            'title'       => trim(
+                $status->label()
+                . ($reason !== '' ? ': ' . mb_strtolower(CloseReason::label($reason), 'UTF-8') : '')
+                . ' — ' . $code
+            ),
             'note'        => sprintf(
                 $status === ContractStatus::Cancelled
                     ? '%s: η αίτηση ακυρώθηκε. Έλεγξε την αιτία και ενημέρωσε τον πελάτη αν χρειάζεται.'

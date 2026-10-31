@@ -201,6 +201,8 @@ final class ContractLifecycle
             'from_status' => $from,
             'to_status'   => $to,
             'message'     => $options['message'] ?? null,
+            // (342) Λόγος απόρριψης/ακύρωσης (CloseReason), όπου δόθηκε.
+            'reason'      => $options['reason'] ?? null,
         ]);
 
         $this->announce($contractId, $to, $from, $options);
@@ -252,6 +254,6 @@ final class ContractLifecycle
          * mistake the constant exists to prevent.
          */
         // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
-        do_action(self::STATUS_CHANGED, $contractId, $to, $from);
+        do_action(self::STATUS_CHANGED, $contractId, $to, $from, (string) ($options['reason'] ?? ''));
     }
 }

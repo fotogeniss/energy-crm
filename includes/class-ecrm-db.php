@@ -436,6 +436,7 @@ class ECRM_DB {
 
 		// --- events (status history / audit) ---------------------------------
 		// type: status_change|note|created|extracted
+		// reason: (342) κωδικός λόγου απόρριψης/ακύρωσης (Domain\Contract\CloseReason)
 		dbDelta( "CREATE TABLE {$p}events (
 			id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			contract_id BIGINT UNSIGNED NOT NULL,
@@ -444,6 +445,7 @@ class ECRM_DB {
 			from_status VARCHAR(24) NULL,
 			to_status   VARCHAR(24) NULL,
 			message     TEXT NULL,
+			reason      VARCHAR(32) NULL,
 			created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
 			KEY contract_id (contract_id)

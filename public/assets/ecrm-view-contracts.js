@@ -19,8 +19,9 @@ import { openDetail, openEdit } from '@energy-crm/navigate';
 import { openExportModal } from '@energy-crm/export-modal';
 import { confirmTyped, confirmTypedWithReason } from '@energy-crm/dialog';
 import { scope, setScope } from '@energy-crm/scope';
+import { pickReason } from '@energy-crm/close-reason';
 
-var contractsState = { status: '', q: '', page: 1, pageSize: 12 };
+var contractsState = { status: '', q: '', page: 1, pageSize: 12, reason: '', reasonLabel: '' };
 
 /* Ορίζει το φίλτρο κατάστασης από ΕΞΩ, χωρίς να φορτώσει.
  *
@@ -34,12 +35,23 @@ export function setContractsFilter(status, q) {
 	// openCustomerContracts(): οι προϋπάρχουσες κλήσεις με ένα όρισμα (τα KPI
 	// του dashboard) συνεχίζουν να αφήνουν την αναζήτηση όπως ήταν.
 	if (typeof q === 'string') contractsState.q = q;
+	contractsState.reason = '';
+	contractsState.reasonLabel = '';
 	contractsState.page = 1;
+}
+
+/* (342) Από την κάρτα «Γιατί χάνουμε αιτήσεις»: όσες πήραν αυτόν τον λόγο
+ * τις τελευταίες 90 μέρες. Φαίνεται ως φίλτρο που κλείνει με ×. */
+export function setContractsReason(reason, label) {
+	setContractsFilter('', '');
+	contractsState.reason = reason || '';
+	contractsState.reasonLabel = label || '';
 }
 
 export function loadContracts() {
 	var view = viewEl('contracts');
-	var url = api('/contracts') + '?status=' + encodeURIComponent(contractsState.status) + '&q=' + encodeURIComponent(contractsState.q) + '&scope=' + encodeURIComponent(scope());
+	var url = api('/contracts') + '?status=' + encodeURIComponent(contractsState.status) + '&q=' + encodeURIComponent(contractsState.q) + '&scope=' + encodeURIComponent(scope()) +
+		(contractsState.reason ? '&reason=' + encodeURIComponent(contractsState.reason) : '');
 	fetch(url, { headers: H() })
 		.then(function (r) { return r.json(); })
 		.then(function (d) { renderContracts(view, d); })
@@ -345,6 +357,10 @@ function renderContracts(view, d) {
 		'<div class="ecrm-search-row"><div class="ecrm-search"><input type="search" class="ecrm-input" placeholder="Αναζήτηση πελάτη, ΑΦΜ, ΗΚΑΣΠ, αριθμού συμβολαίου…" value="' + esc(contractsState.q) + '" data-search></div>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-save-filter><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.9 6 6.6.9-4.8 4.6 1.2 6.5-5.9-3.1-5.9 3.1 1.2-6.5L2.5 9.9 9.1 9z"/></svg> Αποθήκευση φίλτρου</button>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-toggle-filters><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg> Φίλτρα</button></div>' +
+		(contractsState.reason
+			? '<div class="ecrm-savedfilters"><span class="ecrm-savedchip"><span class="ecrm-savedchip__go">Λόγος: ' + esc(contractsState.reasonLabel || contractsState.reason) + ' · 90 μέρες</span>' +
+				'<button type="button" class="ecrm-savedchip__x" data-reason-clear aria-label="Χωρίς φίλτρο λόγου">×</button></span></div>'
+			: '') +
 		'<div class="ecrm-savedfilters" data-savedfilters></div>' +
 		'<div class="ecrm-tabs" data-tabs>' + tabs + '</div>' +
 		table + '</div>';
@@ -357,6 +373,8 @@ function renderContracts(view, d) {
 		var timer;
 		search.addEventListener('input', function () { clearTimeout(timer); var val = this.value; timer = setTimeout(function () { contractsState.q = val; contractsState.page = 1; loadContracts(); }, 350); });
 	}
+	var rc = view.querySelector('[data-reason-clear]');
+	if (rc) rc.addEventListener('click', function () { contractsState.reason = ''; contractsState.reasonLabel = ''; contractsState.page = 1; loadContracts(); });
 	var ft = view.querySelector('[data-toggle-filters]');
 	if (ft) ft.addEventListener('click', function () { var t = view.querySelector('[data-tabs]'); if (t) t.classList.toggle('is-hidden'); });
 
@@ -573,9 +591,15 @@ function renderContracts(view, d) {
 		}
 		var bs = bar.querySelector('[data-bulk-apply-status]');
 		if (bs) bs.addEventListener('click', function () {
-			var v = bar.querySelector('[data-bulk-status]').value;
+			var sel = bar.querySelector('[data-bulk-status]');
+			var v = sel.value;
 			if (!v) { toast('Διάλεξε κατάσταση.', false); return; }
-			runBulk({ action: 'status', value: v }, 'Ενημερώθηκαν');
+			// (342) Απόρριψη/ακύρωση: ένας λόγος για όλες.
+			var label = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : v;
+			pickReason(v, label, selectedIds().length).then(function (picked) {
+				if (!picked) return;
+				runBulk({ action: 'status', value: v, reason: picked.reason, note: picked.note }, 'Ενημερώθηκαν');
+			});
 		});
 		var ba = bar.querySelector('[data-bulk-apply-assign]');
 		if (ba) ba.addEventListener('click', function () {

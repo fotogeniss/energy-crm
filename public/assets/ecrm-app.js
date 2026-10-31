@@ -2,7 +2,7 @@ import { api, esc, fetch, H, toast } from '@energy-crm/util';
 import { wire } from '@energy-crm/navigate';
 import { count as queueCount, flush as queueFlush, forget as queueForget, onChange as onQueueChange, pending as queuePending, purgeExpired, retryNow } from '@energy-crm/queue';
 import { openDetail } from '@energy-crm/view-detail';
-import { loadContracts, setContractsFilter } from '@energy-crm/view-contracts';
+import { loadContracts, setContractsFilter, setContractsReason } from '@energy-crm/view-contracts';
 import { loadPending } from '@energy-crm/view-pending';
 import { loadDocuments } from '@energy-crm/view-documents';
 import { loadCommissions } from '@energy-crm/view-commissions';
@@ -640,6 +640,8 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 		// ίδια την καρτέλα πελάτη (openCustomerCard) -- τη χρησιμοποιεί η
 		// λίστα «Πελάτες», που έχει customer id σε κάθε γραμμή.
 		openCustomerContracts: function (q) { setContractsFilter('', q); go('contracts'); },
+		// (342) Από την κάρτα «Γιατί χάνουμε αιτήσεις» των Στατιστικών.
+		openReasonContracts: function (reason, label) { setContractsReason(reason, label); go('contracts'); },
 	});
 
 		// ---- boot -------------------------------------------------------------

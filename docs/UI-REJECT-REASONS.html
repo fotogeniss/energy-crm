@@ -1,0 +1,71 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Λόγοι απόρριψης</title>
+<style>
+:root{--bg:#f8f8f6;--card:#fff;--ink:#2a2926;--mu:#6e6c66;--line:#dedcd7;--acc:#0b690c;--accw:#eafaea;--accb:#16c217;--warn:#ab5506;--warnw:#fcf2ec;--bad:#c32b47;--badw:#fdeaea}
+@media (prefers-color-scheme:dark){:root{--bg:#111110;--card:#1a1a18;--ink:#f1f1ee;--mu:#a3a099;--line:#33322e;--acc:#6bdd6d;--accw:#12240f;--warn:#ffb682;--warnw:#3f322a;--bad:#fb8a91;--badw:#423030}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Manrope,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:880px;margin:0 auto;padding:24px 16px 60px}h1{font-size:23px;margin:0 0 6px}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:30px 0 8px}
+p{margin:0 0 12px}.d{color:var(--mu)}
+.dlg{max-width:500px;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:0 12px 40px #0002;padding:16px}
+.dlg h3{margin:0 0 4px;font-size:17px}.eb{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--bad);text-transform:uppercase}
+.opt{display:flex;gap:8px;align-items:center;padding:7px 8px;border:1px solid var(--line);border-radius:9px;margin-top:6px;font-size:13.5px}
+.opt.on{border-color:var(--bad);background:var(--badw)}
+.r{width:14px;height:14px;border-radius:50%;border:2px solid var(--line)}.on .r{border-color:var(--bad);background:radial-gradient(var(--bad) 45%,transparent 50%)}
+.ta{border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:52px;color:var(--mu);margin-top:10px;font-size:13px}
+.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.btn{border:1px solid var(--line);border-radius:9px;padding:8px 12px;font:700 13px inherit;background:transparent;color:var(--ink)}
+.btn.dn{background:var(--bad);border-color:var(--bad);color:#fff}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.step{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-bottom:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 120px 44px;gap:10px;align-items:center;padding:6px 0;font-size:13.5px}
+.track{height:8px;border-radius:99px;background:var(--line);overflow:hidden}.fill{height:100%;background:var(--bad)}
+.n{text-align:right;font-weight:800}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.tab{border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:12px;font-weight:700}.tab.on{background:var(--accb);border-color:var(--accb);color:#0b3d0c}
+.tl{border-left:2px solid var(--line);padding:2px 0 2px 12px;font-size:13px}.tl b{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-top:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}th{color:var(--mu);font-size:12px}
+</style></head><body><div class="w">
+<h1>#9 · Λόγοι απόρριψης και ακύρωσης</h1>
+<p class="d">Σήμερα, όταν μια αίτηση γυρνά «Απόρριψη ΘΑΛΗΣ», «MP reject» ή «Ακυρώθηκε», ο λόγος μπαίνει, αν μπει, ως ελεύθερο κείμενο. Έτσι δεν μπορείς να δεις τι φταίει πιο συχνά. Το STATUS-MODEL (Κ5, §7) λέει ήδη «κάθε ακύρωση απαιτεί λόγο από λίστα», αλλά δεν υλοποιήθηκε ποτέ.</p>
+
+<h2>1 · Αλλαγή σε απόρριψη: λόγος υποχρεωτικός</h2>
+<div class="dlg">
+<div class="eb">Απόρριψη ΘΑΛΗΣ</div>
+<h3>Γιατί απορρίφθηκε;</h3>
+<div class="opt"><span class="r"></span>Ελλιπή ή δυσανάγνωστα δικαιολογητικά</div>
+<div class="opt on"><span class="r"></span>Στοιχεία δεν ταιριάζουν (ΑΦΜ, ΑΔΤ, όνομα)</div>
+<div class="opt"><span class="r"></span>Λάθος αριθμός παροχής / τηλεφώνου</div>
+<div class="opt"><span class="r"></span>Οφειλή σε προηγούμενο πάροχο</div>
+<div class="opt"><span class="r"></span>Παροχή δεσμευμένη ή σε διακοπή</div>
+<div class="opt"><span class="r"></span>Λείπει ή λάθος υπογραφή</div>
+<div class="opt"><span class="r"></span>Πολιτική αποδοχής παρόχου</div>
+<div class="opt"><span class="r"></span>Άλλο</div>
+<div class="ta">Σημείωση (προαιρετική, υποχρεωτική στο «Άλλο»): το ΑΔΤ στη φωτογραφία ήταν ΑΒ123456, στη φόρμα ΑΒ123465</div>
+<div class="foot"><button class="btn">Ακύρωση</button><button class="btn dn">Αλλαγή σε «Απόρριψη ΘΑΛΗΣ»</button></div>
+</div>
+<p class="d" style="margin-top:8px">Για το «Ακυρώθηκε» η λίστα είναι οι 5 λόγοι του STATUS-MODEL §7: δέσμευση συμβολαίου, τον κράτησε ο πάροχος (retention), πολιτική αποδοχής, το μετάνιωσε, δεν ολοκληρώθηκαν τα δικαιολογητικά. Υπάρχουν επίσης τα «Απορρίφθηκε από πάροχο» και «Άλλο».</p>
+
+<h2>2 · Στο ιστορικό της αίτησης</h2>
+<div class="c"><div class="tl">Νίκος Τ. · Οριστικοποίηση → <b>Απόρριψη ΘΑΛΗΣ</b> · <b>Στοιχεία δεν ταιριάζουν</b><br><span class="d">«το ΑΔΤ στη φωτογραφία ήταν ΑΒ123456, στη φόρμα ΑΒ123465»</span></div></div>
+<p class="d">Η εργασία παρακολούθησης που ήδη φτιάχνεται μετά από απόρριψη γράφει πλέον και τον λόγο: «Απόρριψη ΘΑΛΗΣ: στοιχεία δεν ταιριάζουν».</p>
+
+<h2>3 · Στα Στατιστικά: «Γιατί χάνουμε αιτήσεις»</h2>
+<div class="c">
+<div class="step">Γιατί χάνουμε αιτήσεις · τελευταίες 90 μέρες</div>
+<div class="tabs"><span class="tab on">Όλοι οι πάροχοι</span><span class="tab">Protergia</span><span class="tab">ΗΡΩΝ</span><span class="tab">Orizon</span></div>
+<div class="bar"><span>Ελλιπή ή δυσανάγνωστα δικαιολογητικά</span><span class="track"><span class="fill" style="width:100%;display:block"></span></span><span class="n">14</span></div>
+<div class="bar"><span>Στοιχεία δεν ταιριάζουν</span><span class="track"><span class="fill" style="width:64%;display:block"></span></span><span class="n">9</span></div>
+<div class="bar"><span>Το μετάνιωσε</span><span class="track"><span class="fill" style="width:43%;display:block"></span></span><span class="n">6</span></div>
+<div class="bar"><span>Οφειλή σε προηγούμενο πάροχο</span><span class="track"><span class="fill" style="width:29%;display:block"></span></span><span class="n">4</span></div>
+<div class="bar"><span>Χωρίς λόγο (παλιές/μαζικές)</span><span class="track"><span class="fill" style="width:21%;display:block"></span></span><span class="n">3</span></div>
+<p class="d" style="margin:10px 0 0">Πατώντας μια γραμμή ανοίγει η λίστα «Συμβάσεις» με τις αιτήσεις αυτού του λόγου. Τη βλέπει όποιος βλέπει ήδη τα Στατιστικά, ο καθένας για όσες αιτήσεις του επιτρέπονται.</p>
+</div>
+
+<h2>Πού είναι υποχρεωτικός</h2>
+<div class="c"><table>
+<tr><th>Διαδρομή</th><th>Λόγος</th></tr>
+<tr><td>Αλλαγή κατάστασης από την καρτέλα αίτησης</td><td>Υποχρεωτικός</td></tr>
+<tr><td>Μαζική αλλαγή από τη λίστα Συμβάσεων</td><td>Υποχρεωτικός, ένας για όλες</td></tr>
+<tr><td>Εισαγωγή Excel παρόχου</td><td>Δεν ζητείται, μένει «χωρίς λόγο»</td></tr>
+<tr><td>Παλιές αιτήσεις</td><td>«Χωρίς λόγο»</td></tr>
+</table></div>
+</div></body></html>

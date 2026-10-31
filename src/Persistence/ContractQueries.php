@@ -49,8 +49,13 @@ final class ContractQueries
      *
      * @return list<array<string, mixed>>
      */
-    public function search(UserScope $scope, string $status = '', string $term = '', int $limit = 200): array
-    {
+    public function search(
+        UserScope $scope,
+        string $status = '',
+        string $term = '',
+        int $limit = 200,
+        string $reason = ''
+    ): array {
         global $wpdb;
 
         [$clause, $scopeParams] = ScopeClause::forScope($scope, 'c');
@@ -67,6 +72,14 @@ final class ContractQueries
         if ($status !== '') {
             $conditions[] = 'c.status = %s';
             $params[]     = $status;
+        }
+
+        // (342) Από τα «Γιατί χάνουμε αιτήσεις»: όσες πήραν αυτόν τον λόγο
+        // απόρριψης/ακύρωσης τις τελευταίες 90 μέρες (ίδιο παράθυρο με την κάρτα).
+        if ($reason !== '') {
+            $conditions[] = 'EXISTS ( SELECT 1 FROM %i ev WHERE ev.contract_id = c.id AND ev.reason = %s'
+                . ' AND ev.created_at >= NOW() - INTERVAL 90 DAY )';
+            $params       = [...$params, Tables::name(Tables::EVENTS), $reason];
         }
 
         if ($term !== '') {

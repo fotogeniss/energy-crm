@@ -18,6 +18,7 @@ namespace EnergyCRM\Http;
 use ECRM_Docs;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Contract\CloseReason;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Domain\Contract\ContractStatus;
@@ -58,6 +59,12 @@ final class ContractStatusController implements Controller
                     'type'              => 'string',
                     'default'           => '',
                     'sanitize_callback' => 'sanitize_textarea_field',
+                ],
+                // (342) Λόγος απόρριψης/ακύρωσης -- υποχρεωτικός εκεί (CloseReason).
+                'reason' => [
+                    'type'              => 'string',
+                    'default'           => '',
+                    'sanitize_callback' => 'sanitize_key',
                 ],
             ],
         ]);
@@ -178,10 +185,23 @@ final class ContractStatusController implements Controller
             }
         }
 
+        // (342) Απόρριψη/ακύρωση: λόγος από τη λίστα, «Άλλο» με σημείωση.
+        $reason  = (string) $request['reason'];
+        $problem = CloseReason::problem($target->value, $reason, (string) $request['message'], $from);
+
+        if ($problem !== null) {
+            return new WP_REST_Response([
+                'ok'      => false,
+                'error'   => $problem,
+                'reasons' => CloseReason::for($target->value),
+            ], 422);
+        }
+
         $this->lifecycle->moveTo($id, $target->value, [
             'user_id' => $scope->actorId(),
             'from'    => $from,
             'message' => (string) $request['message'] ?: null,
+            'reason'  => CloseReason::required($target->value, $from) ? $reason : null,
         ]);
 
         return new WP_REST_Response(['ok' => true, 'status' => $target->value], 200);

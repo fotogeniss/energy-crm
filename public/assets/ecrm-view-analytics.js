@@ -11,6 +11,7 @@
  */
 
 import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
+import { openReasonContracts } from '@energy-crm/navigate';
 
 var analyticsScope = 'team';
 export function loadAnalytics() {
@@ -21,6 +22,7 @@ export function loadAnalytics() {
 			if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
 			analyticsScope = d.scope; // server may downgrade team→own
 			view.innerHTML = analyticsHTML(d);
+			wireLost(view, d.lost_reasons || []);
 			view.querySelectorAll('[data-ascope]').forEach(function (b) { b.addEventListener('click', function () { analyticsScope = this.getAttribute('data-ascope'); loadAnalytics(); }); });
 		})
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
@@ -35,6 +37,63 @@ function barList(items, accentClass) {
 			'<div class="ecrm-barrow__track"><div class="ecrm-barrow__fill ' + (accentClass || '') + '" style="width:' + pct + '%"></div></div>' +
 			'<div class="ecrm-barrow__val">' + it.count + '</div></div>';
 	}).join('') + '</div>';
+}
+
+/* (342) «Γιατί χάνουμε αιτήσεις»: απορρίψεις και ακυρώσεις 90 ημερών ανά
+ * λόγο, με καρτέλες παρόχου. Το πάτημα σε λόγο ανοίγει τις αιτήσεις του.
+ * docs/UI-REJECT-REASONS.html. */
+var lostProvider = '';
+
+function lostHTML(rows, provider) {
+	var providers = [];
+	rows.forEach(function (r) { if (r.provider && providers.indexOf(r.provider) < 0) providers.push(r.provider); });
+	var by = {}, order = [];
+	rows.forEach(function (r) {
+		if (provider && r.provider !== provider) return;
+		if (!by[r.reason]) { by[r.reason] = { reason: r.reason, label: r.label, count: 0 }; order.push(r.reason); }
+		by[r.reason].count += r.count;
+	});
+	var items = order.map(function (k) { return by[k]; }).sort(function (a, b) { return b.count - a.count; });
+	var max = 1; items.forEach(function (it) { if (it.count > max) max = it.count; });
+
+	var tabs = providers.length > 1
+		? '<div class="ecrm-xsell__tabs">' +
+			'<button type="button" class="ecrm-xsell__tab' + (provider === '' ? ' is-on' : '') + '" data-lost-prov="">Όλοι οι πάροχοι</button>' +
+			providers.map(function (p) {
+				return '<button type="button" class="ecrm-xsell__tab' + (provider === p ? ' is-on' : '') + '" data-lost-prov="' + esc(p) + '">' + esc(p) + '</button>';
+			}).join('') + '</div>'
+		: '';
+
+	var list = items.length
+		? '<div class="ecrm-barlist">' + items.map(function (it) {
+			var pct = Math.round(100 * it.count / max);
+			var lbl = it.reason
+				? '<button type="button" class="ecrm-lost__go" data-lost-reason="' + esc(it.reason) + '" data-lost-label="' + esc(it.label) + '">' + esc(it.label) + '</button>'
+				: esc(it.label + ' (παλιές / Excel)');
+			return '<div class="ecrm-barrow"><div class="ecrm-barrow__lbl">' + lbl + '</div>' +
+				'<div class="ecrm-barrow__track"><div class="ecrm-barrow__fill is-lost" style="width:' + pct + '%"></div></div>' +
+				'<div class="ecrm-barrow__val">' + esc(it.count) + '</div></div>';
+		}).join('') + '</div>'
+		: '<div class="ecrm-empty">Καμία απόρριψη ή ακύρωση τις τελευταίες 90 μέρες.</div>';
+
+	return '<div class="ecrm-step">Γιατί χάνουμε αιτήσεις · τελευταίες 90 μέρες</div>' + tabs + list;
+}
+
+function wireLost(view, rows) {
+	var box = view.querySelector('[data-lost]');
+	if (!box) return;
+	box.querySelectorAll('[data-lost-prov]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			lostProvider = b.getAttribute('data-lost-prov') || '';
+			box.innerHTML = lostHTML(rows, lostProvider);
+			wireLost(view, rows);
+		});
+	});
+	box.querySelectorAll('[data-lost-reason]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			openReasonContracts(b.getAttribute('data-lost-reason'), b.getAttribute('data-lost-label'));
+		});
+	});
 }
 
 function analyticsHTML(d) {
@@ -100,6 +159,7 @@ function analyticsHTML(d) {
 		'<div class="ecrm-card"><div class="ecrm-step">Ανά υπηρεσία</div>' + barList(d.by_energy || [], 'is-energy') + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Ανά νομό</div>' + barList(d.by_region || [], 'is-region') + '</div>' +
 		'</div>' +
+		'<div class="ecrm-card" data-lost>' + lostHTML(d.lost_reasons || [], lostProvider) + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Τάση μήνα (' + new Date().getFullYear() + ')</div>' + trend + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step"><svg class="ecrm-i ecrm-i--step" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 01-8 0zM8 6H5v2a3 3 0 003 3M16 6h3v2a3 3 0 01-3 3M10 13h4v3h-4zM8 20h8M12 16v4"/></svg> Κατάταξη συνεργατών</div>' + lbHTML + '</div>';
 }

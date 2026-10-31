@@ -59,6 +59,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-escalations' => 'ecrm-view-escalations.js',
 		'@energy-crm/tickets'          => 'ecrm-tickets.js',
 		'@energy-crm/photo-check'      => 'ecrm-photo-check.js',
+		'@energy-crm/close-reason'     => 'ecrm-close-reason.js',
 		// Ειχε ξεχαστει απο εδω στο (243) -- το ecrm-app.js το εισαγε, ο
 		// browser δεν μπορουσε να λυσει το bare specifier χωρις καταχωρηση, και
 		// πεταγε ΟΛΟΚΛΗΡΟ το ecrm-app.js: καθε οθονη εμενε στο «Φορτωση…».
@@ -77,7 +78,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/format'           => [],
 		'@energy-crm/scope'            => [],
 		'@energy-crm/view-commissions' => [ '@energy-crm/util' ],
-		'@energy-crm/view-analytics'   => [ '@energy-crm/util' ],
+		'@energy-crm/view-analytics'   => [ '@energy-crm/util', '@energy-crm/navigate' ],
 		'@energy-crm/export-modal'     => [ '@energy-crm/util' ],
 		'@energy-crm/dialog'           => [ '@energy-crm/util' ],
 		'@energy-crm/view-detail'      => [
@@ -87,6 +88,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/dialog',
 			'@energy-crm/ai-docs',
 			'@energy-crm/photo-check',
+			'@energy-crm/close-reason',
 		],
 		'@energy-crm/view-contracts'   => [
 			'@energy-crm/util',
@@ -95,6 +97,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/export-modal',
 			'@energy-crm/dialog',
 			'@energy-crm/scope',
+			'@energy-crm/close-reason',
 		],
 		'@energy-crm/view-pending'     => [
 			'@energy-crm/util',
@@ -152,6 +155,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/dialog',
 		],
 		'@energy-crm/photo-check'      => [],
+		'@energy-crm/close-reason'     => [ '@energy-crm/util', '@energy-crm/dialog' ],
 		'@energy-crm/app'              => [
 			'@energy-crm/util',
 			'@energy-crm/navigate',
@@ -301,6 +305,8 @@ class ECRM_Shortcodes {
 			'userId'   => get_current_user_id(),
 			// (339) Μπαίνει στα τεχνικά κάθε αναφοράς προβλήματος.
 			'version'  => ECRM_VERSION,
+			// (342) Λόγοι απόρριψης/ακύρωσης ανά κατάσταση (CloseReason).
+			'closeReasons' => \EnergyCRM\Domain\Contract\CloseReason::all(),
 		] );
 	}
 

@@ -93,6 +93,13 @@ export function openCustomerContracts(query) {
  * edit() wants and the caller already has it — fetching it again to hand back
  * the same fields would be a round trip for nothing.
  */
+/* (342) Η λίστα συμβάσεων φιλτραρισμένη σε λόγο απόρριψης/ακύρωσης. */
+export function openReasonContracts(reason, label) {
+	if (typeof handlers.openReasonContracts === 'function') {
+		handlers.openReasonContracts(reason, label);
+	}
+}
+
 export function openEdit(contract) {
 	if (typeof handlers.openEdit === 'function') {
 		handlers.openEdit(contract);

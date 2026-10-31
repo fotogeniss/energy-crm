@@ -21,6 +21,8 @@ use EnergyCRM\Domain\Commission\CommissionAmount;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Analytics\Funnel;
+use EnergyCRM\Domain\Contract\CloseReason;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\AnalyticsRepository;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -84,6 +86,21 @@ final class AnalyticsController implements Controller
             'by_provider' => $this->labelled($this->analytics->topProviders($scope)),
             'by_energy'   => $byEnergy,
             'by_region'   => $this->labelled($this->analytics->topRegions($scope)),
+
+            // (342) «Γιατί χάνουμε αιτήσεις», 90 μέρες.
+            'lost_reasons' => array_map(
+                static fn (array $row): array => [
+                    'reason'   => (string) $row['reason'],
+                    'label'    => CloseReason::label((string) $row['reason']),
+                    'provider' => (string) $row['provider'],
+                    'count'    => (int) $row['c'],
+                ],
+                $this->analytics->lostReasons($scope, [
+                    ContractStatus::ThalisRejected->value,
+                    ContractStatus::MnpReject->value,
+                    ContractStatus::Cancelled->value,
+                ])
+            ),
             // gmdate() εδώ έδινε λάθος έτος για 2-3 ώρες μετά τα μεσάνυχτα
             // (ώρα Ελλάδας) την 1η Ιανουαρίου -- ίδια κλάση σφάλματος με τα ήδη
             // διορθωμένα σημεία, εύρημα ελέγχου ασφαλείας/λογικής (26/08/2026).
