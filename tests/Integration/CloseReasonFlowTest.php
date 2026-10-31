@@ -42,15 +42,15 @@ final class CloseReasonFlowTest extends IntegrationTestCase
     {
         $id = $this->contract('presale');
 
-        $refused = $this->status($id, ['status' => 'cancelled']);
+        $refused = $this->changeStatus($id, ['status' => 'cancelled']);
         self::assertSame(422, $refused->get_status());
         self::assertArrayHasKey('changed_mind', $refused->get_data()['reasons']);
         self::assertSame('presale', $this->statusOf($id));
 
-        $other = $this->status($id, ['status' => 'cancelled', 'reason' => 'other']);
+        $other = $this->changeStatus($id, ['status' => 'cancelled', 'reason' => 'other']);
         self::assertSame(422, $other->get_status(), '«Άλλο» χωρίς σημείωση');
 
-        $ok = $this->status($id, [
+        $ok = $this->changeStatus($id, [
             'status'  => 'cancelled',
             'reason'  => 'changed_mind',
             'message' => 'βρήκε φθηνότερο',
@@ -67,7 +67,7 @@ final class CloseReasonFlowTest extends IntegrationTestCase
     {
         $id = $this->contract('draft');
 
-        self::assertSame(200, $this->status($id, ['status' => 'cancelled'])->get_status());
+        self::assertSame(200, $this->changeStatus($id, ['status' => 'cancelled'])->get_status());
         self::assertNull($this->lastEvent($id)['reason']);
     }
 
@@ -75,7 +75,7 @@ final class CloseReasonFlowTest extends IntegrationTestCase
     {
         $id = $this->contract('finalisation');
 
-        $moved = $this->status($id, ['status' => 'thalis_rejected', 'reason' => 'data_mismatch']);
+        $moved = $this->changeStatus($id, ['status' => 'thalis_rejected', 'reason' => 'data_mismatch']);
         self::assertSame(200, $moved->get_status());
 
         $events = $this->call('GET', '/contracts/' . $id)->get_data()['contract']['events'];
@@ -149,7 +149,7 @@ final class CloseReasonFlowTest extends IntegrationTestCase
     }
 
     /** @param array<string, mixed> $params */
-    private function status(int $id, array $params): WP_REST_Response
+    private function changeStatus(int $id, array $params): WP_REST_Response
     {
         return $this->call('POST', '/contracts/' . $id . '/status', $params);
     }

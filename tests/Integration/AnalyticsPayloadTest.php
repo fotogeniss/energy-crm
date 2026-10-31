@@ -91,6 +91,8 @@ final class AnalyticsPayloadTest extends IntegrationTestCase
                 'by_provider',
                 'by_energy',
                 'by_region',
+                // (342) «Γιατί χάνουμε αιτήσεις» -- το διαβάζει το lostHTML().
+                'lost_reasons',
                 'monthly',
                 'leaderboard',
             ],
