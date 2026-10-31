@@ -384,7 +384,7 @@ final class ContractQueries
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT c.id, c.code, c.status, c.end_date, c.term_months,
+                "SELECT c.id, c.code, c.status, c.end_date, c.term_months, c.partner_user_id,
                         c.provider_id, c.program_id, c.energy_type, c.category, c.extra_json,
                         DATEDIFF(c.end_date, NOW()) AS days_left,
                         p.name AS provider_name, p.logo_url AS provider_logo,

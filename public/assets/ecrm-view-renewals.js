@@ -8,6 +8,12 @@ import { fmtDate, initials, svgIcon, tint } from '@energy-crm/format';
 import { openEdit } from '@energy-crm/navigate';
 
 var renewState = { scope: 'own' };
+
+/* (343) Από την καρτέλα «Κατάστημα»: ανοίγει στο «Ομάδας». Δεν φορτώνει·
+ * το go('renewals') που ακολουθεί φορτώνει. */
+export function setRenewalsScope(next) {
+	renewState.scope = next === 'team' ? 'team' : 'own';
+}
 export function loadRenewals() {
 	var view = viewEl('renewals');
 	fetch(api('/renewals') + '?scope=' + renewState.scope, { headers: H() })

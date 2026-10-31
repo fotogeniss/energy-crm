@@ -12,6 +12,12 @@ import { openDetail } from '@energy-crm/navigate';
 import { scope, setScope } from '@energy-crm/scope';
 
 var currentFilter = 'all';
+
+/* (343) Από την καρτέλα «Κατάστημα»: «Λείπουν δικαιολογητικά» ανοίγει με
+ * το φίλτρο «λείπουν». Χωρίς φόρτωση· τη κάνει το go('documents'). */
+export function setDocumentsFilter(next) {
+	currentFilter = next === 'missing' || next === 'pending' ? next : 'all';
+}
 var lastData = null;
 
 export function loadDocuments() {

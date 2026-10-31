@@ -4,11 +4,12 @@ import { count as queueCount, flush as queueFlush, forget as queueForget, onChan
 import { openDetail } from '@energy-crm/view-detail';
 import { loadContracts, setContractsFilter, setContractsReason } from '@energy-crm/view-contracts';
 import { loadPending } from '@energy-crm/view-pending';
-import { loadDocuments } from '@energy-crm/view-documents';
+import { loadDocuments, setDocumentsFilter } from '@energy-crm/view-documents';
 import { loadCommissions } from '@energy-crm/view-commissions';
 import { loadAnalytics } from '@energy-crm/view-analytics';
 import { loadLeads } from '@energy-crm/view-leads';
-import { loadRenewals } from '@energy-crm/view-renewals';
+import { loadRenewals, setRenewalsScope } from '@energy-crm/view-renewals';
+import { setScope } from '@energy-crm/scope';
 import { loadTasks } from '@energy-crm/view-tasks';
 import { loadCalc } from '@energy-crm/view-calc';
 import { loadCustomers } from '@energy-crm/view-customers';
@@ -642,6 +643,15 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 		openCustomerContracts: function (q) { setContractsFilter('', q); go('contracts'); },
 		// (342) Από την κάρτα «Γιατί χάνουμε αιτήσεις» των Στατιστικών.
 		openReasonContracts: function (reason, label) { setContractsReason(reason, label); go('contracts'); },
+		// (343) Τα «Δες» της καρτέλας «Κατάστημα»: η υπάρχουσα οθόνη, στο «Ομάδας».
+		openStoreList: function (kind) {
+			setScope('team');
+			if (kind === 'signatures') { setContractsFilter('awaiting_signature', ''); go('contracts'); return; }
+			if (kind === 'docs') { setDocumentsFilter('missing'); go('documents'); return; }
+			if (kind === 'stuck') { go('escalations'); return; }
+			if (kind === 'leads') { go('leads'); return; }
+			if (kind === 'expiring') { setRenewalsScope('team'); go('renewals'); }
+		},
 	});
 
 		// ---- boot -------------------------------------------------------------

@@ -2211,3 +2211,25 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-lost__go { border: 0; background: transparent; padding: 0; font: inherit; color: inherit; text-align: left; text-decoration: underline; text-decoration-color: var(--line); cursor: pointer; }
 .ecrm-lost__go:hover { color: var(--accent-ink); }
 .ecrm-barrow__fill.is-lost { background: var(--st-cancel); }
+
+/* (343) Αρχική → «Κατάστημα». Mockup: docs/UI-STORE-DASHBOARD.html.
+   Ο διακόπτης «Εγώ | Κατάστημα» είναι το ίδιο .ecrm-scope με το «Δικά μου /
+   Ομάδας»· οι γραμμές του «Θέλει κίνηση» στο ίδιο σχήμα με το .ecrm-attn. */
+.ecrm-hometabs { flex: 0 0 auto; align-self: center; }
+.ecrm-storechg { font-weight: 700; }
+.ecrm-storechg.is-up { color: var(--st-active); }
+.ecrm-storechg.is-down { color: var(--st-cancel); }
+.ecrm-storedo { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line-soft); }
+.ecrm-storedo:first-of-type { border-top: none; }
+.ecrm-storedo__n { flex: 0 0 32px; height: 32px; border-radius: 8px; display: grid; place-items: center;
+	font-weight: 800; font-size: var(--fs-13-5); }
+.ecrm-storedo__n.is-bad { background: var(--st-cancel-bg); color: var(--st-cancel); }
+.ecrm-storedo__n.is-warn { background: var(--st-pending-bg); color: var(--st-pending); }
+.ecrm-storedo__n.is-info { background: var(--st-new-bg); color: var(--st-new); }
+.ecrm-storedo__m { flex: 1; min-width: 0; font-size: var(--fs-13-5); color: var(--ink); }
+.ecrm-storedo__m b { display: block; font-weight: 600; }
+.ecrm-storedo__m small { display: block; color: var(--muted); font-size: var(--fs-12); margin-top: 2px; }
+.ecrm-storedo__a { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 13px;
+	font-family: inherit; font-size: var(--fs-12-5); font-weight: 600; color: var(--navy-soft); cursor: pointer; white-space: nowrap; }
+.ecrm-storedo__a:hover { border-color: var(--line-strong); color: var(--navy); }
+.ecrm-storebad { color: var(--st-cancel); font-weight: 800; }

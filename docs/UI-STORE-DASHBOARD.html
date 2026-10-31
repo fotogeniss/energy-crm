@@ -1,0 +1,55 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Αρχική καταστήματος</title>
+<style>
+:root{--bg:#f8f8f6;--card:#fff;--ink:#2a2926;--mu:#6e6c66;--line:#dedcd7;--acc:#0b690c;--accw:#eafaea;--accb:#16c217;--warn:#ab5506;--warnw:#fcf2ec;--bad:#c32b47;--badw:#fdeaea;--blue:#0062a8;--bluew:#ebf0fb}
+@media (prefers-color-scheme:dark){:root{--bg:#111110;--card:#1a1a18;--ink:#f1f1ee;--mu:#a3a099;--line:#33322e;--acc:#6bdd6d;--accw:#12240f;--warn:#ffb682;--warnw:#3f322a;--bad:#fb8a91;--badw:#423030;--blue:#8cc4f2;--bluew:#1d2733}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Manrope,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:960px;margin:0 auto;padding:24px 16px 60px}h1{font-size:23px;margin:0 0 6px}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:30px 0 8px}
+p{margin:0 0 12px}.d{color:var(--mu)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}.seg span{padding:6px 14px;font-weight:700;font-size:13px}.seg .on{background:var(--accb);color:#0b3d0c}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}@media(max-width:700px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.t{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.t .k{font-size:12px;color:var(--mu);font-weight:700}.t .v{font-size:26px;font-weight:800}.t .s{font-size:12px;color:var(--mu)}
+.up{color:var(--acc);font-weight:800}.dn{color:var(--bad);font-weight:800}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+.step{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-bottom:8px}
+.do{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;border-top:1px solid var(--line);padding:9px 2px}.do:first-of-type{border-top:0}
+.n{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:800}
+.n.w{background:var(--warnw);color:var(--warn)}.n.b{background:var(--badw);color:var(--bad)}.n.i{background:var(--bluew);color:var(--blue)}
+.lnk{font-size:12.5px;font-weight:700;color:var(--acc);text-decoration:underline}
+.mt{font-size:12px;color:var(--mu)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-top:1px solid var(--line);padding:8px 6px;text-align:left}th{color:var(--mu);font-size:12px;font-weight:700}td.r,th.r{text-align:right}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accb);margin-right:6px}.dot.off{background:var(--line)}
+.bad{color:var(--bad);font-weight:800}
+</style></head><body><div class="w">
+<h1>#10 · Η Αρχική του υπεύθυνου καταστήματος</h1>
+<p class="d">Σήμερα ο υπεύθυνος βλέπει το κατάστημα σε πέντε διαφορετικές οθόνες: Ομάδα τώρα, Στατιστικά, Κολλημένες, Λήξεις, Η ομάδα μου. Η Αρχική δείχνει μόνο τη δική του δουλειά. Πρόταση: δεύτερη καρτέλα «Κατάστημα» στην Αρχική, μόνο για όποιον έχει ομάδα. Δείχνει τι έγινε σήμερα, τι θέλει κίνηση και ποιος πωλητής πού βρίσκεται. Κάθε αριθμός ανοίγει την οθόνη που ήδη υπάρχει. Στόχοι ανά πωλητή δεν μπαίνουν εδώ, είναι το #19.</p>
+
+<h2>Αρχική → «Κατάστημα»</h2>
+<div class="seg"><span>Εγώ</span><span class="on">Κατάστημα</span></div>
+<div class="tiles">
+<div class="t"><div class="k">Αιτήσεις σήμερα</div><div class="v">7</div><div class="s"><span class="up">+2</span> από χθες</div></div>
+<div class="t"><div class="k">Αιτήσεις μήνα</div><div class="v">83</div><div class="s"><span class="up">+12%</span> από ίδιο διάστημα Σεπτ.</div></div>
+<div class="t"><div class="k">Περιμένουν υπογραφή</div><div class="v">9</div><div class="s">3 πάνω από 2 μέρες</div></div>
+<div class="t"><div class="k">Απορρίψεις 30 ημ.</div><div class="v">5</div><div class="s">κυρίως: δικαιολογητικά</div></div>
+</div>
+
+<div class="c"><div class="step">Θέλει κίνηση σήμερα</div>
+<div class="do"><span class="n b">3</span><div><b>Υπογραφές που περιμένουν πάνω από 2 μέρες</b><div class="mt">Μαρία Κ. 2 · Νίκος Τ. 1</div></div><span class="lnk">Δες</span></div>
+<div class="do"><span class="n w">4</span><div><b>Λείπουν δικαιολογητικά</b><div class="mt">Γιάννης Π. 3 · Μαρία Κ. 1</div></div><span class="lnk">Δες</span></div>
+<div class="do"><span class="n w">2</span><div><b>Κολλημένες αιτήσεις</b><div class="mt">Protergia 2</div></div><span class="lnk">Δες</span></div>
+<div class="do"><span class="n i">5</span><div><b>Ραντεβού επανάκλησης για σήμερα ή περασμένα</b><div class="mt">Νίκος Τ. 3 · Γιάννης Π. 2</div></div><span class="lnk">Δες</span></div>
+<div class="do"><span class="n i">6</span><div><b>Λήγουν τις επόμενες 30 μέρες</b><div class="mt">με φθηνότερη πρόταση: 4</div></div><span class="lnk">Δες</span></div>
+</div>
+
+<div class="c"><div class="step">Πωλητές</div>
+<table><tr><th>Πωλητής</th><th class="r">Σήμερα</th><th class="r">Μήνας</th><th class="r">Ενεργές μήνα</th><th class="r">Περ. υπογρ.</th><th class="r">Απορρ. 30 ημ.</th><th>Τελευταία κίνηση</th></tr>
+<tr><td><span class="dot"></span>Μαρία Κ.</td><td class="r">3</td><td class="r">31</td><td class="r">18</td><td class="r">4</td><td class="r">1</td><td>πριν 5′</td></tr>
+<tr><td><span class="dot"></span>Νίκος Τ.</td><td class="r">2</td><td class="r">27</td><td class="r">15</td><td class="r">3</td><td class="r bad">3</td><td>πριν 40′</td></tr>
+<tr><td><span class="dot off"></span>Γιάννης Π.</td><td class="r">2</td><td class="r">25</td><td class="r">11</td><td class="r">2</td><td class="r">1</td><td>χθες</td></tr>
+</table>
+<p class="mt" style="margin:8px 0 0">Πατώντας πωλητή ανοίγει η καρτέλα του, που ήδη υπάρχει. Η πράσινη κουκκίδα σημαίνει online τώρα, όπως στο «Ομάδα τώρα».</p>
+</div>
+
+<h2>Ποιος τη βλέπει</h2>
+<p class="d">Όποιος έχει ομάδα: συνεργάτης ή υπεύθυνος, για την ομάδα του. Ο διαχειριστής τη βλέπει για όλη την εταιρεία. Ο πωλητής και το back office δεν βλέπουν την καρτέλα και η Αρχική τους μένει ως έχει. Τα «Ενεργές μήνα» είναι πλήθος αιτήσεων, χωρίς ποσά, ώστε να μη χρειάζεται δικαίωμα προμηθειών.</p>
+</div></body></html>

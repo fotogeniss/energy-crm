@@ -93,7 +93,7 @@ class ECRM_Notifications {
 		$sph = implode( ',', array_fill( 0, count( $statuses ), '%s' ) );
 
 		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.id, c.code, c.activation_type, c.energy_type,
+			"SELECT c.id, c.code, c.activation_type, c.energy_type, c.partner_user_id,
 				DATEDIFF(NOW(), c.updated_at) AS age_days,
 				cu.first_name, cu.last_name, cu.company_name
 			 FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id = c.customer_id
@@ -115,6 +115,8 @@ class ECRM_Notifications {
 				'customer' => $name ?: '—',
 				'missing'  => $missing,
 				'age_days' => (int) $r['age_days'],
+				// (343) Ποιου πωλητή: η καρτέλα «Κατάστημα» τα μετρά ανά πωλητή.
+				'owner'    => (int) $r['partner_user_id'],
 			];
 		}
 		return $out;
@@ -321,7 +323,7 @@ class ECRM_Notifications {
 		$ph = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 
 		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, name, phone, stage, callback_at,
+			"SELECT id, name, phone, stage, callback_at, partner_user_id,
 				DATEDIFF(NOW(), callback_at) AS age_days
 			 FROM {$lt}
 			 WHERE partner_user_id IN ($ph) AND stage NOT IN ('won','lost')
@@ -340,6 +342,7 @@ class ECRM_Notifications {
 				'stage_label' => $labels[ $r['stage'] ] ?? $r['stage'],
 				'callback_at' => $r['callback_at'],
 				'age_days'    => max( 0, (int) $r['age_days'] ),
+				'owner'       => (int) $r['partner_user_id'], // (343)
 			];
 		}
 		return $out;

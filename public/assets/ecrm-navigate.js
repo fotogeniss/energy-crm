@@ -100,6 +100,15 @@ export function openReasonContracts(reason, label) {
 	}
 }
 
+/* (343) Από την καρτέλα «Κατάστημα»: η υπάρχουσα λίστα για μία γραμμή του
+ * «Θέλει κίνηση», ανοιχτή στο «Ομάδας». kind: signatures, docs, stuck,
+ * leads, expiring. */
+export function openStoreList(kind) {
+	if (typeof handlers.openStoreList === 'function') {
+		handlers.openStoreList(kind);
+	}
+}
+
 export function openEdit(contract) {
 	if (typeof handlers.openEdit === 'function') {
 		handlers.openEdit(contract);

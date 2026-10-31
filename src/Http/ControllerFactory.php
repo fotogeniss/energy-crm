@@ -33,6 +33,7 @@ use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Persistence\CrossSellQueries;
 use EnergyCRM\Persistence\GuaranteeRuleRepository;
+use EnergyCRM\Persistence\StoreRepository;
 use EnergyCRM\Providers\Http\ProviderAccessController;
 use EnergyCRM\Providers\Http\ProviderStatusMapController;
 use EnergyCRM\Providers\Persistence\ProviderStatusMapRepository;
@@ -63,6 +64,7 @@ final class ControllerFactory
         $details   = Services::contractDetails();
         $draftExit = Services::draftExitGate();
         $deletion  = Services::deletionGate();
+        $stuck     = new StuckController($scope, Services::statusDwell(), Services::team());
 
         return [
             // Contracts — read, write, status, bulk, documents.
@@ -250,7 +252,16 @@ final class ControllerFactory
                 Services::team(),
             ),
             // (338) Κολλημένες αιτήσεις.
-            new StuckController($scope, Services::statusDwell(), Services::team()),
+            $stuck,
+            // (343) Η καρτέλα «Κατάστημα» στην Αρχική.
+            new StoreDashboardController(
+                $scope,
+                new StoreRepository(),
+                Services::teamActivity(),
+                Services::team(),
+                $queries,
+                $stuck,
+            ),
             // (332) Σωστό μέγεθος Picasso.
             new PackageFitController($scope, Services::providerVisibility(), Services::providers()),
             // (328) Πρόταση προγράμματος από λογαριασμό.

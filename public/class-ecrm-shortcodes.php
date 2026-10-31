@@ -160,6 +160,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/util',
 			'@energy-crm/navigate',
 			'@energy-crm/queue',
+			'@energy-crm/scope',
 			'@energy-crm/view-detail',
 			'@energy-crm/view-contracts',
 			'@energy-crm/view-pending',

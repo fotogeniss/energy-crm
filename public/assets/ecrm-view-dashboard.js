@@ -18,18 +18,175 @@
  *     δίνει 2,33:1 σε λευκό, κάτω από το 3:1 που θέλουν τα γραφικά.
  */
 
-import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
+import { api, can, esc, fetch, H, viewEl } from '@energy-crm/util';
 import { timeAgo } from '@energy-crm/format';
-import { openDetail, go } from '@energy-crm/navigate';
+import { openDetail, openPartner, openStoreList, go } from '@energy-crm/navigate';
 
 var MONTHS = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
+var MONTHS_LONG = ['Ιανουαρίου', 'Φεβρουαρίου', 'Μαρτίου', 'Απριλίου', 'Μαΐου', 'Ιουνίου', 'Ιουλίου',
+	'Αυγούστου', 'Σεπτεμβρίου', 'Οκτωβρίου', 'Νοεμβρίου', 'Δεκεμβρίου'];
+
+/* (343) «Εγώ | Κατάστημα»: η δεύτερη καρτέλα μόνο για όποιον έχει ομάδα.
+ * Η επιλογή μένει στον browser -- απλή ευκολία, τίποτα από τα δεδομένα. */
+var STORE_KEY = 'ecrm-home-tab';
+
+function hasStore() {
+	return can('ecrm_manage_team');
+}
+
+function storeTab() {
+	if (!hasStore()) return false;
+	try { return localStorage.getItem(STORE_KEY) === 'store'; } catch (e) { return false; }
+}
+
+function setStoreTab(on) {
+	try { localStorage.setItem(STORE_KEY, on ? 'store' : 'me'); } catch (e) { /* ιδιωτική περιήγηση */ }
+}
+
+function tabsHTML(store) {
+	if (!hasStore()) return '';
+	return '<div class="ecrm-scope ecrm-hometabs">' +
+		'<button type="button" class="ecrm-scope__b' + (store ? '' : ' is-on') + '" data-hometab="me">Εγώ</button>' +
+		'<button type="button" class="ecrm-scope__b' + (store ? ' is-on' : '') + '" data-hometab="store">Κατάστημα</button></div>';
+}
+
+function wireTabs(view) {
+	view.querySelectorAll('[data-hometab]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			setStoreTab(b.getAttribute('data-hometab') === 'store');
+			loadDashboard();
+		});
+	});
+}
 
 export function loadDashboard() {
 	var view = viewEl('dashboard');
+	if (storeTab()) { loadStore(view); return; }
 	fetch(api('/dashboard'), { headers: H() })
 		.then(function (r) { return r.json(); })
-		.then(function (d) { view.innerHTML = dashboardHTML(d); wire(view, d); })
+		.then(function (d) { view.innerHTML = dashboardHTML(d); wire(view, d); wireTabs(view); })
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης dashboard.</div></div>'; });
+}
+
+function loadStore(view) {
+	fetch(api('/store'), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) { throw new Error('store'); }
+			view.innerHTML = storeHTML(d);
+			wireStore(view);
+			wireTabs(view);
+		})
+		.catch(function () {
+			view.innerHTML = tabsHTML(true) + '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>';
+			wireTabs(view);
+		});
+}
+
+/* «+2 από χθες», «+12% από ίδιο διάστημα Σεπτεμβρίου». */
+function delta(n, unit) {
+	if (n === null || n === undefined || isNaN(n)) return '';
+	var cls = n > 0 ? ' is-up' : (n < 0 ? ' is-down' : '');
+	return '<span class="ecrm-storechg' + cls + '">' + (n > 0 ? '+' : '') + Number(n) + (unit === '%' ? '%' : '') + '</span>';
+}
+
+function storeTilesHTML(t) {
+	var prev = MONTHS_LONG[(new Date().getMonth() + 11) % 12];
+	var today = Number(t.today) || 0;
+	var late = Number(t.awaiting_late) || 0;
+	var change = t.month_change === null || t.month_change === undefined ? null : Number(t.month_change);
+	var tiles = [
+		{ label: 'Αιτήσεις σήμερα', v: today, delta: today - (Number(t.yesterday) || 0), unit: '', text: ' από χθες' },
+		{
+			label: 'Αιτήσεις μήνα',
+			v: Number(t.month) || 0,
+			delta: change, unit: '%', text: change === null ? '' : ' από ίδιο διάστημα ' + prev
+		},
+		{
+			label: 'Περιμένουν υπογραφή',
+			v: Number(t.awaiting) || 0,
+			delta: null, text: late > 0 ? late + ' πάνω από 2 μέρες' : '',
+			warn: late > 0
+		},
+		{
+			label: 'Απορρίψεις 30 ημ.',
+			v: Number(t.lost) || 0,
+			delta: null, text: t.top_reason ? 'κυρίως: ' + t.top_reason : ''
+		}
+	];
+
+	return '<div class="ecrm-kpis ecrm-kpis--4">' + tiles.map(function (x) {
+		var hasFoot = x.delta !== null || x.text !== '';
+		return '<div class="ecrm-kpi"><div class="ecrm-kpi__k">' + esc(x.label) + '</div>' +
+			'<div class="ecrm-kpi__v">' + x.v + '</div>' +
+			(hasFoot
+				? '<div class="ecrm-kpi__f' + (x.warn ? ' is-warn' : '') + '">' + delta(x.delta, x.unit) + esc(x.text) + '</div>'
+				: '') +
+			'</div>';
+	}).join('') + '</div>';
+}
+
+var TODO = {
+	signatures: { label: 'Υπογραφές που περιμένουν πάνω από 2 μέρες', tone: 'bad' },
+	docs: { label: 'Λείπουν δικαιολογητικά', tone: 'warn' },
+	stuck: { label: 'Κολλημένες αιτήσεις', tone: 'warn' },
+	leads: { label: 'Ραντεβού επανάκλησης για σήμερα ή περασμένα', tone: 'info' },
+	expiring: { label: 'Λήγουν τις επόμενες 30 μέρες', tone: 'info' }
+};
+
+function todoHTML(list) {
+	var rows = (list || []).filter(function (x) { return x.count > 0 && TODO[x.key]; });
+	if (!rows.length) {
+		return '<div class="ecrm-card"><div class="ecrm-step">Θέλει κίνηση σήμερα</div>' +
+			'<div class="ecrm-empty">Τίποτα δεν περιμένει την ομάδα αυτή τη στιγμή.</div></div>';
+	}
+	return '<div class="ecrm-card"><div class="ecrm-step">Θέλει κίνηση σήμερα</div>' + rows.map(function (x) {
+		var who = (x.split || []).slice(0, 4).map(function (s) { return esc(s.name) + ' ' + s.count; }).join(' · ');
+		return '<div class="ecrm-storedo">' +
+			'<span class="ecrm-storedo__n is-' + TODO[x.key].tone + '">' + x.count + '</span>' +
+			'<span class="ecrm-storedo__m"><b>' + esc(TODO[x.key].label) + '</b><small>' + who + '</small></span>' +
+			'<button type="button" class="ecrm-storedo__a" data-store-go="' + esc(x.key) + '">Δες</button></div>';
+	}).join('') + '</div>';
+}
+
+function membersHTML(list) {
+	var rows = (list || []).map(function (m) {
+		var dot = '<span class="ecrm-tldot' + (m.online ? ' is-on' : '') + '" title="' +
+			(m.online ? 'Ενεργός τελευταίο 30λεπτο' : 'Ανενεργός') + '"></span>';
+		return '<tr class="ecrm-rowlink" data-store-member="' + esc(m.id) + '">' +
+			'<td>' + dot + '<strong>' + esc(m.name) + '</strong>' + (m.is_self ? ' <span class="ecrm-muted">(εσύ)</span>' : '') + '</td>' +
+			'<td class="ecrm-tlnum">' + m.today + '</td>' +
+			'<td class="ecrm-tlnum">' + m.month + '</td>' +
+			'<td class="ecrm-tlnum ecrm-col-sec">' + esc(m.activated) + '</td>' +
+			'<td class="ecrm-tlnum ecrm-col-sec">' + esc(m.awaiting) + '</td>' +
+			'<td class="ecrm-tlnum">' + (m.lost >= 3 ? '<span class="ecrm-storebad">' + esc(m.lost) + '</span>' : esc(m.lost)) + '</td>' +
+			'<td class="ecrm-muted ecrm-col-sec">' + (m.last ? esc(timeAgo(m.last)) : '—') + '</td></tr>';
+	}).join('');
+	if (!rows) rows = '<tr><td colspan="7" class="ecrm-empty">Δεν υπάρχουν μέλη ομάδας.</td></tr>';
+
+	return '<div class="ecrm-card"><div class="ecrm-step">Πωλητές</div><div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr>' +
+		'<th>Πωλητής</th><th class="ecrm-tlnum">Σήμερα</th><th class="ecrm-tlnum">Μήνας</th>' +
+		'<th class="ecrm-tlnum ecrm-col-sec">Ενεργές μήνα</th><th class="ecrm-tlnum ecrm-col-sec">Περ. υπογρ.</th>' +
+		'<th class="ecrm-tlnum">Απορρ. 30 ημ.</th><th class="ecrm-col-sec">Τελευταία κίνηση</th>' +
+		'</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+}
+
+function storeHTML(d) {
+	return '<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">' +
+		new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div>' +
+		'<h2 class="ecrm-title">Κατάστημα</h2></div>' + tabsHTML(true) + '</header>' +
+		storeTilesHTML(d.tiles || {}) +
+		todoHTML(d.todo) +
+		membersHTML(d.members);
+}
+
+function wireStore(view) {
+	view.querySelectorAll('[data-store-go]').forEach(function (b) {
+		b.addEventListener('click', function () { openStoreList(b.getAttribute('data-store-go')); });
+	});
+	view.querySelectorAll('[data-store-member]').forEach(function (tr) {
+		tr.addEventListener('click', function () { openPartner(Number(tr.getAttribute('data-store-member'))); });
+	});
 }
 
 function greeting() {
@@ -353,9 +510,9 @@ function dashboardHTML(d) {
 	var lvl = d.level || {}, tiles = d.tiles || {};
 
 	return '' +
-		'<header class="ecrm-head"><div class="ecrm-eyebrow">' +
+		'<header class="ecrm-head' + (hasStore() ? ' ecrm-head--row' : '') + '"><div><div class="ecrm-eyebrow">' +
 		new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div>' +
-		'<h2 class="ecrm-title">' + greeting() + ', ' + esc(d.user || '') + '</h2></header>' +
+		'<h2 class="ecrm-title">' + greeting() + ', ' + esc(d.user || '') + '</h2></div>' + tabsHTML(false) + '</header>' +
 		tilesHTML(tiles) +
 		levelHTML(lvl) +
 		attentionHTML(d.attention) +
