@@ -487,6 +487,47 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-timeline__whoname { font-size: var(--fs-11); color: var(--muted); font-weight: 600; }
 .ecrm-timeline__whoname.is-sys { font-style: italic; font-weight: 500; }
 
+/* (346) Ιστορικό πελάτη σε μία οθόνη -- docs/UI-CUSTOMER-HISTORY.html.
+   Δικό του όνομα (ecrm-hist), όχι .ecrm-timeline: εκείνο είναι το χρονολόγιο
+   ΜΙΑΣ σύμβασης με κουκκίδα, εδώ κάθε γραμμή έχει εικονίδιο-είδος και ώρα
+   δεξιά. Χρώματα μόνο από τα --st-* -- ίδια γλώσσα με τα badges κατάστασης. */
+.ecrm-hist__count { font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--muted); }
+.ecrm-hist__chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+.ecrm-hist__month { font-size: var(--fs-11); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 14px 0 6px; }
+.ecrm-hist__chips + .ecrm-hist__month { margin-top: 0; }
+.ecrm-hist { list-style: none; margin: 0; padding: 0; position: relative; }
+.ecrm-hist::before { content: ""; position: absolute; left: 13px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+.ecrm-hist__row { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; padding: 7px 0; position: relative; }
+.ecrm-hist__ic { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--fs-13); position: relative; z-index: 1; box-shadow: 0 0 0 2px var(--surface); }
+.ecrm-hist__ic--ok { background: var(--st-active-bg); color: var(--st-active); }
+.ecrm-hist__ic--bad { background: var(--st-cancel-bg); color: var(--st-cancel); }
+.ecrm-hist__ic--contract { background: var(--accent-wash); color: var(--accent-ink); }
+.ecrm-hist__ic--sign { background: var(--st-new-bg); color: var(--st-new); }
+.ecrm-hist__ic--task { background: var(--st-pending-bg); color: var(--st-pending); }
+.ecrm-hist__ic--lead { background: var(--st-signed-bg); color: var(--st-signed); }
+.ecrm-hist__ic--note,
+.ecrm-hist__ic--edit,
+.ecrm-hist__ic--doc { background: var(--st-draft-bg); color: var(--st-draft); }
+.ecrm-hist__body { min-width: 0; }
+.ecrm-hist__title { font-size: var(--fs-13); font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.ecrm-hist__ref { font-size: var(--fs-11-5); font-weight: 600; color: var(--accent-ink); background: var(--accent-wash); border-radius: 5px; padding: 0 6px; margin-left: 4px; text-decoration: none; white-space: nowrap; }
+.ecrm-hist__ref:hover { text-decoration: underline; }
+.ecrm-hist__refshort { display: none; }
+.ecrm-hist__detail { font-size: var(--fs-12); color: var(--muted); margin-top: 1px; overflow-wrap: anywhere; }
+.ecrm-hist__who { font-size: var(--fs-11); color: var(--muted); font-weight: 600; margin-top: 2px; }
+.ecrm-hist__who.is-sys { font-style: italic; font-weight: 500; }
+.ecrm-hist__when { font-size: var(--fs-11); color: var(--muted); white-space: nowrap; text-align: right; padding-top: 2px; }
+.ecrm-hist__more { display: block; width: 100%; margin-top: 6px; padding: 10px 0 0; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; font-size: var(--fs-12-5); font-weight: 600; color: var(--accent-ink); cursor: pointer; }
+.ecrm-hist__cap { font-size: var(--fs-11-5); color: var(--muted); text-align: center; margin-top: 8px; }
+@media (max-width: 600px) {
+	.ecrm-hist__chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+	.ecrm-hist__chips .ecrm-filterchip { flex: 0 0 auto; }
+	.ecrm-hist__row { grid-template-columns: 28px 1fr; }
+	.ecrm-hist__when { grid-column: 2; text-align: left; padding-top: 0; }
+	.ecrm-hist__reflong { display: none; }
+	.ecrm-hist__refshort { display: inline; }
+}
+
 @media (max-width: 860px) {
 	.ecrm-dlgrid { grid-template-columns: 1fr 1fr; }
 }

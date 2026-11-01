@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Μακέτα: Ιστορικό πελάτη (#11)</title>
+<style>
+  :root{
+    --p500:#8a7bd8; --accent-ink:#5b4fc4; --accent-wash:#f1eefb;
+    --ink:#1f2430; --muted:#6b7280; --line:#e2e5ea; --bg:#f7f8fa; --card:#fff;
+    --ok:#1d8a4e; --ok-wash:#eefaf0; --warn:#a8760a; --warn-wash:#fff8e6; --danger:#a33; --danger-wash:#fdeeee;
+    --info:#2563a8; --info-wash:#eaf2fc; --grey-wash:#eef0f3;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:28px;margin:0;line-height:1.5;}
+  h1{font-size:19px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 20px;max-width:1000px;}
+  h2.sec{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:30px 0 12px;font-weight:700;border-top:1px solid var(--line);padding-top:16px;}
+  .note,.ask,.ok{border-radius:8px;padding:11px 13px;font-size:12.5px;margin-bottom:16px;max-width:1000px;line-height:1.55;}
+  .note{background:var(--warn-wash);border:1px solid #f0dca0;color:#6b5510;}
+  .ask{background:#eef4ff;border:1px solid #b9cdf0;color:#20355c;}
+  .ok{background:var(--ok-wash);border:1px solid #a8ddb5;color:#1d4d2b;}
+  .note strong,.ask strong,.ok strong{display:block;margin-bottom:3px;}
+  .note ul,.ask ul,.ok ul{margin:4px 0 0;padding-left:18px;}
+  code{background:#eef0f3;padding:1px 5px;border-radius:4px;font-size:11.5px;}
+
+  .screen{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;max-width:1000px;}
+  .crumb{padding:10px 18px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);background:#fbfbfc;}
+  .crumb a{color:var(--accent-ink);text-decoration:none;}
+  .chead{display:flex;gap:16px;padding:16px 18px;border-bottom:1px solid var(--line);align-items:center;}
+  .avatar{width:46px;height:46px;border-radius:12px;background:var(--accent-wash);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .cname{font-size:16px;font-weight:700;margin:0;}
+  .cmeta{font-size:12px;color:var(--muted);}
+  .ghost{color:#b6bcc6;font-size:12px;padding:14px 18px;border-bottom:1px solid var(--line);font-style:italic;}
+
+  .main{padding:16px 18px;}
+  .ecard{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px;}
+  .ecard.faded{opacity:.45;}
+  .step{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+  .step .cnt{font-weight:600;text-transform:none;letter-spacing:0;color:#9aa1ab;}
+  .step .tag-new{display:inline-block;padding:0 7px;border-radius:999px;font-size:9.5px;font-weight:700;background:var(--p500);color:#fff;letter-spacing:.02em;}
+
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 11px;font-size:12px;color:var(--ink);white-space:nowrap;}
+  .chip b{font-weight:600;color:var(--muted);margin-left:3px;}
+  .chip.on{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;}
+  .chip.on b{color:#e4ddf6;}
+
+  .month{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px;}
+  .month:first-of-type{margin-top:0;}
+  ul.tl{list-style:none;margin:0;padding:0;position:relative;}
+  ul.tl::before{content:"";position:absolute;left:13px;top:6px;bottom:6px;width:2px;background:#eef0f3;}
+  ul.tl li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;padding:7px 0;position:relative;font-size:12.5px;}
+  .ic{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;position:relative;z-index:1;border:2px solid #fff;}
+  .ic--contract{background:var(--accent-wash);color:var(--accent-ink);}
+  .ic--sign{background:var(--info-wash);color:var(--info);}
+  .ic--ok{background:var(--ok-wash);color:var(--ok);}
+  .ic--bad{background:var(--danger-wash);color:var(--danger);}
+  .ic--task{background:var(--warn-wash);color:var(--warn);}
+  .ic--note{background:var(--grey-wash);color:#5a6270;}
+  .ic--edit{background:var(--grey-wash);color:#5a6270;}
+  .ic--lead{background:#fdf0f7;color:#a33b78;}
+  .ic--doc{background:var(--grey-wash);color:#5a6270;}
+  .txt{font-weight:600;}
+  .txt .ref{font-weight:600;color:var(--accent-ink);text-decoration:none;margin-left:4px;font-size:11.5px;background:var(--accent-wash);border-radius:5px;padding:0 6px;white-space:nowrap;}
+  .sub2{color:var(--muted);font-size:12px;margin-top:1px;}
+  .sub2 q{font-style:italic;}
+  .who{font-size:11px;color:var(--muted);margin-top:2px;}
+  .when{font-size:11px;color:var(--muted);white-space:nowrap;text-align:right;padding-top:2px;}
+  .more{display:block;text-align:center;font-size:12.5px;color:var(--accent-ink);font-weight:600;border-top:1px solid #f1f2f5;padding-top:10px;margin-top:6px;}
+
+  .phone{width:390px;border:1px solid var(--line);border-radius:22px;background:var(--card);overflow:hidden;}
+  .phone .chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;}
+  .phone ul.tl li{grid-template-columns:28px 1fr;}
+  .phone .when{grid-column:2;text-align:left;padding-top:0;}
+  .row2{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;}
+  table.map{border-collapse:collapse;font-size:12.5px;max-width:1000px;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;}
+  table.map th,table.map td{text-align:left;padding:7px 10px;border-bottom:1px solid #f1f2f5;vertical-align:top;}
+  table.map th{font-size:10.5px;text-transform:uppercase;color:var(--muted);}
+  @media (max-width:700px){body{padding:16px;} .phone{width:100%;}}
+</style>
+</head>
+<body>
+
+<h1>#11 — Ιστορικό πελάτη σε μία οθόνη</h1>
+<p class="sub">Στην καρτέλα πελάτη μπαίνει μία νέα κάρτα, «Ιστορικό». Δείχνει με χρονολογική σειρά όλα όσα έγιναν με τον πελάτη, από όλες του τις συμβάσεις. Δεν χρειάζεται πια να ανοίγεις κάθε σύμβαση χωριστά για να καταλάβεις τι έγινε.</p>
+
+<div class="ok"><strong>Τι μέτρησα στον κώδικα (HEAD 9b0903a)</strong>
+<ul>
+<li>Η καρτέλα πελάτη έχει ήδη ταυτότητα, συμβάσεις, λήξεις, σημειώσεις, έγγραφα και την «τελευταία αλλαγή». <b>Δεν</b> έχει ενιαία χρονολογική εικόνα.</li>
+<li>Χρονολόγιο υπάρχει μόνο <b>μέσα σε κάθε σύμβαση</b> (<code>ecrm-view-detail.js</code> → <code>.ecrm-timeline</code>, με «ποιος»).</li>
+<li>Όλα τα δεδομένα <b>υπάρχουν ήδη στη βάση</b>. Δεν χρειάζεται νέος πίνακας ή migration, μόνο ένα endpoint που τα μαζεύει.</li>
+</ul></div>
+
+<h2 class="sec">1 · Υπολογιστής (1100px) — η νέα κάρτα στην καρτέλα πελάτη</h2>
+
+<div class="screen">
+  <div class="crumb"><a href="#">Πελάτες</a> › Παπαδοπούλου Μαρία</div>
+  <div class="chead"><div class="avatar">ΠΜ</div><div><p class="cname">Παπαδοπούλου Μαρία</p><div class="cmeta">ΑΦΜ 0•••••789 · πελάτης από 03/2025</div></div></div>
+  <div class="ghost">… KPI, Ταυτότητα, Διεύθυνση, Επικοινωνία — όπως είναι σήμερα …</div>
+  <div class="main">
+    <div class="ecard faded"><div class="step">Συμβάσεις</div><div style="font-size:12px;color:var(--muted)">(ίδιο με σήμερα)</div></div>
+
+    <div class="ecard">
+      <div class="step">Ιστορικό <span class="cnt">· 23 γεγονότα</span> <span class="tag-new">ΝΕΟ</span></div>
+      <div class="chips">
+        <span class="chip on">Όλα <b>23</b></span>
+        <span class="chip">Συμβάσεις <b>9</b></span>
+        <span class="chip">Υπογραφές <b>4</b></span>
+        <span class="chip">Εργασίες &amp; κλήσεις <b>5</b></span>
+        <span class="chip">Σημειώσεις <b>2</b></span>
+        <span class="chip">Έγγραφα <b>2</b></span>
+        <span class="chip">Αλλαγές στοιχείων <b>1</b></span>
+      </div>
+
+      <div class="month">Οκτώβριος 2026</div>
+      <ul class="tl">
+        <li><span class="ic ic--ok">✓</span><div><div class="txt">Σε αναμονή → Ενεργή <a class="ref" href="#">#1842 · Ρεύμα Protergia</a></div><div class="sub2">Εισαγωγή Excel παρόχου: <q>Ενεργοποιήθηκε 12/10</q></div><div class="who">Σύστημα</div></div><span class="when">πριν 3 μέρες</span></li>
+        <li><span class="ic ic--task">☎</span><div><div class="txt">Κλήση ολοκληρώθηκε: «Επιβεβαίωση ενεργοποίησης»</div><div class="who">Γιώργος Κ.</div></div><span class="when">10/10</span></li>
+        <li><span class="ic ic--sign">✉</span><div><div class="txt">Στάλθηκε σύνδεσμος υπογραφής με Viber <a class="ref" href="#">#1843 · Αέριο</a></div><div class="who">Γιώργος Κ.</div></div><span class="when">08/10</span></li>
+        <li><span class="ic ic--bad">!</span><div><div class="txt">Αποτυχία αποστολής SMS <a class="ref" href="#">#1843 · Αέριο</a></div><div class="sub2">Ο αριθμός δεν απάντησε</div><div class="who">Γιώργος Κ.</div></div><span class="when">08/10</span></li>
+        <li><span class="ic ic--contract">＋</span><div><div class="txt">Νέα σύμβαση <a class="ref" href="#">#1843 · Αέριο Protergia</a></div><div class="who">Γιώργος Κ.</div></div><span class="when">08/10</span></li>
+        <li><span class="ic ic--doc">▤</span><div><div class="txt">Ανέβηκε έγγραφο: Λογαριασμός <a class="ref" href="#">#1843</a></div><div class="who">Γιώργος Κ.</div></div><span class="when">08/10</span></li>
+      </ul>
+
+      <div class="month">Σεπτέμβριος 2026</div>
+      <ul class="tl">
+        <li><span class="ic ic--edit">✎</span><div><div class="txt">Άλλαξαν στοιχεία: Κινητό, Email</div><div class="sub2">Οι παλιές/νέες τιμές φαίνονται στο «Ιστορικό αλλαγών», όπως σήμερα</div><div class="who">Λίτσα (back office)</div></div><span class="when">22/09</span></li>
+        <li><span class="ic ic--note">✍</span><div><div class="txt">Σημείωση</div><div class="sub2"><q>Προτιμά επικοινωνία μετά τις 5. Ενδιαφέρεται για αέριο.</q></div><div class="who">Γιώργος Κ.</div></div><span class="when">15/09</span></li>
+        <li><span class="ic ic--task">⏰</span><div><div class="txt">Εργασία: «Κλήση ανανέωσης» · προθεσμία 30/09</div><div class="sub2">Ανοιχτή</div><div class="who">ανατέθηκε σε Γιώργο Κ.</div></div><span class="when">01/09</span></li>
+      </ul>
+
+      <div class="month">Μάρτιος 2025</div>
+      <ul class="tl">
+        <li><span class="ic ic--contract">＋</span><div><div class="txt">Νέα σύμβαση <a class="ref" href="#">#1210 · Ρεύμα Protergia</a></div><div class="who">Γιώργος Κ.</div></div><span class="when">04/03/2025</span></li>
+        <li><span class="ic ic--lead">★</span><div><div class="txt">Ήρθε ως επαφή από QR</div><div class="sub2">Έγινε πελάτης με τη #1210</div><div class="who">Γιώργος Κ.</div></div><span class="when">01/03/2025</span></li>
+      </ul>
+      <a class="more" href="#">Δείξε παλαιότερα (11)</a>
+    </div>
+
+    <div class="ecard faded"><div class="step">Λήξεις · Σημειώσεις · Έγγραφα</div><div style="font-size:12px;color:var(--muted)">(ίδια με σήμερα)</div></div>
+  </div>
+</div>
+
+<h2 class="sec">2 · Κινητό (390px)</h2>
+<div class="row2">
+<div class="phone">
+  <div class="main">
+    <div class="ecard">
+      <div class="step">Ιστορικό <span class="cnt">· 23</span></div>
+      <div class="chips">
+        <span class="chip on">Όλα <b>23</b></span><span class="chip">Συμβάσεις <b>9</b></span><span class="chip">Υπογραφές <b>4</b></span><span class="chip">Εργασίες <b>5</b></span><span class="chip">Σημειώσεις <b>2</b></span>
+      </div>
+      <div class="month">Οκτώβριος 2026</div>
+      <ul class="tl">
+        <li><span class="ic ic--ok">✓</span><div><div class="txt">Σε αναμονή → Ενεργή <a class="ref" href="#">#1842</a></div><div class="who">Σύστημα</div></div><span class="when">πριν 3 μέρες</span></li>
+        <li><span class="ic ic--task">☎</span><div><div class="txt">Κλήση ολοκληρώθηκε</div><div class="who">Γιώργος Κ.</div></div><span class="when">10/10</span></li>
+        <li><span class="ic ic--sign">✉</span><div><div class="txt">Σύνδεσμος υπογραφής · Viber <a class="ref" href="#">#1843</a></div><div class="who">Γιώργος Κ.</div></div><span class="when">08/10</span></li>
+      </ul>
+      <a class="more" href="#">Δείξε παλαιότερα (20)</a>
+    </div>
+  </div>
+</div>
+<div style="flex:1;min-width:260px;max-width:560px;">
+  <div class="note"><strong>Στο κινητό</strong>Τα φίλτρα κυλάνε οριζόντια. Η ώρα πηγαίνει κάτω από το κείμενο, όχι δεξιά. Η σύμβαση φαίνεται μόνο με τον αριθμό της. Με ένα άγγιγμα ανοίγει η σύμβαση, όπως και στις υπόλοιπες γραμμές της καρτέλας.</div>
+</div>
+</div>
+
+<h2 class="sec">3 · Από πού έρχεται κάθε γραμμή</h2>
+<table class="map">
+<tr><th>Φίλτρο</th><th>Πηγή (υπάρχει ήδη)</th><th>Τι δείχνει</th></tr>
+<tr><td>Συμβάσεις</td><td><code>events</code> τύποι <code>created</code>, <code>status_change</code> (+ <code>reason</code>, <code>message</code>)</td><td>Νέα σύμβαση, «από → προς», λόγος απόρριψης, σχόλιο παρόχου</td></tr>
+<tr><td>Υπογραφές</td><td><code>events</code> <code>sign_sent_*</code>, <code>sign_failed_*</code>, <code>sign_expired</code></td><td>Αποστολή συνδέσμου με SMS, Viber, email ή «μόνο σύνδεσμος», αποτυχία, λήξη</td></tr>
+<tr><td>Εργασίες &amp; κλήσεις</td><td><code>tasks</code> με <code>customer_id</code> ή <code>contract_id</code> του πελάτη</td><td>Δημιουργία (με προθεσμία), ολοκλήρωση (<code>done_at</code>)</td></tr>
+<tr><td>Σημειώσεις</td><td><code>customer_notes</code> + <code>events</code> τύπου <code>note</code></td><td>Το κείμενο της σημείωσης (κομμένο στις 2 γραμμές)</td></tr>
+<tr><td>Έγγραφα</td><td>αρχεία συμβάσεων (<code>files->forContracts</code>)</td><td>Είδος εγγράφου + σύμβαση. <b>Χωρίς</b> σύνδεσμο λήψης εδώ</td></tr>
+<tr><td>Αλλαγές στοιχείων</td><td><code>customer_events</code></td><td><b>Μόνο ποια πεδία</b> άλλαξαν, όχι τις τιμές</td></tr>
+<tr><td>(στο «Όλα»)</td><td><code>leads.contract_id</code></td><td>Η αρχή: «Ήρθε ως επαφή από QR / site / …»</td></tr>
+</table>
+
+<h2 class="sec">4 · Αποφάσεις που πήρα (πες μου αν θες κάτι αλλιώς)</h2>
+<div class="ask"><strong>Κανόνες</strong>
+<ul>
+<li><b>Θέση:</b> αμέσως κάτω από τις «Συμβάσεις», γιατί εκεί κοιτάς πρώτα. Ανοίγει με τα 15 πιο πρόσφατα και φορτώνει τα υπόλοιπα με «Δείξε παλαιότερα».</li>
+<li><b>Ίδια ορατότητα με την καρτέλα:</b> ο συνεργάτης βλέπει μόνο τις δικές του συμβάσεις και εργασίες. Το back office και ο admin βλέπουν όλες.</li>
+<li><b>Κανένα ποσό:</b> ούτε προμήθειες ούτε τιμές, για κανέναν ρόλο.</li>
+<li><b>GDPR:</b> στις αλλαγές στοιχείων φαίνεται μόνο το όνομα του πεδίου. Οι τιμές μένουν στο υπάρχον «Ιστορικό αλλαγών» με τη μάσκα του. Δεν κρατάμε τίποτα σε cache, γιατί φορτώνεται κάθε φορά από τη βάση.</li>
+<li><b>Δεν μπαίνουν</b> οι τεχνικές καταγραφές (<code>doc_kind_ai</code>, <code>sla_escalation</code>). Είναι θόρυβος για τον χρήστη.</li>
+<li><b>Τεχνικά:</b> ένα νέο endpoint <code>GET /customers/{id}/history?before=…</code>. Τη συναρμολόγηση και την ταξινόμηση την κάνει μια κλάση στο Domain χωρίς WordPress (Laravel-ready). Τα SELECT μένουν στο Persistence. Χωρίς migration.</li>
+</ul></div>
+
+</body>
+</html>

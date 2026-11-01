@@ -114,6 +114,51 @@ final class TaskRepository
     }
 
     /**
+     * (346) Οι εργασίες ενός πελάτη για το «Ιστορικό» της καρτέλας: όσες
+     * δείχνουν στον πελάτη ή σε μία από τις συμβάσεις του, ΚΑΙ είναι ορατές
+     * στον χρήστη με τον ίδιο κανόνα που ισχύει παντού για τις εργασίες.
+     *
+     * @param list<int> $contractIds Ήδη scoped (ContractQueries::forCustomer).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function forCustomerHistory(UserScope $scope, int $customerId, array $contractIds): array
+    {
+        global $wpdb;
+
+        if ($customerId <= 0) {
+            return [];
+        }
+
+        [$clause, $params] = $this->reachable($scope, '');
+
+        $ids    = array_values(array_unique(array_filter(array_map('intval', $contractIds))));
+        $belong = 'customer_id = %d';
+        $values = [$this->table, $customerId];
+
+        if ($ids !== []) {
+            $belong .= ' OR contract_id IN (' . implode(',', array_fill(0, count($ids), '%d')) . ')';
+            $values  = [...$values, ...$ids];
+        }
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT contract_id, assigned_to, created_by, kind, title, note, due_at, status,
+                        created_at, done_at
+                 FROM %i WHERE ({$belong}) AND {$clause}
+                 ORDER BY created_at DESC LIMIT 500",
+                [...$values, ...$params]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $rows;
+    }
+
+    /**
      * Σημαδεύει «είδε τη λίστα» τις εργασίες που μόλις επιστράφηκαν σε αυτόν
      * τον χρήστη -- ό,τι έχει ήδη seen_at δεν ξαναγράφεται, οπότε η κλήση
      * είναι φθηνή να γίνεται σε κάθε φόρτωση της οθόνης (214, βλ. TasksController).

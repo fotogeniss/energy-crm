@@ -21,6 +21,7 @@ import { api, esc, fetch, H, markSubViewOpen, toast, viewEl } from '@energy-crm/
 import { fmtDate, initials, timeAgo, tint } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
+import { mountCustomerHistory } from '@energy-crm/view-customer-history';
 
 var TYPE_LABEL = { individual: 'ΙΔΙΩΤΗΣ', company: 'ΕΤΑΙΡΕΙΑ', sole_prop: 'ΑΤΟΜΙΚΗ' };
 
@@ -360,6 +361,8 @@ function renderCard(view, id, d) {
 
 		'<div class="ecrm-pgrid__main">' +
 		'<div class="ecrm-card"><div class="ecrm-step">Συμβάσεις</div>' + contractsTable(contracts, statuses) + '</div>' +
+		// (346) Ιστορικό πελάτη -- δικό του fetch, γεμίζει μετά το render.
+		'<div class="ecrm-card" data-customer-history></div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Λήξεις &amp; ανανεώσεις</div>' + expiringRows(contracts) + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Σημειώσεις</div>' + notesBlock(d.notes) + '</div>' +
 		'<div class="ecrm-card"><div class="ecrm-step">Έγγραφα όλων των συμβάσεων</div>' + documentsList(documents, d.doc_kinds, contracts) + '</div>' +
@@ -367,6 +370,8 @@ function renderCard(view, id, d) {
 		'</div>' +
 
 		auditFooter(d.last_event);
+
+	mountCustomerHistory(view.querySelector('[data-customer-history]'), id);
 
 	var back = view.querySelector('[data-back]');
 	if (back) { back.addEventListener('click', function () { go('customers'); }); }
