@@ -190,11 +190,12 @@ class ECRM_App {
 					 * διαδρομές μπροστά, τα υπόλοιπα πίσω από ένα κλικ. Ανοίγει
 					 * μόνο του στο ΠΡΩΤΟ login κάποιου (καμία διαδρομή δεν χάνεται
 					 * αναξήτητα), μετά θυμάται με localStorage — δες ecrm-app.js. */
-					$more_badges = array_sum( array_map( fn( $it ) => $it['badge'] ?? 0, $navMore ) );
+					//
+					// (346b) Χωρίς σήμα-άθροισμα στο ίδιο το «Περισσότερα»: απόφαση
+					// ιδιοκτήτη 02/11. Κάθε γραμμή από κάτω κρατά το δικό της σήμα.
 					?>
 					<button type="button" class="ecrm-nav__more-toggle" data-nav-more-toggle aria-expanded="false">
 						<span>Περισσότερα</span>
-						<?php if ( $more_badges > 0 ) : ?><span class="ecrm-nav__badge ecrm-nav__badge--more"><?php echo (int) $more_badges; ?></span><?php endif; ?>
 						<span class="ecrm-nav__more-chev" aria-hidden="true"><?php echo self::icon( 'chevron-down' ); // phpcs:ignore ?></span>
 					</button>
 					<div class="ecrm-nav__more-body" data-nav-more-body>
