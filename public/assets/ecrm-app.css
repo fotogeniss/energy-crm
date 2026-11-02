@@ -77,7 +77,10 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-nav__more-chev { width: 14px; height: 14px; display: grid; place-items: center; transition: transform .18s ease; }
 .ecrm-nav__more-chev svg { width: 12px; height: 12px; }
 .ecrm-nav__more-toggle[aria-expanded="true"] .ecrm-nav__more-chev { transform: rotate(180deg); }
-.ecrm-nav__badge--more { position: static; margin-left: auto; box-shadow: none; }
+/* (346b) Δύο κλάσεις: το απλό .ecrm-nav__badge--more έχανε από το .ecrm-nav__badge
+   (position: absolute, πιο κάτω στο αρχείο, ίδια ειδικότητα) και το σήμα του
+   «Περισσότερα» κολλούσε στην πάνω δεξιά γωνία της πλευρικής μπάρας. */
+.ecrm-nav__more-toggle .ecrm-nav__badge--more { position: static; margin-left: auto; box-shadow: none; }
 .ecrm-nav__more-body { overflow: hidden; max-height: 0; display: flex; flex-direction: column; gap: 4px; transition: max-height .22s ease; }
 .ecrm-nav__more-body.is-open { max-height: 600px; }
 /* Σε συμπτυγμένο μενού (data-collapsed) το «Περισσότερα» μένει πάντα ανοιχτό —
