@@ -57,3 +57,4 @@ _to_delete/
 docs/_measure/
 
 tools/.load-test-credentials.json
+Claude outputs/
