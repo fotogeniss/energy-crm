@@ -1,7 +1,7 @@
 <?php
 
 /**
- * (348) Παρατηρήσεις εκκρεμότητας: ποιος γράφει τι και πότε.
+ * (348) Παρατηρήσεις: Protergia μόνο σε «Εκκρεμότητα» από Back office· Agent παντού.
  *
  * @package EnergyCRM
  */
@@ -21,15 +21,18 @@ final class PendingRemarksTest extends TestCase
         self::assertNull(PendingRemarks::problem('provider', 'pending_issue', 'κείμενο', true));
     }
 
-    public function testAnyoneWithTheContractWritesTheAgentRemark(): void
+    public function testTheProviderRemarkExistsOnlyInPendingIssue(): void
     {
-        self::assertNull(PendingRemarks::problem('agent', 'pending_issue', 'Ζητήθηκε νέο ΑΔΤ', false));
+        self::assertTrue(PendingRemarks::showsProvider('pending_issue'));
+        self::assertFalse(PendingRemarks::showsProvider('active'));
+        self::assertNotNull(PendingRemarks::problem('provider', 'processing', 'κείμενο', true));
     }
 
-    public function testRemarksOnlyOpenInPendingIssue(): void
+    public function testTheAgentRemarkIsWrittenInEveryStatusByAnyone(): void
     {
-        self::assertNotNull(PendingRemarks::problem('agent', 'active', 'κείμενο', true));
-        self::assertNotNull(PendingRemarks::problem('provider', 'processing', 'κείμενο', true));
+        foreach (['draft', 'processing', 'pending_issue', 'active', 'cancelled'] as $status) {
+            self::assertNull(PendingRemarks::problem('agent', $status, 'Ζητήθηκε νέο ΑΔΤ', false), $status);
+        }
     }
 
     public function testEmptyTextAndUnknownKindAreRefused(): void

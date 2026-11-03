@@ -86,7 +86,8 @@ function expandPanel(c, view) {
 		'<span class="ecrm-expbanner__ico">' + (c.status === 'draft' ? '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>' : (c.status === 'cancelled' || c.status === 'terminated' ? '✕' : '!')) + '</span>' +
 		'<div><div class="ecrm-expbanner__eyebrow">' + esc(up(stLabel)) + '</div>' +
 		'<div class="ecrm-expbanner__title">' + esc(stLabel) + ' για ' + esc(name) + '</div>' +
-		'<div class="ecrm-expbanner__sub">Δημιουργήθηκε: <b>' + fmtDate(c.created_at) + '</b> · Αριθμός συμβολαίου: <b>' + esc(c.code || '—') + '</b></div></div></div>';
+		'<div class="ecrm-expbanner__sub">Δημιουργήθηκε: <b>' + fmtDate(c.created_at) + '</b> · Αριθμός συμβολαίου: <b>' + esc(c.code || '—') + '</b></div></div>' +
+		providerRemark(c) + '</div>';
 
 	var cards =
 		'<div class="ecrm-expcards">' +
@@ -677,4 +678,15 @@ function showDiag(view) {
 	box.textContent = lines.join('\n');
 	box.addEventListener('click', function () { box.remove(); });
 	document.body.appendChild(box);
+}
+
+/* (348) «Παρατηρήσεις Protergia» στο κενό δεξιά της κάρτας «Εκκρεμότητα»
+ * (όπως τη ζήτησε η Protergia, 03/11). Μόνο όταν ο server λέει
+ * `show_provider` (κατάσταση «Εκκρεμότητα»). */
+function providerRemark(c) {
+	var r = c.remarks;
+	if (!r || !r.show_provider) { return ''; }
+	var cur = r.provider;
+	return '<div class="ecrm-expbanner__remark' + (cur ? '' : ' is-none') + '"><b>Παρατηρήσεις Protergia</b>' +
+		(cur ? esc(cur.text) : 'Δεν υπάρχει ακόμα παρατήρηση.') + '</div>';
 }

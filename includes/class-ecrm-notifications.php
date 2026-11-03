@@ -437,19 +437,6 @@ class ECRM_Notifications {
 				'updated_at' => $r['updated_at'],
 			];
 		}
-		// (348) Η «Παρατήρηση Protergia» δίπλα στις αιτήσεις σε «Εκκρεμότητα».
-		$pending_ids = [];
-		foreach ( $out as $o ) {
-			if ( $o['status'] === \EnergyCRM\Domain\Contract\PendingRemarks::STATUS ) {
-				$pending_ids[] = $o['id'];
-			}
-		}
-		$remarks = $pending_ids ? \EnergyCRM\Services::pendingRemarks()->currentFor( $pending_ids ) : [];
-		foreach ( $out as $i => $o ) {
-			$out[ $i ]['is_pending_issue'] = in_array( $o['id'], $pending_ids, true );
-			$out[ $i ]['provider_remark']  = (string) ( $remarks[ $o['id'] ]['provider']['text'] ?? '' );
-		}
-
 		// Stale first.
 		usort( $out, function ( $a, $b ) { return $b['age_days'] <=> $a['age_days']; } );
 

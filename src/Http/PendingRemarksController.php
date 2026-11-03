@@ -75,6 +75,6 @@ final class PendingRemarksController implements Controller
 
         $this->remarks->add($id, $scope->actorId(), $kind, (string) $request['text']);
 
-        return new WP_REST_Response(['ok' => true, 'remarks' => $this->remarks->currentFor([$id])[$id] ?? null], 200);
+        return new WP_REST_Response(['ok' => true, 'remarks' => $this->remarks->current($id)], 200);
     }
 }

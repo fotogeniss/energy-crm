@@ -1,13 +1,16 @@
 <?php
 
 /**
- * (348) Παρατηρήσεις εκκρεμότητας: «Παρατηρήσεις Protergia» και «Παρατηρήσεις Agent».
+ * (348) Παρατηρήσεις αίτησης: «Παρατηρήσεις Protergia» και «Παρατηρήσεις Agent».
  *
- * Όταν μια αίτηση μπαίνει σε «Εκκρεμότητα», ο πάροχος εξηγεί τι λείπει
- * (το γράφει ο Back office, από το email/portal) και ο agent που τη χειρίζεται
- * απαντά τι έκανε. Δύο κείμενα ανά αίτηση, με ιστορικό: κάθε αποθήκευση είναι
- * νέα γραμμή στο `events`, η τελευταία είναι η τρέχουσα. Καμία γραμμή δεν
- * αλλάζει ή σβήνεται.
+ * - **Protergia:** η εξήγηση του παρόχου για μια εκκρεμότητα. Τη γράφει μόνο ο
+ *   Back office (και ο διαχειριστής), και μόνο όσο η αίτηση είναι σε
+ *   «Εκκρεμότητα». Εκτός «Εκκρεμότητας» δεν φαίνεται.
+ * - **Agent:** ό,τι γράφει όποιος χειρίζεται την αίτηση, σε κάθε αίτηση,
+ *   όποια κατάσταση κι αν έχει.
+ *
+ * Κάθε αποθήκευση είναι νέα γραμμή στο `events`, η τρέχουσα είναι η
+ * τελευταία. Καμία γραμμή δεν αλλάζει ή σβήνεται.
  *
  * Μόνο κανόνες: τι είναι έγκυρο, ποιος γράφει τι. Χωρίς WordPress.
  *
@@ -26,7 +29,7 @@ final class PendingRemarks
     public const EVENT_PROVIDER = 'remark_provider';
     public const EVENT_AGENT    = 'remark_agent';
 
-    /** Μόνο σε αυτή την κατάσταση ανοίγουν τα πεδία. */
+    /** Η κατάσταση όπου υπάρχει «Παρατηρήσεις Protergia». */
     public const STATUS = 'pending_issue';
 
     public const MAX_LENGTH = 1000;
@@ -39,12 +42,6 @@ final class PendingRemarks
     public static function kinds(): array
     {
         return [self::PROVIDER, self::AGENT];
-    }
-
-    /** @return list<string> */
-    public static function eventTypes(): array
-    {
-        return [self::EVENT_PROVIDER, self::EVENT_AGENT];
     }
 
     public static function eventType(string $kind): string
@@ -62,6 +59,12 @@ final class PendingRemarks
         return $kind === self::PROVIDER ? 'Παρατηρήσεις Protergia' : 'Παρατηρήσεις Agent';
     }
 
+    /** Φαίνεται η «Παρατηρήσεις Protergia» σε αυτή την κατάσταση; */
+    public static function showsProvider(string $status): bool
+    {
+        return $status === self::STATUS;
+    }
+
     /** Το κείμενο όπως αποθηκεύεται: χωρίς κενά στις άκρες, μέχρι MAX_LENGTH χαρακτήρες. */
     public static function clean(string $text): string
     {
@@ -72,12 +75,7 @@ final class PendingRemarks
             : substr($text, 0, self::MAX_LENGTH);
     }
 
-    /**
-     * Ο λόγος που δεν γίνεται η αποθήκευση, ή null.
-     *
-     * Η παρατήρηση του παρόχου γράφεται μόνο από Back office / διαχειριστή.
-     * Και οι δύο μόνο όσο η αίτηση είναι σε «Εκκρεμότητα».
-     */
+    /** Ο λόγος που δεν γίνεται η αποθήκευση, ή null. */
     public static function problem(string $kind, string $status, string $text, bool $isBackOffice): ?string
     {
         if (! in_array($kind, self::kinds(), true)) {
@@ -88,8 +86,8 @@ final class PendingRemarks
             return 'Τις «Παρατηρήσεις Protergia» τις γράφει το Back office.';
         }
 
-        if ($status !== self::STATUS) {
-            return 'Οι παρατηρήσεις γράφονται μόνο σε αιτήσεις με κατάσταση «Εκκρεμότητα».';
+        if ($kind === self::PROVIDER && ! self::showsProvider($status)) {
+            return 'Οι «Παρατηρήσεις Protergia» γράφονται μόνο σε αιτήσεις σε «Εκκρεμότητα».';
         }
 
         if (self::clean($text) === '') {

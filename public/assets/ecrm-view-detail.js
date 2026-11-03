@@ -1321,19 +1321,20 @@ export function addCompanion(id) {
 }
 
 
-/* (348) Παρατηρήσεις εκκρεμότητας -- μόνο όταν ο server στέλνει `c.remarks`
- * (κατάσταση «Εκκρεμότητα»). Η «Protergia» γράφεται από Back office· η
- * «Agent» από όποιον χειρίζεται την αίτηση. Ιστορικό από τα events. */
+/* (348) «Παρατηρήσεις Agent» σε κάθε αίτηση, κάτω από την κατάσταση· από
+ * πάνω «Παρατηρήσεις Protergia», μόνο σε «Εκκρεμότητα» (το αποφασίζει ο
+ * server: `show_provider`). Την Protergia τη γράφει ο Back office. */
 var REMARK_LABELS = { remark_provider: 'Παρατηρήσεις Protergia', remark_agent: 'Παρατηρήσεις Agent' };
 
 function remarkBlock(kind, label, cur, editable, max, c) {
-	var meta = cur ? '<div class="ecrm-remarkbox__meta">Τελευταία ενημέρωση: ' + esc(cur.actor) + ' · ' + esc(fmtDate(cur.created_at)) + '</div>' : '';
 	var type = kind === 'provider' ? 'remark_provider' : 'remark_agent';
+	var meta = cur ? '<div class="ecrm-remarkbox__meta">Τελευταία ενημέρωση: ' + esc(cur.actor) + ' · ' + esc(fmtDate(cur.created_at)) + '</div>' : '';
 	var hist = (c.events || []).filter(function (e) { return e.type === type; }).slice(1, 6).map(function (e) {
 		return '<li>' + esc(fmtDate(e.created_at)) + ' ' + esc(e.actor || '') + ' — «' + esc(e.message || '') + '»</li>';
 	}).join('');
 	var body = editable
-		? '<textarea class="ecrm-remarkbox__ta" maxlength="' + max + '" data-remark-text="' + kind + '" placeholder="' + (kind === 'provider' ? 'Γράψε την εξήγηση της Protergia για την εκκρεμότητα…' : 'Γράψε εδώ τι έγινε με την εκκρεμότητα…') + '">' + esc(cur ? cur.text : '') + '</textarea>' +
+		? '<textarea class="ecrm-remarkbox__ta" maxlength="' + esc(String(max)) + '" data-remark-text="' + kind + '" placeholder="' +
+			(kind === 'provider' ? 'Γράψε την εξήγηση της Protergia για την εκκρεμότητα…' : 'Γράψε εδώ τι έγινε με την αίτηση…') + '">' + esc(cur ? cur.text : '') + '</textarea>' +
 			'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-remark-save="' + kind + '">Αποθήκευση</button>'
 		: '<div class="ecrm-remarkbox__txt">' + (cur ? esc(cur.text) : '<span class="is-none">Δεν υπάρχει ακόμα παρατήρηση.</span>') + '</div>';
 	return '<div class="ecrm-remarkbox ecrm-remarkbox--' + kind + '"><b class="ecrm-remarkbox__t">' + label + '</b>' + body + meta +
@@ -1344,7 +1345,7 @@ function remarksCard(c) {
 	var r = c.remarks;
 	if (!r) { return ''; }
 	return '<div class="ecrm-remarks">' +
-		remarkBlock('provider', 'Παρατηρήσεις Protergia', r.provider, !!r.can_provider, r.max, c) +
+		(r.show_provider ? remarkBlock('provider', 'Παρατηρήσεις Protergia', r.provider, !!r.can_provider, r.max, c) : '') +
 		remarkBlock('agent', 'Παρατηρήσεις Agent', r.agent, true, r.max, c) +
 		'</div>';
 }

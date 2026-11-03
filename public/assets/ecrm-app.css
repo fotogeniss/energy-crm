@@ -2326,16 +2326,17 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	.ecrm-tgt__track { min-width: 36px; }
 }
 
-/* (348) Παρατηρήσεις εκκρεμότητας: Protergia (μπλε) και Agent (πράσινο). */
-.ecrm-remark { margin-top: 6px; border-left: 3px solid var(--st-asig); background: var(--st-asig-bg); border-radius: 0 8px 8px 0; padding: 6px 10px; font-size: var(--fs-12-5); color: var(--ink); overflow-wrap: anywhere; }
-.ecrm-remark b { display: block; font-size: var(--fs-10); text-transform: uppercase; letter-spacing: .04em; color: var(--st-asig); }
-.ecrm-remark.is-none { border-color: var(--line); background: var(--st-draft-bg); color: var(--muted); }
-.ecrm-remark.is-none b { color: var(--muted); }
+/* (348) Παρατηρήσεις: Protergia (μπλε, μόνο σε Εκκρεμότητα) και Agent (πράσινο). */
+.ecrm-expbanner__remark { margin-left: auto; flex: 0 1 46%; min-width: 0; border-left: 3px solid var(--st-asig); background: var(--st-asig-bg); border-radius: 0 8px 8px 0; padding: 7px 11px; font-size: var(--fs-12-5); color: var(--ink); overflow-wrap: anywhere; white-space: pre-wrap; }
+.ecrm-expbanner__remark b { display: block; font-size: var(--fs-10); text-transform: uppercase; letter-spacing: .04em; color: var(--st-asig); white-space: normal; }
+.ecrm-expbanner__remark.is-none { border-left-color: var(--line); background: var(--st-draft-bg); color: var(--muted); }
+.ecrm-expbanner__remark.is-none b { color: var(--muted); }
+@media (max-width: 860px) { .ecrm-expbanner { flex-wrap: wrap; } .ecrm-expbanner__remark { flex: 1 1 100%; margin-left: 0; } }
 .ecrm-remarks { display: grid; gap: 10px; margin: 0 0 14px; }
-.ecrm-remarkbox { border: 1px solid var(--st-asig); background: var(--st-asig-bg); border-radius: 10px; padding: 12px; }
-.ecrm-remarkbox--agent { border-color: var(--st-resolved); background: var(--st-resolved-bg); }
-.ecrm-remarkbox__t { display: block; font-size: var(--fs-11-5); text-transform: uppercase; letter-spacing: .04em; color: var(--st-asig); margin-bottom: 6px; }
-.ecrm-remarkbox--agent .ecrm-remarkbox__t { color: var(--st-resolved); }
+.ecrm-remarkbox { border: 1px solid var(--st-resolved); background: var(--st-resolved-bg); border-radius: 10px; padding: 12px; }
+.ecrm-remarkbox--provider { border-color: var(--st-asig); background: var(--st-asig-bg); }
+.ecrm-remarkbox__t { display: block; font-size: var(--fs-11-5); text-transform: uppercase; letter-spacing: .04em; color: var(--st-resolved); margin-bottom: 6px; }
+.ecrm-remarkbox--provider .ecrm-remarkbox__t { color: var(--st-asig); }
 .ecrm-remarkbox__txt { font-size: var(--fs-13); overflow-wrap: anywhere; white-space: pre-wrap; }
 .ecrm-remarkbox__txt .is-none { color: var(--muted); }
 .ecrm-remarkbox__ta { width: 100%; min-height: 76px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; font-size: var(--fs-13); background: var(--surface); color: var(--ink); margin-bottom: 8px; }

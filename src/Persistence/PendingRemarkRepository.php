@@ -1,7 +1,7 @@
 <?php
 
 /**
- * (348) Οι παρατηρήσεις εκκρεμότητας -- γραμμές του `events`, τύπων
+ * (348) Οι παρατηρήσεις αίτησης -- γραμμές του `events`, τύπων
  * `remark_provider` / `remark_agent`. Η τρέχουσα είναι η τελευταία γραμμή.
  *
  * @package EnergyCRM
@@ -27,68 +27,52 @@ final class PendingRemarkRepository
     }
 
     /**
-     * Η τρέχουσα παρατήρηση κάθε είδους, ανά αίτηση.
+     * Η τρέχουσα παρατήρηση κάθε είδους.
      *
-     * @param list<int> $contractIds
-     *
-     * @return array<int, array{provider: ?array<string, mixed>, agent: ?array<string, mixed>}>
+     * @return array{provider: ?array{text: string, actor: string, created_at: string},
+     *               agent: ?array{text: string, actor: string, created_at: string}}
      */
-    public function currentFor(array $contractIds): array
+    public function current(int $contractId): array
     {
-        global $wpdb;
+        $out = ['provider' => null, 'agent' => null];
 
-        $ids = array_values(array_filter(array_map('intval', $contractIds), static fn (int $i): bool => $i > 0));
-        $out = [];
-
-        foreach ($ids as $id) {
-            $out[$id] = ['provider' => null, 'agent' => null];
-        }
-
-        if ($ids === []) {
-            return $out;
-        }
-
-        $table = Tables::name(Tables::EVENTS);
-        $ph    = implode(',', array_fill(0, count($ids), '%d'));
-
-        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT e.contract_id, e.type, e.message, e.user_id, e.created_at
-                 FROM %i e
-                 JOIN ( SELECT MAX(id) AS id FROM %i
-                        WHERE type IN (%s, %s) AND contract_id IN ($ph)
-                        GROUP BY contract_id, type ) last ON last.id = e.id",
-                array_merge(
-                    [$table, $table, PendingRemarks::EVENT_PROVIDER, PendingRemarks::EVENT_AGENT],
-                    $ids
-                )
-            ),
-            ARRAY_A
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
-
-        $names = [];
-        $uids  = array_values(array_unique(array_filter(
-            array_map(static fn (array $r): int => (int) $r['user_id'], (array) $rows)
-        )));
-
-        $users = $uids === [] ? [] : get_users(['include' => $uids, 'fields' => ['ID', 'display_name']]);
-
-        foreach ($users as $u) {
-            $names[(int) $u->ID] = (string) $u->display_name;
-        }
-
-        foreach ((array) $rows as $r) {
-            $kind = PendingRemarks::kindOf((string) $r['type']);
-
-            $out[(int) $r['contract_id']][$kind] = [
-                'text'       => (string) $r['message'],
-                'actor'      => $names[(int) $r['user_id']] ?? '—',
-                'created_at' => (string) $r['created_at'],
-            ];
+        foreach (PendingRemarks::kinds() as $kind) {
+            $out[$kind] = $this->latest($contractId, PendingRemarks::eventType($kind));
         }
 
         return $out;
+    }
+
+    /** @return array{text: string, actor: string, created_at: string}|null */
+    private function latest(int $contractId, string $type): ?array
+    {
+        global $wpdb;
+
+        if ($contractId <= 0) {
+            return null;
+        }
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT message, user_id, created_at FROM %i
+                 WHERE contract_id = %d AND type = %s ORDER BY id DESC LIMIT 1',
+                Tables::name(Tables::EVENTS),
+                $contractId,
+                $type
+            ),
+            ARRAY_A
+        );
+
+        if (! is_array($row)) {
+            return null;
+        }
+
+        $user = (int) $row['user_id'] > 0 ? get_userdata((int) $row['user_id']) : false;
+
+        return [
+            'text'       => (string) $row['message'],
+            'actor'      => $user ? (string) $user->display_name : '—',
+            'created_at' => (string) $row['created_at'],
+        ];
     }
 }

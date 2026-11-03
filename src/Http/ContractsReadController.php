@@ -201,13 +201,17 @@ final class ContractsReadController implements Controller
         $row['sign_window_hours'] = ECRM_Tracking::SIGN_WINDOW_HOURS;
         $row['stuck']         = $this->stuck($row);
 
-        // (348) Παρατηρήσεις εκκρεμότητας: μόνο όσο η αίτηση είναι «Εκκρεμότητα».
-        $row['remarks'] = (string) ($row['status'] ?? '') === PendingRemarks::STATUS
-            ? array_merge(
-                Services::pendingRemarks()->currentFor([$id])[$id] ?? ['provider' => null, 'agent' => null],
-                ['can_provider' => PendingRemarksController::canWriteProvider(), 'max' => PendingRemarks::MAX_LENGTH]
-            )
-            : null;
+        // (348) «Παρατηρήσεις Agent» σε κάθε αίτηση· «Παρατηρήσεις Protergia»
+        // μόνο σε «Εκκρεμότητα» (PendingRemarks).
+        $remarks        = Services::pendingRemarks()->current($id);
+        $showsProvider  = PendingRemarks::showsProvider((string) ($row['status'] ?? ''));
+        $row['remarks'] = [
+            'agent'         => $remarks['agent'],
+            'provider'      => $showsProvider ? $remarks['provider'] : null,
+            'show_provider' => $showsProvider,
+            'can_provider'  => $showsProvider && PendingRemarksController::canWriteProvider(),
+            'max'           => PendingRemarks::MAX_LENGTH,
+        ];
 
         // What the status panel is allowed to offer, per the same graph the
         // server enforces (ContractStatus::allowedNext()) — the screen used to
