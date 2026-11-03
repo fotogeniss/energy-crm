@@ -1,0 +1,21 @@
+feat(site-intake): αιτήσεις από το site σύγκρισης τιμών γίνονται Υποψήφιοι (310)
+
+Νέα πόρτα POST /ecrm/v1/site-intake (+ /{ref}/file) για το Laravel site
+σύγκρισης τιμών. Υπογραφή HMAC-SHA256 με κοινό μυστικό (Energy CRM → Site
+σύγκρισης), idempotent με leads.external_ref (UNIQUE). ΑΦΜ/διεύθυνση/αριθμός
+παροχής κρυπτογραφημένα στο leads.site_data· η «Μετατροπή» τα περνά σε πελάτη
+και σύμβαση και τα σβήνει. Νέα πηγή υποψηφίου «Από το site».
+
+Migration 0043_add_site_intake_columns (τρέχει και μετά το 0044: ο runner
+κρατά λίστα ids). Έκδοση 1.12.0.
+
+RestRouteGuardTest: το 404 στο site-intake/{ref}/file ήταν του test — το
+concretePath() έβαζε 'sample' (6 χαρ.) σε placeholder {8,64}. Νέο
+sampleSegment() διαλέγει τιμή που ταιριάζει στο μοτίβο· το route ΔΕΝ μπαίνει
+στα PUBLIC_ROUTES (έχει φύλακα HMAC, απαντά 401/403).
+
+phpcs: οι 15 γραμμές >120 του 310 σπάστηκαν — τέλος το --no-verify.
+
+Μαζί: docs/CHANGELOG.md με τις εγγραφές 311–319.
+
+Tests: SiteIntakeDomainTest (22).

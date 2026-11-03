@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="el"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Μακέτα: Εγκατάσταση στο κινητό</title>
+<style>
+:root{--ink:#1f2430;--muted:#6b7280;--line:#e2e5ea;--bg:#f7f8fa;--card:#fff;--acc:#1d8a4e;--acc-wash:#eefaf0;--warn-wash:#fff8e6;--warn:#a8760a;--info-wash:#eaf2fc;--info:#2563a8;--grey:#eef0f3;--dark:#14171f}
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:28px;margin:0;line-height:1.5}
+h1{font-size:19px;margin:0 0 4px}.sub{color:var(--muted);font-size:13px;max-width:1000px;margin:0 0 20px}
+h2.sec{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:30px 0 12px;border-top:1px solid var(--line);padding-top:16px}
+.note,.ask,.ok{border-radius:8px;padding:11px 13px;font-size:12.5px;margin-bottom:16px;max-width:1000px}
+.note{background:var(--warn-wash);border:1px solid #f0dca0;color:#6b5510}.ask{background:#eef4ff;border:1px solid #b9cdf0;color:#20355c}.ok{background:var(--acc-wash);border:1px solid #a8ddb5;color:#1d4d2b}
+.note strong,.ask strong,.ok strong{display:block;margin-bottom:3px}ul{margin:4px 0 0;padding-left:18px}code{background:var(--grey);padding:1px 5px;border-radius:4px;font-size:11.5px}
+.row{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+.cap{font-size:11.5px;color:var(--muted);margin:0 0 6px;font-weight:600}
+.phone{width:390px;border:1px solid var(--line);border-radius:22px;background:var(--card);overflow:hidden}
+.desk{max-width:1000px;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden;display:grid;grid-template-columns:200px 1fr}
+.side{background:var(--dark);color:#c9ccd4;padding:14px;font-size:12.5px}.side div{padding:7px 8px;border-radius:7px}.side .on{background:#1f3b2a;color:#fff}.side .lbl{font-size:10px;letter-spacing:.06em;color:#7d8290;margin-top:8px}
+.main{padding:18px}
+.banner{display:flex;gap:10px;align-items:center;background:var(--acc-wash);border-bottom:1px solid #a8ddb5;padding:10px 12px;font-size:12.5px}
+.banner b{display:block}.banner .x{margin-left:auto;color:var(--muted);font-size:16px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;white-space:nowrap}.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px;background:#fff}
+.step{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;margin:0 0 10px}
+.tabs{display:flex;gap:6px;margin:0 0 12px}.tab{border:1px solid var(--line);border-radius:999px;padding:4px 13px;font-size:12.5px;background:#fff}.tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+ol.st{list-style:none;margin:0;padding:0;counter-reset:s}ol.st li{counter-increment:s;display:grid;grid-template-columns:28px 1fr;gap:10px;padding:8px 0;font-size:13px;border-bottom:1px solid #f1f2f5}
+ol.st li:last-child{border-bottom:0}ol.st li::before{content:counter(s);width:24px;height:24px;border-radius:50%;background:var(--acc-wash);color:var(--acc);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.ico{display:inline-block;border:1px solid var(--line);background:var(--grey);border-radius:5px;padding:0 6px;font-size:12px}
+.status{display:flex;gap:8px;align-items:center;font-size:12.5px;padding:9px 11px;border-radius:8px;margin-bottom:12px}
+.status.ok2{background:var(--acc-wash);color:#1d4d2b}.status.info{background:var(--info-wash);color:var(--info)}.status.warn{background:var(--warn-wash);color:var(--warn)}
+.pad{padding:14px}.small{font-size:12px;color:var(--muted)}
+@media(max-width:700px){body{padding:16px}.phone{width:100%}.desk{grid-template-columns:1fr}.side{display:none}}
+</style></head><body>
+<h1>Εγκατάσταση στο κινητό — οδηγός μέσα στο CRM</h1>
+<p class="sub">Το CRM είναι ήδη PWA, οπότε δεν χρειάζεται καμία ξεχωριστή εφαρμογή. Το πρόβλημα είναι ότι ο συνεργάτης πρέπει να ξέρει τα βήματα, και στο iPhone είναι διαφορετικά από το Android. Η σελίδα αυτή τα δείχνει σωστά για το κινητό που κρατάει.</p>
+
+<div class="ok"><strong>Τι μέτρησα στον κώδικα</strong><ul>
+<li>Υπάρχουν ήδη manifest, service worker και εικονίδια (<code>class-ecrm-pwa.php</code>, <code>ecrm-sw.js</code>), με <code>display: standalone</code>.</li>
+<li>Δεν υπάρχει πουθενά οδηγός ούτε κουμπί «Εγκατάσταση». Κανένας κώδικας για <code>beforeinstallprompt</code>.</li>
+<li>Δεν χρειάζεται αλλαγή στη βάση ούτε στον server: όλα γίνονται στον browser.</li></ul></div>
+
+<h2 class="sec">1 · Οθόνη «Εγκατάσταση στο κινητό» (υπολογιστής)</h2>
+<div class="desk">
+ <div class="side"><div>Αρχική</div><div>Συμβάσεις</div><div class="lbl">ΠΕΡΙΣΣΟΤΕΡΑ</div><div>Εκπαίδευση</div><div class="on">Εφαρμογή στο κινητό</div><div>Βάση Γνώσης</div></div>
+ <div class="main">
+  <div class="card"><div class="step">Εφαρμογή στο κινητό</div>
+   <div class="small" style="margin-bottom:10px">Βάλε το CRM στην αρχική οθόνη του κινητού, σαν εφαρμογή. Ανοίγει χωρίς γραμμή browser και δουλεύει και με κακή σύνδεση.</div>
+   <div class="tabs"><span class="tab on">Android</span><span class="tab">iPhone</span></div>
+   <ol class="st">
+    <li><div>Άνοιξε το CRM στο <b>Chrome</b> και συνδέσου.</div></li>
+    <li><div>Πάτα το μενού <span class="ico">⋮</span> πάνω δεξιά.</div></li>
+    <li><div>Διάλεξε <b>«Εγκατάσταση εφαρμογής»</b> (ή «Προσθήκη στην αρχική οθόνη»).</div></li>
+    <li><div>Επιβεβαίωσε. Το εικονίδιο «Energy CRM» εμφανίζεται στην αρχική οθόνη.</div></li>
+   </ol></div>
+  <div class="card"><div class="step">Στείλε τον σύνδεσμο στο κινητό σου</div>
+   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:220px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;color:var(--muted)">https://gdg-ts.gr/…</div><span class="btn">Αντιγραφή συνδέσμου</span></div>
+   <div class="small" style="margin-top:6px">Στείλ' τον στον εαυτό σου ή σε συνεργάτη. Στο iPhone πρέπει να ανοίξει στο Safari.</div></div>
+ </div></div>
+</div>
+
+<h2 class="sec">2 · Στο κινητό: ο οδηγός ξέρει τι κινητό έχεις (390px)</h2>
+<div class="row">
+ <div><p class="cap">Android, Chrome — με ένα κουμπί</p><div class="phone"><div class="pad">
+  <div class="step">Εφαρμογή στο κινητό</div>
+  <div class="status info">Δεν έχει εγκατασταθεί ακόμα σε αυτό το κινητό.</div>
+  <div style="margin-bottom:12px"><span class="btn p" style="display:block;text-align:center">Εγκατάσταση εφαρμογής</span></div>
+  <div class="small">Αν δεν εμφανιστεί παράθυρο: μενού <span class="ico">⋮</span> → «Εγκατάσταση εφαρμογής».</div>
+ </div></div></div>
+
+ <div><p class="cap">iPhone, Safari — βήματα με τα εικονίδια</p><div class="phone"><div class="pad">
+  <div class="step">Εφαρμογή στο κινητό</div>
+  <div class="status info">Το iPhone δεν επιτρέπει κουμπί. Τρία πατήματα:</div>
+  <ol class="st">
+   <li><div>Πάτα το κουμπί κοινοποίησης <span class="ico">⬆︎</span> κάτω στη μπάρα του Safari.</div></li>
+   <li><div>Κύλησε και διάλεξε <b>«Προσθήκη στην αρχική οθόνη»</b> <span class="ico">＋</span>.</div></li>
+   <li><div>Πάτα <b>«Προσθήκη»</b> πάνω δεξιά.</div></li>
+  </ol></div></div></div>
+
+ <div><p class="cap">iPhone, αλλά όχι Safari (π.χ. Chrome, Viber, WhatsApp)</p><div class="phone"><div class="pad">
+  <div class="step">Εφαρμογή στο κινητό</div>
+  <div class="status warn">Στο iPhone η εγκατάσταση γίνεται μόνο από το Safari.</div>
+  <div style="margin-bottom:10px"><span class="btn p" style="display:block;text-align:center">Αντιγραφή συνδέσμου</span></div>
+  <div class="small">Άνοιξε το Safari, πάτησε παρατεταμένα τη γραμμή διεύθυνσης και κάνε «Επικόλληση και μετάβαση». Μετά ακολούθησε τα βήματα.</div>
+ </div></div></div>
+
+ <div><p class="cap">Όταν είναι ήδη εγκατεστημένο</p><div class="phone"><div class="pad">
+  <div class="step">Εφαρμογή στο κινητό</div>
+  <div class="status ok2">✓ Το CRM τρέχει ως εφαρμογή σε αυτό το κινητό.</div>
+  <div class="small">Δεν χρειάζεται τίποτα άλλο. Για να το βάλεις και σε άλλο κινητό, στείλε τον σύνδεσμο από τον υπολογιστή.</div>
+ </div></div></div>
+</div>
+
+<h2 class="sec">3 · Υπενθύμιση στο κινητό (μία φορά)</h2>
+<div class="row"><div><p class="cap">Πάνω από την Αρχική, μόνο όταν δεν είναι εγκατεστημένο</p><div class="phone">
+ <div class="banner"><div><b>Βάλε το CRM στην αρχική οθόνη</b>Ανοίγει σαν εφαρμογή, πιο γρήγορα.</div><span class="btn p" style="padding:6px 11px;font-size:12px">Πώς</span><span class="x">×</span></div>
+ <div class="pad small">… η Αρχική όπως είναι σήμερα …</div></div></div>
+ <div style="flex:1;min-width:260px;max-width:560px"><div class="note"><strong>Πότε εμφανίζεται</strong><ul>
+ <li>Μόνο σε κινητό (οθόνη κάτω από 861px) και μόνο όταν <b>δεν</b> τρέχει ήδη ως εφαρμογή.</li>
+ <li>Το «Πώς» ανοίγει την παραπάνω οθόνη. Το «×» την κρύβει για 30 μέρες, στον browser (μόνο μια προτίμηση εμφάνισης, κανένα στοιχείο πελάτη).</li>
+ <li>Στο Android, αν ο Chrome έχει έτοιμη την εγκατάσταση, το «Πώς» γίνεται κατευθείαν «Εγκατάσταση».</li></ul></div></div></div>
+
+<h2 class="sec">4 · Αποφάσεις που πήρα</h2>
+<div class="ask"><strong>Κανόνες</strong><ul>
+<li><b>Θέση:</b> γραμμή «Εφαρμογή στο κινητό» στο «Περισσότερα», κάτω από την «Εκπαίδευση». Χωρίς σήμα.</li>
+<li><b>Ποιος τη βλέπει:</b> όλοι οι ρόλοι (πωλητής, υπεύθυνος, back office, διαχειριστής). Δεν έχει δεδομένα, μόνο οδηγίες.</li>
+<li><b>Τι ανιχνεύω στον browser:</b> iPhone ή Android, αν είναι Safari, και αν τρέχει ήδη ως εφαρμογή (<code>display-mode: standalone</code>). Δεν στέλνεται τίποτα στον server.</li>
+<li><b>Τεχνικά:</b> νέο module <code>ecrm-view-install.js</code>, καμία αλλαγή σε REST/βάση. Μόνο κείμενα και λίγο CSS με τα ήδη υπάρχοντα tokens.</li>
+<li><b>Όριο:</b> δεν υπόσχομαι εικόνα για κάθε μοντέλο κινητού: τα ονόματα των μενού αλλάζουν ελαφρά ανάμεσα σε εκδόσεις του Safari/Chrome. Γι' αυτό τα βήματα λένε τι να ψάξεις, όχι πού ακριβώς είναι.</li></ul></div>
+</body></html>

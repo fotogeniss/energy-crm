@@ -1,0 +1,14 @@
+feat(contracts): «+ Αέριο / + Ρεύμα στον ίδιο πελάτη» — η δεύτερη αίτηση ανοίγει έτοιμη (326)
+
+Ρεύμα + αέριο είναι δύο αιτήσεις στον ίδιο ΑΦΜ (Protergia 29/10). Ένα κουμπί
+στην καρτέλα και στο Βήμα 4 φτιάχνει την αίτηση του άλλου είδους με τον πελάτη,
+τις διευθύνσεις, επικοινωνία, εκπρόσωπο, πληρωμή και συναινέσεις, και τον
+αριθμό παροχής ρεύματος στο πεδίο Power+Gas του αερίου. Όχι πρόγραμμα, παροχή,
+υπογραφή ή συναίνεση. Αν υπάρχει ήδη, σύνδεσμος αντί για κουμπί.
+
+- Domain\Contract\CompanionDraft, Http\CompanionController (GET/POST
+  /contracts/{id}/companion), ContractQueries::companion().
+- Mockup docs/UI-ADD-GAS.html (εγκρίθηκε 30/10).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Kf2oHo55u2JAm7PFpfm4k3

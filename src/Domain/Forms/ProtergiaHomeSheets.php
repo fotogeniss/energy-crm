@@ -15,8 +15,7 @@
  * picasso student είναι ίδια χωρίς διαφοροποίηση με την αίτηση για το
  * κανονικό picasso 39,90€». Το «Picasso 2.0» της λίστας 07/10, το Student και
  * το Picasso S 39,90 τυπώνουν άρα το ίδιο φύλλο. Τα υπόλοιπα 8 οικιακά Picasso
- * (S 49,90 / 64,90, M, L) δεν έχουν ακόμα δικό τους έντυπο
- * (`ProtergiaCatalogue::AWAITING_SHEET`).
+ * (S 49,90 / 64,90, M, L) απέκτησαν δικό τους έντυπο στις 03/11 (348).
  *
  * @package EnergyCRM
  */
@@ -38,6 +37,16 @@ final class ProtergiaHomeSheets
         'protergia_picasso2'         => 'protergia_oik_picasso_s1',
         'protergia_picasso2_student' => 'protergia_oik_picasso_s1',
         'protergia_pic_h_s1'         => 'protergia_oik_picasso_s1',
+        // (348) Protergia 03/11: έντυπο για κάθε οικιακό πακέτο· ίδια αίτηση, αλλάζουν
+        // μόνο η τιμή και το όνομα του πακέτου στη σελίδα 2. Οι ΓΟΣ κοινοί (`tail`).
+        'protergia_pic_h_s2'         => 'protergia_oik_picasso_s2',
+        'protergia_pic_h_s3'         => 'protergia_oik_picasso_s3',
+        'protergia_pic_h_m1'         => 'protergia_oik_picasso_m1',
+        'protergia_pic_h_m2'         => 'protergia_oik_picasso_m2',
+        'protergia_pic_h_m3'         => 'protergia_oik_picasso_m3',
+        'protergia_pic_h_l1'         => 'protergia_oik_picasso_l1',
+        'protergia_pic_h_l2'         => 'protergia_oik_picasso_l2',
+        'protergia_pic_h_l3'         => 'protergia_oik_picasso_l3',
     ];
 
     private function __construct()

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup — Παρατηρήσεις Εκκρεμότητας</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#17202e;--mute:#667085;--line:#e4e8ef;--brand:#1f6feb;--warn:#b45309;--warnbg:#fff4e0;--prov:#6d28d9;--provbg:#f1ebff;--agent:#047857;--agentbg:#e6f6ef}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,Segoe UI,sans-serif;padding:16px}
+h1{font-size:18px;margin:0 0 4px}p.n{color:var(--mute);margin:0 0 16px;font-size:13px}
+.wrap{max-width:980px;margin:0 auto;display:grid;gap:22px}
+.lbl{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:12px;color:var(--mute);padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border:0}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--warnbg);color:var(--warn)}
+.age{font-size:12px;color:var(--mute)}
+.remark{margin-top:6px;border-left:3px solid var(--prov);background:var(--provbg);border-radius:0 8px 8px 0;padding:6px 10px;font-size:13px}
+.remark b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--prov)}
+.remark.none{border-color:var(--line);background:#f7f8fa;color:var(--mute)}.remark.none b{color:var(--mute)}
+.agent{margin-top:14px;border:1px solid var(--agent);background:var(--agentbg);border-radius:10px;padding:12px}
+.agent b.t{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--agent);margin-bottom:6px}
+textarea{width:100%;min-height:76px;border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;background:#fff}
+button{border:0;background:var(--agent);color:#fff;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;margin-top:8px}
+.meta{font-size:12px;color:var(--mute);margin-top:6px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hist{margin-top:10px;font-size:13px;border-top:1px dashed var(--line);padding-top:8px}
+</style></head><body><div class="wrap">
+<div><h1>Εκκρεμότητες — Παρατηρήσεις Protergia / Παρατηρήσεις Agent</h1>
+<p class="n">Mockup για έγκριση. Δεν έχει γραφτεί κώδικας ακόμα.</p></div>
+
+<div><div class="lbl">1. Λίστα «Εκκρεμότητες» — η παρατήρηση της Protergia κάτω από το όνομα</div>
+<div class="card"><table>
+<thead><tr><th>Πελάτης</th><th>Κωδικός</th><th>Κατάσταση</th><th>Ανοιχτή για</th></tr></thead>
+<tbody>
+<tr><td><b>Παπαδοπούλου Μαρία</b>
+<div class="remark"><b>Παρατηρήσεις Protergia</b>Ο αριθμός παροχής δεν αντιστοιχεί στο όνομα του πελάτη. Απαιτείται νέο έγγραφο ταυτοποίησης.</div></td>
+<td>PRO-10482</td><td><span class="badge">Εκκρεμότητα</span></td><td class="age">6 ημέρες</td></tr>
+<tr><td><b>Γεωργίου Νίκος</b>
+<div class="remark none"><b>Παρατηρήσεις Protergia</b>Δεν υπάρχει ακόμα παρατήρηση.</div></td>
+<td>PRO-10455</td><td><span class="badge">Εκκρεμότητα</span></td><td class="age">2 ημέρες</td></tr>
+</tbody></table>
+<div class="meta">Η παρατήρηση της Protergia φαίνεται μόνο στις αιτήσεις με κατάσταση «Εκκρεμότητα». Κόβεται σε 2 γραμμές στη λίστα· ολόκληρη στο άνοιγμα.</div></div></div>
+
+<div><div class="lbl">2. Άνοιγμα αίτησης — ακριβώς κάτω από την κατάσταση «Εκκρεμότητα»</div>
+<div class="card">
+<div class="row"><b style="font-size:17px">Παπαδοπούλου Μαρία</b><span class="badge">Εκκρεμότητα</span></div>
+<div class="remark"><b>Παρατηρήσεις Protergia</b>Ο αριθμός παροχής δεν αντιστοιχεί στο όνομα του πελάτη. Απαιτείται νέο έγγραφο ταυτοποίησης.</div>
+<div class="agent"><b class="t">Παρατηρήσεις Agent</b>
+<textarea placeholder="Γράψε εδώ τι έγινε με την εκκρεμότητα (π.χ. «Ζητήθηκε νέο ΑΔΤ από τον πελάτη, αναμένεται»)…">Ζητήθηκε νέο ΑΔΤ από τον πελάτη. Θα το ανεβάσει αύριο.</textarea>
+<button>Αποθήκευση</button>
+<div class="meta">Τελευταία ενημέρωση: Κ. Παπαδόπουλος · 03/11/2026 14:20</div>
+<div class="hist"><b>Ιστορικό:</b> 03/11 14:20 Κ. Παπαδόπουλος — «Ζητήθηκε νέο ΑΔΤ…» · 31/10 09:05 Ε. Νικολάου — «Καλέστηκε ο πελάτης, δεν απάντησε.»</div></div>
+</div>
+<div class="meta">Η «Παρατηρήσεις Agent» ορατή και επεξεργάσιμη από όποιον χειρίζεται την αίτηση (και Back office). Κάθε αποθήκευση κρατά ιστορικό (ποιος, πότε). Δεν εμφανίζεται όταν η κατάσταση δεν είναι «Εκκρεμότητα».</div></div>
+</div></body></html>

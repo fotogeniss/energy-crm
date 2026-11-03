@@ -1,0 +1,36 @@
+feat(forms): Protergia — φύλλα αερίου Flex/Standard και επαγγελματικά ρεύματος (13 + 9 Picasso), νόμιμος εκπρόσωπος σε κάθε υπογραφή (321, 322)
+
+--- (321) ---
+feat(forms): αέριο Protergia — δικά τους φύλλα Flex/Standard, τύπος μετρητή, αριθμός παροχής ρεύματος, κανόνες Protergia (321)
+
+Τα 4 κυμαινόμενα (οικιακά/επαγγελματικά Flex, Standard) τύπωναν το
+protergia_fa = οικιακό Value Gas Sure με σταθερή τιμή. Νέα φύλλα από τα
+PDF της Protergia (22/10): ΕΟ.1250-2_95/_97/_98/_99. Θέσεις από το ίδιο το
+PDF (tools/protergia-gas-2026-maps.py).
+
+- Νέα πεδία (μόνο αέριο): Τύπος Μετρητή (G2,5–G160), Αριθμός Παροχής
+  Ρεύματος (Power + Gas, προαιρετικό). Mockup docs/UI-GAS-PROTERGIA.html.
+- Κανόνες Protergia: 12 μήνες, Παρατηρήσεις = πρόγραμμα · promotion
+  (χωρίς ΚΟΤ), μετρητά → εγγύηση με 1ο λογαριασμό, όροι κατά νόημα
+  (Ε/ΣΤ ΝΑΙ-ΟΧΙ, email, πάντα), εταιρεία → «ΟΝΟΜΑ - ΝΟΜΙΜΟΣ ΕΚΠΡΟΣΩΠΟΣ».
+- Τα παλιά φύλλα αερίου δεν τυπώνουν πια τον ΗΚΑΣΠ στον αριθμό παροχής
+  ρεύματος.
+
+Tests: ProtergiaGasSheetsTest (νέο), FormTemplatesTest, StandingOrderCoordinateTest.
+
+--- (322) ---
+(322) Protergia επαγγελματικά ρεύματος: δική τους αίτηση και ΓΟΣ (13 + 9 Picasso), νόμιμος εκπρόσωπος σε κάθε υπογραφή
+
+- ProtergiaBizSheets: τα 13 ρεύματος του καταλόγου και τα 9 επαγγελματικά
+  Picasso τυπώνουν το δικό τους φύλλο (έντυπα Protergia 22/10), όχι το
+  γενικό protergia_he_biz. Το πρόγραμμα αποφασίζει, κανόνας (283).
+- Θέσεις από το ελεγμένο protergia_epag_simple2 (ίδιο έντυπο),
+  tools/protergia-biz-2026-maps.py· σελ.2 ανά ετικέτα.
+- Υπογραφές και στις σελίδες εκκαθάρισης Picasso / Dynamic One και στους ΓΟΣ.
+- Εταιρεία: «ΟΝΟΜΑΤΕΠΩΝΥΜΟ - ΝΟΜΙΜΟΣ ΕΚΠΡΟΣΩΠΟΣ» σε κάθε υπογραφή· Αρ. ΓΕΜΗ.
+- Seasonal: νεότερη έκδοση _232 (χωρίς προτυπωμένο Χ στο 8.6(β)).
+- FormTemplates::pagePaths()/tail(): κοινές σελίδες ΓΟΣ, μία φορά στον δίσκο.
+- Tests: ProtergiaBizSheetsTest (νέο), FormTemplatesTest, ProtergiaBizPlansTest.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Kf2oHo55u2JAm7PFpfm4k3

@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence\Schema;
 
 use EnergyCRM\Persistence\Schema\Migrations\ActivateProtergiaGasSure2;
+use EnergyCRM\Persistence\Schema\Migrations\ActivateProtergiaHomePicasso;
 use EnergyCRM\Persistence\Schema\Migrations\AddComboEnergyContactColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddComboMobileContactColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddContractAddresses;
@@ -137,6 +138,7 @@ final class MigrationList
             new AddEventReasonColumn(),
             new AddTaskKindColumn(),
             new CreateTargetsTable(),
+            new ActivateProtergiaHomePicasso(),
         ];
     }
 }

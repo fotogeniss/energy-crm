@@ -158,18 +158,10 @@ final class ProtergiaCatalogue
      * τη σελίδα Παρόχων.
      *
      * (325) Value Bright 2.0: «υπάρχει στην πλατφόρμα» της Protergia, δεν
-     * στάλθηκε. Τα 8 οικιακά Picasso εκτός του S 39,90: στάλθηκε μόνο αυτό.
+     * στάλθηκε. Τα 8 οικιακά Picasso ήρθαν 03/11 (348).
      */
     public const AWAITING_SHEET = [
         'protergia_value_bright2',
-        'protergia_pic_h_s2',
-        'protergia_pic_h_s3',
-        'protergia_pic_h_m1',
-        'protergia_pic_h_m2',
-        'protergia_pic_h_m3',
-        'protergia_pic_h_l1',
-        'protergia_pic_h_l2',
-        'protergia_pic_h_l3',
     ];
 
     /**

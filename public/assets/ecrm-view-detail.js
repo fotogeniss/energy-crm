@@ -243,7 +243,7 @@ function renderDetail(view, d) {
 		? '<ul class="ecrm-timeline">' + c.events.map(function (e) {
 			var label = e.type === 'status_change'
 				? (statuses[e.from_status] || e.from_status || '—') + ' → ' + (statuses[e.to_status] || e.to_status || '—')
-				: (e.message || e.type);
+				: (REMARK_LABELS[e.type] ? REMARK_LABELS[e.type] + ': ' : '') + (e.message || e.type);
 			/* Το `message` ενός status_change γράφεται εδώ και μήνες σε πολλές
 			 * διαδρομές -- χειροκίνητο σχόλιο αλλαγής, «Μαζική αλλαγή
 			 * κατάστασης», η εξήγηση του AutoProcess, το IP της ηλεκτρονικής
@@ -429,6 +429,8 @@ function renderDetail(view, d) {
 		(c.consent_at ? '<span class="ecrm-chip-consent" title="Συναίνεση: ' + esc(fmtDate(c.consent_at)) + '">✓ GDPR</span>' : '') +
 		'</div>' +
 
+		remarksCard(c) +
+
 		'<div class="ecrm-cols">' +
 		'<div class="ecrm-card"><div class="ecrm-step">Στοιχεία πελάτη</div>' +
 		kv('Ονοματεπώνυμο', name) + kv('ΑΦΜ', c.afm) + kv('ΔΟΥ', c.doy) + kv('ΑΔΤ', c.adt) +
@@ -494,6 +496,8 @@ function renderDetail(view, d) {
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--danger" data-detail-del="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' +
 		'</div></aside></div>';
 
+
+	bindRemarks(view, c);
 
 	view.querySelectorAll('.ecrm-statuschip').forEach(function (b) {
 		b.addEventListener('click', function () {
@@ -1314,4 +1318,52 @@ export function addCompanion(id) {
 				.then(function (dd) { openEdit(dd.contract || dd); });
 		})
 		.catch(function () { toast('Σφάλμα δικτύου.', false); });
+}
+
+
+/* (348) Παρατηρήσεις εκκρεμότητας -- μόνο όταν ο server στέλνει `c.remarks`
+ * (κατάσταση «Εκκρεμότητα»). Η «Protergia» γράφεται από Back office· η
+ * «Agent» από όποιον χειρίζεται την αίτηση. Ιστορικό από τα events. */
+var REMARK_LABELS = { remark_provider: 'Παρατηρήσεις Protergia', remark_agent: 'Παρατηρήσεις Agent' };
+
+function remarkBlock(kind, label, cur, editable, max, c) {
+	var meta = cur ? '<div class="ecrm-remarkbox__meta">Τελευταία ενημέρωση: ' + esc(cur.actor) + ' · ' + esc(fmtDate(cur.created_at)) + '</div>' : '';
+	var type = kind === 'provider' ? 'remark_provider' : 'remark_agent';
+	var hist = (c.events || []).filter(function (e) { return e.type === type; }).slice(1, 6).map(function (e) {
+		return '<li>' + esc(fmtDate(e.created_at)) + ' ' + esc(e.actor || '') + ' — «' + esc(e.message || '') + '»</li>';
+	}).join('');
+	var body = editable
+		? '<textarea class="ecrm-remarkbox__ta" maxlength="' + max + '" data-remark-text="' + kind + '" placeholder="' + (kind === 'provider' ? 'Γράψε την εξήγηση της Protergia για την εκκρεμότητα…' : 'Γράψε εδώ τι έγινε με την εκκρεμότητα…') + '">' + esc(cur ? cur.text : '') + '</textarea>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-remark-save="' + kind + '">Αποθήκευση</button>'
+		: '<div class="ecrm-remarkbox__txt">' + (cur ? esc(cur.text) : '<span class="is-none">Δεν υπάρχει ακόμα παρατήρηση.</span>') + '</div>';
+	return '<div class="ecrm-remarkbox ecrm-remarkbox--' + kind + '"><b class="ecrm-remarkbox__t">' + label + '</b>' + body + meta +
+		(hist ? '<details class="ecrm-remarkbox__hist"><summary>Ιστορικό</summary><ul>' + hist + '</ul></details>' : '') + '</div>';
+}
+
+function remarksCard(c) {
+	var r = c.remarks;
+	if (!r) { return ''; }
+	return '<div class="ecrm-remarks">' +
+		remarkBlock('provider', 'Παρατηρήσεις Protergia', r.provider, !!r.can_provider, r.max, c) +
+		remarkBlock('agent', 'Παρατηρήσεις Agent', r.agent, true, r.max, c) +
+		'</div>';
+}
+
+function bindRemarks(view, c) {
+	view.querySelectorAll('[data-remark-save]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			var kind = this.getAttribute('data-remark-save');
+			var ta = view.querySelector('[data-remark-text="' + kind + '"]');
+			var text = ta ? ta.value.trim() : '';
+			if (!text) { toast('Γράψε μια παρατήρηση.', false); return; }
+			b.disabled = true;
+			fetch(api('/contracts/' + c.id + '/remarks'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ kind: kind, text: text }) })
+				.then(function (r) { return r.json(); })
+				.then(function (res) {
+					if (res && res.ok) { toast('Αποθηκεύτηκε.'); openDetail(c.id); }
+					else { b.disabled = false; toast((res && res.error) || 'Αποτυχία αποθήκευσης.', false); }
+				})
+				.catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
+	});
 }

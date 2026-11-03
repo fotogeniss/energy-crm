@@ -21,7 +21,7 @@ function renderPending(view, d) {
 	var statuses = (window.ECRM && ECRM.statuses) || {};
 	var body = rows.map(function (r) {
 		return '<tr class="ecrm-rowlink" data-id="' + r.id + '">' +
-			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span><span>' + esc(r.customer) + '</span></span></td>' +
+			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span><span>' + esc(r.customer) + '</span></span>' + providerRemark(r) + '</td>' +
 			'<td class="ecrm-col-sec"><span class="ecrm-code">' + esc(r.code || '') + '</span></td>' +
 			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || statuses[r.status] || r.status) + '</span></td>' +
 			'<td><span class="ecrm-agepill' + (r.stale ? ' is-stale' : '') + '">' + r.age_days + ' ημέρες</span></td>' +
@@ -40,4 +40,13 @@ function renderPending(view, d) {
 
 	view.querySelectorAll('.ecrm-rowlink').forEach(function (tr) { tr.addEventListener('click', function () { openDetail(this.getAttribute('data-id')); }); });
 	view.querySelectorAll('[data-pscope]').forEach(function (b) { b.addEventListener('click', function () { setScope(this.getAttribute('data-pscope')); loadPending(); }); });
+}
+
+/* (348) «Παρατηρήσεις Protergia» κάτω από το όνομα -- μόνο σε αιτήσεις σε
+ * «Εκκρεμότητα». Χωρίς κείμενο δείχνει ότι δεν έχει γραφτεί ακόμα. */
+function providerRemark(r) {
+	if (!r.is_pending_issue) { return ''; }
+	var has = !!r.provider_remark;
+	return '<div class="ecrm-remark' + (has ? '' : ' is-none') + '"><b>Παρατηρήσεις Protergia</b>' +
+		(has ? esc(r.provider_remark) : 'Δεν υπάρχει ακόμα παρατήρηση.') + '</div>';
 }

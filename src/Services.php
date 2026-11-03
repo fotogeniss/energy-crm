@@ -109,6 +109,7 @@ final class Services
     private static ?TaskRepository $tasks = null;
 
     private static ?EventRepository $events = null;
+    private static ?\EnergyCRM\Persistence\PendingRemarkRepository $pendingRemarks = null;
     private static ?DeletionLogRepository $deletionLog = null;
 
     private static ?StatusDwellRepository $statusDwell = null;
@@ -401,6 +402,11 @@ final class Services
     public static function siteIntakeConfig(): \EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig
     {
         return self::$siteIntakeConfig ??= new \EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig(self::secrets());
+    }
+
+    public static function pendingRemarks(): \EnergyCRM\Persistence\PendingRemarkRepository
+    {
+        return self::$pendingRemarks ??= new \EnergyCRM\Persistence\PendingRemarkRepository(self::events());
     }
 
     public static function events(): EventRepository

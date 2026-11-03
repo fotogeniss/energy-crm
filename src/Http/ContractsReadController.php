@@ -26,6 +26,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\CloseReason;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Domain\Contract\PendingRemarks;
 use EnergyCRM\Domain\Contract\SignatureRoles;
 use EnergyCRM\Domain\Contract\StatusTrack;
 use EnergyCRM\Domain\Contract\StuckRule;
@@ -36,6 +37,7 @@ use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\FileRepository;
 use EnergyCRM\Persistence\StatusDwellRepository;
+use EnergyCRM\Services;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -198,6 +200,14 @@ final class ContractsReadController implements Controller
         // τον ίδιο που έγραψε το test. Ένα σημείο: ECRM_Tracking.
         $row['sign_window_hours'] = ECRM_Tracking::SIGN_WINDOW_HOURS;
         $row['stuck']         = $this->stuck($row);
+
+        // (348) Παρατηρήσεις εκκρεμότητας: μόνο όσο η αίτηση είναι «Εκκρεμότητα».
+        $row['remarks'] = (string) ($row['status'] ?? '') === PendingRemarks::STATUS
+            ? array_merge(
+                Services::pendingRemarks()->currentFor([$id])[$id] ?? ['provider' => null, 'agent' => null],
+                ['can_provider' => PendingRemarksController::canWriteProvider(), 'max' => PendingRemarks::MAX_LENGTH]
+            )
+            : null;
 
         // What the status panel is allowed to offer, per the same graph the
         // server enforces (ContractStatus::allowedNext()) — the screen used to

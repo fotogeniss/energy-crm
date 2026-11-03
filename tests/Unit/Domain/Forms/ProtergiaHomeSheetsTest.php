@@ -26,8 +26,17 @@ final class ProtergiaHomeSheetsTest extends TestCase
 {
     private const PICASSO = 'protergia_oik_picasso_s1';
 
+    /** (348) Και τα 8 υπόλοιπα οικιακά πακέτα: ίδιο έντυπο, άλλη τιμή στη σελ. 2. */
+    private const PICASSO_PACKAGES = ['s2', 's3', 'm1', 'm2', 'm3', 'l1', 'l2', 'l3'];
+
     /** Dynamic One και Picasso: μία σελίδα παραπάνω πριν από τους όρους. */
-    private const FOUR_PAGES = ['protergia_oik_dynamic_one', self::PICASSO];
+    private const FOUR_PAGES = [
+        'protergia_oik_dynamic_one',
+        self::PICASSO,
+        ...['protergia_oik_picasso_s2', 'protergia_oik_picasso_s3', 'protergia_oik_picasso_m1',
+            'protergia_oik_picasso_m2', 'protergia_oik_picasso_m3', 'protergia_oik_picasso_l1',
+            'protergia_oik_picasso_l2', 'protergia_oik_picasso_l3'],
+    ];
 
     public function testEveryHomeCatalogueTariffHasItsSheetExceptThoseAwaitingOne(): void
     {
@@ -121,6 +130,9 @@ final class ProtergiaHomeSheetsTest extends TestCase
     public function testTheTariffPageFieldsFollowTheirOwnRow(): void
     {
         $tall = ['protergia_oik_balance_12m' => 152.7, 'protergia_oik_sure4_12m' => 152.7, self::PICASSO => 152.1];
+        foreach (self::PICASSO_PACKAGES as $size) {
+            $tall['protergia_oik_picasso_' . $size] = 152.1;
+        }
         foreach ($tall as $tpl => $guarantee) {
             $f = $this->map($tpl)['fields'];
             self::assertEqualsWithDelta($guarantee - 0.7, $f['poso_eggiisis']['y'], 0.05, $tpl);
@@ -144,11 +156,11 @@ final class ProtergiaHomeSheetsTest extends TestCase
     public static function lines(): iterable
     {
         foreach (ProtergiaHomeSheets::templates() as $tpl) {
-            if ($tpl === self::PICASSO) {
-                yield 'Picasso εκκαθάριση' => [$tpl, 3, 203.9];
-                yield 'Picasso Παλαιά Σύμβαση' => [$tpl, 3, 247.5];
-                yield 'Picasso ΓΟΣ' => [$tpl, 8, 109.1];
-                yield 'Picasso Πρόσθετοι Όροι' => [$tpl, 8, 186.2];
+            if (in_array($tpl, self::FOUR_PAGES, true) && str_starts_with($tpl, 'protergia_oik_picasso_')) {
+                yield $tpl . ' ' . 'Picasso εκκαθάριση' => [$tpl, 3, 203.9];
+                yield $tpl . ' ' . 'Picasso Παλαιά Σύμβαση' => [$tpl, 3, 247.5];
+                yield $tpl . ' ' . 'Picasso ΓΟΣ' => [$tpl, 8, 109.1];
+                yield $tpl . ' ' . 'Picasso Πρόσθετοι Όροι' => [$tpl, 8, 186.2];
                 continue;
             }
             if ($tpl === 'protergia_oik_dynamic_one') {
@@ -171,6 +183,16 @@ final class ProtergiaHomeSheetsTest extends TestCase
             }
         }
         self::assertTrue($found, "{$tpl}: καμία υπογραφή στη γραμμή {$line} της σελ. {$page}");
+    }
+
+    public function testEveryHomePicassoPackageHasItsOwnSheetAndSharesTheTerms(): void
+    {
+        foreach (self::PICASSO_PACKAGES as $size) {
+            $tpl = 'protergia_oik_picasso_' . $size;
+            self::assertSame($tpl, ProtergiaHomeSheets::templateKey('protergia_pic_h_' . $size));
+            self::assertSame('protergia_gos_oik_picasso', FormTemplates::tail($tpl, $this->map($tpl)), $tpl);
+            self::assertSame($this->map(self::PICASSO)['fields'], $this->map($tpl)['fields'], $tpl);
+        }
     }
 
     public function testThePicassoTermsAreSharedOnceOnDisk(): void

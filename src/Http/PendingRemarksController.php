@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * (348) POST /contracts/{id}/remarks -- «Παρατηρήσεις Protergia» / «Παρατηρήσεις Agent».
+ *
+ * Λεπτός: ο κανόνας (ποιος γράφει τι, σε ποια κατάσταση) ζει στο
+ * Domain\Contract\PendingRemarks. Την αίτηση τη βρίσκει το scoped find(), άρα
+ * όποιος δεν τη βλέπει παίρνει 404· το Back office τη βλέπει (VIEW_ALL).
+ *
+ * @package EnergyCRM
+ */
+
+declare(strict_types=1);
+
+namespace EnergyCRM\Http;
+
+use EnergyCRM\Access\Capability;
+use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Contract\PendingRemarks;
+use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\PendingRemarkRepository;
+use WP_REST_Request;
+use WP_REST_Response;
+
+final class PendingRemarksController implements Controller
+{
+    public function __construct(
+        private readonly ScopeResolver $scopes,
+        private readonly ContractRepository $contracts,
+        private readonly PendingRemarkRepository $remarks,
+    ) {
+    }
+
+    /** Ο Back office και ο διαχειριστής γράφουν «Παρατηρήσεις Protergia». */
+    public static function canWriteProvider(): bool
+    {
+        return current_user_can('manage_options') || current_user_can(Capability::VIEW_ALL);
+    }
+
+    public function routes(): void
+    {
+        register_rest_route(Router::NAMESPACE, '/contracts/(?P<id>\d+)/remarks', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'save'],
+            'permission_callback' => Guards::crmUser(),
+            'args'                => [
+                'id'   => ['type' => 'integer', 'required' => true],
+                'kind' => ['type' => 'string', 'required' => true, 'enum' => PendingRemarks::kinds()],
+                'text' => ['type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_textarea_field'],
+            ],
+        ]);
+    }
+
+    public function save(WP_REST_Request $request): WP_REST_Response
+    {
+        $scope    = $this->scopes->forCurrentUser();
+        $id       = (int) $request['id'];
+        $contract = $this->contracts->find($id, $scope);
+
+        if ($contract === null) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
+        }
+
+        $kind    = (string) $request['kind'];
+        $problem = PendingRemarks::problem(
+            $kind,
+            (string) ($contract['status'] ?? ''),
+            (string) $request['text'],
+            self::canWriteProvider()
+        );
+
+        if ($problem !== null) {
+            return new WP_REST_Response(['ok' => false, 'error' => $problem], 422);
+        }
+
+        $this->remarks->add($id, $scope->actorId(), $kind, (string) $request['text']);
+
+        return new WP_REST_Response(['ok' => true, 'remarks' => $this->remarks->currentFor([$id])[$id] ?? null], 200);
+    }
+}

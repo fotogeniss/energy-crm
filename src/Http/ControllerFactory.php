@@ -98,6 +98,8 @@ final class ControllerFactory
                 $deletion,
                 Services::deletionLog()
             ),
+            // (348) Παρατηρήσεις εκκρεμότητας.
+            new PendingRemarksController($scope, Services::contracts(), Services::pendingRemarks()),
             new ContractsBulkController(
                 $scope,
                 Services::contracts(),

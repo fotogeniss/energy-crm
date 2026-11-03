@@ -114,6 +114,8 @@ class ECRM_App {
 			[ 'view' => 'calc',         'label' => 'Προσφορά',       'icon' => 'calc' ],
 			[ 'view' => 'kb',           'label' => 'Βάση Γνώσης',     'icon' => 'book' ],
 			[ 'view' => 'training',     'label' => 'Εκπαίδευση',     'icon' => 'cap' ],
+			// (347) Οδηγός εγκατάστασης στο κινητό, για όλους τους ρόλους.
+			[ 'view' => 'install',      'label' => 'Εφαρμογή στο κινητό', 'icon' => 'phone' ],
 		];
 
 		// The menu mirrors the capability matrix rather than guessing from the
@@ -260,6 +262,19 @@ class ECRM_App {
 				?>
 				<div class="ecrm-offline" id="ecrm-offline" role="status" aria-live="polite" hidden>
 					Εκτός σύνδεσης — ό,τι κάνεις τώρα μπαίνει σε ουρά και θα σταλεί μόλις γυρίσει η σύνδεση.
+				</div>
+				<?php
+				/*
+				 * (347) Υπενθύμιση «Βάλε το CRM στην αρχική οθόνη» -- άδειο markup,
+				 * η ecrm-view-install.js αποφασίζει αν φαίνεται (μόνο κινητό, μόνο
+				 * όταν δεν τρέχει ήδη ως εφαρμογή, όχι αν έγινε «×» τις τελευταίες
+				 * 30 μέρες). Το CSS το δείχνει μόνο στην Αρχική.
+				 */
+				?>
+				<div class="ecrm-install" data-install-banner hidden>
+					<div class="ecrm-install__txt"><b>Βάλε το CRM στην αρχική οθόνη</b>Ανοίγει σαν εφαρμογή, πιο γρήγορα.</div>
+					<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-go="install">Πώς</button>
+					<button type="button" class="ecrm-install__x" data-install-dismiss aria-label="Κλείσιμο">&times;</button>
 				</div>
 				<?php
 				/*
@@ -426,6 +441,9 @@ class ECRM_App {
 					<!-- Εκπαίδευση -->
 					<section class="ecrm-view" data-view="training"><div class="ecrm-loading">Φόρτωση…</div></section>
 
+					<!-- Εφαρμογή στο κινητό (347) -->
+					<section class="ecrm-view" data-view="install"><div class="ecrm-loading">Φόρτωση…</div></section>
+
 					<!-- Leads / χωνί -->
 					<section class="ecrm-view" data-view="leads"><div class="ecrm-loading">Φόρτωση…</div></section>
 				</div>
@@ -587,6 +605,7 @@ class ECRM_App {
 			'funnel'    => '<path d="M3 4h18l-7 8v6l-4 2v-8z"/>',
 			'logout'    => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
 			'gear'      => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+			'phone'     => '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
 			'menu'      => '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',
 			'bell'      => '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
 			'chat'      => '<path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/>',
