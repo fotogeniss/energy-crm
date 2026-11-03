@@ -2332,14 +2332,14 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-expbanner__remark.is-none { border-left-color: var(--line); background: var(--st-draft-bg); color: var(--muted); }
 .ecrm-expbanner__remark.is-none b { color: var(--muted); }
 @media (max-width: 860px) { .ecrm-expbanner { flex-wrap: wrap; } .ecrm-expbanner__remark { flex: 1 1 100%; margin-left: 0; } }
-.ecrm-remarks { display: grid; gap: 10px; margin: 0 0 14px; }
-.ecrm-remarkbox { border: 1px solid var(--st-resolved); background: var(--st-resolved-bg); border-radius: 10px; padding: 12px; }
-.ecrm-remarkbox--provider { border-color: var(--st-asig); background: var(--st-asig-bg); }
-.ecrm-remarkbox__t { display: block; font-size: var(--fs-11-5); text-transform: uppercase; letter-spacing: .04em; color: var(--st-resolved); margin-bottom: 6px; }
-.ecrm-remarkbox--provider .ecrm-remarkbox__t { color: var(--st-asig); }
-.ecrm-remarkbox__txt { font-size: var(--fs-13); overflow-wrap: anywhere; white-space: pre-wrap; }
+.ecrm-remarks { display: grid; gap: 10px; }
+.ecrm-remarkbox { border: 1px solid var(--line); border-left: 3px solid var(--st-resolved); background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+.ecrm-remarkbox--provider { border-left-color: var(--st-asig); }
+.ecrm-remarkbox__t { display: block; font-size: var(--fs-10); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 6px; }
+
+.ecrm-remarkbox__txt { font-size: var(--fs-12-5); overflow-wrap: anywhere; white-space: pre-wrap; }
 .ecrm-remarkbox__txt .is-none { color: var(--muted); }
-.ecrm-remarkbox__ta { width: 100%; min-height: 76px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; font-size: var(--fs-13); background: var(--surface); color: var(--ink); margin-bottom: 8px; }
+.ecrm-remarkbox__ta { width: 100%; min-height: 54px; resize: vertical; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: var(--fs-12-5); background: var(--surface); color: var(--ink); margin-bottom: 6px; }
 .ecrm-remarkbox__meta { font-size: var(--fs-11-5); color: var(--muted); margin-top: 6px; }
 .ecrm-remarkbox__hist { margin-top: 8px; font-size: var(--fs-12); color: var(--muted); }
 .ecrm-remarkbox__hist ul { margin: 6px 0 0; padding-left: 18px; }

@@ -429,8 +429,6 @@ function renderDetail(view, d) {
 		(c.consent_at ? '<span class="ecrm-chip-consent" title="Συναίνεση: ' + esc(fmtDate(c.consent_at)) + '">✓ GDPR</span>' : '') +
 		'</div>' +
 
-		remarksCard(c) +
-
 		'<div class="ecrm-cols">' +
 		'<div class="ecrm-card"><div class="ecrm-step">Στοιχεία πελάτη</div>' +
 		kv('Ονοματεπώνυμο', name) + kv('ΑΦΜ', c.afm) + kv('ΔΟΥ', c.doy) + kv('ΑΔΤ', c.adt) +
@@ -468,6 +466,8 @@ function renderDetail(view, d) {
 		auditCard +
 		'<div class="ecrm-card ecrm-rcard' + (done === checks.length ? ' is-ok' : '') + '">' +
 		'<div class="ecrm-step">Checklist &nbsp;<b>' + done + '/' + checks.length + '</b></div>' + checklistHTML + '</div>' +
+		// (348) Παρατηρήσεις: στο rail, κάτω από το Checklist (ιδιοκτήτης 03/11).
+		remarksCard(c) +
 		'<div class="ecrm-drail__acts">' +
 		// Μόνο σε καταστάσεις απ' όπου το pipeline όντως επιτρέπει μετάβαση σε
 		// pending_signature (ContractStatus::allowedNext(), src/Domain/Contract/
@@ -1321,7 +1321,7 @@ export function addCompanion(id) {
 }
 
 
-/* (348) «Παρατηρήσεις Agent» σε κάθε αίτηση, κάτω από την κατάσταση· από
+/* (348) «Παρατηρήσεις Agent» σε κάθε αίτηση, στο rail κάτω από το Checklist· από
  * πάνω «Παρατηρήσεις Protergia», μόνο σε «Εκκρεμότητα» (το αποφασίζει ο
  * server: `show_provider`). Την Protergia τη γράφει ο Back office. */
 var REMARK_LABELS = { remark_provider: 'Παρατηρήσεις Protergia', remark_agent: 'Παρατηρήσεις Agent' };
