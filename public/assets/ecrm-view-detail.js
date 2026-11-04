@@ -1321,36 +1321,66 @@ export function addCompanion(id) {
 }
 
 
-/* (348) «Παρατηρήσεις Agent» σε κάθε αίτηση, στο rail κάτω από το Checklist· από
- * πάνω «Παρατηρήσεις Protergia», μόνο σε «Εκκρεμότητα» (το αποφασίζει ο
- * server: `show_provider`). Την Protergia τη γράφει ο Back office. */
+/* (348) Παρατηρήσεις στο rail, κάτω από το Checklist: «Παρατηρήσεις Protergia»
+ * (μόνο σε «Εκκρεμότητα», το αποφασίζει ο server με `show_provider`· γράφει
+ * μόνο ο Back office) και «Παρατηρήσεις Agent» (σε κάθε αίτηση).
+ * Κάρτες που ανοίγουν/κλείνουν με βελάκι (docs/UI-REMARKS-RAIL.html, εκδοχή Β,
+ * εγκρίθηκε 03/11). Κλειστές: πόσες + η τελευταία. Ανοιχτές: κουτί νέας
+ * παρατήρησης (όπου επιτρέπεται) και όλο το ιστορικό, νεότερη πρώτη. */
 var REMARK_LABELS = { remark_provider: 'Παρατηρήσεις Protergia', remark_agent: 'Παρατηρήσεις Agent' };
 
-function remarkBlock(kind, label, cur, editable, max, c) {
+// Ποια κάρτα είναι ανοιχτή, ανά αίτηση -- για να μένει ανοιχτή μετά την αποθήκευση.
+var remarkOpen = {};
+
+function remarkBlock(kind, label, editable, max, c) {
 	var type = kind === 'provider' ? 'remark_provider' : 'remark_agent';
-	var meta = cur ? '<div class="ecrm-remarkbox__meta">Τελευταία ενημέρωση: ' + esc(cur.actor) + ' · ' + esc(fmtDate(cur.created_at)) + '</div>' : '';
-	var hist = (c.events || []).filter(function (e) { return e.type === type; }).slice(1, 6).map(function (e) {
-		return '<li>' + esc(fmtDate(e.created_at)) + ' ' + esc(e.actor || '') + ' — «' + esc(e.message || '') + '»</li>';
-	}).join('');
-	var body = editable
-		? '<textarea class="ecrm-remarkbox__ta" maxlength="' + esc(String(max)) + '" data-remark-text="' + kind + '" placeholder="' +
-			(kind === 'provider' ? 'Γράψε την εξήγηση της Protergia για την εκκρεμότητα…' : 'Γράψε εδώ τι έγινε με την αίτηση…') + '">' + esc(cur ? cur.text : '') + '</textarea>' +
-			'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-remark-save="' + kind + '">Αποθήκευση</button>'
-		: '<div class="ecrm-remarkbox__txt">' + (cur ? esc(cur.text) : '<span class="is-none">Δεν υπάρχει ακόμα παρατήρηση.</span>') + '</div>';
-	return '<div class="ecrm-remarkbox ecrm-remarkbox--' + kind + '"><b class="ecrm-remarkbox__t">' + label + '</b>' + body + meta +
-		(hist ? '<details class="ecrm-remarkbox__hist"><summary>Ιστορικό</summary><ul>' + hist + '</ul></details>' : '') + '</div>';
+	var list = (c.events || []).filter(function (e) { return e.type === type; });
+	var open = !!remarkOpen[c.id + ':' + kind];
+	var last = list[0];
+	var lastHTML = last
+		? '<div class="ecrm-rm__last"><span class="ecrm-rm__lt">' + esc(last.message || '') + '</span><small>' + esc(last.actor || '') + ' · ' + esc(fmtDate(last.created_at)) + '</small></div>'
+		: '<div class="ecrm-rm__last is-none">Καμία παρατήρηση ακόμα.</div>';
+	var form = editable
+		? '<div class="ecrm-rm__new"><textarea class="ecrm-rm__ta" maxlength="' + esc(String(max)) + '" data-remark-text="' + kind + '" placeholder="' +
+			(kind === 'provider' ? 'Νέα παρατήρηση της Protergia…' : 'Γράψε τι έγινε με την αίτηση…') + '"></textarea>' +
+			'<div class="ecrm-rm__row"><button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-remark-save="' + kind + '">Αποθήκευση</button></div></div>'
+		: (kind === 'provider' ? '<p class="ecrm-rm__ro">Μόνο ο Back office γράφει εδώ.</p>' : '');
+	var hist = list.length
+		? '<ul class="ecrm-rm__hist">' + list.map(function (e, i) {
+			return '<li' + (i === 0 ? ' class="is-now"' : '') + '>' + esc(e.message || '') +
+				'<small>' + esc(e.actor || '') + ' · ' + esc(fmtDate(e.created_at)) + '</small></li>';
+		}).join('') + '</ul>'
+		: '';
+	return '<div class="ecrm-rm ecrm-rm--' + kind + (open ? ' is-open' : '') + '" data-rm="' + kind + '">' +
+		'<button type="button" class="ecrm-rm__h" data-rm-toggle="' + kind + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+		'<span class="ecrm-rm__dot"></span><span class="ecrm-rm__t">' + label + '</span>' +
+		'<span class="ecrm-rm__c">' + list.length + '</span>' +
+		'<span class="ecrm-rm__x" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></button>' +
+		// Τα δύο «συρτάρια» ανοιγοκλείνουν με ομαλή κίνηση ύψους (grid 0fr↔1fr στο CSS).
+		'<div class="ecrm-rm__fold ecrm-rm__fold--last"><div>' + lastHTML + '</div></div>' +
+		'<div class="ecrm-rm__fold ecrm-rm__fold--body"><div><div class="ecrm-rm__b">' + form + hist + '</div></div></div></div>';
 }
 
 function remarksCard(c) {
 	var r = c.remarks;
 	if (!r) { return ''; }
 	return '<div class="ecrm-remarks">' +
-		(r.show_provider ? remarkBlock('provider', 'Παρατηρήσεις Protergia', r.provider, !!r.can_provider, r.max, c) : '') +
-		remarkBlock('agent', 'Παρατηρήσεις Agent', r.agent, true, r.max, c) +
+		(r.show_provider ? remarkBlock('provider', 'Παρατηρήσεις Protergia', !!r.can_provider, r.max, c) : '') +
+		remarkBlock('agent', 'Παρατηρήσεις Agent', true, r.max, c) +
 		'</div>';
 }
 
 function bindRemarks(view, c) {
+	view.querySelectorAll('[data-rm-toggle]').forEach(function (h) {
+		h.addEventListener('click', function () {
+			var kind = this.getAttribute('data-rm-toggle');
+			var box = this.parentNode;
+			var open = !box.classList.contains('is-open');
+			box.classList.toggle('is-open', open);
+			this.setAttribute('aria-expanded', open ? 'true' : 'false');
+			remarkOpen[c.id + ':' + kind] = open;
+		});
+	});
 	view.querySelectorAll('[data-remark-save]').forEach(function (b) {
 		b.addEventListener('click', function () {
 			var kind = this.getAttribute('data-remark-save');
@@ -1361,7 +1391,7 @@ function bindRemarks(view, c) {
 			fetch(api('/contracts/' + c.id + '/remarks'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ kind: kind, text: text }) })
 				.then(function (r) { return r.json(); })
 				.then(function (res) {
-					if (res && res.ok) { toast('Αποθηκεύτηκε.'); openDetail(c.id); }
+					if (res && res.ok) { remarkOpen[c.id + ':' + kind] = true; toast('Αποθηκεύτηκε.'); openDetail(c.id); }
 					else { b.disabled = false; toast((res && res.error) || 'Αποτυχία αποθήκευσης.', false); }
 				})
 				.catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
