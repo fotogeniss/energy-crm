@@ -130,7 +130,14 @@ final class ContractsReadController implements Controller
             unset($row['payout_id'], $row['payout_amount']);
         }
 
-        $row['events'] = $this->withActorNames($this->events->forContract($id));
+        // (348) Οι διαγραμμένες παρατηρήσεις και οι γραμμές διαγραφής δεν φαίνονται.
+        $removedRemarks = Services::pendingRemarks()->removedIds($id);
+        $row['events']  = $this->withActorNames(array_values(array_filter(
+            $this->events->forContract($id),
+            static fn (array $e): bool => (string) ($e['type'] ?? '') !== PendingRemarks::EVENT_REMOVED
+                && ! (PendingRemarks::isRemark((string) ($e['type'] ?? ''))
+                    && in_array((int) ($e['id'] ?? 0), $removedRemarks, true))
+        )));
         // Η αίτηση (και τα φύλλα της, και το υπογεγραμμένο αντίγραφο) ΔΕΝ είναι
         // έγγραφο της λίστας: έχει δικό της κουμπί «PDF έντυπο», που δίνει την
         // τελευταία εκδοχή. Οι υπογραφές μένουν, με σταθερή ετικέτα αντί για
@@ -210,6 +217,9 @@ final class ContractsReadController implements Controller
             'provider'      => $showsProvider ? $remarks['provider'] : null,
             'show_provider' => $showsProvider,
             'can_provider'  => $showsProvider && PendingRemarksController::canWriteProvider(),
+            // Ποιος βλέπει κάδο: αυτός που την έγραψε, ή Back office / admin σε όλες.
+            'me'            => $this->scopes->forCurrentUser()->actorId(),
+            'can_delete_any' => PendingRemarksController::canWriteProvider(),
             'max'           => PendingRemarks::MAX_LENGTH,
         ];
 

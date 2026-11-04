@@ -2372,6 +2372,13 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-rm__hist { list-style: none; margin: 10px 0 0; padding: 0; }
 .ecrm-rm__hist li { position: relative; padding: 0 0 10px 16px; font-size: var(--fs-12-5); overflow-wrap: anywhere; white-space: pre-wrap; }
 .ecrm-rm__hist li small { white-space: normal; }
+.ecrm-rm__hist li { padding-right: 34px; }
+.ecrm-rm__del { position: absolute; top: -2px; right: 0; height: 26px; min-width: 26px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: var(--fs-11); font-weight: 700; opacity: .55; transition: opacity .2s ease, background-color .2s ease, color .2s ease; }
+.ecrm-rm__del svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ecrm-rm__hist li:hover .ecrm-rm__del, .ecrm-rm__del:focus-visible { opacity: 1; }
+.ecrm-rm__del:hover { background: var(--st-cancel-bg); color: var(--st-cancel); }
+.ecrm-rm__del.is-confirm { opacity: 1; background: var(--st-cancel-bg); color: var(--st-cancel); white-space: nowrap; }
+.ecrm-rm__del:disabled { opacity: .4; cursor: default; }
 .ecrm-rm__hist li::before { content: ""; position: absolute; left: 3px; top: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
 .ecrm-rm__hist li::after { content: ""; position: absolute; left: 6px; top: 15px; bottom: 0; width: 1px; background: var(--line); }
 .ecrm-rm__hist li:last-child::after { display: none; }

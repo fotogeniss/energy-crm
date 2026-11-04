@@ -43,8 +43,8 @@ final class EventRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT type, from_status, to_status, message, reason, user_id, created_at
-                 FROM %i WHERE contract_id = %d ORDER BY created_at DESC',
+                'SELECT id, type, from_status, to_status, message, reason, user_id, created_at
+                 FROM %i WHERE contract_id = %d ORDER BY created_at DESC, id DESC',
                 $this->table,
                 $contractId
             ),

@@ -10,7 +10,9 @@
  *   όποια κατάσταση κι αν έχει.
  *
  * Κάθε αποθήκευση είναι νέα γραμμή στο `events`, η τρέχουσα είναι η
- * τελευταία. Καμία γραμμή δεν αλλάζει ή σβήνεται.
+ * τελευταία. Καμία γραμμή δεν αλλάζει ή σβήνεται· η «διαγραφή» (από αυτόν που
+ * την έγραψε, τον Back office ή τον διαχειριστή) είναι κι αυτή νέα γραμμή
+ * (`remark_removed`) που την κρύβει.
  *
  * Μόνο κανόνες: τι είναι έγκυρο, ποιος γράφει τι. Χωρίς WordPress.
  *
@@ -28,6 +30,13 @@ final class PendingRemarks
 
     public const EVENT_PROVIDER = 'remark_provider';
     public const EVENT_AGENT    = 'remark_agent';
+
+    /**
+     * Διαγραφή: δεν σβήνεται γραμμή του `events` (το ιστορικό είναι append-only).
+     * Γράφεται νέα γραμμή αυτού του τύπου με το id της παρατήρησης στο `reason`,
+     * και η παρατήρηση κρύβεται από παντού.
+     */
+    public const EVENT_REMOVED = 'remark_removed';
 
     /** Η κατάσταση όπου υπάρχει «Παρατηρήσεις Protergia». */
     public const STATUS = 'pending_issue';
@@ -73,6 +82,20 @@ final class PendingRemarks
         return function_exists('mb_substr')
             ? mb_substr($text, 0, self::MAX_LENGTH)
             : substr($text, 0, self::MAX_LENGTH);
+    }
+
+    public static function isRemark(string $eventType): bool
+    {
+        return in_array($eventType, [self::EVENT_PROVIDER, self::EVENT_AGENT], true);
+    }
+
+    /**
+     * Ποιος σβήνει μια παρατήρηση: αυτός που την έγραψε, ο Back office και ο
+     * διαχειριστής.
+     */
+    public static function canDelete(int $actorId, int $authorId, bool $isBackOfficeOrAdmin): bool
+    {
+        return $isBackOfficeOrAdmin || ($actorId > 0 && $actorId === $authorId);
     }
 
     /** Ο λόγος που δεν γίνεται η αποθήκευση, ή null. */

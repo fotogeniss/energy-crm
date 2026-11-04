@@ -1345,9 +1345,14 @@ function remarkBlock(kind, label, editable, max, c) {
 			(kind === 'provider' ? 'Νέα παρατήρηση της Protergia…' : 'Γράψε τι έγινε με την αίτηση…') + '"></textarea>' +
 			'<div class="ecrm-rm__row"><button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-remark-save="' + kind + '">Αποθήκευση</button></div></div>'
 		: (kind === 'provider' ? '<p class="ecrm-rm__ro">Μόνο ο Back office γράφει εδώ.</p>' : '');
+	var r = c.remarks || {};
 	var hist = list.length
 		? '<ul class="ecrm-rm__hist">' + list.map(function (e, i) {
-			return '<li' + (i === 0 ? ' class="is-now"' : '') + '>' + esc(e.message || '') +
+			// Κάδος: σε αυτόν που την έγραψε, και σε Back office / admin σε όλες.
+			var del = (r.can_delete_any || (+e.user_id > 0 && +e.user_id === +r.me))
+				? '<button type="button" class="ecrm-rm__del" data-remark-del="' + esc(String(e.id)) + '" data-kind="' + kind + '" title="Διαγραφή" aria-label="Διαγραφή παρατήρησης">' + svgIcon('trash') + '</button>'
+				: '';
+			return '<li' + (i === 0 ? ' class="is-now"' : '') + '>' + del + '<span class="ecrm-rm__msg">' + esc(e.message || '') + '</span>' +
 				'<small>' + esc(e.actor || '') + ' · ' + esc(fmtDate(e.created_at)) + '</small></li>';
 		}).join('') + '</ul>'
 		: '';
@@ -1370,7 +1375,38 @@ function remarksCard(c) {
 		'</div>';
 }
 
+function redrawRemarks(view, c) {
+	// Το `view` είναι είτε όλη η σελίδα (πρώτη φορά) είτε το ίδιο το wrap (μετά).
+	var wrap = view.matches && view.matches('[data-remarks-wrap]') ? view : view.querySelector('[data-remarks-wrap]');
+	if (wrap) { wrap.innerHTML = remarksCard(c); bindRemarks(wrap, c); }
+}
+
 function bindRemarks(view, c) {
+	// Διαγραφή σε δύο πατήματα: το πρώτο ρωτά «Σίγουρα;», το δεύτερο σβήνει.
+	view.querySelectorAll('[data-remark-del]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			if (!b.classList.contains('is-confirm')) {
+				b.classList.add('is-confirm');
+				b.innerHTML = 'Διαγραφή;';
+				setTimeout(function () { if (b.isConnected && b.classList.contains('is-confirm')) { b.classList.remove('is-confirm'); b.innerHTML = svgIcon('trash'); } }, 4000);
+				return;
+			}
+			var eid = b.getAttribute('data-remark-del'), kind = b.getAttribute('data-kind');
+			b.disabled = true;
+			fetch(api('/contracts/' + c.id + '/remarks/' + eid), { method: 'DELETE', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (res) {
+					if (res && res.ok) {
+						c.events = (c.events || []).filter(function (e) { return String(e.id) !== String(eid); });
+						if (c.remarks && res.remarks) { c.remarks.provider = c.remarks.show_provider ? res.remarks.provider : null; c.remarks.agent = res.remarks.agent; }
+						remarkOpen[c.id + ':' + kind] = true;
+						redrawRemarks(view, c);
+						toast('Η παρατήρηση διαγράφηκε.');
+					} else { b.disabled = false; toast((res && res.error) || 'Αποτυχία διαγραφής.', false); }
+				})
+				.catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
+	});
 	view.querySelectorAll('[data-rm-toggle]').forEach(function (h) {
 		h.addEventListener('click', function () {
 			var kind = this.getAttribute('data-rm-toggle');
@@ -1397,6 +1433,8 @@ function bindRemarks(view, c) {
 						var cur = res.remarks && res.remarks[kind];
 						c.events = c.events || [];
 						c.events.unshift({
+							id: cur ? cur.id : 0,
+							user_id: c.remarks ? c.remarks.me : 0,
 							type: kind === 'provider' ? 'remark_provider' : 'remark_agent',
 							message: cur ? cur.text : text,
 							actor: cur ? cur.actor : '',
@@ -1405,8 +1443,7 @@ function bindRemarks(view, c) {
 						if (kind === 'provider' && c.remarks) { c.remarks.provider = cur || null; }
 						if (kind === 'agent' && c.remarks) { c.remarks.agent = cur || null; }
 						remarkOpen[c.id + ':' + kind] = true;
-						var wrap = view.querySelector('[data-remarks-wrap]');
-						if (wrap) { wrap.innerHTML = remarksCard(c); bindRemarks(wrap, c); }
+						redrawRemarks(view, c);
 						toast('Αποθηκεύτηκε.');
 					}
 					else { b.disabled = false; toast((res && res.error) || 'Αποτυχία αποθήκευσης.', false); }

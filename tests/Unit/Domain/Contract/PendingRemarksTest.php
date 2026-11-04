@@ -56,4 +56,20 @@ final class PendingRemarksTest extends TestCase
         self::assertSame('Παρατηρήσεις Protergia', PendingRemarks::label('provider'));
         self::assertSame('Παρατηρήσεις Agent', PendingRemarks::label('agent'));
     }
+
+    public function testTheAuthorBackOfficeAndAdminDeleteNobodyElse(): void
+    {
+        self::assertTrue(PendingRemarks::canDelete(7, 7, false), 'αυτός που την έγραψε');
+        self::assertTrue(PendingRemarks::canDelete(9, 7, true), 'Back office / διαχειριστής');
+        self::assertFalse(PendingRemarks::canDelete(9, 7, false), 'άλλος πωλητής');
+        self::assertFalse(PendingRemarks::canDelete(0, 0, false), 'χωρίς χρήστη');
+    }
+
+    public function testOnlyRemarksCountAsRemarks(): void
+    {
+        self::assertTrue(PendingRemarks::isRemark('remark_provider'));
+        self::assertTrue(PendingRemarks::isRemark('remark_agent'));
+        self::assertFalse(PendingRemarks::isRemark('remark_removed'));
+        self::assertFalse(PendingRemarks::isRemark('status_change'));
+    }
 }
