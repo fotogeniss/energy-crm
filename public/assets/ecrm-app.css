@@ -416,6 +416,15 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-kv b { display: block; font-size: var(--fs-14); font-weight: 700; color: var(--ink); word-break: break-word; }
 
 .ecrm-drail { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 76px; }
+/* (348) Το rail μένει «κολλημένο» δίπλα στη σελίδα, αλλά με δικό του scroll:
+ * με τις παρατηρήσεις κάτω από το Checklist ψήλωσε πάνω από την οθόνη και το
+ * κάτω μέρος δεν φαινόταν ποτέ. Λεπτή μπάρα, χωρίς να «κλέβει» το scroll της σελίδας. Κάτω από 1100px το rail πάει κάτω από τη σελίδα (static) και δεν χρειάζεται. */
+@media (min-width: 1101px) {
+	/* Κάτω κενό 72px: να ανεβαίνει το τελευταίο κουμπί πάνω από το στρογγυλό κουμπί του AIde. */
+	.ecrm-drail { max-height: calc(100vh - 92px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding: 0 4px 72px 0; margin-right: -4px; }
+	.ecrm-drail::-webkit-scrollbar { width: 6px; }
+	.ecrm-drail::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+}
 .ecrm-drail__acts { display: flex; flex-direction: column; gap: 8px; }
 .ecrm-drail__acts .ecrm-btn { width: 100%; justify-content: flex-start; }
 /* (326) Η δίδυμη αίτηση: κουμπί, ή σύνδεσμος όταν υπάρχει ήδη. */

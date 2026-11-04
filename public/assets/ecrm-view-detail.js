@@ -467,7 +467,7 @@ function renderDetail(view, d) {
 		'<div class="ecrm-card ecrm-rcard' + (done === checks.length ? ' is-ok' : '') + '">' +
 		'<div class="ecrm-step">Checklist &nbsp;<b>' + done + '/' + checks.length + '</b></div>' + checklistHTML + '</div>' +
 		// (348) Παρατηρήσεις: στο rail, κάτω από το Checklist (ιδιοκτήτης 03/11).
-		remarksCard(c) +
+		'<div data-remarks-wrap>' + remarksCard(c) + '</div>' +
 		'<div class="ecrm-drail__acts">' +
 		// Μόνο σε καταστάσεις απ' όπου το pipeline όντως επιτρέπει μετάβαση σε
 		// pending_signature (ContractStatus::allowedNext(), src/Domain/Contract/
@@ -1391,7 +1391,24 @@ function bindRemarks(view, c) {
 			fetch(api('/contracts/' + c.id + '/remarks'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ kind: kind, text: text }) })
 				.then(function (r) { return r.json(); })
 				.then(function (res) {
-					if (res && res.ok) { remarkOpen[c.id + ':' + kind] = true; toast('Αποθηκεύτηκε.'); openDetail(c.id); }
+					if (res && res.ok) {
+						// Χωρίς επαναφόρτωση της σελίδας: η νέα παρατήρηση μπαίνει πρώτη
+						// στο ιστορικό και ξαναζωγραφίζεται μόνο η κάρτα των παρατηρήσεων.
+						var cur = res.remarks && res.remarks[kind];
+						c.events = c.events || [];
+						c.events.unshift({
+							type: kind === 'provider' ? 'remark_provider' : 'remark_agent',
+							message: cur ? cur.text : text,
+							actor: cur ? cur.actor : '',
+							created_at: cur ? cur.created_at : ''
+						});
+						if (kind === 'provider' && c.remarks) { c.remarks.provider = cur || null; }
+						if (kind === 'agent' && c.remarks) { c.remarks.agent = cur || null; }
+						remarkOpen[c.id + ':' + kind] = true;
+						var wrap = view.querySelector('[data-remarks-wrap]');
+						if (wrap) { wrap.innerHTML = remarksCard(c); bindRemarks(wrap, c); }
+						toast('Αποθηκεύτηκε.');
+					}
 					else { b.disabled = false; toast((res && res.error) || 'Αποτυχία αποθήκευσης.', false); }
 				})
 				.catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
