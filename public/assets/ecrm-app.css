@@ -2384,3 +2384,15 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-rm__hist li:last-child::after { display: none; }
 .ecrm-rm__hist li.is-now::before { background: var(--st-resolved); }
 .ecrm-rm--provider .ecrm-rm__hist li.is-now::before { background: var(--st-asig); }
+
+/* (349) Καμπανάκι: «Εκκαθάριση», βελάκι σε ό,τι ανοίγει, αχνό ό,τι δεν
+   ανοίγει πια. docs/UI-BELL-CLEAR.html. */
+.ecrm-bellpanel__head { align-items: center; gap: 10px; }
+.ecrm-bellpanel__head span { flex: 1; }
+.ecrm-bellpanel__clear { border: 0; background: none; padding: 2px 0; font-family: inherit; font-size: var(--fs-12-5); font-weight: 700; color: var(--accent-ink); cursor: pointer; }
+.ecrm-bellpanel__clear:disabled { opacity: .5; cursor: default; }
+.ecrm-bellpanel__sub { padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: var(--fs-11); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ecrm-bellitem__go { flex: 0 0 auto; font-size: var(--fs-18); line-height: 1; color: var(--muted); }
+.ecrm-bellitem.is-gone { cursor: default; }
+.ecrm-bellitem.is-gone .ecrm-bellitem__name { color: var(--muted); font-weight: 600; }
+.ecrm-bellitem.is-gone .ecrm-bellitem__dot { background: var(--line); }

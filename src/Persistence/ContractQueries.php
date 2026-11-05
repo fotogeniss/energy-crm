@@ -88,9 +88,9 @@ final class ContractQueries
             // See CustomerRepository::search() — the ΑΦΜ is matched both as a
             // column and as its hash, because it may be stored either way.
             $conditions[] = '( cu.first_name LIKE %s OR cu.last_name LIKE %s OR cu.company_name LIKE %s'
-                . ' OR cu.afm LIKE %s OR c.supply_number LIKE %s OR c.code LIKE %s'
+                . ' OR cu.afm LIKE %s OR c.supply_number LIKE %s OR c.code LIKE %s OR c.provider_ref LIKE %s'
                 . ' OR cu.' . CustomerFields::INDEX_COLUMN . ' = %s )';
-            $params       = [...$params, $like, $like, $like, $like, $like, $like, $this->fields->index($term)];
+            $params       = [...$params, $like, $like, $like, $like, $like, $like, $like, $this->fields->index($term)];
         }
 
         $where = implode(' AND ', $conditions);
@@ -307,7 +307,7 @@ final class ContractQueries
                  FROM %i c
                  LEFT JOIN %i cu ON cu.id = c.customer_id
                  LEFT JOIN %i p  ON p.id  = c.provider_id
-                 WHERE ( c.code LIKE %s OR c.supply_number LIKE %s
+                 WHERE ( c.code LIKE %s OR c.supply_number LIKE %s OR c.provider_ref LIKE %s
                          OR cu.first_name LIKE %s OR cu.last_name LIKE %s
                          OR cu.company_name LIKE %s OR cu.afm LIKE %s
                          OR cu.mobile LIKE %s
@@ -318,7 +318,7 @@ final class ContractQueries
                     $this->table,
                     Tables::name(Tables::CUSTOMERS),
                     Tables::name(Tables::PROVIDERS),
-                    $like, $like, $like, $like, $like, $like, $like,
+                    $like, $like, $like, $like, $like, $like, $like, $like,
                     $this->fields->index($term),
                     ...$scopeParams,
                 ]

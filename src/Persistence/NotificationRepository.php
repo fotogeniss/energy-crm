@@ -17,6 +17,9 @@ namespace EnergyCRM\Persistence;
 
 final class NotificationRepository
 {
+    /** (349) Βλ. clearedFollowups(). */
+    public const CLEARED_META = 'ecrm_bell_cleared_followups';
+
     private string $table;
 
     public function __construct(?string $table = null)
@@ -143,5 +146,46 @@ final class NotificationRepository
                 $userId
             )
         );
+    }
+
+    /**
+     * (349) «Εκκαθάριση» στο καμπανάκι: σβήνει όλες τις ειδοποιήσεις ενός
+     * χρήστη. Είναι μόνο μηνύματα· καμία αίτηση δεν αγγίζεται.
+     */
+    public function clearFor(int $userId): int
+    {
+        global $wpdb;
+
+        if ($userId <= 0) {
+            return 0;
+        }
+
+        return (int) $wpdb->query(
+            $wpdb->prepare('DELETE FROM %i WHERE user_id = %d', $this->table, $userId)
+        );
+    }
+
+    /**
+     * (349) Οι εκκρεμότητες που ήταν στο καμπανάκι τη στιγμή της εκκαθάρισης,
+     * id σύμβασης => updated_at. Κρύβονται από το καμπανάκι όσο δεν αλλάζει
+     * τίποτα πάνω τους. Στο user meta, όπως και η απόρριψη του
+     * ECRM_Notifications::dismiss_stale_for().
+     *
+     * @return array<string, string>
+     */
+    public function clearedFollowups(int $userId): array
+    {
+        $raw = $userId > 0 ? get_user_meta($userId, self::CLEARED_META, true) : '';
+        $map = is_string($raw) && $raw !== '' ? json_decode($raw, true) : [];
+
+        return is_array($map) ? array_map('strval', $map) : [];
+    }
+
+    /** @param array<string, string> $map */
+    public function saveClearedFollowups(int $userId, array $map): void
+    {
+        if ($userId > 0) {
+            update_user_meta($userId, self::CLEARED_META, (string) wp_json_encode($map));
+        }
     }
 }

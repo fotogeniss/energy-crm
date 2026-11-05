@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use EnergyCRM\Domain\Contract\ApplicationNumber;
 use EnergyCRM\Domain\Contract\ContractAddresses;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\ContractTerm;
@@ -181,6 +182,12 @@ final class ContractSaveMapping
         if (! $isUpdate || isset($params['invoice_code'])) {
             $contract['invoice_code'] = isset($params['invoice_code'])
                 ? sanitize_text_field((string) $params['invoice_code']) : null;
+        }
+
+        // (349) «Αριθμός Αίτησης»: η φόρμα τον στέλνει πάντα, και κενό, ώστε
+        // να μπορεί και να σβηστεί.
+        if (! $isUpdate || isset($params['provider_ref'])) {
+            $contract['provider_ref'] = ApplicationNumber::normalize((string) ($params['provider_ref'] ?? ''));
         }
 
         if (! $isUpdate || isset($params['status'])) {

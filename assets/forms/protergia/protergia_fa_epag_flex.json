@@ -305,7 +305,14 @@
     "size": 6.0,
     "maxw": 86.0
    }
-  ]
+  ],
+  "arithmos_aitisis": {
+   "page": 1,
+   "x": 143.5,
+   "y": 32.4,
+   "size": 8,
+   "maxw": 42.6
+  }
  },
  "sigs": [
   {

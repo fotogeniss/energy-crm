@@ -219,6 +219,7 @@ class ECRM_DB {
 			supply_number   VARCHAR(40) NULL,
 			meter_number    VARCHAR(40) NULL,
 			invoice_code    VARCHAR(20) NULL,
+			provider_ref    VARCHAR(40) NULL,
 			status          VARCHAR(24) NOT NULL DEFAULT 'draft',
 			notes           TEXT NULL,
 			extracted_json  LONGTEXT NULL,

@@ -1323,3 +1323,15 @@
 .ecrm-fit__btn[hidden] { display: none; }
 @media (max-width: 600px) { .ecrm-fit { grid-template-columns: 1fr; } .ecrm-fit__btn { grid-column: 1; } }
 .ecrm-actbanner[hidden] { display: none; }
+
+/* (349) «Αριθμός Αίτησης» στο βήμα 1, κάτω από τους παρόχους.
+   docs/UI-APPLICATION-NUMBER.html. */
+.ecrm-appno {
+	display: grid; grid-template-columns: 150px minmax(0, 320px); gap: 6px 12px; align-items: center;
+	margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);
+}
+.ecrm-appno__label { font-size: var(--fs-12-5); font-weight: 700; color: var(--muted); }
+.ecrm-appno__input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .02em; }
+@media (max-width: 560px) {
+	.ecrm-appno { grid-template-columns: 1fr; }
+}

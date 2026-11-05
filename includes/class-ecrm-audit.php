@@ -34,7 +34,7 @@ class ECRM_Audit {
 			'customer_type' => 'Τύπος πελάτη', 'provider_id' => 'Πάροχος', 'program_id' => 'Πρόγραμμα',
 			'energy_type' => 'Είδος', 'category' => 'Κατηγορία', 'price_type' => 'Τύπος τιμής',
 			'activation_type' => 'Ενεργοποίηση', 'supply_number' => 'Αριθμός παροχής', 'meter_number' => 'Μετρητής',
-			'invoice_code' => 'Τιμολόγιο', 'notes' => 'Σημειώσεις',
+			'invoice_code' => 'Τιμολόγιο', 'provider_ref' => 'Αριθμός αίτησης', 'notes' => 'Σημειώσεις',
 			'start_date' => 'Έναρξη', 'term_months' => 'Διάρκεια (μήνες)', 'end_date' => 'Λήξη',
 		];
 		return $m[ $k ] ?? $k;

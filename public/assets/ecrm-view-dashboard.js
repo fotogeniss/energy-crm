@@ -57,6 +57,7 @@ function wireTabs(view) {
 	view.querySelectorAll('[data-hometab]').forEach(function (b) {
 		b.addEventListener('click', function () {
 			setStoreTab(b.getAttribute('data-hometab') === 'store');
+			storeMonth = '';
 			loadDashboard();
 		});
 	});
@@ -75,7 +76,25 @@ export function loadDashboard() {
 var storeMonth = '';
 var storeMonths = [];
 
+/* (349) Από την ειδοποίηση της μηνιαίας αναφοράς (`#store/2026-10`): ανοίγει
+ * το «Κατάστημα» σε εκείνον τον μήνα. Δεν φορτώνει· το go('dashboard') που
+ * ακολουθεί φορτώνει. */
+export function openStoreMonth(month) {
+	if (!hasStore()) return;
+	setStoreTab(true);
+	storeMonth = /^\d{4}-\d{2}$/.test(month || '') ? month : '';
+}
+
 function loadStore(view) {
+	// Μήνας χωρίς τη λίστα μηνών (ήρθε από ειδοποίηση): πρώτα η λίστα, για
+	// να υπάρχει το «Τώρα» και οι υπόλοιποι μήνες.
+	if (storeMonth && !storeMonths.length) {
+		fetch(api('/store'), { headers: H() })
+			.then(function (r) { return r.json(); })
+			.then(function (d) { storeMonths = (d && d.months) || []; loadStoreMonth(view); })
+			.catch(function () { loadStoreMonth(view); });
+		return;
+	}
 	if (storeMonth) { loadStoreMonth(view); return; }
 	fetch(api('/store'), { headers: H() })
 		.then(function (r) { return r.json(); })

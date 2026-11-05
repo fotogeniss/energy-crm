@@ -449,7 +449,9 @@ function renderDetail(view, d) {
 			: '' ) +
 		kv('Διεύθυνση', [c.street, c.street_no].filter(Boolean).join(' ')) +
 		kv('Πόλη / ΤΚ', [c.city, c.postal_code].filter(Boolean).join(' · ')) + kv('Νομός', c.region) +
-		kv('Πάροχος', c.provider_name) + kv('Πρόγραμμα', c.program_name) + kv('Είδος', energy) +
+		kv('Πάροχος', c.provider_name) + kv('Πρόγραμμα', c.program_name) +
+		// (349) Η αριθμοσειρά του εντύπου του παρόχου, όπως τη γράφει ο agent.
+		kv('Αριθμός αίτησης', c.provider_ref) + kv('Είδος', energy) +
 		kv('Ενεργοποίηση', acts[c.activation_type] || c.activation_type) +
 		(c.notes ? '<div class="ecrm-notes"><strong>Σχόλια:</strong> ' + esc(c.notes) + '</div>' : '') +
 		'</div></div>' +

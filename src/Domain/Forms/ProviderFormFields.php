@@ -287,7 +287,8 @@ final class ProviderFormFields
         'kodikos_timologiou'             => [],
         'onoma_programmatos'             => [],
         'diarkeia_symvasis'              => [],
-        'arithmos_aitisis'               => [],
+        // (349) Ο «Αριθμός Αίτησης» που γράφει ο agent στο βήμα 1.
+        'arithmos_aitisis'               => ['provider_ref'],
         'imerominia_aitisis'             => [],
         'imerominia_liksis'              => ['end_date'],
         'topos_aitisis'                  => [],

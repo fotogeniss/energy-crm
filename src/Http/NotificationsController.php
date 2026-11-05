@@ -14,6 +14,7 @@ namespace EnergyCRM\Http;
 use ECRM_Notifications;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Analytics\Month;
 use EnergyCRM\Infrastructure\MonthlyStoreReport;
 use EnergyCRM\Infrastructure\StalePriceNotice;
 use EnergyCRM\Infrastructure\TicketNotices;
@@ -23,6 +24,9 @@ use WP_REST_Response;
 
 final class NotificationsController implements Controller
 {
+    /** (349) Ο τύπος της «Νέα αίτηση από το site» (SiteIntakeController). */
+    private const SITE_LEAD = 'site_lead';
+
     private NotificationRepository $notifications;
 
     public function __construct(
@@ -44,7 +48,16 @@ final class NotificationsController implements Controller
                     'default' => 'own',
                     'enum'    => ['own', 'team'],
                 ],
+                // (349) Το καμπανάκι: χωρίς όσες εκκρεμότητες «καθάρισε».
+                'bell'  => ['type' => 'boolean', 'default' => false],
             ],
+        ]);
+
+        // (349) «Εκκαθάριση» στο καμπανάκι.
+        register_rest_route(Router::NAMESPACE, '/notifications/clear', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'clear'],
+            'permission_callback' => Guards::crmUser(),
         ]);
 
         register_rest_route(Router::NAMESPACE, '/notifications/read', [
@@ -92,9 +105,16 @@ final class NotificationsController implements Controller
                 'created_at'  => $row['created_at'],
                 // (336) Ειδοποίηση χωρίς σύμβαση που οδηγεί σε σελίδα διαχείρισης.
                 'link'        => self::link((string) $row['type']),
+                // (349) Ούτε σύμβαση ούτε σύνδεσμος: η αίτηση διαγράφηκε
+                // (το contract_id γίνεται NULL), οπότε δεν ανοίγει τίποτα.
+                'gone'        => (int) $row['contract_id'] === 0 && self::link((string) $row['type']) === '',
             ],
             $this->notifications->recentFor($scope->actorId())
         );
+
+        if ($request['bell']) {
+            $data = $this->withoutCleared($data, $scope->actorId());
+        }
 
         $data['unread'] = $this->notifications->unreadCount($scope->actorId());
 
@@ -111,9 +131,16 @@ final class NotificationsController implements Controller
             return admin_url('admin.php?page=energy-crm-providers');
         }
 
-        // (345) Η μηνιαία αναφορά: η Αρχική, όπου είναι η καρτέλα «Κατάστημα».
+        // (345/349) Η μηνιαία αναφορά: Αρχική → Κατάστημα → εκείνος ο μήνας.
         if (str_starts_with($type, MonthlyStoreReport::TYPE_PREFIX)) {
-            return '#dashboard';
+            $month = Month::parse(substr($type, strlen(MonthlyStoreReport::TYPE_PREFIX)));
+
+            return $month !== null ? '#store/' . $month : '#dashboard';
+        }
+
+        // (349) Νέα αίτηση από το site: οι Υποψήφιοι.
+        if ($type === self::SITE_LEAD) {
+            return '#leads';
         }
 
         $ticket = TicketNotices::ticketOf($type);
@@ -143,5 +170,57 @@ final class NotificationsController implements Controller
         }
 
         return new WP_REST_Response(['ok' => true], 200);
+    }
+
+    /**
+     * (349) POST /notifications/clear -- σβήνει τις ειδοποιήσεις του χρήστη
+     * και κρύβει από το καμπανάκι τις εκκρεμότητες που υπάρχουν τώρα. Αυτές
+     * μένουν στην οθόνη «Εκκρεμότητες» και ξαναβγαίνουν στο καμπανάκι μόλις
+     * αλλάξει κάτι πάνω τους (νέο updated_at).
+     */
+    public function clear(): WP_REST_Response
+    {
+        try {
+            $scope = $this->scopes->forCurrentUser();
+        } catch (NotAuthenticated) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Απαιτείται σύνδεση.'], 401);
+        }
+
+        $actor = $scope->actorId();
+        $this->notifications->clearFor($actor);
+
+        $map = [];
+
+        foreach (ECRM_Notifications::followups_for([$actor])['rows'] as $row) {
+            $map[(string) $row['id']] = (string) $row['updated_at'];
+        }
+
+        $this->notifications->saveClearedFollowups($actor, $map);
+        ECRM_Notifications::dismiss_stale_for($actor);
+
+        return new WP_REST_Response(['ok' => true], 200);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     *
+     * @return array<string, mixed>
+     */
+    private function withoutCleared(array $data, int $actor): array
+    {
+        $cleared = $this->notifications->clearedFollowups($actor);
+
+        if ($cleared === []) {
+            return $data;
+        }
+
+        $data['rows'] = array_values(array_filter(
+            (array) ($data['rows'] ?? []),
+            static fn (array $row): bool => ($cleared[(string) $row['id']] ?? null) !== (string) $row['updated_at']
+        ));
+        $data['count'] = count($data['rows']);
+        $data['stale'] = count(array_filter($data['rows'], static fn (array $row): bool => ! empty($row['stale'])));
+
+        return $data;
     }
 }

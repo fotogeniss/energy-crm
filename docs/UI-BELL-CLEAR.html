@@ -1,0 +1,56 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ειδοποιήσεις: άνοιγμα και εκκαθάριση</title>
+<style>
+:root{--bg:#f8f8f6;--card:#fff;--ink:#2a2926;--mu:#6e6c66;--line:#dedcd7;--acc:#0b690c;--accb:#16c217;--warn:#ab5506;--warnw:#fcf2ec}
+@media (prefers-color-scheme:dark){:root{--bg:#111110;--card:#1a1a18;--ink:#f1f1ee;--mu:#a3a099;--line:#33322e;--acc:#6bdd6d;--warn:#ffb682;--warnw:#3f322a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Manrope,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:900px;margin:0 auto;padding:24px 16px 60px}h1{font-size:22px;margin:0 0 6px}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:28px 0 8px}
+p{margin:0 0 10px}.d{color:var(--mu)}
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.panel{width:340px;max-width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 18px 50px -24px #0006}
+.head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.head b{font-size:14px}.head .n{font-size:11.5px;color:var(--mu)}.head .sp{flex:1}
+.clr{border:0;background:none;color:var(--acc);font:700 12.5px inherit;padding:4px 2px;cursor:pointer}
+.it{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.it.new{background:var(--warnw)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accb);flex:0 0 8px}.it.read .dot{background:var(--line)}
+.m{flex:1;min-width:0}.m b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.m small{display:block;font-size:11.5px;color:var(--mu)}
+.go{color:var(--mu);font-size:18px;line-height:1}
+.it.dead .m b{color:var(--mu);font-weight:600}
+.sub{padding:8px 14px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--line)}
+.empty{padding:26px 16px;text-align:center;color:var(--mu)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-top:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}th{color:var(--mu);font-size:12px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+</style></head><body><div class="w">
+<h1>Ειδοποιήσεις: πάτημα που ανοίγει + «Εκκαθάριση»</h1>
+<p class="d">Σήμερα ένα πάτημα πάνω σε ειδοποίηση πάει σε αίτηση με αριθμό 0 όταν η ειδοποίηση δεν έχει αίτηση (νέα αίτηση από το site, αίτηση που διαγράφηκε, μηνιαία αναφορά), οπότε δεν γίνεται τίποτα. Και δεν υπάρχει τρόπος να αδειάσει η λίστα.</p>
+
+<h2>Πριν και μετά την εκκαθάριση</h2>
+<div class="row">
+<div class="panel">
+<div class="head"><b>Ειδοποιήσεις</b><span class="n">3 νέες</span><span class="sp"></span><button class="clr">Εκκαθάριση</button></div>
+<div class="it new"><span class="dot"></span><span class="m"><b>⚠ Εκκρεμότητα: EC-0412 · Παπαδόπουλος Γ.</b><small>πριν 10′</small></span><span class="go">›</span></div>
+<div class="it new"><span class="dot"></span><span class="m"><b>Νέα αίτηση από το site</b><small>Νίκος Δ. · ρεύμα · πριν 1 ώρα</small></span><span class="go">›</span></div>
+<div class="it new"><span class="dot"></span><span class="m"><b>Οκτώβριος 2026 σε μια ματιά</b><small>Αιτήσεις: 100 (+9% από Σεπτέμβριο)</small></span><span class="go">›</span></div>
+<div class="it read dead"><span class="dot"></span><span class="m"><b>Απόρριψη ΘΑΛΗΣ: EC-0388</b><small>η αίτηση δεν υπάρχει πια · χθες</small></span></div>
+<div class="sub">Εκκρεμότητες · 2 πάνω από 5 ημέρες</div>
+<div class="it"><span class="dot" style="background:var(--warn)"></span><span class="m"><b>Κωνσταντίνου Μ.</b><small>EC-0401 · Οριστικοποίηση · 8η</small></span><span class="go">›</span></div>
+</div>
+<div class="panel">
+<div class="head"><b>Ειδοποιήσεις</b><span class="sp"></span></div>
+<div class="empty">Δεν έχεις ειδοποιήσεις.</div>
+</div>
+</div>
+
+<h2>Πού πάει κάθε πάτημα</h2>
+<div class="c"><table>
+<tr><th>Ειδοποίηση</th><th>Ανοίγει</th></tr>
+<tr><td>Για αίτηση (εκκρεμότητα, απόρριψη, υπογραφή κ.λπ.)</td><td>Την καρτέλα της αίτησης</td></tr>
+<tr><td>Νέα αίτηση από το site</td><td>Υποψήφιοι</td></tr>
+<tr><td>Μηνιαία αναφορά</td><td>Αρχική → Κατάστημα → εκείνος ο μήνας</td></tr>
+<tr><td>Αναφορά προβλήματος</td><td>Την αναφορά (όπως σήμερα)</td></tr>
+<tr><td>Τιμές προς ενημέρωση</td><td>Τη σελίδα παρόχων (όπως σήμερα)</td></tr>
+<tr><td>Αίτηση που διαγράφηκε</td><td>Τίποτα: φαίνεται αχνή, χωρίς βελάκι, «η αίτηση δεν υπάρχει πια»</td></tr>
+</table></div>
+<p class="d" style="margin-top:10px">Κάθε ειδοποίηση που πατάς γίνεται διαβασμένη. Το «Εκκαθάριση» σβήνει όλες τις ειδοποιήσεις σου και κρύβει από το καμπανάκι τις εκκρεμότητες που ήδη υπάρχουν. Αυτές δεν χάνονται: μένουν στην οθόνη «Εκκρεμότητες» και ξαναεμφανίζονται στο καμπανάκι μόνο αν αλλάξει κάτι πάνω τους. Χωρίς επιβεβαίωση: δεν σβήνει καμία αίτηση, μόνο μηνύματα.</p>
+</div></body></html>

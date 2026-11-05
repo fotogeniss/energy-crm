@@ -173,6 +173,13 @@
    "x": 84.2,
    "y": 161.7,
    "check": true
+  },
+  "arithmos_aitisis": {
+   "page": 1,
+   "x": 143.5,
+   "y": 32.6,
+   "size": 8,
+   "maxw": 42.6
   }
  },
  "sigs": [

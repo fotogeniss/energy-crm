@@ -40,6 +40,8 @@ final class WritableColumns
         'supply_number',
         'meter_number',
         'invoice_code',
+        // (349) «Αριθμός Αίτησης» του εντύπου του παρόχου.
+        'provider_ref',
         'status',
         'notes',
         'extracted_json',

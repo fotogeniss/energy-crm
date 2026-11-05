@@ -13,7 +13,7 @@ import { setScope } from '@energy-crm/scope';
 import { loadTasks } from '@energy-crm/view-tasks';
 import { loadCalc } from '@energy-crm/view-calc';
 import { loadCustomers } from '@energy-crm/view-customers';
-import { loadDashboard } from '@energy-crm/view-dashboard';
+import { loadDashboard, openStoreMonth } from '@energy-crm/view-dashboard';
 import { initImport } from '@energy-crm/view-import';
 import { loadKB } from '@energy-crm/view-kb';
 import { loadTraining } from '@energy-crm/view-training';
@@ -515,7 +515,8 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 
 	function loadBell() {
 		if (!bellBtn) return;
-		fetch(api('/notifications'), { headers: H() })
+		// (349) bell=1: χωρίς τις εκκρεμότητες που «καθάρισε» ο χρήστης.
+		fetch(api('/notifications') + '?bell=1', { headers: H() })
 			.then(function (r) { return r.json(); })
 			.then(function (d) {
 				if (!d || !d.ok) return;
@@ -539,23 +540,35 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 		var rows = (d.rows || []);
 		var html = '';
 
+		// (349) Μία κεφαλίδα με «Εκκαθάριση» όταν υπάρχει κάτι να καθαρίσει.
+		// docs/UI-BELL-CLEAR.html.
+		html += '<div class="ecrm-bellpanel__head"><b>Ειδοποιήσεις</b><span>' + (unread ? unread + ' νέες' : '') + '</span>' +
+			(notifs.length || rows.length ? '<button type="button" class="ecrm-bellpanel__clear" data-bell-clear>Εκκαθάριση</button>' : '') + '</div>';
+
+		if (!notifs.length && !rows.length) {
+			html += '<div class="ecrm-bellpanel__empty">Δεν έχεις ειδοποιήσεις.</div>';
+		}
+
 		if (notifs.length) {
-			html += '<div class="ecrm-bellpanel__head"><b>Ειδοποιήσεις</b><span>' + (unread ? unread + ' νέες' : '') + '</span></div>';
 			html += '<div class="ecrm-bellpanel__list">' + notifs.slice(0, 10).map(function (n) {
+				var main = '<span class="ecrm-bellitem__main"><span class="ecrm-bellitem__name">' + esc(n.title) + '</span>' +
+					'<span class="ecrm-bellitem__meta">' + (n.gone ? 'η αίτηση δεν υπάρχει πια' : esc(n.body || '')) + '</span></span>';
+				// (349) Χωρίς σύμβαση και χωρίς σύνδεσμο δεν ανοίγει τίποτα: δεν
+				// είναι κουμπί, για να μη μοιάζει χαλασμένο.
+				if (n.gone) {
+					return '<div class="ecrm-bellitem is-gone"><span class="ecrm-bellitem__dot"></span>' + main + '</div>';
+				}
 				// (336) Ειδοποίηση με σύνδεσμο (π.χ. τιμές προς ενημέρωση): ανοίγει τη
 				// σελίδα, όχι καρτέλα σύμβασης -- δεν έχει σύμβαση.
-				var target = n.link ? 'data-bell-link="' + esc(n.link) + '"' : 'data-bell-open="' + n.contract_id + '"';
-				return '<button type="button" class="ecrm-bellitem' + (n.read ? '' : ' is-stale') + '" ' + target + '>' +
-					'<span class="ecrm-bellitem__dot ecrm-badge--processing"></span>' +
-					'<span class="ecrm-bellitem__main"><span class="ecrm-bellitem__name">' + esc(n.title) + '</span>' +
-					'<span class="ecrm-bellitem__meta">' + esc(n.body || '') + '</span></span></button>';
+				var target = n.link ? 'data-bell-link="' + esc(n.link) + '"' : 'data-bell-open="' + esc(n.contract_id) + '"';
+				return '<button type="button" class="ecrm-bellitem' + (n.read ? '' : ' is-stale') + '" ' + target + ' data-bell-id="' + esc(n.id) + '">' +
+					'<span class="ecrm-bellitem__dot ecrm-badge--processing"></span>' + main +
+					'<span class="ecrm-bellitem__go" aria-hidden="true">›</span></button>';
 			}).join('') + '</div>';
 		}
 
-		html += '<div class="ecrm-bellpanel__head"><b>Εκκρεμότητες</b><span>' + (stale ? stale + ' πάνω από ' + d.threshold + ' ημέρες' : 'όλα εντάξει') + '</span></div>';
-		if (!rows.length) {
-			html += '<div class="ecrm-bellpanel__empty">Καμία ανοιχτή σύμβαση</div>';
-		} else {
+		if (rows.length) {
+			html += '<div class="ecrm-bellpanel__sub">Εκκρεμότητες' + (stale ? ' · ' + stale + ' πάνω από ' + d.threshold + ' ημέρες' : '') + '</div>';
 			html += '<div class="ecrm-bellpanel__list">' + rows.slice(0, 12).map(function (r) {
 				return '<button type="button" class="ecrm-bellitem' + (r.stale ? ' is-stale' : '') + '" data-bell-open="' + r.id + '">' +
 					'<span class="ecrm-bellitem__dot ecrm-badge--' + esc(r.status) + '"></span>' +
@@ -565,11 +578,34 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 			}).join('') + '</div>';
 		}
 		bellPanel.innerHTML = html;
+		// (349) Ό,τι πατάς γίνεται διαβασμένο.
+		function markOne(el) {
+			var id = el.getAttribute('data-bell-id');
+			if (!id) return;
+			fetch(api('/notifications/read'), {
+				method: 'POST',
+				headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+				body: JSON.stringify({ id: Number(id) })
+			}).catch(function () {});
+		}
+		var clearBtn = bellPanel.querySelector('[data-bell-clear]');
+		if (clearBtn) clearBtn.addEventListener('click', function (e) {
+			e.stopPropagation();
+			clearBtn.disabled = true;
+			fetch(api('/notifications/clear'), { method: 'POST', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (res) {
+					if (!res || !res.ok) { clearBtn.disabled = false; toast('Δεν έγινε η εκκαθάριση.', false); return; }
+					renderBell({ ok: true, notifs: [], rows: [], stale: 0, unread: 0, threshold: d.threshold });
+				})
+				.catch(function () { clearBtn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
 		bellPanel.querySelectorAll('[data-bell-open]').forEach(function (b) {
-			b.addEventListener('click', function () { bellPanel.hidden = true; openDetail(this.getAttribute('data-bell-open')); });
+			b.addEventListener('click', function () { markOne(this); bellPanel.hidden = true; openDetail(this.getAttribute('data-bell-open')); });
 		});
 		bellPanel.querySelectorAll('[data-bell-link]').forEach(function (b) {
 			b.addEventListener('click', function () {
+				markOne(this);
 				bellPanel.hidden = true;
 				var link = this.getAttribute('data-bell-link');
 				// (339) Σύνδεσμος μέσα στο CRM (#tickets/58): χωρίς ξαναφόρτωμα.
@@ -663,6 +699,14 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 	// σύνδεσμος της ειδοποίησης στο καμπανάκι.
 	function route(hash, push) {
 		var v = hash || '';
+		// (349) `#store/2026-10`: Αρχική → Κατάστημα → εκείνος ο μήνας (μηνιαία αναφορά).
+		var storeMonth = /^store\/(\d{4}-\d{2})$/.exec(v);
+		if (storeMonth) {
+			if (push) { try { history.pushState({ v: v }, '', '#' + v); } catch (e) {} }
+			openStoreMonth(storeMonth[1]);
+			suppressHash = true; go('dashboard'); suppressHash = false;
+			return;
+		}
 		var ticket = /^tickets\/(\d+)$/.exec(v);
 		if (ticket) {
 			if (push) { try { history.pushState({ v: v }, '', '#' + v); } catch (e) {} }

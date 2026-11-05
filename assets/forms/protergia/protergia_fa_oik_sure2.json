@@ -311,7 +311,14 @@
     "size": 6.0,
     "maxw": 86.0
    }
-  ]
+  ],
+  "arithmos_aitisis": {
+   "page": 1,
+   "x": 139.8,
+   "y": 28.9,
+   "size": 8,
+   "maxw": 46.4
+  }
  },
  "labels": {
   "onomateponymo_pelati": "Ονοματεπώνυμο",

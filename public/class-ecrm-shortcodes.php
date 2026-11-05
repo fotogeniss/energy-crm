@@ -438,6 +438,15 @@ class ECRM_Shortcodes {
 				<div class="ecrm-step"><span class="ecrm-step__n">1</span> Επιλογή Παρόχου <span class="ecrm-step__hint" data-selprov></span></div>
 				<div class="ecrm-usual" data-usual hidden></div>
 				<div class="ecrm-providers" data-providers><div class="ecrm-loading">Φόρτωση παρόχων…</div></div>
+				<?php
+				// (349) «Αριθμός Αίτησης»: η αριθμοσειρά του εντύπου του παρόχου.
+				// Στήλη contracts.provider_ref· τυπώνεται στο arithmos_aitisis.
+				// docs/UI-APPLICATION-NUMBER.html.
+				?>
+				<label class="ecrm-appno">
+					<span class="ecrm-appno__label">Αριθμός Αίτησης</span>
+					<input type="text" name="provider_ref" class="ecrm-input ecrm-appno__input" maxlength="40" autocomplete="off" spellcheck="false" inputmode="text">
+				</label>
 			</section>
 
 			<section class="ecrm-card">

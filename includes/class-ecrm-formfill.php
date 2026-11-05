@@ -400,6 +400,9 @@ class ECRM_FormFill {
 			// αναζήτηση, δικό μας contract PDF) — απλώς δεν τυπώνεται πια στο
 			// έντυπο του παρόχου. Αφορά 5 πρότυπα: orizon_mobile, protergia_he,
 			// volton_fa, volton_he, zenith_he.
+			// (349) Το ΔΙΚΟ ΤΟΥ πεδίο τώρα παίρνει τον δικό του αριθμό: την
+			// αριθμοσειρά του εντύπου που γράφει ο agent στο βήμα 1.
+			'arithmos_aitisis'         => (string) ( $c['provider_ref'] ?? '' ),
 			'imerominia_aitisis'       => $created ? gmdate( 'd/m/Y', $created ) : '',
 			'imerominia_liksis'        => ! empty( $c['end_date'] ) ? gmdate( 'd/m/Y', strtotime( (string) $c['end_date'] ) ) : '',
 			'topos_aitisis'            => (string) ( $c['city'] ?? '' ),
