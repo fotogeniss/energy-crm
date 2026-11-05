@@ -176,6 +176,10 @@ final class Plugin
         // φανεί στις Ανανεώσεις. Ίδιο σημείο σύνδεσης.
         Services::activationTerm()->register();
 
+        // (350) Αλλαγή κατάστασης σε αίτηση από το site -> ενημέρωση του site
+        // (ο πελάτης βλέπει την πορεία στην εφαρμογή). Μετά το ActivationTerm.
+        Services::siteStatusOutbox()->register();
+
         // (336) Τιμές κυμαινόμενων που παλιώνουν -> ειδοποίηση στους διαχειριστές.
         Services::stalePriceNotice()->register();
         // (339) Οι κλειστές αναφορές σβήνονται μετά από 12 μήνες.

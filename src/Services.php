@@ -126,6 +126,8 @@ final class Services
 
     private static ?\EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig $siteIntakeConfig = null;
 
+    private static ?\EnergyCRM\SiteIntake\Infrastructure\SiteStatusOutbox $siteStatusOutbox = null;
+
     private static ?ProviderGrantRepository $providerGrants = null;
 
     private static ?ProviderVisibility $providerVisibility = null;
@@ -402,6 +404,16 @@ final class Services
     public static function siteIntakeConfig(): \EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig
     {
         return self::$siteIntakeConfig ??= new \EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig(self::secrets());
+    }
+
+    /** (350) Οι αλλαγές κατάστασης προς το site σύγκρισης τιμών. */
+    public static function siteStatusOutbox(): \EnergyCRM\SiteIntake\Infrastructure\SiteStatusOutbox
+    {
+        return self::$siteStatusOutbox ??= new \EnergyCRM\SiteIntake\Infrastructure\SiteStatusOutbox(
+            self::siteIntakeConfig(),
+            self::siteLeads(),
+            self::contractTransitions()
+        );
     }
 
     public static function pendingRemarks(): \EnergyCRM\Persistence\PendingRemarkRepository

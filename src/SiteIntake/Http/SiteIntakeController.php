@@ -122,6 +122,9 @@ final class SiteIntakeController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Σφάλμα αποθήκευσης.'], 500);
         }
 
+        // (350) Πού να στέλνουμε τις αλλαγές κατάστασης: το λέει το ίδιο το site.
+        $this->config->rememberStatusUrl(is_array($payload) ? (string) ($payload['status_url'] ?? '') : '');
+
         if (! $result['existing']) {
             $this->notifications->add(
                 $owner,

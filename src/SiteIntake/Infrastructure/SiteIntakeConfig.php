@@ -18,12 +18,15 @@ namespace EnergyCRM\SiteIntake\Infrastructure;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Infrastructure\SecretStore;
 use EnergyCRM\Persistence\TeamRepository;
+use EnergyCRM\SiteIntake\Domain\SiteStatusUpdate;
 
 final class SiteIntakeConfig
 {
     private const SECRET = 'site_intake_secret';
 
     private const OWNER = 'ecrm_site_intake_owner';
+
+    private const STATUS_URL = 'ecrm_site_status_url';
 
     public function __construct(private readonly SecretStore $secrets)
     {
@@ -56,6 +59,27 @@ final class SiteIntakeConfig
         $this->secrets->put(self::SECRET, $secret);
 
         return $secret;
+    }
+
+    /**
+     * (350) Πού στέλνονται οι αλλαγές κατάστασης. Σταθερά στο wp-config αν
+     * υπάρχει, αλλιώς ό,τι είπε τελευταία το ίδιο το site με μια αίτηση.
+     */
+    public function statusUrl(): string
+    {
+        if (defined('ECRM_SITE_STATUS_URL')) {
+            return (string) constant('ECRM_SITE_STATUS_URL');
+        }
+
+        return (string) get_option(self::STATUS_URL, '');
+    }
+
+    /** Από αίτηση με έγκυρη υπογραφή. Άκυρη διεύθυνση αγνοείται σιωπηλά. */
+    public function rememberStatusUrl(string $url): void
+    {
+        if (SiteStatusUpdate::validUrl($url) && $url !== (string) get_option(self::STATUS_URL, '')) {
+            update_option(self::STATUS_URL, $url, false);
+        }
     }
 
     public function ownerId(): int

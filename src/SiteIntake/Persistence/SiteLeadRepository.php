@@ -35,6 +35,26 @@ final class SiteLeadRepository
         $this->files = Tables::name(Tables::FILES);
     }
 
+    /**
+     * (350) Το `ref` του site για μια σύμβαση, αν ο υποψήφιός της ήρθε από το site.
+     * Μία ανάγνωση σε κάθε αλλαγή κατάστασης. Το `contract_id` δεν έχει ευρετήριο·
+     * οι υποψήφιοι είναι λίγοι (εκατοντάδες), αν γίνουν πολλοί θέλει KEY στο dbDelta.
+     */
+    public function refForContract(int $contractId): ?string
+    {
+        global $wpdb;
+
+        $ref = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT external_ref FROM %i WHERE contract_id = %d AND external_ref IS NOT NULL LIMIT 1',
+                $this->leads,
+                $contractId
+            )
+        );
+
+        return is_string($ref) && $ref !== '' ? $ref : null;
+    }
+
     /** @return array{id: int, partner_user_id: int, contract_id: int}|null */
     public function findByRef(string $ref): ?array
     {
