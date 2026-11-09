@@ -50,6 +50,7 @@ use EnergyCRM\Persistence\Schema\Migrations\DropIbanFromExtras;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureInnoDb;
 use EnergyCRM\Persistence\Schema\Migrations\EnsureLegacyColumns;
 use EnergyCRM\Persistence\Schema\Migrations\FixProviderEnergyTypes;
+use EnergyCRM\Persistence\Schema\Migrations\MarkProtergiaPicassoFixed;
 use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusVocabulary;
 use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusesToPaperLists;
 use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
@@ -139,6 +140,7 @@ final class MigrationList
             new AddTaskKindColumn(),
             new CreateTargetsTable(),
             new ActivateProtergiaHomePicasso(),
+            new MarkProtergiaPicassoFixed(),
         ];
     }
 }
