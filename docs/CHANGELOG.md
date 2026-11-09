@@ -13,6 +13,8 @@
 - `camera=(self)`: η κάμερα επιτρέπεται μόνο στο ίδιο το site, όχι σε ξένα iframes. Γεωθεσία, μικρόφωνο και browsing-topics μένουν κλειστά.
 - Δεν μετρήθηκε στο live αν και ο server (hosting, Imunify) στέλνει δική του επικεφαλίδα· αν η κάμερα μείνει μαύρη μετά το ανέβασμα, αυτό είναι το επόμενο που κοιτάμε.
 
+- `composer.json`: `process-timeout` 900''. Τα integration τεστ (756) ξεπέρασαν το προεπιλεγμένο όριο 300'' του composer· το `tools\test-db.cmd` έγραφε «ΑΠΕΤΥΧΕ» ενώ δεν είχε αποτύχει κανένα τεστ.
+
 **Laravel-ready;** Ναι. Μία επικεφαλίδα HTTP· στη Laravel γίνεται middleware.
 
 Τεστ: `CameraIsAllowedTest` (unit).

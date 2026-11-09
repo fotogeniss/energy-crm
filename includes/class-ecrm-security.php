@@ -32,7 +32,9 @@ class ECRM_Security {
 		header( 'X-Content-Type-Options: nosniff' );
 		header( 'X-Frame-Options: SAMEORIGIN' );
 		header( 'Referrer-Policy: strict-origin-when-cross-origin' );
-		header( 'Permissions-Policy: geolocation=(), microphone=(), camera=(), browsing-topics=()' );
+		// (352) Κάμερα επιτρεπτή στο ίδιο το site: η εφαρμογή φωτογραφίζει λογαριασμούς
+		// και έγγραφα. Με την κάμερα κλειστή, δύο iPhone την άνοιγαν μαύρη (09/11/2026).
+		header( 'Permissions-Policy: geolocation=(), microphone=(), camera=(self), browsing-topics=()' );
 		if ( is_ssl() ) {
 			header( 'Strict-Transport-Security: max-age=31536000; includeSubDomains' );
 		}
