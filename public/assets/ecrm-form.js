@@ -1,6 +1,6 @@
 import { api, esc, rejectedNote, requestId, toast } from '@energy-crm/util';
 import { enqueueContract, enqueueFiles, forget } from '@energy-crm/queue';
-import { energyLabel } from '@energy-crm/format';
+import { energyLabel, tint } from '@energy-crm/format';
 import { openCustomerContracts } from '@energy-crm/navigate';
 import { firstPages, storedForAi } from '@energy-crm/ai-docs';
 import { checkPhoto } from '@energy-crm/photo-check';
@@ -1323,6 +1323,11 @@ import { openDialog } from '@energy-crm/dialog';
 			})
 			.catch(function () { q('[data-providers]').innerHTML = '<div class="ecrm-empty">Δεν φόρτωσαν οι πάροχοι.</div>'; });
 
+		function isSignature() {
+			var app = document.getElementById('ecrm-app');
+			return !!app && app.getAttribute('data-ui') === 'signature';
+		}
+
 		function renderProviders(list) {
 			var wrap = q('[data-providers]');
 			// (279) «Δεν υπάρχουν πάροχοι» ήταν σωστό όσο ο κατάλογος ήταν ίδιος
@@ -1344,6 +1349,18 @@ import { openDialog } from '@energy-crm/dialog';
 				// than a hole being closed. It also keeps the file's own rule
 				// intact: nothing reaches innerHTML without esc().
 				b.innerHTML = p.logo_url ? '<img src="' + esc(p.logo_url) + '" alt="' + esc(p.name) + '">' : '<span>' + esc(p.name) + '</span>';
+				// (353d) Νέα εμφάνιση: ο πάροχος γίνεται κάρτα, σαν στο Wallet --
+				// όνομα, τι παροχές έχει, πόσα προγράμματα. Χρώμα από το όνομα,
+				// ίδιο κάθε φορά. Μόνο όταν το κέλυφος έχει data-ui="signature".
+				if (isSignature()) {
+					var nProg = programsCache.filter(function (pr) { return parseInt(pr.provider_id, 10) === parseInt(p.id, 10); }).length;
+					var kinds = String(p.energy_types || '').split(',').filter(Boolean).map(energyLabel).join(', ');
+					b.classList.add('is-card');
+					b.style.setProperty('--h', String(tint(p.name || '')));
+					b.innerHTML = '<span class="sig-pv__name">' + esc(p.name) + '</span>' +
+						(kinds ? '<span class="sig-pv__kinds">' + esc(kinds) + '</span>' : '') +
+						'<span class="sig-pv__n">' + nProg + (nProg === 1 ? ' πρόγραμμα' : ' προγράμματα') + '</span>';
+				}
 				b.addEventListener('click', function () {
 					wrap.querySelectorAll('.ecrm-provider').forEach(function (x) { x.classList.remove('is-on'); });
 					b.classList.add('is-on'); state.provider_id = parseInt(p.id, 10);
