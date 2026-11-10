@@ -1,0 +1,66 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ομάδα: χρήστες χωρίς ομάδα</title>
+<style>
+:root{--bg:#f8f8f6;--card:#fff;--ink:#2a2926;--mu:#6e6c66;--line:#dedcd7;--acc:#0b690c;--accb:#16c217;--warn:#ab5506;--warnw:#fcf2ec}
+@media (prefers-color-scheme:dark){:root{--bg:#111110;--card:#1a1a18;--ink:#f1f1ee;--mu:#a3a099;--line:#33322e;--acc:#6bdd6d;--warn:#ffb682;--warnw:#3f322a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Manrope,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:900px;margin:0 auto;padding:24px 16px 60px}h1{font-size:22px;margin:0 0 6px}h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:28px 0 8px}
+p{margin:0 0 10px}.d{color:var(--mu)}
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.panel{width:340px;max-width:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 18px 50px -24px #0006}
+.head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.head b{font-size:14px}.head .n{font-size:11.5px;color:var(--mu)}.head .sp{flex:1}
+.clr{border:0;background:none;color:var(--acc);font:700 12.5px inherit;padding:4px 2px;cursor:pointer}
+.it{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.it.new{background:var(--warnw)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accb);flex:0 0 8px}.it.read .dot{background:var(--line)}
+.m{flex:1;min-width:0}.m b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.m small{display:block;font-size:11.5px;color:var(--mu)}
+.go{color:var(--mu);font-size:18px;line-height:1}
+.it.dead .m b{color:var(--mu);font-weight:600}
+.sub{padding:8px 14px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);border-bottom:1px solid var(--line)}
+.empty{padding:26px 16px;text-align:center;color:var(--mu)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-top:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}th{color:var(--mu);font-size:12px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.team{max-width:620px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.th{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}.th b{font-size:15px}.th .sp{flex:1}
+.mem{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:800 12px inherit;color:#fff;flex:0 0 32px}
+.chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mu);white-space:nowrap}
+.orph{background:var(--warnw)}
+.btn{border:1px solid var(--acc);color:var(--acc);background:none;border-radius:8px;font:700 12px inherit;padding:5px 9px;cursor:pointer;white-space:nowrap}
+.sel{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;font:12px inherit;padding:5px 6px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:520px){.mem{flex-wrap:wrap}.acts{width:100%;justify-content:flex-start;padding-left:43px}}
+</style></head><body><div class="w">
+<h1>Ομάδα: «Χωρίς ομάδα»</h1>
+<p class="d">Όσοι φτιάχτηκαν από το WordPress (Users → Add User) δεν έχουν προϊστάμενο. Γι' αυτό δεν φαίνονται πουθενά στο CRM και δεν μπορείς να τους δώσεις παρόχους. Στο live σήμερα: και οι πέντε.</p>
+
+<h2>Οθόνη «Ομάδα» του διαχειριστή</h2>
+<div class="team">
+<div class="th"><b>Η ομάδα μου</b><span class="n d" style="font-size:12px">0 μέλη</span><span class="sp"></span></div>
+<div class="empty">Δεν έχεις ακόμα μέλη.</div>
+<div class="sub orph">Χωρίς ομάδα · 5 &nbsp;<span style="text-transform:none;letter-spacing:0;font-weight:600">φαίνεται μόνο στον διαχειριστή</span></div>
+<div class="mem"><span class="av" style="background:#2f7d5b">ΒΚ</span><span class="m"><b>Βίκτωρας Καμπελής</b><small>viktork@preludedma.gr</small></span><span class="chip">Πωλητής</span><span class="acts"><button class="btn">Στην ομάδα μου</button><select class="sel"><option>Κάτω από…</option><option>Part Ner (Συνεργάτης)</option></select></span></div>
+<div class="mem"><span class="av" style="background:#5b5bb5">ΝΒ</span><span class="m"><b>Νίκος Βελονάκης</b><small>nikv@preludedma.gr</small></span><span class="chip">Back office</span><span class="acts"><button class="btn">Στην ομάδα μου</button><select class="sel"><option>Κάτω από…</option><option>Part Ner (Συνεργάτης)</option></select></span></div>
+<div class="mem"><span class="av" style="background:#b5732f">PN</span><span class="m"><b>Part Ner</b><small>test3@test.gr</small></span><span class="chip">Συνεργάτης</span><span class="acts"><button class="btn">Στην ομάδα μου</button><select class="sel"><option>Κάτω από…</option><option>Part Ner (Συνεργάτης)</option></select></span></div>
+<div class="mem"><span class="av" style="background:#7a7a7a">BO</span><span class="m"><b>Back Office</b><small>test@test.gr</small></span><span class="chip">Back office</span><span class="acts"><button class="btn">Στην ομάδα μου</button><select class="sel"><option>Κάτω από…</option><option>Part Ner (Συνεργάτης)</option></select></span></div>
+<div class="mem"><span class="av" style="background:#7a7a7a">T1</span><span class="m"><b>test1</b><small>test@test.com</small></span><span class="chip">Πωλητής</span><span class="acts"><button class="btn">Στην ομάδα μου</button><select class="sel"><option>Κάτω από…</option><option>Part Ner (Συνεργάτης)</option></select></span></div>
+</div>
+
+<h2>Μετά το «Στην ομάδα μου» για τον Καμπελή</h2>
+<div class="team">
+<div class="th"><b>Η ομάδα μου</b><span class="n d" style="font-size:12px">1 μέλος</span><span class="sp"></span></div>
+<div class="mem"><span class="av" style="background:#2f7d5b">ΒΚ</span><span class="m"><b>Βίκτωρας Καμπελής</b><small>Πωλητής · 0 αιτήσεις · Πάροχοι: —</small></span><span class="go">›</span></div>
+<div class="sub orph">Χωρίς ομάδα · 4</div>
+<div class="empty" style="padding:12px">…</div>
+</div>
+<p class="d" style="margin-top:10px">Πατάς πάνω του και ανοίγει η καρτέλα μέλους όπως σήμερα, με τους παρόχους (π.χ. PROTERGIA) να τους τσεκάρεις. Το «Κάτω από…» τον βάζει στην ομάδα ενός Συνεργάτη. Δεν αλλάζει καμία αίτηση ή προμήθεια, μόνο ποιος είναι ο προϊστάμενος.</p>
+
+<h2>Στο εξής, αυτόματα</h2>
+<div class="c"><table>
+<tr><th>Πώς φτιάχνεται ο χρήστης</th><th>Πού μπαίνει</th></tr>
+<tr><td>Από το CRM («Ομάδα» → νέο μέλος)</td><td>Στην ομάδα αυτού που τον έφτιαξε (όπως σήμερα)</td></tr>
+<tr><td>Από το WordPress, με ρόλο CRM</td><td><b>Νέο:</b> στην ομάδα του διαχειριστή που τον έφτιαξε</td></tr>
+<tr><td>Διαχειριστής WordPress</td><td>Πουθενά, δεν χρειάζεται: βλέπει τα πάντα</td></tr>
+</table></div>
+</div></body></html>

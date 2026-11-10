@@ -84,7 +84,9 @@ function renderTeam(view, d, flash) {
 		(canManage ? '<span><button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-show-bulk>Πάροχοι ομάδας</button> ' +
 			'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-show-add>+ Νέος Πωλητής</button></span>' : '') + '</div>' +
 		table + '</div>' + addForm +
-		(canManage ? '<div class="ecrm-card" data-bulkwrap hidden></div>' : '');
+		(canManage ? '<div class="ecrm-card" data-bulkwrap hidden></div>' : '') +
+		// (352c) «Χωρίς ομάδα»: μόνο για τον διαχειριστή, γεμίζει από το GET /team/orphans.
+		'<div data-orphans></div>';
 
 	// Παρόχοι (279): φορτώνονται μία φορά ανά άνοιγμα οθόνης, μοιρασμένοι
 	// ανάμεσα στη φόρμα «Νέο μέλος» και το «Πάροχοι ομάδας» -- το GET
@@ -96,6 +98,8 @@ function renderTeam(view, d, flash) {
 		}
 		return providersPromise;
 	}
+
+	if (window.ECRM && window.ECRM.isAdmin) { loadOrphans(view.querySelector('[data-orphans]')); }
 
 	var showAdd = view.querySelector('[data-show-add]');
 	if (showAdd) showAdd.addEventListener('click', function () {
@@ -281,4 +285,63 @@ function bulkOp(wrap, providerId, op) {
 			});
 		})
 		.catch(function () { toast('Σφάλμα δικτύου.', false); });
+}
+
+/* (352c) Όσοι φτιάχτηκαν από το WordPress και δεν έχουν προϊστάμενο. Δεν
+ * φαίνονταν σε καμία ομάδα, άρα δεν έπαιρναν παρόχους. Ο διαχειριστής τους
+ * βάζει στην ομάδα του ή κάτω από Συνεργάτη· μετά φαίνονται πάνω, στη λίστα.
+ * docs/UI-TEAM-ORPHANS.html. */
+function loadOrphans(box) {
+	if (!box) { return; }
+	fetch(api('/team/orphans'), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) { renderOrphans(box, d); })
+		.catch(function () { box.innerHTML = ''; });
+}
+function renderOrphans(box, d) {
+	var members = (d && d.members) || [];
+	if (!members.length) { box.innerHTML = ''; return; }
+	var managers = (d && d.managers) || [];
+
+	var rows = members.map(function (m) {
+		var under = managers.filter(function (p) { return p.id !== m.id; }).map(function (p) {
+			return '<option value="' + p.id + '">' + esc(p.name) + '</option>';
+		}).join('');
+
+		return '<tr>' +
+			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(m.name) + '">' + esc(initials(m.name)) + '</span>' +
+			'<span>' + esc(m.name) + '<span class="ecrm-orphan__mail">' + esc(m.email) + '</span></span></span></td>' +
+			'<td><span class="ecrm-badge">' + esc(m.role_label) + '</span></td>' +
+			'<td class="ecrm-orphan__acts"><button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-place="' + m.id + '">Στην ομάδα μου</button>' +
+			(under ? ' <select class="ecrm-input ecrm-input--sm" data-place-under="' + m.id + '"><option value="">Κάτω από…</option>' + under + '</select>' : '') +
+			'</td></tr>';
+	}).join('');
+
+	box.innerHTML = '<div class="ecrm-card ecrm-orphans">' +
+		'<div class="ecrm-listhead"><span class="ecrm-listhead__count">Χωρίς ομάδα · ' + members.length + '</span>' +
+		'<span class="ecrm-hint">Φτιάχτηκαν από το WordPress. Φαίνεται μόνο σε σένα.</span></div>' +
+		'<div class="ecrm-tablewrap"><table class="ecrm-table"><tbody>' + rows + '</tbody></table></div></div>';
+
+	box.querySelectorAll('[data-place]').forEach(function (b) {
+		b.addEventListener('click', function () { place(this.getAttribute('data-place'), 0, this); });
+	});
+	box.querySelectorAll('[data-place-under]').forEach(function (sel) {
+		sel.addEventListener('change', function () {
+			if (this.value) { place(this.getAttribute('data-place-under'), parseInt(this.value, 10), this); }
+		});
+	});
+}
+function place(id, managerId, el) {
+	el.disabled = true;
+	postJson(api('/team/' + id + '/place'), { manager_id: managerId })
+		.then(function (res) {
+			if (res.d && res.d.ok) {
+				toast('Μπήκε στην ομάδα.');
+				loadTeam();
+			} else {
+				el.disabled = false;
+				toast((res.d && res.d.error) || 'Αποτυχία.', false);
+			}
+		})
+		.catch(function () { el.disabled = false; toast('Σφάλμα δικτύου.', false); });
 }

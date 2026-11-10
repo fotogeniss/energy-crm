@@ -1,0 +1,217 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Νέα εμφάνιση: τρεις κατευθύνσεις</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600;700;800&family=Fira+Sans:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--g:#16c217;--g6:#0e8610;--g9:#00531e;--gw:#e3f0e4;--ink:#2a2926;--mu:#6e6c66;--line:#dedcd7;--bg:#f8f8f6;--card:#fff;--chrome:#171715;--warn:#ab5506;--warnw:#fcf2ec;--red:#c32b47;--redw:#fdeaea;--blue:#1d5fb8;--bluew:#e8f0fb}
+*{box-sizing:border-box}body{margin:0;background:#ecebe7;color:var(--ink);font:14px/1.5 Manrope,system-ui,sans-serif}
+.w{max-width:1180px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:24px;margin:0 0 6px}h2{font-size:19px;margin:0 0 4px}
+.d{color:var(--mu);margin:0 0 12px;max-width:760px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 18px;position:sticky;top:0;background:#ecebe7;padding:10px 0;z-index:5}
+.tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font:700 13px inherit;cursor:pointer}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.dir{display:none}.dir.on{display:block}
+.keep{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 18px}.keep span{font-size:12px;border-radius:999px;padding:3px 10px;background:#fff;border:1px solid var(--line)}
+.keep b{color:var(--g6)}
+.row{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.lbl{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:22px 0 8px}
+.desk{flex:1 1 640px;min-width:0;border-radius:12px;overflow:hidden;box-shadow:0 20px 50px -28px #0007;border:1px solid #d6d4cf;background:var(--bg)}
+.phone{width:300px;flex:0 0 300px;height:600px;border-radius:34px;border:9px solid #1b1b1a;overflow:hidden;background:var(--bg);position:relative;box-shadow:0 20px 50px -28px #0008}
+.phone .scr{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column}
+@media (max-width:700px){.phone{width:100%;flex-basis:100%;max-width:330px;margin:0 auto}}
+
+/* ---------- A: Ταμείο καταστήματος ---------- */
+.A{font-family:Commissioner,system-ui,sans-serif}
+.A .top{display:flex;align-items:center;gap:14px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line)}
+.A .logo{font-weight:800;font-size:15px;letter-spacing:-.02em}.A .logo i{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--g);margin-right:6px;font-style:normal}
+.A .nav{display:flex;gap:2px}.A .nav a{padding:6px 10px;border-radius:6px;color:var(--mu);font-weight:600;font-size:13px;text-decoration:none}.A .nav a.on{color:var(--ink);background:var(--bg);box-shadow:inset 0 -2px 0 var(--g)}
+.A .search{flex:1;max-width:320px;margin-left:auto;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 10px;color:var(--mu);font-size:12.5px}
+.A .new{background:var(--g6);color:#fff;border-radius:6px;padding:7px 12px;font-weight:700;font-size:12.5px;white-space:nowrap}
+.A .body{padding:18px 18px 22px}
+.A .greet{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}.A .greet b{font-size:18px}.A .greet span{color:var(--mu);font-size:12.5px}
+.A .strip{display:flex;border:1px solid var(--line);border-radius:6px;background:#fff;margin-bottom:16px}
+.A .strip div{flex:1;padding:10px 14px;border-right:1px solid var(--line)}.A .strip div:last-child{border:0}
+.A .strip small{display:block;color:var(--mu);font-size:11.5px}.A .strip b{font-size:20px}.A .strip em{font-style:normal;font-size:11.5px;color:var(--g6);margin-left:6px}
+.A .list{background:#fff;border:1px solid var(--line);border-radius:6px}
+.A .li{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 0;border-bottom:1px solid var(--line)}.A .li:last-child{border:0}
+.A .li:before{content:"";align-self:stretch;width:3px;border-radius:0 3px 3px 0;background:var(--s,var(--g))}
+.A .li .n{flex:1;min-width:0}.A .li .n b{display:block;font-size:13.5px}.A .li .n small{color:var(--mu);font-size:11.5px}
+.A .li .st{font-size:11.5px;font-weight:700;color:var(--s,var(--g6))}
+.A .li .t{font-size:11.5px;color:var(--mu);width:56px;text-align:right}
+.A .sec{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 6px}.A .sec b{font-size:13px}.A .sec a{font-size:12px;color:var(--g6);font-weight:700}
+.A .ptop{padding:12px 14px 8px;background:#fff;border-bottom:1px solid var(--line)}
+.A .ptop b{font-size:17px}.A .ptop .search{display:block;max-width:none;margin:8px 0 0}
+.A .chips{display:flex;gap:6px;padding:8px 12px;overflow:hidden;background:#fff;border-bottom:1px solid var(--line)}.A .chips span{font-size:11.5px;font-weight:600;border:1px solid var(--line);border-radius:6px;padding:3px 8px;white-space:nowrap}.A .chips span.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.A .pbody{flex:1;overflow:hidden;padding:10px}
+.A .bar{display:flex;justify-content:space-around;align-items:center;padding:6px 6px 12px;background:#fff;border-top:1px solid var(--line)}
+.A .bar span{font-size:10px;color:var(--mu);text-align:center;font-weight:600}.A .bar span i{display:block;width:20px;height:20px;margin:0 auto 2px;border-radius:5px;border:2px solid currentColor;font-style:normal}
+.A .bar span.on{color:var(--ink)}.A .bar .plus{width:44px;height:44px;border-radius:12px;background:var(--g6);color:#fff;font-size:24px;line-height:44px;margin-top:-18px;box-shadow:0 6px 16px -6px #0e8610}
+.A .step{display:flex;gap:4px;padding:10px 14px;background:#fff;border-bottom:1px solid var(--line)}.A .step i{flex:1;height:3px;border-radius:2px;background:var(--line)}.A .step i.on{background:var(--g)}
+.A .fl{font-size:11.5px;color:var(--mu);font-weight:600;margin:12px 0 6px}
+.A .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff}.A .seg span{flex:1;text-align:center;padding:8px 4px;font-size:12.5px;font-weight:600;border-right:1px solid var(--line)}.A .seg span:last-child{border:0}.A .seg span.on{background:var(--gw);color:var(--g9)}
+.A .prov{display:grid;grid-template-columns:1fr 1fr;gap:6px}.A .prov span{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px;font-weight:700;font-size:12.5px}.A .prov span.on{border-color:var(--g6);box-shadow:inset 0 0 0 1px var(--g6)}
+.A .inp{background:#fff;border:1px solid var(--line);border-radius:6px;padding:9px 10px;font-size:12.5px;color:var(--mu)}
+.A .go{margin:14px 0 0;background:var(--g6);color:#fff;text-align:center;border-radius:6px;padding:11px;font-weight:700}
+
+/* ---------- B: Τι έχω να κάνω σήμερα ---------- */
+.B{font-family:"Fira Sans",system-ui,sans-serif;display:flex;min-height:420px}
+.B .rail{width:58px;flex:0 0 58px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 0}
+.B .rail i{width:34px;height:34px;border-radius:10px;display:block;background:var(--bg);border:1px solid var(--line)}.B .rail i.on{background:var(--gw);border-color:#bfe0c2}
+.B .rail i.logo{background:var(--g);border:0;border-radius:50%}
+.B .main{flex:1;min-width:0;padding:18px 20px}
+.B .hello{font-size:20px;font-weight:700;margin:0}.B .hello span{color:var(--mu);font-weight:400}
+.B .sub{color:var(--mu);font-size:12.5px;margin:2px 0 14px}
+.B .grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--mu);margin:14px 0 6px;display:flex;gap:8px;align-items:center}.B .grp:after{content:"";flex:1;height:1px;background:var(--line)}
+.B .act{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:6px}
+.B .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;flex:0 0 30px}
+.B .act .n{flex:1;min-width:0}.B .act .n b{display:block;font-size:13.5px;font-weight:600}.B .act .n small{color:var(--mu);font-size:11.5px}
+.B .act .btn{border:1px solid var(--ink);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap}
+.B .side{display:flex;gap:10px;margin-top:4px}.B .side div{flex:1;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px}.B .side small{color:var(--mu);font-size:11.5px;display:block}.B .side b{font-size:18px}
+.B .side .bar{height:5px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden;padding:0;border:0;flex:none}.B .bar i{display:block;height:100%;background:var(--g)}
+.B .kan{display:flex;gap:8px;padding:10px;overflow:hidden;flex:1}
+.B .col{flex:0 0 150px;background:#efeee9;border-radius:14px;padding:8px}
+.B .col h4{margin:2px 4px 8px;font-size:12px;display:flex;justify-content:space-between}.B .col h4 span{color:var(--mu);font-weight:500}
+.B .kc{background:#fff;border-radius:10px;padding:8px;margin-bottom:6px;font-size:12px;border:1px solid var(--line)}.B .kc b{display:block;font-weight:600}.B .kc small{color:var(--mu)}
+.B .ptop{padding:14px 14px 6px;background:var(--bg)}.B .ptop b{font-size:18px}
+.B .bot{display:flex;justify-content:space-around;padding:8px 6px 14px;background:#fff;border-top:1px solid var(--line)}.B .bot i{width:22px;height:22px;border-radius:7px;border:2px solid var(--mu);display:block}.B .bot i.on{border-color:var(--g6);background:var(--gw)}
+.B .q{padding:12px;flex:1}.B .q h3{font-size:16px;margin:4px 0 10px}
+.B .big{display:block;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;font-weight:600}.B .big small{display:block;color:var(--mu);font-weight:400;font-size:11.5px}.B .big.on{border-color:var(--g6);background:var(--gw)}
+
+/* ---------- Γ: Ίδια δομή, άλλη ταυτότητα ---------- */
+.C{font-family:"Noto Sans",system-ui,sans-serif;display:flex;min-height:420px}
+.C .side{width:180px;flex:0 0 180px;background:#fff;border-right:1px solid var(--line);padding:16px 12px}
+.C .side .logo{font-weight:800;font-size:15px;margin:0 6px 16px}.C .side .logo:before{content:"◆ ";color:var(--g)}
+.C .side a{display:block;padding:7px 10px;border-radius:999px;font-size:13px;color:var(--mu);font-weight:600;text-decoration:none;margin-bottom:2px}.C .side a.on{background:var(--ink);color:#fff}
+.C .main{flex:1;min-width:0;padding:18px 20px}
+.C h3{font-size:20px;margin:0 0 12px;font-weight:800;letter-spacing:-.02em}
+.C .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.C .tile{background:#fff;border-radius:18px;padding:12px 14px;border:1px solid var(--line)}.C .tile small{color:var(--mu);font-size:11.5px}.C .tile b{display:block;font-size:22px}
+.C table{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:12.5px}.C td{background:#fff;padding:9px 10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.C td:first-child{border-left:1px solid var(--line);border-radius:12px 0 0 12px}.C td:last-child{border-right:1px solid var(--line);border-radius:0 12px 12px 0}
+.C .pill{border-radius:999px;padding:2px 9px;font-weight:700;font-size:11px;border:1.5px solid currentColor}
+.note{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:22px}
+.note li{margin-bottom:4px}
+.verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}.verdict div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px}.verdict b{display:block;margin-bottom:4px}
+@media (max-width:760px){.verdict{grid-template-columns:1fr}.A .nav{display:none}.C .side{display:none}.C .tiles{grid-template-columns:1fr 1fr}}
+</style></head><body><div class="w">
+<h1>Νέα εμφάνιση: τρεις κατευθύνσεις</h1>
+<p class="d">Στόχος: ένας συνεργάτης που δουλεύει και στο άλλο site να μην αναγνωρίζει τη δική μας εφαρμογή. Δεν αλλάζουν οι ροές, τα δεδομένα και τα χρώματα· αλλάζει η δομή, τα σχήματα, η γραμματοσειρά και η Αρχική. Τα δεδομένα εδώ είναι ψεύτικα.</p>
+<div class="keep"><span><b>Μένει:</b> πράσινο #16c217 και οι αποχρώσεις του</span><span><b>Μένει:</b> χρώματα καταστάσεων</span><span><b>Μένει:</b> βήματα και πεδία της αίτησης</span><span><b>Φεύγει:</b> σκούρο πλαϊνό μενού</span><span><b>Φεύγει:</b> Manrope</span><span><b>Φεύγει:</b> πλακίδια με αριθμούς στην Αρχική</span></div>
+
+<div class="tabs"><button class="on" data-t="a">Α · Ταμείο καταστήματος</button><button data-t="b">Β · Τι έχω να κάνω σήμερα</button><button data-t="c">Γ · Ίδια δομή, άλλη ταυτότητα</button></div>
+
+<!-- ================= A ================= -->
+<section class="dir on" id="a">
+<h2>Α · Ταμείο καταστήματος</h2>
+<p class="d">Χωρίς πλαϊνό μενού. Πάνω μια λευκή γραμμή με το μενού και αναζήτηση παντού· στο κινητό μπάρα κάτω με μεγάλο «+» για νέα αίτηση. Λίστες αντί για κάρτες, με λεπτή χρωματιστή λωρίδα κατάστασης. Γραμματοσειρά Commissioner, γωνίες 6px (πιο «κοφτές»).</p>
+<div class="lbl">Αρχική · υπολογιστής</div>
+<div class="desk A">
+<div class="top"><span class="logo"><i></i>gdg crm</span><nav class="nav"><a class="on">Αρχική</a><a>Αιτήσεις</a><a>Πελάτες</a><a>Υποψήφιοι</a><a>Ανανεώσεις</a><a>Ομάδα</a></nav><span class="search">Αναζήτηση πελάτη, ΑΦΜ, αριθμού αίτησης…</span><span class="new">+ Νέα αίτηση</span></div>
+<div class="body">
+<div class="greet"><b>Καλησπέρα, Κωνσταντίνε</b><span>Τρίτη 10 Νοεμβρίου · Κατάστημα Κέντρο</span></div>
+<div class="strip"><div><small>Αιτήσεις μήνα</small><b>31</b><em>+12%</em></div><div><small>Στόχος</small><b>78%</b></div><div><small>Περιμένουν υπογραφή</small><b>4</b></div><div><small>Λείπουν χαρτιά</small><b>3</b></div></div>
+<div class="sec"><b>Χρειάζονται εσένα</b><a>Όλες ›</a></div>
+<div class="list">
+<div class="li" style="--s:var(--warn)"><span class="n"><b>Παπαδόπουλος Γιώργος</b><small>Protergia · Ρεύμα · λείπει λογαριασμός ΔΕΗ</small></span><span class="st">Λείπουν χαρτιά</span><span class="t">2 μέρες</span></div>
+<div class="li" style="--s:var(--blue)"><span class="n"><b>Κωνσταντίνου Μαρία</b><small>Protergia · Αέριο · στάλθηκε σύνδεσμος</small></span><span class="st">Αναμονή υπογραφής</span><span class="t">5 ώρες</span></div>
+<div class="li" style="--s:var(--red)"><span class="n"><b>Δημητρίου Νίκος</b><small>Volton · Ρεύμα · λάθος ΑΦΜ</small></span><span class="st">Απόρριψη</span><span class="t">χθες</span></div>
+<div class="li" style="--s:var(--g)"><span class="n"><b>Αλεξίου Ελένη</b><small>Protergia · Picasso M · λήγει σε 20 μέρες</small></span><span class="st">Ανανέωση</span><span class="t">20 μέρες</span></div>
+</div></div></div>
+
+<div class="lbl">Κινητό · Αιτήσεις και Νέα αίτηση</div>
+<div class="row">
+<div class="phone A"><div class="scr">
+<div class="ptop"><b>Αιτήσεις</b><span class="search">Αναζήτηση…</span></div>
+<div class="chips"><span class="on">Όλες 128</span><span>Λείπουν χαρτιά 3</span><span>Υπογραφή 4</span><span>Ενεργές</span></div>
+<div class="pbody"><div class="list">
+<div class="li" style="--s:var(--warn)"><span class="n"><b>Παπαδόπουλος Γ.</b><small>Protergia · Ρεύμα</small></span><span class="t">2μ</span></div>
+<div class="li" style="--s:var(--blue)"><span class="n"><b>Κωνσταντίνου Μ.</b><small>Protergia · Αέριο</small></span><span class="t">5ω</span></div>
+<div class="li" style="--s:var(--g9)"><span class="n"><b>Γεωργίου Π.</b><small>Protergia · Picasso S</small></span><span class="t">1εβδ</span></div>
+<div class="li" style="--s:var(--red)"><span class="n"><b>Δημητρίου Ν.</b><small>Volton · Ρεύμα</small></span><span class="t">χθες</span></div>
+<div class="li" style="--s:var(--g9)"><span class="n"><b>Ιωάννου Κ.</b><small>Protergia · Ρεύμα</small></span><span class="t">2εβδ</span></div>
+<div class="li" style="--s:var(--g9)"><span class="n"><b>Νικολάου Σ.</b><small>Orizon · Κινητή</small></span><span class="t">3εβδ</span></div>
+</div></div>
+<div class="bar"><span class="on"><i></i>Αρχική</span><span><i></i>Αιτήσεις</span><span class="plus">+</span><span><i></i>Πελάτες</span><span><i></i>Μενού</span></div>
+</div></div>
+<div class="phone A"><div class="scr">
+<div class="ptop"><b>Νέα αίτηση</b></div>
+<div class="step"><i class="on"></i><i></i><i></i><i></i></div>
+<div class="pbody" style="padding:4px 14px">
+<div class="fl">Τι παροχή</div><div class="seg"><span class="on">Ρεύμα</span><span>Αέριο</span><span>Κινητή</span></div>
+<div class="fl">Πάροχος</div><div class="prov"><span class="on">PROTERGIA</span><span>VOLTON</span><span>ΗΡΩΝ</span><span>Orizon</span></div>
+<div class="fl">Χρώμα τιμολογίου</div><div class="seg"><span class="on">Σταθερό</span><span>Κυμαινόμενο</span></div>
+<div class="fl">Αριθμός αίτησης</div><div class="inp">&nbsp;</div>
+<div class="go">Συνέχεια</div>
+</div></div></div>
+</div>
+</section>
+
+<!-- ================= B ================= -->
+<section class="dir" id="b">
+<h2>Β · Τι έχω να κάνω σήμερα</h2>
+<p class="d">Η Αρχική είναι λίστα ενεργειών, ταξινομημένη κατά προτεραιότητα, με κουμπί δίπλα στην καθεμιά. Οι αιτήσεις φαίνονται σε στήλες ανά κατάσταση. Λεπτό λευκό μενού με εικονίδια. Γραμματοσειρά Fira Sans, στρογγυλές γωνίες 14px, κουμπιά-χάπια.</p>
+<div class="lbl">Αρχική · υπολογιστής</div>
+<div class="desk B">
+<div class="rail"><i class="logo"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+<div class="main">
+<p class="hello">Καλησπέρα, Κωνσταντίνε <span>· 6 πράγματα για σήμερα</span></p>
+<div class="side"><div><small>Νοέμβριος</small><b>31 / 40</b><div class="bar"><i style="width:78%"></i></div></div><div><small>Ενεργοποιήθηκαν</small><b>18</b></div><div><small>Στον πάροχο</small><b>9</b></div></div>
+<div class="grp">Τώρα</div>
+<div class="act"><span class="ic" style="background:var(--warnw);color:var(--warn)">!</span><span class="n"><b>Λείπει λογαριασμός ΔΕΗ · Παπαδόπουλος Γ.</b><small>Protergia Ρεύμα · 2 μέρες σε αναμονή</small></span><span class="btn">Ζήτα το</span></div>
+<div class="act"><span class="ic" style="background:var(--redw);color:var(--red)">×</span><span class="n"><b>Απόρριψη · Δημητρίου Ν.</b><small>Volton · λάθος ΑΦΜ</small></span><span class="btn">Διόρθωσε</span></div>
+<div class="grp">Σήμερα</div>
+<div class="act"><span class="ic" style="background:var(--bluew);color:var(--blue)">✎</span><span class="n"><b>Δεν υπέγραψε ακόμα · Κωνσταντίνου Μ.</b><small>Ο σύνδεσμος στάλθηκε πριν 5 ώρες</small></span><span class="btn">Ξαναστείλε</span></div>
+<div class="act"><span class="ic" style="background:var(--gw);color:var(--g9)">↻</span><span class="n"><b>Ανανέωση σε 20 μέρες · Αλεξίου Ε.</b><small>Picasso M · κλήση ανανέωσης</small></span><span class="btn">Κάλεσε</span></div>
+</div></div>
+
+<div class="lbl">Κινητό · Αιτήσεις σε στήλες και Νέα αίτηση</div>
+<div class="row">
+<div class="phone B" style="display:block"><div class="scr">
+<div class="ptop"><b>Αιτήσεις</b></div>
+<div class="kan">
+<div class="col"><h4>Λείπουν χαρτιά <span>3</span></h4><div class="kc"><b>Παπαδόπουλος Γ.</b><small>Protergia · 2μ</small></div><div class="kc"><b>Σταύρου Α.</b><small>ΗΡΩΝ · 4μ</small></div></div>
+<div class="col"><h4>Υπογραφή <span>4</span></h4><div class="kc"><b>Κωνσταντίνου Μ.</b><small>Protergia · 5ω</small></div><div class="kc"><b>Μάρκου Ι.</b><small>Volton · 1μ</small></div></div>
+</div>
+<div class="bot"><i class="on"></i><i></i><i></i><i></i></div>
+</div></div>
+<div class="phone B" style="display:block"><div class="scr">
+<div class="q"><h3>Τι θα πουλήσουμε;</h3>
+<span class="big on">Ρεύμα<small>Σπίτι ή επιχείρηση</small></span><span class="big">Φυσικό αέριο<small>Protergia, ΗΡΩΝ</small></span><span class="big">Κινητή<small>Orizon</small></span>
+<h3 style="margin-top:14px">Πάροχος</h3><span class="big on">PROTERGIA<small>Σταθερό · Κυμαινόμενο</small></span>
+</div>
+<div class="bot"><i></i><i class="on"></i><i></i><i></i></div>
+</div></div>
+</div>
+</section>
+
+<!-- ================= Γ ================= -->
+<section class="dir" id="c">
+<h2>Γ · Ίδια δομή, άλλη ταυτότητα</h2>
+<p class="d">Το πλαϊνό μενού μένει, αλλά λευκό με «χάπια». Γραμματοσειρά Noto Sans, ετικέτες κατάστασης με περίγραμμα, γραμμές πίνακα σαν ξεχωριστές λωρίδες. Λιγότερη δουλειά, αλλά ένας προσεκτικός συνεργάτης θα αναγνωρίσει ακόμα τη διάταξη.</p>
+<div class="lbl">Αρχική · υπολογιστής</div>
+<div class="desk C">
+<div class="side"><div class="logo">gdg crm</div><a class="on">Αρχική</a><a>Αιτήσεις</a><a>Πελάτες</a><a>Υποψήφιοι</a><a>Ανανεώσεις</a><a>Ομάδα</a><a>Προμήθειες</a></div>
+<div class="main"><h3>Αρχική</h3>
+<div class="tiles"><div class="tile"><small>Αιτήσεις μήνα</small><b>31</b></div><div class="tile"><small>Στόχος</small><b>78%</b></div><div class="tile"><small>Λείπουν χαρτιά</small><b>3</b></div></div>
+<table><tr><td><b>Παπαδόπουλος Γ.</b></td><td>Protergia · Ρεύμα</td><td><span class="pill" style="color:var(--warn)">Λείπουν χαρτιά</span></td><td>2 μέρες</td></tr>
+<tr><td><b>Κωνσταντίνου Μ.</b></td><td>Protergia · Αέριο</td><td><span class="pill" style="color:var(--blue)">Υπογραφή</span></td><td>5 ώρες</td></tr>
+<tr><td><b>Δημητρίου Ν.</b></td><td>Volton · Ρεύμα</td><td><span class="pill" style="color:var(--red)">Απόρριψη</span></td><td>χθες</td></tr></table>
+</div></div>
+</section>
+
+<div class="verdict">
+<div><b>Α · Ταμείο</b>Πολύ διαφορετική δομή, η πιο γρήγορη στο κινητό. Μεσαία δουλειά: αλλάζει το κέλυφος και οι λίστες.</div>
+<div><b>Β · Σήμερα</b>Η πιο διαφορετική και η πιο χρήσιμη Αρχική. Οι στήλες αιτήσεων είναι η μεγαλύτερη δουλειά.</div>
+<div><b>Γ · Ταυτότητα</b>Η μικρότερη δουλειά, αλλά η διάταξη παραμένει αναγνωρίσιμη.</div>
+</div>
+<div class="note"><b>Πρόταση:</b> το κέλυφος και οι λίστες της <b>Α</b>, με την Αρχική της <b>Β</b> («Χρειάζονται εσένα» με κουμπί ενέργειας).
+<ul><li>Μπαίνει πίσω από διακόπτη: τη βλέπει πρώτα μόνο ο διαχειριστής στο live, οι υπόλοιποι συνεχίζουν με την παλιά.</li>
+<li>Σειρά: κέλυφος και μενού → Αρχική → λίστες → νέα αίτηση → καρτέλα αίτησης → ομάδα, προμήθειες, στατιστικά. Mockup και έγκριση σε κάθε βήμα.</li>
+<li>Όταν περάσουν όλες οι οθόνες, ο διακόπτης ανοίγει για όλους και η παλιά εμφάνιση σβήνεται.</li></ul></div>
+</div>
+<script>
+document.querySelectorAll('.tabs button').forEach(function(b){b.addEventListener('click',function(){
+document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('on',x===b)});
+document.querySelectorAll('.dir').forEach(function(s){s.classList.toggle('on',s.id===b.getAttribute('data-t'))});});});
+</script>
+</body></html>

@@ -124,6 +124,68 @@ final class TeamRepository
         return $moved;
     }
 
+    /**
+     * (352c) Όσοι έχουν ρόλο CRM αλλά κανέναν προϊστάμενο, με σειρά ονόματος.
+     * Χωρίς διαχειριστές (βλέπουν τα πάντα) και χωρίς απενεργοποιημένους: η
+     * «Αφαίρεση» από ομάδα αφήνει ακριβώς αυτό το σχήμα, και δεν πρέπει να
+     * ξαναβγαίνουν εδώ σαν καινούργιοι.
+     *
+     * @param list<string> $roles
+     * @return list<WP_User>
+     */
+    public function orphans(array $roles): array
+    {
+        if ($roles === []) {
+            return [];
+        }
+
+        /** @var list<WP_User> $users */
+        $users = get_users([
+            'role__in'   => $roles,
+            'orderby'    => 'display_name',
+            'meta_query' => [
+                'relation' => 'OR',
+                ['key' => self::PARENT_META, 'compare' => 'NOT EXISTS'],
+                ['key' => self::PARENT_META, 'value' => ['', '0'], 'compare' => 'IN'],
+            ],
+        ]);
+
+        return array_values(array_filter(
+            $users,
+            fn (WP_User $u): bool => ! user_can($u, 'manage_options') && ! $this->isDisabled((int) $u->ID)
+        ));
+    }
+
+    public function hasManager(int $userId): bool
+    {
+        return (int) get_user_meta($userId, self::PARENT_META, true) > 0;
+    }
+
+    /**
+     * (352c) Η αλυσίδα προϊσταμένων, από τον άμεσο προς τα πάνω. Σταματά σε
+     * κύκλο ή στα 50 επίπεδα, ίδιο όριο με το `NetworkRepository`.
+     *
+     * @return list<int>
+     */
+    public function managersAbove(int $userId): array
+    {
+        $chain   = [];
+        $current = $userId;
+
+        for ($depth = 0; $depth < 50; $depth++) {
+            $parent = (int) get_user_meta($current, self::PARENT_META, true);
+
+            if ($parent <= 0 || in_array($parent, $chain, true)) {
+                break;
+            }
+
+            $chain[] = $parent;
+            $current = $parent;
+        }
+
+        return $chain;
+    }
+
     public function attach(int $userId, int $managerId): void
     {
         update_user_meta($userId, self::PARENT_META, $managerId);

@@ -191,6 +191,8 @@ final class ControllerFactory
                 Services::providerVisibility(),
                 Services::providerGrants(),
             ),
+            // (352c) «Χωρίς ομάδα»: όσοι φτιάχτηκαν από το WordPress.
+            new TeamPlacementController(Services::team()),
             // Ποιους παρόχους βλέπει κάθε μέλος (278).
             new ProviderAccessController(
                 $scope,
