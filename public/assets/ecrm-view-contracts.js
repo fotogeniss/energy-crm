@@ -59,8 +59,8 @@ export function loadContracts() {
 }
 
 var expandCache = {};
-function loadExpand(id, view) {
-	var box = view.querySelector('[data-exppanel="' + id + '"]');
+function loadExpand(id, view, target) {
+	var box = target || view.querySelector('[data-exppanel="' + id + '"]');
 	if (!box) return;
 	if (expandCache[id]) { box.innerHTML = expandPanel(expandCache[id], view); bindExpand(box, expandCache[id], view); return; }
 	fetch(api('/contracts/' + id), { headers: H() })
@@ -262,6 +262,50 @@ function primaryAction(status) {
 	}
 }
 
+/* ═══ (353c) «Signature»: ο επιθεωρητής ═══════════════════════════════════
+ * Με τη νέα εμφάνιση (διαχειριστής, σε δοκιμή), σε υπολογιστή, το πάτημα σε
+ * γραμμή ΔΕΝ φεύγει από τη λίστα: ανοίγει δεξιά ένα πάνελ με ό,τι δείχνει και
+ * το «+» της γραμμής (στοιχεία, πάροχος, κουμπιά, «Καρτέλα · αλλαγή
+ * κατάστασης»). Η λίστα, τα φίλτρα και οι μαζικές ενέργειες μένουν όπως είναι.
+ * Στο κινητό δεν αλλάζει τίποτα. docs/UI-REDESIGN-PREMIUM.html. */
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+function openInspector(view, id) {
+	var panel = view.querySelector('[data-insp]');
+	if (!panel) {
+		panel = document.createElement('aside');
+		panel.className = 'sig-insp';
+		panel.setAttribute('data-insp', '');
+		panel.setAttribute('aria-label', 'Η αίτηση');
+		view.appendChild(panel);
+	}
+	view.querySelectorAll('.ecrm-rowlink.is-sel').forEach(function (r) { r.classList.remove('is-sel'); });
+	var row = view.querySelector('.ecrm-rowlink[data-id="' + id + '"]');
+	if (row) { row.classList.add('is-sel'); }
+
+	panel.innerHTML = '<div class="sig-insp__bar"><span>Αίτηση</span>' +
+		'<button type="button" class="sig-insp__x" data-insp-close aria-label="Κλείσιμο">×</button></div>' +
+		'<div class="sig-insp__body"><div class="ecrm-loading">Φόρτωση…</div></div>';
+	panel.querySelector('[data-insp-close]').addEventListener('click', function () { closeInspector(view); });
+	requestAnimationFrame(function () { panel.classList.add('is-open'); });
+	loadExpand(id, view, panel.querySelector('.sig-insp__body'));
+}
+
+function closeInspector(view) {
+	var panel = view.querySelector('[data-insp]');
+	if (panel) { panel.classList.remove('is-open'); }
+	view.querySelectorAll('.ecrm-rowlink.is-sel').forEach(function (r) { r.classList.remove('is-sel'); });
+}
+
+document.addEventListener('keydown', function (e) {
+	if (e.key !== 'Escape') return;
+	var view = viewEl('contracts');
+	if (view && view.querySelector('[data-insp].is-open')) { closeInspector(view); }
+});
+
 function renderContracts(view, d) {
 	var statuses = d.statuses || {}, counts = d.counts || {};
 	var allRows = d.rows || [];
@@ -271,12 +315,12 @@ function renderContracts(view, d) {
 	// Χωρίς εξαιρέσεις πλέον: η παράκαμψη που έκρυβε το 'awaiting_signature'
 	// υπήρχε επειδή δύο ονόματα έδειχναν στο ίδιο βήμα. Το νέο μοντέλο έχει
 	// ένα (07/09/2026), οπότε κάθε κατάσταση παίρνει την καρτέλα της.
-	var tabs = '<button type="button" class="ecrm-tab' + (contractsState.status === '' ? ' is-on' : '') + '" data-status=""><span class="ecrm-tabdot ecrm-tabdot--all"></span>ΟΛΕΣ <b>' + (counts.all || 0) + '</b></button>';
+	var tabs = '<button type="button" class="ecrm-tab' + (contractsState.status === '' ? ' is-on' : '') + '" data-status=""><span class="ecrm-tabdot ecrm-tabdot--all"></span>' + (isSignature() ? 'Όλες' : 'ΟΛΕΣ') + ' <b>' + (counts.all || 0) + '</b></button>';
 	// 05/10/2026: με δύο λίστες οι καταστάσεις έγιναν 18, οπότε καρτέλα
 	// παίρνουν μόνο όσες έχουν αιτήσεις, συν αυτή που είναι επιλεγμένη.
 	Object.keys(statuses).forEach(function (st) {
 		if (!counts[st] && contractsState.status !== st) return;
-		tabs += '<button type="button" class="ecrm-tab' + (contractsState.status === st ? ' is-on' : '') + '" data-status="' + st + '"><span class="ecrm-tabdot ecrm-tabdot--' + esc(st) + '"></span>' + esc(up(statuses[st])) + ' <b>' + (counts[st] || 0) + '</b></button>';
+		tabs += '<button type="button" class="ecrm-tab' + (contractsState.status === st ? ' is-on' : '') + '" data-status="' + st + '"><span class="ecrm-tabdot ecrm-tabdot--' + esc(st) + '"></span>' + esc(isSignature() ? statuses[st] : up(statuses[st])) + ' <b>' + (counts[st] || 0) + '</b></button>';
 	});
 
 	// client-side pagination
@@ -440,7 +484,7 @@ function renderContracts(view, d) {
 		tr.addEventListener('click', function () {
 			var id = this.getAttribute('data-id');
 			if (pressFired) { pressFired = false; return; }
-			if (!isMobile()) { openDetail(id); return; }
+			if (!isMobile()) { if (isSignature()) { openInspector(view, id); return; } openDetail(id); return; }
 			var cb = this.querySelector('.ecrm-rowcheck');
 			if (view.querySelector('.ecrm-table--cards.is-selecting') && cb) { cb.checked = !cb.checked; refreshBar(); return; }
 			toggleExpand(id);
