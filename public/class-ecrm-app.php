@@ -78,6 +78,15 @@ class ECRM_App {
 		// κάθε πλοήγηση. Το κλειδί του user meta το ξέρει ΜΟΝΟ το ThemePreference.
 		$theme = \EnergyCRM\Infrastructure\ThemePreference::forUser( (int) $user->ID );
 
+		// (353) Νέα εμφάνιση «Signature»: μόνο διαχειριστής, όσο είναι σε δοκιμή.
+		// Το φύλλο της φορτώνεται μόνο όταν είναι ανοιχτή, ώστε οι άλλοι να μην
+		// κατεβάζουν τίποτα παραπάνω. docs/UI-REDESIGN-WOW.html.
+		$ui     = \EnergyCRM\Infrastructure\UiPreference::forUser( (int) $user->ID );
+		$ui_try = \EnergyCRM\Infrastructure\UiPreference::mayTry( (int) $user->ID );
+		if ( 'signature' === $ui ) {
+			wp_enqueue_style( 'ecrm-signature', ECRM_URL . 'public/assets/ecrm-signature.css', [ 'ecrm-app' ], ECRM_Shortcodes::asset_version( 'ecrm-signature.css' ) );
+		}
+
 		// Leads with a callback due today or overdue, still open (own scope).
 		$leads_due = (int) $wpdb->get_var( $wpdb->prepare(
 			"SELECT COUNT(*) FROM " . ECRM_DB::table( 'leads' ) . "
@@ -163,7 +172,7 @@ class ECRM_App {
 		ob_start();
 		?>
 		<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $style is a whole attribute fragment, ' style="…"', whose only variable part went through esc_attr() where it was built. Escaping it here would escape the attribute syntax itself. ?>
-		<div class="ecrm ecrm-app" id="ecrm-app" lang="el" data-view="dashboard" data-collapsed="0" data-theme="<?php echo esc_attr( $theme ); ?>"<?php echo $style; ?>>
+		<div class="ecrm ecrm-app" id="ecrm-app" lang="el" data-view="dashboard" data-collapsed="0" data-theme="<?php echo esc_attr( $theme ); ?>" data-ui="<?php echo esc_attr( $ui ); ?>"<?php echo $style; ?>>
 
 			<div class="ecrm-backdrop" data-mobnav-close></div>
 
@@ -233,6 +242,12 @@ class ECRM_App {
 						<span class="ecrm-nav__icon"><?php echo self::icon( 'moon' ); // phpcs:ignore ?></span>
 						<span class="ecrm-nav__txt">Φωτεινή / σκούρα εμφάνιση</span>
 					</button>
+					<?php if ( $ui_try ) : ?>
+					<button type="button" class="ecrm-nav__item ecrm-nav__ui" data-ui-toggle data-next="<?php echo esc_attr( 'signature' === $ui ? 'classic' : 'signature' ); ?>">
+						<span class="ecrm-nav__icon"><?php echo self::icon( 'spark' ); // phpcs:ignore ?></span>
+						<span class="ecrm-nav__txt"><?php echo esc_html( 'signature' === $ui ? 'Παλιά εμφάνιση' : 'Νέα εμφάνιση (δοκιμή)' ); ?></span>
+					</button>
+					<?php endif; ?>
 					<?php if ( current_user_can( 'manage_options' ) ) : ?>
 					<a class="ecrm-nav__item" href="<?php echo esc_url( admin_url( 'admin.php?page=energy-crm' ) ); ?>" title="Ρυθμίσεις (WP Admin)">
 						<span class="ecrm-nav__icon"><?php echo self::icon( 'gear' ); // phpcs:ignore ?></span>
@@ -612,6 +627,7 @@ class ECRM_App {
 			'moon'      => '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
 			'sun'       => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.9 4.9l1.4 1.4"/><path d="M17.7 17.7l1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M4.9 19.1l1.4-1.4"/><path d="M17.7 6.3l1.4-1.4"/>',
 			'chevron-down' => '<path d="M6 9l6 6 6-6"/>',
+			'spark'     => '<path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"/>',
 		];
 		$d = $p[ $name ] ?? '';
 		return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $d . '</svg>';

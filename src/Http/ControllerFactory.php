@@ -216,6 +216,8 @@ final class ControllerFactory
             new AssistantHistoryController($scope, Services::assistantHistory()),
             new SavedFiltersController($scope),
             new ThemeController($scope),
+            // (353) Νέα εμφάνιση «Signature», σε δοκιμή από τον διαχειριστή.
+            new UiController(),
 
             // Catalogue and form metadata.
             new CatalogueController(

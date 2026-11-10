@@ -396,6 +396,20 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 		});
 	});
 
+	// (353) Νέα εμφάνιση «Signature»: μόνο για διαχειριστή, όσο είναι σε δοκιμή.
+	// Το φύλλο της φορτώνει η PHP, άρα η αλλαγή θέλει ξαναφόρτωμα της σελίδας.
+	app.querySelectorAll('[data-ui-toggle]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			b.disabled = true;
+			fetch(api('/ui'), {
+				method: 'POST',
+				headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+				body: JSON.stringify({ ui: b.getAttribute('data-next') })
+			}).then(function () { window.location.reload(); })
+				.catch(function () { b.disabled = false; });
+		});
+	});
+
 	app.addEventListener('click', function (e) {
 		var btn = e.target.closest('[data-go]');
 		if (!btn) return;

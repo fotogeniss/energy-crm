@@ -1,0 +1,336 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Νέα εμφάνιση: Signature</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+--canvas:#eef0ed;--surface:rgba(255,255,255,.78);--solid:#fff;--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;
+--hair:rgba(20,30,20,.09);--hair2:rgba(20,30,20,.055);
+--lime:#16c217;--lime2:#8bea4f;--teal:#00a99a;--teal2:#5ce8d6;--sky:#2f7cf6;--sky2:#7cc0ff;--deep:#0a6b1d;
+--amber:#d97a00;--amber-t:rgba(255,160,20,.14);--rose:#e0284a;--rose-t:rgba(255,60,90,.12);--blue-t:rgba(47,124,246,.12);
+--glow:0 0 0 1px rgba(255,255,255,.6) inset,0 1px 0 rgba(255,255,255,.9) inset;
+--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+--page:#dfe3de;
+--disp:"Inter Tight",Inter,-apple-system,"Segoe UI",system-ui,sans-serif;--text:Inter,-apple-system,"Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+--canvas:#0d0f0d;--surface:rgba(30,33,30,.72);--solid:#1b1e1b;--ink:#f2f4f1;--ink2:#a6aba3;--ink3:#6f746c;--hair:rgba(255,255,255,.1);--hair2:rgba(255,255,255,.06);
+--glow:0 0 0 1px rgba(255,255,255,.05) inset,0 1px 0 rgba(255,255,255,.07) inset;--lift:0 1px 1px rgba(0,0,0,.3),0 14px 34px -14px rgba(0,0,0,.7);--page:#060706;
+--amber-t:rgba(255,160,20,.2);--rose-t:rgba(255,60,90,.2);--blue-t:rgba(47,124,246,.22);}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.5 var(--text);-webkit-font-smoothing:antialiased;letter-spacing:-.006em}
+.wrap{max-width:1320px;margin:0 auto;padding:40px 20px 100px}
+.lede h1{font:700 40px/1.05 var(--disp);letter-spacing:-.035em;margin:0 0 10px}
+.lede p{color:var(--ink2);max-width:640px;margin:0;font-size:16px}
+.cap{font:600 13px var(--text);color:var(--ink2);margin:44px 0 12px}
+
+/* ===== Desktop window ===== */
+.mac{border-radius:18px;overflow:hidden;box-shadow:0 50px 100px -40px rgba(10,30,10,.45),0 0 0 1px var(--hair);position:relative;background:var(--canvas)}
+.amb{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.amb i{position:absolute;border-radius:50%;filter:blur(80px);opacity:.55}
+.amb i:nth-child(1){width:520px;height:520px;left:-120px;top:-180px;background:radial-gradient(circle,#b6f59a,transparent 70%)}
+.amb i:nth-child(2){width:600px;height:600px;right:-200px;top:120px;background:radial-gradient(circle,#a8efe6,transparent 70%)}
+.amb i:nth-child(3){width:500px;height:400px;left:30%;bottom:-260px;background:radial-gradient(circle,#c9e2ff,transparent 70%)}
+@media (prefers-color-scheme:dark){.amb i{opacity:.16}}
+.win{position:relative;display:flex;min-height:780px}
+.side{width:236px;flex:0 0 236px;padding:16px 12px;background:var(--surface);backdrop-filter:saturate(190%) blur(30px);-webkit-backdrop-filter:saturate(190%) blur(30px);border-right:1px solid var(--hair);display:flex;flex-direction:column}
+.lights{display:flex;gap:8px;padding:2px 8px 20px}.lights i{width:12px;height:12px;border-radius:50%;background:var(--hair)}
+.mark{display:flex;align-items:center;gap:10px;padding:0 8px 18px;font:700 16px var(--disp);letter-spacing:-.02em}
+.mark b{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:conic-gradient(from 200deg,var(--lime),var(--teal),var(--lime));box-shadow:0 4px 12px -4px rgba(22,194,23,.7),inset 0 1px 0 rgba(255,255,255,.5)}
+.mark b:after{content:"";width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.35)}
+.nv a{display:flex;align-items:center;gap:11px;padding:7px 10px;border-radius:9px;font:500 14px var(--text);color:var(--ink);text-decoration:none;margin-bottom:1px}
+.nv a svg{width:18px;height:18px;stroke:var(--ink2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nv a em{margin-left:auto;font:600 12px var(--text);font-style:normal;color:var(--ink3)}
+.nv a.on{background:var(--solid);box-shadow:var(--lift)}.nv a.on svg{stroke:var(--lime)}
+.nv .grp{font:600 12px var(--text);color:var(--ink3);padding:16px 10px 6px}
+.you{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 8px}
+.av{width:32px;height:32px;border-radius:50%;flex:0 0 32px;display:grid;place-items:center;font:700 12px var(--disp);color:#fff}
+.you b{display:block;font:600 13.5px var(--text);line-height:1.2}.you small{color:var(--ink2);font-size:12px}
+
+.main{flex:1;min-width:0;padding:0 34px 34px;position:relative}
+.top{display:flex;align-items:center;gap:14px;height:66px}
+.find{display:flex;align-items:center;gap:8px;width:280px;padding:8px 12px;border-radius:11px;background:var(--surface);backdrop-filter:blur(20px);box-shadow:var(--glow),0 0 0 1px var(--hair);color:var(--ink3);font-size:13.5px}
+.find kbd{margin-left:auto;font:600 11px var(--text);color:var(--ink3);border:1px solid var(--hair);border-radius:5px;padding:0 5px}
+.find svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.tsp{flex:1}
+.newbtn{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:980px;font:600 14px var(--text);color:#fff;background:linear-gradient(180deg,#22cf23,#0e9a12);box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 8px 20px -8px rgba(14,154,18,.8);white-space:nowrap}
+.bell{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--surface);box-shadow:var(--glow),0 0 0 1px var(--hair);position:relative}
+.bell svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.7}.bell i{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--rose);box-shadow:0 0 0 2px var(--solid)}
+
+/* live island */
+.island{position:absolute;left:50%;top:13px;transform:translateX(-50%);height:40px;width:40px;border-radius:24px;background:#050505;color:#fff;display:flex;align-items:center;gap:10px;padding:0 6px;overflow:hidden;box-shadow:0 10px 30px -8px rgba(0,0,0,.45);z-index:3;animation:isl 1.1s cubic-bezier(.2,.9,.2,1.15) .9s forwards}
+.island .av{width:28px;height:28px;flex:0 0 28px;font-size:10.5px}
+.island .tx{white-space:nowrap;opacity:0;animation:fade .4s ease 1.6s forwards}
+.island .tx b{font:600 13px var(--text)}.island .tx small{display:block;font-size:11.5px;color:#9be59d;line-height:1.1}
+.island .pr{margin-left:auto;width:26px;height:26px;opacity:0;animation:fade .4s ease 1.7s forwards;flex:0 0 26px}
+@keyframes isl{to{width:330px}}@keyframes fade{to{opacity:1}}
+
+.hello{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:18px 0 24px}
+.hello h2{font:700 44px/1 var(--disp);letter-spacing:-.04em;margin:0}
+.hello p{margin:8px 0 0;color:var(--ink2);font-size:15.5px}
+.range{display:flex;padding:3px;border-radius:11px;background:var(--hair2);box-shadow:inset 0 0 0 1px var(--hair2)}
+.range span{padding:6px 14px;border-radius:8px;font:600 13px var(--text);color:var(--ink2)}.range span.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+
+.grid{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
+.panel{background:var(--surface);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-radius:22px;box-shadow:var(--glow),0 0 0 1px var(--hair),var(--lift);padding:22px 24px;position:relative}
+.ph{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.ph h3{font:650 17px var(--disp);font-weight:700;letter-spacing:-.02em;margin:0}.ph a{font:500 13.5px var(--text);color:var(--deep)}
+@media (prefers-color-scheme:dark){.ph a{color:var(--lime2)}}
+/* rings */
+.rings{display:flex;align-items:center;gap:30px}
+.rg{width:210px;height:210px;flex:0 0 210px;position:relative}
+.rg svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.rg .trk{fill:none;stroke-width:16;opacity:.16}
+.rg .arc{fill:none;stroke-width:16;stroke-linecap:round;stroke-dasharray:0 999;animation:draw 1.6s cubic-bezier(.3,.8,.2,1) .25s forwards}
+.rg .a1{filter:drop-shadow(0 0 6px rgba(22,194,23,.55));--to:var(--d1)}.rg .a2{filter:drop-shadow(0 0 6px rgba(0,169,154,.5));--to:var(--d2)}.rg .a3{filter:drop-shadow(0 0 6px rgba(47,124,246,.5));--to:var(--d3)}
+@keyframes draw{to{stroke-dasharray:var(--to) 999}}
+.rg .ctr{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.rg .ctr b{display:block;font:800 40px/1 var(--disp);letter-spacing:-.05em}.rg .ctr small{color:var(--ink2);font-size:12.5px}
+.leg{flex:1;display:grid;gap:16px}
+.leg div{display:grid;grid-template-columns:12px 1fr auto;gap:2px 12px;align-items:baseline}
+.leg i{width:10px;height:10px;border-radius:50%;align-self:center}
+.leg span{font:500 14px var(--text);color:var(--ink2)}
+.leg b{font:700 28px/1 var(--disp);letter-spacing:-.04em}.leg b small{font-size:16px;color:var(--ink3);font-weight:600}
+.leg em{grid-column:2/4;font-style:normal;font-size:12.5px;color:var(--ink3)}
+/* chart */
+.big{font:800 46px/1 var(--disp);letter-spacing:-.05em;margin:10px 0 2px}.big small{font:600 15px var(--text);color:var(--deep);letter-spacing:0;margin-left:8px}
+@media (prefers-color-scheme:dark){.big small{color:var(--lime2)}}
+.subt{color:var(--ink2);font-size:13.5px;margin:0 0 12px}
+.chart{width:100%;height:150px;display:block}
+.axis{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink3);margin-top:4px}
+/* row 2 */
+.grid2{display:grid;grid-template-columns:1.1fr .9fr 1fr;gap:18px;margin-top:18px}
+.stack{position:relative;margin-top:12px;padding-bottom:20px}
+.note{position:relative;border-radius:16px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),0 12px 26px -16px rgba(0,0,0,.35);padding:13px 14px;display:flex;gap:12px;align-items:flex-start;transition:transform .45s cubic-bezier(.2,.9,.2,1),opacity .3s}
+.note .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:0 0 34px;font:700 15px var(--disp)}
+.note b{display:block;font:600 14.5px var(--text);letter-spacing:-.01em}.note p{margin:1px 0 9px;color:var(--ink2);font-size:13px}
+.note .acts{display:flex;gap:6px}.note .acts span{font:600 12.5px var(--text);padding:5px 12px;border-radius:980px;background:var(--hair2)}.note .acts span.go{background:var(--ink);color:var(--solid)}
+.note time{margin-left:auto;font-size:12px;color:var(--ink3);white-space:nowrap}
+.note.n1{z-index:3}
+.stack:not(.open) .note.n2,.stack:not(.open) .note.n3{position:absolute;left:12px;right:12px;height:30px;overflow:hidden;padding:0;bottom:8px;opacity:.7;z-index:2}
+.stack:not(.open) .note.n3{left:24px;right:24px;bottom:0;opacity:.4;z-index:1}
+.stack:not(.open) .note.n2>*,.stack:not(.open) .note.n3>*{visibility:hidden}
+.stack.open{padding-bottom:0}.stack.open .note{margin-bottom:8px}
+.more{font:600 13px var(--text);color:var(--ink2);background:none;border:0;padding:6px 0 0;cursor:pointer}
+.pod{display:flex;align-items:flex-end;gap:12px;height:190px;margin-top:20px;justify-content:center}
+.pod>div{flex:1;max-width:84px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.pod .av{width:42px;height:42px;flex-basis:42px;font-size:14px;box-shadow:0 0 0 3px var(--solid),0 6px 14px -6px rgba(0,0,0,.4)}
+.pod .bar{width:100%;border-radius:14px 14px 6px 6px;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font:800 22px var(--disp);letter-spacing:-.04em;color:#fff}
+.pod small{font:500 12.5px var(--text);color:var(--ink2);text-align:center;line-height:1.25}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:16px}
+.days div{border-radius:12px;padding:8px 4px;text-align:center;background:var(--hair2)}
+.days small{display:block;font-size:11px;color:var(--ink3)}.days b{font:700 17px var(--disp)}
+.days .has{background:var(--solid);box-shadow:0 0 0 1px var(--hair)}.days .has:after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--teal);margin:4px auto 0}
+.days .tdy{background:var(--ink);color:var(--solid)}.days .tdy small{color:var(--ink3)}
+.ren{margin-top:14px}.ren div{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--hair2);font-size:13.5px}.ren div b{font-weight:600}.ren div span{margin-left:auto;color:var(--ink3);font-size:12.5px}
+
+/* ===== Phones ===== */
+.phones{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}
+.iph{width:340px;height:720px;flex:0 0 340px;border-radius:56px;padding:11px;background:linear-gradient(145deg,#3a3d3a,#0d0e0d 40%,#2a2c2a);box-shadow:0 50px 90px -40px rgba(0,0,0,.6),inset 0 0 0 1.5px rgba(255,255,255,.12)}
+.scr{position:relative;height:100%;border-radius:46px;overflow:hidden;background:var(--canvas);display:flex;flex-direction:column}
+.scr .amb i:nth-child(1){width:300px;height:300px;left:-80px;top:-60px}.scr .amb i:nth-child(2){width:320px;height:320px;right:-140px;top:260px}
+.stat{position:relative;display:flex;justify-content:space-between;align-items:center;padding:16px 30px 0;height:50px;font:600 14.5px var(--text);z-index:2}
+.di{position:absolute;left:50%;top:11px;transform:translateX(-50%);height:34px;width:112px;border-radius:20px;background:#000;z-index:4;display:flex;align-items:center;padding:0 5px;gap:8px;color:#fff;transition:all .5s cubic-bezier(.2,.9,.2,1.1)}
+.di.live{width:200px}
+.di .av{width:24px;height:24px;flex:0 0 24px;font-size:9.5px;opacity:0}.di.live .av{opacity:1}
+.di .tx{font:600 12px var(--text);white-space:nowrap;opacity:0}.di.live .tx{opacity:1;transition:opacity .3s .25s}
+.di .tx small{color:#9be59d;font-weight:500}
+.di svg{margin-left:auto;width:22px;height:22px;opacity:0}.di.live svg{opacity:1}
+.ptitle{position:relative;padding:14px 22px 8px}.ptitle small{color:var(--ink2);font-size:13.5px}.ptitle h2{margin:0;font:800 34px/1.05 var(--disp);letter-spacing:-.04em}
+.pbody{position:relative;flex:1;overflow:hidden;padding:4px 16px}
+.wid{display:flex;align-items:center;gap:16px;padding:16px;border-radius:24px}
+.wid .rg{width:118px;height:118px;flex-basis:118px}.wid .rg .trk,.wid .rg .arc{stroke-width:13}
+.wid .leg{gap:8px}.wid .leg b{font-size:20px}.wid .leg span{font-size:12px}.wid .leg div{grid-template-columns:10px 1fr auto;gap:0 8px}.wid .leg i{width:8px;height:8px}
+.plbl{font:700 19px var(--disp);letter-spacing:-.02em;margin:20px 4px 10px;display:flex;justify-content:space-between;align-items:baseline}.plbl a{font:500 14px var(--text);color:var(--deep)}
+.pbody .stack{margin:0}.pbody .note{padding:12px}
+.tabs{position:absolute;left:14px;right:14px;bottom:22px;height:64px;border-radius:32px;background:var(--surface);backdrop-filter:saturate(200%) blur(30px);-webkit-backdrop-filter:saturate(200%) blur(30px);box-shadow:var(--glow),0 0 0 1px var(--hair),0 16px 30px -14px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:space-around;padding:0 8px;z-index:3}
+.tabs span{display:flex;flex-direction:column;align-items:center;gap:2px;font:600 10.5px var(--text);color:var(--ink3);padding:6px 10px;border-radius:22px}
+.tabs span.on{color:var(--deep);background:rgba(22,194,23,.12)}
+@media (prefers-color-scheme:dark){.tabs span.on{color:var(--lime2)}.plbl a{color:var(--lime2)}}
+.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs .plus{width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,#22cf23,#0e9a12);color:#fff;padding:0;justify-content:center;box-shadow:0 8px 18px -6px rgba(14,154,18,.8)}
+.tabs .plus svg{stroke:#fff;width:24px;height:24px}
+
+/* wallet */
+.wtop{position:relative;display:flex;justify-content:space-between;align-items:center;padding:6px 20px 0;font:500 16px var(--text);color:var(--deep)}
+@media (prefers-color-scheme:dark){.wtop{color:var(--lime2)}}
+.wtop b{color:var(--ink);font-weight:600}
+.dots{display:flex;gap:5px;justify-content:center;padding:10px 0 4px}.dots i{width:22px;height:4px;border-radius:2px;background:var(--hair)}.dots i.on{background:var(--lime)}
+.wallet{position:relative;height:376px;margin:8px 16px 0;transition:height .5s cubic-bezier(.2,.9,.2,1)}
+.card{position:absolute;left:0;right:0;height:200px;border-radius:20px;padding:18px 20px;color:#fff;cursor:pointer;transition:transform .55s cubic-bezier(.2,.9,.2,1.05),top .55s cubic-bezier(.2,.9,.2,1.05),box-shadow .3s;box-shadow:0 -1px 0 rgba(255,255,255,.25) inset,0 18px 30px -18px rgba(0,0,0,.55);overflow:hidden}
+.card:before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.28),transparent 38%,transparent 62%,rgba(255,255,255,.08));pointer-events:none}
+.card .nm{font:800 22px var(--disp);letter-spacing:-.02em;display:flex;justify-content:space-between;align-items:center}
+.card .nm i{font:600 12px var(--text);font-style:normal;background:rgba(255,255,255,.2);border-radius:980px;padding:3px 10px;backdrop-filter:blur(6px)}
+.card .meta{position:absolute;left:20px;right:20px;bottom:16px;display:flex;justify-content:space-between;align-items:flex-end}
+.card .meta small{display:block;font-size:11.5px;opacity:.8}.card .meta b{font:700 16px var(--disp)}
+.card .chipline{display:flex;gap:6px;margin-top:10px}.card .chipline span{font:600 11.5px var(--text);background:rgba(0,0,0,.18);border-radius:980px;padding:3px 9px}
+.c1{background:linear-gradient(135deg,#2f6ff0,#1b3fb0);top:0}
+.c2{background:linear-gradient(135deg,#ff8a3d,#d64d10);top:56px}
+.c3{background:linear-gradient(135deg,#21b46a,#0b6e3e);top:112px}
+.c4{background:linear-gradient(135deg,#8a62ff,#5530c9);top:168px}
+.wallet.pick{height:236px;overflow:hidden;padding-bottom:0}.wallet.pick .card{top:208px!important;transform:scale(.9);transform-origin:top center;filter:brightness(.92)}.wallet.pick .card.sel{filter:none}.picked{margin-top:14px!important}
+.wallet.pick .card.sel{top:0!important;transform:none;z-index:9}
+.picked{position:relative;margin:0 16px;opacity:0;transform:translateY(10px);transition:all .45s ease .15s}
+.wallet.pick+.picked{opacity:1;transform:none}
+.segp{display:flex;padding:3px;border-radius:12px;background:var(--hair2);margin-top:6px}.segp span{flex:1;text-align:center;padding:8px;border-radius:9px;font:600 13.5px var(--text);color:var(--ink2)}.segp span.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.hint{position:relative;text-align:center;color:var(--ink3);font-size:12.5px;margin-top:2px}
+.pcta{position:absolute;left:16px;right:16px;bottom:26px;height:54px;border-radius:18px;display:grid;place-items:center;font:600 17px var(--text);color:#fff;background:linear-gradient(180deg,#22cf23,#0e9a12);box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 14px 26px -12px rgba(14,154,18,.9)}
+
+.why{margin-top:48px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.why div{background:var(--solid);border-radius:18px;padding:18px 20px;box-shadow:0 0 0 1px var(--hair)}
+.why b{display:block;font:700 16px var(--disp);letter-spacing:-.02em;margin-bottom:4px}.why p{margin:0;color:var(--ink2);font-size:14px}
+@media (max-width:1100px){.grid,.grid2{grid-template-columns:1fr}.side{display:none}.island{display:none}}
+@media (max-width:700px){.main{padding:0 16px 20px}.rings{flex-direction:column;align-items:flex-start}.hello{flex-direction:column;align-items:flex-start}.hello h2{font-size:34px}.find{width:auto;flex:1}.newbtn span{display:none}.why{grid-template-columns:1fr}.iph{width:100%;max-width:350px;flex-basis:100%}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important;transition:none!important}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8bea4f"/><stop offset="1" stop-color="#16c217"/></linearGradient>
+<linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ce8d6"/><stop offset="1" stop-color="#00a99a"/></linearGradient>
+<linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7cc0ff"/><stop offset="1" stop-color="#2f7cf6"/></linearGradient>
+<linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16c217" stop-opacity=".32"/><stop offset="1" stop-color="#16c217" stop-opacity="0"/></linearGradient>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+<symbol id="i-ppl" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.6"/><path d="M17 14.6c2.5.3 4 2 4.5 4.6"/></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z"/></symbol>
+<symbol id="i-cyc" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-14.3 4.9M4 12A8 8 0 0 1 18.3 7.1"/><path d="M18.5 3v4.3h-4.3M5.5 21v-4.3h4.3"/></symbol>
+<symbol id="i-team" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.5"/><path d="M5 20c.7-3.8 3.4-6 7-6s6.3 2.2 7 6"/></symbol>
+<symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M14.8 9.2c-.5-.9-1.6-1.4-2.8-1.4-1.6 0-2.8.8-2.8 2.1 0 3 5.6 1.6 5.6 4.3 0 1.3-1.2 2.1-2.8 2.1-1.3 0-2.4-.6-2.9-1.5M12 6.3v1.5M12 16.7v1.5"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+<symbol id="i-find" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+<div class="lede"><h1>Signature</h1><p>Η εφαρμογή σαν να βγήκε από το ίδιο εργοστάσιο με το iPhone σου: γυαλί, βάθος, ζωντανά στοιχεία που κινούνται μόνο όταν κάτι συμβαίνει. Το πράσινό μας μένει και γίνεται φως. Ψεύτικα δεδομένα.</p></div>
+
+<p class="cap">Αρχική στον υπολογιστή. Κοίτα την κορυφή: μόλις φορτώσει, η «ζωντανή νησίδα» δείχνει μια υπογραφή που γίνεται αυτή τη στιγμή.</p>
+<div class="mac"><div class="amb"><i></i><i></i><i></i></div><div class="win">
+<aside class="side"><div class="lights"><i></i><i></i><i></i></div>
+<div class="mark"><b></b>gdg energy</div>
+<nav class="nv">
+<a class="on"><svg><use href="#i-home"/></svg>Αρχική</a>
+<a><svg><use href="#i-doc"/></svg>Αιτήσεις<em>128</em></a>
+<a><svg><use href="#i-ppl"/></svg>Πελάτες</a>
+<a><svg><use href="#i-spark"/></svg>Υποψήφιοι<em>5</em></a>
+<a><svg><use href="#i-cyc"/></svg>Ανανεώσεις<em>6</em></a>
+<div class="grp">Το κατάστημα</div>
+<a><svg><use href="#i-team"/></svg>Ομάδα</a>
+<a><svg><use href="#i-coin"/></svg>Προμήθειες</a>
+<a><svg><use href="#i-chart"/></svg>Στατιστικά</a>
+</nav>
+<div class="you"><span class="av" style="background:linear-gradient(135deg,#6e6bff,#3d38c9)">ΚΝ</span><span><b>Κωνσταντίνος</b><small>Διαχειριστής</small></span></div>
+</aside>
+<main class="main">
+<div class="island"><span class="av" style="background:linear-gradient(135deg,#3cc6d9,#1a8ea3)">ΜΚ</span><span class="tx"><b>Η Μαρία Κωνσταντίνου υπογράφει</b><small>Protergia Αέριο, σελίδα 2 από 3</small></span>
+<svg class="pr" viewBox="0 0 36 36" style="transform:rotate(-90deg)"><circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="4"/><circle cx="18" cy="18" r="14" fill="none" stroke="#5ff060" stroke-width="4" stroke-linecap="round" stroke-dasharray="58 88"/></svg></div>
+<div class="top"><span class="find"><svg><use href="#i-find"/></svg>Βρες πελάτη ή αίτηση<kbd>Ctrl K</kbd></span><span class="tsp"></span><span class="bell"><svg><use href="#i-bell"/></svg><i></i></span><span class="newbtn"><svg width="16" height="16" style="stroke:#fff;fill:none;stroke-width:2.2"><use href="#i-plus"/></svg><span>Νέα αίτηση</span></span></div>
+
+<div class="hello"><div><h2>Καλησπέρα, Κωνσταντίνε.</h2><p>Πας μπροστά από τον Οκτώβριο. Τέσσερα πράγματα περιμένουν εσένα.</p></div><div class="range"><span>Σήμερα</span><span class="on">Μήνας</span><span>Έτος</span></div></div>
+
+<div class="grid">
+<section class="panel"><div class="ph"><h3>Νοέμβριος</h3><a>Στόχοι</a></div>
+<div class="rings">
+<div class="rg"><svg viewBox="0 0 200 200">
+<circle class="trk" cx="100" cy="100" r="88" stroke="#16c217"/><circle class="arc a1" cx="100" cy="100" r="88" stroke="url(#g1)" style="--d1:431"/>
+<circle class="trk" cx="100" cy="100" r="68" stroke="#00a99a"/><circle class="arc a2" cx="100" cy="100" r="68" stroke="url(#g2)" style="--d2:308"/>
+<circle class="trk" cx="100" cy="100" r="48" stroke="#2f7cf6"/><circle class="arc a3" cx="100" cy="100" r="48" stroke="url(#g3)" style="--d3:254"/>
+</svg><div class="ctr"><div><b>78%</b><small>του στόχου</small></div></div></div>
+<div class="leg">
+<div><i style="background:var(--lime)"></i><span>Αιτήσεις</span><b>31<small> / 40</small></b><em>9 ακόμα σε 20 μέρες, άνετα</em></div>
+<div><i style="background:var(--teal)"></i><span>Ενεργοποιήσεις</span><b>18<small> / 25</small></b><em>4 στον πάροχο αυτή την εβδομάδα</em></div>
+<div><i style="background:var(--sky)"></i><span>Υπογραφές</span><b>26<small> / 31</small></b><em>5 περιμένουν τον πελάτη</em></div>
+</div></div></section>
+
+<section class="panel"><div class="ph"><h3>Ρυθμός</h3><a>Στατιστικά</a></div>
+<div class="big">31<small>+12% από τον Οκτώβριο</small></div><p class="subt">αιτήσεις ως τις 10 του μήνα</p>
+<svg class="chart" viewBox="0 0 400 150" preserveAspectRatio="none">
+<path d="M0 140 C40 132 60 128 90 118 S150 96 190 88 S260 70 300 52 S360 30 400 22" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-dasharray="4 6" opacity=".7"/>
+<path d="M0 138 C30 130 55 122 80 110 S130 84 160 74 S200 46 230 36 L230 150 L0 150Z" fill="url(#area)"/>
+<path d="M0 138 C30 130 55 122 80 110 S130 84 160 74 S200 46 230 36" fill="none" stroke="#16c217" stroke-width="3" stroke-linecap="round"/>
+<circle cx="230" cy="36" r="6" fill="#16c217" stroke="var(--solid)" stroke-width="3"/>
+</svg>
+<div class="axis"><span>1 Νοε</span><span>Σήμερα</span><span>30 Νοε</span></div>
+</section>
+</div>
+
+<div class="grid2">
+<section class="panel"><div class="ph"><h3>Χρειάζονται εσένα</h3><a>4</a></div>
+<div class="stack" data-stack>
+<div class="note n1"><span class="ic" style="background:var(--amber-t);color:var(--amber)">!</span><div><b>Λείπει ο λογαριασμός ΔΕΗ</b><p>Παπαδόπουλος Γιώργος, Protergia Ρεύμα</p><div class="acts"><span class="go">Ζήτα τον με SMS</span><span>Άνοιξε</span></div></div><time>2 μέρες</time></div>
+<div class="note n2"><span class="ic" style="background:var(--rose-t);color:var(--rose)">×</span><div><b>Απορρίφθηκε για λάθος ΑΦΜ</b><p>Δημητρίου Νίκος, Volton Ρεύμα</p><div class="acts"><span class="go">Διόρθωσε</span><span>Άνοιξε</span></div></div><time>χθες</time></div>
+<div class="note n3"><span class="ic" style="background:var(--blue-t);color:var(--sky)">✎</span><div><b>Δεν έχει υπογράψει ακόμα</b><p>Ιωάννου Κατερίνα, ΗΡΩΝ Ρεύμα</p><div class="acts"><span class="go">Ξαναστείλε</span><span>Άνοιξε</span></div></div><time>5 ώρες</time></div>
+</div><button class="more" data-more>Δες και τα τρία</button></section>
+
+<section class="panel"><div class="ph"><h3>Η ομάδα</h3><a>Ομάδα</a></div>
+<div class="pod">
+<div><span class="av" style="background:linear-gradient(135deg,#3cc6d9,#1a8ea3)">ΜΚ</span><div class="bar" style="height:96px;background:linear-gradient(180deg,#5ce8d6,#00a99a)">11</div><small>Μαρία Κ.</small></div>
+<div><span class="av" style="background:linear-gradient(135deg,#ffb340,#e07800)">ΒΚ</span><div class="bar" style="height:130px;background:linear-gradient(180deg,#8bea4f,#16c217)">14</div><small>Βίκτωρας Κ.</small></div>
+<div><span class="av" style="background:linear-gradient(135deg,#c38bff,#8c46e8)">ΓΠ</span><div class="bar" style="height:58px;background:linear-gradient(180deg,#7cc0ff,#2f7cf6)">6</div><small>Γιάννης Π.</small></div>
+</div></section>
+
+<section class="panel"><div class="ph"><h3>Ανανεώσεις</h3><a>Όλες</a></div>
+<div class="days"><div class="tdy"><small>Τρ</small><b>10</b></div><div><small>Τε</small><b>11</b></div><div class="has"><small>Πε</small><b>12</b></div><div><small>Πα</small><b>13</b></div><div><small>Σα</small><b>14</b></div><div><small>Κυ</small><b>15</b></div><div class="has"><small>Δε</small><b>16</b></div></div>
+<div class="ren"><div><span class="av" style="width:26px;height:26px;flex-basis:26px;font-size:10px;background:linear-gradient(135deg,#8bea4f,#16c217)">ΑΕ</span><b>Αλεξίου Ελένη</b><span>Πέμπτη</span></div><div><span class="av" style="width:26px;height:26px;flex-basis:26px;font-size:10px;background:linear-gradient(135deg,#7cc0ff,#2f7cf6)">ΣΝ</span><b>Σταύρου Νίκος</b><span>Δευτέρα</span></div></div>
+</section>
+</div>
+</main></div></div>
+
+<p class="cap">Στο κινητό. Αριστερά η Αρχική με τη ζωντανή υπογραφή στη νησίδα. Δεξιά η νέα αίτηση: οι πάροχοι είναι κάρτες σαν στο Wallet. Πάτα μια κάρτα.</p>
+<div class="phones">
+<div class="iph"><div class="scr"><div class="amb"><i></i><i></i></div>
+<div class="di" data-di><span class="av" style="background:linear-gradient(135deg,#3cc6d9,#1a8ea3)">ΜΚ</span><span class="tx">Υπογράφει <small>2 από 3</small></span><svg viewBox="0 0 36 36" style="transform:rotate(-90deg)"><circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="4"/><circle cx="18" cy="18" r="14" fill="none" stroke="#5ff060" stroke-width="4" stroke-linecap="round" stroke-dasharray="58 88"/></svg></div>
+<div class="stat"><span>9:41</span><span>▮▮▮</span></div>
+<div class="ptitle"><small>Τρίτη 10 Νοεμβρίου</small><h2>Αρχική</h2></div>
+<div class="pbody">
+<section class="panel wid"><div class="rg"><svg viewBox="0 0 200 200">
+<circle class="trk" cx="100" cy="100" r="86" stroke="#16c217"/><circle class="arc a1" cx="100" cy="100" r="86" stroke="url(#g1)" style="--d1:421"/>
+<circle class="trk" cx="100" cy="100" r="62" stroke="#00a99a"/><circle class="arc a2" cx="100" cy="100" r="62" stroke="url(#g2)" style="--d2:280"/>
+<circle class="trk" cx="100" cy="100" r="38" stroke="#2f7cf6"/><circle class="arc a3" cx="100" cy="100" r="38" stroke="url(#g3)" style="--d3:200"/>
+</svg></div>
+<div class="leg"><div><i style="background:var(--lime)"></i><span>Αιτήσεις</span><b>31<small>/40</small></b></div><div><i style="background:var(--teal)"></i><span>Ενεργές</span><b>18<small>/25</small></b></div><div><i style="background:var(--sky)"></i><span>Υπογραφές</span><b>26<small>/31</small></b></div></div></section>
+<div class="plbl">Χρειάζονται εσένα<a>4</a></div>
+<div class="stack">
+<div class="note n1"><span class="ic" style="background:var(--amber-t);color:var(--amber)">!</span><div><b>Λείπει ο λογαριασμός</b><p>Παπαδόπουλος Γ.</p><div class="acts"><span class="go">Ζήτα τον</span></div></div><time>2μ</time></div>
+<div class="note n2"><span class="ic" style="background:var(--rose-t);color:var(--rose)">×</span><div><b>Λάθος ΑΦΜ</b><p>Δημητρίου Ν.</p></div><time>χθες</time></div>
+<div class="note n3"><span class="ic" style="background:var(--blue-t);color:var(--sky)">✎</span><div><b>Δεν υπέγραψε</b><p>Ιωάννου Κ.</p></div><time>5ω</time></div>
+</div></div>
+<nav class="tabs"><span class="on"><svg><use href="#i-home"/></svg>Αρχική</span><span><svg><use href="#i-doc"/></svg>Αιτήσεις</span><span class="plus"><svg><use href="#i-plus"/></svg></span><span><svg><use href="#i-ppl"/></svg>Πελάτες</span><span><svg><use href="#i-team"/></svg>Ομάδα</span></nav>
+</div></div>
+
+<div class="iph"><div class="scr"><div class="amb"><i></i><i></i></div>
+<div class="di"></div>
+<div class="stat"><span>9:41</span><span>▮▮▮</span></div>
+<div class="wtop"><span>Άκυρο</span><b>Νέα αίτηση</b><span style="opacity:.4">Επόμενο</span></div>
+<div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
+<div class="ptitle" style="padding-top:4px"><h2 style="font-size:30px">Ποιος πάροχος;</h2></div>
+<div class="wallet" data-wallet>
+<div class="card c1" data-card><div class="nm">PROTERGIA<i>Ρεύμα, Αέριο</i></div><div class="chipline"><span>Σταθερό</span><span>Κυμαινόμενο</span><span>Picasso</span></div><div class="meta"><div><small>Προγράμματα</small><b>42</b></div><div style="text-align:right"><small>Αυτόν τον μήνα</small><b>19 αιτήσεις</b></div></div></div>
+<div class="card c2" data-card><div class="nm">VOLTON<i>Ρεύμα</i></div><div class="chipline"><span>Σταθερό</span><span>Κυμαινόμενο</span></div><div class="meta"><div><small>Προγράμματα</small><b>14</b></div><div style="text-align:right"><small>Αυτόν τον μήνα</small><b>7 αιτήσεις</b></div></div></div>
+<div class="card c3" data-card><div class="nm">ΗΡΩΝ<i>Ρεύμα, Αέριο</i></div><div class="chipline"><span>Κυμαινόμενο</span></div><div class="meta"><div><small>Προγράμματα</small><b>8</b></div><div style="text-align:right"><small>Αυτόν τον μήνα</small><b>3 αιτήσεις</b></div></div></div>
+<div class="card c4" data-card><div class="nm">Orizon<i>Κινητή</i></div><div class="chipline"><span>4 πακέτα</span></div><div class="meta"><div><small>Προγράμματα</small><b>4</b></div><div style="text-align:right"><small>Αυτόν τον μήνα</small><b>2 αιτήσεις</b></div></div></div>
+</div>
+<div class="picked"><div class="segp"><span class="on">Ρεύμα</span><span>Αέριο</span></div><div class="segp"><span class="on">Οικιακό</span><span>Επαγγελματικό</span></div></div>
+<div class="hint" data-hint>Πάτα μια κάρτα για να τη διαλέξεις</div>
+<div class="pcta">Συνέχεια</div>
+</div></div>
+</div>
+
+<div class="why">
+<div><b>Ένα πράγμα κινείται, όταν πρέπει</b><p>Τα δαχτυλίδια γεμίζουν μία φορά όταν ανοίγεις την Αρχική. Η νησίδα ανάβει μόνο όταν ένας πελάτης υπογράφει εκείνη τη στιγμή.</p></div>
+<div><b>Γυαλί και βάθος</b><p>Μενού, μπάρες και κάρτες είναι ημιδιάφανα πάνω σε απαλό φως. Οι ειδοποιήσεις στοιβάζονται όπως στο iPhone και ανοίγουν με ένα πάτημα.</p></div>
+<div><b>Οι πάροχοι γίνονται κάρτες</b><p>Η πρώτη απόφαση της αίτησης γίνεται σαν να διαλέγεις κάρτα στο Wallet, με τα τιμολόγια και τα προγράμματα του καθενός πάνω της.</p></div>
+</div>
+</div>
+<script>
+(function(){
+var st=document.querySelector('[data-stack]'),mb=document.querySelector('[data-more]');
+mb.addEventListener('click',function(){var o=st.classList.toggle('open');mb.textContent=o?'Μάζεψέ τα':'Δες και τα τρία';});
+var di=document.querySelector('[data-di]');setTimeout(function(){di.classList.add('live')},1400);
+var w=document.querySelector('[data-wallet]'),h=document.querySelector('[data-hint]');
+w.querySelectorAll('[data-card]').forEach(function(c){c.addEventListener('click',function(){
+if(w.classList.contains('pick')&&c.classList.contains('sel')){w.classList.remove('pick');c.classList.remove('sel');h.textContent='Πάτα μια κάρτα για να τη διαλέξεις';return;}
+w.querySelectorAll('[data-card]').forEach(function(x){x.classList.remove('sel')});c.classList.add('sel');w.classList.add('pick');h.textContent='Πάτα ξανά την κάρτα για να αλλάξεις πάροχο';});});
+})();
+</script>
+</body></html>

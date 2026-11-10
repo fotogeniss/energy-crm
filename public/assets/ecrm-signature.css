@@ -1,0 +1,185 @@
+/* ═══ (353) Νέα εμφάνιση «Signature» ══════════════════════════════════════
+ *
+ * Φορτώνεται ΜΟΝΟ όταν η PHP γράψει data-ui="signature" (UiPreference: όσο
+ * είναι σε δοκιμή, μόνο ο διαχειριστής). Δεν αλλάζει markup ούτε συμπεριφορά:
+ * ξαναντύνει το κέλυφος (πλαϊνό μενού, πάνω μπάρα, κάτω μπάρα κινητού, φόντο,
+ * γραμματοσειρά, κάρτες, κουμπιά). Οι οθόνες μία-μία έρχονται στα επόμενα
+ * βήματα, κάθε μία με δικό της mockup. Πρότυπο: docs/UI-REDESIGN-WOW.html.
+ *
+ * Γραμματοσειρά: της ίδιας της συσκευής. Σε iPhone/Mac είναι η γραμματοσειρά
+ * της Apple, σε Windows η Segoe UI Variable. Τίποτα δεν κατεβαίνει από
+ * Google ή άλλον τρίτο (GDPR), και η σελίδα δεν περιμένει γραμματοσειρά.
+ *
+ * Χρώματα: μόνο ως tokens σε αυτό το μπλοκ (ColourIsDecidedInOnePlaceTest).
+ */
+.ecrm-app[data-ui="signature"] {
+	--font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto, sans-serif;
+	--radius: 16px;
+
+	--sig-canvas: #eef0ed;
+	--sig-glass: #ffffffbf;
+	--sig-glass-strong: #ffffffeb;
+	--sig-solid: #ffffff;
+	--sig-hair: #141e1417;
+	--sig-hair-2: #141e140d;
+	--sig-fill: #141e140f;
+	--sig-ink: #1b1d1a;
+	--sig-ink-2: #5f635d;
+	--sig-ink-3: #9a9e97;
+	--sig-green: #16c217;
+	--sig-green-ink: #0a6b1d;
+	--sig-teal: #00a99a;
+	--sig-green-tint: #16c2171f;
+	--sig-btn-top: #22cf23;
+	--sig-btn-bottom: #0e9a12;
+	--sig-on-btn: #ffffff;
+	--sig-glow-1: #b6f59a8c;
+	--sig-glow-2: #a8efe68c;
+	--sig-glow-3: #c9e2ff8c;
+	--sig-lift: 0 1px 1px rgba(16, 24, 16, .04), 0 10px 30px -14px rgba(16, 24, 16, .22);
+	--sig-float: 0 16px 34px -14px rgba(16, 24, 16, .35);
+
+	--bg: var(--sig-canvas);
+	--page-canvas: var(--sig-canvas);
+
+	background: var(--sig-canvas);
+	position: relative;
+	isolation: isolate;
+}
+.ecrm-app[data-ui="signature"][data-theme="dark"] {
+	--sig-canvas: #0d0f0d;
+	--sig-glass: #1e211ebf;
+	--sig-glass-strong: #1b1e1beb;
+	--sig-solid: #1b1e1b;
+	--sig-hair: #ffffff1a;
+	--sig-hair-2: #ffffff0f;
+	--sig-fill: #ffffff12;
+	--sig-ink: #f2f4f1;
+	--sig-ink-2: #a6aba3;
+	--sig-ink-3: #6f746c;
+	--sig-green-ink: #8bea4f;
+	--sig-green-tint: #16c21729;
+	--sig-glow-1: #16c2171f;
+	--sig-glow-2: #00a99a1a;
+	--sig-glow-3: #2f7cf61a;
+	--sig-lift: 0 1px 1px rgba(0, 0, 0, .3), 0 14px 34px -14px rgba(0, 0, 0, .7);
+	--sig-float: 0 16px 34px -12px rgba(0, 0, 0, .75);
+	--page-canvas-dark: var(--sig-canvas);
+}
+
+/* Απαλό φως πίσω από το γυαλί: τρεις θολές κηλίδες, σταθερές στην οθόνη. */
+.ecrm-app[data-ui="signature"]::before {
+	content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+	background:
+		radial-gradient(520px 520px at 8% -10%, var(--sig-glow-1), transparent 70%),
+		radial-gradient(640px 600px at 100% 30%, var(--sig-glow-2), transparent 70%),
+		radial-gradient(560px 420px at 45% 115%, var(--sig-glow-3), transparent 70%);
+}
+.ecrm-app[data-ui="signature"] .ecrm-content { background: transparent; padding: 22px 28px 34px; }
+
+/* ── Πλαϊνό μενού: γυαλί αντί για ανθρακί ── */
+.ecrm-app[data-ui="signature"] .ecrm-sidebar {
+	background: var(--sig-glass);
+	-webkit-backdrop-filter: saturate(190%) blur(30px);
+	backdrop-filter: saturate(190%) blur(30px);
+	border-right: 1px solid var(--sig-hair);
+	color: var(--sig-ink);
+	padding: 16px 12px;
+}
+.ecrm-app[data-ui="signature"] .ecrm-sidebar__foot { border-top-color: var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .ecrm-brand__mark {
+	border-radius: 9px; color: transparent; position: relative;
+	background: conic-gradient(from 200deg, var(--sig-green), var(--sig-teal), var(--sig-green));
+	box-shadow: 0 4px 12px -4px var(--sig-green), inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+.ecrm-app[data-ui="signature"] .ecrm-brand__mark::after {
+	content: ""; position: absolute; inset: 0; margin: auto; width: 10px; height: 10px; border-radius: 50%;
+	background: var(--sig-on-btn); box-shadow: 0 0 0 3px rgba(255, 255, 255, .35);
+}
+.ecrm-app[data-ui="signature"] .ecrm-brand__txt { color: var(--sig-ink); letter-spacing: -.02em; }
+.ecrm-app[data-ui="signature"] .ecrm-nav__label {
+	text-transform: none; letter-spacing: 0; font-size: var(--fs-12); font-weight: 600;
+	color: var(--sig-ink-3); padding: 14px 10px 4px;
+}
+.ecrm-app[data-ui="signature"] .ecrm-nav__more-toggle {
+	color: var(--sig-ink-3); text-transform: none; letter-spacing: 0; font-size: var(--fs-12); font-weight: 600;
+}
+.ecrm-app[data-ui="signature"] .ecrm-sidebar .ecrm-nav__item {
+	color: var(--sig-ink); font-size: var(--fs-14); font-weight: 500; padding: 7px 10px; border-radius: 10px;
+}
+.ecrm-app[data-ui="signature"] .ecrm-sidebar .ecrm-nav__item .ecrm-nav__icon { color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .ecrm-sidebar .ecrm-nav__item:hover { background: var(--sig-fill); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-sidebar .ecrm-nav__item.is-active {
+	background: var(--sig-solid); color: var(--sig-ink); font-weight: 600; box-shadow: var(--sig-lift);
+}
+.ecrm-app[data-ui="signature"] .ecrm-sidebar .ecrm-nav__item.is-active .ecrm-nav__icon { color: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .ecrm-collapse { color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .ecrm-collapse:hover { background: var(--sig-fill); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-nav__ui .ecrm-nav__icon { color: var(--sig-green); }
+
+/* ── Πάνω μπάρα: γυαλί που αφήνει το περιεχόμενο να φαίνεται από κάτω ── */
+.ecrm-app[data-ui="signature"] .ecrm-topbar {
+	background: var(--sig-glass);
+	-webkit-backdrop-filter: saturate(180%) blur(24px);
+	backdrop-filter: saturate(180%) blur(24px);
+	border-bottom: 1px solid var(--sig-hair-2);
+	padding: 12px 28px;
+}
+.ecrm-app[data-ui="signature"] .ecrm-topbar__hello { color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .ecrm-gsearch > input {
+	background: var(--sig-fill); border: 1px solid transparent; border-radius: 11px; color: var(--sig-ink);
+}
+.ecrm-app[data-ui="signature"] .ecrm-gsearch > input:focus {
+	background: var(--sig-solid); border-color: var(--sig-hair); box-shadow: 0 0 0 4px var(--sig-green-tint);
+}
+.ecrm-app[data-ui="signature"] .ecrm-burger { background: var(--sig-glass-strong); border-color: var(--sig-hair); }
+
+/* ── Τίτλοι οθόνης: μεγάλοι και σφιχτοί ── */
+.ecrm-app[data-ui="signature"] .ecrm-title { font-size: var(--fs-28); font-weight: 700; letter-spacing: -.03em; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-sub { color: var(--sig-ink-2); }
+
+/* ── Κάρτες: γυαλί με λεπτή γραμμή και απαλό βάθος ── */
+.ecrm-app[data-ui="signature"] .ecrm-card {
+	background: var(--sig-glass-strong);
+	-webkit-backdrop-filter: saturate(170%) blur(20px);
+	backdrop-filter: saturate(170%) blur(20px);
+	border: 1px solid var(--sig-hair);
+	border-radius: 20px;
+	box-shadow: var(--sig-lift);
+	padding: 16px 18px;
+}
+
+/* ── Κουμπιά: χάπια, το κύριο με φως ── */
+.ecrm-app[data-ui="signature"] .ecrm-btn { border-radius: 999px; }
+.ecrm-app[data-ui="signature"] .ecrm-btn--primary {
+	background: linear-gradient(180deg, var(--sig-btn-top), var(--sig-btn-bottom));
+	color: var(--sig-on-btn);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 8px 20px -8px var(--sig-btn-bottom);
+}
+.ecrm-app[data-ui="signature"] .ecrm-btn--primary:hover:not(:disabled) {
+	background: linear-gradient(180deg, var(--sig-btn-top), var(--sig-btn-top));
+}
+.ecrm-app[data-ui="signature"] .ecrm-input { border-radius: 11px; }
+
+/* ── Κάτω μπάρα κινητού: αιωρούμενο γυάλινο χάπι ── */
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .ecrm-content { padding: 16px 14px 110px; }
+	.ecrm-app[data-ui="signature"] .ecrm-topbar { padding: 10px 14px; }
+	.ecrm-app[data-ui="signature"] .ecrm-botnav {
+		left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
+		padding: 6px; border-radius: 30px; border: 1px solid var(--sig-hair);
+		background: var(--sig-glass);
+		-webkit-backdrop-filter: saturate(200%) blur(30px);
+		backdrop-filter: saturate(200%) blur(30px);
+		box-shadow: var(--sig-float);
+	}
+	.ecrm-app[data-ui="signature"] .ecrm-botnav__item { border-radius: 24px; min-height: 50px; color: var(--sig-ink-3); }
+	.ecrm-app[data-ui="signature"] .ecrm-botnav__item.is-active { background: var(--sig-green-tint); color: var(--sig-green-ink); }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+	.ecrm-app[data-ui="signature"] .ecrm-sidebar,
+	.ecrm-app[data-ui="signature"] .ecrm-topbar,
+	.ecrm-app[data-ui="signature"] .ecrm-card,
+	.ecrm-app[data-ui="signature"] .ecrm-botnav { background: var(--sig-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
