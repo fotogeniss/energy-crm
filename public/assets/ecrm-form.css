@@ -46,6 +46,7 @@
  * σήμερα — μετρημένο. Φύλακας: tests/Unit/TypographyIsDecidedInOnePlaceTest.php */
 :root {
 	/* κείμενο */
+	--fs-40: 40px; /* (353) Signature: χαιρετισμός και μεγάλος αριθμός της Αρχικής */
 	--fs-34: 34px;           /* 2 */
 	--fs-28: 28px;           /* 1 */
 	--fs-26: 26px;           /* 1 */

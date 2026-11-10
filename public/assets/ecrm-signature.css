@@ -37,6 +37,18 @@
 	--sig-glow-2: #a8efe68c;
 	--sig-glow-3: #c9e2ff8c;
 	--sig-lift: 0 1px 1px rgba(16, 24, 16, .04), 0 10px 30px -14px rgba(16, 24, 16, .22);
+	--sig-green-hi: #8bea4f;
+	--sig-teal-hi: #5ce8d6;
+	--sig-blue: #2f7cf6;
+	--sig-blue-hi: #7cc0ff;
+	--sig-amber: #c46a00;
+	--sig-amber-t: #ffa01424;
+	--sig-rose: #d70f3c;
+	--sig-rose-t: #ff3c5a1f;
+	--sig-blue-t: #2f7cf61f;
+	--sig-island: #050505;
+	--sig-island-ink: #ffffff;
+	--sig-island-sub: #9be59d;
 	--sig-float: 0 16px 34px -14px rgba(16, 24, 16, .35);
 
 	--bg: var(--sig-canvas);
@@ -63,6 +75,11 @@
 	--sig-glow-2: #00a99a1a;
 	--sig-glow-3: #2f7cf61a;
 	--sig-lift: 0 1px 1px rgba(0, 0, 0, .3), 0 14px 34px -14px rgba(0, 0, 0, .7);
+	--sig-amber: #ffb340;
+	--sig-amber-t: #ffa01433;
+	--sig-rose: #ff6b81;
+	--sig-rose-t: #ff3c5a33;
+	--sig-blue-t: #2f7cf638;
 	--sig-float: 0 16px 34px -12px rgba(0, 0, 0, .75);
 	--page-canvas-dark: var(--sig-canvas);
 }
@@ -175,6 +192,155 @@
 	}
 	.ecrm-app[data-ui="signature"] .ecrm-botnav__item { border-radius: 24px; min-height: 50px; color: var(--sig-ink-3); }
 	.ecrm-app[data-ui="signature"] .ecrm-botnav__item.is-active { background: var(--sig-green-tint); color: var(--sig-green-ink); }
+}
+
+/* ═══ Αρχική (βήμα 2) ═══ */
+.ecrm-app[data-ui="signature"] .sig-hello { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 6px 0 4px; }
+.ecrm-app[data-ui="signature"] .sig-date { margin: 0 0 4px; color: var(--sig-ink-2); font-size: var(--fs-14); }
+.ecrm-app[data-ui="signature"] .sig-hello h2 { margin: 0; font-size: var(--fs-40); font-weight: 700; letter-spacing: -.04em; line-height: 1.05; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-lead { margin: 8px 0 0; color: var(--sig-ink-2); font-size: var(--fs-15); }
+
+.ecrm-app[data-ui="signature"] .sig-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.ecrm-app[data-ui="signature"] .sig-chip {
+	display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px; border-radius: 999px;
+	background: var(--sig-glass-strong); border: 1px solid var(--sig-hair); box-shadow: var(--sig-lift);
+	font: inherit; color: var(--sig-ink); text-align: left;
+}
+.ecrm-app[data-ui="signature"] button.sig-chip { cursor: pointer; }
+.ecrm-app[data-ui="signature"] button.sig-chip:hover { border-color: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-chip b { font-size: var(--fs-22); font-weight: 700; letter-spacing: -.03em; min-width: 22px; text-align: center; }
+.ecrm-app[data-ui="signature"] .sig-chip span { font-size: var(--fs-13); color: var(--sig-ink-2); line-height: 1.2; }
+.ecrm-app[data-ui="signature"] .sig-chip small { display: block; font-size: var(--fs-11-5); color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-chip.is-warn small { color: var(--sig-amber); }
+
+.ecrm-app[data-ui="signature"] .sig-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; }
+.ecrm-app[data-ui="signature"] .sig-grid--3 { grid-template-columns: 1.15fr .85fr 1fr; align-items: start; }
+.ecrm-app[data-ui="signature"] .sig-panel { padding: 20px 22px; border-radius: 22px; }
+.ecrm-app[data-ui="signature"] .sig-ph { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.ecrm-app[data-ui="signature"] .sig-ph h3 { margin: 0; font-size: var(--fs-17); font-weight: 700; letter-spacing: -.02em; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-ph__note { font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-link { border: 0; background: none; padding: 0; font: inherit; font-size: var(--fs-13-5); color: var(--sig-green-ink); cursor: pointer; }
+.ecrm-app[data-ui="signature"] .sig-count { font-size: var(--fs-12); font-weight: 700; color: var(--sig-green-ink); background: var(--sig-green-tint); border-radius: 999px; padding: 1px 9px; }
+.ecrm-app[data-ui="signature"] .sig-empty { margin: 4px 0 0; color: var(--sig-ink-2); font-size: var(--fs-14); }
+
+/* Τα δαχτυλίδια: γεμίζουν μία φορά, όταν ανοίγει η Αρχική. */
+.ecrm-app[data-ui="signature"] .sig-rings__body { display: flex; align-items: center; gap: 28px; }
+.ecrm-app[data-ui="signature"] .sig-ring { position: relative; width: 196px; height: 196px; flex: 0 0 196px; }
+.ecrm-app[data-ui="signature"] .sig-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.ecrm-app[data-ui="signature"] .sig-ring__trk { fill: none; stroke-width: 16; opacity: .16; }
+.ecrm-app[data-ui="signature"] .sig-ring__arc { fill: none; stroke-width: 16; stroke-linecap: round; stroke-dasharray: 0 999; animation: sig-draw 1.5s cubic-bezier(.3, .8, .2, 1) .2s forwards; }
+.ecrm-app[data-ui="signature"] .sig-ring .is-a { stroke: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-ring .is-b { stroke: var(--sig-teal); }
+.ecrm-app[data-ui="signature"] .sig-ring .is-c { stroke: var(--sig-blue); }
+.ecrm-app[data-ui="signature"] .sig-ring__arc.is-a { filter: drop-shadow(0 0 6px var(--sig-green)); }
+.ecrm-app[data-ui="signature"] .sig-ring__arc.is-b { filter: drop-shadow(0 0 6px var(--sig-teal)); }
+.ecrm-app[data-ui="signature"] .sig-ring__arc.is-c { filter: drop-shadow(0 0 6px var(--sig-blue)); }
+@keyframes sig-draw { to { stroke-dasharray: var(--to) 999; } }
+.ecrm-app[data-ui="signature"] .sig-ring__c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.ecrm-app[data-ui="signature"] .sig-ring__c b { display: block; font-size: var(--fs-34); font-weight: 800; letter-spacing: -.05em; line-height: 1; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-ring__c small { font-size: var(--fs-12); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-leg { flex: 1; display: grid; gap: 16px; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-leg__row { display: grid; grid-template-columns: 12px 1fr auto; gap: 2px 10px; align-items: baseline; }
+.ecrm-app[data-ui="signature"] .sig-dot { width: 10px; height: 10px; border-radius: 50%; align-self: center; }
+.ecrm-app[data-ui="signature"] .sig-dot.is-a { background: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-dot.is-b { background: var(--sig-teal); }
+.ecrm-app[data-ui="signature"] .sig-dot.is-c { background: var(--sig-blue); }
+.ecrm-app[data-ui="signature"] .sig-leg__row span { font-size: var(--fs-14); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-leg__row b { font-size: var(--fs-28); font-weight: 700; letter-spacing: -.04em; line-height: 1; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-leg__row b small { font-size: var(--fs-15); color: var(--sig-ink-3); font-weight: 600; }
+.ecrm-app[data-ui="signature"] .sig-leg__row em { grid-column: 2 / 4; font-style: normal; font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+
+/* Ρυθμός */
+.ecrm-app[data-ui="signature"] .sig-big { font-size: var(--fs-40); font-weight: 800; letter-spacing: -.05em; line-height: 1; color: var(--sig-ink); margin-top: 4px; }
+.ecrm-app[data-ui="signature"] .sig-big small { font-size: var(--fs-14); font-weight: 600; letter-spacing: 0; margin-left: 10px; }
+.ecrm-app[data-ui="signature"] .sig-big small.is-up { color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-big small.is-down { color: var(--sig-amber); }
+.ecrm-app[data-ui="signature"] .sig-subt { margin: 4px 0 10px; color: var(--sig-ink-2); font-size: var(--fs-13-5); }
+.ecrm-app[data-ui="signature"] .sig-chart { width: 100%; height: 140px; display: block; overflow: visible; }
+.ecrm-app[data-ui="signature"] .sig-chart__area { fill: var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .sig-chart__line { fill: none; stroke: var(--sig-green); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.ecrm-app[data-ui="signature"] .sig-chart__dot { fill: var(--sig-green); stroke: var(--sig-solid); stroke-width: 3; }
+.ecrm-app[data-ui="signature"] .sig-axis { display: flex; justify-content: space-between; font-size: var(--fs-11-5); color: var(--sig-ink-3); margin-top: 4px; }
+
+/* «Χρειάζονται εσένα»: στοίβα σαν ειδοποιήσεις τηλεφώνου */
+.ecrm-app[data-ui="signature"] .sig-stack { position: relative; padding-bottom: 18px; }
+.ecrm-app[data-ui="signature"] .sig-note {
+	position: relative; display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 16px;
+	background: var(--sig-solid); border: 1px solid var(--sig-hair); box-shadow: 0 10px 24px -16px rgba(0, 0, 0, .35);
+	transition: transform .4s cubic-bezier(.2, .9, .2, 1), opacity .3s;
+}
+.ecrm-app[data-ui="signature"] .sig-note.is-top { z-index: 3; }
+.ecrm-app[data-ui="signature"] .sig-stack:not(.is-open) .sig-note.is-peek {
+	position: absolute; left: 12px; right: 12px; bottom: 8px; height: 28px; padding: 0; overflow: hidden; opacity: .7; z-index: 2;
+}
+.ecrm-app[data-ui="signature"] .sig-stack:not(.is-open) .sig-note.is-peek2 { left: 24px; right: 24px; bottom: 0; opacity: .4; z-index: 1; }
+.ecrm-app[data-ui="signature"] .sig-stack:not(.is-open) .sig-note.is-peek > * { visibility: hidden; }
+.ecrm-app[data-ui="signature"] .sig-stack:not(.is-open) .sig-note.is-rest { display: none; }
+.ecrm-app[data-ui="signature"] .sig-stack.is-open { padding-bottom: 0; display: grid; gap: 8px; }
+.ecrm-app[data-ui="signature"] .sig-note__ic { width: 32px; height: 32px; flex: 0 0 32px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; font-size: var(--fs-15); }
+.ecrm-app[data-ui="signature"] .sig-note__ic.is-docs { background: var(--sig-amber-t); color: var(--sig-amber); }
+.ecrm-app[data-ui="signature"] .sig-note__ic.is-bad { background: var(--sig-rose-t); color: var(--sig-rose); }
+.ecrm-app[data-ui="signature"] .sig-note__ic.is-sign { background: var(--sig-blue-t); color: var(--sig-blue); }
+.ecrm-app[data-ui="signature"] .sig-note__ic.is-draft { background: var(--sig-fill); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-note__b { flex: 1; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-note__b b { display: block; font-size: var(--fs-14); font-weight: 600; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-note__b p { margin: 1px 0 8px; font-size: var(--fs-13); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-note__go {
+	border: 0; border-radius: 999px; padding: 5px 13px; font: inherit; font-size: var(--fs-12-5); font-weight: 600;
+	background: var(--sig-ink); color: var(--sig-solid); cursor: pointer;
+}
+.ecrm-app[data-ui="signature"] .sig-note time { font-size: var(--fs-12); color: var(--sig-ink-3); white-space: nowrap; }
+.ecrm-app[data-ui="signature"] .sig-more { border: 0; background: none; padding: 8px 0 0; font: inherit; font-size: var(--fs-13); font-weight: 600; color: var(--sig-ink-2); cursor: pointer; }
+
+/* Ανά πάροχο */
+.ecrm-app[data-ui="signature"] .sig-pbar { display: grid; grid-template-columns: 96px 1fr 28px; align-items: center; gap: 10px; padding: 7px 0; }
+.ecrm-app[data-ui="signature"] .sig-pbar span { font-size: var(--fs-13); font-weight: 600; color: var(--sig-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ecrm-app[data-ui="signature"] .sig-pbar i { display: block; height: 10px; border-radius: 999px; background: var(--sig-fill); overflow: hidden; }
+.ecrm-app[data-ui="signature"] .sig-pbar__f { display: block; height: 100%; border-radius: 999px; }
+.ecrm-app[data-ui="signature"] .sig-pbar__f.is-0 { background: linear-gradient(90deg, var(--sig-green), var(--sig-green-hi)); }
+.ecrm-app[data-ui="signature"] .sig-pbar__f.is-1 { background: linear-gradient(90deg, var(--sig-teal), var(--sig-teal-hi)); }
+.ecrm-app[data-ui="signature"] .sig-pbar__f.is-2 { background: linear-gradient(90deg, var(--sig-blue), var(--sig-blue-hi)); }
+.ecrm-app[data-ui="signature"] .sig-pbar em { font-style: normal; font-size: var(--fs-14); font-weight: 700; color: var(--sig-ink); text-align: right; }
+
+/* Δραστηριότητα */
+.ecrm-app[data-ui="signature"] .sig-feed { list-style: none; margin: 0; padding: 0 0 0 18px; position: relative; }
+.ecrm-app[data-ui="signature"] .sig-feed::before { content: ""; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 2px; background: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-feed li { position: relative; padding: 0 0 12px; }
+.ecrm-app[data-ui="signature"] .sig-feed li::before { content: ""; position: absolute; left: -18px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--sig-solid); border: 2px solid var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-feed b { display: block; font-size: var(--fs-13-5); font-weight: 600; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-feed small { font-size: var(--fs-12); color: var(--sig-ink-3); }
+
+/* Η νησίδα: μόνο όταν κάτι έγινε τα τελευταία 30 λεπτά. */
+.ecrm-app[data-ui="signature"] .sig-island {
+	position: sticky; top: 72px; z-index: 15; margin: 0 auto 4px; width: max-content; max-width: 100%;
+	display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 12px; border-radius: 999px;
+	background: var(--sig-island); color: var(--sig-island-ink); box-shadow: var(--sig-float);
+	animation: sig-island .7s cubic-bezier(.2, .9, .2, 1.15) .4s both;
+}
+.ecrm-app[data-ui="signature"] .sig-island__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sig-green); box-shadow: 0 0 0 4px var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .sig-island__t b { display: block; font-size: var(--fs-13); font-weight: 600; }
+.ecrm-app[data-ui="signature"] .sig-island__t small { font-size: var(--fs-11-5); color: var(--sig-island-sub); }
+@keyframes sig-island { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+
+@media (max-width: 1100px) {
+	.ecrm-app[data-ui="signature"] .sig-grid, .ecrm-app[data-ui="signature"] .sig-grid--3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+	.ecrm-app[data-ui="signature"] .sig-hello { flex-direction: column; align-items: flex-start; }
+	.ecrm-app[data-ui="signature"] .sig-hello h2 { font-size: var(--fs-28); }
+	.ecrm-app[data-ui="signature"] .sig-chips { display: grid; grid-template-columns: 1fr 1fr; }
+	.ecrm-app[data-ui="signature"] .sig-rings__body { gap: 16px; }
+	.ecrm-app[data-ui="signature"] .sig-ring { width: 120px; height: 120px; flex-basis: 120px; }
+	.ecrm-app[data-ui="signature"] .sig-ring__c b { font-size: var(--fs-22); }
+	.ecrm-app[data-ui="signature"] .sig-leg { gap: 10px; }
+	.ecrm-app[data-ui="signature"] .sig-leg__row b { font-size: var(--fs-22); }
+	.ecrm-app[data-ui="signature"] .sig-leg__row em { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-big { font-size: var(--fs-34); }
+	.ecrm-app[data-ui="signature"] .sig-island { top: 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.ecrm-app[data-ui="signature"] .sig-ring__arc { animation-duration: .01s; animation-delay: 0s; }
+	.ecrm-app[data-ui="signature"] .sig-island { animation: none; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

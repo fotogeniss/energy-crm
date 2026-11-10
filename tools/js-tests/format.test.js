@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { up, energyLabel, fmtDate, timeAgo, initials, tint, svgIcon } from '../../public/assets/ecrm-format.js';
+import { up, energyLabel, fmtDate, timeAgo, minutesAgo, initials, tint, svgIcon } from '../../public/assets/ecrm-format.js';
 
 test('up() strips Greek accents and uppercases', () => {
 	assert.equal(up('Γεώργιος'), 'ΓΕΩΡΓΙΟΣ');
@@ -92,4 +92,13 @@ test('svgIcon() returns markup only for known names, empty inner content otherwi
 	assert.match(svgIcon('phone'), /<svg[^>]*class="ecrm-bico"/);
 	assert.match(svgIcon('phone'), /<path/);
 	assert.equal(svgIcon('does-not-exist'), '<svg class="ecrm-bico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>');
+});
+
+test('minutesAgo() reads local time like timeAgo, and null for nothing or junk', () => {
+	const p = (n) => (n < 10 ? '0' : '') + n;
+	const d = new Date(Date.now() - 5 * 60000);
+	const local = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+	assert.equal(minutesAgo(local), 5);
+	assert.equal(minutesAgo(''), null);
+	assert.equal(minutesAgo('όχι ημερομηνία'), null);
 });

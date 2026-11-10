@@ -242,6 +242,8 @@ final class TypographyIsDecidedInOnePlaceTest extends TestCase
         return [
             ['public/assets/ecrm-form.css'],
             ['public/assets/ecrm-app.css'],
+            // (353) Η νέα εμφάνιση υπακούει στην ίδια κλίμακα.
+            ['public/assets/ecrm-signature.css'],
         ];
     }
 }

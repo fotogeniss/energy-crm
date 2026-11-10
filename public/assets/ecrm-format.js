@@ -72,6 +72,15 @@ export function timeAgo(iso) {
 	return Math.floor(s / 86400) + 'μ πριν';
 }
 
+/** (353) Πόσα λεπτά πέρασαν. Ίδια ανάγνωση με τη timeAgo: τοπική, χωρίς 'Z'. Άκυρο → null. */
+export function minutesAgo(iso) {
+	if (!iso) return null;
+
+	var t = new Date(String(iso).replace(' ', 'T')).getTime();
+
+	return isNaN(t) ? null : Math.max(0, Math.floor((Date.now() - t) / 60000));
+}
+
 /** Two letters for the avatar circle. */
 export function initials(name) {
 	var parts = (name || '').trim().split(/\s+/).filter(Boolean);
