@@ -4,7 +4,11 @@
  * μαζεμένα σε μία οθόνη. Ίδιο σχήμα scope με τις Εκκρεμότητες
  * (@energy-crm/scope). Τα φίλτρα-chips φιλτράρουν ΤΟΠΙΚΑ πάνω στη λίστα που
  * ήδη ήρθε -- η λίστα είναι ήδη μικρή (≤200 γραμμές, ίδιο ταβάνι με τις
- * υπόλοιπες οθόνες), δεν αξίζει δεύτερο request ανά φίλτρο. */
+ * υπόλοιπες οθόνες), δεν αξίζει δεύτερο request ανά φίλτρο.
+ *
+ * (358) Στη νέα εμφάνιση «Signature»: μεγάλος τίτλος, τα τρία φίλτρα ως
+ * μετρητές, και κάθε αίτηση μια γραμμή με τα έγγραφά της από κάτω
+ * (sigDocumentsHTML). Ίδια data-*, ίδια καλωδίωση. */
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
@@ -75,7 +79,9 @@ function renderDocuments(view, d) {
 		return '<button type="button" class="ecrm-filterchip' + (currentFilter === key ? ' is-on' : '') + '" data-doc-filter="' + key + '">' + label + (count !== null ? ' <span class="ecrm-filterchip__ct">(' + count + ')</span>' : '') + '</button>';
 	}
 
-	view.innerHTML =
+	if (isSignature()) {
+		view.innerHTML = sigDocumentsHTML(d, rows, statuses);
+	} else view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div class="ecrm-titlewrap"><span class="ecrm-pageicon">' +
 		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></span>' +
 		'<div><h2 class="ecrm-title">Έγγραφα</h2><p class="ecrm-sub">' + (d.count || 0) + ' αιτήσεις με έγγραφα · ' + missingCt + ' με ελλιπή δικαιολογητικά</p></div></div>' +
@@ -116,4 +122,58 @@ function renderDocuments(view, d) {
 			})
 			.catch(function () { goBtn.disabled = false; goBtn.innerHTML = original; toast('Σφάλμα δικτύου.', false); });
 	});
+}
+
+// ---------------------------------------------------------------------
+// (358) «Signature»: Έγγραφα
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+function sigDocPill(doc) {
+	var cls = 'sig-dpill' + (doc.pending ? ' is-wait' : (doc.source === 'ai' || doc.source === 'ai_ok' ? ' is-ai' : ''));
+	var mark = doc.pending ? '<span class="ecrm-spin"></span>' : '<i></i>';
+	return '<span class="' + cls + '">' + mark + esc(doc.label) + '</span>';
+}
+
+function sigDocumentsHTML(d, rows, statuses) {
+	var all = (d.rows || []).length;
+	var missing = d.missing || 0;
+	var pending = d.pending || 0;
+
+	function counter(key, n, label, warn) {
+		return '<button type="button" class="sig-chip' + (warn && n ? ' is-warn' : '') + (currentFilter === key ? ' is-on' : '') + '" data-doc-filter="' + key + '">' +
+			'<b>' + esc(String(n)) + '</b><span>' + esc(label) + '</span></button>';
+	}
+
+	var list = rows.length
+		? '<ul class="sig-rows">' + rows.map(function (r) {
+			var docs = (r.docs || []).map(sigDocPill).join('');
+			var need = r.complete
+				? '<span class="sig-age is-ok">Όλα παρόντα</span>'
+				: '<span class="sig-age is-bad">Λείπουν ' + esc(String((r.missing || []).length)) + '</span>';
+			var below = (docs ? '<div class="sig-dpills">' + docs + '</div>' : '<div class="sig-dpills"><span class="sig-dnone">Δεν έχει ανέβει τίποτα ακόμα.</span></div>') +
+				(r.complete ? '' : '<div class="sig-dmiss">Λείπει: ' + esc((r.missing || []).join(', ')) + '</div>');
+			return '<li class="sig-row sig-row--wrap ecrm-rowlink" data-id="' + esc(String(r.id)) + '">' +
+				'<span class="sig-row__av" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span>' +
+				'<span class="sig-row__who"><b>' + esc(r.customer || '—') + '</b><small>' + esc(r.code ? '#' + r.code : '') + '</small></span>' +
+				'<span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || statuses[r.status] || r.status) + '</span>' +
+				need +
+				'<div class="sig-row__below">' + below + '</div>' +
+			'</li>';
+		}).join('') + '</ul>'
+		: '<div class="sig-tempty"><b>Καμία αίτηση σε αυτό το φίλτρο.</b></div>';
+
+	var sub = all + (all === 1 ? ' αίτηση με έγγραφα' : ' αιτήσεις με έγγραφα') + (missing ? ', ' + missing + ' με ελλιπή δικαιολογητικά' : '');
+
+	return '<header class="sig-cuhead"><div><h2>Έγγραφα</h2><p>' + esc(sub) + '</p></div>' +
+		'<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (scope() === 'own' ? ' is-on' : '') + '" data-dscope="own">Δικά μου</button>' +
+		'<button type="button" class="ecrm-scope__b' + (scope() === 'team' ? ' is-on' : '') + '" data-dscope="team">Ομάδας</button></div></header>' +
+		'<div class="sig-dbar"><div class="sig-chips">' +
+			counter('all', all, 'Όλες', false) + counter('missing', missing, 'Λείπουν χαρτιά', true) + counter('pending', pending, 'Περιμένουν AI', false) +
+		'</div><button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-doc-reviewall>Έλεγξε τώρα ό,τι εκκρεμεί</button></div>' +
+		list;
 }

@@ -8,7 +8,7 @@
  * shared module. Both have exactly one caller, here, and a helper with one
  * user is not shared — it is misplaced. */
 
-import { api, esc, fetch, H, markSubViewOpen, rejectedNote, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, markSubViewOpen, providerMark, rejectedNote, toast, viewEl } from '@energy-crm/util';
 import { contractStages, energyLabel, fmtDate, initials, svgIcon, timeAgo, tint } from '@energy-crm/format';
 import { go, openEdit } from '@energy-crm/navigate';
 import { confirmTyped, confirmTypedWithReason, openDialog } from '@energy-crm/dialog';
@@ -502,7 +502,8 @@ function renderDetail(view, d) {
 			stageHTML +
 			'<div class="sig-dgrid"><div class="sig-dmain">' +
 				'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Στοιχεία πελάτη</h3><div class="sig-facts">' + who + '</div>' +
-				'<h3 class="sig-ch">' + (mobile ? 'Διεύθυνση και πρόγραμμα' : 'Παροχή και πρόγραμμα') + '</h3><div class="sig-facts">' + where + '</div>' +
+				'<h3 class="sig-ch sig-ch--prov"><span>' + (mobile ? 'Διεύθυνση και πρόγραμμα' : 'Παροχή και πρόγραμμα') + '</span>' +
+					(c.provider_name ? providerMark(c.provider_name, c.provider_logo) : '') + '</h3><div class="sig-facts">' + where + '</div>' +
 				(c.notes ? '<div class="sig-notes"><small>Σχόλια</small>' + esc(c.notes) + '</div>' : '') +
 				'</section>' +
 				filesCard(c) +

@@ -356,6 +356,7 @@ final class TeamController implements Controller
                 'code'     => (string) $row['code'],
                 'customer' => $customer !== '' ? $customer : '—',
                 'provider' => $row['provider_name'] ?: '—',
+                'logo'     => (string) ($row['provider_logo'] ?? ''),
                 'amount'   => round($amount, 2),
                 'paid'     => ($row['payout_status'] ?? '') === 'paid',
             ];
@@ -385,6 +386,7 @@ final class TeamController implements Controller
                 'code'     => (string) ($row['code'] ?? ''),
                 'customer' => $name !== '' ? $name : '—',
                 'provider' => (string) ($row['provider_name'] ?? '') ?: '—',
+                'logo'     => (string) ($row['provider_logo'] ?? ''),
                 'status'   => (string) $row['status'],
                 'updated'  => (string) $row['updated_at'],
             ];

@@ -240,6 +240,17 @@ export function providerChipsHtml(providers, checkedIds, readonly) {
 	}).join('') + '</div>';
 }
 
+/**
+ * (358) Το σήμα ενός παρόχου στη νέα εμφάνιση: το λογότυπό του αν έχει
+ * (Πάροχοι → logo_url, το ίδιο που δείχνει η κλασική λίστα αιτήσεων), αλλιώς
+ * το πρώτο γράμμα του. Ένα σημείο, ώστε λίστα, καρτέλα, Αρχική και Στατιστικά
+ * να δείχνουν τον ίδιο πάροχο με τον ίδιο τρόπο.
+ */
+export function providerMark(name, logo) {
+	if (logo) { return '<span class="sig-plogo"><img src="' + esc(logo) + '" alt="" loading="lazy"></span>'; }
+	return '<span class="sig-plogo is-text">' + esc(String(name || '·').trim().charAt(0).toUpperCase() || '·') + '</span>';
+}
+
 /** Τα id των chips τσεκαρισμένα αυτή τη στιγμή μέσα σε ένα container. */
 export function checkedProviderIds(scope) {
 	return Array.prototype.map.call(scope.querySelectorAll('.ecrm-pchip.is-on[data-pchip]'), function (b) {

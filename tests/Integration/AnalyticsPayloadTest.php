@@ -119,9 +119,13 @@ final class AnalyticsPayloadTest extends IntegrationTestCase
         foreach (self::DISTRIBUTIONS as $key) {
             self::assertNotSame([], $data[$key], "Το {$key} ήρθε κενό — το fixture δεν μετρήθηκε.");
 
+            // (358) Οι πάροχοι φέρνουν και το λογότυπό τους· τα δύο κοινά
+            // κλειδιά μένουν πρώτα και ίδια, όπως τα διαβάζει η barList().
+            $expected = $key === 'by_provider' ? ['label', 'count', 'logo'] : ['label', 'count'];
+
             foreach ($data[$key] as $i => $row) {
                 self::assertSame(
-                    ['label', 'count'],
+                    $expected,
                     array_keys($row),
                     "Το {$key}[{$i}] δεν έχει το σχήμα που διαβάζει η barList()."
                 );

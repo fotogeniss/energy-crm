@@ -18,7 +18,7 @@
  *     δίνει 2,33:1 σε λευκό, κάτω από το 3:1 που θέλουν τα γραφικά.
  */
 
-import { api, can, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, can, esc, fetch, H, providerMark, toast, viewEl } from '@energy-crm/util';
 import { minutesAgo, timeAgo } from '@energy-crm/format';
 import { openDetail, openPartner, openStoreList, go } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
@@ -972,7 +972,7 @@ function sigProvidersHTML(list) {
 	var max = Math.max.apply(null, list.map(function (p) { return Number(p.c) || 0; }).concat([1]));
 	var body = list.length ? list.map(function (p, i) {
 		var c = Number(p.c) || 0;
-		return '<div class="sig-pbar"><span>' + esc(p.name || '—') + '</span><i><b class="sig-pbar__f is-' + (i % 3) + '" style="width:' +
+		return '<div class="sig-pbar"><span>' + providerMark(p.name, p.logo) + esc(p.name || '—') + '</span><i><b class="sig-pbar__f is-' + (i % 3) + '" style="width:' +
 			Math.round(c * 100 / max) + '%"></b></i><em>' + c + '</em></div>';
 	}).join('') : '<p class="sig-empty">Καμία αίτηση αυτόν τον μήνα ακόμα.</p>';
 

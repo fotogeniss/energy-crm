@@ -62,7 +62,7 @@ final class CommissionRepository
                         c.energy_type, c.category, c.updated_at, c.payout_id,
                         c.payout_amount,
                         po.status AS payout_status,
-                        p.name AS provider_name,
+                        p.name AS provider_name, p.logo_url AS provider_logo,
                         cu.first_name, cu.last_name, cu.company_name
                  FROM %i c
                  LEFT JOIN %i cu ON cu.id = c.customer_id

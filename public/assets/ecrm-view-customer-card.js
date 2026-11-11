@@ -21,7 +21,7 @@
  * καλωδίωση.
  */
 
-import { api, esc, fetch, H, markSubViewOpen, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, markSubViewOpen, providerMark, toast, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, timeAgo, tint } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
@@ -600,7 +600,7 @@ function sigCardHTML(c, d, contracts, documents, statuses, name) {
 	var list = contracts.length
 		? '<ul class="sig-paylist sig-custlist">' + contracts.map(function (k) {
 			return '<li class="ecrm-rowlink" data-open="' + esc(String(k.id)) + '">' +
-				'<span class="sig-crow__prov"><i style="--h:' + tint(k.provider_name || '') + '"></i></span>' +
+				'<span class="sig-crow__prov">' + providerMark(k.provider_name, k.provider_logo) + '</span>' +
 				'<span class="sig-paylist__who"><b>' + esc(k.code || '—') + '</b><small>' + esc([k.provider_name, k.program_name].filter(Boolean).join(' · ') || '—') + '</small></span>' +
 				'<span class="ecrm-badge ecrm-badge--' + esc(k.status) + '">' + esc(statuses[k.status] || k.status) + '</span>' +
 				'<span class="sig-custlist__end">' + (k.end_date ? 'λήγει ' + esc(fmtDate(k.end_date)) : '') + '</span>' +

@@ -15,9 +15,17 @@
  * επειδή δεν υπογράφηκε αλλά επειδή κανείς δεν κατέγραφε πότε. Ένας μέσος όρος
  * από δώδεκα υπογραφές δεν είναι «ο χρόνος του συνεργάτη» — και χωρίς το
  * δείγμα δίπλα του θα περνούσε για ιστορικό.
+ *
+ * ## (358b) Νέα εμφάνιση «Signature»
+ *
+ * sigPartnerHTML(): ίδια κεφαλίδα και πλέγμα με την καρτέλα πελάτη, τα ίδια
+ * τέσσερα νούμερα με τις ίδιες υποσημειώσεις (kpiParts(), κοινό και για τις
+ * δύο εμφανίσεις -- ο κανόνας του παρονομαστή δεν γράφεται δεύτερη φορά), οι
+ * συμβάσεις και οι προμήθειες ως λίστες με το λογότυπο του παρόχου. Η κάρτα
+ * «Πάροχοι» είναι η ίδια (providersCard), με την ίδια καλωδίωση.
  */
 
-import { api, checkedProviderIds, esc, fetch, H, markSubViewOpen, providerChipsHtml, toast, viewEl, wireProviderChips } from '@energy-crm/util';
+import { api, checkedProviderIds, esc, fetch, H, markSubViewOpen, providerChipsHtml, providerMark, toast, viewEl, wireProviderChips } from '@energy-crm/util';
 import { fmtDate, initials, tint } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
 
@@ -85,6 +93,19 @@ function euro(n) {
 }
 
 function kpiCards(k) {
+	var p = kpiParts(k);
+
+	return '<div class="ecrm-kpis' + (p.money ? ' ecrm-kpis--4' : '') + '">' +
+		kpi('Συμβάσεις μήνα', p.month + deltaChip(p.month, p.prev), esc(p.monthFoot)) +
+		kpi('Επιτυχία', p.rate, esc(p.rateFoot)) +
+		kpi('Μέσος χρόνος ως υπογραφή', p.days, esc(p.daysFoot)) +
+		(p.money ? kpi('Προμήθεια', p.total, esc(p.commFoot)) : '') +
+		'</div>';
+}
+
+/* Τα νούμερα και οι υποσημειώσεις των πλακιδίων, χωρίς markup: τα ίδια και
+ * για τις δύο εμφανίσεις. */
+function kpiParts(k) {
 	var m = k.month || { month: 0, prev: 0 };
 	var s = k.success || { payable: 0, settled: 0 };
 	var g = k.sign || { avg: null, sample: 0 };
@@ -127,17 +148,15 @@ function kpiCards(k) {
 			(g.sample < MIN_SAMPLE ? ' — μικρό δείγμα' : '');
 	}
 
-	return '<div class="ecrm-kpis' + (money ? ' ecrm-kpis--4' : '') + '">' +
-		kpi('Συμβάσεις μήνα', m.month + deltaChip(m.month, m.prev), esc(monthFoot)) +
-		kpi('Επιτυχία', rate, esc(rateFoot)) +
-		kpi('Μέσος χρόνος ως υπογραφή', days, esc(daysFoot)) +
-		(money
-			? kpi('Προμήθεια', euro(c.total),
-				c.unpaid > 0
-					? esc(euro(c.unpaid) + ' δεν έχει πληρωθεί ακόμη')
-					: (c.count ? 'όλα πληρωμένα' : 'καμία πληρωτέα σύμβαση'))
-			: '') +
-		'</div>';
+	return {
+		month: m.month, prev: m.prev, monthFoot: monthFoot,
+		rate: rate, rateFoot: rateFoot,
+		days: days, daysFoot: daysFoot,
+		money: money, total: euro(c.total),
+		commFoot: c.unpaid > 0
+			? euro(c.unpaid) + ' δεν έχει πληρωθεί ακόμη'
+			: (c.count ? 'όλα πληρωμένα' : 'καμία πληρωτέα σύμβαση'),
+	};
 }
 
 function recentRows(list, statuses) {
@@ -272,6 +291,11 @@ function saveProviders(memberId, providerIds) {
 }
 
 function renderPartner(view, d, memberId, prov) {
+	if (isSignature()) {
+		view.innerHTML = sigPartnerHTML(d, prov);
+		wirePartner(view, memberId, (d.member || {}).name || '', prov);
+		return;
+	}
 	var m = d.member || {};
 	var statuses = d.statuses || {};
 	var down = d.downline || [];
@@ -358,6 +382,10 @@ function renderPartner(view, d, memberId, prov) {
 		'</div>' +
 		'</div>';
 
+	wirePartner(view, memberId, m.name || '', prov);
+}
+
+function wirePartner(view, memberId, name, prov) {
 	var back = view.querySelector('[data-back]');
 	if (back) { back.addEventListener('click', function () { go('team'); }); }
 
@@ -365,5 +393,95 @@ function renderPartner(view, d, memberId, prov) {
 		row.addEventListener('click', function () { openDetail(this.getAttribute('data-open')); });
 	});
 
-	wireProvidersCard(view, memberId, m.name || '', prov);
+	wireProvidersCard(view, memberId, name, prov);
+}
+
+// ---------------------------------------------------------------------
+// (358b) «Signature»: η καρτέλα συνεργάτη
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+function sigFact(label, value) {
+	return '<div class="sig-fact' + (value ? '' : ' is-empty') + '"><small>' + esc(label) + '</small><b>' + (value ? esc(value) : '—') + '</b></div>';
+}
+
+function sigPartnerHTML(d, prov) {
+	var m = d.member || {};
+	var statuses = d.statuses || {};
+	var down = d.downline || [];
+	var recent = d.recent || [];
+	var commRows = d.commission_rows || [];
+	var showComm = d.commission_rows !== null;
+	var p = kpiParts(d.kpi || {});
+	var name = m.name || '—';
+
+	var delta = p.month - p.prev;
+	var kpis = '<div class="sig-kpis' + (p.money ? '' : ' sig-kpis--3') + '">' +
+		'<div><small>Συμβάσεις μήνα</small><b>' + esc(String(p.month)) +
+			(delta ? ' <span class="sig-delta' + (delta > 0 ? ' is-up' : ' is-down') + '">' + esc((delta > 0 ? '+' : '') + delta) + '</span>' : '') +
+			'</b><em>' + esc(p.monthFoot) + '</em></div>' +
+		'<div><small>Επιτυχία</small><b>' + esc(p.rate) + '</b><em>' + esc(p.rateFoot) + '</em></div>' +
+		'<div><small>Μέχρι την υπογραφή</small><b>' + esc(p.days) + '</b><em>' + esc(p.daysFoot) + '</em></div>' +
+		(p.money ? '<div><small>Προμήθεια</small><b>' + esc(p.total) + '</b><em>' + esc(p.commFoot) + '</em></div>' : '') +
+	'</div>';
+
+	var recentList = recent.length
+		? '<ul class="sig-paylist sig-custlist">' + recent.map(function (r) {
+			return '<li class="ecrm-rowlink" data-open="' + esc(String(r.id)) + '">' +
+				'<span class="sig-crow__prov">' + providerMark(r.provider, r.logo) + '</span>' +
+				'<span class="sig-paylist__who"><b>' + esc(r.customer) + '</b><small>' + esc([r.code, r.provider].filter(Boolean).join(' · ')) + '</small></span>' +
+				'<span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(statuses[r.status] || r.status) + '</span>' +
+				'<span class="sig-custlist__end">' + esc(fmtDate(r.updated)) + '</span>' +
+			'</li>';
+		}).join('') + '</ul>'
+		: '<div class="sig-tempty"><b>Καμία σύμβαση ακόμη.</b></div>';
+
+	var commList = commRows.length
+		? '<ul class="sig-paylist sig-custlist">' + commRows.map(function (r) {
+			return '<li>' +
+				'<span class="sig-crow__prov">' + providerMark(r.provider, r.logo) + '</span>' +
+				'<span class="sig-paylist__who"><b>' + esc(r.customer) + '</b><small>' + esc([r.code, r.provider].filter(Boolean).join(' · ')) + '</small></span>' +
+				(r.paid ? '<em class="is-ok">Πληρώθηκε</em>' : '<em>Εκκρεμεί</em>') +
+				'<b class="sig-paylist__amt">' + esc(euro(r.amount)) + '</b>' +
+			'</li>';
+		}).join('') + '</ul>' +
+			(commRows.length >= 10 ? '<p class="sig-pmore">Δες όλες στις Προμήθειες.</p>' : '')
+		: '<div class="sig-tempty"><b>Καμία προμήθεια ακόμη.</b></div>';
+
+	var downList = down.length
+		? '<ul class="sig-pdown">' + down.map(function (x) {
+			return '<li><span class="sig-pdown__av" style="--h:' + tint(x.name || '') + '">' + esc(initials(x.name || '')) + '</span>' +
+				'<b>' + esc(x.name) + '</b><small>' + esc(String(x.contracts)) + (x.contracts === 1 ? ' σύμβαση' : ' συμβάσεις') + '</small></li>';
+		}).join('') + '</ul>'
+		: '<div class="sig-tempty"><b>Κανένα μέλος από κάτω του.</b></div>';
+
+	var sub = [m.role_label, m.joined ? 'μέλος από ' + fmtDate(m.joined) : ''].filter(Boolean).join(' · ');
+
+	return '<div class="sig-detail sig-cust sig-partner">' +
+		'<button type="button" class="sig-detail__back" data-back><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg> Η ομάδα μου</button>' +
+		'<header class="sig-dh">' +
+			'<span class="sig-dh__av" style="--h:' + tint(m.name || '') + '">' + esc(initials(m.name || '')) + '</span>' +
+			'<div class="sig-dh__who"><h2>' + esc(name) + (m.is_self ? ' <span class="sig-partner__self">εσύ</span>' : '') + '</h2><small>' + esc(sub) + '</small></div>' +
+			'<div class="sig-dh__acts">' +
+				(m.active ? '<span class="sig-age is-ok">Ενεργός</span>' : '<span class="sig-age">Ανενεργός</span>') +
+				(m.email ? '<a class="ecrm-btn ecrm-btn--ghost" href="' + esc('mailto:' + m.email) + '">Email</a>' : '') +
+			'</div>' +
+		'</header>' +
+		kpis +
+		'<div class="sig-dgrid"><div class="sig-dmain">' +
+			'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Τελευταίες συμβάσεις</h3>' + recentList + '</section>' +
+			(showComm ? '<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Προμήθεια ανά σύμβαση</h3>' + commList + '</section>' : '') +
+		'</div><aside class="sig-dside">' +
+			'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Στοιχεία</h3><div class="sig-facts sig-facts--2">' +
+				sigFact('Ρόλος', m.role_label) + sigFact('Στην ομάδα από', m.joined ? fmtDate(m.joined) : '') +
+				'<div class="sig-fact is-wide' + (m.email ? '' : ' is-empty') + '"><small>Email</small><b>' + esc(m.email || '—') + '</b></div>' +
+			'</div></section>' +
+			providersCard(prov) +
+			'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Κάτω δίκτυο <b>' + esc(String(down.length)) + '</b></h3>' + downList + '</section>' +
+		'</aside></div>' +
+	'</div>';
 }

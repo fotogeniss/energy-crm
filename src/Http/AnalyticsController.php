@@ -83,7 +83,7 @@ final class AnalyticsController implements Controller
             'canc_rate'   => $funnel['canc_rate'],
             'avg_days'    => $this->analytics->averageDaysToActivation($scope),
             'funnel'      => $funnel['funnel'],
-            'by_provider' => $this->labelled($this->analytics->topProviders($scope)),
+            'by_provider' => $this->withLogo($this->analytics->topProviders($scope)),
             'by_energy'   => $byEnergy,
             'by_region'   => $this->labelled($this->analytics->topRegions($scope)),
 
@@ -138,6 +138,26 @@ final class AnalyticsController implements Controller
             static fn (array $row): array => [
                 'label' => (string) $row['name'],
                 'count' => (int) $row['c'],
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * (358) Οι πάροχοι: ίδιο σχήμα με τις άλλες κατανομές, συν το λογότυπο
+     * (Πάροχοι → logo_url) που δείχνει η νέα εμφάνιση δίπλα στο όνομα. Το
+     * κλειδί μπαίνει πάντα, κενό όταν ο πάροχος δεν έχει λογότυπο.
+     *
+     * @param  list<array<string, mixed>> $rows
+     * @return list<array{label: string, count: int, logo: string}>
+     */
+    private function withLogo(array $rows): array
+    {
+        return array_map(
+            static fn (array $row): array => [
+                'label' => (string) $row['name'],
+                'count' => (int) $row['c'],
+                'logo'  => (string) ($row['logo'] ?? ''),
             ],
             $rows
         );

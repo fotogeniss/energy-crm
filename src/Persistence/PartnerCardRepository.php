@@ -204,7 +204,7 @@ final class PartnerCardRepository
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT c.id, c.code, c.status, c.energy_type, c.updated_at,
-                        p.name AS provider_name,
+                        p.name AS provider_name, p.logo_url AS provider_logo,
                         cu.first_name, cu.last_name, cu.company_name
                  FROM %i c
                  LEFT JOIN %i cu ON cu.id = c.customer_id

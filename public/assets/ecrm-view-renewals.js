@@ -6,7 +6,7 @@
  * (357) Στη νέα εμφάνιση «Signature»: γραμμές-κάρτες με την πρόταση φθηνότερου
  * προγράμματος μέσα στην κάρτα (sigRenewalsHTML). Ίδια data-*. */
 
-import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, providerMark, toast, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, svgIcon, tint } from '@energy-crm/format';
 import { openEdit } from '@energy-crm/navigate';
 
@@ -182,6 +182,7 @@ function sigRenewalsHTML(d, rows, soon) {
 				'<span class="sig-row__av" style="--h:' + tint(customer) + '">' + esc(initials(customer)) + '</span>' +
 				'<span class="sig-row__who"><b>' + esc(customer || '—') + '</b><small>' +
 					esc([r.code ? '#' + r.code : '', r.provider_name, r.end_date ? 'λήξη ' + fmtDate(r.end_date) : ''].filter(Boolean).join(' · ')) + '</small></span>' +
+				(r.provider_name ? '<span class="sig-row__prov">' + providerMark(r.provider_name, r.provider_logo) + '</span>' : '') +
 				'<span class="sig-age' + cls + '">' + esc(pill) + '</span>' +
 				'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-renew="' + esc(String(r.id)) + '">Ανανέωση</button>' +
 				(offer ? '<div class="sig-row__offer">' + offer + '</div>' : '') +

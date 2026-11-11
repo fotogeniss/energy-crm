@@ -13,7 +13,7 @@
  * του φίλτρου και κόβονται εδώ. Δουλεύει επειδή τα φίλτρα κρατάνε το σύνολο
  * μικρό· αν ποτέ μια σελίδα αργήσει, το πρόβλημα είναι εδώ και όχι στο δίκτυο. */
 
-import { api, can, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, can, esc, fetch, H, providerMark, toast, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, svgIcon, timeAgo, tint, up } from '@energy-crm/format';
 import { openDetail, openEdit } from '@energy-crm/navigate';
 import { openExportModal } from '@energy-crm/export-modal';
@@ -319,7 +319,7 @@ function sigCardsHTML(rows, statuses, showOwner) {
 			'<input type="checkbox" class="ecrm-rowcheck sig-crow__check" data-cid="' + r.id + '" aria-label="Επιλογή">' +
 			'<span class="sig-crow__av" style="--h:' + tint(name) + '">' + esc(initials(name)) + '</span>' +
 			'<span class="sig-crow__who"><b>' + esc(name) + '</b><small>' + subLine(r) + '</small></span>' +
-			'<span class="sig-crow__prov"><i style="--h:' + tint(r.provider_name || '') + '"></i><span><b>' + esc(r.provider_name || '—') + '</b>' +
+			'<span class="sig-crow__prov">' + providerMark(r.provider_name, r.provider_logo) + '<span><b>' + esc(r.provider_name || '—') + '</b>' +
 			'<small>' + esc(r.program_name || '') + '</small></span></span>' +
 			(showOwner ? '<span class="sig-crow__owner">' + esc(r.partner_name || '—') + '</span>' : '') +
 			'<span class="sig-crow__st"><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(statuses[r.status] || r.status) + '</span>' + sig + '</span>' +

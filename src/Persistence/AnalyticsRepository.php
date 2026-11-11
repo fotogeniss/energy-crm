@@ -85,7 +85,7 @@ final class AnalyticsRepository
         [$since, $sinceArg] = $this->sinceClause($days, 'ct');
 
         return $this->rows(
-            "SELECT p.name, COUNT(*) c
+            "SELECT p.name, MAX(p.logo_url) logo, COUNT(*) c
              FROM %i ct LEFT JOIN %i p ON p.id = ct.provider_id
              WHERE 1 = 1{$clause}{$since}
              GROUP BY ct.provider_id ORDER BY c DESC LIMIT " . max(1, $limit),

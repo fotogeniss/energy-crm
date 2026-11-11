@@ -182,7 +182,7 @@ final class DashboardRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT p.name, COUNT(*) c
+                'SELECT p.name, MAX(p.logo_url) logo, COUNT(*) c
                  FROM %i ct LEFT JOIN %i p ON p.id = ct.provider_id
                  WHERE ct.partner_user_id = %d AND ct.created_at >= %s
                  GROUP BY ct.provider_id ORDER BY c DESC',
