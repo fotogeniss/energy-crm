@@ -51,6 +51,9 @@
 	--sig-island-sub: #9be59d;
 	--sig-float: 0 16px 34px -14px rgba(16, 24, 16, .35);
 	--sig-logo-bg: #ffffff;
+	--sig-violet: #7a4de0;
+	--sig-violet-t: #7a4de01c;
+	--sig-lnext-2: #16301a;
 	--sig-paper-ink: #1b1d1a;
 	--sig-paper-ink-2: #5f635d;
 	--sig-paper-ink-3: #9a9e97;
@@ -89,6 +92,9 @@
 	--sig-blue-t: #2f7cf638;
 	--sig-float: 0 16px 34px -12px rgba(0, 0, 0, .75);
 	--sig-logo-bg: #f4f5f3;
+	--sig-violet: #a98bff;
+	--sig-violet-t: #a98bff26;
+	--sig-lnext-2: #10261a;
 	--sig-paper-ink: #1b1d1a;
 	--sig-paper-ink-2: #5f635d;
 	--sig-paper-ink-3: #9a9e97;
@@ -1550,6 +1556,154 @@
 	.ecrm-app[data-ui="signature"] .sig-paper__sign { left: 20px; right: 20px; }
 	.ecrm-app[data-ui="signature"] .sig-pl { grid-template-columns: 96px minmax(0, 1fr); }
 	.ecrm-app[data-ui="signature"] .sig-way__body { padding-left: 18px; }
+}
+
+/* ═══ (359) Υποψήφιοι: «Η επόμενη κλήση» ═══
+ * Mockup docs/UI-LEADS-FRESH.html, κατεύθυνση Α. Markup: sigLeadsHTML(). */
+.ecrm-app[data-ui="signature"] [data-view="leads"] { max-width: 1240px; margin: 0 auto; width: 100%; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-lhead__acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.ecrm-app[data-ui="signature"] [data-view="leads"] .ecrm-leadform { margin-bottom: 18px; border-radius: 22px; }
+.ecrm-app[data-ui="signature"] [data-view="leads"] .ecrm-mylink { margin-bottom: 18px; border-radius: 18px; }
+
+.ecrm-app[data-ui="signature"] .sig-lflow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 0 0 20px; }
+.ecrm-app[data-ui="signature"] .sig-lflow__s {
+	position: relative; padding: 12px 14px; border: 0; border-radius: 16px; text-align: left; font: inherit; color: var(--sig-ink); cursor: pointer;
+	background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair); transition: box-shadow .2s ease;
+}
+.ecrm-app[data-ui="signature"] .sig-lflow__s:hover { box-shadow: 0 0 0 1px var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-lflow__s.is-on { background: var(--sig-solid); box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-lflow__s b { display: block; font-size: var(--fs-22); font-weight: 800; letter-spacing: -.03em; }
+.ecrm-app[data-ui="signature"] .sig-lflow__s span { font-size: var(--fs-12-5); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-lflow__s.is-won b { color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-lflow__s:not(:last-child)::after {
+	content: ""; position: absolute; right: -7px; top: 50%; width: 6px; height: 6px; border-top: 2px solid var(--sig-hair); border-right: 2px solid var(--sig-hair);
+	transform: translateY(-50%) rotate(45deg);
+}
+
+.ecrm-app[data-ui="signature"] .sig-lhero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; margin: 0 0 22px; }
+.ecrm-app[data-ui="signature"] .sig-lhero.is-solo { grid-template-columns: minmax(0, 1fr); }
+.ecrm-app[data-ui="signature"] .sig-lnext {
+	position: relative; padding: 24px; border-radius: 26px; color: var(--sig-island-ink);
+	background: linear-gradient(150deg, var(--sig-island), var(--sig-lnext-2)); box-shadow: var(--sig-float);
+}
+/* Η λάμψη μένει μέσα στην κάρτα χωρίς overflow:hidden, για να μην κόβεται
+ * το μενού του «Αργότερα». */
+.ecrm-app[data-ui="signature"] .sig-lnext::before {
+	content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+	background: radial-gradient(circle at 92% 0%, rgba(34, 207, 35, .32), transparent 45%);
+}
+.ecrm-app[data-ui="signature"] .sig-lnext small { position: relative; font-size: var(--fs-12-5); font-weight: 700; color: var(--sig-island-sub); }
+.ecrm-app[data-ui="signature"] .sig-lnext h3 { position: relative; margin: 6px 0 2px; font-size: var(--fs-28); font-weight: 800; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-lnext p { position: relative; margin: 0 0 14px; font-size: var(--fs-14); color: rgba(255, 255, 255, .72); }
+.ecrm-app[data-ui="signature"] .sig-lnext__facts { position: relative; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.ecrm-app[data-ui="signature"] .sig-lnext__facts span { padding: 6px 11px; border-radius: 999px; background: rgba(255, 255, 255, .09); font-size: var(--fs-13); color: rgba(255, 255, 255, .9); }
+.ecrm-app[data-ui="signature"] .sig-lnext__acts { position: relative; display: flex; flex-wrap: wrap; gap: 8px; }
+.ecrm-app[data-ui="signature"] .sig-lnext__acts a { text-decoration: none; }
+.ecrm-app[data-ui="signature"] .sig-lsnooze { position: relative; }
+.ecrm-app[data-ui="signature"] .sig-lsnooze summary { list-style: none; cursor: pointer; background: rgba(255, 255, 255, .08); color: var(--sig-island-ink); border-color: rgba(255, 255, 255, .16); }
+.ecrm-app[data-ui="signature"] .sig-lsnooze summary::-webkit-details-marker { display: none; }
+.ecrm-app[data-ui="signature"] .sig-lsnooze[open] summary,
+.ecrm-app[data-ui="signature"] .sig-lsnooze summary:hover { background: rgba(255, 255, 255, .16); }
+.ecrm-app[data-ui="signature"] .sig-lsnooze__menu {
+	position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; min-width: 190px; padding: 6px; border-radius: 16px;
+	background: var(--sig-solid); box-shadow: var(--sig-float), 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-lsnooze__menu button {
+	display: block; width: 100%; padding: 9px 12px; border: 0; border-radius: 10px; background: none; text-align: left;
+	font: inherit; font-size: var(--fs-14); color: var(--sig-ink); cursor: pointer;
+}
+.ecrm-app[data-ui="signature"] .sig-lsnooze__menu button:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-lnext__acts svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ecrm-app[data-ui="signature"] .sig-lnext__acts .ecrm-btn--ghost { background: rgba(255, 255, 255, .08); color: var(--sig-island-ink); border-color: rgba(255, 255, 255, .16); }
+.ecrm-app[data-ui="signature"] .sig-lnext__acts .ecrm-btn--ghost:hover { background: rgba(255, 255, 255, .16); }
+
+.ecrm-app[data-ui="signature"] .sig-ltoday { padding: 20px; border-radius: 26px; background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-ltoday h4 { margin: 0 0 10px; font-size: var(--fs-16); font-weight: 700; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-ltoday__none { margin: 0; font-size: var(--fs-13-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-lslot { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-lslot:first-of-type { border-top: 0; }
+.ecrm-app[data-ui="signature"] .sig-lslot time { font-size: var(--fs-14); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-lslot time.is-late { color: var(--sig-rose); }
+.ecrm-app[data-ui="signature"] .sig-lslot b { display: block; font-size: var(--fs-14); font-weight: 600; color: var(--sig-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-lslot em { display: block; font-style: normal; font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-lcall { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--sig-green-tint); color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-lcall svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.ecrm-app[data-ui="signature"] .sig-lsearch { margin: 0 0 18px; }
+.ecrm-app[data-ui="signature"] .sig-lsearch .ecrm-input { width: 100%; height: 44px; border-radius: 999px; padding: 0 18px; }
+.ecrm-app[data-ui="signature"] .sig-lgroup { margin: 0 0 18px; }
+.ecrm-app[data-ui="signature"] .sig-lgroup h5 { display: flex; align-items: center; gap: 8px; margin: 0 6px 10px; font-size: var(--fs-15); font-weight: 700; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-lgroup h5 small { font-weight: 600; color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-lgroup h5 i { width: 8px; height: 8px; border-radius: 50%; }
+.ecrm-app[data-ui="signature"] .sig-lgroup h5 i.is-rose { background: var(--sig-rose); }
+.ecrm-app[data-ui="signature"] .sig-lgroup h5 i.is-amber { background: var(--sig-amber); }
+.ecrm-app[data-ui="signature"] .sig-lgroup h5 i.is-blue { background: var(--sig-blue); }
+.ecrm-app[data-ui="signature"] .sig-lgroup h5 i.is-teal { background: var(--sig-teal); }
+.ecrm-app[data-ui="signature"] .sig-lgroup h5 i.is-green { background: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-lgroup h5 i.is-grey { background: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-llist { border-radius: 22px; background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair); padding: 4px 0; }
+.ecrm-app[data-ui="signature"] .sig-lrow {
+	position: relative; display: grid; grid-template-columns: 40px minmax(0, 1.2fr) minmax(0, 1.6fr) auto 36px; gap: 14px; align-items: center; padding: 12px 16px;
+}
+.ecrm-app[data-ui="signature"] .sig-lrow + .sig-lrow::before { content: ""; position: absolute; top: 0; left: 70px; right: 16px; height: 1px; background: var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-lrow__av {
+	width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; font-size: var(--fs-13); font-weight: 800; color: var(--sig-on-btn);
+	background: linear-gradient(135deg, hsl(var(--h, 140) 62% 58%), hsl(var(--h, 140) 62% 40%));
+}
+.ecrm-app[data-ui="signature"] .sig-lrow__who { min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-lrow__who b { display: block; font-size: var(--fs-15); font-weight: 600; color: var(--sig-ink); overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-lrow__who small { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 3px; font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-lrow__who a { color: var(--sig-ink-2); text-decoration: none; font-variant-numeric: tabular-nums; }
+.ecrm-app[data-ui="signature"] .sig-lrow__who a:hover { color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-lrow__what { min-width: 0; font-size: var(--fs-13); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-lsrc { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; background: var(--sig-fill); font-size: var(--fs-12); font-weight: 600; color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-lsrc svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ecrm-app[data-ui="signature"] .sig-ldupe__n { display: inline-block; white-space: nowrap; margin-left: 4px; padding: 2px 8px; border-radius: 999px; background: var(--sig-amber-t); color: var(--sig-amber); font-style: normal; font-size: var(--fs-11-5); font-weight: 700; vertical-align: middle; }
+.ecrm-app[data-ui="signature"] .sig-lrow__dupes { grid-column: 2 / -1; }
+.ecrm-app[data-ui="signature"] .sig-ldupe { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; background: var(--sig-amber-t); font-size: var(--fs-12-5); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-ldupe + .sig-ldupe { margin-top: 6px; }
+.ecrm-app[data-ui="signature"] .sig-ldupe__del { margin-left: auto; padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--sig-rose); cursor: pointer; }
+
+/* Το στάδιο: select ντυμένο σαν χρωματιστό κουμπάκι. */
+.ecrm-app[data-ui="signature"] select.sig-lstage {
+	height: 30px; padding: 0 28px 0 12px; border: 0; border-radius: 999px; font: inherit; font-size: var(--fs-12-5); font-weight: 700; cursor: pointer;
+	background: var(--sig-fill); color: var(--sig-ink-2);
+}
+.ecrm-app[data-ui="signature"] select.sig-lstage.is-new { background: var(--sig-blue-t); color: var(--sig-blue); }
+.ecrm-app[data-ui="signature"] select.sig-lstage.is-contacted { background: var(--sig-green-tint); color: var(--sig-teal); }
+.ecrm-app[data-ui="signature"] select.sig-lstage.is-callback { background: var(--sig-amber-t); color: var(--sig-amber); }
+.ecrm-app[data-ui="signature"] select.sig-lstage.is-qualified { background: var(--sig-violet-t); color: var(--sig-violet); }
+.ecrm-app[data-ui="signature"] select.sig-lstage.is-won { background: var(--sig-green-tint); color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] select.sig-lstage.is-lost { background: var(--sig-rose-t); color: var(--sig-rose); }
+
+.ecrm-app[data-ui="signature"] .sig-lmore { position: relative; }
+.ecrm-app[data-ui="signature"] .sig-lmore summary {
+	list-style: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--sig-ink-2); font-size: var(--fs-18);
+}
+.ecrm-app[data-ui="signature"] .sig-lmore summary::-webkit-details-marker { display: none; }
+.ecrm-app[data-ui="signature"] .sig-lmore summary:hover,
+.ecrm-app[data-ui="signature"] .sig-lmore[open] summary { background: var(--sig-fill); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-lmore__menu {
+	position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 210px; padding: 6px; border-radius: 16px;
+	background: var(--sig-solid); box-shadow: var(--sig-float), 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-lmore__menu button {
+	display: block; width: 100%; padding: 9px 12px; border: 0; border-radius: 10px; background: none; text-align: left;
+	font: inherit; font-size: var(--fs-14); color: var(--sig-ink); cursor: pointer;
+}
+.ecrm-app[data-ui="signature"] .sig-lmore__menu button:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-lmore__menu button.is-danger { color: var(--sig-rose); }
+
+@media (max-width: 900px) {
+	.ecrm-app[data-ui="signature"] .sig-lflow { grid-template-columns: repeat(5, minmax(96px, 1fr)); overflow-x: auto; padding-bottom: 4px; }
+	.ecrm-app[data-ui="signature"] .sig-lhero { grid-template-columns: minmax(0, 1fr); }
+	.ecrm-app[data-ui="signature"] .sig-lrow { grid-template-columns: 40px minmax(0, 1fr) 36px; row-gap: 8px; align-items: start; }
+	.ecrm-app[data-ui="signature"] .sig-lrow__what,
+	.ecrm-app[data-ui="signature"] .sig-lrow > select.sig-lstage,
+	.ecrm-app[data-ui="signature"] .sig-lrow > .ecrm-btn { grid-column: 2; justify-self: start; }
+	.ecrm-app[data-ui="signature"] .sig-lmore { grid-column: 3; grid-row: 1; }
+	.ecrm-app[data-ui="signature"] .sig-lrow + .sig-lrow::before { left: 16px; }
+	.ecrm-app[data-ui="signature"] .sig-lrow__dupes { grid-column: 1 / -1; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Υποψήφιοι — δύο νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--rose-t:#ff3c5a1f;
+	--blue:#2f7cf6;--blue-t:#2f7cf61f;--teal:#00a99a;--violet:#7a4de0;--violet-t:#7a4de01c;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:760px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:900px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn svg,.ic svg{width:18px;height:18px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 0;color:var(--ink2);font-size:15px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:3px 9px;border-radius:999px}
+.src svg{width:13px;height:13px}
+.plogo{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;letter-spacing:-.01em;padding:3px 8px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.plogo i{width:9px;height:9px;border-radius:50%}
+.save{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:3px 9px;border-radius:999px}
+
+/* ---------- A: Η επόμενη κλήση ---------- */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:22px}
+.fs{position:relative;padding:12px 14px;border-radius:16px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);cursor:pointer}
+.fs b{display:block;font-size:24px;letter-spacing:-.03em}
+.fs span{font-size:12.5px;color:var(--ink2)}
+.fs.on{box-shadow:0 0 0 2px var(--green),var(--lift);background:#fff}
+.fs.won b{color:var(--green-ink)}
+.fs:not(:last-child)::after{content:"";position:absolute;right:-7px;top:50%;width:6px;height:6px;border-top:2px solid #c8ccc5;border-right:2px solid #c8ccc5;transform:translateY(-50%) rotate(45deg)}
+.hero{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:26px}
+.next{position:relative;border-radius:26px;padding:24px;background:linear-gradient(150deg,#0f1a10,#16301a);color:#fff;box-shadow:var(--float);overflow:hidden}
+.next::before{content:"";position:absolute;right:-60px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,#22cf2355,transparent 65%)}
+.next small{font-size:12.5px;color:#9be59d;font-weight:700}
+.next h3{margin:6px 0 2px;font-size:30px;letter-spacing:-.035em}
+.next .why{color:#c9d3c9;font-size:14px;margin:0 0 14px}
+.next .facts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.next .facts span{font-size:13px;padding:6px 11px;border-radius:999px;background:#ffffff14;color:#e6ece6}
+.next .facts span.g{background:#22cf2333;color:#b6f59a}
+.next .row{display:flex;gap:8px;flex-wrap:wrap;position:relative}
+.next .btn.gho{background:#ffffff14;color:#fff;box-shadow:0 0 0 1px #ffffff26}
+.today{border-radius:26px;padding:20px;background:var(--glass);box-shadow:0 0 0 1px var(--hair)}
+.today h4{margin:0 0 12px;font-size:16px;display:flex;justify-content:space-between}
+.today h4 small{color:var(--ink3);font-weight:600}
+.slot{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--hair2);font-size:14px}
+.slot:first-of-type{border-top:0}
+.slot time{font-weight:700;font-variant-numeric:tabular-nums}
+.slot time.late{color:var(--rose)}
+.slot em{font-style:normal;color:var(--ink3);font-size:12.5px;display:block}
+.callbtn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--green-t);color:var(--green-ink)}
+.callbtn svg{width:16px;height:16px}
+.group{margin-bottom:18px}
+.group h5{display:flex;align-items:center;gap:8px;margin:0 6px 10px;font-size:15px;letter-spacing:-.01em}
+.group h5 i{width:8px;height:8px;border-radius:50%}
+.group h5 small{color:var(--ink3);font-weight:600}
+.list{border-radius:22px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);padding:4px 0}
+.lead{display:grid;grid-template-columns:40px minmax(0,1.3fr) minmax(0,1.6fr) auto auto;gap:14px;align-items:center;padding:12px 16px;position:relative}
+.lead+.lead::before{content:"";position:absolute;top:0;left:70px;right:16px;height:1px;background:var(--hair2)}
+.lead:hover{background:var(--fill)}
+.lead .who b{display:block;font-size:15px}
+.lead .who small{display:flex;gap:6px;align-items:center;margin-top:3px;color:var(--ink3);font-size:12.5px;flex-wrap:wrap}
+.lead .what{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--ink2)}
+.stp{font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:999px;border:0;font-family:inherit;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+.stp.new{background:var(--blue-t);color:var(--blue)}
+.stp.cb{background:var(--amber-t);color:var(--amber)}
+.stp.won{background:var(--green-t);color:var(--green-ink)}
+.stp.ready{background:var(--violet-t);color:var(--violet)}
+.dupe{font-size:11.5px;font-weight:700;color:var(--amber);background:var(--amber-t);padding:2px 8px;border-radius:999px}
+.more{width:34px;height:34px;border-radius:50%;border:0;background:transparent;color:var(--ink2);font-size:18px;cursor:pointer}
+
+/* ---------- B: Ο πίνακας ---------- */
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+.col{border-radius:22px;background:#141e140a;padding:10px;min-height:420px}
+.col h5{display:flex;align-items:center;gap:8px;margin:4px 6px 10px;font-size:14px}
+.col h5 i{width:8px;height:8px;border-radius:50%}
+.col h5 small{margin-left:auto;color:var(--ink3);font-weight:700}
+.card{border-radius:18px;background:#fff;box-shadow:0 0 0 1px var(--hair),0 6px 16px -12px rgba(16,24,16,.35);padding:14px;margin-bottom:10px;cursor:grab}
+.card .t{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.card .t .av{width:34px;height:34px;flex-basis:34px;border-radius:11px;font-size:12px}
+.card .t b{font-size:14.5px;display:block}
+.card .t small{font-size:12px;color:var(--ink3)}
+.card .w{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.card .w span{font-size:12px;padding:4px 8px;border-radius:8px;background:var(--fill);color:var(--ink2)}
+.card .f{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card .f .when{font-size:12.5px;font-weight:700;color:var(--amber)}
+.card .f .when.late{color:var(--rose)}
+.card.ghost{border:2px dashed #c8ccc5;box-shadow:none;background:transparent;height:76px;display:grid;place-items:center;color:var(--ink3);font-size:13px;cursor:default}
+.closed{display:flex;gap:10px;margin-top:14px}
+.closed div{flex:1;padding:14px 16px;border-radius:18px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);display:flex;align-items:center;gap:10px;font-size:14px}
+.closed b{font-size:22px;letter-spacing:-.03em}
+.closed .w b{color:var(--green-ink)}
+
+@media (max-width:900px){
+	.frame{padding:18px}.head h2{font-size:30px}
+	.flow{grid-template-columns:repeat(5,minmax(96px,1fr));overflow-x:auto}
+	.hero{grid-template-columns:1fr}
+	.lead{grid-template-columns:40px minmax(0,1fr);row-gap:8px;align-items:start}
+	.lead .who,.lead .what,.lead>.stp,.lead>.btn{grid-column:2}
+	.lead>.stp,.lead>.btn{justify-self:start}
+	.lead .more{display:none}
+	.lead+.lead::before{left:16px}
+	.board{grid-template-columns:repeat(4,minmax(250px,1fr));overflow-x:auto;scroll-snap-type:x mandatory}
+	.col{scroll-snap-align:start}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="tel" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></symbol>
+<symbol id="arrow" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></g></symbol>
+<symbol id="qr" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2"/></g></symbol>
+<symbol id="link" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+<symbol id="plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+</defs></svg>
+
+<div class="doc">
+	<div class="intro">
+		<h1>Υποψήφιοι: δύο νέες ιδέες</h1>
+		<p>Σήμερα η οθόνη είναι μια στοίβα από ίδιες κάρτες: δεν φαίνεται ποιον παίρνεις τώρα, ποιος είναι εκπρόθεσμος, και ο ίδιος άνθρωπος εμφανίζεται δύο φορές.</p>
+		<p>Ίδια δεδομένα και ίδιες ενέργειες από πίσω (κλήση, μετατροπή σε σύμβαση, επεξεργασία, στάδιο, ο σύνδεσμός μου). Αλλάζει το πώς τα βλέπει ο συνεργάτης.</p>
+	</div>
+
+	<div class="switch"><button class="on" data-s="a">Α. Η επόμενη κλήση</button><button data-s="b">Β. Ο πίνακας</button></div>
+
+	<!-- ================= A ================= -->
+	<section class="stage on" data-stage="a">
+		<p class="note"><b>Η ιδέα:</b> η οθόνη απαντά πρώτα στο «ποιον παίρνω τώρα». Πάνω η ροή των σταδίων με αριθμούς (πατιέται σαν φίλτρο). Μετά μια σκούρα κάρτα με τον επόμενο άνθρωπο και το γιατί, και δίπλα το πρόγραμμα της μέρας. Από κάτω οι υπόλοιποι σε ομάδες: εκπρόθεσμοι, σήμερα, νέοι χωρίς επαφή, αργότερα. Το στάδιο αλλάζει από το χρωματιστό κουμπάκι, χωρίς να ανοίξεις φόρμα. Ο ίδιος άνθρωπος δύο φορές φαίνεται ως «2 αιτήματα».</p>
+		<div class="frame">
+			<div class="head"><div><h2>Υποψήφιοι</h2><p>3 σε εξέλιξη, 1 επανάκληση σήμερα</p></div>
+				<div class="acts"><span class="btn gho"><svg><use href="#link"/></svg>Ο σύνδεσμός μου</span><span class="btn pri"><svg><use href="#plus"/></svg>Νέος υποψήφιος</span></div></div>
+
+			<div class="flow">
+				<div class="fs on"><b>2</b><span>Νέοι</span></div>
+				<div class="fs"><b>0</b><span>Σε επαφή</span></div>
+				<div class="fs"><b>1</b><span>Επανάκληση</span></div>
+				<div class="fs"><b>0</b><span>Έτοιμοι</span></div>
+				<div class="fs won"><b>2</b><span>Κερδισμένοι · 40%</span></div>
+			</div>
+
+			<div class="hero">
+				<div class="next">
+					<small>ΕΠΟΜΕΝΗ ΚΛΗΣΗ</small>
+					<h3>Μαρία Παπαδοπούλου</h3>
+					<p class="why">Ήρθε από το site πριν από 2 ώρες και δεν έχει γίνει επαφή. Ζήτησε δύο φορές.</p>
+					<div class="facts"><span>Ρεύμα · Οικιακό</span><span>330 kWh/μήνα</span><span>Volton Σταθερό</span><span class="g">~64 €/μήνα</span></div>
+					<div class="row"><span class="btn pri"><svg><use href="#tel"/></svg>Κάλεσε 691 234 5678</span><span class="btn gho"><svg><use href="#arrow"/></svg>Μετατροπή σε σύμβαση</span><span class="btn gho">Αργότερα</span></div>
+				</div>
+				<div class="today">
+					<h4>Σήμερα <small>Τετ 11/11</small></h4>
+					<div class="slot"><time class="late">10:30</time><span>Νίκος Δημητρίου<em>επανάκληση, εκπρόθεσμη</em></span><span class="callbtn"><svg><use href="#tel"/></svg></span></div>
+					<div class="slot"><time>17:00</time><span>Ελένη Ιωάννου<em>«πάρε μετά τις 5»</em></span><span class="callbtn"><svg><use href="#tel"/></svg></span></div>
+					<div class="slot"><time>—</time><span>Μαρία Παπαδοπούλου<em>νέα, χωρίς επαφή</em></span><span class="callbtn"><svg><use href="#tel"/></svg></span></div>
+				</div>
+			</div>
+
+			<div class="group"><h5><i style="background:var(--rose)"></i>Εκπρόθεσμοι <small>1</small></h5>
+				<div class="list">
+					<div class="lead"><span class="av" style="--h:210">ΝΔ</span><span class="who"><b>Νίκος Δημητρίου</b><small><span class="src"><svg><use href="#qr"/></svg>QR</span>694 112 3344</small></span>
+						<span class="what"><span class="plogo"><i style="background:#e4007c"></i>protergia</span>Αέριο · 9 kWh/μέρα · <span class="save">−12 €/μήνα</span></span>
+						<button class="stp cb">Επανάκληση 10:30 ▾</button><button class="more">⋯</button></div>
+				</div></div>
+
+			<div class="group"><h5><i style="background:var(--blue)"></i>Νέοι, χωρίς επαφή <small>1</small></h5>
+				<div class="list">
+					<div class="lead"><span class="av" style="--h:330">ΜΠ</span><span class="who"><b>Μαρία Παπαδοπούλου <span class="dupe">2 αιτήματα</span></b><small><span class="src"><svg><use href="#globe"/></svg>Site</span>691 234 5678</small></span>
+						<span class="what"><span class="plogo"><i style="background:#f39200"></i>VOLTON</span>Ρεύμα · 330 kWh/μήνα · ~64 €/μήνα</span>
+						<button class="stp new">Νέο ▾</button><button class="more">⋯</button></div>
+				</div></div>
+
+			<div class="group"><h5><i style="background:var(--green)"></i>Κερδισμένοι <small>2</small></h5>
+				<div class="list">
+					<div class="lead"><span class="av" style="--h:140">ΚΝ</span><span class="who"><b>Κωνσταντίνος Νίκας</b><small><span class="src"><svg><use href="#globe"/></svg>Site</span>698 277 4563</small></span>
+						<span class="what"><span class="plogo"><i style="background:#2b7de9"></i>ΔΕΗ</span>My Home Online · 450 kWh/μήνα · ~80 €/μήνα</span>
+						<span class="btn gho sm">Άνοιγμα σύμβασης</span><button class="more">⋯</button></div>
+				</div></div>
+		</div>
+	</section>
+
+	<!-- ================= B ================= -->
+	<section class="stage" data-stage="b">
+		<p class="note"><b>Η ιδέα:</b> ο υποψήφιος είναι κάρτα που προχωρά από στήλη σε στήλη. Τη σέρνεις στο επόμενο στάδιο (ή πατάς το στάδιο στο κινητό). Βλέπεις αμέσως πού κολλάνε οι άνθρωποι. Κερδισμένοι και χαμένοι μαζεύονται κάτω ως αριθμοί, για να μη γεμίζουν τον πίνακα. Στο κινητό οι στήλες σύρονται οριζόντια, μία κάθε φορά.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Υποψήφιοι</h2><p>Σύρε μια κάρτα στο επόμενο στάδιο</p></div>
+				<div class="acts"><span class="btn gho"><svg><use href="#link"/></svg>Ο σύνδεσμός μου</span><span class="btn pri"><svg><use href="#plus"/></svg>Νέος υποψήφιος</span></div></div>
+			<div class="board">
+				<div class="col"><h5><i style="background:var(--blue)"></i>Νέοι<small>1</small></h5>
+					<div class="card"><div class="t"><span class="av" style="--h:330">ΜΠ</span><span><b>Μαρία Παπαδοπούλου</b><small>Site · πριν 2 ώρες · 2 αιτήματα</small></span></div>
+						<div class="w"><span class="plogo"><i style="background:#f39200"></i>VOLTON</span><span>Ρεύμα</span><span>330 kWh/μήνα</span><span>~64 €</span></div>
+						<div class="f"><span class="btn pri sm"><svg><use href="#tel"/></svg>Κάλεσε</span><span class="btn gho sm"><svg><use href="#arrow"/></svg>Σύμβαση</span></div></div>
+				</div>
+				<div class="col"><h5><i style="background:var(--teal)"></i>Σε επαφή<small>0</small></h5>
+					<div class="card ghost">Σύρε εδώ μετά την κλήση</div></div>
+				<div class="col"><h5><i style="background:var(--amber)"></i>Επανάκληση<small>2</small></h5>
+					<div class="card"><div class="t"><span class="av" style="--h:210">ΝΔ</span><span><b>Νίκος Δημητρίου</b><small>QR · 694 112 3344</small></span></div>
+						<div class="w"><span class="plogo"><i style="background:#e4007c"></i>protergia</span><span>Αέριο</span><span class="save">−12 €/μήνα</span></div>
+						<div class="f"><span class="when late">Σήμερα 10:30 · εκπρόθεσμη</span><span class="callbtn"><svg><use href="#tel"/></svg></span></div></div>
+					<div class="card"><div class="t"><span class="av" style="--h:20">ΕΙ</span><span><b>Ελένη Ιωάννου</b><small>Σύνδεσμος · 697 555 0101</small></span></div>
+						<div class="w"><span>Ρεύμα</span><span>Επαγγελματικό</span><span>1.200 kWh/μήνα</span></div>
+						<div class="f"><span class="when">Σήμερα 17:00</span><span class="callbtn"><svg><use href="#tel"/></svg></span></div></div>
+				</div>
+				<div class="col"><h5><i style="background:var(--violet)"></i>Έτοιμοι για σύμβαση<small>0</small></h5>
+					<div class="card ghost">Όταν συμφωνήσει, σύρε εδώ</div></div>
+			</div>
+			<div class="closed"><div class="w"><b>2</b> κερδισμένοι αυτόν τον μήνα · 40%</div><div><b>0</b> χαμένοι</div></div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){
+	document.querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+document.querySelectorAll('.fs').forEach(function(f){f.onclick=function(){document.querySelectorAll('.fs').forEach(function(x){x.classList.toggle('on',x===f)})}});
+</script>
+</body>
+</html>

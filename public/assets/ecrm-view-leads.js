@@ -86,7 +86,9 @@ function renderLeads(view, d) {
 	}).join('');
 	if (!(d.leads || []).length) cards = '<div class="ecrm-card"><div class="ecrm-empty">Δεν υπάρχουν υποψήφιοι πελάτες' + (leadsState.stage ? ' σε αυτό το στάδιο' : ' ακόμα') + '.</div></div>';
 
-	view.innerHTML =
+	if (isSignature()) {
+		view.innerHTML = sigLeadsHTML(d, form);
+	} else view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Πριν τη σύμβαση</div><h2 class="ecrm-title">Leads</h2>' +
 		'<p class="ecrm-sub">Υποψήφιοι πελάτες & επανακλήσεις</p></div>' +
 		'<div class="ecrm-head__acts">' +
@@ -213,6 +215,7 @@ function renderLeads(view, d) {
 	view.querySelectorAll('[data-lopen]').forEach(function (b) {
 		b.addEventListener('click', function () { var id = +this.getAttribute('data-lopen'); go('contracts'); setTimeout(function () { openDetail(id); }, 60); });
 	});
+	if (isSignature()) { wireSigStages(view, d); }
 }
 
 /* ── Η παράδοση: από τον σύνδεσμο του πελάτη σε αίτηση ────────────────────
@@ -528,4 +531,276 @@ function openQrPoster(url, owner) {
 	// Το παράθυρο έχει ήδη φορτώσει τη σελίδα· το blob δεν χρειάζεται μετά.
 	setTimeout(function () { URL.revokeObjectURL(page); }, 60000);
 	return !!win;
+}
+
+// ---------------------------------------------------------------------
+// (359) «Signature»: Υποψήφιοι — «Η επόμενη κλήση»
+// Mockup docs/UI-LEADS-FRESH.html, κατεύθυνση Α (εγκρίθηκε 11/11).
+//
+// Η οθόνη απαντά πρώτα στο «ποιον παίρνω τώρα»: ροή σταδίων με αριθμούς
+// (φίλτρο), σκούρα κάρτα με τον επόμενο και το γιατί, το «Σήμερα» δίπλα, και
+// από κάτω οι υπόλοιποι σε ομάδες. Ίδια δεδομένα, ίδια data-* (ledit, lconv,
+// lopen, ldel, lstage, lq, lnew, mylink), ίδια καλωδίωση στο renderLeads().
+// Το στάδιο αλλάζει από το κουμπάκι της γραμμής· η αποθήκευση στέλνει ΟΛΟ
+// τον υποψήφιο, γιατί το POST /leads/{id} γράφει όλα τα πεδία
+// (LeadsController::fieldsFrom) και ένα σκέτο {stage} θα έσβηνε τα υπόλοιπα.
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+var SIG_SRC_ICON = {
+	site: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+	qr: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2z"/>',
+	link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+	phone: '<path d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/>'
+};
+var SIG_TEL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>';
+var SIG_ENERGY = { power: 'Ρεύμα', gas: 'Αέριο', mobile: 'Κινητή' };
+
+function sigLeadTint(name) {
+	var h = 0, s = String(name || '');
+	for (var i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) % 360; }
+	return h;
+}
+
+function sigLeadInitials(name) {
+	var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+	return ((parts[0] || '').charAt(0) + (parts.length > 1 ? parts[parts.length - 1].charAt(0) : '')).toUpperCase() || '·';
+}
+
+function sigSrc(l) {
+	if (!l.source_label) return '';
+	var icon = SIG_SRC_ICON[l.source] || '';
+	return '<span class="sig-lsrc">' + (icon ? '<svg viewBox="0 0 24 24" aria-hidden="true">' + icon + '</svg>' : '') + esc(l.source_label) + '</span>';
+}
+
+function sigDigits(p) { return String(p || '').replace(/[^0-9]/g, '').slice(-10); }
+
+/* 'YYYY-MM-DD HH:MM:SS' τοπική -> { day: 'YYYY-MM-DD', hm: 'HH:MM', ms } */
+function sigWhen(v) {
+	if (!v) return null;
+	var day = v.slice(0, 10), hm = v.slice(11, 16);
+	return { day: day, hm: hm, ms: new Date(v.replace(' ', 'T')).getTime() };
+}
+
+/* «Ρεύμα · <ενδιαφέρον>», χωρίς να λέει το είδος δύο φορές όταν το γράφει
+ * ήδη το ενδιαφέρον («Αέριο · 9 kWh/μέρα»). */
+function sigWhat(l) {
+	var kind = l.energy_type ? SIG_ENERGY[l.energy_type] || l.energy_type : '';
+	var interest = String(l.interest || '');
+	if (kind && interest.indexOf(kind) === 0) kind = '';
+	return [kind, interest].filter(Boolean);
+}
+
+function sigToday() {
+	var n = new Date();
+	var p = function (x) { return (x < 10 ? '0' : '') + x; };
+	return n.getFullYear() + '-' + p(n.getMonth() + 1) + '-' + p(n.getDate());
+}
+
+function sigLeadsHTML(d, form) {
+	var stages = d.stages || {}, counts = d.counts || {};
+	var now = Date.now(), today = sigToday();
+	var all = (d.leads || []).slice();
+
+	// Ο ίδιος άνθρωπος δύο φορές (ίδιο τηλέφωνο): μία γραμμή, και οι υπόλοιποι
+	// ως «+1 αίτημα» από κάτω της, με το δικό τους κουμπί διαγραφής.
+	var byPhone = {}, rows = [];
+	all.forEach(function (l) {
+		var key = sigDigits(l.phone);
+		if (key && byPhone[key]) { byPhone[key].dupes.push(l); return; }
+		var row = { lead: l, dupes: [] };
+		if (key) byPhone[key] = row;
+		rows.push(row);
+	});
+
+	var active = function (l) { return l.stage !== 'won' && l.stage !== 'lost'; };
+	rows.forEach(function (r) { r.when = sigWhen(r.lead.callback_at); });
+
+	var late = [], todayRows = [], fresh = [], open = [], won = [], lost = [];
+	rows.forEach(function (r) {
+		var l = r.lead;
+		if (l.stage === 'won') { won.push(r); return; }
+		if (l.stage === 'lost') { lost.push(r); return; }
+		if (r.when && r.when.ms <= now) { late.push(r); return; }
+		if (r.when && r.when.day === today) { todayRows.push(r); return; }
+		if (l.stage === 'new' && !r.when) { fresh.push(r); return; }
+		open.push(r);
+	});
+	var byTime = function (a, b) { return a.when.ms - b.when.ms; };
+	late.sort(byTime); todayRows.sort(byTime);
+
+	// Ο επόμενος: πρώτα ο πιο παλιός εκπρόθεσμος, μετά ο πιο πρόσφατος νέος,
+	// μετά η επόμενη επανάκληση της μέρας.
+	var next = late[0] || fresh[0] || todayRows[0] || null;
+	var why = '';
+	if (next) {
+		if (next === late[0]) why = 'Η επανάκληση ήταν για τις ' + next.when.hm + (next.when.day !== today ? ' στις ' + fmtDate(next.when.day) : '') + ' και δεν έχει γίνει ακόμα.';
+		else if (next === fresh[0]) {
+			var src = String(next.lead.source_label || '');
+			why = (/^Από /.test(src) ? 'Ήρθε α' + src.slice(1) : 'Νέος υποψήφιος' + (src ? ' (' + src + ')' : '')) + ' και δεν έχει γίνει επαφή.';
+		}
+		else why = 'Επανάκληση σήμερα στις ' + next.when.hm + '.';
+		if (next.dupes.length) why += ' Ζήτησε ' + (next.dupes.length + 1) + ' φορές.';
+	}
+
+	var flowKeys = ['new', 'contacted', 'callback', 'qualified', 'won'];
+	var wonN = counts.won || 0, lostN = counts.lost || 0;
+	var rate = wonN + lostN ? Math.round(wonN / (wonN + lostN) * 100) : null;
+	var flow = '<div class="sig-lflow">' + flowKeys.map(function (k) {
+		var label = stages[k] || k;
+		if (k === 'won' && rate !== null) label += ' · ' + rate + '%';
+		return '<button type="button" class="sig-lflow__s' + (k === 'won' ? ' is-won' : '') + (leadsState.stage === k ? ' is-on' : '') + '" data-lstage="' + esc(leadsState.stage === k ? '' : k) + '">' +
+			'<b>' + esc(String(counts[k] || 0)) + '</b><span>' + esc(label) + '</span></button>';
+	}).join('') + '</div>';
+
+	var hero = '';
+	if (next && !leadsState.stage) {
+		var l = next.lead;
+		var facts = sigWhat(l);
+		hero = '<div class="sig-lnext">' +
+			'<small>Επόμενη κλήση</small><h3>' + esc(l.name) + '</h3><p>' + esc(why) + '</p>' +
+			(facts.length ? '<div class="sig-lnext__facts">' + facts.map(function (f) { return '<span>' + esc(f) + '</span>'; }).join('') + '</div>' : '') +
+			'<div class="sig-lnext__acts">' +
+				(l.phone ? '<a class="ecrm-btn ecrm-btn--primary" href="' + esc('tel:' + l.phone) + '">' + SIG_TEL + ' Κάλεσε ' + esc(l.phone) + '</a>' : '') +
+				'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-lconv="' + esc(String(l.id)) + '">Μετατροπή σε σύμβαση</button>' +
+				// (359b) «Αργότερα» = μετάθεση, όχι φόρμα: άνοιγε την επεξεργασία και
+				// η «Αποθήκευση» γύριζε στο ίδιο σημείο, με τον ίδιο άνθρωπο ξανά
+				// πρώτο (ιδιοκτήτης 11/11). Τώρα βάζει επανάκληση με ένα πάτημα.
+				'<details class="sig-lsnooze"><summary class="ecrm-btn ecrm-btn--ghost">Αργότερα</summary><div class="sig-lsnooze__menu">' +
+					'<button type="button" data-lsnooze="' + esc(String(l.id)) + '" data-lsnooze-in="60">Σε 1 ώρα</button>' +
+					'<button type="button" data-lsnooze="' + esc(String(l.id)) + '" data-lsnooze-in="180">Σε 3 ώρες</button>' +
+					'<button type="button" data-lsnooze="' + esc(String(l.id)) + '" data-lsnooze-in="tomorrow">Αύριο 10:00</button>' +
+					'<button type="button" data-ledit="' + esc(String(l.id)) + '">Άλλη ώρα…</button>' +
+				'</div></details>' +
+			'</div></div>';
+	}
+
+	var slots = rows.filter(function (r) { return active(r.lead) && r.when && (r.when.day === today || r.when.ms <= now); })
+		.sort(byTime).slice(0, 6);
+	var todayCard = !leadsState.stage ? '<div class="sig-ltoday"><h4>Σήμερα</h4>' + (slots.length ? slots.map(function (r) {
+		var isLate = r.when.ms <= now;
+		return '<div class="sig-lslot"><time class="' + (isLate ? 'is-late' : '') + '">' + esc(r.when.day === today ? r.when.hm : fmtDate(r.when.day)) + '</time>' +
+			'<span><b>' + esc(r.lead.name) + '</b><em>' + esc(isLate ? 'επανάκληση, εκπρόθεσμη' : 'επανάκληση') + '</em></span>' +
+			(r.lead.phone ? '<a class="sig-lcall" href="' + esc('tel:' + r.lead.phone) + '" aria-label="' + esc('Κάλεσε ' + r.lead.name) + '">' + SIG_TEL + '</a>' : '') + '</div>';
+	}).join('') : '<p class="sig-ltoday__none">Καμία επανάκληση για σήμερα.</p>') + '</div>' : '';
+
+	function row(r) {
+		var l = r.lead, id = esc(String(l.id));
+		var stageSel = l.stage === 'won' && l.contract_id
+			? '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-lopen="' + esc(String(l.contract_id)) + '">Άνοιγμα σύμβασης</button>'
+			: '<select class="sig-lstage is-' + esc(l.stage) + '" data-lstagepick="' + id + '" aria-label="Στάδιο">' + Object.keys(stages).map(function (k) {
+				var lbl = stages[k] + (k === 'callback' && r.when ? ' ' + (r.when.day === today ? r.when.hm : fmtDate(r.when.day)) : '');
+				return '<option value="' + esc(k) + '"' + (k === l.stage ? ' selected' : '') + '>' + esc(lbl) + '</option>';
+			}).join('') + '</select>';
+		var what = sigWhat(l).join(' · ');
+		var dupes = r.dupes.map(function (x) {
+			return '<div class="sig-ldupe">Ίδιο τηλέφωνο, ξεχωριστό αίτημα' + (x.interest ? ': ' + esc(x.interest) : '') +
+				' <button type="button" class="sig-ldupe__del" data-ldel="' + esc(String(x.id)) + '">Διαγραφή διπλού</button></div>';
+		}).join('');
+		return '<div class="sig-lrow">' +
+			'<span class="sig-lrow__av" style="--h:' + sigLeadTint(l.name) + '">' + esc(sigLeadInitials(l.name)) + '</span>' +
+			'<span class="sig-lrow__who"><b>' + esc(l.name) + (r.dupes.length ? ' <em class="sig-ldupe__n">' + esc((r.dupes.length + 1) + ' αιτήματα') + '</em>' : '') + '</b>' +
+				'<small>' + sigSrc(l) + (l.phone ? '<a href="' + esc('tel:' + l.phone) + '">' + esc(l.phone) + '</a>' : '') + '</small></span>' +
+			'<span class="sig-lrow__what">' + esc(what || '—') + '</span>' +
+			stageSel +
+			'<details class="sig-lmore"><summary aria-label="Περισσότερα">⋯</summary><div class="sig-lmore__menu">' +
+				'<button type="button" data-ledit="' + id + '">Επεξεργασία</button>' +
+				(l.stage === 'won' && l.contract_id ? '' : '<button type="button" data-lconv="' + id + '">Μετατροπή σε σύμβαση</button>') +
+				'<button type="button" class="is-danger" data-ldel="' + id + '">Διαγραφή</button>' +
+			'</div></details>' +
+			(dupes ? '<div class="sig-lrow__dupes">' + dupes + '</div>' : '') +
+		'</div>';
+	}
+
+	function group(title, tone, list) {
+		if (!list.length) return '';
+		return '<section class="sig-lgroup"><h5><i class="is-' + tone + '"></i>' + esc(title) + ' <small>' + esc(String(list.length)) + '</small></h5>' +
+			'<div class="sig-llist">' + list.map(row).join('') + '</div></section>';
+	}
+
+	var groups = group('Εκπρόθεσμοι', 'rose', late) + group('Σήμερα', 'amber', todayRows) +
+		group('Νέοι, χωρίς επαφή', 'blue', fresh) + group('Σε εξέλιξη', 'teal', open) +
+		group('Κερδισμένοι', 'green', won) + group('Χαμένοι', 'grey', lost);
+	if (!rows.length) {
+		groups = '<div class="sig-tempty"><b>' + esc(leadsState.stage || leadsState.q ? 'Κανένας υποψήφιος εδώ.' : 'Δεν έχεις υποψήφιους ακόμα.') + '</b>' +
+			'<span>Πρόσθεσε έναν, ή στείλε τον σύνδεσμό σου σε πελάτη.</span></div>';
+	}
+
+	var inFlight = rows.filter(function (r) { return active(r.lead); }).length;
+	var dueToday = late.length + todayRows.length;
+	var sub = inFlight + (inFlight === 1 ? ' σε εξέλιξη' : ' σε εξέλιξη') + (dueToday ? ', ' + dueToday + (dueToday === 1 ? ' κλήση σήμερα' : ' κλήσεις σήμερα') : '');
+
+	return '<header class="sig-cuhead"><div><h2>Υποψήφιοι</h2><p>' + esc(sub) + '</p></div>' +
+		'<div class="sig-lhead__acts">' +
+			'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-mylink><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg> Ο σύνδεσμός μου</button>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary" data-lnew><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέος υποψήφιος</button>' +
+		'</div></header>' +
+		'<div class="ecrm-mylink" data-mylinkbox hidden></div>' +
+		form +
+		flow +
+		(hero || todayCard ? '<div class="sig-lhero' + (hero ? '' : ' is-solo') + '">' + hero + todayCard + '</div>' : '') +
+		'<div class="sig-lsearch"><input type="search" class="ecrm-input" placeholder="Αναζήτηση ονόματος, τηλεφώνου, ενδιαφέροντος…" value="' + esc(leadsState.q) + '" data-lq></div>' +
+		groups;
+}
+
+/* Αποθήκευση ενός υποψήφιου με αλλαγές: ΟΛΟΣ πίσω, γιατί το POST
+ * /leads/{id} γράφει όλα τα πεδία (LeadsController::fieldsFrom). */
+function sigSaveLead(l, patch, done, fail) {
+	var body = {
+		name: l.name || '', phone: l.phone || '', email: l.email || '', source: l.source || '',
+		energy_type: l.energy_type || '', interest: l.interest || '', notes: l.notes || '',
+		callback_at: leadCbInput(l.callback_at), lost_reason: l.lost_reason || '', stage: l.stage || 'new'
+	};
+	Object.keys(patch).forEach(function (k) { body[k] = patch[k]; });
+	fetch(api('/leads/' + l.id), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(body) })
+		.then(function (r) { return r.json(); })
+		.then(function (res) {
+			if (res && res.ok) { done(); loadLeads(); }
+			else { fail(); toast((res && res.error) || 'Αποτυχία.', false); }
+		})
+		.catch(function () { fail(); toast('Σφάλμα δικτύου.', false); });
+}
+
+/* «YYYY-MM-DDTHH:MM» τοπική ώρα, όπως το datetime-local της φόρμας. */
+function sigLocalInput(t) {
+	var p = function (x) { return (x < 10 ? '0' : '') + x; };
+	return t.getFullYear() + '-' + p(t.getMonth() + 1) + '-' + p(t.getDate()) + 'T' + p(t.getHours()) + ':' + p(t.getMinutes());
+}
+
+/* Αλλαγή σταδίου από τη γραμμή, και «Αργότερα» από την κάρτα της επόμενης κλήσης. */
+function wireSigStages(view, d) {
+	var find = function (id) { return (d.leads || []).filter(function (x) { return x.id === id; })[0]; };
+	view.querySelectorAll('[data-lstagepick]').forEach(function (sel) {
+		sel.addEventListener('change', function () {
+			var l = find(+this.getAttribute('data-lstagepick'));
+			if (!l) return;
+			sel.disabled = true;
+			sigSaveLead(l, { stage: this.value }, function () { toast('Το στάδιο άλλαξε.'); }, function () { sel.disabled = false; });
+		});
+	});
+	view.querySelectorAll('[data-lsnooze]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			var l = find(+this.getAttribute('data-lsnooze'));
+			if (!l) return;
+			var when = this.getAttribute('data-lsnooze-in');
+			var t = new Date();
+			if (when === 'tomorrow') { t.setDate(t.getDate() + 1); t.setHours(10, 0, 0, 0); }
+			else { t = new Date(t.getTime() + parseInt(when, 10) * 60000); t.setSeconds(0, 0); }
+			var label = this.textContent;
+			b.disabled = true;
+			sigSaveLead(l, { callback_at: sigLocalInput(t), stage: 'callback' },
+				function () { toast('Επανάκληση: ' + label.toLowerCase() + '.'); },
+				function () { b.disabled = false; });
+		});
+	});
+	view.querySelectorAll('.sig-lsnooze').forEach(function (m) {
+		m.addEventListener('click', function (e) { if (e.target.closest('button')) m.removeAttribute('open'); });
+	});
+	view.querySelectorAll('.sig-lmore').forEach(function (m) {
+		m.addEventListener('click', function (e) { if (e.target.closest('button')) m.removeAttribute('open'); });
+	});
 }
