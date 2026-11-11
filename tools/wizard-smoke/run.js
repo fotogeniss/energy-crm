@@ -258,7 +258,7 @@ const step = function () {
 	q('[data-finalize]').click();
 	await tick(); await tick(); await tick();
 	const fin = w.__queued.filter(function (e) { return e.what === 'contract'; })[0];
-	ok('η οριστικοποίηση μπήκε στην ουρά', !!fin && fin.payload.status === 'presale', JSON.stringify(w.__queued));
+	ok('η οριστικοποίηση μπήκε στην ουρά', !!fin && fin.payload.status === 'registration', JSON.stringify(w.__queued));
 	ok('η φόρμα καθάρισε', root.querySelector('[name="afm"]').value === '', root.querySelector('[name="afm"]').value);
 	ok('και γύρισε στο βήμα 1', step() === '1', 'ορατά: ' + step());
 	ok('δεν μένει «μη αποθηκευμένο»', w.ECRMForm.isDirty() === false);
