@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Βήμα 4 — δύο νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--blue:#2f7cf6;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1180px;margin:0 auto;padding:32px 20px 80px}
+.intro{max-width:720px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:860px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;position:relative;overflow:hidden}
+.frame h2{font-size:40px;font-weight:800;letter-spacing:-.045em;margin:0 0 22px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:15px;padding:12px 20px;cursor:pointer}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.logo{display:inline-flex;align-items:center;gap:6px;font-weight:800;color:#1d2bd8;letter-spacing:-.02em}
+.logo i{width:16px;height:16px;border-radius:50%;border:3.5px solid #1d2bd8;border-bottom-color:transparent;display:inline-block}
+
+/* ---------- A: Το έγγραφο ---------- */
+.a-grid>*{min-width:0}.a-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:34px;align-items:start}
+.paper{position:relative;background:#fff;border-radius:6px;padding:30px 30px 26px;box-shadow:0 2px 0 #0000000a,0 30px 60px -30px rgba(16,24,16,.45),0 0 0 1px var(--hair);transform:rotate(-1.2deg);aspect-ratio:1/1.32}
+.paper::after{content:"";position:absolute;left:10px;right:-10px;top:12px;bottom:-12px;background:#fff;border-radius:6px;z-index:-1;box-shadow:0 0 0 1px var(--hair);transform:rotate(2.4deg)}
+.paper__head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:16px}
+.paper__head small{font-size:11px;color:var(--ink3);text-align:right;line-height:1.3}
+.paper h3{font-size:16px;margin:0 0 14px;letter-spacing:-.01em}
+.pl{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:end;padding:7px 0;border-bottom:1px solid #eceeea;font-size:13px}
+.pl span{color:var(--ink3);font-size:11.5px}
+.pl b{font-weight:600;font-family:"Segoe Print","Bradley Hand",cursive,var(--font);font-size:14px;color:#22306b}
+.pl.miss{border-bottom:1.5px dashed var(--amber)}
+.pl.miss b{font-family:var(--font);font-size:12.5px;color:var(--amber);font-weight:700;cursor:pointer}
+.pl.miss b:hover{text-decoration:underline}
+.sigbox{position:absolute;left:30px;right:30px;bottom:26px;height:92px;border-radius:12px;border:1.5px dashed #c8ccc5;display:flex;align-items:flex-end;justify-content:space-between;padding:10px 14px}
+.sigbox span{font-size:11px;color:var(--ink3)}
+.sigbox em{font-style:normal;font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.sigbox .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 var(--green);animation:p 1.8s infinite}
+@keyframes p{0%{box-shadow:0 0 0 0 #16c21766}100%{box-shadow:0 0 0 10px #16c21700}}
+.paper__miss{position:absolute;top:-14px;right:18px;background:var(--amber);color:#fff;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;transform:rotate(1.2deg);box-shadow:0 8px 16px -8px var(--amber)}
+
+.ways h3{font-size:22px;letter-spacing:-.03em;margin:4px 0 4px}
+.ways p.sub{margin:0 0 16px;color:var(--ink2);font-size:14px}
+.way{display:block;width:100%;text-align:left;border:0;font:inherit;color:inherit;background:var(--glass);border-radius:20px;box-shadow:0 0 0 1px var(--hair);padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:box-shadow .2s,transform .2s}
+.way:hover{transform:translateY(-1px)}
+.way.on{box-shadow:0 0 0 2px var(--green),var(--lift);background:#fff}
+.way__row{display:flex;align-items:center;gap:14px}
+.way__ic{width:44px;height:44px;flex:0 0 44px;border-radius:14px;display:grid;place-items:center;background:var(--fill);font-size:20px}
+.way.on .way__ic{background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));color:#fff}
+.way__t b{display:block;font-size:16px}
+.way__t small{display:block;color:var(--ink2);font-size:13px;margin-top:2px}
+.way__radio{margin-left:auto;width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px #c8ccc5}
+.way.on .way__radio{box-shadow:inset 0 0 0 7px var(--green)}
+.way__body{display:none;margin:14px 0 2px 58px}
+.way.on .way__body{display:block}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:7px 14px;border-radius:999px;background:var(--fill);font-size:13px;font-weight:600;color:var(--ink2)}
+.chip.on{background:var(--green-t);color:var(--green-ink)}
+.to{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.to input{flex:1;min-width:0;height:42px;border-radius:12px;border:1px solid var(--hair);padding:0 12px;font:inherit;font-size:14px;background:#fff}
+.qrrow{display:flex;gap:16px;align-items:center}
+.qr{width:96px;height:96px;border-radius:12px;background:
+	conic-gradient(from 90deg at 30% 30%,#1b1d1a 25%,transparent 0) 0 0/24px 24px,
+	conic-gradient(from 0deg at 60% 60%,#1b1d1a 25%,transparent 0) 6px 6px/18px 18px,#fff;
+	box-shadow:0 0 0 6px #fff,0 0 0 7px var(--hair)}
+.small{font-size:12.5px;color:var(--ink3);margin-top:8px}
+.extra{display:flex;align-items:center;gap:10px;margin-top:6px;padding:12px 16px;border-radius:16px;border:1px dashed #c8ccc5;color:var(--ink2);font-size:14px}
+.extra b{color:var(--ink)}
+
+/* ---------- B: Μία ερώτηση ---------- */
+.strip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;border-radius:18px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);margin-bottom:28px}
+.strip .who{font-weight:700}
+.strip .dot{color:var(--ink3)}
+.strip .warn{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.strip .warn a{font-size:12.5px;font-weight:700;color:var(--amber);background:var(--amber-t);padding:6px 11px;border-radius:999px;text-decoration:none}
+.q{font-size:34px;font-weight:800;letter-spacing:-.04em;text-align:center;margin:8px 0 6px}
+.qsub{text-align:center;color:var(--ink2);margin:0 0 22px;font-size:15px}
+.ans{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px;margin:0 auto}
+.an{border:0;font:inherit;color:inherit;text-align:left;cursor:pointer;border-radius:26px;padding:24px;background:var(--glass);box-shadow:0 0 0 1px var(--hair),var(--lift);transition:transform .25s,box-shadow .25s;min-height:150px;display:flex;flex-direction:column;gap:6px}
+.an:hover{transform:translateY(-2px)}
+.an.on{box-shadow:0 0 0 2px var(--green),var(--float);background:#fff}
+.an .big{font-size:40px;line-height:1}
+.an b{font-size:22px;letter-spacing:-.02em;margin-top:8px}
+.an small{color:var(--ink2);font-size:14px;line-height:1.45}
+.panel{max-width:860px;margin:18px auto 0;border-radius:26px;background:#fff;box-shadow:0 0 0 1px var(--hair),var(--lift);padding:24px;display:none}
+.panel.on{display:block;animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.yes{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center}
+.yes .qr{width:150px;height:150px}
+.yes h4,.no h4{font-size:20px;margin:0 0 6px;letter-spacing:-.02em}
+.yes p,.no p{margin:0 0 14px;color:var(--ink2);font-size:14px;line-height:1.5}
+.or{display:flex;gap:10px;flex-wrap:wrap}
+.no .to{max-width:520px}
+.later{text-align:center;margin-top:16px;font-size:14px;color:var(--ink2)}
+.later a{color:var(--green-ink);font-weight:700;text-decoration:none}
+
+.foot{margin-top:26px;display:flex;justify-content:space-between;align-items:center;padding:12px 12px 12px 18px;border-radius:22px;background:var(--glass);box-shadow:0 0 0 1px var(--hair)}
+.foot small{color:var(--ink2);font-size:12.5px}
+.foot div{display:flex;gap:8px}
+
+@media (max-width:820px){
+	.frame{padding:18px}.frame h2{font-size:30px}
+	.a-grid{grid-template-columns:1fr}
+	.paper{transform:none;aspect-ratio:auto;padding-bottom:140px}
+	.way__body{margin-left:0}
+	.ans{grid-template-columns:1fr}
+	.yes{grid-template-columns:1fr;justify-items:center;text-align:center}
+	.q{font-size:26px}
+	.foot{flex-direction:column;gap:10px;align-items:stretch}
+	.foot div{flex-wrap:wrap}.foot .btn{flex:1 1 auto}
+	.paper::after{display:none}
+	.paper__miss{right:10px}
+}
+</style>
+</head>
+<body>
+<div class="doc">
+	<div class="intro">
+		<h1>Βήμα 4, «Έλεγχος και υπογραφή»: δύο νέες ιδέες</h1>
+		<p>Και οι δύο βγάζουν τη «Γρήγορη σύνοψη» από τα δεξιά σε αυτό το βήμα, για να μη λέει η σελίδα το ίδιο πράγμα δύο φορές.</p>
+		<p>Ίδια δεδομένα και ίδια κουμπιά από πίσω (εκτύπωση, email, σύνδεσμος). Αλλάζει μόνο ο τρόπος που τα συναντά ο συνεργάτης.</p>
+	</div>
+
+	<div class="switch" role="tablist">
+		<button class="on" data-s="a">Α. Το έγγραφο</button>
+		<button data-s="b">Β. Μία ερώτηση</button>
+	</div>
+
+	<!-- ================= A ================= -->
+	<section class="stage on" data-stage="a">
+		<p class="note"><b>Η ιδέα:</b> αριστερά βλέπεις την αίτηση όπως θα τη δει ο πελάτης, σαν χαρτί, με τα στοιχεία γραμμένα πάνω της. Ό,τι λείπει είναι κενή γραμμή με πορτοκαλί «Συμπλήρωσε», ακριβώς στη θέση που θα έμπαινε. Κάτω, το κουτί της υπογραφής περιμένει. Δεξιά διαλέγεις τρόπο, και ο τρόπος ανοίγει με ό,τι χρειάζεται: κινητό και κανάλι, ή QR, ή εκτύπωση.</p>
+		<div class="frame">
+			<h2>Έλεγχος και υπογραφή</h2>
+			<div class="a-grid">
+				<div style="position:relative;padding:14px 10px 20px">
+					<div class="paper">
+						<span class="paper__miss">Λείπουν 2 στοιχεία</span>
+						<div class="paper__head"><span class="logo"><i></i>orizon</span><small>Αίτηση σύνδεσης<br>#EC-0421</small></div>
+						<h3>Στοιχεία συνδρομητή</h3>
+						<div class="pl"><span>Ονοματεπώνυμο</span><b>Μαρία Κωνσταντίνου</b></div>
+						<div class="pl miss"><span>ΑΦΜ</span><b>Συμπλήρωσε το ΑΦΜ</b></div>
+						<div class="pl"><span>Διεύθυνση</span><b>Ερμού 12, Αθήνα</b></div>
+						<div class="pl miss"><span>Κινητό</span><b>Συμπλήρωσε κινητό</b></div>
+						<div class="pl"><span>Πρόγραμμα</span><b>orizon unlimited · 25 €/μήνα</b></div>
+						<div class="sigbox"><span>Υπογραφή πελάτη</span><em><i class="pulse"></i>Περιμένει υπογραφή</em></div>
+					</div>
+				</div>
+				<div class="ways">
+					<h3>Πώς θα υπογράψει;</h3>
+					<p class="sub">Διάλεξε έναν τρόπο. Αλλάζεις όποτε θες.</p>
+
+					<button class="way on" data-way>
+						<div class="way__row"><span class="way__ic">📱</span><span class="way__t"><b>Στο κινητό του</b><small>Του στέλνεις σύνδεσμο, υπογράφει με το ΑΦΜ του</small></span><span class="way__radio"></span></div>
+						<div class="way__body">
+							<div class="chips"><span class="chip on">SMS</span><span class="chip">Viber</span><span class="chip">Email</span></div>
+							<div class="to"><input value="694 123 4410" aria-label="Κινητό"><span class="btn pri">Στείλε</span></div>
+							<div class="small">Θα δεις στην καρτέλα της αίτησης πότε το άνοιξε και πότε υπέγραψε.</div>
+						</div>
+					</button>
+
+					<button class="way" data-way>
+						<div class="way__row"><span class="way__ic">✍️</span><span class="way__t"><b>Εδώ, τώρα</b><small>Είναι μπροστά σου: σκανάρει το QR ή υπογράφει σε αυτή τη συσκευή</small></span><span class="way__radio"></span></div>
+						<div class="way__body">
+							<div class="qrrow"><div class="qr"></div><div><span class="btn gho">Άνοιξε εδώ για υπογραφή</span><div class="small">Ο σύνδεσμος ισχύει 7 ημέρες.</div></div></div>
+						</div>
+					</button>
+
+					<button class="way" data-way>
+						<div class="way__row"><span class="way__ic">🖨️</span><span class="way__t"><b>Σε χαρτί</b><small>Τυπώνεις την αίτηση και υπογράφει με στυλό</small></span><span class="way__radio"></span></div>
+						<div class="way__body"><span class="btn pri">Τύπωσε την αίτηση</span><div class="small">Μετά ανέβασε τη σκαναρισμένη στην καρτέλα της αίτησης.</div></div>
+					</button>
+
+					<div class="extra">＋ <span><b>Πρόσθεσε και ρεύμα στον ίδιο πελάτη</b> · νέα αίτηση με τα στοιχεία του ήδη μέσα</span></div>
+				</div>
+			</div>
+			<div class="foot"><small>✓ Ο πελάτης ενημερώθηκε και συναινεί (GDPR)</small><div><span class="btn gho">← Πίσω</span><span class="btn gho">Προσωρινή αποθήκευση</span><span class="btn pri">Οριστικοποίηση</span></div></div>
+		</div>
+	</section>
+
+	<!-- ================= B ================= -->
+	<section class="stage" data-stage="b">
+		<p class="note"><b>Η ιδέα:</b> ο συνεργάτης δεν σκέφτεται «PDF, email ή σύνδεσμος». Σκέφτεται «είναι ο πελάτης εδώ ή όχι». Η σελίδα κάνει αυτή την ερώτηση, και η απάντηση φέρνει τον σωστό τρόπο. Η αίτηση χωράει σε μία γραμμή πάνω, και ό,τι λείπει είναι κουμπί που σε πάει εκεί.</p>
+		<div class="frame">
+			<h2>Έλεγχος και υπογραφή</h2>
+			<div class="strip">
+				<span class="logo"><i></i>orizon</span><span class="who">Μαρία Κωνσταντίνου</span><span class="dot">·</span><span>orizon unlimited</span>
+				<span class="warn"><a href="#">Λείπει ΑΦΜ</a><a href="#">Λείπει κινητό</a></span>
+			</div>
+			<div class="q">Είναι ο πελάτης μαζί σου τώρα;</div>
+			<p class="qsub">Από αυτό εξαρτάται ο πιο γρήγορος τρόπος να υπογράψει.</p>
+			<div class="ans">
+				<button class="an on" data-an="yes"><span class="big">🤝</span><b>Ναι, είναι εδώ</b><small>Υπογράφει τώρα: σκανάρει το QR με το κινητό του, ή υπογράφει στη δική σου συσκευή.</small></button>
+				<button class="an" data-an="no"><span class="big">📨</span><b>Όχι, θα υπογράψει μετά</b><small>Του στέλνεις σύνδεσμο. Ανοίγει με το ΑΦΜ του και σου έρχεται το αποδεικτικό.</small></button>
+			</div>
+			<div class="panel on" data-panel="yes">
+				<div class="yes">
+					<div class="qr"></div>
+					<div><h4>Δείξε του το QR</h4><p>Το σκανάρει, γράφει το ΑΦΜ του και υπογράφει με το δάχτυλο. Δεν χρειάζεται να του στείλεις τίποτα.</p>
+					<div class="or"><span class="btn pri">Υπογραφή σε αυτή τη συσκευή</span><span class="btn gho">Τύπωσε σε χαρτί</span></div></div>
+				</div>
+			</div>
+			<div class="panel" data-panel="no">
+				<div class="no"><h4>Στείλε του τον σύνδεσμο</h4><p>Θα δεις στην καρτέλα της αίτησης πότε τον άνοιξε και πότε υπέγραψε.</p>
+					<div class="chips"><span class="chip on">SMS</span><span class="chip">Viber</span><span class="chip">Email</span></div>
+					<div class="to"><input value="694 123 4410" aria-label="Κινητό"><span class="btn pri">Στείλε</span></div>
+				</div>
+			</div>
+			<div class="later">ή <a href="#">πρόσθεσε και ρεύμα στον ίδιο πελάτη</a></div>
+			<div class="foot"><small>✓ Ο πελάτης ενημερώθηκε και συναινεί (GDPR)</small><div><span class="btn gho">← Πίσω</span><span class="btn gho">Προσωρινή αποθήκευση</span><span class="btn pri">Οριστικοποίηση</span></div></div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){
+	document.querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+document.querySelectorAll('[data-way]').forEach(function(w){w.onclick=function(){document.querySelectorAll('[data-way]').forEach(function(x){x.classList.toggle('on',x===w)})}});
+document.querySelectorAll('[data-an]').forEach(function(a){a.onclick=function(){
+	document.querySelectorAll('[data-an]').forEach(function(x){x.classList.toggle('on',x===a)});
+	document.querySelectorAll('[data-panel]').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-panel')===a.getAttribute('data-an'))});
+}});
+</script>
+</body>
+</html>

@@ -2679,70 +2679,119 @@ import { openDialog } from '@energy-crm/dialog';
 			var foot = box.querySelector('[data-sum-step]');
 			if (foot) foot.textContent = '\u0392\u03ae\u03bc\u03b1 ' + state.wstep + ' \u03b1\u03c0\u03cc ' + WSTEPS;
 
-			if (isSignature()) paintSigReview(rows, checks, pct);
+			if (isSignature()) paintSigReview(rows, checks);
 		}
 
-		/* (358c) Νέα εμφάνιση, Βήμα 4 «Έλεγχος και υπογραφή»: μια κάρτα που
-		 * δείχνει ΤΙ θα υπογραφεί πριν διαλέξεις ΠΩΣ (αίτημα ιδιοκτήτη 11/11:
-		 * «να αλλάξει εντελώς, είναι ίδια με το άλλο»). Τα ίδια ακριβώς
-		 * στοιχεία και τα ίδια πέντε κριτήρια με τη «Γρήγορη σύνοψη» -- καμία
-		 * δεύτερη εκδοχή του «τι σημαίνει έτοιμο». Ό,τι λείπει έχει κουμπί που
-		 * πηγαίνει στο βήμα του. Μπαίνει μόνο με data-ui="signature". */
-		var SIG_CHECK = {
-			providerProgram: ['Πάροχος και πρόγραμμα', 1],
-			identity: ['Στοιχεία ταυτότητας', 3],
-			afmAdt: ['ΑΦΜ / ΑΔΤ', 3],
-			address: ['Διεύθυνση', 3],
-			contact: ['Επικοινωνία', 3]
+		/* (358c) Νέα εμφάνιση, Βήμα 4 «Έλεγχος και υπογραφή». Mockup:
+		 * docs/UI-STEP4-FRESH.html, κατεύθυνση Α «Το έγγραφο» (εγκρίθηκε 11/11,
+		 * «τα icons κάν' τα premium»).
+		 *
+		 * Αριστερά η αίτηση σαν χαρτί, με τα στοιχεία γραμμένα πάνω της· ό,τι
+		 * λείπει είναι κενή γραμμή «Συμπλήρωσε …» που πάει στο βήμα του. Τα
+		 * κριτήρια είναι τα ΙΔΙΑ πέντε με τη «Γρήγορη σύνοψη» (καμία δεύτερη
+		 * εκδοχή του «τι σημαίνει έτοιμο»), και η σύνοψη κρύβεται σε αυτό το
+		 * βήμα για να μη λέγεται το ίδιο δύο φορές. Δεξιά οι τρεις τρόποι
+		 * υπογραφής· κάθε κουμπί τους πατάει το ΥΠΑΡΧΟΝ [data-act], οπότε η
+		 * αποστολή, ο σύνδεσμος και η εκτύπωση μένουν ακριβώς ίδια. Μπαίνει
+		 * μόνο με data-ui="signature". */
+		var sigWay = 'send';
+
+		var SIG_ICON = {
+			send: '<path d="M8.5 2.75h7a2 2 0 0 1 2 2v14.5a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V4.75a2 2 0 0 1 2-2Z"/><path d="M10.5 18.25h3"/><path d="M9.25 12.6c.9-1.6 1.7-2.4 2.2-2.1.6.4-.6 2.6 0 2.9.5.3 1.2-.9 1.8-.7.5.2.2 1 .7 1.1.3 0 .7-.3 1-.6"/>',
+			here: '<path d="M14.6 4.6 19.4 9.4"/><path d="M4.5 19.5l1.2-4.6L15.9 4.7a1.7 1.7 0 0 1 2.4 0l1 1a1.7 1.7 0 0 1 0 2.4L9.1 18.3Z"/><path d="M3.75 21.25h8.5"/>',
+			paper: '<path d="M7 8.25V3.75h10v4.5"/><path d="M7 17.25H5.25a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h13.5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H17"/><path d="M7 14.25h10v6H7z"/><path d="M17.25 11.25h.01"/>'
 		};
 
-		function paintSigReview(rows, checks, pct) {
+		function sigIcon(name) {
+			return '<span class="sig-way__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + SIG_ICON[name] + '</svg></span>';
+		}
+
+		function sigPaperLine(label, value, ok, fix, step) {
+			if (ok) return '<div class="sig-pl"><span>' + esc(label) + '</span><b>' + esc(value || '—') + '</b></div>';
+			return '<div class="sig-pl is-miss"><span>' + esc(label) + '</span><button type="button" data-sig-go="' + esc(String(step)) + '">' + esc(fix) + '</button></div>';
+		}
+
+		function paintSigReview(rows, checks) {
 			var step = root.querySelector('[data-wstep="4"]');
 			if (!step) return;
-			var box = step.querySelector('[data-sig-review]');
-			if (!box) {
-				box = document.createElement('section');
-				box.className = 'ecrm-card sig-review';
-				box.setAttribute('data-sig-review', '');
-				step.insertBefore(box, step.firstChild);
-				var h = document.createElement('h3');
-				h.className = 'sig-review__h';
-				h.textContent = 'Πώς θα υπογράψει ο πελάτης;';
-				var banners = step.querySelector('.ecrm-actbanners');
+			var wrap = step.querySelector('[data-sig-s4]');
+			if (!wrap) {
+				wrap = document.createElement('div');
+				wrap.className = 'sig-s4';
+				wrap.setAttribute('data-sig-s4', '');
+				wrap.innerHTML = '<div class="sig-s4__doc"><div class="sig-paper" data-sig-paper></div></div>' +
+					'<div class="sig-s4__ways"><h3>Πώς θα υπογράψει;</h3><p>Διάλεξε έναν τρόπο. Αλλάζεις όποτε θες.</p>' +
+					'<div data-sig-ways></div></div>';
+				step.insertBefore(wrap, step.firstChild);
+				// Ο επιλογέας «σε ποιον από τους δύο» και το «+ αέριο / ρεύμα»
+				// μετακομίζουν στη δεξιά στήλη· ίδια στοιχεία, ίδιοι listeners.
+				var ways = wrap.querySelector('.sig-s4__ways');
 				var who = step.querySelector('[data-signwho]');
-				step.insertBefore(h, who || banners);
-				box.addEventListener('click', function (e) {
-					var b = e.target.closest ? e.target.closest('[data-sig-go]') : null;
-					if (b) goStep(parseInt(b.getAttribute('data-sig-go'), 10), false);
+				if (who) ways.insertBefore(who, ways.querySelector('[data-sig-ways]'));
+				var comp = step.querySelector('[data-act="companion"]');
+				if (comp) ways.appendChild(comp);
+				wrap.addEventListener('click', function (e) {
+					var go = e.target.closest ? e.target.closest('[data-sig-go]') : null;
+					if (go) { goStep(parseInt(go.getAttribute('data-sig-go'), 10), false); return; }
+					var run = e.target.closest ? e.target.closest('[data-sig-run]') : null;
+					if (run) {
+						var real = step.querySelector('.ecrm-actbanners [data-act="' + run.getAttribute('data-sig-run') + '"]');
+						if (real) real.click();
+						return;
+					}
+					var pick = e.target.closest ? e.target.closest('[data-sig-way]') : null;
+					if (pick) { sigWay = pick.getAttribute('data-sig-way'); updateSummary(); }
 				});
 			}
 
+			var ok = {};
+			checks.forEach(function (c) { ok[c.key] = c.ok; });
+			var missing = checks.filter(function (c) { return !c.ok; }).length;
+			var isCompany = state.customer_type === 'company';
 			var prov = providersCache.filter(function (p) { return parseInt(p.id, 10) === state.provider_id; })[0];
-			var logo = prov && prov.logo_url
-				? '<span class="sig-review__logo"><img src="' + esc(prov.logo_url) + '" alt=""></span>'
-				: (rows.provider ? '<span class="sig-review__pname">' + esc(rows.provider) + '</span>' : '');
-			var missing = checks.filter(function (c) { return !c.ok; });
-			var line = [rows.provider, rows.program, rows.region].filter(Boolean).join(' · ');
-			var nMiss = missing.length;
-			var stateText = !nMiss ? 'Έτοιμη για υπογραφή' : (nMiss === 1 ? 'Λείπει 1 από 5' : 'Λείπουν ' + nMiss + ' από 5');
+			var head = prov && prov.logo_url
+				? '<span class="sig-paper__logo"><img src="' + esc(prov.logo_url) + '" alt="' + esc(rows.provider) + '"></span>'
+				: '<span class="sig-paper__pname">' + esc(rows.provider || 'Πάροχος') + '</span>';
+			var afm = [readField('afm') ? 'ΑΦΜ ' + readField('afm') : '', !isCompany && readField('adt') ? 'ΑΔΤ ' + readField('adt') : ''].filter(Boolean).join(' · ');
+			var addr = [[readField('street'), readField('street_no')].filter(Boolean).join(' '), readField('city')].filter(Boolean).join(', ');
+			var badge = missing
+				? '<span class="sig-paper__badge is-warn">' + esc(missing === 1 ? 'Λείπει 1 στοιχείο' : 'Λείπουν ' + missing + ' στοιχεία') + '</span>'
+				: '<span class="sig-paper__badge is-ok">Έτοιμη για υπογραφή</span>';
 
-			box.innerHTML =
-				'<div class="sig-review__top">' +
-					'<div class="sig-review__who"><small>Αίτηση για</small>' +
-						'<b' + (rows.customer ? '' : ' class="is-empty"') + '>' + esc(rows.customer || 'Χωρίς όνομα ακόμα') + '</b>' +
-						'<span>' + esc(line || 'Δεν έχει επιλεγεί πάροχος') + '</span></div>' +
-					logo +
-				'</div>' +
-				'<div class="sig-review__state' + (nMiss ? ' is-warn' : ' is-ok') + '">' +
-					'<b>' + esc(stateText) + '</b>' +
-					'<span class="sig-review__bar"><i style="width:' + esc(String(pct)) + '%"></i></span>' +
-				'</div>' +
-				'<ul class="sig-review__checks">' + checks.map(function (c) {
-					var meta = SIG_CHECK[c.key] || [c.key, 3];
-					return '<li class="' + (c.ok ? 'is-ok' : 'is-miss') + '"><span class="sig-review__m">' + (c.ok ? '✓' : '!') + '</span>' +
-						'<span class="sig-review__l">' + esc(meta[0]) + '</span>' +
-						(c.ok ? '' : '<button type="button" class="sig-review__go" data-sig-go="' + esc(String(meta[1])) + '">Συμπλήρωσε</button>') + '</li>';
-				}).join('') + '</ul>';
+			wrap.querySelector('[data-sig-paper]').innerHTML = badge +
+				'<div class="sig-paper__head">' + head + '<small>Αίτηση' + (state.contract_id ? '<br>#' + esc(String(state.contract_id)) : '') + '</small></div>' +
+				'<h4>Στοιχεία πελάτη</h4>' +
+				sigPaperLine(isCompany ? 'Επωνυμία' : 'Ονοματεπώνυμο', rows.customer, ok.identity, isCompany ? 'Συμπλήρωσε επωνυμία' : 'Συμπλήρωσε όνομα', 3) +
+				sigPaperLine(isCompany ? 'ΑΦΜ' : 'ΑΦΜ / ΑΔΤ', afm, ok.afmAdt, isCompany ? 'Συμπλήρωσε ΑΦΜ' : 'Συμπλήρωσε ΑΦΜ και ΑΔΤ', 3) +
+				sigPaperLine('Διεύθυνση', addr, ok.address, 'Συμπλήρωσε διεύθυνση', 3) +
+				sigPaperLine('Επικοινωνία', readField('mobile') || readField('phone'), ok.contact, 'Συμπλήρωσε τηλέφωνο', 3) +
+				sigPaperLine('Πρόγραμμα', rows.program, ok.providerProgram, 'Διάλεξε πρόγραμμα', 1) +
+				'<div class="sig-paper__sign"><span>Υπογραφή πελάτη</span><em><i></i>Περιμένει υπογραφή</em></div>';
+
+			var email = readField('email');
+			var WAYS = [
+				{ key: 'send', title: 'Στο κινητό ή στο email του', sub: 'Του στέλνεις σύνδεσμο· ανοίγει με το ΑΦΜ του',
+					body: (email
+						? '<p>Ο σύνδεσμος πάει στο <b>' + esc(email) + '</b>. Θα δεις στην καρτέλα της αίτησης πότε τον άνοιξε και πότε υπέγραψε.</p>'
+						: '<p>Δεν έχει email ακόμα. <button type="button" class="sig-way__link" data-sig-go="3">Συμπλήρωσε email</button>, ή φτιάξε σύνδεσμο από το «Εδώ, τώρα» και στείλ’ τον όπως θες.</p>') +
+						'<button type="button" class="ecrm-btn ecrm-btn--primary" data-sig-run="email">Στείλε για υπογραφή</button>' },
+				{ key: 'here', title: 'Εδώ, τώρα', sub: 'Είναι μπροστά σου: υπογράφει στη συσκευή σου ή στο κινητό του',
+					body: '<p>Φτιάχνεται σύνδεσμος υπογραφής. Τον ανοίγεις εδώ, ή του τον δίνεις να τον ανοίξει στο κινητό του.</p>' +
+						'<button type="button" class="ecrm-btn ecrm-btn--primary" data-sig-run="livelink">Φτιάξε σύνδεσμο υπογραφής</button>' },
+				{ key: 'paper', title: 'Σε χαρτί', sub: 'Τυπώνεις την αίτηση και υπογράφει με στυλό',
+					body: '<p>Μετά ανέβασε τη σκαναρισμένη στην καρτέλα της αίτησης.</p>' +
+						'<button type="button" class="ecrm-btn ecrm-btn--primary" data-sig-run="pdf">Τύπωσε την αίτηση</button>' }
+			];
+			wrap.querySelector('[data-sig-ways]').innerHTML = WAYS.map(function (w) {
+				var on = w.key === sigWay;
+				var bodyHtml = w.body; // χτισμένο πιο πάνω, με esc() σε ό,τι ήρθε από τη φόρμα
+				return '<div class="sig-way' + (on ? ' is-on' : '') + '">' +
+					'<button type="button" class="sig-way__row" data-sig-way="' + esc(w.key) + '" aria-expanded="' + (on ? 'true' : 'false') + '">' +
+						sigIcon(w.key) + '<span class="sig-way__t"><b>' + esc(w.title) + '</b><small>' + esc(w.sub) + '</small></span><span class="sig-way__radio"></span>' +
+					'</button>' +
+					(on ? '<div class="sig-way__body">' + bodyHtml + '</div>' : '') +
+				'</div>';
+			}).join('');
 		}
 
 		// Τα chips (πάροχος, energy_type, category) δεν πυροδοτούν φυσικό
