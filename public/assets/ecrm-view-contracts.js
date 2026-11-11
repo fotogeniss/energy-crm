@@ -364,6 +364,20 @@ document.addEventListener('keydown', function (e) {
 	if (view && view.querySelector('[data-insp].is-open')) { closeInspector(view); }
 });
 
+/* (360c) Κλικ έξω από τον επιθεωρητή τον κλείνει, όπως το Esc. Εξαιρούνται
+ * οι γραμμές (ανοίγουν άλλη αίτηση στο ίδιο πάνελ), τα παράθυρα διαλόγου που
+ * ανοίγουν τα κουμπιά του πάνελ, και στοιχεία που αφαιρέθηκαν από τη σελίδα
+ * μέσα στο ίδιο κλικ (π.χ. ξαναγράφτηκε το περιεχόμενο του πάνελ). */
+document.addEventListener('click', function (e) {
+	var view = viewEl('contracts');
+	var panel = view && view.querySelector('[data-insp].is-open');
+	var t = e.target;
+	if (!panel || !t || !t.closest || !document.contains(t)) return;
+	if (panel.contains(t)) return;
+	if (t.closest('.ecrm-rowlink, [role="dialog"], dialog, .ecrm-modalov, .ecrm-toast')) return;
+	closeInspector(view);
+});
+
 function renderContracts(view, d) {
 	var statuses = d.statuses || {}, counts = d.counts || {};
 	var allRows = d.rows || [];
