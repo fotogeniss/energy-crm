@@ -545,7 +545,7 @@
 	.ecrm-app[data-ui="signature"] .sig-tn__new:hover,
 	.ecrm-app[data-ui="signature"] .sig-tn__new.is-active { color: var(--sig-on-btn); background: linear-gradient(180deg, var(--sig-btn-top), var(--sig-btn-top)); }
 	.ecrm-app[data-ui="signature"] .sig-tn__new svg { width: 16px; height: 16px; }
-	.ecrm-app[data-ui="signature"] .ecrm-content { max-width: 1240px; width: 100%; margin: 0 auto; padding: 30px 40px 40px; }
+	.ecrm-app[data-ui="signature"] .ecrm-content { max-width: 1360px; width: 100%; margin: 0 auto; padding: 30px 40px 40px; }
 }
 @media (min-width: 861px) and (max-width: 1240px) {
 	.ecrm-app[data-ui="signature"] .ecrm-gsearch,
@@ -659,8 +659,9 @@
 
 /* ── (353h) Καρτέλα αίτησης: μεγάλο όνομα, πέντε σταθμοί, στοιχεία σε κουτάκια ──
  * Markup: sigDetailHTML() στο ecrm-view-detail.js. Πρότυπο: docs/UI-REDESIGN-NEW-SKELETON.html. */
-/* Το view είναι flex: χωρίς min-width:0 η καρτέλα φούσκωνε στο πλάτος της λωρίδας σταθμών (712px σε κινητό). */
-.ecrm-app[data-ui="signature"] .sig-detail { flex: 1 1 auto; width: 100%; min-width: 0; max-width: 1240px; margin: 0 auto; }
+/* (356) Πλάτος ως 1360px (ήταν 1240· τα 1480 ήταν πολλά): σε μεγάλη οθόνη έμενε άδειος χώρος δεξιά-αριστερά (ιδιοκτήτης 11/11).
+   Το view είναι flex: χωρίς min-width:0 η καρτέλα φούσκωνε στο πλάτος της λωρίδας σταθμών (712px σε κινητό). */
+.ecrm-app[data-ui="signature"] .sig-detail { flex: 1 1 auto; width: 100%; min-width: 0; max-width: 1360px; margin: 0 auto; }
 .ecrm-app[data-ui="signature"] .sig-detail__back {
 	display: inline-flex; align-items: center; gap: 4px; margin: 0 0 14px -6px; padding: 6px 10px 6px 6px; border: 0; border-radius: 999px;
 	background: transparent; color: var(--sig-ink-2); font: inherit; font-size: var(--fs-14); font-weight: 600; cursor: pointer;
@@ -729,7 +730,7 @@
 .ecrm-app[data-ui="signature"] .sig-stage__s.is-stop small { color: var(--sig-rose); }
 
 /* Σώμα: στοιχεία/έγγραφα αριστερά, πορεία δεξιά. */
-.ecrm-app[data-ui="signature"] .sig-dgrid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.ecrm-app[data-ui="signature"] .sig-dgrid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
 .ecrm-app[data-ui="signature"] .sig-dmain,
 .ecrm-app[data-ui="signature"] .sig-dside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .ecrm-app[data-ui="signature"] .sig-detail .ecrm-card { padding: 18px 20px; border-radius: 22px; }
@@ -834,7 +835,7 @@
 /* ═══ (353i) Πελάτες: πλέγμα από κάρτες ═══
  * Markup: sigCustomersHTML() στο ecrm-view-customers.js. Οι καρτέλες «Χωρίς αέριο /
  * Χωρίς ρεύμα» κρατούν το markup τους και αλλάζουν μόνο ρούχο. */
-.ecrm-app[data-ui="signature"] [data-view="customers"] { max-width: 1240px; margin: 0 auto; width: 100%; min-width: 0; }
+.ecrm-app[data-ui="signature"] [data-view="customers"] { max-width: 1360px; margin: 0 auto; width: 100%; min-width: 0; }
 .ecrm-app[data-ui="signature"] .sig-cuhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 6px 0 18px; }
 .ecrm-app[data-ui="signature"] .sig-cuhead h2 { margin: 0; font-size: var(--fs-40); font-weight: 800; letter-spacing: -.04em; line-height: 1.05; color: var(--sig-ink); }
 .ecrm-app[data-ui="signature"] .sig-cuhead p { margin: 6px 0 0; font-size: var(--fs-15); color: var(--sig-ink-2); }
@@ -994,7 +995,7 @@
 /* ═══ (353k) Ομάδα: κάρτες ανθρώπων ═══
  * Markup: sigTeamHTML() στο ecrm-view-team.js. Η φόρμα «Νέο μέλος», οι
  * «Πάροχοι ομάδας» και το «Χωρίς ομάδα» κρατούν markup, αλλάζουν μόνο ρούχο. */
-.ecrm-app[data-ui="signature"] [data-view="team"] { max-width: 1240px; margin: 0 auto; width: 100%; min-width: 0; }
+.ecrm-app[data-ui="signature"] [data-view="team"] { max-width: 1360px; margin: 0 auto; width: 100%; min-width: 0; }
 .ecrm-app[data-ui="signature"] .sig-teamacts { display: flex; gap: 8px; flex-wrap: wrap; }
 .ecrm-app[data-ui="signature"] .sig-teamacts .ecrm-btn--ghost { background: var(--sig-solid); color: var(--sig-ink); border: 0; box-shadow: 0 0 0 1px var(--sig-hair); }
 .ecrm-app[data-ui="signature"] .sig-teamgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
