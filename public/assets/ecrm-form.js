@@ -1356,10 +1356,14 @@ import { openDialog } from '@energy-crm/dialog';
 					var nProg = programsCache.filter(function (pr) { return parseInt(pr.provider_id, 10) === parseInt(p.id, 10); }).length;
 					var kinds = String(p.energy_types || '').split(',').filter(Boolean).map(energyLabel).join(', ');
 					b.classList.add('is-card');
+					if (p.logo_url) { b.classList.add('has-logo'); }
 					b.style.setProperty('--h', String(tint(p.name || '')));
 					b.innerHTML = '<span class="sig-pv__name">' + esc(p.name) + '</span>' +
 						(kinds ? '<span class="sig-pv__kinds">' + esc(kinds) + '</span>' : '') +
-						'<span class="sig-pv__n">' + nProg + (nProg === 1 ? ' πρόγραμμα' : ' προγράμματα') + '</span>';
+						'<span class="sig-pv__n">' + nProg + (nProg === 1 ? ' πρόγραμμα' : ' προγράμματα') + '</span>' +
+						// (358) Το λογότυπο του παρόχου, κάτω δεξιά σε λευκό πλαίσιο
+						// (αίτημα ιδιοκτήτη 11/11). Πάνω δεξιά μένει το ✓ της επιλογής.
+						(p.logo_url ? '<span class="sig-pv__logo"><img src="' + esc(p.logo_url) + '" alt=""></span>' : '');
 				}
 				b.addEventListener('click', function () {
 					wrap.querySelectorAll('.ecrm-provider').forEach(function (x) { x.classList.remove('is-on'); });
@@ -2674,6 +2678,71 @@ import { openDialog } from '@energy-crm/dialog';
 
 			var foot = box.querySelector('[data-sum-step]');
 			if (foot) foot.textContent = '\u0392\u03ae\u03bc\u03b1 ' + state.wstep + ' \u03b1\u03c0\u03cc ' + WSTEPS;
+
+			if (isSignature()) paintSigReview(rows, checks, pct);
+		}
+
+		/* (358c) Νέα εμφάνιση, Βήμα 4 «Έλεγχος και υπογραφή»: μια κάρτα που
+		 * δείχνει ΤΙ θα υπογραφεί πριν διαλέξεις ΠΩΣ (αίτημα ιδιοκτήτη 11/11:
+		 * «να αλλάξει εντελώς, είναι ίδια με το άλλο»). Τα ίδια ακριβώς
+		 * στοιχεία και τα ίδια πέντε κριτήρια με τη «Γρήγορη σύνοψη» -- καμία
+		 * δεύτερη εκδοχή του «τι σημαίνει έτοιμο». Ό,τι λείπει έχει κουμπί που
+		 * πηγαίνει στο βήμα του. Μπαίνει μόνο με data-ui="signature". */
+		var SIG_CHECK = {
+			providerProgram: ['Πάροχος και πρόγραμμα', 1],
+			identity: ['Στοιχεία ταυτότητας', 3],
+			afmAdt: ['ΑΦΜ / ΑΔΤ', 3],
+			address: ['Διεύθυνση', 3],
+			contact: ['Επικοινωνία', 3]
+		};
+
+		function paintSigReview(rows, checks, pct) {
+			var step = root.querySelector('[data-wstep="4"]');
+			if (!step) return;
+			var box = step.querySelector('[data-sig-review]');
+			if (!box) {
+				box = document.createElement('section');
+				box.className = 'ecrm-card sig-review';
+				box.setAttribute('data-sig-review', '');
+				step.insertBefore(box, step.firstChild);
+				var h = document.createElement('h3');
+				h.className = 'sig-review__h';
+				h.textContent = 'Πώς θα υπογράψει ο πελάτης;';
+				var banners = step.querySelector('.ecrm-actbanners');
+				var who = step.querySelector('[data-signwho]');
+				step.insertBefore(h, who || banners);
+				box.addEventListener('click', function (e) {
+					var b = e.target.closest ? e.target.closest('[data-sig-go]') : null;
+					if (b) goStep(parseInt(b.getAttribute('data-sig-go'), 10), false);
+				});
+			}
+
+			var prov = providersCache.filter(function (p) { return parseInt(p.id, 10) === state.provider_id; })[0];
+			var logo = prov && prov.logo_url
+				? '<span class="sig-review__logo"><img src="' + esc(prov.logo_url) + '" alt=""></span>'
+				: (rows.provider ? '<span class="sig-review__pname">' + esc(rows.provider) + '</span>' : '');
+			var missing = checks.filter(function (c) { return !c.ok; });
+			var line = [rows.provider, rows.program, rows.region].filter(Boolean).join(' · ');
+			var nMiss = missing.length;
+			var stateText = !nMiss ? 'Έτοιμη για υπογραφή' : (nMiss === 1 ? 'Λείπει 1 από 5' : 'Λείπουν ' + nMiss + ' από 5');
+
+			box.innerHTML =
+				'<div class="sig-review__top">' +
+					'<div class="sig-review__who"><small>Αίτηση για</small>' +
+						'<b' + (rows.customer ? '' : ' class="is-empty"') + '>' + esc(rows.customer || 'Χωρίς όνομα ακόμα') + '</b>' +
+						'<span>' + esc(line || 'Δεν έχει επιλεγεί πάροχος') + '</span></div>' +
+					logo +
+				'</div>' +
+				'<div class="sig-review__state' + (nMiss ? ' is-warn' : ' is-ok') + '">' +
+					'<b>' + esc(stateText) + '</b>' +
+					'<span class="sig-review__bar"><i style="width:' + esc(String(pct)) + '%"></i></span>' +
+				'</div>' +
+				'<ul class="sig-review__checks">' + checks.map(function (c) {
+					var meta = SIG_CHECK[c.key] || [c.key, 3];
+					return '<li class="' + (c.ok ? 'is-ok' : 'is-miss') + '"><span class="sig-review__m">' + (c.ok ? '✓' : '!') + '</span>' +
+						'<span class="sig-review__l">' + esc(meta[0]) + '</span>' +
+						(c.ok ? '' : '<button type="button" class="sig-review__go" data-sig-go="' + esc(String(meta[1])) + '">Συμπλήρωσε</button>') + '</li>';
+				}).join('') + '</ul>';
 		}
 
 		// Τα chips (πάροχος, energy_type, category) δεν πυροδοτούν φυσικό
