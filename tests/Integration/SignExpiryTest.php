@@ -30,6 +30,8 @@ namespace EnergyCRM\Tests\Integration;
 
 use ECRM_Tracking;
 use EnergyCRM\Access\Roles;
+use EnergyCRM\Domain\Contract\SignatureRoles;
+use EnergyCRM\Domain\Contract\SignProof;
 use EnergyCRM\Persistence\EventRepository;
 use EnergyCRM\Persistence\Tables;
 use WP_REST_Request;
@@ -236,6 +238,11 @@ final class SignExpiryTest extends IntegrationTestCase
         $request = new WP_REST_Request('POST', '/ecrm/v1/track/' . ECRM_Tracking::token($this->contractId) . '/sign');
         $request->set_param('signature', $dataUrl);
         $request->set_param('consent', $consent);
+        // (354b) Η υπογραφή θέλει πλέον επιβεβαίωση ΑΦΜ· εδώ δοκιμάζεται η
+        // λήξη και το φορτίο, οπότε δίνεται έγκυρη απόδειξη.
+        $key = (new \ReflectionMethod(ECRM_Tracking::class, 'key_for'))->invoke(null, $this->contractId);
+        $proof = SignProof::makeProof($this->contractId, SignatureRoles::MOBILE, time(), (string) $key);
+        $request->set_param('afm_proof', $proof);
 
         return rest_do_request($request);
     }

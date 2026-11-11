@@ -71,6 +71,9 @@ final class RestRouteGuardTest extends IntegrationTestCase
         self::ROOT . '/track/(?P<token>[A-Za-z0-9\-]+)/sign' =>
             'Signing from the tracking page.',
 
+        self::ROOT . '/track/(?P<token>[A-Za-z0-9\-]+)/afm' =>
+            '(354b) Ο πελάτης γράφει το ΑΦΜ του πριν υπογράψει· rate limit ανά IP και κλείδωμα μετά από 5 λάθη.',
+
         self::ROOT . '/track/(?P<token>[A-Za-z0-9\-]+)/upload' =>
             'The customer uploading their own documents from the tracking page.',
 

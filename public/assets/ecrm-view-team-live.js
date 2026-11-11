@@ -37,7 +37,7 @@ function renderTeamLive(view, d) {
 		stat('Online τώρα', (t.online || 0), 'is-online') +
 		stat('Σήμερα', (t.today || 0)) +
 		stat('Αυτόν τον μήνα', (t.month || 0)) +
-		stat('Presale', (t.presale || 0)) +
+		stat('Καταχώρηση', (t.presale || 0)) + // (354) Presale + Καταχώρηση
 		stat('Οριστικοποίηση', (t.finalisation || 0)) +
 		stat('Ενεργές', (t.active || 0)) +
 	'</div>';
@@ -63,6 +63,6 @@ function renderTeamLive(view, d) {
 		'<span class="ecrm-live"><span class="ecrm-live__dot"></span> ' + esc(d.ts || '') + '</span></header>' +
 		cards +
 		'<div class="ecrm-card"><div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr>' +
-		'<th>Μέλος</th><th>Σήμερα</th><th class="ecrm-col-sec">Μήνας</th><th>Presale</th><th class="ecrm-col-sec">Οριστ/ση</th><th>Εργασίες</th><th class="ecrm-col-sec">Τελ. δραστηριότητα</th>' +
+		'<th>Μέλος</th><th>Σήμερα</th><th class="ecrm-col-sec">Μήνας</th><th>Καταχώρηση</th><th class="ecrm-col-sec">Οριστ/ση</th><th>Εργασίες</th><th class="ecrm-col-sec">Τελ. δραστηριότητα</th>' +
 		'</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 }

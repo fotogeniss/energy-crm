@@ -98,7 +98,7 @@ final class ContractStatusTest extends TestCase
     public function testADraftCanOnlyBeSubmittedOrCancelled(): void
     {
         self::assertSame(
-            [ContractStatus::Presale, ContractStatus::Cancelled],
+            [ContractStatus::Presale, ContractStatus::Registration, ContractStatus::Cancelled],
             ContractStatus::Draft->allowedNext()
         );
     }

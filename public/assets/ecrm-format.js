@@ -123,3 +123,92 @@ export function svgIcon(name) {
 		+ 'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
 		+ (p[name] || '') + '</svg>';
 }
+
+/* (353h) Οι πέντε σταθμοί μιας αίτησης, για τη λωρίδα της «Signature» καρτέλας.
+ *
+ * Πρόχειρο → Χαρτιά → Υπογραφή → Πάροχος → Ενεργή. Δεν είναι νέα κατάσταση:
+ * διαβάζει την κατάσταση ΚΑΙ τα γεγονότα που ήδη ταξιδεύουν με την αίτηση.
+ * «Χαρτιά» και «Υπογραφή» κρίνονται από τα ίδια τα στοιχεία (checklist,
+ * signed_at, signatures), όχι από το όνομα της κατάστασης: μια αίτηση που
+ * υπογράφηκε αλλά της λείπει λογαριασμός δείχνει ✓ στην υπογραφή και ● στα
+ * χαρτιά, γιατί αυτό ακριβώς την κρατά. Ο server παραμένει ο φύλακας των
+ * μεταβάσεων (ContractStatus::allowedNext()) -- εδώ μόνο ζωγραφίζεται.
+ *
+ * state: 'ok' πέρασε, 'now' εδώ είναι, 'warn' εδώ με εκκρεμότητα,
+ * 'stop' σταμάτησε εδώ (απόρριψη/ακύρωση), 'next' δεν έφτασε ακόμα. */
+var STAGE_RANK = {
+	draft: 0, presale: 1, registration: 1, awaiting_signature: 1,
+	to_finalisation: 3, signature_complete: 3, awaiting_sim: 3, sim_delivered: 3,
+	pending_issue: 3, recheck: 3, debt: 3, for_review: 3,
+	finalisation: 4, thalis_confirmed: 4, active: 5
+};
+var STAGE_WARN = { pending_issue: 1, recheck: 1, debt: 1, for_review: 1 };
+var STAGE_STOP = { cancelled: 1, thalis_rejected: 1, mnp_reject: 1 };
+
+export function contractStages(c) {
+	c = c || {};
+	var st = String(c.status || 'draft');
+	var rank = STAGE_RANK[st] !== undefined ? STAGE_RANK[st] : 0;
+	var ck = c.doc_checklist && c.doc_checklist.items && c.doc_checklist.items.length ? c.doc_checklist : null;
+	var expired = (c.doc_expired || []).length > 0;
+	var docsOk = ck ? (!!ck.complete && !expired) : (c.files || []).length > 0;
+	var sg = c.signatures;
+	var sigOk = sg && sg.required && sg.required.length > 1
+		? (sg.collected || []).length >= sg.required.length
+		: !!c.signed_at;
+
+	var ok = [
+		st !== 'draft',
+		docsOk || rank >= 5,
+		sigOk || rank >= 3,
+		rank >= 4,
+		st === 'active'
+	];
+	var now = ok.indexOf(false);
+	var labels = ['Πρόχειρο', 'Χαρτιά', 'Υπογραφή', 'Πάροχος', 'Ενεργή'];
+	var keys = ['draft', 'docs', 'sign', 'provider', 'active'];
+
+	return labels.map(function (label, i) {
+		var state = ok[i] ? 'ok' : 'next';
+		if (i === now) {
+			state = STAGE_STOP[st] ? 'stop' : (STAGE_WARN[st] ? 'warn' : 'now');
+		}
+		return { key: keys[i], label: label, state: state };
+	});
+}
+
+/* (353j) Σε ποια ομάδα της λίστας «Εργασίες» μπαίνει μια εργασία.
+ *
+ * Το due_at είναι ΤΟΠΙΚΗ ώρα του site («2026-11-11 14:30:00»). Συγκρίνεται ως
+ * ημερομηνία-κείμενο με το «σήμερα» του `now`, χωρίς ζώνη ώρας -- ίδια ανάγνωση
+ * με fmtDate(). Το «εκπρόθεσμη» δεν το κρίνουμε εδώ: το στέλνει ο server
+ * (t.overdue) και μία πηγή αρκεί.
+ *
+ * Επιστρέφει: 'done' | 'overdue' | 'today' | 'tomorrow' | 'week' | 'later' | 'none'. */
+export function dueBucket(t, now) {
+	t = t || {};
+	if (t.status === 'done') return 'done';
+	if (t.overdue) return 'overdue';
+
+	var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(t.due_at || ''));
+	if (!m) return 'none';
+
+	now = now || new Date();
+	var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+	var due = new Date(+m[1], +m[2] - 1, +m[3]);
+	var days = Math.round((due - today) / 86400000);
+
+	if (days <= 0) return 'today';
+	if (days === 1) return 'tomorrow';
+	if (days < 7) return 'week';
+
+	return 'later';
+}
+
+/** (353j) «14:30» ή «12/11 14:30» από τοπικό due_at, χωρίς να περάσει από Date. */
+export function dueClock(iso, withDate) {
+	var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(String(iso || ''));
+	if (!m) return '';
+
+	return (withDate ? m[3] + '/' + m[2] + ' ' : '') + m[4] + ':' + m[5];
+}

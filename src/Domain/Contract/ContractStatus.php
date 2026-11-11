@@ -211,7 +211,9 @@ enum ContractStatus: string
     /**
      * Πού μπορεί να πάει από εδώ, χωρίς να ξέρουμε το είδος της αίτησης.
      *
-     * - Από το πρόχειρο: μόνο υποβολή ή ακύρωση.
+     * - Από το πρόχειρο: υποβολή ή ακύρωση. Η υποβολή από τη φόρμα πάει
+     *   κατευθείαν σε Καταχώρηση (11/11/2026, ώστε να μπορεί να σταλεί αμέσως
+     *   για υπογραφή)· η Presale μένει νόμιμη για εισαγωγές και παλιούς πελάτες.
      * - Από κάθε ενδιάμεση: σε κάθε άλλη ενδιάμεση, στην Ενεργό, ή ακύρωση.
      * - Από την Ενεργό: πίσω σε ενδιάμεση για διόρθωση, ή ακύρωση. Και τα δύο
      *   θέλουν το `ecrm_exit_active`.
@@ -225,7 +227,7 @@ enum ContractStatus: string
     public function allowedNext(): array
     {
         if ($this === self::Draft) {
-            return [self::Presale, self::Cancelled];
+            return [self::Presale, self::Registration, self::Cancelled];
         }
 
         if ($this === self::Cancelled) {

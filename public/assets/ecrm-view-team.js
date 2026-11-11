@@ -1,4 +1,8 @@
-/* Energy CRM — team: the members at each role, and adding one. */
+/* Energy CRM — team: the members at each role, and adding one.
+ *
+ * (353k) Στη νέα εμφάνιση «Signature» ο πίνακας γίνεται κάρτες ανθρώπων
+ * (sigTeamHTML): αρχικά, όνομα, email, πόσες αιτήσεις με μπάρα σε σχέση με τον
+ * πρώτο, και οι ενέργειες στο «⋯». Ίδια data-*, ίδια καλωδίωση. */
 
 import { api, banner, checkedProviderIds, esc, failureText, fetch, H, postJson, providerChipsHtml, toast, viewEl, wireProviderChips } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
@@ -73,7 +77,11 @@ function renderTeam(view, d, flash) {
 		'<div class="ecrm-ai-status" data-member-msg></div></div>'
 	) : '';
 
-	view.innerHTML =
+	if (isSignature()) {
+		view.innerHTML = sigTeamHTML(members, canManage, flash) + addForm +
+			(canManage ? '<div class="ecrm-card" data-bulkwrap hidden></div>' : '') +
+			'<div data-orphans></div>';
+	} else view.innerHTML =
 		'<header class="ecrm-head"><h2 class="ecrm-title">Η ομάδα μου</h2><p class="ecrm-sub">Διαχείριση πωλητών του γραφείου σου.</p></header>' +
 		// Το αποτέλεσμα της δημιουργίας μέλους, πάνω από τη λίστα που μόλις
 		// ξαναφορτώθηκε -- αλλιώς το username και το αν έφυγε η πρόσκληση
@@ -142,9 +150,17 @@ function renderTeam(view, d, flash) {
 	// αυτόν τον έλεγχο κάθε τους πάτημα θα άνοιγε και την καρτέλα από κάτω.
 	view.querySelectorAll('[data-member]').forEach(function (row) {
 		row.addEventListener('click', function (ev) {
-			if (ev.target.closest('button')) { return; }
+			if (ev.target.closest('button, details, a')) { return; }
 			openPartner(this.getAttribute('data-member'));
 		});
+		// (353k) Στη Signature η κάρτα είναι role="button": Enter ανοίγει κι αυτό.
+		row.addEventListener('keydown', function (ev) {
+			if ((ev.key === 'Enter' || ev.key === ' ') && ev.target === this) { ev.preventDefault(); openPartner(this.getAttribute('data-member')); }
+		});
+	});
+	// (353k) Το «⋯» μιας κάρτας κλείνει μόλις διαλεχτεί κάτι.
+	view.querySelectorAll('[data-mm-more]').forEach(function (dm) {
+		dm.addEventListener('click', function (ev) { if (ev.target.closest('.sig-mm__menu button')) { dm.open = false; } });
 	});
 	view.querySelectorAll('[data-toggle]').forEach(function (b) { b.addEventListener('click', function () { teamOp(this.getAttribute('data-toggle'), 'toggle'); }); });
 	view.querySelectorAll('[data-remove]').forEach(function (b) { b.addEventListener('click', function () { if (confirm('Αφαίρεση μέλους από την ομάδα;')) teamOp(this.getAttribute('data-remove'), 'remove'); }); });
@@ -344,4 +360,62 @@ function place(id, managerId, el) {
 			}
 		})
 		.catch(function () { el.disabled = false; toast('Σφάλμα δικτύου.', false); });
+}
+
+// ---------------------------------------------------------------------
+// (353k) «Signature»: η ομάδα ως κάρτες ανθρώπων
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+// Κλικ έξω από ανοιχτό «⋯» το κλείνει. Ένας listener για όλη τη σελίδα.
+document.addEventListener('click', function (e) {
+	document.querySelectorAll('[data-mm-more][open]').forEach(function (d) {
+		if (!d.contains(e.target)) { d.open = false; }
+	});
+});
+
+function sigTeamHTML(members, canManage, flash) {
+	var total = members.reduce(function (n, m) { return n + (Number(m.contracts) || 0); }, 0);
+	var top = members.reduce(function (n, m) { return Math.max(n, Number(m.contracts) || 0); }, 0);
+	var active = members.filter(function (m) { return m.active; }).length;
+
+	var cards = members.map(function (m) {
+		var n = Number(m.contracts) || 0;
+		var pct = top ? Math.round(n / top * 100) : 0;
+		var menu = canManage
+			? '<details class="sig-mm" data-mm-more><summary aria-label="Ενέργειες για ' + esc(m.name) + '">⋯</summary><div class="sig-mm__menu">' +
+				(m.active ? '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-promote="' + esc(String(m.id)) + '" data-name="' + esc(m.name) + '">Προαγωγή σε Συνεργάτη</button>' : '') +
+				'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-toggle="' + esc(String(m.id)) + '">' + (m.active ? 'Απενεργοποίηση' : 'Ενεργοποίηση') + '</button>' +
+				'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--danger" data-remove="' + esc(String(m.id)) + '">Αφαίρεση από την ομάδα</button>' +
+			'</div></details>'
+			: '';
+
+		return '<div class="sig-member' + (m.active ? '' : ' is-off') + '" data-member="' + esc(String(m.id)) + '" role="button" tabindex="0">' +
+			'<div class="sig-member__top">' +
+				'<span class="sig-member__av" style="--h:' + tint(m.name) + '">' + esc(initials(m.name)) + '<i class="' + (m.active ? 'is-on' : '') + '" aria-hidden="true"></i></span>' +
+				'<span class="sig-member__who"><b>' + esc(m.name) + '</b><small>' + esc(m.email || '') + '</small></span>' +
+				menu +
+			'</div>' +
+			'<div class="sig-member__n"><b>' + esc(String(n)) + '</b><span>' + (n === 1 ? 'αίτηση' : 'αιτήσεις') + '</span>' +
+				(m.active ? '' : '<em>Ανενεργός</em>') + '</div>' +
+			'<div class="sig-member__bar" aria-hidden="true"><i style="width:' + esc(String(pct)) + '%"></i></div>' +
+		'</div>';
+	}).join('');
+
+	var sub = members.length
+		? (members.length === 1 ? '1 πωλητής' : members.length + ' πωλητές') + ', ' + active + (active === 1 ? ' ενεργός · ' : ' ενεργοί · ') + total + (total === 1 ? ' αίτηση' : ' αιτήσεις') + ' συνολικά'
+		: 'Κανένα μέλος ακόμα';
+
+	return '<header class="sig-cuhead"><div><h2>Η ομάδα μου</h2><p>' + esc(sub) + '</p></div>' +
+		(canManage ? '<div class="sig-teamacts"><button type="button" class="ecrm-btn ecrm-btn--ghost" data-show-bulk>Πάροχοι ομάδας</button>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary" data-show-add>+ Νέος πωλητής</button></div>' : '') +
+		'</header>' +
+		(flash ? '<div class="ecrm-import-banner is-ok">' + esc(flash) + '</div>' : '') +
+		(cards
+			? '<div class="sig-teamgrid">' + cards + '</div>'
+			: '<div class="sig-tempty"><b>Κανένα μέλος στην ομάδα ακόμα.</b>' + (canManage ? '<span>Πάτα «+ Νέος πωλητής» για τον πρώτο.</span>' : '') + '</div>');
 }

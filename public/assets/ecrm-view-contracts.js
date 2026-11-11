@@ -253,6 +253,7 @@ function primaryAction(status) {
 	switch (status) {
 		case 'draft':              return { txt: 'Συνέχεια',      quiet: false };
 		case 'presale':            return { txt: 'Δικαιολογητικά', quiet: false };
+		case 'registration':       return { txt: 'Για υπογραφή',  quiet: false }; // (354)
 		case 'awaiting_signature': return { txt: 'Υπενθύμιση',    quiet: false };
 		case 'pending_issue':
 		case 'debt':               return { txt: 'Άνοιγμα',       quiet: false };
@@ -271,6 +272,63 @@ function primaryAction(status) {
 function isSignature() {
 	var app = document.getElementById('ecrm-app');
 	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+/* (353f) Οι αιτήσεις ως κάρτες, ομαδοποιημένες ανά μέρα της τελευταίας
+ * αλλαγής: Σήμερα, Χθες, Αυτή την εβδομάδα, Παλιότερα. Η σειρά είναι αυτή
+ * που στέλνει ήδη ο server· εδώ μπαίνουν μόνο οι επικεφαλίδες. Ίδιες κλάσεις
+ * (.ecrm-rowlink, .ecrm-rowcheck, data-checkall) με τον πίνακα, οπότε η
+ * επιλογή πολλών, η μαζική μπάρα και το πάτημα δουλεύουν όπως πριν.
+ * docs/UI-REDESIGN-NEW-SKELETON.html. */
+function sigDayGroup(updated) {
+	var t = new Date(String(updated || '').replace(' ', 'T'));
+	if (isNaN(t.getTime())) return 'Παλιότερα';
+	var today = new Date(); today.setHours(0, 0, 0, 0);
+	var day = new Date(t.getTime()); day.setHours(0, 0, 0, 0);
+	var diff = Math.round((today - day) / 86400000);
+	if (diff <= 0) return 'Σήμερα';
+	if (diff === 1) return 'Χθες';
+	if (diff < 7) return 'Αυτή την εβδομάδα';
+	return 'Παλιότερα';
+}
+
+function sigWhen(updated, group) {
+	if (group === 'Σήμερα' || group === 'Χθες') {
+		var t = new Date(String(updated || '').replace(' ', 'T'));
+		var p = function (n) { return (n < 10 ? '0' : '') + n; };
+		return isNaN(t.getTime()) ? '' : p(t.getHours()) + ':' + p(t.getMinutes());
+	}
+	return fmtDate(updated);
+}
+
+function sigCardsHTML(rows, statuses, showOwner) {
+	var last = '';
+	var out = '<div class="sig-clist"><label class="sig-clist__all"><input type="checkbox" data-checkall> Επιλογή όλων</label>';
+
+	rows.forEach(function (r) {
+		var name = r.company_name || ((r.first_name || '') + ' ' + (r.last_name || '')).trim() || '—';
+		var group = sigDayGroup(r.updated_at);
+		var act = primaryAction(r.status);
+		if (group !== last) { out += '<div class="sig-clist__day">' + esc(group) + '</div>'; last = group; }
+
+		var sig = r.signatures && !r.signatures.complete
+			? '<span class="ecrm-sigpill">' + r.signatures.collected.length + '/' + r.signatures.required.length + '</span>'
+			: '';
+
+		out += '<div class="sig-crow ecrm-rowlink" data-id="' + r.id + '" data-status="' + esc(r.status) + '">' +
+			'<input type="checkbox" class="ecrm-rowcheck sig-crow__check" data-cid="' + r.id + '" aria-label="Επιλογή">' +
+			'<span class="sig-crow__av" style="--h:' + tint(name) + '">' + esc(initials(name)) + '</span>' +
+			'<span class="sig-crow__who"><b>' + esc(name) + '</b><small>' + subLine(r) + '</small></span>' +
+			'<span class="sig-crow__prov"><i style="--h:' + tint(r.provider_name || '') + '"></i><span><b>' + esc(r.provider_name || '—') + '</b>' +
+			'<small>' + esc(r.program_name || '') + '</small></span></span>' +
+			(showOwner ? '<span class="sig-crow__owner">' + esc(r.partner_name || '—') + '</span>' : '') +
+			'<span class="sig-crow__st"><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(statuses[r.status] || r.status) + '</span>' + sig + '</span>' +
+			'<span class="sig-crow__when">' + esc(sigWhen(r.updated_at, group)) + '</span>' +
+			'<span class="sig-crow__act' + (act.quiet ? ' is-quiet' : '') + '">' + esc(act.txt) + '</span>' +
+			'</div>';
+	});
+
+	return out + '</div>';
 }
 
 function openInspector(view, id) {
@@ -373,11 +431,12 @@ function renderContracts(view, d) {
 			(can('ecrm_export_data') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-export><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Export επιλογής</button>' : '') +
 			(can('ecrm_delete_contract') ? '<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--danger" data-bulk-delete><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' : '') +
 			'<button type="button" class="ecrm-btn ecrm-btn--sm ecrm-btn--ghost" data-bulk-clear>Ακύρωση</button></div>' +
+			(isSignature() ? sigCardsHTML(rowsPage, statuses, showOwner) :
 			'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-table--rich ecrm-table--cards"><thead><tr>' +
 			'<th class="ecrm-checkcol"><input type="checkbox" data-checkall></th><th></th><th>Πελάτης</th><th>Πάροχος / πρόγραμμα</th>' +
 			(showOwner ? '<th class="ecrm-col-sec">Συνεργάτης</th>' : '') +
 			'<th class="ecrm-col-sec">Παροχή / τιμολόγιο</th><th>Κατάσταση</th><th class="ecrm-col-sec">Ενημέρωση</th><th></th>' +
-			'</tr></thead><tbody>' + body + '</tbody></table></div>' +
+			'</tr></thead><tbody>' + body + '</tbody></table></div>') +
 			'<div class="ecrm-pager"><span>Σύνολο <b>' + total + '</b> συμβάσεις</span>' +
 			'<div class="ecrm-pager__nav"><button type="button" class="ecrm-pager__b" data-page="prev"' + (contractsState.page <= 1 ? ' disabled' : '') + '>‹ Προηγούμενη</button>' +
 			'<span class="ecrm-pager__pos">Σελίδα ' + contractsState.page + ' από ' + pages + '</span>' +
@@ -485,6 +544,7 @@ function renderContracts(view, d) {
 			var id = this.getAttribute('data-id');
 			if (pressFired) { pressFired = false; return; }
 			if (!isMobile()) { if (isSignature()) { openInspector(view, id); return; } openDetail(id); return; }
+			if (isSignature()) { openDetail(id); return; }
 			var cb = this.querySelector('.ecrm-rowcheck');
 			if (view.querySelector('.ecrm-table--cards.is-selecting') && cb) { cb.checked = !cb.checked; refreshBar(); return; }
 			toggleExpand(id);

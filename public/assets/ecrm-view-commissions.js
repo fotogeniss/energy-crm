@@ -5,6 +5,10 @@
  * and the only things it needs from outside are four primitives. Nothing had
  * to be rewritten to make the move possible — that is the bar the next view
  * has to clear too.
+ *
+ * (355) Στη νέα εμφάνιση «Signature»: ένα μεγάλο σύνολο με μπάρα «πληρωμένα /
+ * προς πληρωμή / σε αναμονή», μηνιαίες στήλες, οι μήνες ως λίστα και οι
+ * βεβαιώσεις ως γραμμές με PDF (sigCommissionsHTML). Ίδια δεδομένα, ίδια data-*.
  */
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
@@ -111,6 +115,7 @@ function downloadStatement(id, btn) {
 }
 
 function commissionsHTML(d, payoutRows) {
+	if (isSignature()) { return sigCommissionsHTML(d, payoutRows); }
 	var months = d.months || [];
 	var range = months.length ? (months[months.length - 1].label + ' → ' + months[0].label) : '—';
 	var avg = d.count ? (d.total / d.count) : 0;
@@ -158,4 +163,109 @@ function commissionsHTML(d, payoutRows) {
 
 		// payout statements
 		payoutsHTML(payoutRows);
+}
+
+// ---------------------------------------------------------------------
+// (355) «Signature»: Προμήθειες
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+/** 12.480 € -- τελεία για χιλιάδες, χωρίς δεκαδικά, όπως η κλασική οθόνη. */
+function eur(n) {
+	return Number(n || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' €';
+}
+
+/* «Ιούνιος 2026» → «Ιούν». Τρία γράμματα δεν φτάνουν: Ιούνιος και Ιούλιος
+ * γίνονταν και οι δύο «Ιού». */
+var SHORT_MONTH = {
+	'Ιανουάριος': 'Ιαν', 'Φεβρουάριος': 'Φεβ', 'Μάρτιος': 'Μάρ', 'Απρίλιος': 'Απρ', 'Μάιος': 'Μάι', 'Ιούνιος': 'Ιούν',
+	'Ιούλιος': 'Ιούλ', 'Αύγουστος': 'Αύγ', 'Σεπτέμβριος': 'Σεπ', 'Οκτώβριος': 'Οκτ', 'Νοέμβριος': 'Νοέ', 'Δεκέμβριος': 'Δεκ'
+};
+function shortMonth(label) {
+	var first = String(label || '').split(' ')[0];
+	return SHORT_MONTH[first] || first.slice(0, 3);
+}
+
+function pct(part, whole) {
+	return whole > 0 ? Math.max(0, Math.min(100, Math.round(part / whole * 1000) / 10)) : 0;
+}
+
+function sigCommissionsHTML(d, payoutRows) {
+	var months = d.months || [];
+	var paid = Number(d.paid_total) || 0;
+	var unpaid = Number(d.unpaid_total) || 0;
+	var pending = Number(d.pending_est) || 0;
+	var whole = paid + unpaid + pending;
+	var range = months.length ? (months[months.length - 1].label + ' έως ' + months[0].label) : '';
+
+	var scope = '<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (commScope === 'own' ? ' is-on' : '') + '" data-cscope="own">Δικά μου</button>' +
+		'<button type="button" class="ecrm-scope__b' + (commScope === 'team' ? ' is-on' : '') + '" data-cscope="team">Ομάδας</button></div>';
+
+	// Η μπάρα: τρία κομμάτια, με τη σειρά που φτάνουν τα λεφτά στην τσέπη.
+	var bar = '<div class="sig-pay__bar" role="img" aria-label="' + esc('Πληρωμένα ' + eur(paid) + ', προς πληρωμή ' + eur(unpaid) + ', σε αναμονή περίπου ' + eur(pending)) + '">' +
+		'<i class="is-paid" style="width:' + esc(String(pct(paid, whole))) + '%"></i>' +
+		'<i class="is-due" style="width:' + esc(String(pct(unpaid, whole))) + '%"></i>' +
+		'<i class="is-wait" style="width:' + esc(String(pct(pending, whole))) + '%"></i></div>';
+
+	var legend = '<div class="sig-pay__legend">' +
+		'<span class="is-paid"><i></i><small>Πληρωμένα</small><b>' + esc(eur(paid)) + '</b></span>' +
+		'<span class="is-due"><i></i><small>Προς πληρωμή</small><b>' + esc(eur(unpaid)) + '</b></span>' +
+		'<span class="is-wait"><i></i><small>Σε αναμονή</small><b>~' + esc(eur(pending)) + '</b></span></div>';
+
+	var hero = '<section class="sig-pay">' +
+		'<div class="sig-pay__top"><div><small>Συνολικά έσοδα' + (range ? ', ' + esc(range) : '') + '</small>' +
+		'<b class="sig-pay__big">' + esc(eur(d.total)) + '</b>' +
+		'<span class="sig-pay__sub">' + esc(String(d.count || 0)) + ((d.count === 1) ? ' σύμβαση' : ' συμβάσεις') +
+			(d.count ? ', μέσος όρος ' + esc(eur((Number(d.total) || 0) / d.count)) : '') +
+			(d.best_label ? ' · καλύτερος μήνας ' + esc(d.best_label) : '') + '</span></div></div>' +
+		bar + legend +
+		(d.truncated ? '<div class="sig-pay__warn">Μερικό: υπολογίστηκαν ' + esc(d.count) + ' από ' + esc(d.available) + ' συμβάσεις</div>' : '') +
+		'</section>';
+
+	// Στήλες ανά μήνα, από τον παλαιότερο αριστερά, έως 12.
+	var shown = months.slice(0, 12).reverse();
+	var top = shown.reduce(function (n, m) { return Math.max(n, Number(m.amount) || 0); }, 0);
+	var chart = shown.length ? '<section class="ecrm-card sig-paychart"><h3 class="sig-ch">Ανά μήνα</h3><div class="sig-paychart__cols">' +
+		shown.map(function (m) {
+			var full = Number(m.count) > 0 && Number(m.paid) === Number(m.count);
+			var h = top ? Math.max(4, Math.round((Number(m.amount) || 0) / top * 100)) : 4;
+			return '<div class="sig-paychart__col' + (full ? ' is-paid' : '') + '" title="' + esc(m.label + ': ' + eur(m.amount)) + '">' +
+				'<span class="sig-paychart__v">' + esc(eur(m.amount)) + '</span>' +
+				'<span class="sig-paychart__b"><i style="height:' + esc(String(h)) + '%"></i></span>' +
+				'<small>' + esc(shortMonth(m.label)) + '</small></div>';
+		}).join('') + '</div></section>' : '';
+
+	var monthRows = months.length
+		? '<ul class="sig-paylist">' + months.map(function (m) {
+			var paidN = Number(m.paid || 0), count = Number(m.count || 0);
+			var state = count > 0 && paidN === count ? '<em class="is-ok">Πληρωμένο</em>'
+				: paidN === 0 ? '<em>Εκκρεμεί</em>'
+				: '<em>' + esc(paidN + '/' + count) + ' πληρωμένα</em>';
+			return '<li><span class="sig-paylist__who"><b>' + esc(m.label) + '</b><small>' + esc(String(count)) + (count === 1 ? ' σύμβαση' : ' συμβάσεις') + '</small></span>' +
+				state + '<b class="sig-paylist__amt">' + esc(eur(m.amount)) + '</b></li>';
+		}).join('') + '</ul>'
+		: '<div class="sig-tempty"><b>Δεν υπάρχουν εκκαθαρίσεις ακόμα.</b><span>Εμφανίζονται μόλις μια αίτηση γίνει Ενεργή.</span></div>';
+
+	var statements = (payoutRows && payoutRows.length)
+		? '<ul class="sig-paylist">' + payoutRows.map(function (b) {
+			var isPaid = b.status === 'paid';
+			return '<li><span class="sig-paylist__who"><b>' + esc(b.period) + '</b><small>' +
+				(commScope === 'team' && b.partner ? esc(b.partner) + ' · ' : '') + esc(String(b.count)) + (Number(b.count) === 1 ? ' σύμβαση' : ' συμβάσεις') + '</small></span>' +
+				(isPaid ? '<em class="is-ok">Πληρωμένη</em>' : '<em>Εκκρεμεί</em>') +
+				'<b class="sig-paylist__amt">' + esc(eur(b.amount)) + '</b>' +
+				'<button type="button" class="sig-paylist__pdf" data-payout-pdf="' + esc(String(b.id)) + '" aria-label="' + esc('Λήψη βεβαίωσης ' + b.period) + '">' +
+					'<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v13m0 0l-4-4m4 4l4-4"/><path d="M5 20h14"/></svg> PDF</button></li>';
+		}).join('') + '</ul>'
+		: '<div class="sig-tempty"><b>Καμία παρτίδα εκκαθάρισης ακόμα.</b><span>Η βεβαίωση εμφανίζεται εδώ μόλις ο διαχειριστής φτιάξει παρτίδα πληρωμής.</span></div>';
+
+	return '<header class="sig-cuhead"><div><h2>Προμήθειες</h2><p>Τι έχεις βγάλει και τι έρχεται</p></div>' + scope + '</header>' +
+		hero + chart +
+		'<div class="sig-paygrid">' +
+			'<section><h3 class="sig-ch sig-paygrid__h">Μήνες</h3>' + monthRows + '</section>' +
+			'<section><h3 class="sig-ch sig-paygrid__h">Βεβαιώσεις εκκαθάρισης</h3>' + statements + '</section>' +
+		'</div>';
 }

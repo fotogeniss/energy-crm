@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Domain\Document;
 
 use EnergyCRM\Domain\Contract\SignatureRoles;
+use EnergyCRM\Domain\Contract\SignProof;
 
 final class SystemKind
 {
@@ -64,9 +65,18 @@ final class SystemKind
     }
 
     /** Ο,τι έφτιαξε το σύστημα -- ποτέ προς ανάγνωση, ποτέ προς αλλαγή είδους. */
+    /**
+     * (354b) Το αποδεικτικό υπογραφής: φαίνεται στα «Έγγραφα» με σταθερή
+     * ετικέτα, όπως η υπογραφή, και δεν πηγαίνει ποτέ για ανάγνωση.
+     */
+    public static function isSignProof(string $kind): bool
+    {
+        return $kind !== '' && in_array($kind, SignProof::kinds(), true);
+    }
+
     public static function isSystem(string $kind): bool
     {
-        return self::isApplication($kind) || self::isSignature($kind);
+        return self::isApplication($kind) || self::isSignature($kind) || self::isSignProof($kind);
     }
 
     /**
@@ -75,6 +85,12 @@ final class SystemKind
      */
     public static function label(string $kind): ?string
     {
+        if (self::isSignProof($kind)) {
+            return $kind === SignProof::kindFor(SignatureRoles::ENERGY)
+                ? 'Αποδεικτικό υπογραφής (πελάτης ενέργειας)'
+                : 'Αποδεικτικό υπογραφής';
+        }
+
         if (! self::isSignature($kind)) {
             return null;
         }

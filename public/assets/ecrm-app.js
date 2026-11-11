@@ -396,6 +396,18 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 		});
 	});
 
+	// (353e) Το «Περισσότερα» της πάνω μπάρας κλείνει όταν διαλέξεις κάτι ή
+	// πατήσεις έξω από αυτό.
+	var tnMore = app.querySelector('[data-tn-more]');
+	if (tnMore) {
+		tnMore.addEventListener('click', function (e) {
+			if (e.target.closest('[data-go]')) { tnMore.open = false; }
+		});
+		document.addEventListener('click', function (e) {
+			if (tnMore.open && !tnMore.contains(e.target)) { tnMore.open = false; }
+		});
+	}
+
 	// (353) Νέα εμφάνιση «Signature»: μόνο για διαχειριστή, όσο είναι σε δοκιμή.
 	// Το φύλλο της φορτώνει η PHP, άρα η αλλαγή θέλει ξαναφόρτωμα της σελίδας.
 	app.querySelectorAll('[data-ui-toggle]').forEach(function (b) {

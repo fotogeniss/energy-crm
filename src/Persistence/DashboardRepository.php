@@ -39,7 +39,8 @@ final class DashboardRepository
      *
      * @var list<string>
      */
-    private const NEEDS_ME = ['presale', 'awaiting_signature', 'draft', 'pending_issue', 'debt'];
+    // (354) Η Καταχώρηση περιμένει τον συνεργάτη: να τη στείλει για υπογραφή.
+    private const NEEDS_ME = ['presale', 'registration', 'awaiting_signature', 'draft', 'pending_issue', 'debt'];
 
     /**
      * Οι στατικές καταστάσεις που ΔΕΝ μετρούν ως «ανοιχτή» αίτηση: η

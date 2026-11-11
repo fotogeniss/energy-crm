@@ -588,8 +588,11 @@ function why(it) {
 	if (it.status === 'awaiting_signature') {
 		return { act: 'Υπενθύμιση', tip: 'Περιμένει υπογραφή πελάτη — ' + ago };
 	}
-	// Ό,τι απομένει είναι presale: το DashboardRepository::NEEDS_ME δίνει
-	// ακριβώς τρεις καταστάσεις, και οι δύο πιάστηκαν παραπάνω.
+	// (354) Καταχώρηση: έτοιμη, περιμένει να σταλεί για υπογραφή.
+	if (it.status === 'registration') {
+		return { act: 'Για υπογραφή', tip: 'Έτοιμη για αποστολή υπογραφής — ' + ago };
+	}
+	// Ό,τι απομένει είναι presale (και οι Εκκρεμότητα/Οφειλή).
 	return { act: 'Δικαιολογητικά', tip: 'Λείπουν δικαιολογητικά — ' + ago };
 }
 
@@ -917,7 +920,7 @@ function sigNeedsRows(d) {
 	var statuses = (window.ECRM && ECRM.statuses) || {};
 	var rows = (d.attention || []).map(function (it) {
 		var w = why(it);
-		var kind = it.status === 'awaiting_signature' ? 'is-sign' : it.status === 'draft' ? 'is-draft' : 'is-docs';
+		var kind = (it.status === 'awaiting_signature' || it.status === 'registration') ? 'is-sign' : it.status === 'draft' ? 'is-draft' : 'is-docs';
 		return { kind: kind, title: statuses[it.status] || it.status, name: it.customer || '—',
 			meta: [it.code ? '#' + it.code : '', it.provider || ''].filter(Boolean).join(', '),
 			act: w.act, attr: ' data-attn-go="' + esc(it.id) + '"', age: Number(it.days) || 0 };

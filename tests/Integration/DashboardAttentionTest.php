@@ -64,6 +64,7 @@ final class DashboardAttentionTest extends IntegrationTestCase
     public function testItListsOnlyWhatWaitsOnThePartner(): void
     {
         $this->contractFor($this->alice, ['status' => 'presale']);
+        $this->contractFor($this->alice, ['status' => 'registration']);
         $this->contractFor($this->alice, ['status' => 'draft']);
         $this->contractFor($this->alice, ['status' => 'awaiting_signature']);
         $this->contractFor($this->alice, ['status' => 'finalisation']);
@@ -71,12 +72,12 @@ final class DashboardAttentionTest extends IntegrationTestCase
 
         $out = $this->dashboard->needsAttention($this->alice);
 
-        self::assertCount(3, $out);
+        self::assertCount(4, $out);
 
         $statuses = array_map(static fn (array $r): string => (string) $r['status'], $out);
         sort($statuses);
 
-        self::assertSame(['awaiting_signature', 'draft', 'presale'], $statuses);
+        self::assertSame(['awaiting_signature', 'draft', 'presale', 'registration'], $statuses);
     }
 
     /**

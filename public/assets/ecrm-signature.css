@@ -471,6 +471,719 @@
 	.ecrm-app[data-ui="signature"] .ecrm-chips { border-radius: 16px; }
 }
 
+/* ═══ (353e) Νέος σκελετός: μενού πάνω σε αιωρούμενο χάπι, κανένα πλαϊνό ═══
+ * Από 861px και πάνω. Κάτω από αυτό μένει το συρτάρι με το ☰ και η κάτω
+ * μπάρα του κινητού. docs/UI-REDESIGN-NEW-SKELETON.html. */
+.ecrm-app[data-ui="signature"] .sig-tn,
+.ecrm-app[data-ui="signature"] .sig-tn__new { display: none; }
+@media (min-width: 861px) {
+	.ecrm-app[data-ui="signature"] .ecrm-sidebar { display: none; }
+	.ecrm-app[data-ui="signature"] .ecrm-main,
+	.ecrm-app[data-ui="signature"][data-collapsed="1"] .ecrm-main { margin-left: 0; }
+	.ecrm-app[data-ui="signature"] .ecrm-topbar {
+		top: 14px; margin: 14px auto 0; width: calc(100% - 28px); max-width: 1320px;
+		padding: 7px 8px 7px 18px; gap: 12px; justify-content: flex-start;
+		border-radius: 999px; border: 0; box-shadow: var(--sig-lift), 0 0 0 1px var(--sig-hair);
+	}
+	.ecrm-app[data-ui="signature"] .ecrm-topbar__hello,
+	.ecrm-app[data-ui="signature"] .ecrm-live,
+	.ecrm-app[data-ui="signature"] .ecrm-org { display: none; }
+	.ecrm-app[data-ui="signature"] .ecrm-topbar__brand {
+		display: inline-flex; align-items: center; gap: 0; white-space: nowrap; color: var(--sig-ink);
+		font-size: var(--fs-15); font-weight: 700; letter-spacing: -.02em;
+	}
+	.ecrm-app[data-ui="signature"] .ecrm-topbar__brand::before {
+		content: ""; width: 24px; height: 24px; border-radius: 8px; margin-right: 8px;
+		background: radial-gradient(circle, var(--sig-on-btn) 0 4px, transparent 4.5px), conic-gradient(from 200deg, var(--sig-green), var(--sig-teal), var(--sig-green));
+	}
+	.ecrm-app[data-ui="signature"] .ecrm-topbar__brand strong { margin-left: .28em; }
+	.ecrm-app[data-ui="signature"] .sig-tn {
+		display: flex; align-items: center; gap: 2px; margin: 0 auto; padding: 3px; border-radius: 999px; background: var(--sig-fill);
+	}
+	.ecrm-app[data-ui="signature"] .sig-tn__item {
+		width: auto; padding: 7px 15px; border-radius: 999px; gap: 6px; white-space: nowrap;
+		font-size: var(--fs-14); font-weight: 600; color: var(--sig-ink-2); background: transparent;
+	}
+	.ecrm-app[data-ui="signature"] .sig-tn__item:hover { color: var(--sig-ink); background: transparent; }
+	.ecrm-app[data-ui="signature"] .sig-tn__item.is-active { background: var(--sig-solid); color: var(--sig-ink); box-shadow: var(--sig-lift); font-weight: 600; }
+	.ecrm-app[data-ui="signature"] .sig-tn__badge {
+		font-style: normal; font-size: var(--fs-11); font-weight: 700; line-height: 1.5; padding: 0 6px; border-radius: 999px;
+		background: var(--sig-rose); color: var(--sig-on-btn);
+	}
+	.ecrm-app[data-ui="signature"] .sig-tn__more { position: relative; }
+	.ecrm-app[data-ui="signature"] .sig-tn__more > summary {
+		list-style: none; cursor: pointer; padding: 7px 15px; border-radius: 999px; white-space: nowrap;
+		font-size: var(--fs-14); font-weight: 600; color: var(--sig-ink-2);
+	}
+	.ecrm-app[data-ui="signature"] .sig-tn__more > summary::-webkit-details-marker { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-tn__more > summary::after { content: " ⌄"; }
+	.ecrm-app[data-ui="signature"] .sig-tn__more[open] > summary { background: var(--sig-solid); color: var(--sig-ink); box-shadow: var(--sig-lift); }
+	.ecrm-app[data-ui="signature"] .sig-tn__menu {
+		position: absolute; top: calc(100% + 10px); right: 0; z-index: 30; width: 260px; max-height: 70vh; overflow-y: auto;
+		padding: 8px; border-radius: 20px; background: var(--sig-solid);
+		box-shadow: var(--sig-float), 0 0 0 1px var(--sig-hair);
+	}
+	.ecrm-app[data-ui="signature"] .sig-tn__menu hr { border: 0; border-top: 1px solid var(--sig-hair-2); margin: 6px 4px; }
+	.ecrm-app[data-ui="signature"] .sig-tn__mi {
+		display: flex; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: 12px; background: none;
+		font: inherit; font-size: var(--fs-14); font-weight: 500; color: var(--sig-ink); text-decoration: none; text-align: left; cursor: pointer;
+	}
+	.ecrm-app[data-ui="signature"] .sig-tn__mi:hover,
+	.ecrm-app[data-ui="signature"] .sig-tn__mi.is-active { background: var(--sig-fill); }
+	.ecrm-app[data-ui="signature"] .sig-tn__mi .sig-tn__badge { margin-left: auto; }
+	.ecrm-app[data-ui="signature"] .sig-tn__ic { width: 20px; height: 20px; display: grid; place-items: center; color: var(--sig-ink-2); }
+	.ecrm-app[data-ui="signature"] .sig-tn__ic svg { width: 18px; height: 18px; }
+	.ecrm-app[data-ui="signature"] .ecrm-gsearch { flex: 0 1 220px; margin: 0; }
+	.ecrm-app[data-ui="signature"] .ecrm-gsearch > input { border-radius: 999px; padding: 8px 14px; }
+	.ecrm-app[data-ui="signature"] .ecrm-topbar__right { gap: 8px; }
+	.ecrm-app[data-ui="signature"] .sig-tn__new {
+		display: inline-flex; align-items: center; gap: 6px; width: auto; padding: 9px 16px; border-radius: 999px; white-space: nowrap;
+		font-size: var(--fs-14); font-weight: 700; color: var(--sig-on-btn);
+		background: linear-gradient(180deg, var(--sig-btn-top), var(--sig-btn-bottom));
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 8px 18px -8px var(--sig-btn-bottom);
+	}
+	.ecrm-app[data-ui="signature"] .sig-tn__new:hover,
+	.ecrm-app[data-ui="signature"] .sig-tn__new.is-active { color: var(--sig-on-btn); background: linear-gradient(180deg, var(--sig-btn-top), var(--sig-btn-top)); }
+	.ecrm-app[data-ui="signature"] .sig-tn__new svg { width: 16px; height: 16px; }
+	.ecrm-app[data-ui="signature"] .ecrm-content { max-width: 1240px; width: 100%; margin: 0 auto; padding: 30px 40px 40px; }
+}
+@media (min-width: 861px) and (max-width: 1240px) {
+	.ecrm-app[data-ui="signature"] .ecrm-gsearch,
+	.ecrm-app[data-ui="signature"] .ecrm-themesw { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-tn__item { padding: 7px 11px; }
+}
+
+/* ═══ (353f) Συμβάσεις ως κάρτες, ανά μέρα ═══ */
+.ecrm-app[data-ui="signature"] .sig-clist { display: grid; gap: 8px; margin-top: 4px; }
+.ecrm-app[data-ui="signature"] .sig-clist__all { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-13); color: var(--sig-ink-3); padding: 0 6px; cursor: pointer; }
+.ecrm-app[data-ui="signature"] .sig-clist__day { font-size: var(--fs-13); font-weight: 700; color: var(--sig-ink-3); margin: 10px 6px 0; }
+.ecrm-app[data-ui="signature"] .sig-crow {
+	display: grid; grid-template-columns: 20px 44px minmax(0, 1.4fr) minmax(0, 1fr) 190px 72px 150px; align-items: center; gap: 14px;
+	padding: 12px 16px; border-radius: 18px; cursor: pointer;
+	background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair); transition: box-shadow .18s, transform .18s;
+}
+.ecrm-app[data-ui="signature"] .sig-crow:has(.sig-crow__owner) { grid-template-columns: 20px 44px minmax(0, 1.4fr) minmax(0, 1fr) 120px 190px 72px 150px; }
+.ecrm-app[data-ui="signature"] .sig-crow:hover { box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift); transform: translateY(-1px); }
+.ecrm-app[data-ui="signature"] .sig-crow.is-sel { box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-crow__av {
+	width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
+	font-size: var(--fs-14); font-weight: 800; color: var(--sig-on-btn);
+	background: linear-gradient(135deg, hsl(var(--h, 140) 62% 58%), hsl(var(--h, 140) 62% 40%));
+}
+.ecrm-app[data-ui="signature"] .sig-crow__who { min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-crow__who b { display: block; font-size: var(--fs-15); font-weight: 600; color: var(--sig-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-crow__who small { display: block; font-size: var(--fs-12-5); color: var(--sig-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-crow__prov { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-crow__prov i { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 10px; background: hsl(var(--h, 140) 62% 48%); }
+.ecrm-app[data-ui="signature"] .sig-crow__prov span { min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-crow__prov b { display: block; font-size: var(--fs-13-5); font-weight: 600; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-crow__prov small { display: block; font-size: var(--fs-12); color: var(--sig-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-crow__owner { font-size: var(--fs-13); color: var(--sig-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-crow__st { display: flex; align-items: center; gap: 6px; }
+.ecrm-app[data-ui="signature"] .sig-crow__when { font-size: var(--fs-12-5); color: var(--sig-ink-3); text-align: right; }
+.ecrm-app[data-ui="signature"] .sig-crow__act {
+	justify-self: end; padding: 7px 14px; border-radius: 999px; font-size: var(--fs-13); font-weight: 600; white-space: nowrap;
+	background: var(--sig-ink); color: var(--sig-solid);
+}
+.ecrm-app[data-ui="signature"] .sig-crow__act.is-quiet { background: var(--sig-fill); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-crow__check { width: 18px; height: 18px; accent-color: var(--sig-green); }
+@media (max-width: 1100px) {
+	.ecrm-app[data-ui="signature"] .sig-crow,
+	.ecrm-app[data-ui="signature"] .sig-crow:has(.sig-crow__owner) { grid-template-columns: 20px 44px minmax(0, 1fr) auto 72px; }
+	.ecrm-app[data-ui="signature"] .sig-crow__prov,
+	.ecrm-app[data-ui="signature"] .sig-crow__owner,
+	.ecrm-app[data-ui="signature"] .sig-crow__act { display: none; }
+}
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-clist__all,
+	.ecrm-app[data-ui="signature"] .sig-crow__check,
+	.ecrm-app[data-ui="signature"] .sig-crow__when { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-crow,
+	.ecrm-app[data-ui="signature"] .sig-crow:has(.sig-crow__owner) { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; padding: 10px 12px; }
+	.ecrm-app[data-ui="signature"] .sig-crow__av { width: 40px; height: 40px; border-radius: 12px; }
+}
+
+/* ═══ (353g) Νέα αίτηση σε λειτουργία εστίασης ═══
+ * Όταν η οθόνη είναι η «Νέα αίτηση» (data-view στο κέλυφος): φεύγει το μενού,
+ * μένει ✕ για έξοδο και τα βήματα ως λεπτή πρόοδος πάνω· ένα στενό κεντρικό
+ * φύλλο με μεγάλο τίτλο ανά βήμα· η μπάρα ενεργειών αιωρείται κάτω. Τίποτα
+ * δεν αλλάζει σε πεδία, βήματα ή κανόνες. */
+.ecrm-app[data-ui="signature"] .sig-focus { display: none; }
+@media (min-width: 861px) {
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-topbar { display: none; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-content { max-width: none; padding: 0 24px 40px; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .sig-focus {
+		display: flex; align-items: center; position: sticky; top: 0; z-index: 24; height: 68px; margin: 0 -24px; padding: 0 24px;
+		background: var(--sig-glass); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px);
+		border-bottom: 1px solid var(--sig-hair-2);
+	}
+	.ecrm-app[data-ui="signature"] .sig-focus__x {
+		width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer;
+		background: var(--sig-fill); color: var(--sig-ink-2); font-size: var(--fs-16);
+	}
+	.ecrm-app[data-ui="signature"] .sig-focus__x:hover { color: var(--sig-ink); background: var(--sig-hair); }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-form > .ecrm-head { display: none; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-layout { display: block; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wizmain { max-width: 780px; margin: 0 auto; }
+	/* Τα βήματα ανεβαίνουν μέσα στη μπάρα εστίασης, στο κέντρο. */
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wsteps {
+		position: sticky; top: 12px; z-index: 25; max-width: 600px; margin: -56px auto 34px;
+	}
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep__b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 9px 12px; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep__b strong { display: none; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep__b.is-done::before { content: "✓ "; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep::before {
+		display: block; margin: 0 0 22px; font-size: var(--fs-40); font-weight: 800; letter-spacing: -.045em; line-height: 1.05; color: var(--sig-ink);
+	}
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep[data-wstep="1"]::before { content: "Τι θα πουλήσουμε;"; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep[data-wstep="2"]::before { content: "Τα έγγραφα του πελάτη"; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep[data-wstep="3"]::before { content: "Στοιχεία πελάτη"; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep[data-wstep="4"]::before { content: "Έλεγχος και υπογραφή"; }
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep > .ecrm-card + .ecrm-card,
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-wstep > section + section { margin-top: 14px; }
+	/* Η μπάρα ενεργειών αιωρείται κάτω. */
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-foot {
+		position: sticky; bottom: 16px; z-index: 20; margin-top: 22px; padding: 12px 12px 12px 18px; border-radius: 24px;
+		-webkit-backdrop-filter: saturate(180%) blur(26px); backdrop-filter: saturate(180%) blur(26px);
+		box-shadow: var(--sig-float), 0 0 0 1px var(--sig-hair);
+	}
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-consent { margin-bottom: 0; font-size: var(--fs-11-5); max-width: 430px; }
+	/* Η σύνοψη: μικρή κάρτα στη δεξιά άκρη, μόνο όπου χωράει δίπλα στο φύλλο. */
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-summary { display: none; }
+}
+@media (min-width: 1440px) {
+	.ecrm-app[data-ui="signature"][data-view="new-contract"] .ecrm-summary {
+		display: block; position: fixed; top: 96px; right: 28px; width: 260px; z-index: 10;
+	}
+}
+
+/* ── (353h) Καρτέλα αίτησης: μεγάλο όνομα, πέντε σταθμοί, στοιχεία σε κουτάκια ──
+ * Markup: sigDetailHTML() στο ecrm-view-detail.js. Πρότυπο: docs/UI-REDESIGN-NEW-SKELETON.html. */
+/* Το view είναι flex: χωρίς min-width:0 η καρτέλα φούσκωνε στο πλάτος της λωρίδας σταθμών (712px σε κινητό). */
+.ecrm-app[data-ui="signature"] .sig-detail { flex: 1 1 auto; width: 100%; min-width: 0; max-width: 1240px; margin: 0 auto; }
+.ecrm-app[data-ui="signature"] .sig-detail__back {
+	display: inline-flex; align-items: center; gap: 4px; margin: 0 0 14px -6px; padding: 6px 10px 6px 6px; border: 0; border-radius: 999px;
+	background: transparent; color: var(--sig-ink-2); font: inherit; font-size: var(--fs-14); font-weight: 600; cursor: pointer;
+}
+.ecrm-app[data-ui="signature"] .sig-detail__back:hover { background: var(--sig-fill); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-dh { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 20px; align-items: center; margin-bottom: 22px; }
+.ecrm-app[data-ui="signature"] .sig-dh__av {
+	width: 72px; height: 72px; border-radius: 22px; display: grid; place-items: center;
+	font-size: var(--fs-22); font-weight: 800; color: var(--sig-on-btn);
+	background: linear-gradient(135deg, hsl(var(--h, 140) 62% 58%), hsl(var(--h, 140) 62% 40%));
+	box-shadow: 0 10px 24px -12px hsl(var(--h, 140) 62% 30%);
+}
+.ecrm-app[data-ui="signature"] .sig-dh__who { min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-dh__who h2 {
+	margin: 0; font-size: var(--fs-40); font-weight: 800; letter-spacing: -.04em; line-height: 1.05; color: var(--sig-ink);
+	overflow-wrap: anywhere;
+}
+.ecrm-app[data-ui="signature"] .sig-dh__who small { display: block; margin-top: 6px; font-size: var(--fs-15); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-dh__gdpr {
+	display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: var(--fs-12); font-weight: 600;
+	background: var(--sig-green-tint); color: var(--sig-green-ink);
+}
+.ecrm-app[data-ui="signature"] .sig-dh__acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.ecrm-app[data-ui="signature"] .sig-dh__acts > .ecrm-btn { padding: 10px 18px; font-weight: 600; }
+.ecrm-app[data-ui="signature"] .sig-dh__acts > .ecrm-btn--ghost,
+.ecrm-app[data-ui="signature"] .sig-dh__acts > [data-detail-edit] {
+	background: var(--sig-solid); color: var(--sig-ink); border: 0; box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-dh__acts [data-companion-slot]:empty { display: none; }
+.ecrm-app[data-ui="signature"] .sig-dh__more { position: relative; }
+.ecrm-app[data-ui="signature"] .sig-dh__more > summary {
+	list-style: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+	background: var(--sig-solid); color: var(--sig-ink); font-size: var(--fs-18); font-weight: 700; box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-dh__more > summary::-webkit-details-marker { display: none; }
+.ecrm-app[data-ui="signature"] .sig-dh__more[open] > summary { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-dh__menu {
+	position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; min-width: 250px; padding: 6px;
+	display: flex; flex-direction: column; gap: 2px; border-radius: 18px;
+	background: var(--sig-solid); box-shadow: var(--sig-float), 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-dh__menu .ecrm-btn {
+	width: 100%; justify-content: flex-start; border: 0; border-radius: 12px; background: transparent; box-shadow: none;
+	color: var(--sig-ink); font-weight: 500; padding: 10px 12px;
+}
+.ecrm-app[data-ui="signature"] .sig-dh__menu .ecrm-btn:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-dh__menu .ecrm-btn--danger { color: var(--sig-rose); }
+
+/* Οι πέντε σταθμοί. */
+.ecrm-app[data-ui="signature"] .sig-stage { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 0 0 20px; padding: 0; list-style: none; }
+.ecrm-app[data-ui="signature"] .sig-stage__s {
+	padding: 12px 14px; border-radius: 16px; background: var(--sig-glass); box-shadow: 0 0 0 1px var(--sig-hair);
+	font-size: var(--fs-13); color: var(--sig-ink-3); min-width: 0;
+}
+.ecrm-app[data-ui="signature"] .sig-stage__s b { display: block; font-size: var(--fs-14); font-weight: 700; color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-stage__s small { display: block; font-size: var(--fs-12-5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-ok { background: var(--sig-green-tint); box-shadow: none; }
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-ok b { color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-now { background: var(--sig-solid); box-shadow: 0 0 0 2px var(--sig-blue); }
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-now b { color: var(--sig-blue); }
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-warn { background: var(--sig-amber-t); box-shadow: 0 0 0 2px var(--sig-amber); }
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-warn b,
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-warn small { color: var(--sig-amber); }
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-stop { background: var(--sig-rose-t); box-shadow: 0 0 0 2px var(--sig-rose); }
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-stop b,
+.ecrm-app[data-ui="signature"] .sig-stage__s.is-stop small { color: var(--sig-rose); }
+
+/* Σώμα: στοιχεία/έγγραφα αριστερά, πορεία δεξιά. */
+.ecrm-app[data-ui="signature"] .sig-dgrid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.ecrm-app[data-ui="signature"] .sig-dmain,
+.ecrm-app[data-ui="signature"] .sig-dside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-card { padding: 18px 20px; border-radius: 22px; }
+.ecrm-app[data-ui="signature"] .sig-ch {
+	display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+	margin: 0 0 12px; font-size: var(--fs-16); font-weight: 700; letter-spacing: -.01em; color: var(--sig-ink);
+}
+.ecrm-app[data-ui="signature"] .sig-ch b { font-size: var(--fs-13); font-weight: 600; color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-facts + .sig-ch { margin-top: 20px; }
+.ecrm-app[data-ui="signature"] .sig-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ecrm-app[data-ui="signature"] .sig-fact {
+	min-width: 0; padding: 10px 14px; border-radius: 14px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair-2);
+}
+.ecrm-app[data-ui="signature"] .sig-fact small { display: block; font-size: var(--fs-12); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-fact b { display: block; font-size: var(--fs-15); font-weight: 600; color: var(--sig-ink); overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-fact.is-empty { background: transparent; box-shadow: inset 0 0 0 1px var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-fact.is-empty b { color: var(--sig-ink-3); font-weight: 500; }
+.ecrm-app[data-ui="signature"] .sig-notes { margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: var(--sig-fill); font-size: var(--fs-14); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-notes small { display: block; font-size: var(--fs-12); color: var(--sig-ink-3); }
+
+/* Έγγραφα: μικρογραφίες αντί για λίστα. Ίδιο markup (filesCard), άλλο ρούχο. */
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-step {
+	text-transform: none; letter-spacing: -.01em; font-size: var(--fs-16); font-weight: 700; color: var(--sig-ink); margin: 0 0 12px;
+}
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-checklist + .ecrm-check__note + .ecrm-step,
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-check__note + .ecrm-step { margin-top: 18px; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-files { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file {
+	position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 8px;
+	border: 0; border-radius: 18px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file:hover { box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__link { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex: none; text-decoration: none; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__thumb {
+	/* Σταθερό ύψος, όχι aspect-ratio: μέσα σε flex στήλη ο Chrome μετρούσε τον σύνδεσμο
+	   πριν την αναλογία και το select έπεφτε πάνω στη μικρογραφία. */
+	width: 100%; height: 120px; flex: none; border-radius: 12px;
+	background: linear-gradient(160deg, var(--sig-fill), var(--sig-hair-2));
+}
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__ext { font-size: var(--fs-15); color: var(--sig-ink-3); }
+/* Ονόματα αρχείων με μία γραμμή και «…»: αλλιώς έβγαιναν έξω από την κάρτα (11/11). */
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__meta { display: block; width: 100%; min-width: 0; overflow: hidden; padding: 0 4px; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-files > .ecrm-file { min-width: 0; overflow: hidden; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file > *,
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__link > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-aiflag { align-items: stretch; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-aiflag .ecrm-btn { align-self: flex-start; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-aiflag__txt { white-space: normal; overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__name,
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__meta .ecrm-file__kind { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__name { color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__kindsel {
+	width: 100%; margin: 0; padding: 6px 8px; border-radius: 10px; border: 0; background: var(--sig-fill); color: var(--sig-ink); font: inherit; font-size: var(--fs-12-5);
+}
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file > .ecrm-file__kind { padding: 0 4px; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__del {
+	position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border-radius: 50%; border: 0;
+	background: var(--sig-glass-strong); color: var(--sig-ink-2); cursor: pointer; opacity: 0; transition: opacity .15s;
+}
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file:hover .ecrm-file__del,
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__del:focus-visible { opacity: 1; }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-docup { border-top: 1px solid var(--sig-hair-2); }
+/* Η σημαία «Η AI το διάβασε και το άλλαξε…» μέσα στη μικρογραφία. Στην
+   κλασική είναι γραμμή με flex-basis 100%· σε κάθετη κάρτα αυτό γινόταν ύψος
+   100%, η κάρτα ψήλωνε και το κείμενο έπεφτε πάνω στη διπλανή (11/11). */
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file--fixed { box-shadow: 0 0 0 1px var(--sig-hair), inset 0 0 0 2px var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-aiflag {
+	flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+	margin: 0; padding: 8px 4px 2px; border-top: 1px dashed var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-detail .ecrm-aiflag__txt { font-size: var(--fs-12); font-weight: 600; color: var(--sig-green-ink); line-height: 1.35; }
+
+/* Πορεία: λεπτή γραμμή με κουκκίδες. */
+.ecrm-app[data-ui="signature"] .sig-dside .ecrm-timeline li:not(:last-child)::after { background: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-dside .ecrm-timeline__dot { background: var(--sig-solid); box-shadow: inset 0 0 0 2px var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-dside .ecrm-timeline__txt { font-weight: 600; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-dside .ecrm-timeline__time { color: var(--sig-ink-3); }
+
+@media (hover: none) {
+	.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__del { opacity: 1; }
+}
+@media (max-width: 1100px) {
+	.ecrm-app[data-ui="signature"] .sig-dgrid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+	.ecrm-app[data-ui="signature"] .sig-dh { grid-template-columns: auto minmax(0, 1fr); gap: 14px; }
+	.ecrm-app[data-ui="signature"] .sig-dh__av { width: 56px; height: 56px; border-radius: 18px; font-size: var(--fs-18); }
+	.ecrm-app[data-ui="signature"] .sig-dh__who h2 { font-size: var(--fs-28); }
+	.ecrm-app[data-ui="signature"] .sig-dh__who small { font-size: var(--fs-13); }
+	.ecrm-app[data-ui="signature"] .sig-dh__acts { grid-column: 1 / -1; justify-content: flex-start; }
+	.ecrm-app[data-ui="signature"] .sig-dh__acts > [data-sign] { flex: 1 1 100%; justify-content: center; }
+	.ecrm-app[data-ui="signature"] .sig-stage { display: flex; overflow-x: auto; scrollbar-width: none; margin-right: -14px; padding-right: 14px; }
+	.ecrm-app[data-ui="signature"] .sig-stage::-webkit-scrollbar { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-stage__s { flex: 0 0 132px; }
+	.ecrm-app[data-ui="signature"] .sig-facts { grid-template-columns: 1fr 1fr; }
+	.ecrm-app[data-ui="signature"] .sig-detail .ecrm-files { grid-template-columns: 1fr 1fr; }
+	.ecrm-app[data-ui="signature"] .sig-detail .ecrm-file__thumb { height: 96px; }
+	.ecrm-app[data-ui="signature"] .sig-fact.is-wide { grid-column: 1 / -1; }
+}
+
+/* ═══ (353i) Πελάτες: πλέγμα από κάρτες ═══
+ * Markup: sigCustomersHTML() στο ecrm-view-customers.js. Οι καρτέλες «Χωρίς αέριο /
+ * Χωρίς ρεύμα» κρατούν το markup τους και αλλάζουν μόνο ρούχο. */
+.ecrm-app[data-ui="signature"] [data-view="customers"] { max-width: 1240px; margin: 0 auto; width: 100%; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-cuhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 6px 0 18px; }
+.ecrm-app[data-ui="signature"] .sig-cuhead h2 { margin: 0; font-size: var(--fs-40); font-weight: 800; letter-spacing: -.04em; line-height: 1.05; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-cuhead p { margin: 6px 0 0; font-size: var(--fs-15); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .ecrm-scope { border: 0; padding: 3px; gap: 2px; background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .ecrm-scope__b { border-radius: 999px; background: transparent; color: var(--sig-ink-2); font-size: var(--fs-13); font-weight: 600; padding: 7px 16px; }
+.ecrm-app[data-ui="signature"] .ecrm-scope__b.is-on { background: var(--sig-solid); color: var(--sig-ink); box-shadow: var(--sig-lift); }
+
+.ecrm-app[data-ui="signature"] .sig-cubar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.ecrm-app[data-ui="signature"] .sig-cubar .ecrm-xsell__tabs { margin: 0; }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__tabs { padding: 3px; gap: 2px; border-radius: 999px; background: var(--sig-fill); display: inline-flex; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__tab {
+	border: 0; border-radius: 999px; padding: 7px 14px; background: transparent; color: var(--sig-ink-2);
+	font-size: var(--fs-13); font-weight: 600; white-space: nowrap;
+}
+.ecrm-app[data-ui="signature"] .ecrm-xsell__tab.is-on { background: var(--sig-solid); color: var(--sig-ink); box-shadow: var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__tab small { color: var(--sig-green-ink); font-weight: 700; opacity: 1; }
+.ecrm-app[data-ui="signature"] .sig-cusearch {
+	flex: 1 1 260px; display: flex; align-items: center; gap: 8px; min-width: 0; padding: 0 14px; height: 42px;
+	border-radius: 999px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair); color: var(--sig-ink-3);
+}
+.ecrm-app[data-ui="signature"] .sig-cusearch:focus-within { box-shadow: 0 0 0 1px var(--sig-hair), 0 0 0 4px var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .sig-cusearch input {
+	flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--sig-ink); font: inherit; font-size: var(--fs-15);
+}
+
+.ecrm-app[data-ui="signature"] .sig-cugrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+.ecrm-app[data-ui="signature"] .sig-cucard {
+	display: flex; flex-direction: column; gap: 14px; padding: 16px; border-radius: 22px; cursor: pointer; min-width: 0;
+	background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair); transition: box-shadow .18s, transform .18s;
+}
+.ecrm-app[data-ui="signature"] .sig-cucard:hover { box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift); transform: translateY(-1px); }
+.ecrm-app[data-ui="signature"] .sig-cucard:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-cucard__top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-cucard__av {
+	width: 48px; height: 48px; flex: 0 0 48px; border-radius: 16px; display: grid; place-items: center;
+	font-size: var(--fs-15); font-weight: 800; color: var(--sig-on-btn);
+	background: linear-gradient(135deg, hsl(var(--h, 140) 62% 58%), hsl(var(--h, 140) 62% 40%));
+}
+.ecrm-app[data-ui="signature"] .sig-cucard__who { flex: 1; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-cucard__who b { display: block; font-size: var(--fs-16); font-weight: 700; letter-spacing: -.01em; color: var(--sig-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-cucard__who small { display: block; font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-cucard__call {
+	width: 38px; height: 38px; flex: 0 0 38px; border-radius: 50%; display: grid; place-items: center;
+	background: var(--sig-green-tint); color: var(--sig-green-ink);
+}
+.ecrm-app[data-ui="signature"] .sig-cucard__call:hover { background: var(--sig-green); color: var(--sig-on-btn); }
+.ecrm-app[data-ui="signature"] .sig-cucard__facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ecrm-app[data-ui="signature"] .sig-cucard__facts span { padding: 8px 12px; border-radius: 12px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-cucard__facts small { display: block; font-size: var(--fs-12); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-cucard__facts b { font-size: var(--fs-15); font-weight: 600; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-cucard__contact { font-size: var(--fs-13); color: var(--sig-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* «Χωρίς αέριο / Χωρίς ρεύμα»: οι γραμμές ως ήσυχες κάρτες. */
+.ecrm-app[data-ui="signature"] [data-view="customers"] .sig-cuhead + .ecrm-xsell__tabs { margin-bottom: 16px; }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__row { border: 0; border-radius: 18px; padding: 14px 16px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__nm { font-weight: 700; font-size: var(--fs-15); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__mt { color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__pill { background: var(--sig-green-tint); color: var(--sig-green-ink); font-weight: 600; }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__pill.is-draft { background: var(--sig-blue-t); color: var(--sig-blue); }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__flt .ecrm-input { border-radius: 999px; }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__tabs { align-self: flex-start; }
+.ecrm-app[data-ui="signature"] .ecrm-xsell__acts .ecrm-btn:not(.ecrm-btn--companion):not(.ecrm-btn--ghost) {
+	background: var(--sig-solid); color: var(--sig-ink); border: 0; box-shadow: 0 0 0 1px var(--sig-hair); text-decoration: none;
+}
+
+@media (max-width: 760px) {
+	.ecrm-app[data-ui="signature"] .sig-cuhead { flex-direction: column; align-items: flex-start; gap: 12px; }
+	.ecrm-app[data-ui="signature"] .sig-cuhead h2 { font-size: var(--fs-34); }
+	.ecrm-app[data-ui="signature"] .sig-cusearch { flex-basis: 100%; }
+	.ecrm-app[data-ui="signature"] .sig-cugrid { grid-template-columns: 1fr; gap: 8px; }
+	.ecrm-app[data-ui="signature"] .sig-cucard { gap: 10px; padding: 12px; border-radius: 18px; }
+}
+
+/* ═══ (353j) Εργασίες: λίστα ανά προθεσμία, «Νέα εργασία» σε μία γραμμή ═══
+ * Markup: sigTasksHTML() στο ecrm-view-tasks.js. */
+.ecrm-app[data-ui="signature"] [data-view="tasks"] { max-width: 920px; margin: 0 auto; width: 100%; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-tadd {
+	display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border-radius: 22px;
+	background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift);
+}
+.ecrm-app[data-ui="signature"] .sig-tadd:focus-within { box-shadow: 0 0 0 1px var(--sig-hair), 0 0 0 4px var(--sig-green-tint), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-tadd__plus {
+	width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%; display: grid; place-items: center;
+	background: var(--sig-green); color: var(--sig-on-btn); font-size: var(--fs-18); font-weight: 700; line-height: 1;
+}
+.ecrm-app[data-ui="signature"] .sig-tadd [data-task-title] {
+	flex: 1 1 auto; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--sig-ink); font: inherit; font-size: var(--fs-16); padding: 8px 4px;
+}
+.ecrm-app[data-ui="signature"] .sig-tadd .ecrm-input { flex: 0 0 auto; width: auto; min-width: 0; border: 0; border-radius: 999px; background: var(--sig-fill); color: var(--sig-ink-2); font-size: var(--fs-13); padding: 8px 12px; }
+.ecrm-app[data-ui="signature"] .sig-tadd [data-task-add] { flex: 0 0 auto; }
+.ecrm-app[data-ui="signature"] .sig-tabs { align-self: flex-start; padding: 3px; gap: 2px; margin: 0; border-radius: 999px; background: var(--sig-fill); flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.ecrm-app[data-ui="signature"] .sig-tabs .ecrm-tab { background: transparent; border: 0; box-shadow: none; white-space: nowrap; font-size: var(--fs-13); font-weight: 600; padding: 7px 14px; }
+.ecrm-app[data-ui="signature"] .sig-tabs .ecrm-tab.is-on { background: var(--sig-solid); box-shadow: var(--sig-lift); color: var(--sig-ink); }
+
+.ecrm-app[data-ui="signature"] .sig-tgroup h3 {
+	display: flex; align-items: baseline; gap: 8px; margin: 8px 6px 8px; font-size: var(--fs-18); font-weight: 700; letter-spacing: -.02em; color: var(--sig-ink);
+}
+.ecrm-app[data-ui="signature"] .sig-tgroup h3 small { font-size: var(--fs-13); font-weight: 600; color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tgroup.is-overdue h3 { color: var(--sig-rose); }
+.ecrm-app[data-ui="signature"] .sig-tgroup.is-today h3 { color: var(--sig-blue); }
+.ecrm-app[data-ui="signature"] .sig-tlist {
+	list-style: none; margin: 0; padding: 4px 0; border-radius: 22px;
+	background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-task { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px 12px 16px; position: relative; }
+.ecrm-app[data-ui="signature"] .sig-task + .sig-task::before { content: ""; position: absolute; top: 0; left: 52px; right: 14px; height: 1px; background: var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-task__check {
+	width: 24px; height: 24px; flex: 0 0 24px; margin-top: 1px; padding: 0; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
+	border: 2px solid var(--sig-ink-3); background: transparent; color: transparent; transition: background .15s, border-color .15s;
+}
+.ecrm-app[data-ui="signature"] .sig-task__check svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.ecrm-app[data-ui="signature"] .sig-task__check:hover { border-color: var(--sig-green); color: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-task.is-overdue .sig-task__check { border-color: var(--sig-rose); }
+.ecrm-app[data-ui="signature"] .sig-task.is-done .sig-task__check { background: var(--sig-green); border-color: var(--sig-green); color: var(--sig-on-btn); }
+.ecrm-app[data-ui="signature"] .sig-task__body { flex: 1; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-task__title { font-size: var(--fs-15); font-weight: 500; color: var(--sig-ink); overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-task__flag { color: var(--sig-amber); font-weight: 800; margin-right: 6px; }
+.ecrm-app[data-ui="signature"] .sig-task.is-done .sig-task__title { color: var(--sig-ink-3); text-decoration: line-through; }
+.ecrm-app[data-ui="signature"] .sig-task__sub { margin-top: 2px; font-size: var(--fs-13); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-task__sub .ecrm-tasklink { color: var(--sig-green-ink); font-weight: 600; }
+.ecrm-app[data-ui="signature"] .sig-task__note { margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: var(--sig-fill); font-size: var(--fs-13); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-task__act { margin-top: 8px; }
+.ecrm-app[data-ui="signature"] .sig-task__when { flex: 0 0 auto; margin-top: 2px; font-size: var(--fs-13); font-weight: 600; color: var(--sig-ink-2); font-variant-numeric: tabular-nums; }
+.ecrm-app[data-ui="signature"] .sig-task.is-overdue .sig-task__when { color: var(--sig-rose); }
+.ecrm-app[data-ui="signature"] .sig-task__rm {
+	width: 28px; height: 28px; flex: 0 0 28px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+	background: transparent; color: var(--sig-ink-3); opacity: 0; transition: opacity .15s, background .15s;
+}
+.ecrm-app[data-ui="signature"] .sig-task__rm svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.ecrm-app[data-ui="signature"] .sig-task:hover .sig-task__rm,
+.ecrm-app[data-ui="signature"] .sig-task__rm:focus-visible { opacity: 1; }
+.ecrm-app[data-ui="signature"] .sig-task__rm:hover { background: var(--sig-rose-t); color: var(--sig-rose); }
+.ecrm-app[data-ui="signature"] .sig-tempty {
+	display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 40px 20px; border-radius: 22px; text-align: center;
+	background: var(--sig-glass); box-shadow: 0 0 0 1px var(--sig-hair-2); color: var(--sig-ink-3); font-size: var(--fs-14);
+}
+.ecrm-app[data-ui="signature"] .sig-tempty b { font-size: var(--fs-16); color: var(--sig-ink); }
+
+@media (hover: none) {
+	.ecrm-app[data-ui="signature"] .sig-task__rm { opacity: 1; }
+}
+@media (max-width: 760px) {
+	.ecrm-app[data-ui="signature"] .sig-tadd { flex-wrap: wrap; padding: 10px 10px 10px 14px; border-radius: 20px; }
+	.ecrm-app[data-ui="signature"] .sig-tadd [data-task-title] { flex: 1 1 calc(100% - 40px); }
+	.ecrm-app[data-ui="signature"] .sig-tadd .ecrm-input { flex: 1 1 40%; }
+	.ecrm-app[data-ui="signature"] .sig-tadd [data-task-add] { flex: 1 1 100%; justify-content: center; }
+	.ecrm-app[data-ui="signature"] .sig-task { padding: 12px; gap: 10px; }
+	.ecrm-app[data-ui="signature"] .sig-task + .sig-task::before { left: 46px; right: 12px; }
+	/* Η ώρα πάει κάτω από τον τίτλο: στα 390px τρεις στήλες έστυβαν τον τίτλο σε δύο λέξεις. */
+	.ecrm-app[data-ui="signature"] .sig-task { display: grid; grid-template-columns: 24px minmax(0, 1fr) 28px; align-items: start; }
+	.ecrm-app[data-ui="signature"] .sig-task__check { grid-column: 1; grid-row: 1; }
+	.ecrm-app[data-ui="signature"] .sig-task__body { grid-column: 2; grid-row: 1; }
+	.ecrm-app[data-ui="signature"] .sig-task__rm { grid-column: 3; grid-row: 1; }
+	.ecrm-app[data-ui="signature"] .sig-task__when { grid-column: 2; grid-row: 2; margin-top: -4px; font-size: var(--fs-12-5); }
+}
+
+/* ═══ (353k) Ομάδα: κάρτες ανθρώπων ═══
+ * Markup: sigTeamHTML() στο ecrm-view-team.js. Η φόρμα «Νέο μέλος», οι
+ * «Πάροχοι ομάδας» και το «Χωρίς ομάδα» κρατούν markup, αλλάζουν μόνο ρούχο. */
+.ecrm-app[data-ui="signature"] [data-view="team"] { max-width: 1240px; margin: 0 auto; width: 100%; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-teamacts { display: flex; gap: 8px; flex-wrap: wrap; }
+.ecrm-app[data-ui="signature"] .sig-teamacts .ecrm-btn--ghost { background: var(--sig-solid); color: var(--sig-ink); border: 0; box-shadow: 0 0 0 1px var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-teamgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.ecrm-app[data-ui="signature"] .sig-member {
+	display: flex; flex-direction: column; gap: 14px; padding: 18px; border-radius: 24px; cursor: pointer; min-width: 0;
+	background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair); transition: box-shadow .18s, transform .18s;
+}
+.ecrm-app[data-ui="signature"] .sig-member:hover { box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift); transform: translateY(-1px); }
+.ecrm-app[data-ui="signature"] .sig-member:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); }
+/* Ανοιχτό «⋯»: η κάρτα του πάνω από τις επόμενες, αλλιώς το μενού κρύβεται κάτω τους. */
+.ecrm-app[data-ui="signature"] .sig-member:has(.sig-mm[open]) { position: relative; z-index: 5; }
+.ecrm-app[data-ui="signature"] .sig-member.is-off { background: var(--sig-glass); }
+.ecrm-app[data-ui="signature"] .sig-member.is-off .sig-member__av { filter: grayscale(1); opacity: .6; }
+.ecrm-app[data-ui="signature"] .sig-member__top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-member__av {
+	position: relative; width: 52px; height: 52px; flex: 0 0 52px; border-radius: 50%; display: grid; place-items: center;
+	font-size: var(--fs-16); font-weight: 800; color: var(--sig-on-btn);
+	background: linear-gradient(135deg, hsl(var(--h, 140) 62% 58%), hsl(var(--h, 140) 62% 40%));
+}
+.ecrm-app[data-ui="signature"] .sig-member__av i {
+	position: absolute; right: 0; bottom: 1px; width: 14px; height: 14px; border-radius: 50%;
+	background: var(--sig-ink-3); box-shadow: 0 0 0 3px var(--sig-solid);
+}
+.ecrm-app[data-ui="signature"] .sig-member__av i.is-on { background: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-member__who { flex: 1; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-member__who b { display: block; font-size: var(--fs-16); font-weight: 700; letter-spacing: -.01em; color: var(--sig-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-member__who small { display: block; font-size: var(--fs-12-5); color: var(--sig-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-member__n { display: flex; align-items: baseline; gap: 6px; }
+.ecrm-app[data-ui="signature"] .sig-member__n b { font-size: var(--fs-34); font-weight: 800; letter-spacing: -.04em; line-height: 1; color: var(--sig-ink); font-variant-numeric: tabular-nums; }
+.ecrm-app[data-ui="signature"] .sig-member__n span { font-size: var(--fs-13); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-member__n em {
+	margin-left: auto; font-style: normal; font-size: var(--fs-12); font-weight: 600; padding: 3px 10px; border-radius: 999px;
+	background: var(--sig-fill); color: var(--sig-ink-2);
+}
+.ecrm-app[data-ui="signature"] .sig-member__bar { height: 6px; border-radius: 999px; background: var(--sig-fill); overflow: hidden; }
+.ecrm-app[data-ui="signature"] .sig-member__bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--sig-teal), var(--sig-green)); }
+.ecrm-app[data-ui="signature"] .sig-member.is-off .sig-member__bar i { background: var(--sig-ink-3); }
+
+.ecrm-app[data-ui="signature"] .sig-mm { position: relative; flex: 0 0 auto; }
+.ecrm-app[data-ui="signature"] .sig-mm > summary {
+	list-style: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+	color: var(--sig-ink-2); font-size: var(--fs-18); font-weight: 700;
+}
+.ecrm-app[data-ui="signature"] .sig-mm > summary::-webkit-details-marker { display: none; }
+.ecrm-app[data-ui="signature"] .sig-mm > summary:hover,
+.ecrm-app[data-ui="signature"] .sig-mm[open] > summary { background: var(--sig-fill); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-mm__menu {
+	position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 230px; padding: 6px;
+	display: flex; flex-direction: column; gap: 2px; border-radius: 18px; cursor: default;
+	background: var(--sig-solid); box-shadow: var(--sig-float), 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-mm__menu .ecrm-btn {
+	width: 100%; justify-content: flex-start; border: 0; border-radius: 12px; background: transparent; box-shadow: none;
+	color: var(--sig-ink); font-weight: 500; padding: 10px 12px;
+}
+.ecrm-app[data-ui="signature"] .sig-mm__menu .ecrm-btn:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-mm__menu .ecrm-btn--danger { color: var(--sig-rose); }
+
+/* Φόρμα «Νέο μέλος», «Πάροχοι ομάδας», «Χωρίς ομάδα»: ίδιο markup, ήσυχοι τίτλοι. */
+.ecrm-app[data-ui="signature"] [data-view="team"] .ecrm-listhead__count { font-size: var(--fs-16); font-weight: 700; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] [data-view="team"] .ecrm-step { font-size: var(--fs-16); font-weight: 700; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] [data-view="team"] .ecrm-input { background: var(--sig-solid); border-color: var(--sig-hair); }
+
+@media (max-width: 760px) {
+	.ecrm-app[data-ui="signature"] .sig-teamacts { width: 100%; }
+	.ecrm-app[data-ui="signature"] .sig-teamacts .ecrm-btn { flex: 1 1 auto; justify-content: center; }
+	.ecrm-app[data-ui="signature"] .sig-teamgrid { grid-template-columns: 1fr; gap: 8px; }
+	.ecrm-app[data-ui="signature"] .sig-member { padding: 14px; gap: 10px; border-radius: 20px; }
+	.ecrm-app[data-ui="signature"] .sig-member__n b { font-size: var(--fs-28); }
+}
+
+/* ═══ (355) Προμήθειες: ένα μεγάλο σύνολο και η μπάρα του ═══
+ * Markup: sigCommissionsHTML() στο ecrm-view-commissions.js. */
+.ecrm-app[data-ui="signature"] [data-view="commissions"] { max-width: 1100px; margin: 0 auto; width: 100%; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-pay {
+	padding: 26px 28px 22px; border-radius: 28px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift);
+}
+.ecrm-app[data-ui="signature"] .sig-pay__top small { display: block; font-size: var(--fs-13); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-pay__big {
+	display: block; margin: 6px 0 4px; font-size: var(--fs-40); font-weight: 800; letter-spacing: -.045em; line-height: 1; color: var(--sig-ink);
+	font-variant-numeric: tabular-nums;
+}
+.ecrm-app[data-ui="signature"] .sig-pay__sub { font-size: var(--fs-13); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-pay__bar {
+	display: flex; gap: 3px; height: 14px; margin: 22px 0 14px; border-radius: 999px; overflow: hidden; background: var(--sig-fill);
+}
+.ecrm-app[data-ui="signature"] .sig-pay__bar i { display: block; height: 100%; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-pay__bar i[style="width:0%"] { display: none; }
+.ecrm-app[data-ui="signature"] .sig-pay__legend .is-paid > i,
+.ecrm-app[data-ui="signature"] .sig-pay__bar .is-paid { background: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-pay__legend .is-due > i,
+.ecrm-app[data-ui="signature"] .sig-pay__bar .is-due { background: var(--sig-teal); }
+.ecrm-app[data-ui="signature"] .sig-pay__legend .is-wait > i,
+.ecrm-app[data-ui="signature"] .sig-pay__bar .is-wait {
+	background: repeating-linear-gradient(135deg, var(--sig-ink-3) 0 4px, transparent 4px 8px); opacity: .55;
+}
+.ecrm-app[data-ui="signature"] .sig-pay__legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ecrm-app[data-ui="signature"] .sig-pay__legend span { display: grid; grid-template-columns: 10px 1fr; column-gap: 8px; align-items: center; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-pay__legend span > i { width: 10px; height: 10px; border-radius: 3px; grid-row: 1; }
+.ecrm-app[data-ui="signature"] .sig-pay__legend small { font-size: var(--fs-12-5); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-pay__legend b { grid-column: 2; font-size: var(--fs-18); font-weight: 700; letter-spacing: -.02em; color: var(--sig-ink); font-variant-numeric: tabular-nums; }
+.ecrm-app[data-ui="signature"] .sig-pay__warn { margin-top: 14px; padding: 8px 12px; border-radius: 12px; background: var(--sig-amber-t); color: var(--sig-amber); font-size: var(--fs-13); font-weight: 600; }
+
+.ecrm-app[data-ui="signature"] .sig-paychart { padding: 18px 20px 14px; border-radius: 24px; }
+.ecrm-app[data-ui="signature"] .sig-paychart__cols { display: flex; align-items: flex-end; gap: 10px; height: 170px; }
+.ecrm-app[data-ui="signature"] .sig-paychart__col { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ecrm-app[data-ui="signature"] .sig-paychart__v { font-size: var(--fs-11); font-weight: 600; color: var(--sig-ink-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ecrm-app[data-ui="signature"] .sig-paychart__b { flex: 1; width: 100%; max-width: 44px; display: flex; align-items: flex-end; }
+.ecrm-app[data-ui="signature"] .sig-paychart__b i { display: block; width: 100%; border-radius: 10px 10px 4px 4px; background: var(--sig-teal); }
+.ecrm-app[data-ui="signature"] .sig-paychart__col.is-paid .sig-paychart__b i { background: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-paychart__col small { font-size: var(--fs-12); color: var(--sig-ink-2); }
+
+.ecrm-app[data-ui="signature"] .sig-paygrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.ecrm-app[data-ui="signature"] .sig-paygrid__h { margin: 4px 6px 10px; font-size: var(--fs-18); }
+.ecrm-app[data-ui="signature"] .sig-paylist {
+	list-style: none; margin: 0; padding: 4px 0; border-radius: 22px; background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-paylist li { display: flex; align-items: center; gap: 12px; padding: 12px 16px; position: relative; }
+.ecrm-app[data-ui="signature"] .sig-paylist li + li::before { content: ""; position: absolute; top: 0; left: 16px; right: 16px; height: 1px; background: var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-paylist__who { flex: 1; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-paylist__who b { display: block; font-size: var(--fs-15); font-weight: 600; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-paylist__who small { display: block; font-size: var(--fs-12-5); color: var(--sig-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-paylist em {
+	flex: 0 0 auto; font-style: normal; font-size: var(--fs-12); font-weight: 600; padding: 3px 10px; border-radius: 999px;
+	background: var(--sig-amber-t); color: var(--sig-amber);
+}
+.ecrm-app[data-ui="signature"] .sig-paylist em.is-ok { background: var(--sig-green-tint); color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-paylist__amt { flex: 0 0 auto; min-width: 84px; text-align: right; font-size: var(--fs-15); font-weight: 700; color: var(--sig-ink); font-variant-numeric: tabular-nums; }
+.ecrm-app[data-ui="signature"] .sig-paylist__pdf {
+	flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border: 0; border-radius: 999px; cursor: pointer;
+	background: var(--sig-fill); color: var(--sig-ink); font: inherit; font-size: var(--fs-12-5); font-weight: 600;
+}
+.ecrm-app[data-ui="signature"] .sig-paylist__pdf:hover { background: var(--sig-green-tint); color: var(--sig-green-ink); }
+
+@media (max-width: 900px) {
+	.ecrm-app[data-ui="signature"] .sig-paygrid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+	.ecrm-app[data-ui="signature"] .sig-pay { padding: 20px 18px 18px; border-radius: 22px; }
+	.ecrm-app[data-ui="signature"] .sig-pay__big { font-size: var(--fs-34); }
+	.ecrm-app[data-ui="signature"] .sig-pay__legend { grid-template-columns: 1fr; gap: 8px; }
+	.ecrm-app[data-ui="signature"] .sig-pay__legend span { grid-template-columns: 10px 1fr auto; }
+	.ecrm-app[data-ui="signature"] .sig-pay__legend b { grid-column: 3; grid-row: 1; font-size: var(--fs-15); }
+	.ecrm-app[data-ui="signature"] .sig-paychart__cols { gap: 6px; height: 140px; }
+	.ecrm-app[data-ui="signature"] .sig-paychart__v { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-paylist li { flex-wrap: wrap; padding: 12px 14px; row-gap: 6px; }
+	.ecrm-app[data-ui="signature"] .sig-paylist__who { flex-basis: 100%; }
+	.ecrm-app[data-ui="signature"] .sig-paylist__amt { margin-left: auto; min-width: 0; }
+}
+
+/* ═══ (356) Καρτέλα πελάτη: ίδιος σκελετός με την καρτέλα αίτησης ═══
+ * Markup: sigCardHTML() στο ecrm-view-customer-card.js. Τα .sig-dh, .sig-dgrid,
+ * .sig-facts, .sig-ch έρχονται από το (353h). */
+.ecrm-app[data-ui="signature"] .sig-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0 0 18px; }
+.ecrm-app[data-ui="signature"] .sig-kpis > div {
+	padding: 14px 16px; border-radius: 18px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair); min-width: 0;
+}
+.ecrm-app[data-ui="signature"] .sig-kpis small { display: block; font-size: var(--fs-12-5); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-kpis b { display: block; margin-top: 4px; font-size: var(--fs-26); font-weight: 800; letter-spacing: -.03em; color: var(--sig-ink); font-variant-numeric: tabular-nums; }
+.ecrm-app[data-ui="signature"] .sig-kpis em { display: block; font-style: normal; font-size: var(--fs-12); color: var(--sig-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-facts--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ecrm-app[data-ui="signature"] .sig-facts--2 .sig-fact.is-wide { grid-column: 1 / -1; }
+.ecrm-app[data-ui="signature"] .sig-dh__acts a.ecrm-btn { text-decoration: none; }
+.ecrm-app[data-ui="signature"] .sig-ch__edit {
+	margin-left: auto; padding: 4px 10px; border: 0; border-radius: 999px; cursor: pointer;
+	background: var(--sig-fill); color: var(--sig-ink-2); font: inherit; font-size: var(--fs-12); font-weight: 600;
+}
+.ecrm-app[data-ui="signature"] .sig-ch__edit:hover { background: var(--sig-green-tint); color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-custlist { box-shadow: none; background: transparent; padding: 0; }
+.ecrm-app[data-ui="signature"] .sig-custlist li { cursor: pointer; padding: 12px 6px; border-radius: 14px; }
+.ecrm-app[data-ui="signature"] .sig-custlist li:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-custlist li + li::before { left: 6px; right: 6px; }
+.ecrm-app[data-ui="signature"] .sig-custlist__end { flex: 0 0 auto; min-width: 116px; text-align: right; font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-cust__phone { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-cust__phone .ecrm-kv { display: flex; flex-direction: column-reverse; border: 0; padding: 0; }
+.ecrm-app[data-ui="signature"] .sig-cust__phone .ecrm-kv > span { font-size: var(--fs-12); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-cust__phone .ecrm-kv > b { font-size: var(--fs-15); font-weight: 600; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-cust__phone .ecrm-kv .ecrm-badge { display: inline-block; margin-left: 4px; }
+.ecrm-app[data-ui="signature"] .sig-cust .ecrm-table th { background: transparent; }
+.ecrm-app[data-ui="signature"] .sig-cust > .ecrm-notes { margin-top: 16px; border-radius: 16px; background: var(--sig-fill); color: var(--sig-ink-2); font-size: var(--fs-13); }
+.ecrm-app[data-ui="signature"] .sig-cust .sig-dside .ecrm-timeline__txt { color: var(--sig-ink); }
+
+@media (max-width: 760px) {
+	.ecrm-app[data-ui="signature"] .sig-kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
+	.ecrm-app[data-ui="signature"] .sig-kpis b { font-size: var(--fs-22); }
+	.ecrm-app[data-ui="signature"] .sig-custlist li { flex-wrap: wrap; row-gap: 6px; }
+	.ecrm-app[data-ui="signature"] .sig-custlist__end { min-width: 0; margin-left: auto; }
+}
+
 @media (prefers-reduced-transparency: reduce) {
 	.ecrm-app[data-ui="signature"] .ecrm-sidebar,
 	.ecrm-app[data-ui="signature"] .ecrm-topbar,

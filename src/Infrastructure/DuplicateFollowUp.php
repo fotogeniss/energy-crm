@@ -79,7 +79,9 @@ final class DuplicateFollowUp
 
     public function onCreated(int $contractId, string $status): void
     {
-        if ($status !== ContractStatus::Presale->value) {
+        // (354) Η οριστικοποίηση γράφει πλέον Καταχώρηση· η Presale μένει για
+        // ό,τι ήταν ήδη σε ουρά εκτός σύνδεσης.
+        if ($status !== ContractStatus::Presale->value && $status !== ContractStatus::Registration->value) {
             return;
         }
 

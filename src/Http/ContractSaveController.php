@@ -428,10 +428,14 @@ final class ContractSaveController implements Controller
         // the screen rather than of this endpoint, and a contract could be born
         // payable. These two are the only stages a first save can mean.
         if ($existing === null) {
-            if ($target !== ContractStatus::Draft && $target !== ContractStatus::Presale) {
+            // (354) Η «Οριστικοποίηση» της φόρμας γράφει πλέον Καταχώρηση· η
+            // Presale μένει δεκτή για ό,τι είναι ήδη σε ουρά εκτός σύνδεσης.
+            $firstStages = [ContractStatus::Draft, ContractStatus::Presale, ContractStatus::Registration];
+
+            if (! in_array($target, $firstStages, true)) {
                 return new WP_REST_Response([
                     'ok'    => false,
-                    'error' => 'Νέα σύμβαση μπορεί να ξεκινήσει μόνο ως πρόχειρη ή ως νέα αίτηση.',
+                    'error' => 'Νέα σύμβαση μπορεί να ξεκινήσει μόνο ως πρόχειρη ή ως καταχώρηση.',
                     'field' => 'status',
                 ], 422);
             }

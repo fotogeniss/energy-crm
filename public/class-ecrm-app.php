@@ -334,6 +334,46 @@ class ECRM_App {
 					<button type="button" class="ecrm-burger" data-mobnav-toggle aria-label="Μενού"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></button>
 					<span class="ecrm-topbar__brand">Energy <strong>CRM</strong></span>
 					<div class="ecrm-topbar__hello">Καλώς ήρθες, <strong><?php echo esc_html( $user->display_name ); ?></strong></div>
+					<?php if ( 'signature' === $ui ) : ?>
+					<?php
+					/*
+					 * (353e) Νέα εμφάνιση: το μενού πάνω, σε χάπι, αντί για πλαϊνό.
+					 * Ίδια data-go με το πλαϊνό, οπότε δρομολόγηση, ενεργό στοιχείο
+					 * και σήματα δουλεύουν όπως πριν. Η «Νέα αίτηση» βγαίνει ως
+					 * πράσινο κουμπί δεξιά· τα υπόλοιπα στο «Περισσότερα».
+					 * docs/UI-REDESIGN-NEW-SKELETON.html.
+					 */
+					?>
+					<nav class="sig-tn" aria-label="Κύρια πλοήγηση">
+						<?php foreach ( $navDaily as $item ) :
+							if ( 'new-contract' === $item['view'] ) { continue; }
+							$go    = $item['go'] ?? $item['view'];
+							$badge = $item['badge'] ?? 0;
+							?>
+							<button type="button" class="ecrm-nav__item sig-tn__item<?php echo 'dashboard' === $go ? ' is-active' : ''; ?>" data-go="<?php echo esc_attr( $go ); ?>"><?php echo esc_html( $item['label'] ); ?><?php if ( $badge > 0 ) : ?><em class="sig-tn__badge"><?php echo (int) $badge; ?></em><?php endif; ?></button>
+						<?php endforeach; ?>
+						<details class="sig-tn__more" data-tn-more>
+							<summary>Περισσότερα</summary>
+							<div class="sig-tn__menu">
+								<?php foreach ( $navMore as $item ) :
+									$go    = $item['go'] ?? $item['view'];
+									$badge = $item['badge'] ?? 0;
+									?>
+									<button type="button" class="ecrm-nav__item sig-tn__mi" data-go="<?php echo esc_attr( $go ); ?>"><span class="sig-tn__ic"><?php echo self::icon( $item['icon'] ); // phpcs:ignore ?></span><?php echo esc_html( $item['label'] ); ?><?php if ( $badge > 0 ) : ?><em class="sig-tn__badge"><?php echo (int) $badge; ?></em><?php endif; ?></button>
+								<?php endforeach; ?>
+								<hr>
+								<?php if ( $ui_try ) : ?>
+								<button type="button" class="sig-tn__mi" data-ui-toggle data-next="classic"><span class="sig-tn__ic"><?php echo self::icon( 'spark' ); // phpcs:ignore ?></span>Παλιά εμφάνιση</button>
+								<?php endif; ?>
+								<?php if ( current_user_can( 'manage_options' ) ) : ?>
+								<a class="sig-tn__mi" href="<?php echo esc_url( admin_url( 'admin.php?page=energy-crm' ) ); ?>"><span class="sig-tn__ic"><?php echo self::icon( 'gear' ); // phpcs:ignore ?></span>Ρυθμίσεις</a>
+								<?php endif; ?>
+								<a class="sig-tn__mi" href="<?php echo esc_url( wp_logout_url() ); ?>"><span class="sig-tn__ic"><?php echo self::icon( 'logout' ); // phpcs:ignore ?></span>Έξοδος</a>
+							</div>
+						</details>
+					</nav>
+					<button type="button" class="ecrm-nav__item sig-tn__new" data-go="new-contract"><?php echo self::icon( 'new' ); // phpcs:ignore ?> Νέα αίτηση</button>
+					<?php endif; ?>
 					<div class="ecrm-gsearch">
 						<input type="search" data-gsearch placeholder="Αναζήτηση σύμβασης ή πελάτη — ΑΦΜ, όνομα, ΗΚΑΣΠ, κωδικός…" autocomplete="off">
 						<div class="ecrm-gsearch__results" data-gsearch-results hidden></div>
@@ -393,6 +433,10 @@ class ECRM_App {
 
 					<!-- New contract (shared form partial) -->
 					<section class="ecrm-view" data-view="new-contract">
+						<?php if ( 'signature' === $ui ) : ?>
+						<?php // (353g) Λειτουργία εστίασης: χωρίς μενού, ✕ για έξοδο. docs/UI-REDESIGN-NEW-SKELETON.html ?>
+						<div class="sig-focus"><button type="button" class="sig-focus__x" data-go="dashboard" aria-label="Έξοδος από την αίτηση">✕</button></div>
+						<?php endif; ?>
 						<?php echo ECRM_Shortcodes::form_inner_html(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 					</section>
 

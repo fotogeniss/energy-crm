@@ -1,10 +1,15 @@
 /* Energy CRM — tasks and callbacks: what the partner owes somebody today.
  *
  * Caches the team list, because the assignee dropdown is rebuilt on every
- * render and the members do not change between two clicks. */
+ * render and the members do not change between two clicks.
+ *
+ * (353j) Στη νέα εμφάνιση «Signature» η λίστα ομαδοποιείται ανά προθεσμία
+ * (Εκπρόθεσμες, Σήμερα, Αύριο, Αυτή την εβδομάδα, Αργότερα, Χωρίς ημερομηνία)
+ * και η «Νέα εργασία» γίνεται μία γραμμή πάνω από τη λίστα. Ίδια data-*, ίδια
+ * καλωδίωση: αλλάζει μόνο το markup (sigTasksHTML). */
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
-import { fmtDate } from '@energy-crm/format';
+import { dueBucket, dueClock, fmtDate } from '@energy-crm/format';
 import { openDetail, renewContract } from '@energy-crm/navigate';
 
 var tasksState = { filter: 'open', scope: 'own' };
@@ -136,7 +141,9 @@ function renderTasks(view, d) {
 			'</li>';
 	}).join('') : '<div class="ecrm-empty">Δεν έχεις καμία εργασία αυτή τη στιγμή. Πρόσθεσε μία παρακάτω.</div>';
 
-	view.innerHTML =
+	if (isSignature()) {
+		view.innerHTML = sigTasksHTML(d, tasks, tabsHTML, scopeToggle, assigneeField);
+	} else view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">Παρακολούθηση</div><h2 class="ecrm-title">Εργασίες</h2>' +
 		'<p class="ecrm-sub">Υπενθυμίσεις & επανακλήσεις</p></div>' + scopeToggle + '</header>' +
 		addForm +
@@ -147,6 +154,12 @@ function renderTasks(view, d) {
 	view.querySelectorAll('[data-tscope]').forEach(function (b) { b.addEventListener('click', function () { tasksState.scope = this.getAttribute('data-tscope'); loadTasks(); }); });
 	view.querySelectorAll('[data-task-renew]').forEach(function (b) { b.addEventListener('click', function () { renewContract(+this.getAttribute('data-task-renew'), this); }); });
 	view.querySelectorAll('[data-task-open]').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); openDetail(+this.getAttribute('data-task-open')); }); });
+
+	// (353j) Enter στον τίτλο = «Προσθήκη».
+	var titleIn = view.querySelector('[data-task-title]');
+	if (titleIn) titleIn.addEventListener('keydown', function (e) {
+		if (e.key === 'Enter') { e.preventDefault(); var ab = view.querySelector('[data-task-add]'); if (ab && !ab.disabled) ab.click(); }
+	});
 
 	var addBtn = view.querySelector('[data-task-add]');
 	if (addBtn) addBtn.addEventListener('click', function () {
@@ -187,4 +200,84 @@ function renderTasks(view, d) {
 				.catch(function () { toast('Σφάλμα δικτύου.', false); });
 		});
 	});
+}
+
+// ---------------------------------------------------------------------
+// (353j) «Signature»: εργασίες ανά προθεσμία
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+var BUCKETS = [
+	['overdue', 'Εκπρόθεσμες'],
+	['today', 'Σήμερα'],
+	['tomorrow', 'Αύριο'],
+	['week', 'Αυτή την εβδομάδα'],
+	['later', 'Αργότερα'],
+	['none', 'Χωρίς ημερομηνία'],
+	['done', 'Ολοκληρωμένες']
+];
+
+function sigTaskRow(t, teamWide) {
+	var done = t.status === 'done';
+	var bucket = dueBucket(t);
+	var link = t.contract_id ? '<a href="#" class="ecrm-tasklink" data-task-open="' + esc(String(t.contract_id)) + '">' + esc(t.contract_code || ('#' + t.contract_id)) + '</a>' : '';
+	var sub = taskSub(t, link, teamWide);
+	var when = t.due_at ? dueClock(t.due_at, bucket !== 'today' && bucket !== 'tomorrow') : '';
+	var flag = t.priority === 'high' ? '<span class="sig-task__flag" title="Υψηλή προτεραιότητα">!</span>' : '';
+
+	return '<li class="sig-task' + (done ? ' is-done' : '') + (t.overdue ? ' is-overdue' : '') + (t.priority === 'low' ? ' is-low' : '') + '">' +
+		'<button type="button" class="sig-task__check" data-task-toggle="' + esc(String(t.id)) + '" data-done="' + (done ? '1' : '0') + '" aria-label="' + (done ? 'Άνοιγμα ξανά' : 'Ολοκλήρωση') + '">' +
+			'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></button>' +
+		'<div class="sig-task__body"><div class="sig-task__title">' + flag + esc(t.title) + '</div>' +
+			(sub ? '<div class="sig-task__sub">' + sub + '</div>' : '') +
+			(t.note ? '<div class="sig-task__note">' + esc(t.note) + '</div>' : '') +
+			(t.kind === 'renewal_call' && t.contract_id && !done
+				? '<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm sig-task__act" data-task-renew="' + esc(String(t.contract_id)) + '">Ανανέωση</button>'
+				: '') +
+		'</div>' +
+		(when ? '<span class="sig-task__when">' + esc(when) + '</span>' : '') +
+		'<button type="button" class="sig-task__rm" data-task-del="' + esc(String(t.id)) + '" aria-label="Διαγραφή εργασίας" title="Διαγραφή">' +
+			'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+		'</li>';
+}
+
+function sigTasksHTML(d, tasks, tabsHTML, scopeToggle, assigneeField) {
+	var groups = {};
+	tasks.forEach(function (t) {
+		var b = dueBucket(t);
+		(groups[b] = groups[b] || []).push(t);
+	});
+
+	var list = BUCKETS.filter(function (b) { return groups[b[0]]; }).map(function (b) {
+		var rows = groups[b[0]];
+		return '<section class="sig-tgroup is-' + b[0] + '"><h3>' + esc(b[1]) + ' <small>' + esc(String(rows.length)) + '</small></h3>' +
+			'<ul class="sig-tlist">' + rows.map(function (t) { return sigTaskRow(t, d.can_team); }).join('') + '</ul></section>';
+	}).join('');
+
+	if (!list) {
+		list = '<div class="sig-tempty"><b>' + (tasksState.filter === 'done' ? 'Τίποτα ολοκληρωμένο ακόμα.' : 'Καμία εργασία εδώ.') + '</b>' +
+			'<span>' + (tasksState.filter === 'done' ? 'Όσα τσεκάρεις θα μαζεύονται εδώ.' : 'Γράψε μία στη γραμμή από πάνω και πάτα Enter.') + '</span></div>';
+	}
+
+	var openCount = tasks.filter(function (t) { return t.status !== 'done'; }).length;
+	var late = (groups.overdue || []).length;
+	var sub = tasksState.filter === 'done'
+		? 'Όσα έκλεισαν'
+		: (openCount === 1 ? '1 ανοιχτή' : openCount + ' ανοιχτές') + (late ? ', ' + (late === 1 ? '1 εκπρόθεσμη' : late + ' εκπρόθεσμες') : '');
+
+	return '<header class="sig-cuhead"><div><h2>Εργασίες</h2><p>' + esc(sub) + '</p></div>' + scopeToggle + '</header>' +
+		'<div class="sig-tadd">' +
+			'<span class="sig-tadd__plus" aria-hidden="true">+</span>' +
+			'<input type="text" data-task-title placeholder="Νέα εργασία…" aria-label="Τίτλος νέας εργασίας">' +
+			'<input type="datetime-local" class="ecrm-input" data-task-due aria-label="Προθεσμία">' +
+			'<select class="ecrm-input" data-task-prio aria-label="Προτεραιότητα"><option value="normal">Κανονική</option><option value="high">Υψηλή</option><option value="low">Χαμηλή</option></select>' +
+			assigneeField +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary" data-task-add>Προσθήκη</button>' +
+		'</div>' +
+		'<div class="ecrm-tabs sig-tabs">' + tabsHTML + '</div>' +
+		list;
 }

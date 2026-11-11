@@ -368,6 +368,128 @@ class ECRM_PDF {
 	}
 
 	/** Truncate a string to n chars with an ellipsis (multibyte-safe). */
+	/**
+	 * (354b) Αποδεικτικό ηλεκτρονικής υπογραφής — docs/UI-SIGN-AFM.html, οθόνη 4.
+	 *
+	 * Ένα A4, λευκό, χωρίς τη σκούρα ταινία των άλλων εντύπων: είναι πρακτικό
+	 * έγγραφο αρχείου, όχι έντυπο προς τον πελάτη. Τα δεδομένα έρχονται έτοιμα
+	 * (κρυμμένο ΑΦΜ/IP, ώρες ως κείμενο) από το ECRM_Tracking — εδώ μόνο
+	 * στοιχειοθετούνται.
+	 *
+	 * @param array{
+	 *   code:string, provider:string, signer:string, afm:string, partner:string,
+	 *   timeline:list<array{0:string,1:string}>, ip:string, device:string,
+	 *   consent:string, sig_path:?string, hash_doc:string, hash_sig:string, note:string
+	 * } $m
+	 * @return string Raw PDF bytes.
+	 */
+	public static function build_sign_proof( array $m ): string {
+		self::boot();
+
+		$ink   = [ 27, 29, 26 ];
+		$muted = [ 95, 99, 93 ];
+		$line  = [ 227, 229, 225 ];
+		$green = [ 10, 107, 29 ];
+
+		$pdf = new tFPDF( 'P', 'mm', 'A4' );
+		$pdf->fontpath = __DIR__ . '/lib/tfpdf/font/';
+		$pdf->SetMargins( 18, 18, 18 );
+		$pdf->SetAutoPageBreak( true, 18 );
+		$pdf->AddPage();
+		$pdf->AddFont( 'DejaVu', '', 'DejaVuSans.ttf', true );
+		$pdf->AddFont( 'DejaVu', 'B', 'DejaVuSans-Bold.ttf', true );
+
+		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '';
+
+		$pdf->SetTextColor( $ink[0], $ink[1], $ink[2] );
+		$pdf->SetFont( 'DejaVu', 'B', 17 );
+		$pdf->Cell( 0, 9, 'Αποδεικτικό ηλεκτρονικής υπογραφής', 0, 1 );
+		$pdf->SetFont( 'DejaVu', '', 9 );
+		$pdf->SetTextColor( $muted[0], $muted[1], $muted[2] );
+		$pdf->Cell( 0, 5, ( $company ? $company . '  ·  ' : '' ) . 'παράχθηκε αυτόματα με την υπογραφή', 0, 1 );
+
+		$rule = static function ( string $title ) use ( $pdf, $muted, $line ): void {
+			$pdf->Ln( 4 );
+			$pdf->SetDrawColor( $line[0], $line[1], $line[2] );
+			$y = $pdf->GetY();
+			$pdf->Line( 18, $y, 192, $y );
+			$pdf->Ln( 3 );
+			$pdf->SetFont( 'DejaVu', 'B', 8.5 );
+			$pdf->SetTextColor( $muted[0], $muted[1], $muted[2] );
+			$pdf->Cell( 0, 5, $title, 0, 1 );
+		};
+		$kv = static function ( string $k, string $v, ?array $color = null ) use ( $pdf, $ink, $muted ): void {
+			$pdf->SetFont( 'DejaVu', '', 9.5 );
+			$pdf->SetTextColor( $muted[0], $muted[1], $muted[2] );
+			$pdf->Cell( 46, 6, $k, 0, 0 );
+			$pdf->SetFont( 'DejaVu', 'B', 9.5 );
+			$c = $color ?? $ink;
+			$pdf->SetTextColor( $c[0], $c[1], $c[2] );
+			$pdf->MultiCell( 0, 6, $v !== '' ? $v : '—', 0, 'L' );
+		};
+
+		$rule( 'Αίτηση' );
+		$kv( 'Κωδικός', (string) $m['code'] );
+		$kv( 'Πάροχος / πρόγραμμα', (string) $m['provider'] );
+		$kv( 'Υπογράφων', (string) $m['signer'] );
+		$kv( 'ΑΦΜ', (string) $m['afm'] . '  ✓ ταιριάζει με την αίτηση', $green );
+		$kv( 'Συνεργάτης', (string) $m['partner'] );
+
+		$rule( 'Χρονολόγιο' );
+		foreach ( (array) $m['timeline'] as $row ) {
+			$pdf->SetFont( 'DejaVu', '', 9.5 );
+			$pdf->SetTextColor( $muted[0], $muted[1], $muted[2] );
+			$pdf->Cell( 46, 6, (string) $row[0], 0, 0 );
+			$pdf->SetTextColor( $ink[0], $ink[1], $ink[2] );
+			$pdf->MultiCell( 0, 6, (string) $row[1], 0, 'L' );
+		}
+
+		$rule( 'Συσκευή' );
+		$kv( 'IP', (string) $m['ip'] );
+		$kv( 'Συσκευή', (string) $m['device'] );
+
+		$rule( 'Κείμενο συναίνεσης που αποδέχτηκε ο πελάτης' );
+		$pdf->SetFillColor( 244, 245, 243 );
+		$pdf->SetFont( 'DejaVu', '', 9 );
+		$pdf->SetTextColor( $ink[0], $ink[1], $ink[2] );
+		$pdf->MultiCell( 0, 5, (string) $m['consent'], 0, 'L', true );
+
+		$rule( 'Υπογραφή' );
+		$y = $pdf->GetY();
+		if ( $y > 240 ) {
+			$pdf->AddPage();
+			$y = $pdf->GetY();
+		}
+		$pdf->SetDrawColor( $line[0], $line[1], $line[2] );
+		$pdf->Rect( 18, $y, 70, 24 );
+		if ( ! empty( $m['sig_path'] ) && is_readable( (string) $m['sig_path'] ) ) {
+			try { $pdf->Image( (string) $m['sig_path'], 20, $y + 1, 66, 22 ); } catch ( \Throwable $e ) {}
+		}
+		$pdf->SetY( $y + 26 );
+
+		$rule( 'Αποτύπωμα (SHA-256)' );
+		$hash = static function ( string $k, string $v ) use ( $pdf, $muted ): void {
+			$pdf->SetFont( 'DejaVu', '', 9 );
+			$pdf->SetTextColor( $muted[0], $muted[1], $muted[2] );
+			$pdf->Cell( 46, 5, $k, 0, 0 );
+			$pdf->SetFont( 'DejaVu', '', 7.5 );
+			$pdf->MultiCell( 0, 5, $v !== '' ? $v : '—', 0, 'L' );
+		};
+		$hash( 'Υπογεγραμμένο έντυπο', (string) $m['hash_doc'] );
+		$hash( 'Εικόνα υπογραφής', (string) $m['hash_sig'] );
+
+		$pdf->Ln( 4 );
+		$pdf->SetFont( 'DejaVu', '', 8 );
+		$pdf->SetTextColor( $muted[0], $muted[1], $muted[2] );
+		$foot = 'Αν το υπογεγραμμένο έντυπο αλλάξει έστω και ένα byte, το αποτύπωμα παύει να ταιριάζει.';
+		if ( ! empty( $m['note'] ) ) {
+			$foot = (string) $m['note'] . ' ' . $foot;
+		}
+		$pdf->MultiCell( 0, 4.5, $foot, 0, 'L' );
+
+		return $pdf->Output( '', 'S' );
+	}
+
 	private static function clip( string $s, int $n ): string {
 		return ( mb_strlen( $s ) > $n ) ? ( mb_substr( $s, 0, $n - 1 ) . '…' ) : $s;
 	}

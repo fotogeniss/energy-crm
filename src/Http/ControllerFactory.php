@@ -152,7 +152,8 @@ final class ControllerFactory
                 Services::documents(),
                 $lifecycle,
                 Services::events(),
-                Services::signatureState()
+                Services::signatureState(),
+                $draftExit
             ),
 
             // People.

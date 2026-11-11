@@ -15,6 +15,10 @@
  * "τι είναι ενεργό" να περνά πάντα από το ίδιο ContractStatus::isTerminal()
  * που ξέρει ήδη ο υπόλοιπος κώδικας. Ιδια στήλη-κατάστασης (ecrm-badge--*) με
  * τη λίστα «Συμβάσεις» -- ο συνεργάτης δεν μαθαίνει δεύτερη γλώσσα χρωμάτων.
+ *
+ * (356) Στη νέα εμφάνιση «Signature»: ίδιος σκελετός με την καρτέλα αίτησης
+ * (μεγάλο όνομα, κουτάκια, στήλη δεξιά) -- sigCardHTML(). Ίδια data-*, ίδια
+ * καλωδίωση.
  */
 
 import { api, esc, fetch, H, markSubViewOpen, toast, viewEl } from '@energy-crm/util';
@@ -133,7 +137,7 @@ function documentsList(documents, docKinds, contracts) {
 	// έτσι ένα έγγραφο δείχνει ίδιο σε δύο σημεία -- μόνη προσθήκη εδώ είναι
 	// ποια σύμβαση το έφερε, που δεν έχει νόημα στην κάρτα μιας σύμβασης.
 	return '<div class="ecrm-files">' + documents.map(function (doc) {
-		var label = (docKinds && docKinds[doc.doc_kind]) || doc.doc_kind || 'Έγγραφο';
+		var label = (docKinds && docKinds[doc.doc_kind]) || systemKindLabel(doc.doc_kind) || 'Έγγραφο';
 		var from = codeById[doc.contract_id] || '';
 		var thumb = doc.is_image && doc.url ? '<img src="' + esc(doc.url) + '" alt="">' : '<span class="ecrm-file__ext">' + (doc.mime === 'application/pdf' ? 'PDF' : 'DOC') + '</span>';
 		return '<a class="ecrm-file" href="' + esc(doc.url || '#') + '" target="_blank" rel="noopener">' +
@@ -142,6 +146,20 @@ function documentsList(documents, docKinds, contracts) {
 			'<span class="ecrm-file__kind">' + esc(label) + (from ? ' · ' + esc(from) : '') + '</span></span>' +
 			'</a>';
 	}).join('') + '</div>';
+}
+
+/* (356) Τα αρχεία που φτιάχνει το ίδιο το σύστημα δεν είναι στον κατάλογο
+ * doc_kinds, οπότε η κάρτα τύπωνε το εσωτερικό τους όνομα («signed_pdf»,
+ * «form_orizon_combo»). Εύρημα ιδιοκτήτη στο Local, 11/11. */
+var SYSTEM_KIND_LABEL = {
+	signature: 'Υπογραφή', signature_energy: 'Υπογραφή (πελάτης ενέργειας)',
+	signed_pdf: 'Υπογεγραμμένη αίτηση', contract: 'Αίτηση (έντυπο)',
+	sign_proof: 'Αποδεικτικό υπογραφής', sign_proof_energy: 'Αποδεικτικό υπογραφής (πελάτης ενέργειας)'
+};
+function systemKindLabel(kind) {
+	kind = String(kind || '');
+	if (SYSTEM_KIND_LABEL[kind]) { return SYSTEM_KIND_LABEL[kind]; }
+	return kind.indexOf('form_') === 0 ? 'Έντυπο παρόχου' : '';
 }
 
 /* 247, Στάδιο 2 (docs/UI-CUSTOMER-CARD.html): ελεύθερο κείμενο για τον
@@ -326,7 +344,9 @@ function renderCard(view, id, d) {
 	var statuses = d.statuses || {};
 	var name = customerName(c);
 
-	view.innerHTML =
+	if (isSignature()) {
+		view.innerHTML = sigCardHTML(c, d, contracts, documents, statuses, name);
+	} else view.innerHTML =
 		'<div style="margin-bottom:10px">' +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-back>&larr; Πελάτες</button>' +
 		'</div>' +
@@ -537,4 +557,88 @@ function renderCard(view, id, d) {
 			})
 			.catch(function () { toast('Σφάλμα δικτύου.', false); });
 	});
+}
+
+// ---------------------------------------------------------------------
+// (356) «Signature»: η καρτέλα πελάτη
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+var SIG_TYPE = { individual: 'Ιδιώτης', company: 'Εταιρεία', sole_prop: 'Ατομική επιχείρηση' };
+
+function sigFact(label, value, wide) {
+	return '<div class="sig-fact' + (value ? '' : ' is-empty') + (wide ? ' is-wide' : '') + '"><small>' + esc(label) + '</small><b>' + (value ? esc(value) : '—') + '</b></div>';
+}
+
+function sigCardHTML(c, d, contracts, documents, statuses, name) {
+	var kpi = d.kpi || {};
+	var next = kpi.next_expiry;
+	var nextTxt = '—', nextFoot = 'καμία επερχόμενη';
+	if (next && next.days_left != null) {
+		var left = +next.days_left;
+		nextTxt = left < 0 ? 'έληξε' : (left === 1 ? '1 ημέρα' : left + ' ημέρες');
+		nextFoot = next.code || '';
+	}
+
+	var sub = [SIG_TYPE[c.customer_type] || '', c.afm ? 'ΑΦΜ ' + c.afm : '', c.created_at ? 'πελάτης από ' + fmtDate(c.created_at) : '']
+		.filter(Boolean).join(' · ');
+	var tel = String(c.mobile || c.phone || '').replace(/[^\d+]/g, '');
+	var acts = (tel ? '<a class="ecrm-btn ecrm-btn--primary" href="' + esc('tel:' + tel) + '">Κλήση</a>' : '') +
+		(c.email ? '<a class="ecrm-btn ecrm-btn--ghost" href="' + esc('mailto:' + c.email) + '">Email</a>' : '');
+
+	var kpis = '<div class="sig-kpis">' +
+		'<div><small>Αιτήσεις</small><b>' + esc(String(kpi.contracts_count || 0)) + '</b></div>' +
+		'<div><small>Ενεργές</small><b>' + esc(String(kpi.active_count || 0)) + '</b></div>' +
+		'<div><small>Επόμενη λήξη</small><b>' + esc(nextTxt) + '</b><em>' + esc(nextFoot) + '</em></div>' +
+		'<div><small>Τελευταία κίνηση</small><b>' + esc(kpi.last_active ? fmtDate(kpi.last_active) : '—') + '</b></div>' +
+	'</div>';
+
+	var list = contracts.length
+		? '<ul class="sig-paylist sig-custlist">' + contracts.map(function (k) {
+			return '<li class="ecrm-rowlink" data-open="' + esc(String(k.id)) + '">' +
+				'<span class="sig-crow__prov"><i style="--h:' + tint(k.provider_name || '') + '"></i></span>' +
+				'<span class="sig-paylist__who"><b>' + esc(k.code || '—') + '</b><small>' + esc([k.provider_name, k.program_name].filter(Boolean).join(' · ') || '—') + '</small></span>' +
+				'<span class="ecrm-badge ecrm-badge--' + esc(k.status) + '">' + esc(statuses[k.status] || k.status) + '</span>' +
+				'<span class="sig-custlist__end">' + (k.end_date ? 'λήγει ' + esc(fmtDate(k.end_date)) : '') + '</span>' +
+			'</li>';
+		}).join('') + '</ul>'
+		: '<div class="sig-tempty"><b>Καμία αίτηση ακόμα.</b></div>';
+
+	var identity = sigFact('Όνομα', c.first_name) + sigFact('Επώνυμο', c.last_name) + sigFact('Πατρώνυμο', c.father_name) +
+		(c.customer_type !== 'individual' ? sigFact('Επωνυμία', c.company_name) : '') +
+		sigFact('ΑΦΜ', c.afm) + sigFact('ΔΟΥ', c.doy) + sigFact('ΑΔΤ', c.adt) + sigFact('Ημ. γέννησης', c.birth_date ? fmtDate(c.birth_date) : '');
+	var address = sigFact('Οδός', [c.street, c.street_no].filter(Boolean).join(' ')) + sigFact('Πόλη', c.city) +
+		sigFact('ΤΚ', c.postal_code) + sigFact('Περιοχή', c.region);
+	var contact = sigFact('Τηλέφωνο', c.phone) + sigFact('Κινητό', c.mobile) + sigFact('Email', c.email, true);
+
+	function head(title, attr) {
+		return '<h3 class="sig-ch">' + esc(title) + '<button type="button" class="sig-ch__edit" data-' + attr + '>Επεξεργασία</button></h3>';
+	}
+
+	return '<div class="sig-detail sig-cust">' +
+		'<button type="button" class="sig-detail__back" data-back><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg> Πελάτες</button>' +
+		'<header class="sig-dh">' +
+			'<span class="sig-dh__av" style="--h:' + tint(name) + '">' + esc(initials(name)) + '</span>' +
+			'<div class="sig-dh__who"><h2>' + esc(name) + '</h2><small>' + esc(sub) + '</small></div>' +
+			'<div class="sig-dh__acts">' + acts + '</div>' +
+		'</header>' +
+		kpis +
+		'<div class="sig-dgrid"><div class="sig-dmain">' +
+			'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Αιτήσεις <b>' + esc(String(contracts.length)) + '</b></h3>' + list + '</section>' +
+			'<div class="ecrm-card" data-customer-history></div>' +
+			'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Λήξεις και ανανεώσεις</h3>' + expiringRows(contracts) + '</section>' +
+			'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Έγγραφα όλων των αιτήσεων</h3>' + documentsList(documents, d.doc_kinds, contracts) + '</section>' +
+		'</div><aside class="sig-dside">' +
+			'<section class="ecrm-card sig-dcard">' + head('Ταυτότητα', 'edit-identity') + '<div class="sig-facts sig-facts--2">' + identity + '</div></section>' +
+			'<section class="ecrm-card sig-dcard">' + head('Διεύθυνση', 'edit-address') + '<div class="sig-facts sig-facts--2">' + address + '</div></section>' +
+			'<section class="ecrm-card sig-dcard">' + head('Επικοινωνία', 'edit-contact') + '<div class="sig-facts sig-facts--2">' + contact + '</div>' +
+				'<div class="sig-cust__phone">' + contactPhoneBlock(c.contact_phone) + '</div></section>' +
+			'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Σημειώσεις</h3>' + notesBlock(d.notes) + '</section>' +
+		'</aside></div>' +
+		auditFooter(d.last_event) +
+	'</div>';
 }

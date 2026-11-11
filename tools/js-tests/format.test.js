@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { up, energyLabel, fmtDate, timeAgo, minutesAgo, initials, tint, svgIcon } from '../../public/assets/ecrm-format.js';
+import { up, energyLabel, fmtDate, timeAgo, minutesAgo, initials, tint, svgIcon, contractStages, dueBucket, dueClock } from '../../public/assets/ecrm-format.js';
 
 test('up() strips Greek accents and uppercases', () => {
 	assert.equal(up('Γεώργιος'), 'ΓΕΩΡΓΙΟΣ');
@@ -101,4 +101,37 @@ test('minutesAgo() reads local time like timeAgo, and null for nothing or junk',
 	assert.equal(minutesAgo(local), 5);
 	assert.equal(minutesAgo(''), null);
 	assert.equal(minutesAgo('όχι ημερομηνία'), null);
+});
+
+test('contractStages() reads facts, not only the status name', () => {
+	const states = (c) => contractStages(c).map((s) => s.state).join(',');
+	assert.equal(states({ status: 'draft' }), 'now,next,next,next,next');
+	assert.equal(states({ status: 'awaiting_signature', doc_checklist: { items: [{ ok: true }], complete: true } }), 'ok,ok,now,next,next');
+	assert.equal(states({ status: 'awaiting_signature', signed_at: '2026-11-11 10:00:00', doc_checklist: { items: [{ ok: false }], complete: false } }), 'ok,now,ok,next,next');
+	assert.equal(states({ status: 'to_finalisation', files: [{}] }), 'ok,ok,ok,now,next');
+	assert.equal(states({ status: 'pending_issue', files: [{}] }), 'ok,ok,ok,warn,next');
+	assert.equal(states({ status: 'active' }), 'ok,ok,ok,ok,ok');
+	assert.equal(states({ status: 'cancelled', files: [{}] }), 'ok,ok,stop,next,next');
+	assert.equal(states({ status: 'registration', files: [{}], signatures: { required: ['mobile', 'energy'], collected: ['mobile'] } }), 'ok,ok,now,next,next');
+	assert.deepEqual(contractStages({}).map((s) => s.label), ['Πρόχειρο', 'Χαρτιά', 'Υπογραφή', 'Πάροχος', 'Ενεργή']);
+});
+
+test('dueBucket() groups by local day; overdue and done come from the row', () => {
+	const now = new Date(2026, 10, 11, 9, 0, 0); // Τετ 11/11/2026 09:00
+	assert.equal(dueBucket({ status: 'done', due_at: '2026-11-11 10:00:00' }, now), 'done');
+	assert.equal(dueBucket({ overdue: true, due_at: '2026-11-09 10:00:00' }, now), 'overdue');
+	assert.equal(dueBucket({ due_at: '2026-11-11 23:00:00' }, now), 'today');
+	assert.equal(dueBucket({ due_at: '2026-11-11 08:00:00' }, now), 'today');
+	assert.equal(dueBucket({ due_at: '2026-11-12 08:00:00' }, now), 'tomorrow');
+	assert.equal(dueBucket({ due_at: '2026-11-17 08:00:00' }, now), 'week');
+	assert.equal(dueBucket({ due_at: '2026-11-18 08:00:00' }, now), 'later');
+	assert.equal(dueBucket({ due_at: '' }, now), 'none');
+	assert.equal(dueBucket({}, now), 'none');
+});
+
+test('dueClock() cuts the local time without a time zone', () => {
+	assert.equal(dueClock('2026-11-12 14:30:00'), '14:30');
+	assert.equal(dueClock('2026-11-12 14:30:00', true), '12/11 14:30');
+	assert.equal(dueClock(''), '');
+	assert.equal(dueClock(null, true), '');
 });

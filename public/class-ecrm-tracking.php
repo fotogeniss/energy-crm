@@ -35,6 +35,12 @@ class ECRM_Tracking {
 			'callback'            => [ __CLASS__, 'rest_sign' ],
 			'permission_callback' => '__return_true',
 		] );
+		// (354b) Το ΑΦΜ πριν από την υπογραφή — docs/UI-SIGN-AFM.html.
+		register_rest_route( \EnergyCRM\Http\Router::NAMESPACE, '/track/(?P<token>[A-Za-z0-9\-]+)/afm', [
+			'methods'             => 'POST',
+			'callback'            => [ __CLASS__, 'rest_afm' ],
+			'permission_callback' => '__return_true',
+		] );
 		register_rest_route( \EnergyCRM\Http\Router::NAMESPACE, '/track/(?P<token>[A-Za-z0-9\-]+)/upload', [
 			'methods'             => 'POST',
 			'callback'            => [ __CLASS__, 'rest_upload' ],
@@ -382,6 +388,8 @@ class ECRM_Tracking {
 			// το πάνελ υπογραφής μόνο όταν αυτό είναι αληθές, οπότε το
 			// tracking μένει ανέπαφο — αυτό ήταν όλο το ζητούμενο.
 			'can_sign'     => ( $signable && $role_required && ! $role_signed && ! $expired ),
+			// (354b) Λεπτά που μένει κλειδωμένο το ΑΦΜ μετά από 5 λάθη· 0 = ανοιχτό.
+			'afm_locked'   => (int) ceil( self::afm_locked_seconds( $id, $role ) / 60 ),
 			'sign_expired' => ( $signable && $role_required && ! $role_signed && $expired ),
 			'docs'         => self::docs_payload( $id, $status, $row['activation_type'] ?? '', $row['energy_type'] ?? '' ),
 			'company'      => class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '',
@@ -430,6 +438,21 @@ class ECRM_Tracking {
 		}
 
 		$p       = $req->get_json_params() ?: $req->get_params();
+
+		// (354b) Πρώτα «είσαι εσύ;»: χωρίς έγκυρη επιβεβαίωση ΑΦΜ (30 λεπτά,
+		// δεμένη με αυτή τη σύμβαση και αυτόν τον ρόλο) δεν υπογράφει κανείς.
+		// Το πλαίσιο υπογραφής στη σελίδα δεν είναι ο φύλακας — αυτό εδώ είναι.
+		$afm_at = \EnergyCRM\Domain\Contract\SignProof::readProof(
+			(string) ( $p['afm_proof'] ?? '' ), $id, $role, self::key_for( $id ), time()
+		);
+		if ( $afm_at === null ) {
+			return new WP_REST_Response( [
+				'ok'        => false,
+				'needs_afm' => true,
+				'error'     => 'Γράψτε πρώτα το ΑΦΜ σας για να υπογράψετε.',
+			], 403 );
+		}
+
 		$consent = ! empty( $p['consent'] );
 		$dataurl = (string) ( $p['signature'] ?? '' );
 		if ( ! $consent ) {
@@ -513,7 +536,13 @@ class ECRM_Tracking {
 		$collected[] = $role;
 		$complete    = \EnergyCRM\Domain\Contract\SignatureRoles::isComplete( $state['required'], $collected );
 
+		$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+
 		if ( ! $complete ) {
+			// (354b) Το αποδεικτικό του ρόλου που μόλις υπέγραψε· το έντυπο
+			// ολοκληρώνεται όταν υπογράψει και ο δεύτερος.
+			self::store_sign_proof( $id, $role, $state['required'], $png, $sig_path, $ip, $ua, '' );
+
 			// Η αίτηση ΔΕΝ μετράει «υπογεγραμμένη» ώσπου να υπογράψουν όλοι
 			// οι απαιτούμενοι ρόλοι -- ρητή απόφαση ιδιοκτήτη 04/09
 			// (SignatureRoles::isComplete). Η σύμβαση μένει στην ίδια
@@ -539,6 +568,7 @@ class ECRM_Tracking {
 		// COMBO με δύο πρόσωπα, το "signed_pdf" θα δείξει μόνο τη ΤΕΛΕΥΤΑΙΑ
 		// υπογραφή· το σωστό, ανά-ρόλο αποτέλεσμα ζει ήδη στο συνημμένο έντυπο
 		// (contractDocuments()->store(), λίγο πιο πάνω, μέσω SignatureRoles).
+		$signed_pdf_bytes = '';
 		if ( class_exists( 'ECRM_PDF' ) ) {
 			// Το fetch του $full μπήκε ΜΕΣΑ στο try 2026-08-24: ήταν έξω, οπότε
 			// το σχόλιο «PDF optional — signing still succeeds» ήταν ψέμα ακριβώς
@@ -551,6 +581,7 @@ class ECRM_Tracking {
 				$full = \EnergyCRM\Services::contractDetails()->forDocument( $id );
 				$pdf = ECRM_PDF::build( $full ?: $row, $sig_path ?: null, [ 'date' => gmdate( 'd/m/Y H:i' ), 'ip' => $ip ] );
 				if ( $pdf && class_exists( 'ECRM_Files' ) ) {
+					$signed_pdf_bytes = (string) $pdf;
 					$sp = ECRM_Files::put_bytes( $pdf, 'pdf', 'application/pdf', 'symvasi-ypografi.pdf' );
 					if ( $sp ) {
 						\EnergyCRM\Services::files()->replaceKind(
@@ -615,6 +646,9 @@ class ECRM_Tracking {
 		// έγγραφο (π.χ. footer/badge) πρέπει να το δει ενημερωμένο.
 		\EnergyCRM\Services::contractDocuments()->store( $id );
 
+		// (354b) Το αποδεικτικό, με το αποτύπωμα του υπογεγραμμένου εντύπου.
+		self::store_sign_proof( $id, $role, $state['required'], $png, $sig_path, $ip, $ua, $signed_pdf_bytes );
+
 		\EnergyCRM\Services::contractNotices()->signed( $id, (string) ( $row['first_name'] ?? '' ) );
 
 		// Notify the seller.
@@ -636,6 +670,254 @@ class ECRM_Tracking {
 		}
 
 		return new WP_REST_Response( [ 'ok' => true, 'message' => 'Ευχαριστούμε! Η υπογραφή καταχωρήθηκε.' ], 200 );
+	}
+
+	// --- (354b) ΑΦΜ πριν από την υπογραφή, και το αποδεικτικό ----------------
+
+	/** Το κλειδί των λαθών/κλειδώματος, ανά σύμβαση και ρόλο. */
+	private static function afm_key( int $id, string $role ): string {
+		return 'ecrm_afm_' . $id . '_' . $role;
+	}
+
+	/** @return array{fails:int, until:int} */
+	private static function afm_attempts( int $id, string $role ): array {
+		$rec = get_transient( self::afm_key( $id, $role ) );
+
+		return is_array( $rec )
+			? [ 'fails' => (int) ( $rec['fails'] ?? 0 ), 'until' => (int) ( $rec['until'] ?? 0 ) ]
+			: [ 'fails' => 0, 'until' => 0 ];
+	}
+
+	private static function afm_locked_seconds( int $id, string $role ): int {
+		return max( 0, self::afm_attempts( $id, $role )['until'] - time() );
+	}
+
+	/**
+	 * Ένα λάθος ακόμα. Επιστρέφει πόσες προσπάθειες μένουν· 0 σημαίνει ότι
+	 * μόλις κλείδωσε για SignProof::LOCK_SECONDS.
+	 */
+	private static function afm_fail( int $id, string $role ): int {
+		$max   = \EnergyCRM\Domain\Contract\SignProof::MAX_FAILS;
+		$lock  = \EnergyCRM\Domain\Contract\SignProof::LOCK_SECONDS;
+		$fails = self::afm_attempts( $id, $role )['fails'] + 1;
+
+		if ( $fails >= $max ) {
+			set_transient( self::afm_key( $id, $role ), [ 'fails' => 0, 'until' => time() + $lock ], $lock * 2 );
+
+			return 0;
+		}
+
+		set_transient( self::afm_key( $id, $role ), [ 'fails' => $fails, 'until' => 0 ], $lock * 2 );
+
+		return $max - $fails;
+	}
+
+	/** @param list<string> $required */
+	private static function role_suffix( string $role, array $required ): string {
+		if ( count( $required ) < 2 ) {
+			return '';
+		}
+
+		return $role === \EnergyCRM\Domain\Contract\SignatureRoles::ENERGY ? ' (πελάτης ενέργειας)' : ' (πελάτης κινητής)';
+	}
+
+	/**
+	 * POST /track/{token}/afm — «γράψτε το ΑΦΜ σας».
+	 *
+	 * Σωστό: απόδειξη επιβεβαίωσης για 30 λεπτά (SignProof::makeProof) και
+	 * γεγονός στο ιστορικό. Λάθος: γεγονός, και μετά από 5 κλείδωμα 15 λεπτών
+	 * για αυτόν τον σύνδεσμο. Ο σύνδεσμος παρακολούθησης μένει ανοιχτός· μόνο
+	 * η υπογραφή περιμένει.
+	 */
+	public static function rest_afm( WP_REST_Request $req ): WP_REST_Response {
+		if ( class_exists( 'ECRM_RateLimit' ) && ! ECRM_RateLimit::allow( 'track_afm', 30, 900 ) ) {
+			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Πολλές προσπάθειες. Δοκιμάστε αργότερα.' ], 429 );
+		}
+		$v = self::verify( (string) $req['token'] );
+		if ( ! $v ) {
+			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Μη έγκυρος σύνδεσμος.' ], 404 );
+		}
+		$id   = $v['id'];
+		$role = $v['role'];
+
+		if ( self::sign_expired( $id ) ) {
+			return new WP_REST_Response( [
+				'ok'      => false,
+				'expired' => true,
+				'error'   => 'Ο σύνδεσμος υπογραφής έληξε. Ζητήστε νέον από τον συνεργάτη σας.',
+			], 410 );
+		}
+
+		global $wpdb;
+		$ct  = ECRM_DB::table( 'contracts' );
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$ct} WHERE id = %d", $id ), ARRAY_A );
+		if ( ! $row || ! in_array( $row['status'], self::signable_statuses(), true ) ) {
+			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Η αίτηση δεν εκκρεμεί για υπογραφή.' ], 409 );
+		}
+
+		$state = self::signature_state( $id, $row );
+		if ( ! in_array( $role, $state['required'], true ) || in_array( $role, $state['collected'], true ) ) {
+			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Δεν χρειάζεται υπογραφή από αυτόν τον σύνδεσμο.' ], 409 );
+		}
+
+		$locked = self::afm_locked_seconds( $id, $role );
+		if ( $locked > 0 ) {
+			return new WP_REST_Response( [
+				'ok'      => false,
+				'locked'  => true,
+				'minutes' => (int) ceil( $locked / 60 ),
+				'error'   => 'Πολλές λάθος προσπάθειες. Δοκιμάστε ξανά σε ' . (int) ceil( $locked / 60 ) . ' λεπτά ή επικοινωνήστε με τον συνεργάτη σας.',
+			], 429 );
+		}
+
+		$full     = \EnergyCRM\Services::contractDetails()->forDocument( $id );
+		$extra    = json_decode( (string) ( $full['extra_json'] ?? '' ), true );
+		$expected = $full
+			? ECRM_Validate::digits( \EnergyCRM\Domain\Contract\SignProof::expectedAfm( $full, is_array( $extra ) ? $extra : [], $role, $state['required'] ) )
+			: '';
+
+		if ( ! \EnergyCRM\Domain\Contract\SignProof::isAfm( $expected ) ) {
+			return new WP_REST_Response( [
+				'ok'    => false,
+				'error' => 'Δεν υπάρχει ΑΦΜ στην αίτηση. Επικοινωνήστε με τον συνεργάτη σας.',
+			], 409 );
+		}
+
+		$p      = $req->get_json_params() ?: $req->get_params();
+		$typed  = ECRM_Validate::digits( (string) ( $p['afm'] ?? '' ) );
+		$events = \EnergyCRM\Services::events();
+		$suffix = self::role_suffix( $role, $state['required'] );
+
+		if ( ! \EnergyCRM\Domain\Contract\SignProof::afmMatches( $typed, $expected ) ) {
+			$left = self::afm_fail( $id, $role );
+			$events->record( $id, 0, 'sign_afm_fail', [ 'message' => 'Λάθος ΑΦΜ στη σελίδα υπογραφής' . $suffix ] );
+
+			if ( $left === 0 ) {
+				$minutes = (int) ceil( \EnergyCRM\Domain\Contract\SignProof::LOCK_SECONDS / 60 );
+
+				return new WP_REST_Response( [
+					'ok'      => false,
+					'locked'  => true,
+					'minutes' => $minutes,
+					'error'   => 'Πολλές λάθος προσπάθειες. Δοκιμάστε ξανά σε ' . $minutes . ' λεπτά ή επικοινωνήστε με τον συνεργάτη σας.',
+				], 429 );
+			}
+
+			return new WP_REST_Response( [
+				'ok'    => false,
+				'left'  => $left,
+				'error' => 'Το ΑΦΜ δεν ταιριάζει με την αίτηση. ' . ( $left === 1 ? 'Απομένει 1 προσπάθεια.' : 'Απομένουν ' . $left . ' προσπάθειες.' ),
+			], 403 );
+		}
+
+		delete_transient( self::afm_key( $id, $role ) );
+		$events->record( $id, 0, 'sign_afm_ok', [ 'message' => 'Ο πελάτης επιβεβαίωσε το ΑΦΜ του στη σελίδα υπογραφής' . $suffix ] );
+
+		return new WP_REST_Response( [
+			'ok'    => true,
+			'proof' => \EnergyCRM\Domain\Contract\SignProof::makeProof( $id, $role, time(), self::key_for( $id ) ),
+		], 200 );
+	}
+
+	/**
+	 * Φτιάχνει και αποθηκεύει το «Αποδεικτικό ηλεκτρονικής υπογραφής» του
+	 * ρόλου που μόλις υπέγραψε — docs/UI-SIGN-AFM.html, οθόνη 4.
+	 *
+	 * Οι ώρες του χρονολογίου είναι ΟΛΕΣ από το ιστορικό (ίδιο ρολόι, της
+	 * βάσης): γι' αυτό γράφεται πρώτα το γεγονός της συναίνεσης. Ποτέ δεν
+	 * ρίχνει την υπογραφή: αν κάτι αποτύχει εδώ, η υπογραφή έχει ήδη γραφτεί.
+	 *
+	 * @param list<string> $required
+	 */
+	private static function store_sign_proof( int $id, string $role, array $required, string $png, string $sig_path, string $ip, string $ua, string $signed_pdf ): void {
+		try {
+			$events = \EnergyCRM\Services::events();
+			$events->record( $id, 0, 'sign_consent', [
+				'message' => 'Ο πελάτης αποδέχτηκε τη συναίνεση και υπέγραψε στη σελίδα υπογραφής' . self::role_suffix( $role, $required ),
+			] );
+
+			if ( ! class_exists( 'ECRM_PDF' ) || ! class_exists( 'ECRM_Files' ) ) {
+				return;
+			}
+
+			$full = \EnergyCRM\Services::contractDetails()->forDocument( $id );
+			if ( ! $full ) {
+				return;
+			}
+			$extra = json_decode( (string) ( $full['extra_json'] ?? '' ), true );
+			$extra = is_array( $extra ) ? $extra : [];
+
+			$main    = $full['company_name'] ?: trim( ( $full['first_name'] ?? '' ) . ' ' . ( $full['last_name'] ?? '' ) );
+			$primary = \EnergyCRM\Domain\Contract\SignatureRoles::primaryRoleFor( (string) ( $full['energy_type'] ?? '' ), $required );
+			$signer  = ( $role === $primary || count( $required ) < 2 )
+				? $main
+				: (string) ( $extra[ $role === \EnergyCRM\Domain\Contract\SignatureRoles::ENERGY ? 'combo_energy_name' : 'combo_mobile_name' ] ?? '' );
+
+			$partner = '';
+			if ( ! empty( $full['partner_user_id'] ) ) {
+				$u       = get_userdata( (int) $full['partner_user_id'] );
+				$partner = $u ? (string) $u->display_name : '';
+			}
+
+			// Από την τελευταία αποστολή συνδέσμου και μετά, με τη σειρά που έγιναν.
+			$rows  = array_reverse( $events->forContract( $id ) );
+			$start = 0;
+			foreach ( $rows as $i => $e ) {
+				if ( str_starts_with( (string) $e['type'], 'sign_sent_' ) ) {
+					$start = $i;
+				}
+			}
+			$channels = [ 'sign_sent_sms' => 'SMS', 'sign_sent_email' => 'email', 'sign_sent_link' => 'σύνδεσμος' ];
+			$timeline = [];
+			$fails    = 0;
+			$first    = '';
+			foreach ( array_slice( $rows, $start ) as $e ) {
+				$type = (string) $e['type'];
+				$when = \EnergyCRM\Domain\Contract\SignProof::stamp( (string) $e['created_at'] );
+				if ( isset( $channels[ $type ] ) ) {
+					$who        = (int) $e['user_id'] > 0 ? get_userdata( (int) $e['user_id'] ) : null;
+					$timeline[] = [ $when, 'Στάλθηκε ο σύνδεσμος υπογραφής (' . $channels[ $type ] . ')' . ( $who ? ' από ' . $who->display_name : '' ) ];
+				} elseif ( $type === 'sign_afm_fail' ) {
+					$fails++;
+					$first = $first ?: $when;
+				} elseif ( $type === 'sign_afm_ok' ) {
+					if ( $fails > 0 ) {
+						$timeline[] = [ $first, 'Λάθος ΑΦΜ (' . ( $fails === 1 ? '1 προσπάθεια' : $fails . ' προσπάθειες' ) . ')' ];
+						$fails      = 0;
+						$first      = '';
+					}
+					$timeline[] = [ $when, 'Επιβεβαιώθηκε το ΑΦΜ' ];
+				} elseif ( $type === 'sign_consent' ) {
+					$timeline[] = [ $when, 'Αποδοχή συναίνεσης και υπογραφή' ];
+				}
+			}
+
+			$code  = (string) ( $full['code'] ?: ( 'symvasi-' . $id ) );
+			$bytes = ECRM_PDF::build_sign_proof( [
+				'code'     => $code,
+				'provider' => trim( (string) ( $full['provider_name'] ?? '' ) . ' · ' . (string) ( $full['program_name'] ?? '' ), ' ·' ),
+				'signer'   => $signer !== '' ? $signer : '—',
+				'afm'      => \EnergyCRM\Domain\Contract\SignProof::maskAfm( ECRM_Validate::digits( \EnergyCRM\Domain\Contract\SignProof::expectedAfm( $full, $extra, $role, $required ) ) ),
+				'partner'  => $partner,
+				'timeline' => $timeline,
+				'ip'       => \EnergyCRM\Domain\Contract\SignProof::maskIp( $ip ),
+				'device'   => \EnergyCRM\Domain\Contract\SignProof::deviceLabel( $ua ),
+				'consent'  => self::consent_text(),
+				'sig_path' => $sig_path !== '' ? $sig_path : null,
+				'hash_doc' => $signed_pdf !== '' ? hash( 'sha256', $signed_pdf ) : '',
+				'hash_sig' => hash( 'sha256', $png ),
+				'note'     => $signed_pdf === '' ? 'Το υπογεγραμμένο έντυπο ολοκληρώνεται όταν υπογράψει και το δεύτερο πρόσωπο.' : '',
+			] );
+
+			$name   = $code . '-apodeiktiko' . ( $role === \EnergyCRM\Domain\Contract\SignatureRoles::ENERGY ? '-energeias' : '' ) . '.pdf';
+			$stored = $bytes !== '' ? ECRM_Files::put_bytes( $bytes, 'pdf', 'application/pdf', $name ) : null;
+			if ( $stored ) {
+				\EnergyCRM\Services::files()->replaceKind( $id, \EnergyCRM\Domain\Contract\SignProof::kindFor( $role ), $name, 'application/pdf', $stored['path'] );
+			}
+		} catch ( \Throwable $e ) {
+			// Το αποδεικτικό δεν ρίχνει ποτέ την υπογραφή. Το γεγονός μένει στο ιστορικό.
+			unset( $e );
+		}
 	}
 
 	// --- REST: customer document upload ------------------------------------
@@ -890,6 +1172,22 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	.btn--sign { background:var(--accent); color:var(--accent-text); width:100%; margin-top:14px; height:46px; font-size:14px; font-weight:700; transition:filter .15s; }
 	.btn--sign:hover:not(:disabled) { filter:brightness(1.08); }
 	.btn--sign:disabled { opacity:.5; cursor:not-allowed; }
+	/* (354b) Το ΑΦΜ πριν από την υπογραφή — docs/UI-SIGN-AFM.html. */
+	.afm { display:flex; gap:8px; }
+	.afm input { flex:1; min-width:0; height:46px; border-radius:8px; border:1px solid var(--line2); background:var(--fill); color:var(--ink);
+		font:inherit; font-size:18px; letter-spacing:.18em; padding:0 14px; font-variant-numeric:tabular-nums; }
+	.afm input:focus { outline:none; border-color:var(--accent); }
+	.afm input.is-err { border-color:var(--err); }
+	.btn--go { background:var(--accent); color:var(--accent-text); height:46px; font-weight:700; }
+	.btn--go:disabled { opacity:.5; cursor:not-allowed; }
+	.afm-note { margin-top:8px; font-size:12px; color:var(--ink3); line-height:1.5; min-height:16px; }
+	.afm-note.is-err { color:var(--err); }
+	.lock { text-align:center; padding:18px 8px 6px; }
+	.lock__i { width:46px; height:46px; border-radius:50%; background:var(--fill); border:1px solid var(--line2); color:var(--ink3);
+		display:grid; place-items:center; font-size:20px; margin:0 auto 12px; }
+	.lock p { margin:0; color:var(--ink2); font-size:13px; line-height:1.55; }
+	.verified { display:inline-flex; align-items:center; gap:6px; margin-bottom:10px; padding:4px 10px; border-radius:999px;
+		background:var(--ok-bg); color:var(--ok); font-size:12px; font-weight:700; }
 	.consent { display:flex; gap:10px; align-items:flex-start; margin-top:14px; font-size:12px; color:var(--ink2); line-height:1.5; }
 	.consent input { margin-top:1px; flex:0 0 18px; width:18px; height:18px; accent-color:var(--accent); }
 	.signed-ok { text-align:center; padding:14px 10px; }
@@ -955,6 +1253,14 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	var TOKEN_OK = <?php echo $token_ok ? 'true' : 'false'; ?>;
 	var CONSENT_TEXT = <?php echo wp_json_encode( $consent_text ); ?>;
 	var SIGN = REST + '/sign';
+	var AFM = REST + '/afm';
+	// (354b) Η επιβεβαίωση ΑΦΜ ζει όσο η καρτέλα (30 λεπτά στον server). Σε
+	// ιδιωτική περιήγηση το sessionStorage μπορεί να πετάξει· τότε μένει μόνο
+	// στη μεταβλητή και ένα ανανέωμα σελίδας ξαναζητά ΑΦΜ.
+	var AFM_KEY = 'ecrm_afm_' + REST;
+	var AFM_PROOF = '';
+	try { AFM_PROOF = sessionStorage.getItem(AFM_KEY) || ''; } catch (e) {}
+	function setProof(v){ AFM_PROOF = v || ''; try { if (v) sessionStorage.setItem(AFM_KEY, v); else sessionStorage.removeItem(AFM_KEY); } catch (e) {} }
 	var content = document.getElementById('content');
 	// Το μελάνι της υπογραφής, από το --pad-ink του :root — ΟΧΙ το --ink. ΔΕΝ
 	// ξαναγράφεται εδώ: ο καμβάς γίνεται PNG που μπαίνει στο υπογεγραμμένο PDF,
@@ -1042,9 +1348,21 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 
 		var tail = '<div style="text-align:center"><span class="badge">'+esc(d.status_label)+'</span></div>';
 
-		if (d.can_sign) {
+		if (d.can_sign && d.afm_locked > 0) {
+			tail += lockHtml(d.afm_locked);
+		} else if (d.can_sign && !AFM_PROOF) {
+			tail +=
+				'<div class="sign" id="signbox">'+
+					'<h2>Υπογραφή σύμβασης</h2>'+
+					'<p class="lead">Για να υπογράψετε, γράψτε πρώτα το ΑΦΜ σας. Το ζητάμε για να βεβαιωθούμε ότι υπογράφετε εσείς.</p>'+
+					'<div class="afm"><input id="afm" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="ΑΦΜ (9 ψηφία)" aria-label="ΑΦΜ">'+
+					'<button type="button" class="btn btn--go" id="afmgo" disabled>Συνέχεια</button></div>'+
+					'<div class="afm-note" id="afmnote" role="status"></div>'+
+				'</div>';
+		} else if (d.can_sign) {
 			tail +=
 				'<div class="sign">'+
+					'<span class="verified">✓ Το ΑΦΜ επιβεβαιώθηκε</span>'+
 					'<h2>Υπογραφή σύμβασης</h2>'+
 					'<p class="lead">Υπογράψτε στο πλαίσιο με το δάχτυλο ή το ποντίκι για να ολοκληρωθεί η αίτησή σας.</p>'+
 					'<canvas class="pad is-empty" id="pad"></canvas>'+
@@ -1081,7 +1399,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 		tail += docsHtml(d.docs);
 
 		content.innerHTML = info + steps + tail;
-		if (d.can_sign) initPad();
+		if (d.can_sign && !(d.afm_locked > 0)) { if (AFM_PROOF) initPad(); else initAfm(); }
 		initDocs();
 	}
 
@@ -1204,6 +1522,47 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 		if (camInput) { camInput.addEventListener('change', function(){ handleFile(camInput.files && camInput.files[0]); }); }
 	}
 
+	function lockHtml(minutes){
+		return '<div class="sign"><div class="lock"><div class="lock__i">⏱</div>'+
+			'<p><b>Πολλές λάθος προσπάθειες.</b><br>Δοκιμάστε ξανά σε '+esc(minutes)+' λεπτά ή επικοινωνήστε με τον συνεργάτη σας.</p></div></div>';
+	}
+
+	// (354b) «Γράψτε το ΑΦΜ σας»: ο server συγκρίνει, εδώ μόνο ρωτάμε.
+	function initAfm(){
+		var input = document.getElementById('afm');
+		var go = document.getElementById('afmgo');
+		var note = document.getElementById('afmnote');
+		if(!input || !go) return;
+		function digits(){ return input.value.replace(/\D+/g, ''); }
+		input.addEventListener('input', function(){
+			input.classList.remove('is-err');
+			go.disabled = digits().length !== 9;
+		});
+		input.addEventListener('keydown', function(e){ if(e.key === 'Enter' && !go.disabled){ e.preventDefault(); go.click(); } });
+		go.addEventListener('click', function(){
+			go.disabled = true; go.textContent = 'Έλεγχος…'; note.textContent = ''; note.className = 'afm-note';
+			fetch(AFM, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ afm: digits() }) })
+				.then(function(r){ return r.json().catch(function(){ return null; }); })
+				.then(function(res){
+					if(res && res.ok && res.proof){ setProof(res.proof); load(); return; }
+					if(res && res.locked){
+						var box = document.getElementById('signbox');
+						if(box) box.outerHTML = lockHtml(res.minutes || 15);
+						return;
+					}
+					go.disabled = false; go.textContent = 'Συνέχεια';
+					input.classList.add('is-err');
+					note.className = 'afm-note is-err';
+					note.textContent = (res && res.error) || 'Δεν ήταν δυνατός ο έλεγχος. Δοκιμάστε ξανά.';
+					if(res && res.expired){ load(); }
+				})
+				.catch(function(){
+					go.disabled = false; go.textContent = 'Συνέχεια';
+					note.className = 'afm-note is-err'; note.textContent = 'Σφάλμα δικτύου. Δοκιμάστε ξανά.';
+				});
+		});
+	}
+
 	function initPad(){
 		var canvas = document.getElementById('pad');
 		var clearBtn = document.getElementById('clear');
@@ -1254,10 +1613,11 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 			if(empty || !consent.checked) return;
 			doBtn.disabled = true; doBtn.textContent = 'Αποστολή…';
 			var data = canvas.toDataURL('image/png');
-			fetch(SIGN, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ signature:data, consent:true }) })
+			fetch(SIGN, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ signature:data, consent:true, afm_proof: AFM_PROOF }) })
 				.then(function(r){ return r.json(); })
 				.then(function(res){
-					if(res && res.ok){ load(); }
+					if(res && res.ok){ setProof(''); load(); }
+					else if(res && res.needs_afm){ setProof(''); load(); }
 					else { doBtn.disabled=false; doBtn.textContent='Υπογραφή & Αποστολή'; alert((res && res.error) || 'Αποτυχία.'); }
 				})
 				.catch(function(){ doBtn.disabled=false; doBtn.textContent='Υπογραφή & Αποστολή'; alert('Σφάλμα δικτύου.'); });

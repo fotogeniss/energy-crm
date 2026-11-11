@@ -3199,11 +3199,16 @@ import { openDialog } from '@energy-crm/dialog';
 			});
 		}
 
+		/* (354) Η «Οριστικοποίηση» βάζει την αίτηση κατευθείαν σε Καταχώρηση
+		 * (11/11/2026, αίτημα ιδιοκτήτη), ώστε να μπορεί να σταλεί αμέσως για
+		 * υπογραφή. Ως τότε έγραφε Presale. */
+		var FINAL = 'registration';
+
 		function save(status, btn, checked) {
-			if (status === 'presale' && !state.provider_id) { toast('Διάλεξε πάροχο πρώτα.', false); return; }
+			if (status === FINAL && !state.provider_id) { toast('Διάλεξε πάροχο πρώτα.', false); return; }
 			// GDPR: consent required to finalize.
 			var consentEl = q('[data-consent]');
-			if (status === 'presale' && consentEl && !consentEl.checked) {
+			if (status === FINAL && consentEl && !consentEl.checked) {
 				toast('Απαιτείται η συναίνεση του πελάτη (GDPR) για οριστικοποίηση.', false);
 				consentEl.focus();
 				return;
@@ -3215,24 +3220,24 @@ import { openDialog } from '@energy-crm/dialog';
 			// — DraftExitGate, from both endpoints — and this is here so the
 			// agent is told before the round trip, next to the field.
 			var afmv = readField('afm');
-			if (status === 'presale' && !afmv) {
+			if (status === FINAL && !afmv) {
 				toast('Χρειάζεται ΑΦΜ πελάτη για την οριστικοποίηση.', false);
 				fieldNote(afmEl, 'Συμπλήρωσε το ΑΦΜ του πελάτη.', 'err');
 				if (afmEl) afmEl.focus();
 				return;
 			}
-			if (status === 'presale' && afmv && !validAfm(afmv)) {
+			if (status === FINAL && afmv && !validAfm(afmv)) {
 				toast('Μη έγκυρο ΑΦΜ — διόρθωσέ το πριν την οριστικοποίηση.', false);
 				fieldNote(afmEl, 'Μη έγκυρο ΑΦΜ (έλεγχος ψηφίου).', 'err');
 				return;
 			}
 			// (341) Έλεγχος πριν την αποστολή, μία φορά ανά πάτημα.
-			if (status === 'presale' && !checked) {
+			if (status === FINAL && !checked) {
 				preflight(function () { save(status, btn, true); });
 				return;
 			}
 			// Duplicate check on finalize: warn if same ΑΦΜ or παροχή already exists.
-			if (status === 'presale') {
+			if (status === FINAL) {
 				var afm = readField('afm'), supply = readField('supply_number');
 				if (afm || supply) {
 					btn.disabled = true;
@@ -3288,7 +3293,7 @@ import { openDialog } from '@energy-crm/dialog';
 				 * ιδιοκτήτη, 15/10). Το «Αποθήκευση προσωρινά» μένει στη φόρμα
 				 * επίτηδες: εκεί ο συνεργάτης συνεχίζει, και η επόμενη αποθήκευση
 				 * με το ΙΔΙΟ κλειδί αντικαθιστά την εγγραφή της ουράς. */
-				if (payload.status === 'presale') {
+				if (payload.status === FINAL) {
 					resetForm();
 					try { window.scrollTo(0, 0); } catch (e) {}
 					toast('✓ Η αίτηση κρατήθηκε στο κινητό και θα σταλεί αυτόματα μόλις υπάρξει σύνδεση. Ξεκίνα νέα αίτηση.');
@@ -3325,7 +3330,7 @@ import { openDialog } from '@energy-crm/dialog';
 							? 'Η αίτηση είχε ήδη καταχωρηθεί -- δεν δημιουργήθηκε δεύτερη.'
 							: (!status
 								? 'Οι αλλαγές αποθηκεύτηκαν.'
-								: (status === 'draft' ? 'Αποθηκεύτηκε προσωρινά.' : 'Η αίτηση οριστικοποιήθηκε.')));
+								: (status === 'draft' ? 'Αποθηκεύτηκε προσωρινά.' : 'Η αίτηση καταχωρήθηκε. Μπορείς να τη στείλεις για υπογραφή.')));
 						// Finalising moves the form off draft, so the pair of
 						// buttons on screen has to move with it.
 						setStage(status || state.status);
@@ -3336,7 +3341,7 @@ import { openDialog } from '@energy-crm/dialog';
 				.finally(function () { btn.disabled = false; });
 		}
 		q('[data-save-draft]').addEventListener('click', function () { save('draft', this); });
-		q('[data-finalize]').addEventListener('click', function () { save('presale', this); });
+		q('[data-finalize]').addEventListener('click', function () { save(FINAL, this); });
 		// No status in the payload: collect() puts `status: undefined`, which
 		// JSON.stringify drops, and contractFrom() then omits the column
 		// entirely — the same no-op path an ordinary field edit already takes.

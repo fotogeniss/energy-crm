@@ -37,6 +37,15 @@ final class SystemKindTest extends TestCase
         self::assertFalse(SystemKind::isApplication('signature'));
     }
 
+    public function testTheSignProofIsShownWithAFixedLabelAndNeverRead(): void
+    {
+        self::assertTrue(SystemKind::isSystem('sign_proof'));
+        self::assertTrue(SystemKind::isSystem('sign_proof_energy'));
+        self::assertFalse(SystemKind::isApplication('sign_proof'), 'Φαίνεται στα «Έγγραφα».');
+        self::assertSame('Αποδεικτικό υπογραφής', SystemKind::label('sign_proof'));
+        self::assertSame('Αποδεικτικό υπογραφής (πελάτης ενέργειας)', SystemKind::label('sign_proof_energy'));
+    }
+
     public function testUploadedDocumentsAreNeverSystem(): void
     {
         foreach (['id_card', 'provider_bill', 'sim_card', 'iban', 'other', 'e9', ''] as $kind) {

@@ -99,7 +99,7 @@ final class ContractSaveStatusTest extends IntegrationTestCase
     /**
      * 2. A draft cannot jump the queue into a payable status.
      *
-     * Draft->allowedNext() is [presale, cancelled].
+     * Draft->allowedNext() is [presale, registration, cancelled].
      * Active is not among them, and it is what makes a contract count for
      * commission — which is why this one is about money rather than tidiness.
      */

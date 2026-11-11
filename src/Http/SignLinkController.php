@@ -36,6 +36,14 @@
  * API να το εξυπηρετήσει όταν η οθόνη υπάρξει, ίδιο μοτίβο με το
  * `AddProviderRefColumn` (η στήλη πριν από τη χρήση της).
  *
+ * ## Από πρόχειρο, από 11/11/2026 (354)
+ *
+ * Ως τότε ένα πρόχειρο αρνιόταν («δεν μπορεί να σταλεί για υπογραφή από
+ * εκεί»), γιατί από το πρόχειρο ο γράφος πήγαινε μόνο σε Presale. Τώρα το
+ * πρόχειρο περνά πρώτα σε Καταχώρηση, με τον ΙΔΙΟ έλεγχο ΑΦΜ που κάνει η
+ * «Οριστικοποίηση» (DraftExitGate), και μετά σε αναμονή υπογραφής. Δύο
+ * γραμμές στο ιστορικό, ό,τι ακριβώς έγινε.
+ *
  * @package EnergyCRM
  */
 
@@ -47,10 +55,12 @@ use ECRM_Admin;
 use ECRM_Tracking;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\SignatureRoles;
 use EnergyCRM\Infrastructure\DocumentQueue;
+use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Infrastructure\SignatureState;
 use ECRM_Messaging;
 use EnergyCRM\Persistence\ContractDetails;
@@ -75,6 +85,7 @@ final class SignLinkController implements Controller
         private readonly ContractLifecycle $lifecycle,
         private readonly EventRepository $events,
         private readonly SignatureState $signatures,
+        private readonly DraftExitGate $draftExit,
     ) {
     }
 
@@ -190,6 +201,12 @@ final class SignLinkController implements Controller
                 . ' καταργήθηκε';
         }
 
+        $registered = $this->registerDraft($id, $contract, $scope);
+
+        if ($registered !== null) {
+            return $registered;
+        }
+
         $moved = $this->lifecycle->moveTo($id, self::TARGET_STATUS, $moveOptions);
 
         // The old handler ignored this and handed back a working signing link
@@ -301,6 +318,48 @@ final class SignLinkController implements Controller
         $label = $status?->label() ?? (string) ($contract['status'] ?? '');
 
         return 'Η αίτηση είναι σε κατάσταση «' . $label . '» και δεν μπορεί να σταλεί για υπογραφή από εκεί.';
+    }
+
+    /**
+     * (354) Πρόχειρο → Καταχώρηση, πριν από την αναμονή υπογραφής.
+     *
+     * Null σημαίνει «προχώρα» (δεν ήταν πρόχειρο, ή έγινε Καταχώρηση). Κάθε
+     * άλλη τιμή είναι η άρνηση που επιστρέφεται αυτούσια: λείπει ΑΦΜ (ίδιο
+     * μήνυμα με την «Οριστικοποίηση»), ή ο γράφος δεν το επέτρεψε.
+     *
+     * @param array<string, mixed> $contract
+     */
+    private function registerDraft(int $id, array $contract, UserScope $scope): ?WP_REST_Response
+    {
+        if ((string) ($contract['status'] ?? '') !== ContractStatus::Draft->value) {
+            return null;
+        }
+
+        $missingAfm = $this->draftExit->refusalOnMove(
+            ContractStatus::Draft,
+            ContractStatus::Registration,
+            (int) ($contract['customer_id'] ?? 0),
+            $scope,
+            (string) ($contract['afm'] ?? '')
+        );
+
+        if ($missingAfm !== null) {
+            return new WP_REST_Response(['ok' => false, 'error' => $missingAfm], 422);
+        }
+
+        $moved = $this->lifecycle->moveTo($id, ContractStatus::Registration->value, [
+            'user_id' => $scope->actorId(),
+            'message' => 'Καταχώρηση από πρόχειρο, για αποστολή υπογραφής',
+        ]);
+
+        if (! $moved) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => 'Η αίτηση δεν μπόρεσε να περάσει από «Πρόχειρο» σε «Καταχώρηση».',
+            ], 409);
+        }
+
+        return null;
     }
 
     private function resolveChannel(WP_REST_Request $request): string

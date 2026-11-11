@@ -9,7 +9,7 @@
  * user is not shared — it is misplaced. */
 
 import { api, esc, fetch, H, markSubViewOpen, rejectedNote, toast, viewEl } from '@energy-crm/util';
-import { energyLabel, fmtDate, initials, svgIcon, timeAgo, tint } from '@energy-crm/format';
+import { contractStages, energyLabel, fmtDate, initials, svgIcon, timeAgo, tint } from '@energy-crm/format';
 import { go, openEdit } from '@energy-crm/navigate';
 import { confirmTyped, confirmTypedWithReason, openDialog } from '@energy-crm/dialog';
 import { storedForAi } from '@energy-crm/ai-docs';
@@ -38,6 +38,19 @@ function legacyCopy(text) {
 		document.body.removeChild(ta);
 		return ok;
 	} catch (e) { return false; }
+}
+/* (353h) Κλικ έξω από ανοιχτό «⋯» της καρτέλας το κλείνει. Ένας listener για
+ * όλη τη ζωή της σελίδας, όχι ένας ανά άνοιγμα καρτέλας. */
+document.addEventListener('click', function (e) {
+	document.querySelectorAll('[data-dh-more][open]').forEach(function (d) {
+		if (!d.contains(e.target)) { d.open = false; }
+	});
+});
+
+/* (353h) Η «Signature» είναι ανοιχτή; Ίδιος έλεγχος με τις άλλες οθόνες. */
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
 }
 export function openDetail(id) {
 	go('contract-detail');
@@ -412,7 +425,101 @@ function renderDetail(view, d) {
 			'</div>'
 		: '';
 
-	view.innerHTML = '' +
+	/* (353h) Τα κουμπιά ενεργειών, μία φορά: τα χρησιμοποιούν και η κλασική
+	   καρτέλα και η «Signature». Ίδια data-* και στις δύο, οπότε η καλωδίωση
+	   πιο κάτω (querySelector μέσα στο view) δεν ξέρει ποια ζωγραφίστηκε. */
+	var printBtnHTML = '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-printform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg> PDF έντυπο</button>';
+	var editBtnHTML = '<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-detail-edit>' + svgIcon('edit') + ' Επεξεργασία</button>';
+	var signBtnHTML = ( c.status !== 'active' && c.status !== 'cancelled'
+		? '<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>'
+		: '' );
+	// (326) «+ Αέριο / + Ρεύμα στον ίδιο πελάτη»: το γεμίζει η
+	// fillCompanion() μόλις απαντήσει το /companion -- κουμπί, ή σύνδεσμος
+	// αν η δίδυμη αίτηση υπάρχει ήδη.
+	var companionSlot = ( c.energy_type === 'power' || c.energy_type === 'gas' ? '<div data-companion-slot></div>' : '' );
+	var provBtnHTML = '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>';
+	var trackBtnHTML = (c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-track="' + esc(c.track_url) + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg> Σύνδεσμος παρακολούθησης</button>' : '');
+	var taskBtnHTML = '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-task-new="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέα εργασία</button>';
+	var delBtnHTML = '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--danger" data-detail-del="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>';
+
+	/* (353h) «Signature»: η ίδια καρτέλα, άλλος σκελετός -- docs/UI-REDESIGN-NEW-SKELETON.html,
+	 * καρτέλα «Καρτέλα αίτησης». Μεγάλο όνομα με τις ενέργειες δίπλα, λωρίδα με
+	 * τους πέντε σταθμούς, στοιχεία σε κουτάκια, έγγραφα ως μικρογραφίες, πορεία
+	 * δεξιά. ΤΑ ΙΔΙΑ κομμάτια με την κλασική (timeline, statusFlow, filesCard,
+	 * stuckCard, auditCard, checklist, παρατηρήσεις, κουμπιά): αλλάζει μόνο η
+	 * θέση τους, όχι τι κάνουν, οπότε καμία καλωδίωση δεν διπλασιάζεται. */
+	function sigDetailHTML() {
+		function fact(label, val, wide) {
+			return '<div class="sig-fact' + (val ? '' : ' is-empty') + (wide ? ' is-wide' : '') + '"><small>' + esc(label) + '</small><b>' + (val ? esc(val) : '—') + '</b></div>';
+		}
+		var stages = contractStages(c);
+		var ck = c.doc_checklist && c.doc_checklist.items && c.doc_checklist.items.length ? c.doc_checklist : null;
+		var sg = twoRoles ? c.signatures : null;
+		var subs = [
+			c.created_at ? fmtDate(c.created_at) : '',
+			ck ? ck.items.filter(function (it) { return it.ok; }).length + ' από ' + ck.items.length
+				: ((c.files || []).length ? (c.files.length === 1 ? '1 έγγραφο' : c.files.length + ' έγγραφα') : 'κανένα έγγραφο'),
+			c.signed_at ? signStamp(c.signed_at).slice(0, 10)
+				: sg ? sg.collected.length + ' από ' + sg.required.length
+				: (c.status === 'awaiting_signature' ? 'στάλθηκε' : ''),
+			'',
+			''
+		];
+		var marks = { ok: '✓ ', now: '● ', warn: '! ', stop: '✕ ', next: '' };
+		var stageHTML = '<ol class="sig-stage">' + stages.map(function (st, i) {
+			var sub = subs[i];
+			if (st.state === 'now' || st.state === 'warn' || st.state === 'stop') {
+				if (i >= 3 || st.state !== 'now') sub = statuses[c.status] || c.status;
+			}
+			if (i === 3 && st.state === 'ok' && c.status !== 'active') sub = statuses[c.status] || c.status;
+			return '<li class="sig-stage__s is-' + esc(st.state) + '"><b>' + marks[st.state] + esc(st.label) + '</b><small>' + (sub ? esc(sub) : ' ') + '</small></li>';
+		}).join('') + '</ol>';
+
+		var sub = ['#' + (c.code || c.id), [c.provider_name, c.program_name].filter(Boolean).join(' '),
+			c.created_at ? 'δημιουργήθηκε ' + fmtDate(c.created_at) : ''].filter(Boolean).join(' · ');
+
+		var mobile = c.energy_type === 'mobile';
+		var who = fact('ΑΦΜ', c.afm) + fact('ΔΟΥ', c.doy) + fact('ΑΔΤ', c.adt) +
+			fact('Κινητό', c.mobile) + fact('Τηλέφωνο', c.phone) + fact('Email', c.email, true) +
+			fact('Πατρώνυμο', c.father_name) + fact('Ημ. γέννησης', c.birth_date);
+		var where = fact('Διεύθυνση', [c.street, c.street_no].filter(Boolean).join(' ')) +
+			fact('Πόλη / ΤΚ', [c.city, c.postal_code].filter(Boolean).join(' · ')) + fact('Νομός', c.region) +
+			(mobile ? '' : fact('Αρ. παροχής', c.supply_number) + fact('Μετρητής', c.meter_number) + fact('Τιμολόγιο', c.invoice_code)) +
+			fact('Πάροχος', c.provider_name) + fact('Πρόγραμμα', c.program_name) + fact('Αριθμός αίτησης', c.provider_ref) +
+			fact('Είδος', energy) + fact('Ενεργοποίηση', acts[c.activation_type] || c.activation_type);
+
+		return '<div class="sig-detail">' +
+			'<button type="button" class="sig-detail__back" data-go="contracts"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg> Αιτήσεις</button>' +
+			'<header class="sig-dh">' +
+				'<span class="sig-dh__av" style="--h:' + tint(name) + '">' + esc(initials(name)) + '</span>' +
+				'<div class="sig-dh__who"><h2>' + esc(name) + '</h2><small>' + esc(sub) +
+					(c.consent_at ? ' <span class="sig-dh__gdpr" title="Συναίνεση: ' + esc(fmtDate(c.consent_at)) + '">✓ GDPR</span>' : '') + '</small></div>' +
+				'<div class="sig-dh__acts">' + signBtnHTML + editBtnHTML + companionSlot +
+					'<details class="sig-dh__more" data-dh-more><summary aria-label="Περισσότερες ενέργειες">⋯</summary>' +
+					'<div class="sig-dh__menu">' + printBtnHTML + provBtnHTML + trackBtnHTML + taskBtnHTML + delBtnHTML + '</div></details>' +
+				'</div>' +
+			'</header>' +
+			stageHTML +
+			'<div class="sig-dgrid"><div class="sig-dmain">' +
+				'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Στοιχεία πελάτη</h3><div class="sig-facts">' + who + '</div>' +
+				'<h3 class="sig-ch">' + (mobile ? 'Διεύθυνση και πρόγραμμα' : 'Παροχή και πρόγραμμα') + '</h3><div class="sig-facts">' + where + '</div>' +
+				(c.notes ? '<div class="sig-notes"><small>Σχόλια</small>' + esc(c.notes) + '</div>' : '') +
+				'</section>' +
+				filesCard(c) +
+				'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Αλλαγή κατάστασης</h3>' + statusFlow + '</section>' +
+			'</div><aside class="sig-dside">' +
+				stuckCard(c) +
+				auditCard +
+				'<section class="ecrm-card ecrm-rcard sig-dcard' + (done === checks.length ? ' is-ok' : '') + '">' +
+				'<h3 class="sig-ch">Checklist <b>' + done + '/' + checks.length + '</b></h3>' + checklistHTML + '</section>' +
+				'<div data-remarks-wrap>' + remarksCard(c) + '</div>' +
+				'<section class="ecrm-card sig-dcard"><h3 class="sig-ch">Πορεία</h3>' + timeline + '</section>' +
+			'</aside></div></div>';
+	}
+
+	if (isSignature()) {
+		view.innerHTML = sigDetailHTML();
+	} else view.innerHTML = '' +
 		'<div class="ecrm-detail2"><div class="ecrm-detail2__main">' +
 
 		'<div class="ecrm-dhead">' +
@@ -420,8 +527,8 @@ function renderDetail(view, d) {
 		'<div class="ecrm-dhead__who"><h2 class="ecrm-dhead__name">' + esc(name) + '</h2>' +
 		'<div class="ecrm-dhead__sub">' + esc(c.code || '') + (c.created_at ? ' · δημιουργία ' + esc(fmtDate(c.created_at)) : '') + '</div></div>' +
 		'<div class="ecrm-dhead__acts">' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-printform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg> PDF έντυπο</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-detail-edit>' + svgIcon('edit') + ' Επεξεργασία</button>' +
+		printBtnHTML +
+		editBtnHTML +
 		'</div></div>' +
 
 		'<div class="ecrm-dsum"><span class="ecrm-badge ecrm-badge--' + esc(c.status) + '">' + esc(statuses[c.status] || c.status) + '</span>' +
@@ -485,21 +592,23 @@ function renderDetail(view, d) {
 		// ΑΦΟΡΑ ΟΛΟΥΣ ΤΟΥΣ ΠΑΡΟΧΟΥΣ — καμία σχέση με energy_type/Orizon.
 		// 05/10/2026: όλες οι ενδιάμεσες πάνε πλέον ελεύθερα σε Αναμονή
 		// υπογραφής, οπότε το κουμπί κρύβεται μόνο σε Ενεργό και Ακυρώθηκε.
-		( c.status !== 'active' && c.status !== 'cancelled'
-			? '<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>'
-			: '' ) +
-		// (326) «+ Αέριο / + Ρεύμα στον ίδιο πελάτη»: το γεμίζει η
-		// fillCompanion() μόλις απαντήσει το /companion -- κουμπί, ή σύνδεσμος
-		// αν η δίδυμη αίτηση υπάρχει ήδη.
-		( c.energy_type === 'power' || c.energy_type === 'gas' ? '<div data-companion-slot></div>' : '' ) +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-provform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> Λήψη εντύπου παρόχου</button>' +
-		(c.track_url ? '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-track="' + esc(c.track_url) + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1.5 1.5M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1.5-1.5"/></svg> Σύνδεσμος παρακολούθησης</button>' : '') +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-task-new="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Νέα εργασία</button>' +
-		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--danger" data-detail-del="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg> Διαγραφή</button>' +
+		signBtnHTML + companionSlot + provBtnHTML + trackBtnHTML + taskBtnHTML + delBtnHTML +
 		'</div></aside></div>';
 
 
 	bindRemarks(view, c);
+
+	// (353h) Στο κινητό η λωρίδα σταθμών κυλά οριζόντια: ξεκινά από εκεί που βρίσκεται η αίτηση.
+	var stageNow = view.querySelector('.sig-stage .is-now, .sig-stage .is-warn, .sig-stage .is-stop');
+	if (stageNow && stageNow.parentNode.scrollWidth > stageNow.parentNode.clientWidth) {
+		stageNow.parentNode.scrollLeft = Math.max(0, stageNow.offsetLeft - stageNow.parentNode.offsetLeft - 14);
+	}
+
+	// (353h) Το «⋯» της Signature κλείνει μόλις διαλεχτεί κάτι (το έξω-κλικ: πιο κάτω, μία φορά).
+	var dhMore = view.querySelector('[data-dh-more]');
+	if (dhMore) dhMore.addEventListener('click', function (e) {
+		if (e.target.closest && e.target.closest('.sig-dh__menu button')) { dhMore.open = false; }
+	});
 
 	view.querySelectorAll('.ecrm-statuschip').forEach(function (b) {
 		b.addEventListener('click', function () {
