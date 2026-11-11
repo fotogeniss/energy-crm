@@ -7,9 +7,17 @@
  * το Domain\Pricing\ProgramPricing. Ο λογαριασμός μένει στη μνήμη της
  * σελίδας: ανεβαίνει στον server μόνο αν πατηθεί «Νέα αίτηση με αυτό», μαζί
  * με την αίτηση. Mockup: docs/UI-BILL-ADVISOR.html.
+ *
+ * (360) Νέα εμφάνιση «Signature»: «Η κάρτα για τον πελάτη», mockup
+ * docs/UI-QUOTE-FRESH.html, κατεύθυνση Β (εγκρίθηκε 11/11). Η απάντηση
+ * γίνεται μια μεγάλη κάρτα «κερδίζει Χ € τον χρόνο» με δύο μπάρες, οι
+ * εναλλακτικές δίπλα, και το «Δείξ' το στον πελάτη» την ανοίγει σε όλη την
+ * οθόνη. Ίδια κατάταξη, ίδια «Νέα αίτηση με αυτό» και PDF (data-bill-apply,
+ * data-bill-pdf)· η αναλυτική λίστα μένει στις «Λεπτομέρειες», ο
+ * χειροκίνητος υπολογισμός σε ένα «Χωρίς λογαριασμό;».
  */
 
-import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, providerMark, toast, viewEl } from '@energy-crm/util';
 import { openEdit } from '@energy-crm/navigate';
 
 var calcData = null;
@@ -25,10 +33,13 @@ function renderCalc(view) {
 	var provs = (calcData && calcData.providers) || [];
 	var provOpts = '<option value="">— Επιλογή —</option>' + provs.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('');
 
-	view.innerHTML =
-		'<header class="ecrm-head"><div class="ecrm-eyebrow">Εργαλείο πώλησης</div><h2 class="ecrm-title">Υπολογισμός Προσφοράς</h2>' +
-		'<p class="ecrm-sub">Εκτίμηση ετήσιου κόστους & οφέλους έναντι του τρέχοντος παρόχου</p></header>' +
-		advisorMarkup() +
+	var sig = isSignature();
+	view.innerHTML = (sig
+		? '<header class="sig-cuhead"><div><h2>Προσφορά</h2><p>Δείξε στον πελάτη πόσα κερδίζει</p></div></header>' +
+			advisorMarkup() + '<details class="sig-qmanual"><summary><span><b>Χωρίς λογαριασμό;</b> Βάλε κατανάλωση και τιμή με το χέρι.</span><i>Χειροκίνητα</i></summary>'
+		: '<header class="ecrm-head"><div class="ecrm-eyebrow">Εργαλείο πώλησης</div><h2 class="ecrm-title">Υπολογισμός Προσφοράς</h2>' +
+			'<p class="ecrm-sub">Εκτίμηση ετήσιου κόστους & οφέλους έναντι του τρέχοντος παρόχου</p></header>' +
+			advisorMarkup()) +
 		'<div class="ecrm-card"><div class="ecrm-calc">' +
 			'<div class="ecrm-calc__h">Χειροκίνητος υπολογισμός · ένα πρόγραμμα</div>' +
 			'<div class="ecrm-calc__grid">' +
@@ -50,7 +61,7 @@ function renderCalc(view) {
 			'<div class="ecrm-calc__result" data-calc-result></div>' +
 			'<div class="ecrm-calc__actions"><button type="button" class="ecrm-btn ecrm-btn--primary" data-calc-pdf><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg> PDF Προσφοράς</button></div>' +
 			'<p class="ecrm-hint">Η εκτίμηση αφορά χρέωση ενέργειας + πάγιο. Ρυθμιζόμενες χρεώσεις, φόροι και δημοτικά τέλη είναι κοινά μεταξύ παρόχων και δεν υπολογίζονται.</p>' +
-		'</div></div>';
+		'</div></div>' + (sig ? '</details>' : '');
 
 	wireAdvisor(view);
 
@@ -234,7 +245,7 @@ function readBill(view, file) {
 		return;
 	}
 
-	advisor.file = file; advisor.customer = null; advisor.result = null;
+	advisor.file = file; advisor.customer = null; advisor.result = null; advisor.pick = null;
 	status(view, 'Διαβάζω τον λογαριασμό…');
 
 	var fd = new FormData();
@@ -256,6 +267,9 @@ function readBill(view, file) {
 
 function fillRead(view, b) {
 	view.querySelector('[data-bill-read]').hidden = false;
+	// (360) Ο λογαριασμός διαβάστηκε: στη νέα εμφάνιση η ζώνη μαζεύει σε γραμμή.
+	var card = view.querySelector('.ecrm-bill');
+	if (card) { card.classList.add('has-read'); }
 	['provider_name', 'period_days', 'kwh', 'annual_kwh', 'price_kwh', 'fixed_month'].forEach(function (k) {
 		var el = view.querySelector('[data-b="' + k + '"]');
 		if (el) { el.value = b[k] != null ? b[k] : ''; el.classList.toggle('is-missing', b[k] == null); }
@@ -271,6 +285,7 @@ function scheduleCompare(view) {
 
 function compare(view) {
 	var box = view.querySelector('[data-bill-rank]');
+	advisor.pick = null; // νέα κατάταξη, η κάρτα ξεκινά από το καλύτερο
 	var kwh = +bval(view, 'annual_kwh');
 	if (!(kwh > 0)) { box.hidden = false; box.innerHTML = '<div class="ecrm-bill__miss">Συμπλήρωσε κατανάλωση για να γίνει η σύγκριση.</div>'; return; }
 
@@ -374,8 +389,15 @@ function renderRank(view, d) {
 			'</ul><p>Η τιμή τους μπαίνει στη σελίδα «Πάροχοι & Προγράμματα».</p></details>'
 		: '';
 
-	box.innerHTML = head + rows + miss +
-		'<p class="ecrm-hint">Ρυθμιζόμενες χρεώσεις, ΥΚΩ, φόροι και δημοτικά είναι ίδια σε όλους τους παρόχους και δεν υπολογίζονται. Κλιμακωτά και πακέτα υπολογίζονται με τον κανόνα τους· στα πακέτα δεν υπολογίζεται επιστροφή για κατανάλωση κάτω από το πακέτο.</p>';
+	var hint = '<p class="ecrm-hint">Ρυθμιζόμενες χρεώσεις, ΥΚΩ, φόροι και δημοτικά είναι ίδια σε όλους τους παρόχους και δεν υπολογίζονται. Κλιμακωτά και πακέτα υπολογίζονται με τον κανόνα τους· στα πακέτα δεν υπολογίζεται επιστροφή για κατανάλωση κάτω από το πακέτο.</p>';
+	if (isSignature()) {
+		box.innerHTML = sigQuoteHTML(view, d) +
+			'<details class="sig-qdetails"><summary><span><b>Θες τα νούμερα αναλυτικά;</b> Τιμές ανά kWh, κλιμάκια, πακέτα, όλα τα προγράμματα.</span><i>Λεπτομέρειες</i></summary>' +
+			head + rows + miss + hint + '</details>';
+		wireSigQuote(view, d);
+	} else {
+		box.innerHTML = head + rows + miss + hint;
+	}
 
 	box.querySelectorAll('[data-bill-apply]').forEach(function (b) {
 		b.addEventListener('click', function () { applyProgram(view, advisor.ranked[+b.getAttribute('data-bill-apply')]); });
@@ -444,4 +466,121 @@ function quotePdf(view, r, btn, d) {
 		})
 		.catch(function () { toast('Σφάλμα δικτύου.', false); })
 		.finally(function () { btn.disabled = false; btn.innerHTML = t; });
+}
+
+// ---------------------------------------------------------------------
+// (360) «Signature»: η κάρτα για τον πελάτη
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+function sigProviderLogo(r) {
+	var p = ((calcData && calcData.providers) || []).filter(function (x) { return +x.id === +r.provider_id; })[0];
+	return providerMark(r.provider, p && p.logo_url);
+}
+
+var SIG_KIND = { package: 'πακέτο', tiered: 'κλιμακωτό' };
+
+function sigKind(r) {
+	return SIG_KIND[r.rule && r.rule.kind] || (TYPE_LABEL[r.price_type] || '').toLowerCase();
+}
+
+/* Η κάρτα: το επιλεγμένο πρόγραμμα (advisor.pick, αλλιώς το πρώτο). */
+function sigQuoteHTML(view, d) {
+	var ranked = d.ranked || [];
+	if (!ranked.length) { return ''; }
+	var i = advisor.pick != null && ranked[advisor.pick] ? advisor.pick : 0;
+	var r = ranked[i];
+	var cur = d.current_annual;
+	var known = cur != null && r.saving != null;
+	var save = known ? r.saving : null;
+	var month = save != null ? Math.round(Math.abs(save) / 12) : null;
+	var today = bval(view, 'provider_name') || 'Σήμερα';
+
+	var big, sub;
+	if (save != null && save > 0) {
+		big = money(save) + ' <span>τον χρόνο</span>';
+		sub = 'κερδίζει ο πελάτης, <b>≈ ' + esc(String(month)) + ' € κάθε μήνα</b>, για την ίδια κατανάλωση.';
+	} else if (save != null) {
+		big = money(r.annual) + ' <span>τον χρόνο</span>';
+		sub = 'Πιο ακριβό από σήμερα κατά <b>' + money(Math.abs(save)) + '</b> τον χρόνο.';
+	} else {
+		big = money(r.annual) + ' <span>τον χρόνο</span>';
+		sub = 'κοστίζει η ενέργεια με αυτό το πρόγραμμα. Γράψε την τιμή του σήμερα για να φανεί το κέρδος.';
+	}
+
+	var top = Math.max(r.annual || 0, cur || 0) || 1;
+	var bars = (cur != null
+		? '<div><span>' + esc(today) + '</span><span class="sig-qbar"><i style="width:' + esc(String(Math.round(cur / top * 100))) + '%"></i></span><b>' + money(cur) + '</b></div>'
+		: '') +
+		'<div><span>Με εμάς</span><span class="sig-qbar is-us"><i style="width:' + esc(String(Math.round(r.annual / top * 100))) + '%"></i></span><b>' + money(r.annual) + '</b></div>';
+
+	var alts = ranked.slice(0, 6).map(function (x, j) {
+		if (j === i) { return ''; }
+		var val = x.saving != null
+			? '<b class="' + (x.saving >= 0 ? '' : 'is-neg') + '">' + (x.saving >= 0 ? '−' : '+') + money(Math.abs(x.saving)) + '</b>'
+			: '<b>' + money(x.annual) + '</b>';
+		var kind = sigKind(x);
+		return '<button type="button" class="sig-qalt" data-q-pick="' + esc(String(j)) + '">' +
+			'<span class="sig-qalt__nm">' + esc(withProvider(x.provider, x.name)) + (kind ? ' <em>' + esc(kind) + '</em>' : '') + '</span>' + val +
+			'<small>' + money(x.annual) + ' τον χρόνο' + (x.stale ? ' · παλιά τιμή' : '') + '</small></button>';
+	}).join('');
+
+	var kindNow = sigKind(r);
+	var card = '<div class="sig-qcard" data-q-card>' +
+		'<div class="sig-qcard__top">' + sigProviderLogo(r) + '<small>' + esc(r.name) + (kindNow ? ' · ' + esc(kindNow) : '') + '</small></div>' +
+		'<div class="sig-qcard__big' + (save != null && save <= 0 ? ' is-neg' : '') + '">' + big + '</div>' +
+		'<p class="sig-qcard__sub">' + sub + '</p>' +
+		'<div class="sig-qcard__duo">' + bars + '</div>' +
+		fitBlock(r, d.annual_kwh) +
+		'<div class="sig-qcard__acts">' +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary" data-bill-apply="' + esc(String(i)) + '">' + ICON_NEW + ' Νέα αίτηση με αυτό</button>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-bill-pdf="' + esc(String(i)) + '">' + ICON_DOC + ' PDF προσφοράς</button>' +
+		'</div></div>';
+
+	return '<div class="sig-qshow">' + card +
+		'<div class="sig-qalts">' + (alts ? '<h4>Άλλες επιλογές</h4>' + alts : '') +
+			'<button type="button" class="sig-qpresent" data-q-present>' +
+				'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>' +
+				'<span>Δείξ\u2019 το στον πελάτη<small>Όλη η οθόνη, μόνο η κάρτα</small></span></button>' +
+		'</div></div>';
+}
+
+function wireSigQuote(view, d) {
+	view.querySelectorAll('[data-q-pick]').forEach(function (b) {
+		b.addEventListener('click', function () { advisor.pick = +b.getAttribute('data-q-pick'); renderRank(view, d); });
+	});
+	var show = view.querySelector('[data-q-present]');
+	if (show) { show.addEventListener('click', function () { sigPresent(view); }); }
+}
+
+/* Η κάρτα σε όλη την οθόνη: χωρίς κουμπιά και τιμές ανά kWh. */
+function sigPresent(view) {
+	var card = view.querySelector('[data-q-card]');
+	if (!card) { return; }
+	var layer = document.createElement('div');
+	layer.className = 'sig-qstage';
+	layer.setAttribute('role', 'dialog');
+	layer.setAttribute('aria-label', 'Η προσφορά');
+	var copy = card.cloneNode(true);
+	copy.removeAttribute('data-q-card');
+	copy.querySelectorAll('.sig-qcard__acts, .ecrm-bill__fit').forEach(function (n) { n.remove(); });
+	layer.appendChild(copy);
+	var x = document.createElement('button');
+	x.type = 'button'; x.className = 'sig-qstage__x'; x.setAttribute('aria-label', 'Κλείσιμο'); x.textContent = '×';
+	layer.appendChild(x);
+	(document.getElementById('ecrm-app') || document.body).appendChild(layer);
+	function close() {
+		document.removeEventListener('keydown', onKey);
+		try { if (document.fullscreenElement) { document.exitFullscreen(); } } catch (e) { /* τίποτα */ }
+		layer.remove();
+	}
+	function onKey(e) { if (e.key === 'Escape') { close(); } }
+	x.addEventListener('click', close);
+	document.addEventListener('keydown', onKey);
+	try { if (layer.requestFullscreen) { layer.requestFullscreen().catch(function () {}); } } catch (e) { /* μένει απλή επικάλυψη */ }
+	x.focus();
 }
