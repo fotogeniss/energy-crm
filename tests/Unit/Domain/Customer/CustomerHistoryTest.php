@@ -34,7 +34,7 @@ final class CustomerHistoryTest extends TestCase
                 ['contract_id' => 7, 'partner_user_id' => 3, 'source' => 'qr', 'created_at' => '2026-10-08 10:00:00'],
             ],
             'files'     => [['contract_id' => 7, 'doc_kind' => 'provider_bill', 'created_at' => '2026-10-08 10:00:00']],
-        ], ['provider_bill' => 'Λογαριασμός παρόχου'], ['qr' => 'Από QR καταστήματος']);
+        ], ['provider_bill' => 'Λογαριασμός παρόχου'], ['qr' => 'Από το QR μου']);
 
         $titles = array_column($result['items'], 'title');
 
@@ -42,7 +42,7 @@ final class CustomerHistoryTest extends TestCase
             'Καταχώρηση → Ενεργός',
             'Ανέβηκε έγγραφο: Λογαριασμός παρόχου',
             'Νέα σύμβαση',
-            'Ήρθε ως επαφή: Από QR καταστήματος',
+            'Ήρθε ως επαφή: Από το QR μου',
         ], $titles);
         self::assertSame('ok', $result['items'][0]['tone']);
         self::assertSame('#1843 · Αέριο Protergia', $result['items'][0]['contract_ref']);

@@ -520,7 +520,7 @@ function openHandoff(leadId, lead, onAbort) {
 }
 
 /* (344) Η αφίσα με το QR, σε νέο παράθυρο για εκτύπωση. Ο σύνδεσμος παίρνει
- * `via=qr`, ώστε ο υποψήφιος να γραφτεί «Από QR καταστήματος». */
+ * `via=qr`, ώστε ο υποψήφιος να γραφτεί «Από το QR μου». */
 function openQrPoster(url, owner) {
 	var target = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'via=qr';
 	var page = URL.createObjectURL(new Blob([qrPosterHtml(target, owner || {})], { type: 'text/html' }));

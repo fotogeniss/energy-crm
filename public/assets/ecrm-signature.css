@@ -321,6 +321,13 @@
 .ecrm-app[data-ui="signature"] .sig-island__t b { display: block; font-size: var(--fs-13); font-weight: 600; }
 .ecrm-app[data-ui="signature"] .sig-island__t small { font-size: var(--fs-11-5); color: var(--sig-island-sub); }
 @keyframes sig-island { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+.ecrm-app[data-ui="signature"] .sig-island__x {
+	margin-left: 4px; width: 28px; height: 28px; flex: 0 0 28px; border: 0; border-radius: 50%; cursor: pointer;
+	background: rgba(255, 255, 255, .12); color: var(--sig-island-ink); font-size: var(--fs-12); line-height: 1;
+}
+.ecrm-app[data-ui="signature"] .sig-island__x:hover { background: rgba(255, 255, 255, .24); }
+.ecrm-app[data-ui="signature"] .sig-island.is-gone { animation: sig-island-out .25s ease-in both; }
+@keyframes sig-island-out { from { opacity: 1; } to { opacity: 0; transform: translateY(-12px) scale(.9); } }
 
 @media (max-width: 1100px) {
 	.ecrm-app[data-ui="signature"] .sig-grid, .ecrm-app[data-ui="signature"] .sig-grid--3 { grid-template-columns: 1fr; }
@@ -1183,6 +1190,62 @@
 	.ecrm-app[data-ui="signature"] .sig-kpis b { font-size: var(--fs-22); }
 	.ecrm-app[data-ui="signature"] .sig-custlist li { flex-wrap: wrap; row-gap: 6px; }
 	.ecrm-app[data-ui="signature"] .sig-custlist__end { min-width: 0; margin-left: auto; }
+}
+
+/* ═══ (357) Εκκρεμότητες, Κολλημένες αιτήσεις, Λήξεις: γραμμές-κάρτες ═══
+ * Markup: sigPendingHTML(), sigRenewalsHTML() και οι .ecrm-mgrrow των Κολλημένων. */
+.ecrm-app[data-ui="signature"] [data-view="pending"],
+.ecrm-app[data-ui="signature"] [data-view="escalations"],
+.ecrm-app[data-ui="signature"] [data-view="renewals"] { max-width: 1100px; margin: 0 auto; width: 100%; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-rows,
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrgroup {
+	list-style: none; margin: 0; padding: 4px 0; border-radius: 22px; background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; position: relative; }
+.ecrm-app[data-ui="signature"] .sig-row.ecrm-rowlink { cursor: pointer; }
+.ecrm-app[data-ui="signature"] .sig-row.ecrm-rowlink:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-row:first-child { border-radius: 22px 22px 0 0; }
+.ecrm-app[data-ui="signature"] .sig-row:last-child { border-radius: 0 0 22px 22px; }
+.ecrm-app[data-ui="signature"] .sig-row + .sig-row::before { content: ""; position: absolute; top: 0; left: 70px; right: 16px; height: 1px; background: var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-row--wrap { flex-wrap: wrap; }
+.ecrm-app[data-ui="signature"] .sig-row__av {
+	width: 40px; height: 40px; flex: 0 0 40px; border-radius: 13px; display: grid; place-items: center;
+	font-size: var(--fs-13); font-weight: 800; color: var(--sig-on-btn);
+	background: linear-gradient(135deg, hsl(var(--h, 140) 62% 58%), hsl(var(--h, 140) 62% 40%));
+}
+.ecrm-app[data-ui="signature"] .sig-row__who { flex: 1; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-row__who b { display: block; font-size: var(--fs-15); font-weight: 600; color: var(--sig-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-row__who small { display: block; font-size: var(--fs-12-5); color: var(--sig-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-app[data-ui="signature"] .sig-row__offer {
+	flex: 1 1 100%; margin: 2px 0 0 54px; padding: 10px 12px; border-radius: 14px; background: var(--sig-fill);
+	font-size: var(--fs-13); color: var(--sig-ink-2); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.ecrm-app[data-ui="signature"] .sig-row__offer .ecrm-input { width: 130px; border-radius: 999px; }
+.ecrm-app[data-ui="signature"] .sig-row__offer .ecrm-renew-offer__kwh { display: inline-flex; gap: 6px; align-items: center; }
+.ecrm-app[data-ui="signature"] .sig-age {
+	flex: 0 0 auto; padding: 4px 12px; border-radius: 999px; font-size: var(--fs-12-5); font-weight: 600;
+	background: var(--sig-fill); color: var(--sig-ink-2); font-variant-numeric: tabular-nums;
+}
+.ecrm-app[data-ui="signature"] .sig-age.is-warn { background: var(--sig-amber-t); color: var(--sig-amber); }
+.ecrm-app[data-ui="signature"] .sig-age.is-bad { background: var(--sig-rose-t); color: var(--sig-rose); }
+
+/* Κολλημένες: οι ομάδες ως κάρτες, το ίδιο markup γραμμών. */
+.ecrm-app[data-ui="signature"] .sig-stuck { display: flex; flex-direction: column; gap: 16px; }
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrgroup { margin: 0; }
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrgroup__head { margin: 0; padding: 14px 16px 8px; }
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrgroup__name { font-size: var(--fs-16); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrgroup__n { color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrrow { padding: 12px 16px; border-top-color: var(--sig-hair-2); cursor: pointer; }
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrrow:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] [data-view="escalations"] .ecrm-xsell__tabs { margin-bottom: 4px; }
+
+@media (max-width: 760px) {
+	.ecrm-app[data-ui="signature"] .sig-row { flex-wrap: wrap; gap: 10px; padding: 12px; }
+	.ecrm-app[data-ui="signature"] .sig-row__who { flex-basis: calc(100% - 54px); }
+	.ecrm-app[data-ui="signature"] .sig-row > .ecrm-badge { margin-left: 50px; }
+	.ecrm-app[data-ui="signature"] .sig-row--wrap > .sig-age { margin-left: 50px; }
+	.ecrm-app[data-ui="signature"] .sig-row + .sig-row::before { left: 12px; right: 12px; }
+	.ecrm-app[data-ui="signature"] .sig-row__offer { margin-left: 0; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

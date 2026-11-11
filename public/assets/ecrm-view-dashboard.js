@@ -29,7 +29,7 @@ var MONTHS_LONG_NOM = ['Ιανουάριος', 'Φεβρουάριος', 'Μάρ
 var MONTHS_LONG = ['Ιανουαρίου', 'Φεβρουαρίου', 'Μαρτίου', 'Απριλίου', 'Μαΐου', 'Ιουνίου', 'Ιουλίου',
 	'Αυγούστου', 'Σεπτεμβρίου', 'Οκτωβρίου', 'Νοεμβρίου', 'Δεκεμβρίου'];
 
-/* (343) «Εγώ | Κατάστημα»: η δεύτερη καρτέλα μόνο για όποιον έχει ομάδα.
+/* (343) «Εγώ | Η ομάδα μου» (357b: πρώην «Κατάστημα»): η δεύτερη καρτέλα μόνο για όποιον έχει ομάδα.
  * Η επιλογή μένει στον browser -- απλή ευκολία, τίποτα από τα δεδομένα. */
 var STORE_KEY = 'ecrm-home-tab';
 
@@ -50,7 +50,7 @@ function tabsHTML(store) {
 	if (!hasStore()) return '';
 	return '<div class="ecrm-scope ecrm-hometabs">' +
 		'<button type="button" class="ecrm-scope__b' + (store ? '' : ' is-on') + '" data-hometab="me">Εγώ</button>' +
-		'<button type="button" class="ecrm-scope__b' + (store ? ' is-on' : '') + '" data-hometab="store">Κατάστημα</button></div>';
+		'<button type="button" class="ecrm-scope__b' + (store ? ' is-on' : '') + '" data-hometab="store">Η ομάδα μου</button></div>';
 }
 
 function wireTabs(view) {
@@ -213,7 +213,7 @@ function storeHTML(d) {
 function storeHeadHTML() {
 	return '<header class="ecrm-head ecrm-head--row"><div><div class="ecrm-eyebrow">' +
 		new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div>' +
-		'<h2 class="ecrm-title">Κατάστημα</h2></div>' + tabsHTML(true) + '</header>' +
+		'<h2 class="ecrm-title">Η ομάδα μου</h2></div>' + tabsHTML(true) + '</header>' +
 		monthsHTML();
 }
 
@@ -352,7 +352,7 @@ function openPrintable(r) {
 	}).join('');
 	var html = '<!doctype html><html lang="el"><head><meta charset="utf-8"><title>' + esc(r.label) + '</title><style>' + css + '</style></head><body>' +
 		'<div class="bar"><button type="button" onclick="window.print()">Εκτύπωση / PDF</button></div>' +
-		'<h1>' + esc(r.label) + '</h1><div class="mt">Μηνιαία αναφορά καταστήματος</div>' +
+		'<h1>' + esc(r.label) + '</h1><div class="mt">Μηνιαία αναφορά ομάδας</div>' +
 		'<div class="tiles">' +
 		tile('Αιτήσεις', t.applications, t.target ? 'στόχος ' + t.target + ' (' + t.of_target + '%)' : '') +
 		tile('Έγιναν ενεργές', t.activated, '') +
@@ -989,12 +989,39 @@ function sigFeedHTML(feed) {
 }
 
 /* Η νησίδα: το τελευταίο γεγονός, αν έγινε τα τελευταία 30 λεπτά. */
+/* (357) Η ειδοποίηση πάνω φεύγει μόνη της μετά από 8'' και έχει ✕ (αίτημα
+ * ιδιοκτήτη 11/11). Όσες έκλεισε δεν ξαναβγαίνουν σε αυτή την καρτέλα. */
+var ISLAND_KEY = 'ecrm_island_seen';
+var ISLAND_SECONDS = 8;
+
+function islandId(f) {
+	return String(f.created_at || '') + '|' + String(f.code || '') + '|' + String(f.type || '');
+}
+
+function islandSeen(id) {
+	try { return sessionStorage.getItem(ISLAND_KEY) === id; } catch (e) { return false; }
+}
+
 function sigIslandHTML(feed) {
 	var f = (feed || [])[0];
 	var m = f ? minutesAgo(f.created_at) : null;
-	if (m === null || m > 30) return '';
-	return '<div class="sig-island" role="status"><span class="sig-island__dot"></span><span class="sig-island__t"><b>' + esc(f.message || f.type) + '</b>' +
-		'<small>' + esc(m === 0 ? 'μόλις τώρα' : 'πριν ' + m + '′') + (f.code ? ', #' + esc(f.code) : '') + '</small></span></div>';
+	if (m === null || m > 30 || islandSeen(islandId(f))) return '';
+	return '<div class="sig-island" role="status" data-island="' + esc(islandId(f)) + '"><span class="sig-island__dot"></span><span class="sig-island__t"><b>' + esc(f.message || f.type) + '</b>' +
+		'<small>' + esc(m === 0 ? 'μόλις τώρα' : 'πριν ' + m + '′') + (f.code ? ', #' + esc(f.code) : '') + '</small></span>' +
+		'<button type="button" class="sig-island__x" data-island-x aria-label="Κλείσιμο">✕</button></div>';
+}
+
+function wireIsland(view) {
+	var island = view.querySelector('[data-island]');
+	if (!island) return;
+	function close() {
+		try { sessionStorage.setItem(ISLAND_KEY, island.getAttribute('data-island')); } catch (e) {}
+		island.classList.add('is-gone');
+		setTimeout(function () { if (island.parentNode) island.parentNode.removeChild(island); }, 300);
+	}
+	var x = island.querySelector('[data-island-x]');
+	if (x) x.addEventListener('click', close);
+	setTimeout(close, ISLAND_SECONDS * 1000);
 }
 
 function sigDashboardHTML(d) {
@@ -1011,6 +1038,7 @@ function sigDashboardHTML(d) {
 }
 
 function wireSignature(view) {
+	wireIsland(view);
 	var more = view.querySelector('[data-sig-more]');
 	var stack = view.querySelector('[data-sig-stack]');
 	if (!more || !stack) return;

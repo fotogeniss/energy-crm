@@ -1,7 +1,10 @@
 /* Energy CRM — Εκκρεμότητες: οι αιτήσεις που κάθονται ανοιχτές πολύ καιρό.
  *
  * Μία κλήση, ένας πίνακας, και ο κοινός διακόπτης «Δικά μου / Ομάδας». Ο
- * διακόπτης είναι ο ΙΔΙΟΣ με της λίστας συμβάσεων — δες @energy-crm/scope. */
+ * διακόπτης είναι ο ΙΔΙΟΣ με της λίστας συμβάσεων — δες @energy-crm/scope.
+ *
+ * (357) Στη νέα εμφάνιση «Signature»: μεγάλος τίτλος και γραμμές-κάρτες
+ * (sigPendingHTML). Ίδια data-*, ίδια καλωδίωση. */
 
 import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
@@ -31,7 +34,9 @@ function renderPending(view, d) {
 		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th class="ecrm-col-sec">Κωδικός</th><th>Κατάσταση</th><th>Ανοιχτή για</th></tr></thead><tbody>' + body + '</tbody></table></div>'
 		: '<div class="ecrm-emptybox ecrm-emptybox--big"><span class="ecrm-emptybox__ico">✓</span><div class="ecrm-emptybox__txt">Καμία εκκρεμότητα — όλα εντάξει!</div></div>';
 
-	view.innerHTML =
+	if (isSignature()) {
+		view.innerHTML = sigPendingHTML(d, rows, statuses);
+	} else view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div class="ecrm-titlewrap"><span class="ecrm-pageicon">' +
 		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><circle cx="12" cy="16.5" r=".6"/><path d="M10.3 3.8 2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0z"/></svg></span>' +
 		'<div><h2 class="ecrm-title">Εκκρεμότητες</h2><p class="ecrm-sub">' + (d.count || 0) + ' ανοιχτές · ' + (d.stale || 0) + ' πάνω από ' + d.threshold + ' ημέρες</p></div></div>' +
@@ -40,4 +45,32 @@ function renderPending(view, d) {
 
 	view.querySelectorAll('.ecrm-rowlink').forEach(function (tr) { tr.addEventListener('click', function () { openDetail(this.getAttribute('data-id')); }); });
 	view.querySelectorAll('[data-pscope]').forEach(function (b) { b.addEventListener('click', function () { setScope(this.getAttribute('data-pscope')); loadPending(); }); });
+}
+
+// ---------------------------------------------------------------------
+// (357) «Signature»: Εκκρεμότητες
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+function sigPendingHTML(d, rows, statuses) {
+	var list = rows.length
+		? '<ul class="sig-rows">' + rows.map(function (r) {
+			return '<li class="sig-row ecrm-rowlink" data-id="' + esc(String(r.id)) + '">' +
+				'<span class="sig-row__av" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span>' +
+				'<span class="sig-row__who"><b>' + esc(r.customer || '—') + '</b><small>' + esc(r.code ? '#' + r.code : '') + '</small></span>' +
+				'<span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || statuses[r.status] || r.status) + '</span>' +
+				'<span class="sig-age' + (r.stale ? ' is-warn' : '') + '">' + esc(String(r.age_days)) + (Number(r.age_days) === 1 ? ' ημέρα' : ' ημέρες') + '</span>' +
+			'</li>';
+		}).join('') + '</ul>'
+		: '<div class="sig-tempty"><b>Καμία εκκρεμότητα.</b><span>Όλα εντάξει.</span></div>';
+	var sub = (d.count || 0) + ' ανοιχτές' + (d.stale ? ', ' + d.stale + ' πάνω από ' + d.threshold + ' ημέρες' : '');
+
+	return '<header class="sig-cuhead"><div><h2>Εκκρεμότητες</h2><p>' + esc(sub) + '</p></div>' +
+		'<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (scope() === 'own' ? ' is-on' : '') + '" data-pscope="own">Δικά μου</button>' +
+		'<button type="button" class="ecrm-scope__b' + (scope() === 'team' ? ' is-on' : '') + '" data-pscope="team">Ομάδας</button></div></header>' +
+		list;
 }

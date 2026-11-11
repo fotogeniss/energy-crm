@@ -42,6 +42,6 @@ class ECRM_Leads {
 		// Το 'site' γράφεται ΜΟΝΟ από το SiteIntakeController (310): αίτηση από
 		// το site σύγκρισης τιμών, με υπογραφή του server του site.
 		// Το 'qr' (344): ο ίδιος σύνδεσμος, σκαναρισμένος από την αφίσα του καταστήματος.
-		return [ 'phone' => 'Τηλέφωνο', 'link' => 'Από τον σύνδεσμό μου', 'qr' => 'Από QR καταστήματος', 'site' => 'Από το site', 'chatbot' => 'Chatbot', 'referral' => 'Σύσταση', 'walk_in' => 'Επίσκεψη', 'social' => 'Social', 'other' => 'Άλλο' ];
+		return [ 'phone' => 'Τηλέφωνο', 'link' => 'Από τον σύνδεσμό μου', 'qr' => 'Από το QR μου', 'site' => 'Από το site', 'chatbot' => 'Chatbot', 'referral' => 'Σύσταση', 'walk_in' => 'Επίσκεψη', 'social' => 'Social', 'other' => 'Άλλο' ];
 	}
 }

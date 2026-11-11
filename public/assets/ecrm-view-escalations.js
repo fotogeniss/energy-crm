@@ -10,6 +10,9 @@
  * πωλητή. Η ομαδοποίηση είναι παρουσίαση και γίνεται εδώ.
  *
  * Το email digest (`/team/escalations`) δεν αλλάζει.
+ *
+ * (357) Στη νέα εμφάνιση «Signature»: μεγάλος τίτλος, οι ομάδες ως κάρτες με
+ * γραμμές. Ίδιο markup γραμμών (ecrm-mgrrow), μόνο ρούχο στο CSS.
  */
 
 import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
@@ -71,11 +74,15 @@ function render(view) {
 	var all = d.rows || [];
 	var group = d.group || 'none';
 	var sub = { provider: 'Όλη η εταιρεία', owner: 'Της ομάδας σου', none: 'Δικές σου' }[group] || '';
-	var head = '<header class="ecrm-head"><div class="ecrm-eyebrow">' + esc(sub) + '</div><h2 class="ecrm-title">Κολλημένες αιτήσεις</h2>' +
+	var head = isSignature()
+		? '<header class="sig-cuhead"><div><h2>Κολλημένες αιτήσεις</h2><p>' + esc(sub) + ': όσες κάθονται στην ίδια κατάσταση πάνω από το διπλάσιο του συνηθισμένου για τον πάροχο</p></div></header>'
+		: '<header class="ecrm-head"><div class="ecrm-eyebrow">' + esc(sub) + '</div><h2 class="ecrm-title">Κολλημένες αιτήσεις</h2>' +
 		'<p class="ecrm-sub">Αιτήσεις που κάθονται στην ίδια κατάσταση πάνω από το διπλάσιο του συνηθισμένου για τον πάροχο.</p></header>';
 
 	if (!all.length) {
-		view.innerHTML = head + '<div class="ecrm-card"><div class="ecrm-empty">Καμία κολλημένη αίτηση αυτή τη στιγμή.</div></div>';
+		view.innerHTML = head + (isSignature()
+			? '<div class="sig-tempty"><b>Καμία κολλημένη αίτηση.</b><span>Όλες κινούνται κανονικά.</span></div>'
+			: '<div class="ecrm-card"><div class="ecrm-empty">Καμία κολλημένη αίτηση αυτή τη στιγμή.</div></div>');
 		return;
 	}
 
@@ -107,7 +114,7 @@ function render(view) {
 		}).join('');
 	}
 
-	view.innerHTML = head + tabs + '<div class="ecrm-card">' + body + '</div>';
+	view.innerHTML = head + tabs + (isSignature() ? '<div class="sig-stuck">' + body + '</div>' : '<div class="ecrm-card">' + body + '</div>');
 
 	view.querySelectorAll('[data-stuck-prov]').forEach(function (b) {
 		b.addEventListener('click', function () {
@@ -123,4 +130,11 @@ function render(view) {
 			openDetail(row.getAttribute('data-mgr-go'));
 		});
 	});
+}
+
+// (357) «Signature»
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
 }

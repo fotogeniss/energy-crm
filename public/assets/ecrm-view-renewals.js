@@ -1,7 +1,10 @@
 /* Energy CRM — renewals: contracts running out, and the ones already past it.
  *
  * The only view that sends the user to the form rather than to a detail
- * screen: renewing is filling in a new contract from an old one. */
+ * screen: renewing is filling in a new contract from an old one.
+ *
+ * (357) Στη νέα εμφάνιση «Signature»: γραμμές-κάρτες με την πρόταση φθηνότερου
+ * προγράμματος μέσα στην κάρτα (sigRenewalsHTML). Ίδια data-*. */
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, svgIcon, tint } from '@energy-crm/format';
@@ -66,7 +69,9 @@ function renderRenewals(view, d) {
 	var table = rows.length
 		? '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr><th>Πελάτης</th><th class="ecrm-col-sec">Κωδικός</th><th class="ecrm-col-sec">Πάροχος</th><th class="ecrm-col-sec">Λήξη</th><th>Κατάσταση</th><th></th></tr></thead><tbody>' + body + '</tbody></table></div>'
 		: '<div class="ecrm-emptybox ecrm-emptybox--big"><span class="ecrm-emptybox__ico">✓</span><div class="ecrm-emptybox__txt">Καμία σύμβαση δεν λήγει σύντομα.</div></div>';
-	view.innerHTML =
+	if (isSignature()) {
+		view.innerHTML = sigRenewalsHTML(d, rows, soon);
+	} else view.innerHTML =
 		'<header class="ecrm-head ecrm-head--row"><div class="ecrm-titlewrap"><span class="ecrm-pageicon">' +
 		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></span>' +
 		'<div><h2 class="ecrm-title">Λήξεις & Ανανεώσεις</h2><p class="ecrm-sub">' + rows.length + ' συμβάσεις λήγουν έως ' + (d.days || 0) + ' ημέρες · ' + soon + ' άμεσα</p></div></div>' +
@@ -101,6 +106,11 @@ function renderRenewals(view, d) {
 
 // (335) Η πρόταση κάτω από τη σύμβαση. Mockup: docs/UI-RENEWAL-OFFER.html.
 function offerRow(r) {
+	var inner = offerInner(r);
+	return inner ? '<tr class="ecrm-renew-offer"><td colspan="6"><div class="ecrm-renew-offer__in">' + inner + '</div></td></tr>' : '';
+}
+
+function offerInner(r) {
 	if (['power', 'gas'].indexOf(r.energy_type) < 0) { return ''; }
 	var money = function (v) { return Math.round(v).toLocaleString('el-GR') + ' €'; };
 	var inner;
@@ -120,7 +130,7 @@ function offerRow(r) {
 	} else {
 		inner = '<span class="ecrm-muted">Δεν υπάρχει πρόγραμμα με πρόσφατη τιμή για σύγκριση.</span>';
 	}
-	return '<tr class="ecrm-renew-offer"><td colspan="6"><div class="ecrm-renew-offer__in">' + inner + '</div></td></tr>';
+	return inner;
 }
 
 /* (344) Και από την εργασία «Κλήση ανανέωσης», μέσω του κελύφους. */
@@ -148,4 +158,40 @@ function renew(btn, id, programId) {
 			} else { toast((d && d.error) || 'Αποτυχία.', false); }
 		})
 		.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+}
+
+// ---------------------------------------------------------------------
+// (357) «Signature»: Λήξεις
+// ---------------------------------------------------------------------
+
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+function sigRenewalsHTML(d, rows, soon) {
+	var list = rows.length
+		? '<ul class="sig-rows">' + rows.map(function (r) {
+			var left = +r.days_left;
+			var customer = renewalCustomer(r);
+			var pill = left < 0 ? 'Έληξε πριν ' + Math.abs(left) + (Math.abs(left) === 1 ? ' ημέρα' : ' ημέρες')
+				: 'Σε ' + left + (left === 1 ? ' ημέρα' : ' ημέρες');
+			var cls = left < 0 ? ' is-bad' : (left <= 30 ? ' is-warn' : '');
+			var offer = offerInner(r);
+			return '<li class="sig-row sig-row--wrap">' +
+				'<span class="sig-row__av" style="--h:' + tint(customer) + '">' + esc(initials(customer)) + '</span>' +
+				'<span class="sig-row__who"><b>' + esc(customer || '—') + '</b><small>' +
+					esc([r.code ? '#' + r.code : '', r.provider_name, r.end_date ? 'λήξη ' + fmtDate(r.end_date) : ''].filter(Boolean).join(' · ')) + '</small></span>' +
+				'<span class="sig-age' + cls + '">' + esc(pill) + '</span>' +
+				'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-renew="' + esc(String(r.id)) + '">Ανανέωση</button>' +
+				(offer ? '<div class="sig-row__offer">' + offer + '</div>' : '') +
+			'</li>';
+		}).join('') + '</ul>'
+		: '<div class="sig-tempty"><b>Καμία σύμβαση δεν λήγει σύντομα.</b></div>';
+	var sub = rows.length + (rows.length === 1 ? ' σύμβαση λήγει' : ' συμβάσεις λήγουν') + ' μέσα σε ' + (d.days || 0) + ' ημέρες' + (soon ? ', ' + soon + ' άμεσα' : '');
+
+	return '<header class="sig-cuhead"><div><h2>Λήξεις και ανανεώσεις</h2><p>' + esc(sub) + '</p></div>' +
+		'<div class="ecrm-scope"><button type="button" class="ecrm-scope__b' + (renewState.scope === 'own' ? ' is-on' : '') + '" data-rscope="own">Δικά μου</button>' +
+		'<button type="button" class="ecrm-scope__b' + (renewState.scope === 'team' ? ' is-on' : '') + '" data-rscope="team">Ομάδας</button></div></header>' +
+		list;
 }

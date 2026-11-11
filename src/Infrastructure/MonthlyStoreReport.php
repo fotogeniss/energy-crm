@@ -90,7 +90,7 @@ final class MonthlyStoreReport
                     $user->user_email,
                     $subject . ' - ' . $company,
                     sprintf(
-                        "Καλημέρα %s,\n\n%s\n\nΌλη η αναφορά στο CRM: Αρχική → Κατάστημα → %s.\n\n%s",
+                        "Καλημέρα %s,\n\n%s\n\nΌλη η αναφορά στο CRM: Αρχική → Η ομάδα μου → %s.\n\n%s",
                         $user->display_name,
                         implode("\n", $lines),
                         Month::name($month),
