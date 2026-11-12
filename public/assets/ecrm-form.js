@@ -1354,13 +1354,18 @@ import { openDialog } from '@energy-crm/dialog';
 				// ίδιο κάθε φορά. Μόνο όταν το κέλυφος έχει data-ui="signature".
 				if (isSignature()) {
 					var nProg = programsCache.filter(function (pr) { return parseInt(pr.provider_id, 10) === parseInt(p.id, 10); }).length;
-					var kinds = String(p.energy_types || '').split(',').filter(Boolean).map(energyLabel).join(', ');
+					var kinds = String(p.energy_types || '').split(',').filter(Boolean).map(energyLabel).join(' · ');
 					b.classList.add('is-card');
 					if (p.logo_url) { b.classList.add('has-logo'); }
+					if (!nProg) { b.classList.add('is-empty'); }
 					b.style.setProperty('--h', String(tint(p.name || '')));
+					// (370) Το χρώμα του ίδιου του παρόχου (σελίδα παρόχου στο admin)·
+					// χωρίς αυτό μένει το χρώμα από το όνομα.
+					var brand = String(p.brand_color || '');
+					if (/^#[0-9a-f]{6}$/i.test(brand)) { b.style.setProperty('--b', brand); }
 					b.innerHTML = '<span class="sig-pv__name">' + esc(p.name) + '</span>' +
 						(kinds ? '<span class="sig-pv__kinds">' + esc(kinds) + '</span>' : '') +
-						'<span class="sig-pv__n">' + nProg + (nProg === 1 ? ' πρόγραμμα' : ' προγράμματα') + '</span>' +
+						'<span class="sig-pv__n">' + (nProg === 0 ? 'Χωρίς προγράμματα' : nProg + (nProg === 1 ? ' πρόγραμμα' : ' προγράμματα')) + '</span>' +
 						// (358) Το λογότυπο του παρόχου, κάτω δεξιά σε λευκό πλαίσιο
 						// (αίτημα ιδιοκτήτη 11/11). Πάνω δεξιά μένει το ✓ της επιλογής.
 						(p.logo_url ? '<span class="sig-pv__logo"><img src="' + esc(p.logo_url) + '" alt=""></span>' : '');

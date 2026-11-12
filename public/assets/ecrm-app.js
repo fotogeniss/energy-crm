@@ -397,17 +397,24 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 		});
 	});
 
-	// (353e) Το «Περισσότερα» της πάνω μπάρας κλείνει όταν διαλέξεις κάτι ή
-	// πατήσεις έξω από αυτό.
-	var tnMore = app.querySelector('[data-tn-more]');
-	if (tnMore) {
-		tnMore.addEventListener('click', function (e) {
-			if (e.target.closest('[data-go]')) { tnMore.open = false; }
+	// (369) Πλαϊνή στήλη της νέας εμφάνισης: κάθε ομάδα μαζεύει με ένα πάτημα
+	// και θυμάται την επιλογή· ανοιχτή από προεπιλογή. Μαζεμένη ομάδα δείχνει
+	// ακόμη την ενεργή οθόνη της (CSS), ώστε να φαίνεται πού είσαι.
+	app.querySelectorAll('[data-rail-grp]').forEach(function (g) {
+		var key = 'ecrm_rail_' + g.getAttribute('data-rail-grp');
+		var btn = g.querySelector('[data-rail-toggle]');
+		if (!btn) return;
+		function paint(open) {
+			g.classList.toggle('is-shut', !open);
+			btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+		}
+		try { if (localStorage.getItem(key) === '0') paint(false); } catch (e) {}
+		btn.addEventListener('click', function () {
+			var open = g.classList.contains('is-shut');
+			paint(open);
+			try { localStorage.setItem(key, open ? '1' : '0'); } catch (e) {}
 		});
-		document.addEventListener('click', function (e) {
-			if (tnMore.open && !tnMore.contains(e.target)) { tnMore.open = false; }
-		});
-	}
+	});
 
 	// (353) Νέα εμφάνιση «Signature»: μόνο για διαχειριστή, όσο είναι σε δοκιμή.
 	// Το φύλλο της φορτώνει η PHP, άρα η αλλαγή θέλει ξαναφόρτωμα της σελίδας.

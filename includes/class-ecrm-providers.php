@@ -18,17 +18,17 @@ class ECRM_Providers {
 	 */
 	private static function defaults(): array {
 		return [
-			[ 'slug' => 'dei',       'name' => 'ΔΕΗ',          'energy_types' => 'power,gas',        'logo_url' => 'https://www.dei.gr/media/ik1eyjgg/deh-darkmode-80px.svg' ],
-			[ 'slug' => 'protergia', 'name' => 'PROTERGIA',    'energy_types' => 'power,gas',        'logo_url' => 'https://www.protergia.gr/assets/images/icons/protergia_logo.png' ],
-			[ 'slug' => 'heron',     'name' => 'ΗΡΩΝ',         'energy_types' => 'power,gas',        'logo_url' => 'https://heron.gr/media/myeprd3l/heron-logo-header-bg.svg' ],
-			[ 'slug' => 'nrg',       'name' => 'NRG',          'energy_types' => 'power,gas',        'logo_url' => 'https://www.nrg.gr/themes/custom/nrg/media/logo2021-vertical.svg' ],
-			[ 'slug' => 'enerwave',  'name' => 'Enerwave',     'energy_types' => 'power',            'logo_url' => 'https://www.enerwave.gr/uploads/sites/126315/siteimage-logonormal.png' ],
-			[ 'slug' => 'volton',    'name' => 'VOLTON',       'energy_types' => 'power,gas',        'logo_url' => '' ],
-			[ 'slug' => 'fysiko',    'name' => 'Φυσικό Αέριο Ελλάδος', 'energy_types' => 'gas',      'logo_url' => 'https://fysikoaerioellados.gr/sites/default/files/logo.svg' ],
-			[ 'slug' => 'zenith',    'name' => 'Ζενίθ',        'energy_types' => 'gas,power',        'logo_url' => 'https://zenith.gr/media/x4bjo31r/logo-footer.svg?width=80' ],
+			[ 'slug' => 'dei',       'name' => 'ΔΕΗ',          'energy_types' => 'power,gas',        'logo_url' => 'https://www.dei.gr/media/ik1eyjgg/deh-darkmode-80px.svg', 'brand_color' => '#2c56c4' ],
+			[ 'slug' => 'protergia', 'name' => 'PROTERGIA',    'energy_types' => 'power,gas',        'logo_url' => 'https://www.protergia.gr/assets/images/icons/protergia_logo.png', 'brand_color' => '#e67e00' ],
+			[ 'slug' => 'heron',     'name' => 'ΗΡΩΝ',         'energy_types' => 'power,gas',        'logo_url' => 'https://heron.gr/media/myeprd3l/heron-logo-header-bg.svg', 'brand_color' => '#22306b' ],
+			[ 'slug' => 'nrg',       'name' => 'NRG',          'energy_types' => 'power,gas',        'logo_url' => 'https://www.nrg.gr/themes/custom/nrg/media/logo2021-vertical.svg', 'brand_color' => '#1786e8' ],
+			[ 'slug' => 'enerwave',  'name' => 'Enerwave',     'energy_types' => 'power',            'logo_url' => 'https://www.enerwave.gr/uploads/sites/126315/siteimage-logonormal.png', 'brand_color' => '#0e9f6e' ],
+			[ 'slug' => 'volton',    'name' => 'VOLTON',       'energy_types' => 'power,gas',        'logo_url' => '', 'brand_color' => '#1426d8' ],
+			[ 'slug' => 'fysiko',    'name' => 'Φυσικό Αέριο Ελλάδος', 'energy_types' => 'gas',      'logo_url' => 'https://fysikoaerioellados.gr/sites/default/files/logo.svg', 'brand_color' => '#0c78b8' ],
+			[ 'slug' => 'zenith',    'name' => 'Ζενίθ',        'energy_types' => 'gas,power',        'logo_url' => 'https://zenith.gr/media/x4bjo31r/logo-footer.svg?width=80', 'brand_color' => '#c4002f' ],
 			// Η Orizon είναι αποκλειστικά κινητή τηλεφωνία· και τα τρία της
 			// έντυπα (ενεργοποίηση, φορητότητα, συνδυαστική) περιγράφουν γραμμή.
-			[ 'slug' => 'orizon',    'name' => 'Orizon',       'energy_types' => 'mobile',           'logo_url' => 'https://orizon.gr/wp-content/uploads/2025/04/logo-orizon.svg' ],
+			[ 'slug' => 'orizon',    'name' => 'Orizon',       'energy_types' => 'mobile',           'logo_url' => 'https://orizon.gr/wp-content/uploads/2025/04/logo-orizon.svg', 'brand_color' => '#1a2fe0' ],
 		];
 	}
 
@@ -43,11 +43,17 @@ class ECRM_Providers {
 				if ( $current === '' && $row['logo_url'] ) {
 					$wpdb->update( $providers, [ 'logo_url' => $row['logo_url'] ], [ 'id' => $id ] );
 				}
+				// (370) Το χρώμα της κάρτας μπαίνει μόνο αν λείπει: ό,τι διάλεξε ο
+				// διαχειριστής στη σελίδα του παρόχου δεν το πειράζουμε.
+				$color = (string) $wpdb->get_var( $wpdb->prepare( "SELECT brand_color FROM {$providers} WHERE id = %d", $id ) );
+				if ( $color === '' && $row['brand_color'] ) {
+					$wpdb->update( $providers, [ 'brand_color' => $row['brand_color'] ], [ 'id' => $id ] );
+				}
 			} else {
 				$wpdb->insert( $providers, [
 					'slug' => $row['slug'], 'name' => $row['name'],
 					'energy_types' => $row['energy_types'], 'logo_url' => $row['logo_url'],
-					'active' => 1, 'sort_order' => 50,
+					'brand_color' => $row['brand_color'], 'active' => 1, 'sort_order' => 50,
 				] );
 			}
 		}
@@ -72,10 +78,11 @@ class ECRM_Providers {
 						'name'         => $row['name'],
 						'energy_types' => $row['energy_types'],
 						'logo_url'     => $row['logo_url'] ?? '',
+						'brand_color'  => $row['brand_color'] ?? '',
 						'active'       => 1,
 						'sort_order'   => $order,
 					],
-					[ '%s', '%s', '%s', '%s', '%d', '%d' ]
+					[ '%s', '%s', '%s', '%s', '%s', '%d', '%d' ]
 				);
 				$provider_id = (int) $wpdb->insert_id;
 

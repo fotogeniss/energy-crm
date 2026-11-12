@@ -815,14 +815,18 @@
 }
 .ecrm input[type="checkbox"]:hover { border-color: var(--line-mid); }
 .ecrm input[type="checkbox"]:checked { background: var(--amber); border-color: var(--amber); }
+/* (370) Το τσεκ ως σχέδιο (μάσκα SVG) σε όλο το κουτάκι, όχι γωνία από
+ * περιγράμματα σε σταθερά pixel: εκείνη έπεφτε αριστερά και κάτω από το
+ * κέντρο του κύκλου (ιδιοκτήτης 12/11). */
 .ecrm input[type="checkbox"]:checked::after {
-	content: ""; position: absolute; left: 6px; top: 3px; width: 4px; height: 8.5px;
-	border: solid var(--on-accent); border-width: 0 2px 2px 0; transform: rotate(45deg);
+	content: ""; position: absolute; inset: 0; background: var(--on-accent);
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat;
 }
 .ecrm input[type="checkbox"]:indeterminate { background: var(--amber); border-color: var(--amber); }
 .ecrm input[type="checkbox"]:indeterminate::after {
-	content: ""; position: absolute; left: 4px; top: 7.5px; width: 9px; height: 2px;
-	background: var(--on-accent); border: none; transform: none; border-radius: 1px;
+	content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 2px;
+	background: var(--on-accent); border: none; transform: translate(-50%, -50%); border-radius: 1px;
+	-webkit-mask: none; mask: none;
 }
 .ecrm input[type="checkbox"]:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .ecrm input[type="checkbox"]:disabled { background: var(--surface-sunk); border-color: var(--line); cursor: not-allowed; }

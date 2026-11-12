@@ -122,7 +122,8 @@ JS;
 			$edit = esc_url( add_query_arg( [ 'page' => 'energy-crm-providers', 'provider' => $r['id'] ], admin_url( 'admin.php' ) ) );
 			echo '<tr>';
 			echo '<td>' . ( $r['logo_url'] ? '<img src="' . esc_url( $r['logo_url'] ) . '" style="max-height:28px;max-width:80px;object-fit:contain">' : '—' ) . '</td>';
-			echo '<td><strong>' . esc_html( $r['name'] ) . '</strong></td>';
+			$swatch = sanitize_hex_color( (string) ( $r['brand_color'] ?? '' ) );
+			echo '<td>' . ( $swatch ? '<span title="' . esc_attr( $swatch ) . '" style="display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px;background:' . esc_attr( $swatch ) . '"></span>' : '' ) . '<strong>' . esc_html( $r['name'] ) . '</strong></td>';
 			echo '<td><code>' . esc_html( $r['slug'] ) . '</code></td>';
 			echo '<td>' . esc_html( $r['energy_types'] ) . '</td>';
 			echo '<td>' . (int) $r['programs'] . '</td>';
@@ -155,6 +156,11 @@ JS;
 					<input type="url" name="logo_url" class="regular-text ecrm-logo-url" value="<?php echo esc_attr( $p['logo_url'] ?? '' ); ?>" placeholder="https://…">
 					<button class="button ecrm-pick-logo">Επιλογή από βιβλιοθήκη</button>
 					<br><img class="ecrm-logo-prev" src="<?php echo esc_attr( $p['logo_url'] ?? '' ); ?>" style="max-height:40px;margin-top:8px;<?php echo empty( $p['logo_url'] ) ? 'display:none' : ''; ?>">
+				</td></tr>
+				<tr><th>Χρώμα</th><td>
+					<?php $brand = (string) sanitize_hex_color( (string) ( $p['brand_color'] ?? '' ) ); ?>
+					<input type="color" name="brand_color" value="<?php echo esc_attr( '' !== $brand ? $brand : '#16a34a' ); ?>">
+					<p class="description">Το χρώμα της κάρτας του παρόχου στη «Νέα αίτηση». Διάλεξε το κύριο χρώμα του λογότυπου.</p>
 				</td></tr>
 				<tr><th>Ενεργός</th><td><label><input type="checkbox" name="active" value="1" <?php checked( $p ? (int) $p['active'] : 1, 1 ); ?>> Εμφανίζεται στη φόρμα</label></td></tr>
 				<tr><th>Σειρά</th><td><input type="number" name="sort_order" value="<?php echo (int) ( $p['sort_order'] ?? 0 ); ?>" class="small-text"></td></tr>
@@ -347,6 +353,7 @@ JS;
 			'slug'         => $slug,
 			'energy_types' => implode( ',', $types ?: [ 'power' ] ),
 			'logo_url'     => esc_url_raw( wp_unslash( $_POST['logo_url'] ?? '' ) ),
+			'brand_color'  => (string) sanitize_hex_color( wp_unslash( $_POST['brand_color'] ?? '' ) ),
 			'active'       => isset( $_POST['active'] ) ? 1 : 0,
 			'sort_order'   => (int) ( $_POST['sort_order'] ?? 0 ),
 		];

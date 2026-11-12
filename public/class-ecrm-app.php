@@ -169,6 +169,40 @@ class ECRM_App {
 			$navMore[] = [ 'view' => 'import', 'label' => 'Εισαγωγή Excel', 'icon' => 'import' ];
 		}
 
+
+		/*
+		 * (369) Η νέα εμφάνιση δείχνει όλες τις οθόνες σε πλαϊνή στήλη, σε
+		 * ομάδες, αντί για πέντε πάνω και τα υπόλοιπα στο «Περισσότερα».
+		 * Ίδια στοιχεία με το $navMore (ίδιοι ρόλοι), απλώς μοιρασμένα.
+		 * Ό,τι δεν αναφέρεται εδώ πέφτει στην πρώτη ομάδα, να μη χαθεί.
+		 * docs/UI-NAV-FRESH.html (Β), εγκρίθηκε 12/11.
+		 */
+		$railGroups = [
+			'daily' => [ 'Καθημερινά', [ 'pending' => 'r', 'escalations' => 'a', 'calc' => 'g', 'renewals' => 'a' ] ],
+			'docs'  => [ 'Πελάτες και έγγραφα', [ 'documents' => 'n', 'import' => 'b', 'tickets' => 'v' ] ],
+			'team'  => [ 'Ομάδα', [ 'teamlive' => 'g', 'network' => 'g', 'team' => 'g', 'commissions' => 'a', 'analytics' => 'b' ] ],
+			'help'  => [ 'Βοήθεια', [ 'kb' => 'v', 'training' => 'g', 'install' => 'n' ] ],
+		];
+		$railTop  = [ 'dashboard' => 'g', 'leads' => 'a', 'contracts' => 'n', 'tasks' => 'b', 'customers' => 'v' ];
+		$railRows = [];
+		$placed   = [];
+		foreach ( $railGroups as $key => $grp ) {
+			$railRows[ $key ] = [];
+			foreach ( $grp[1] as $view => $tone ) {
+				foreach ( $navMore as $item ) {
+					if ( $item['view'] === $view ) {
+						$railRows[ $key ][] = [ $item, $tone ];
+						$placed[ $view ]    = true;
+					}
+				}
+			}
+		}
+		foreach ( $navMore as $item ) {
+			if ( ! isset( $placed[ $item['view'] ] ) ) {
+				$railRows['daily'][] = [ $item, 'n' ];
+			}
+		}
+
 		ob_start();
 		?>
 		<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $style is a whole attribute fragment, ' style="…"', whose only variable part went through esc_attr() where it was built. Escaping it here would escape the attribute syntax itself. ?>
@@ -182,6 +216,25 @@ class ECRM_App {
 					<span class="ecrm-brand__txt">Energy <strong>CRM</strong></span>
 					<button type="button" class="ecrm-collapse" data-collapse aria-label="Σύμπτυξη μενού"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></button>
 				</div>
+				<?php if ( 'signature' === $ui ) : ?>
+				<nav class="ecrm-nav sig-rail" aria-label="Κύρια πλοήγηση">
+					<button type="button" class="ecrm-nav__item sig-rail__new" data-go="new-contract" title="Νέα αίτηση"><span class="ecrm-nav__icon"><?php echo self::icon( 'new' ); // phpcs:ignore ?></span><span class="ecrm-nav__txt">Νέα αίτηση</span></button>
+					<?php foreach ( $navDaily as $item ) :
+						if ( 'new-contract' === $item['view'] ) { continue; }
+						echo self::rail_item( $item, $railTop[ $item['view'] ] ?? 'n' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside rail_item().
+					endforeach; ?>
+					<?php foreach ( $railRows as $key => $rows ) :
+						if ( ! $rows ) { continue; }
+						?>
+						<div class="sig-rail__grp" data-rail-grp="<?php echo esc_attr( $key ); ?>">
+							<button type="button" class="sig-rail__gh" data-rail-toggle aria-expanded="true"><span><?php echo esc_html( $railGroups[ $key ][0] ); ?></span><span class="sig-rail__chev" aria-hidden="true"><?php echo self::icon( 'chevron-down' ); // phpcs:ignore ?></span></button>
+							<?php foreach ( $rows as $row ) {
+								echo self::rail_item( $row[0], $row[1] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside rail_item().
+							} ?>
+						</div>
+					<?php endforeach; ?>
+				</nav>
+				<?php else : ?>
 				<nav class="ecrm-nav">
 					<div class="ecrm-nav__label">Καθημερινά</div>
 					<?php foreach ( $navDaily as $item ) :
@@ -221,6 +274,7 @@ class ECRM_App {
 						<?php endforeach; ?>
 					</div>
 				</nav>
+				<?php endif; ?>
 				<div class="ecrm-sidebar__foot">
 					<?php
 					/*
@@ -334,46 +388,6 @@ class ECRM_App {
 					<button type="button" class="ecrm-burger" data-mobnav-toggle aria-label="Μενού"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></button>
 					<span class="ecrm-topbar__brand">Energy <strong>CRM</strong></span>
 					<div class="ecrm-topbar__hello">Καλώς ήρθες, <strong><?php echo esc_html( $user->display_name ); ?></strong></div>
-					<?php if ( 'signature' === $ui ) : ?>
-					<?php
-					/*
-					 * (353e) Νέα εμφάνιση: το μενού πάνω, σε χάπι, αντί για πλαϊνό.
-					 * Ίδια data-go με το πλαϊνό, οπότε δρομολόγηση, ενεργό στοιχείο
-					 * και σήματα δουλεύουν όπως πριν. Η «Νέα αίτηση» βγαίνει ως
-					 * πράσινο κουμπί δεξιά· τα υπόλοιπα στο «Περισσότερα».
-					 * docs/UI-REDESIGN-NEW-SKELETON.html.
-					 */
-					?>
-					<nav class="sig-tn" aria-label="Κύρια πλοήγηση">
-						<?php foreach ( $navDaily as $item ) :
-							if ( 'new-contract' === $item['view'] ) { continue; }
-							$go    = $item['go'] ?? $item['view'];
-							$badge = $item['badge'] ?? 0;
-							?>
-							<button type="button" class="ecrm-nav__item sig-tn__item<?php echo 'dashboard' === $go ? ' is-active' : ''; ?>" data-go="<?php echo esc_attr( $go ); ?>"><?php echo esc_html( $item['label'] ); ?><?php if ( $badge > 0 ) : ?><em class="sig-tn__badge"><?php echo (int) $badge; ?></em><?php endif; ?></button>
-						<?php endforeach; ?>
-						<details class="sig-tn__more" data-tn-more>
-							<summary>Περισσότερα</summary>
-							<div class="sig-tn__menu">
-								<?php foreach ( $navMore as $item ) :
-									$go    = $item['go'] ?? $item['view'];
-									$badge = $item['badge'] ?? 0;
-									?>
-									<button type="button" class="ecrm-nav__item sig-tn__mi" data-go="<?php echo esc_attr( $go ); ?>"><span class="sig-tn__ic"><?php echo self::icon( $item['icon'] ); // phpcs:ignore ?></span><?php echo esc_html( $item['label'] ); ?><?php if ( $badge > 0 ) : ?><em class="sig-tn__badge"><?php echo (int) $badge; ?></em><?php endif; ?></button>
-								<?php endforeach; ?>
-								<hr>
-								<?php if ( $ui_try ) : ?>
-								<button type="button" class="sig-tn__mi" data-ui-toggle data-next="classic"><span class="sig-tn__ic"><?php echo self::icon( 'spark' ); // phpcs:ignore ?></span>Παλιά εμφάνιση</button>
-								<?php endif; ?>
-								<?php if ( current_user_can( 'manage_options' ) ) : ?>
-								<a class="sig-tn__mi" href="<?php echo esc_url( admin_url( 'admin.php?page=energy-crm' ) ); ?>"><span class="sig-tn__ic"><?php echo self::icon( 'gear' ); // phpcs:ignore ?></span>Ρυθμίσεις</a>
-								<?php endif; ?>
-								<a class="sig-tn__mi" href="<?php echo esc_url( wp_logout_url() ); ?>"><span class="sig-tn__ic"><?php echo self::icon( 'logout' ); // phpcs:ignore ?></span>Έξοδος</a>
-							</div>
-						</details>
-					</nav>
-					<button type="button" class="ecrm-nav__item sig-tn__new" data-go="new-contract"><?php echo self::icon( 'new' ); // phpcs:ignore ?> Νέα αίτηση</button>
-					<?php endif; ?>
 					<div class="ecrm-gsearch">
 						<input type="search" data-gsearch placeholder="Αναζήτηση σύμβασης ή πελάτη — ΑΦΜ, όνομα, ΗΚΑΣΠ, κωδικός…" autocomplete="off">
 						<div class="ecrm-gsearch__results" data-gsearch-results hidden></div>
@@ -626,6 +640,27 @@ class ECRM_App {
 				[ 'id' => 'ecrm-pwa-register' ]
 			);
 		} );
+	}
+
+	/**
+	 * (369) Ένα στοιχείο της πλαϊνής στήλης της νέας εμφάνισης: εικονίδιο σε
+	 * χρωματιστό πλακίδιο, όνομα, και σήμα δεξιά. Ίδιο data-go με το παλιό
+	 * μενού, οπότε δρομολόγηση και ενεργό στοιχείο δουλεύουν όπως πριν.
+	 *
+	 * @param array<string, mixed> $item Στοιχείο του $navDaily / $navMore.
+	 * @param string               $tone g, a, b, v, r ή n.
+	 */
+	private static function rail_item( array $item, string $tone ): string {
+		$go    = (string) ( $item['go'] ?? $item['view'] );
+		$label = (string) $item['label'];
+		$badge = (int) ( $item['badge'] ?? 0 );
+		$html  = '<button type="button" class="ecrm-nav__item sig-rail__item' . ( 'dashboard' === $go ? ' is-active' : '' ) . '" data-go="' . esc_attr( $go ) . '" title="' . esc_attr( $label ) . '">';
+		$html .= '<span class="ecrm-nav__icon sig-tone-' . esc_attr( $tone ) . '">' . self::icon( (string) $item['icon'] ) . '</span>';
+		$html .= '<span class="ecrm-nav__txt">' . esc_html( $label ) . '</span>';
+		if ( $badge > 0 ) {
+			$html .= '<em class="sig-rail__badge">' . $badge . '</em>';
+		}
+		return $html . '</button>';
 	}
 
 	/**

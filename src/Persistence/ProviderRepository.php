@@ -32,7 +32,7 @@ final class ProviderRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT id, slug, name, energy_types, logo_url
+                'SELECT id, slug, name, energy_types, logo_url, brand_color
                  FROM %i WHERE active = 1 ORDER BY sort_order, name',
                 Tables::name(Tables::PROVIDERS)
             ),

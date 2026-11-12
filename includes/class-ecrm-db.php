@@ -22,6 +22,8 @@
  *   request_keys   — idempotency στη δημιουργία σύμβασης: ένα uuid ανά πρόθεση
  *                    δημιουργίας, δεσμευμένο πριν γραφτεί οτιδήποτε (24/DB_VERSION)
  *   tickets, ticket_comments — αναφορές προβλημάτων και η συζήτησή τους (339)
+ *   providers.brand_color — το χρώμα του παρόχου (#rrggbb) για τις κάρτες της
+ *                    νέας αίτησης· κενό = χρώμα από το όνομα (25/DB_VERSION, 370)
  *
  * Designed so future sessions can bolt on: network/team, commissions, mail.
  *
@@ -35,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ECRM_DB {
 
 	/** Bump when schema changes to trigger migration on plugins_loaded. */
-	const DB_VERSION = '24';
+	const DB_VERSION = '25';
 
 	/** @return string Fully-qualified table name. */
 	public static function table( string $name ): string {
@@ -78,6 +80,7 @@ class ECRM_DB {
 			name         VARCHAR(128) NOT NULL,
 			energy_types VARCHAR(32)  NOT NULL DEFAULT 'power,gas',
 			logo_url     VARCHAR(255) NULL,
+			brand_color  VARCHAR(7)   NULL,
 			active       TINYINT(1)   NOT NULL DEFAULT 1,
 			sort_order   INT          NOT NULL DEFAULT 0,
 			created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,

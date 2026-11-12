@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Μενού — δύο νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--rose-t:#ff3c5a1f;
+	--blue:#2f7cf6;--blue-t:#2f7cf61f;--teal:#00a99a;--violet:#7a4de0;--violet-t:#7a4de01c;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:760px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:900px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn svg,.ic svg{width:18px;height:18px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 0;color:var(--ink2);font-size:15px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:3px 9px;border-radius:999px}
+.src svg{width:13px;height:13px}
+.plogo{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;letter-spacing:-.01em;padding:3px 8px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.plogo i{width:9px;height:9px;border-radius:50%}
+.save{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:3px 9px;border-radius:999px}
+
+.tb{display:flex;align-items:center;gap:12px;padding:8px 10px 8px 14px;border-radius:999px;background:#ffffffcc;box-shadow:0 0 0 1px var(--hair),var(--lift);position:relative}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;white-space:nowrap}
+.logo i{width:26px;height:26px;border-radius:8px;background:linear-gradient(180deg,#2ad62b,#0e9a12);display:grid;place-items:center}
+.logo i::after{content:"";width:9px;height:9px;border-radius:3px;background:#fff}
+.tabs{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--fill)}
+.tabs span{padding:8px 14px;border-radius:999px;font-size:14.5px;font-weight:600;color:var(--ink2);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tabs span.on{background:#fff;color:var(--ink);box-shadow:var(--lift)}
+.tabs em{font-style:normal;font-size:11px;font-weight:800;color:#fff;background:var(--rose);border-radius:999px;padding:1px 6px}
+.tabs .more{color:var(--ink)}
+.tabs .more.open{background:#1b1d1a;color:#fff}
+.new{margin-left:auto;padding:9px 16px;border-radius:999px;background:linear-gradient(180deg,#2ad62b,#0e9a12);color:#fff;font-weight:800;font-size:14.5px;white-space:nowrap}
+.srch{padding:9px 14px;border-radius:999px;background:var(--fill);color:var(--ink3);font-size:13.5px;width:200px;display:flex;justify-content:space-between}
+.srch kbd{font:inherit;font-size:11.5px;font-weight:700;background:#fff;border-radius:6px;padding:0 6px;box-shadow:0 0 0 1px var(--hair)}
+.av{width:34px;height:34px;flex-basis:34px;border-radius:50%;font-size:12px}
+/* A mega */
+.mega{position:absolute;left:150px;top:62px;width:860px;border-radius:26px;background:#fff;box-shadow:0 0 0 1px var(--hair),0 30px 60px -20px #0003;padding:18px;z-index:5}
+.mq{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--fill);margin-bottom:14px;color:var(--ink3);font-size:14px}
+.mq svg{width:16px;height:16px}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.col h5{margin:4px 10px 6px;font-size:12.5px;font-weight:800;color:var(--ink3)}
+.mi{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:14px;cursor:pointer}
+.mi:hover,.mi.hl{background:var(--fill)}
+.mi .ic{flex:0 0 30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:14px}
+.mi b{display:flex;align-items:center;gap:6px;font-size:14px}
+.mi b em{font-style:normal;font-size:11px;font-weight:800;color:#fff;background:var(--rose);border-radius:999px;padding:1px 6px}
+.mi small{display:block;font-size:12px;color:var(--ink3);line-height:1.35;margin-top:1px}
+.g{background:var(--green-t);color:var(--green-ink)}.b{background:var(--blue-t);color:var(--blue)}.a{background:var(--amber-t);color:var(--amber)}.v{background:var(--violet-t);color:var(--violet)}.r{background:var(--rose-t);color:var(--rose)}.n{background:var(--fill);color:var(--ink2)}
+.mfoot{display:flex;justify-content:space-between;margin-top:12px;padding:10px 10px 0;border-top:1px solid var(--hair2);font-size:12.5px;color:var(--ink3)}
+.page{height:360px;margin-top:22px;border-radius:24px;background:var(--glass);box-shadow:0 0 0 1px var(--hair)}
+/* B rail */
+.shell{display:grid;grid-template-columns:250px 1fr;gap:18px;min-height:640px}
+.rail{border-radius:26px;background:#ffffffcc;box-shadow:0 0 0 1px var(--hair),var(--lift);padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+.rail .logo{padding:4px 8px 14px}
+.rail .new{margin:0 4px 12px;text-align:center}
+.ri{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;font-size:14px;font-weight:600;color:var(--ink2)}
+.ri .ic{flex:0 0 26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:12.5px}
+.ri.on{background:#fff;color:var(--ink);box-shadow:var(--lift)}
+.ri em{margin-left:auto;font-style:normal;font-size:11px;font-weight:800;color:#fff;background:var(--rose);border-radius:999px;padding:1px 6px}
+.rg{margin:12px 10px 4px;font-size:12px;font-weight:800;color:var(--ink3);display:flex;justify-content:space-between}
+.rail .bottom{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--hair2)}
+.mainb{display:flex;flex-direction:column;gap:14px}
+.mtop{display:flex;align-items:center;gap:12px;padding:8px 10px 8px 16px;border-radius:999px;background:#ffffffcc;box-shadow:0 0 0 1px var(--hair)}
+.mtop h3{margin:0;font-size:18px;flex:1}
+@media (max-width:860px){.frame{padding:14px}.mega{position:static;width:auto;margin-top:12px}.cols{grid-template-columns:1fr 1fr}.tabs span:not(.on):not(.more){display:none}.srch{display:none}.shell{grid-template-columns:1fr}.rail{display:none}}
+</style>
+</head>
+<body>
+<div class="doc">
+	<div class="intro">
+		<h1>Μενού: δύο νέες ιδέες</h1>
+		<p>Σήμερα: πάνω 5 οθόνες, και όλες οι υπόλοιπες, ως 14 ανάλογα με τον ρόλο, σε μία λίστα κάτω από το «Περισσότερα». Για να βρεις την «Ομάδα τώρα» ή την «Εισαγωγή Excel» διαβάζεις όλη τη λίστα, και δεν ξέρεις τι κάνει η καθεμία αν δεν την ανοίξεις.</p>
+		<p>Οι οθόνες, οι διαδρομές και το ποιος βλέπει τι μένουν ίδια. Στο κινητό η κάτω μπάρα και το «☰» μένουν, με τις ίδιες ομάδες μέσα.</p>
+	</div>
+	<div class="switch"><button class="on" data-s="a">Α. Ομάδες στο «Περισσότερα»</button><button data-s="b">Β. Πλαϊνή στήλη</button></div>
+
+	<section class="stage on" data-stage="a">
+		<p class="note"><b>Η ιδέα:</b> η πάνω μπάρα μένει ως έχει. Το «Περισσότερα» ανοίγει ένα φαρδύ πάνελ με τις οθόνες σε τέσσερις ομάδες (Καθημερινά, Πελάτες και έγγραφα, Ομάδα, Βοήθεια), με εικονίδιο σε χρώμα και μια γραμμή για το τι κάνει η καθεμία. Πάνω στο πάνελ ένα κουτί «Πήγαινε σε…»: γράφεις «εισ» και πας στην Εισαγωγή με Enter. Το ίδιο ανοίγει από οπουδήποτε με Ctrl+K. Ομάδες που δεν έχουν τίποτα για τον ρόλο σου δεν φαίνονται.</p>
+		<div class="frame">
+			<div class="tb">
+				<span class="logo"><i></i>Energy CRM</span>
+				<div class="tabs"><span class="on">Αρχική</span><span>Υποψήφιοι <em>2</em></span><span>Συμβάσεις</span><span>Εργασίες <em>3</em></span><span>Πελάτες</span><span class="more open">Περισσότερα ▾</span></div>
+				<span class="new">＋ Νέα αίτηση</span>
+				<span class="srch">Αναζήτηση… <kbd>Ctrl K</kbd></span>
+				<span class="av" style="--h:140">KN</span>
+				<div class="mega">
+					<div class="mq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Πήγαινε σε… (γράψε για να βρεις οθόνη)</div>
+					<div class="cols">
+						<div class="col"><h5>Καθημερινά</h5>
+							<div class="mi"><span class="ic r">!</span><div><b>Εκκρεμότητες <em>4</em></b><small>Αιτήσεις που περιμένουν κάτι από σένα</small></div></div>
+							<div class="mi"><span class="ic a">⚑</span><div><b>Κολλημένες <em>2</em></b><small>Μέρες στην ίδια κατάσταση</small></div></div>
+							<div class="mi"><span class="ic g">€</span><div><b>Προσφορά</b><small>Πόσα κερδίζει ο πελάτης, από τον λογαριασμό</small></div></div>
+							<div class="mi"><span class="ic a">↻</span><div><b>Λήξεις</b><small>Συμβόλαια που λήγουν, για ανανέωση</small></div></div></div>
+						<div class="col"><h5>Πελάτες και έγγραφα</h5>
+							<div class="mi"><span class="ic n">▤</span><div><b>Έγγραφα</b><small>Ό,τι λείπει ή λήγει, σε όλες τις αιτήσεις</small></div></div>
+							<div class="mi hl"><span class="ic b">⇪</span><div><b>Εισαγωγή Excel</b><small>Καταστάσεις από το αρχείο του παρόχου</small></div></div>
+							<div class="mi"><span class="ic v">✉</span><div><b>Αναφορές</b><small>Προβλήματα που ανέφεραν οι συνεργάτες</small></div></div></div>
+						<div class="col"><h5>Ομάδα</h5>
+							<div class="mi"><span class="ic g">●</span><div><b>Ομάδα τώρα</b><small>Ποιος δουλεύει, τι έκανε σήμερα</small></div></div>
+							<div class="mi"><span class="ic g">⋔</span><div><b>Το δίκτυό μου</b><small>Υποσυνεργάτες και πάροχοι ομάδας</small></div></div>
+							<div class="mi"><span class="ic g">☺</span><div><b>Η ομάδα μου</b><small>Πωλητές, πρόσβαση, προαγωγές</small></div></div>
+							<div class="mi"><span class="ic a">€</span><div><b>Προμήθειες</b><small>Τι πληρώνεται και πότε</small></div></div>
+							<div class="mi"><span class="ic b">▥</span><div><b>Στατιστικά</b><small>Αιτήσεις, πάροχοι, μήνες</small></div></div></div>
+						<div class="col"><h5>Βοήθεια</h5>
+							<div class="mi"><span class="ic v">❖</span><div><b>Βάση Γνώσης</b><small>Δικαιολογητικά και εγγυήσεις ανά πάροχο</small></div></div>
+							<div class="mi"><span class="ic g">✓</span><div><b>Εκπαίδευση</b><small>Μαθήματα με τη σειρά · 3 από 8</small></div></div>
+							<div class="mi"><span class="ic n">▯</span><div><b>Εφαρμογή στο κινητό</b><small>Βάλε το CRM στην αρχική οθόνη</small></div></div></div>
+					</div>
+					<div class="mfoot"><span>↑↓ για επιλογή · Enter για άνοιγμα · Esc για κλείσιμο</span><span>Ctrl K από οπουδήποτε</span></div>
+				</div>
+			</div>
+			<div class="page"></div>
+		</div>
+	</section>
+
+	<section class="stage" data-stage="b">
+		<p class="note"><b>Η ιδέα:</b> όλες οι οθόνες σε μια στήλη αριστερά, πάντα ορατές, στις ίδιες ομάδες: τίποτα κρυμμένο σε «Περισσότερα». Η «Νέα αίτηση» πάνω πάνω. Οι ομάδες μαζεύουν με ένα πάτημα, και η στήλη στενεύει σε εικονίδια για όσους θέλουν χώρο. Πάνω από τη σελίδα μένουν μόνο ο τίτλος, η αναζήτηση και το καμπανάκι. Είναι η μεγαλύτερη αλλαγή από τις δύο, γιατί αλλάζει το σχήμα όλων των οθονών.</p>
+		<div class="frame">
+			<div class="shell">
+				<div class="rail">
+					<span class="logo"><i></i>Energy CRM</span>
+					<span class="new">＋ Νέα αίτηση</span>
+					<span class="ri on"><span class="ic g">⌂</span>Αρχική</span>
+					<span class="ri"><span class="ic a">★</span>Υποψήφιοι<em>2</em></span>
+					<span class="ri"><span class="ic n">▦</span>Συμβάσεις</span>
+					<span class="ri"><span class="ic b">✓</span>Εργασίες<em>3</em></span>
+					<span class="ri"><span class="ic v">☺</span>Πελάτες</span>
+					<div class="rg">Καθημερινά <span>▾</span></div>
+					<span class="ri"><span class="ic r">!</span>Εκκρεμότητες<em>4</em></span>
+					<span class="ri"><span class="ic a">⚑</span>Κολλημένες<em>2</em></span>
+					<span class="ri"><span class="ic g">€</span>Προσφορά</span>
+					<span class="ri"><span class="ic a">↻</span>Λήξεις</span>
+					<div class="rg">Ομάδα <span>▾</span></div>
+					<span class="ri"><span class="ic g">●</span>Ομάδα τώρα</span>
+					<span class="ri"><span class="ic g">⋔</span>Το δίκτυό μου</span>
+					<span class="ri"><span class="ic a">€</span>Προμήθειες</span>
+					<div class="rg">Βοήθεια <span>▸</span></div>
+					<div class="bottom"><span class="av" style="--h:140">KN</span><b style="font-size:13.5px">Κωνσταντίνος</b></div>
+				</div>
+				<div class="mainb">
+					<div class="mtop"><h3>Αρχική</h3><span class="srch">Αναζήτηση… <kbd>Ctrl K</kbd></span><span class="av" style="--h:140">KN</span></div>
+					<div class="page" style="margin:0;flex:1"></div>
+				</div>
+			</div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){
+	document.querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+</script>
+</body>
+</html>
