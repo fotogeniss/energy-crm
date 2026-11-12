@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Το δίκτυό μου — δύο νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--rose-t:#ff3c5a1f;
+	--blue:#2f7cf6;--blue-t:#2f7cf61f;--teal:#00a99a;--violet:#7a4de0;--violet-t:#7a4de01c;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:760px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:900px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn svg,.ic svg{width:18px;height:18px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 0;color:var(--ink2);font-size:15px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:3px 9px;border-radius:999px}
+.src svg{width:13px;height:13px}
+.plogo{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;letter-spacing:-.01em;padding:3px 8px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.plogo i{width:9px;height:9px;border-radius:50%}
+.save{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:3px 9px;border-radius:999px}
+
+
+/* ---------- A: Ο χάρτης ---------- */
+.me{position:relative;max-width:560px;margin:0 auto;border-radius:26px;padding:20px 22px;background:linear-gradient(150deg,#0f1a10,#16301a);color:#fff;box-shadow:var(--float);display:flex;align-items:center;gap:16px;overflow:hidden}
+.me::before{content:"";position:absolute;right:-70px;top:-90px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,#22cf2355,transparent 65%)}
+.me .av{width:52px;height:52px;flex-basis:52px;border-radius:16px;font-size:16px}
+.me h3{margin:0;font-size:22px;letter-spacing:-.03em}
+.me p{margin:3px 0 0;color:#c9d3c9;font-size:14px}
+.me .nums{margin-left:auto;display:flex;gap:18px;position:relative}
+.me .nums div{text-align:right}
+.me .nums b{display:block;font-size:26px;letter-spacing:-.03em}
+.me .nums span{font-size:12px;color:#9be59d}
+.trunk{width:2px;height:28px;margin:0 auto;background:#c8ccc5}
+.branch{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding-top:28px}
+.branch::before{content:"";position:absolute;top:0;left:12.5%;right:12.5%;height:2px;background:#c8ccc5}
+.node{position:relative;border-radius:20px;padding:16px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift);cursor:pointer;transition:box-shadow .15s}
+.node::before{content:"";position:absolute;top:-28px;left:50%;width:2px;height:28px;background:#c8ccc5}
+.node:hover{box-shadow:0 0 0 2px var(--green),var(--lift)}
+.node .top{display:flex;align-items:center;gap:10px}
+.node .top b{font-size:15px;letter-spacing:-.01em;line-height:1.2}
+.node .top small{display:block;font-size:12px;color:var(--ink3);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.node .stats{display:flex;gap:8px;margin-top:14px}
+.node .stats div{flex:1;padding:8px 10px;border-radius:12px;background:var(--fill)}
+.node .stats b{display:block;font-size:20px;letter-spacing:-.03em}
+.node .stats span{font-size:11.5px;color:var(--ink2)}
+.node .below{margin-top:12px;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2)}
+.node .below i{display:flex}
+.node .below i span{width:20px;height:20px;border-radius:7px;margin-left:-5px;box-shadow:0 0 0 2px #fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.node .below i span:first-child{margin-left:0}
+.node.quiet .stats b{color:var(--ink3)}
+.node.add{display:grid;place-items:center;text-align:center;background:transparent;box-shadow:none;border:2px dashed #c8ccc5;color:var(--ink2);font-weight:700;font-size:14px;min-height:160px}
+.node.add svg{width:26px;height:26px;display:block;margin:0 auto 6px;color:var(--green-ink)}
+.node.add:hover{border-color:var(--green);color:var(--green-ink)}
+.pv{margin-top:30px;border-radius:22px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);padding:18px 20px}
+.pv h4{margin:0 0 4px;font-size:16px;letter-spacing:-.01em}
+.pv>p{margin:0 0 14px;font-size:13.5px;color:var(--ink2)}
+.pvrow{display:grid;grid-template-columns:150px 1fr auto;align-items:center;gap:16px;padding:10px 0;border-top:1px solid var(--hair2)}
+.dots{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink2);min-width:0}
+.dots span{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;font-size:10px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.dots span.off{background:var(--fill);color:var(--ink3);box-shadow:inset 0 0 0 1px var(--hair)}
+.dots em{font-style:normal;margin-left:8px}
+.pvrow .acts{display:flex;gap:6px}
+.btn.dng{background:var(--solid);color:var(--rose);box-shadow:0 0 0 1px var(--rose-t)}
+
+/* ---------- B: Ο πίνακας ---------- */
+.split{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+.tot{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.tot div{padding:14px 16px;border-radius:18px;background:var(--glass);box-shadow:0 0 0 1px var(--hair)}
+.tot b{display:block;font-size:28px;letter-spacing:-.035em}
+.tot span{font-size:13px;color:var(--ink2)}
+.board{border-radius:22px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift);overflow:hidden}
+.brow{display:grid;grid-template-columns:28px 40px 1fr 1.1fr 64px;align-items:center;gap:12px;padding:14px 18px;border-top:1px solid var(--hair2);cursor:pointer}
+.brow:first-child{border-top:0}
+.brow:hover{background:#f7faf6}
+.brow .rk{font-size:13px;font-weight:800;color:var(--ink3);text-align:center}
+.brow.top .rk{color:var(--green-ink)}
+.brow .who b{display:block;font-size:15px}
+.brow .who small{font-size:12.5px;color:var(--ink3)}
+.bar{height:10px;border-radius:999px;background:var(--fill);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#22cf23,#0e9a12)}
+.brow .n{text-align:right}
+.brow .n b{display:block;font-size:18px;letter-spacing:-.02em}
+.brow .n span{font-size:11.5px;color:var(--ink3)}
+.tm{display:inline-block;white-space:nowrap;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:2px 8px;border-radius:999px;margin-left:6px}
+.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px}
+.inv{border-radius:22px;padding:18px;background:linear-gradient(160deg,#f2fcef,#fff);box-shadow:0 0 0 1px #16c21740,var(--lift)}
+.inv h4{margin:0 0 4px;font-size:17px;letter-spacing:-.02em}
+.inv p{margin:0 0 12px;font-size:13px;color:var(--ink2);line-height:1.45}
+.inp{display:block;width:100%;font:inherit;font-size:14px;padding:11px 13px;border-radius:12px;border:0;box-shadow:0 0 0 1px var(--hair);background:#fff;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:6px 10px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px var(--hair);cursor:pointer}
+.chip i{width:8px;height:8px;border-radius:50%}
+.chip.on{box-shadow:0 0 0 2px var(--green);background:#f2fcef}
+.chip.on::after{content:"✓";color:var(--green-ink)}
+.inv .btn{width:100%}
+.pvm{border-radius:22px;padding:16px 18px;background:var(--solid);box-shadow:0 0 0 1px var(--hair)}
+.pvm h4{margin:0 0 10px;font-size:15px}
+.pvm .r{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--hair2);font-size:13.5px}
+.pvm .r .plogo{min-width:96px}
+.pvm .r .bar{flex:1;height:8px}
+.pvm .r small{color:var(--ink2);min-width:42px;text-align:right}
+.pvm .r a{font-size:12.5px;font-weight:700;color:var(--green-ink);text-decoration:none}
+
+@media (max-width:860px){
+	.frame{padding:16px;border-radius:22px}
+	.head h2{font-size:30px}
+	.me{flex-wrap:wrap}.me .nums{margin-left:0;width:100%;justify-content:flex-start}.me .nums div{text-align:left}
+	.trunk{margin-left:26px}
+	.branch{grid-template-columns:1fr;padding:0 0 0 22px;gap:10px;border-left:2px solid #c8ccc5;margin-left:26px}
+	.branch::before{display:none}
+	.node::before{top:50%;left:-22px;width:22px;height:2px}
+	.node.add{min-height:70px}
+	.pvrow{grid-template-columns:1fr;gap:8px}
+	.split{grid-template-columns:1fr}
+	.side{position:static}
+	.tot b{font-size:22px}
+	.brow{grid-template-columns:18px 36px minmax(0,1fr) 48px;gap:10px;padding:12px 14px}.brow .who b{font-size:14px}.brow .who small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	.brow .bar{grid-column:3/5;grid-row:2}
+	.brow .av{width:36px;height:36px;flex-basis:36px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+<symbol id="mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></g></symbol>
+<symbol id="plug" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/></symbol>
+</defs></svg>
+
+<div class="doc">
+	<div class="intro">
+		<h1>Το δίκτυό μου: δύο νέες ιδέες</h1>
+		<p>Σήμερα η οθόνη είναι ένας πίνακας τεσσάρων στηλών, και η πρόσκληση και οι πάροχοι ομάδας κρύβονται σε φόρμες που ανοίγουν στο τέλος της σελίδας.</p>
+		<p>Ίδια δεδομένα από πίσω: όνομα, email, πόσους έχει από κάτω, πόσες αιτήσεις. Ίδιες ενέργειες: άνοιγμα συνεργάτη, πρόσκληση με παρόχους, «Σε όλους» / «Αφαίρεση από όλους». Καμία αλλαγή στον server.</p>
+	</div>
+
+	<div class="switch"><button class="on" data-s="a">Α. Ο χάρτης</button><button data-s="b">Β. Η κατάταξη</button></div>
+
+	<!-- ================= A ================= -->
+	<section class="stage on" data-stage="a">
+		<p class="note"><b>Η ιδέα:</b> το δίκτυο φαίνεται σαν δίκτυο. Πάνω εσύ, με το σύνολο της ομάδας. Από κάτω, δεμένοι με γραμμές, οι άμεσοι υποσυνεργάτες σου ως κάρτες: αιτήσεις και πόσους έχουν από κάτω. Όποιος δεν έχει κάνει ακόμα αίτηση φαίνεται σβηστός. Η πρόσκληση είναι η τελευταία κάρτα του δέντρου, εκεί που θα μπει ο νέος. Από κάτω οι πάροχοι: πόσοι από την ομάδα τους έχουν, με ένα κουμπί για όλους. Στο κινητό το δέντρο γίνεται κάθετη γραμμή.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Το δίκτυό μου</h2><p>Πάτα σε έναν για να δεις τα στατιστικά του.</p></div></div>
+
+			<div class="me">
+				<span class="av" style="--h:140">ΚΝ</span>
+				<div><h3>Εσύ</h3><p>3 άμεσοι συνεργάτες, 7 ακόμα από κάτω τους</p></div>
+				<div class="nums"><div><b>10</b><span>άτομα</span></div><div><b>69</b><span>αιτήσεις ομάδας</span></div></div>
+			</div>
+			<div class="trunk"></div>
+			<div class="branch">
+				<div class="node">
+					<div class="top"><span class="av" style="--h:210">ΓΑ</span><div><b>Γιώργος Αγναντόπουλος</b><small>g.agnantopoulos@gmail.com</small></div></div>
+					<div class="stats"><div><b>41</b><span>αιτήσεις</span></div><div><b>4</b><span>από κάτω</span></div></div>
+				</div>
+				<div class="node">
+					<div class="top"><span class="av" style="--h:330">ΜΠ</span><div><b>Μαρία Παπαδοπούλου</b><small>maria.p@store-patra.gr</small></div></div>
+					<div class="stats"><div><b>28</b><span>αιτήσεις</span></div><div><b>3</b><span>από κάτω</span></div></div>
+				</div>
+				<div class="node quiet">
+					<div class="top"><span class="av" style="--h:60">ΔΚ</span><div><b>Δημήτρης Κωστόπουλος</b><small>dkostop@yahoo.gr</small></div></div>
+					<div class="stats"><div><b>0</b><span>αιτήσεις</span></div><div><b>0</b><span>από κάτω</span></div></div>
+					<div class="below">Δεν έχει κάνει ακόμα αίτηση</div>
+				</div>
+				<div class="node add"><div><svg><use href="#plus"/></svg>Νέος υποσυνεργάτης</div></div>
+			</div>
+
+			<div class="pv">
+				<h4>Πάροχοι της ομάδας</h4>
+				<p>Πόσοι από τους άμεσους συνεργάτες σου βλέπουν κάθε πάροχο. Ο καθένας τους αποφασίζει μόνος για τη δική του ομάδα.</p>
+				<div class="pvrow"><span class="plogo"><i style="background:#f39200"></i>Protergia</span>
+					<div class="dots"><div class="bar" style="flex:1"><i style="width:100%"></i></div><em>3 από 3</em></div>
+					<div class="acts"><span class="btn dng sm">Αφαίρεση από όλους</span></div></div>
+				<div class="pvrow"><span class="plogo"><i style="background:#1d4fd8"></i>Volton</span>
+					<div class="dots"><div class="bar" style="flex:1"><i style="width:67%"></i></div><em>2 από 3</em></div>
+					<div class="acts"><span class="btn gho sm">Σε όλους</span><span class="btn dng sm">Αφαίρεση από όλους</span></div></div>
+				<div class="pvrow"><span class="plogo"><i style="background:#e30613"></i>ΔΕΗ</span>
+					<div class="dots"><div class="bar" style="flex:1"><i style="width:0%"></i></div><em>Κανένας</em></div>
+					<div class="acts"><span class="btn gho sm">Σε όλους</span></div></div>
+			</div>
+		</div>
+	</section>
+
+	<!-- ================= B ================= -->
+	<section class="stage" data-stage="b">
+		<p class="note"><b>Η ιδέα:</b> ποιος φέρνει δουλειά. Πάνω τρία σύνολα. Οι συνεργάτες ταξινομημένοι κατά αιτήσεις, με μπάρα ώστε να φαίνεται αμέσως η απόσταση πρώτου και τελευταίου, και πόσους έχει ο καθένας από κάτω. Δεξιά, πάντα ανοιχτή, η πρόσκληση με τους παρόχους, και από κάτω οι πάροχοι ομάδας σε μικρό πίνακα. Στο κινητό η πρόσκληση πάει κάτω από τη λίστα.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Το δίκτυό μου</h2><p>Πάτα σε έναν για να δεις τα στατιστικά του.</p></div></div>
+			<div class="split">
+				<div>
+					<div class="tot"><div><b>4</b><span>άμεσοι συνεργάτες</span></div><div><b>7</b><span>από κάτω τους</span></div><div><b>86</b><span>αιτήσεις ομάδας</span></div></div>
+					<div class="board">
+						<div class="brow top"><span class="rk">1</span><span class="av" style="--h:210">ΓΑ</span><div class="who"><b>Γιώργος Αγναντόπουλος<span class="tm">4 από κάτω</span></b><small>g.agnantopoulos@gmail.com</small></div><div class="bar"><i style="width:100%"></i></div><div class="n"><b>41</b><span>αιτήσεις</span></div></div>
+						<div class="brow"><span class="rk">2</span><span class="av" style="--h:330">ΜΠ</span><div class="who"><b>Μαρία Παπαδοπούλου<span class="tm">3 από κάτω</span></b><small>maria.p@store-patra.gr</small></div><div class="bar"><i style="width:68%"></i></div><div class="n"><b>28</b><span>αιτήσεις</span></div></div>
+						<div class="brow"><span class="rk">3</span><span class="av" style="--h:20">ΕΛ</span><div class="who"><b>Ελένη Λαμπράκη</b><small>eleni.l@gmail.com</small></div><div class="bar"><i style="width:41%"></i></div><div class="n"><b>17</b><span>αιτήσεις</span></div></div>
+						<div class="brow"><span class="rk">4</span><span class="av" style="--h:60">ΔΚ</span><div class="who"><b>Δημήτρης Κωστόπουλος</b><small>dkostop@yahoo.gr</small></div><div class="bar"><i style="width:0"></i></div><div class="n"><b>0</b><span>αιτήσεις</span></div></div>
+					</div>
+				</div>
+				<div class="side">
+					<div class="inv">
+						<h4>Νέος υποσυνεργάτης</h4>
+						<p>Θα του σταλεί email με σύνδεσμο για να ορίσει κωδικό.</p>
+						<input class="inp" placeholder="Ονοματεπώνυμο">
+						<input class="inp" placeholder="Email">
+						<div style="font-size:12.5px;font-weight:700;color:var(--ink2);margin-top:6px">Πάροχοι που θα βλέπει</div>
+						<div class="chips"><span class="chip on"><i style="background:#f39200"></i>Protergia</span><span class="chip on"><i style="background:#1d4fd8"></i>Volton</span><span class="chip"><i style="background:#e30613"></i>ΔΕΗ</span></div>
+						<span class="btn pri"><svg><use href="#mail"/></svg>Στείλε πρόσκληση</span>
+					</div>
+					<div class="pvm">
+						<h4>Πάροχοι ομάδας</h4>
+						<div class="r"><span class="plogo"><i style="background:#f39200"></i>Protergia</span><div class="bar"><i style="width:100%"></i></div><small>4 / 4</small></div>
+						<div class="r"><span class="plogo"><i style="background:#1d4fd8"></i>Volton</span><div class="bar"><i style="width:50%"></i></div><small>2 / 4</small><a href="#">Σε όλους</a></div>
+						<div class="r"><span class="plogo"><i style="background:#e30613"></i>ΔΕΗ</span><div class="bar"><i style="width:0"></i></div><small>0 / 4</small><a href="#">Σε όλους</a></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){
+	document.querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+document.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){c.classList.toggle('on')}});
+</script>
+</body>
+</html>

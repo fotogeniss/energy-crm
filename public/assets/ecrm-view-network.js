@@ -1,6 +1,6 @@
 /* Energy CRM — network: the partner tree below the acting user. */
 
-import { api, banner, checkedProviderIds, esc, failureText, fetch, H, postJson, providerChipsHtml, toast, viewEl, wireProviderChips } from '@energy-crm/util';
+import { api, banner, checkedProviderIds, esc, failureText, fetch, H, postJson, providerChipsHtml, providerMark, toast, viewEl, wireProviderChips } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
 import { openPartner } from '@energy-crm/navigate';
 
@@ -14,6 +14,53 @@ export function loadNetwork(flash) {
 function networkIcon() {
 	return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.2 10.8 15.8 7.2"/><path d="M8.2 13.2 15.8 16.8"/></svg>';
 }
+/* (361) «Signature»: ο χάρτης. Πάνω εσύ με το σύνολο της ομάδας, από κάτω
+ * οι άμεσοι υποσυνεργάτες ως κάρτες δεμένες με γραμμές, και τελευταία κάρτα
+ * η πρόσκληση. Από κάτω, πάντα ανοιχτοί, οι πάροχοι ομάδας. Ίδια δεδομένα
+ * και ίδια data-* με την κλασική εμφάνιση. docs/UI-NETWORK-FRESH.html, Α. */
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+function sigPlural(n, one, many) { return n === 1 ? one : many; }
+
+function sigNetworkHTML(partners, flash) {
+	var below = partners.reduce(function (n, p) { return n + (Number(p.team_size) || 0); }, 0);
+	var total = partners.reduce(function (n, p) { return n + (Number(p.contracts) || 0); }, 0);
+	var people = partners.length + below;
+	var sub = partners.length
+		? partners.length + sigPlural(partners.length, ' άμεσος συνεργάτης', ' άμεσοι συνεργάτες') +
+			(below ? ', ' + below + ' ακόμα από κάτω τους' : '')
+		: 'Δεν έχεις υποσυνεργάτες ακόμα';
+
+	var nodes = partners.map(function (p) {
+		var n = Number(p.contracts) || 0;
+		var t = Number(p.team_size) || 0;
+		return '<div class="sig-nnode' + (n ? '' : ' is-quiet') + '" data-member="' + esc(String(p.id)) + '" role="button" tabindex="0">' +
+			'<div class="sig-nnode__top"><span class="sig-member__av" style="--h:' + tint(p.name) + '">' + esc(initials(p.name)) + '</span>' +
+			'<span class="sig-nnode__who"><b>' + esc(p.name) + '</b><small>' + esc(p.email || '') + '</small></span></div>' +
+			'<div class="sig-nnode__stats"><div><b>' + esc(String(n)) + '</b><span>' + sigPlural(n, 'αίτηση', 'αιτήσεις') + '</span></div>' +
+			'<div><b>' + esc(String(t)) + '</b><span>από κάτω</span></div></div>' +
+			(n ? '' : '<p class="sig-nnode__note">Δεν έχει κάνει ακόμα αίτηση</p>') +
+			'</div>';
+	}).join('');
+
+	return '<header class="sig-cuhead"><div><h2>Το δίκτυό μου</h2><p>Πάτα σε έναν για να δεις τα στατιστικά του.</p></div></header>' +
+		(flash ? '<div class="ecrm-import-banner is-ok">' + esc(flash) + '</div>' : '') +
+		'<div class="sig-nmap">' +
+			'<div class="sig-nme"><span class="sig-nme__ico">' + networkIcon() + '</span>' +
+				'<div class="sig-nme__who"><b>Εσύ</b><span>' + esc(sub) + '</span></div>' +
+				'<div class="sig-nme__nums"><div><b>' + esc(String(people)) + '</b><span>' + sigPlural(people, 'άτομο', 'άτομα') + '</span></div>' +
+				'<div><b>' + esc(String(total)) + '</b><span>αιτήσεις ομάδας</span></div></div></div>' +
+			'<div class="sig-nbranch">' + nodes +
+				'<button type="button" class="sig-nnode sig-nnode--add" data-show-invite>' +
+				'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+				'<span>' + (partners.length ? 'Νέος υποσυνεργάτης' : 'Πρόσκληση του πρώτου υποσυνεργάτη') + '</span></button>' +
+			'</div>' +
+		'</div>';
+}
+
 function renderNetwork(view, partners, flash) {
 	var head =
 		'<header class="ecrm-head ecrm-head--row"><div class="ecrm-titlewrap"><span class="ecrm-pageicon">' + networkIcon() + '</span>' +
@@ -57,7 +104,10 @@ function renderNetwork(view, partners, flash) {
 		'<span class="ecrm-hint">Θα του σταλεί email με σύνδεσμο για να ορίσει κωδικό.</span></div>' +
 		'<div class="ecrm-ai-status" data-invite-msg></div></div>';
 
-	view.innerHTML = head + (flash ? '<div class="ecrm-import-banner is-ok">' + esc(flash) + '</div>' : '') + bodyCard + inviteForm + '<div class="ecrm-card" data-bulkwrap hidden></div>';
+	var sig = isSignature();
+	view.innerHTML = sig
+		? sigNetworkHTML(partners, flash) + inviteForm + (partners.length ? '<div class="sig-npv" data-bulkwrap></div>' : '')
+		: head + (flash ? '<div class="ecrm-import-banner is-ok">' + esc(flash) + '</div>' : '') + bodyCard + inviteForm + '<div class="ecrm-card" data-bulkwrap hidden></div>';
 
 	var providersPromise = null;
 	function loadProviders() {
@@ -73,6 +123,12 @@ function renderNetwork(view, partners, flash) {
 			openPartner(this.getAttribute('data-member'));
 		});
 	});
+	view.querySelectorAll('.sig-nnode[data-member]').forEach(function (node) {
+		node.addEventListener('keydown', function (ev) {
+			if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openPartner(this.getAttribute('data-member')); }
+		});
+	});
+	if (sig && partners.length) { renderBulk(view.querySelector('[data-bulkwrap]'), loadProviders); }
 	view.querySelectorAll('[data-show-invite]').forEach(function (b) {
 		b.addEventListener('click', function () {
 			var w = view.querySelector('[data-invitewrap]');
@@ -163,11 +219,30 @@ function renderBulk(wrap, loadProviders) {
 				'<td class="ecrm-ptbl__act">' + grantBtn + ' ' + revokeBtn + '</td></tr>';
 		}).join('');
 
+		if (isSignature()) {
+			var srows = (d.providers || []).map(function (p) {
+				var has = p.has || 0;
+				var pct = members ? Math.round((has / members) * 100) : 0;
+				var cnt = has >= members && members ? 'Όλοι' : (has ? has + ' από ' + members : 'Κανένας');
+				return '<div class="sig-npv__row">' +
+					'<span class="sig-npv__name">' + providerMark(p.name, p.logo) + '<b>' + esc(p.name) + '</b></span>' +
+					'<span class="sig-npv__bar" aria-hidden="true"><i style="width:' + esc(String(pct)) + '%"></i></span>' +
+					'<span class="sig-npv__cnt">' + esc(cnt) + '</span>' +
+					'<span class="sig-npv__act">' +
+					(has < members ? '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-bulk-op="grant" data-bulk-id="' + esc(String(p.id)) + '">Σε όλους</button>' : '') +
+					(has > 0 ? '<button type="button" class="ecrm-btn ecrm-btn--danger ecrm-btn--sm" data-bulk-op="revoke" data-bulk-id="' + esc(String(p.id)) + '" data-bulk-name="' + esc(p.name) + '">Αφαίρεση από όλους</button>' : '') +
+					'</span></div>';
+			}).join('');
+			wrap.innerHTML = '<h3>Πάροχοι της ομάδας</h3>' +
+				'<p>Πόσοι από τους άμεσους συνεργάτες σου βλέπουν κάθε πάροχο. Ο καθένας τους αποφασίζει μόνος για τη δική του ομάδα.</p>' +
+				(srows || '<div class="ecrm-empty">Δεν έχεις κανέναν πάροχο ακόμα.</div>');
+		} else {
 		wrap.innerHTML = '<div class="ecrm-step">Πάροχοι ομάδας</div>' +
 			(rows
 				? '<div class="ecrm-tablewrap"><table class="ecrm-ptbl"><thead><tr><th>Πάροχος</th><th>Το έχουν</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
 				: '<div class="ecrm-empty">Δεν έχεις κανέναν πάροχο ακόμα.</div>') +
 			'<div class="ecrm-hint">Μόνο οι άμεσοι υποσυνεργάτες σου. Ο καθένας τους αποφασίζει ο ίδιος για τη δική του ομάδα.</div>';
+		}
 
 		wrap.querySelectorAll('[data-bulk-op]').forEach(function (b) {
 			b.addEventListener('click', function () {

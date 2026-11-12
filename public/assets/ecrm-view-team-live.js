@@ -4,7 +4,7 @@
  * after the view is left keeps polling a screen nobody is looking at. */
 
 import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
-import { timeAgo } from '@energy-crm/format';
+import { initials, timeAgo, tint } from '@energy-crm/format';
 
 var teamLiveTimer = null;
 export function loadTeamLive() {
@@ -28,7 +28,72 @@ export function loadTeamLive() {
 			.then(function (d) { if (d && d.ok) renderTeamLive(v, d); }).catch(function () {});
 	}, 30000);
 }
+/* (364) «Signature»: ο πίνακας της μέρας. Σκούρα κάρτα με το «σήμερα» της
+ * ομάδας, δίπλα «Θέλουν προσοχή» (καταχωρήσεις και εργασίες που περιμένουν),
+ * από κάτω όλοι σε κατάταξη της μέρας με μπάρες σήμερα/μήνας. Ίδια δεδομένα
+ * και ίδια ανανέωση κάθε 30". docs/UI-TEAMLIVE-FRESH.html, Β. */
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+function sigAv(m, size) {
+	return '<span class="sig-tlav' + (m.online ? ' is-on' : '') + (size ? ' sig-tlav--' + size : '') + '" style="--h:' + tint(m.name) + '">' + esc(initials(m.name)) + '</span>';
+}
+
+function sigPlural(n, one, many) { return n === 1 ? one : many; }
+
+function sigTeamLiveHTML(d) {
+	var t = d.totals || {};
+	var members = d.members || [];
+	var online = members.filter(function (m) { return m.online; }).length;
+	var topToday = members.reduce(function (n, m) { return Math.max(n, Number(m.today) || 0); }, 0);
+	var topMonth = members.reduce(function (n, m) { return Math.max(n, Number(m.month) || 0); }, 0);
+
+	var needs = members.filter(function (m) { return (m.presale || 0) + (m.open_tasks || 0) > 0; })
+		.sort(function (a, b) { return ((b.presale || 0) + (b.open_tasks || 0)) - ((a.presale || 0) + (a.open_tasks || 0)); });
+	var needsHTML = needs.length
+		? needs.map(function (m) {
+			var pills = (m.presale ? '<span class="sig-tlpill">' + m.presale + ' σε καταχώρηση</span>' : '') +
+				(m.open_tasks ? '<span class="sig-tlpill">' + m.open_tasks + sigPlural(m.open_tasks, ' εργασία', ' εργασίες') + '</span>' : '');
+			return '<div class="sig-tlneed">' + sigAv(m, 'sm') + '<b>' + esc(m.name) + '</b><span class="sig-tlneed__p">' + pills + '</span></div>';
+		}).join('')
+		: '<p class="sig-tlcalm">Τίποτα δεν περιμένει. Καμία καταχώρηση ή εργασία σε αναμονή.</p>';
+
+	var rows = members.map(function (m) {
+		var today = Number(m.today) || 0;
+		var month = Number(m.month) || 0;
+		var pt = topToday ? Math.round(today / topToday * 100) : 0;
+		var pm = topMonth ? Math.round(month / topMonth * 100) : 0;
+		return '<div class="sig-tlrow' + (m.online ? ' is-on' : '') + '">' +
+			sigAv(m) +
+			'<div class="sig-tlrow__who"><b>' + esc(m.name) + '</b><small>' + esc(m.role || '') + (m.is_self ? ' · εσύ' : '') + '</small></div>' +
+			'<div class="sig-tlrow__bars" aria-hidden="true"><span class="is-today"><i style="width:' + pt + '%"></i></span><span class="is-month"><i style="width:' + pm + '%"></i></span></div>' +
+			'<div class="sig-tlrow__n"><b>' + today + '</b><span>' + month + ' τον μήνα</span></div>' +
+			'<div class="sig-tlrow__last">' + (m.online ? 'online' : (m.last ? esc(timeAgo(m.last)) : '—')) + '</div>' +
+		'</div>';
+	}).join('');
+
+	return '<header class="sig-cuhead"><div><h2>Ομάδα τώρα</h2><p>Ανανεώνεται μόνο του κάθε 30″</p></div>' +
+			'<span class="sig-tllive"><i></i>' + online + ' online' + (d.ts ? ' · ' + esc(d.ts) : '') + '</span></header>' +
+		'<div class="sig-tlhero">' +
+			'<div class="sig-tlday"><small>ΣΗΜΕΡΑ</small><div class="sig-tlday__big">' + (t.today || 0) + '</div>' +
+				'<p>' + sigPlural(t.today || 0, 'αίτηση', 'αιτήσεις') + ' από την ομάδα · ' + online + ' από ' + members.length + ' online</p>' +
+				'<div class="sig-tlday__row">' +
+					'<div><b>' + (t.month || 0) + '</b><span>τον μήνα</span></div>' +
+					'<div><b>' + (t.presale || 0) + '</b><span>καταχώρηση</span></div>' +
+					'<div><b>' + (t.finalisation || 0) + '</b><span>οριστικοποίηση</span></div>' +
+					'<div><b>' + (t.active || 0) + '</b><span>ενεργές</span></div>' +
+				'</div></div>' +
+			'<div class="sig-tlhelp"><h3>Θέλουν προσοχή</h3>' + needsHTML + '</div>' +
+		'</div>' +
+		(members.length
+			? '<div class="sig-tlboard"><div class="sig-tlboard__key" aria-hidden="true"><span class="is-today">σήμερα</span><span class="is-month">μήνας</span></div>' + rows + '</div>'
+			: '<div class="sig-tempty"><b>Δεν υπάρχουν μέλη ομάδας.</b></div>');
+}
+
 function renderTeamLive(view, d) {
+	if (isSignature()) { view.innerHTML = sigTeamLiveHTML(d); return; }
 	var t = d.totals || {};
 	var stat = function (label, val, cls) {
 		return '<div class="ecrm-tlstat ' + (cls || '') + '"><div class="ecrm-tlstat__n">' + val + '</div><div class="ecrm-tlstat__l">' + label + '</div></div>';

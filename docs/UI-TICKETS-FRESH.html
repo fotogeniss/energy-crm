@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Αναφορές — δύο νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--rose-t:#ff3c5a1f;
+	--blue:#2f7cf6;--blue-t:#2f7cf61f;--teal:#00a99a;--violet:#7a4de0;--violet-t:#7a4de01c;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:760px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:900px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn svg,.ic svg{width:18px;height:18px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 0;color:var(--ink2);font-size:15px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:3px 9px;border-radius:999px}
+.src svg{width:13px;height:13px}
+.plogo{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;letter-spacing:-.01em;padding:3px 8px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.plogo i{width:9px;height:9px;border-radius:50%}
+.save{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:3px 9px;border-radius:999px}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);color:var(--ink2);white-space:nowrap}
+.chip b{margin-left:5px;color:var(--ink3)}
+.chip.on{background:#1b1d1a;color:#fff;box-shadow:none}.chip.on b{color:#9be59d}
+.st{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.st.new{background:var(--blue-t);color:var(--blue)}.st.prog{background:var(--amber-t);color:var(--amber)}.st.done{background:var(--green-t);color:var(--green-ink)}.st.no{background:var(--fill);color:var(--ink3)}
+.urg{font-size:11.5px;font-weight:800;color:var(--rose);background:var(--rose-t);padding:3px 8px;border-radius:999px;white-space:nowrap}
+.meta{font-size:12.5px;color:var(--ink3)}
+/* A */
+.inbox{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}
+.list{border-radius:22px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);padding:6px}
+.it{padding:12px 14px;border-radius:16px;cursor:pointer}
+.it+.it{margin-top:2px}
+.it .r1{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.it .r1 .when{margin-left:auto;font-size:12px;color:var(--ink3)}
+.it b{display:block;font-size:14px;line-height:1.35;margin-bottom:3px}
+.it.on{background:#fff;box-shadow:0 0 0 2px var(--green),var(--lift)}
+.it.unread b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:7px;vertical-align:middle}
+.conv{border-radius:24px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--float);overflow:hidden}
+.ch{padding:20px 22px;border-bottom:1px solid var(--hair2)}
+.ch .r1{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.ch h3{margin:0 0 6px;font-size:22px;letter-spacing:-.025em}
+.ch a{color:var(--green-ink);font-weight:700;text-decoration:none}
+.thread{padding:18px 22px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(#fafbf9,#fff)}
+.msg{max-width:78%;padding:12px 14px;border-radius:18px 18px 18px 6px;background:var(--fill);font-size:14.5px;line-height:1.5}
+.msg small{display:block;font-size:11.5px;color:var(--ink3);margin-bottom:3px;font-weight:700}
+.msg.me{align-self:flex-end;border-radius:18px 18px 6px 18px;background:#e6f8e3}
+.sys{align-self:center;font-size:12px;color:var(--ink3);background:#fff;box-shadow:0 0 0 1px var(--hair);padding:4px 10px;border-radius:999px}
+.shot{align-self:flex-start;width:220px;height:130px;border-radius:14px;background:linear-gradient(135deg,#e8ece6,#d5dbd2);box-shadow:0 0 0 1px var(--hair);display:grid;place-items:center;font-size:12px;color:var(--ink3)}
+details.tech{margin:0 22px 14px;border-radius:14px;background:var(--fill);padding:10px 14px;font-size:13px;color:var(--ink2)}
+details.tech summary{cursor:pointer;font-weight:700;color:var(--ink)}
+.reply{padding:14px 22px 18px;border-top:1px solid var(--hair2)}
+.reply textarea{width:100%;border:0;border-radius:16px;box-shadow:0 0 0 1px var(--hair);padding:12px 14px;font:inherit;font-size:14.5px;min-height:70px;resize:vertical}
+.ra{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.ra .sp{flex:1}
+.ra small{font-size:12px;color:var(--ink3);width:100%}
+/* B */
+.kan{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
+.colk{border-radius:22px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);padding:12px}
+.colk h4{display:flex;align-items:center;gap:8px;margin:2px 4px 12px;font-size:14px}
+.colk h4 em{font-style:normal;color:var(--ink3);font-weight:600}
+.kc{border-radius:16px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift);padding:12px 14px;margin-bottom:8px}
+.kc b{display:block;font-size:14px;line-height:1.35;margin:6px 0 4px}
+.kc .r1{display:flex;gap:6px;align-items:center}.kc .r1 .when{margin-left:auto;font-size:12px;color:var(--ink3)}
+.kc.urgent{box-shadow:0 0 0 1.5px var(--rose),var(--lift)}
+.colk.closed .kc{opacity:.75}
+.more{font-size:12.5px;font-weight:700;color:var(--ink2);text-align:center;padding:6px}
+.drawer{margin-top:18px;border-radius:24px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--float);padding:18px 20px}
+.drawer p{margin:0;font-size:13.5px;color:var(--ink2)}
+@media (max-width:860px){
+	.frame{padding:16px;border-radius:22px}.head h2{font-size:30px}
+	.inbox{grid-template-columns:1fr}.msg{max-width:92%}
+	.kan{grid-template-columns:1fr}
+	.chips{flex-wrap:nowrap;overflow-x:auto}
+}
+</style>
+</head>
+<body>
+<div class="doc">
+	<div class="intro">
+		<h1>Αναφορές: δύο νέες ιδέες</h1>
+		<p>Σήμερα η οθόνη είναι καρτέλες κατάστασης και μια λίστα. Πάτημα σε αναφορά αντικαθιστά όλη τη σελίδα, και για την επόμενη γυρνάς με «← Όλες οι αναφορές». Η συζήτηση είναι κείμενο κάτω από κείμενο.</p>
+		<p>Ίδια δεδομένα και ίδιες ενέργειες: απάντηση, αλλαγή κατάστασης (μόνο ο διαχειριστής), «Δεν λύθηκε;», εικόνα, τεχνικά, άνοιγμα αίτησης. Καμία αλλαγή στον server.</p>
+	</div>
+	<div class="switch"><button class="on" data-s="a">Α. Τα εισερχόμενα</button><button data-s="b">Β. Ο πίνακας</button></div>
+
+	<section class="stage on" data-stage="a">
+		<p class="note"><b>Η ιδέα:</b> σαν εφαρμογή μηνυμάτων. Αριστερά η λίστα, δεξιά η ανοιχτή αναφορά, χωρίς να φεύγεις από τη λίστα. Η συζήτηση σε φούσκες, οι δικές σου δεξιά, οι αλλαγές κατάστασης ως μικρές ετικέτες στη μέση. Η εικόνα μέσα στη συζήτηση, τα τεχνικά κλειστά σε ένα «Τεχνικά». Από κάτω το κουτί απάντησης και τα κουμπιά κατάστασης. Στο κινητό η αναφορά ανοίγει σε όλη την οθόνη.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Αναφορές προβλημάτων</h2><p>Όλες οι αναφορές της εταιρείας.</p></div><span class="btn pri">Νέα αναφορά</span></div>
+			<div class="chips"><span class="chip on">Ανοιχτές<b>4</b></span><span class="chip">Νέα<b>3</b></span><span class="chip">Σε εξέλιξη<b>1</b></span><span class="chip">Λύθηκε<b>18</b></span><span class="chip">Δεν είναι πρόβλημα<b>2</b></span></div>
+			<div class="inbox">
+				<div class="list">
+					<div class="it on"><div class="r1"><span class="st prog">Σε εξέλιξη</span><span class="urg">με σταματάει</span><span class="when">πριν 12΄</span></div><b>Δεν ανεβαίνει η ταυτότητα στο βήμα 3</b><span class="meta">#214 · Μαρία Π. · Αίτηση PROT-39231 · 💬 3</span></div>
+					<div class="it"><div class="r1"><span class="st new">Νέα</span><span class="when">πριν 1 ώρα</span></div><b>Η Προσφορά δεν βρίσκει τιμή για Volton</b><span class="meta">#213 · Γιώργος Α. · Προσφορά</span></div>
+					<div class="it"><div class="r1"><span class="st new">Νέα</span><span class="when">χθες</span></div><b>Το SMS υπογραφής δεν έφτασε στον πελάτη</b><span class="meta">#211 · Ελένη Λ. · Αίτηση VOL-39210 · 📷</span></div>
+					<div class="it"><div class="r1"><span class="st new">Νέα</span><span class="when">πριν 2 μέρες</span></div><b>Στο κινητό κόβεται το κουμπί «Συνέχεια»</b><span class="meta">#209 · Δημήτρης Κ. · Νέα αίτηση · 📷</span></div>
+				</div>
+				<div class="conv">
+					<div class="ch"><div class="r1"><span class="st prog">Σε εξέλιξη</span><span class="urg">με σταματάει</span></div>
+						<h3>#214 · Δεν ανεβαίνει η ταυτότητα στο βήμα 3</h3>
+						<div class="meta">Μαρία Παπαδοπούλου · Πωλήτρια · πριν 40΄ · <a href="#">Άνοιγμα αίτησης PROT-39231</a></div></div>
+					<div class="thread">
+						<div class="msg"><small>Μαρία Παπαδοπούλου · πριν 40΄</small>Πατάω «Ανέβασμα» στην ταυτότητα, γυρίζει λίγο και μετά δεν εμφανίζεται τίποτα. Ο πελάτης περιμένει μπροστά μου.</div>
+						<div class="shot">εικόνα της αναφοράς</div>
+						<span class="sys">Κωνσταντίνος → Σε εξέλιξη · πριν 30΄</span>
+						<div class="msg me"><small>Εσύ · πριν 28΄</small>Το κοιτάω. Η φωτογραφία είναι πάνω από 15 MB; Δοκίμασε από τη συλλογή αντί για την κάμερα.</div>
+						<div class="msg"><small>Μαρία Παπαδοπούλου · πριν 12΄</small>Ναι, από τη συλλογή ανέβηκε. Ευχαριστώ!</div>
+					</div>
+					<details class="tech"><summary>Τεχνικά</summary>Σελίδα: Νέα αίτηση · βήμα 3 · Chrome 131 / Android · 2 σφάλματα στα τελευταία 10΄</details>
+					<div class="reply"><textarea placeholder="Γράψε απάντηση…"></textarea>
+						<div class="ra"><span class="btn pri">Απάντηση</span><span class="sp"></span><span class="btn gho sm">✓ Λύθηκε</span><span class="btn gho sm">Δεν είναι πρόβλημα</span><small>Με «Λύθηκε» ή «Δεν είναι πρόβλημα» η εικόνα σβήνεται οριστικά.</small></div></div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="stage" data-stage="b">
+		<p class="note"><b>Η ιδέα:</b> οι αναφορές ως πίνακας εργασίας σε τρεις στήλες: Νέα, Σε εξέλιξη, Κλειστές (Λύθηκε και «Δεν είναι πρόβλημα» μαζί, μόνο οι πιο πρόσφατες). Όσες «με σταματάνε» έχουν κόκκινο περίγραμμα και ανεβαίνουν πρώτες. (Η οθόνη θα φέρνει τις τρεις στήλες με τρία αιτήματα στον server, όπως οι καρτέλες σήμερα.) Πάτημα σε κάρτα ανοίγει από κάτω (ή σε πάνελ δεξιά) τη συζήτηση, όπως στο Α.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Αναφορές προβλημάτων</h2><p>Όλες οι αναφορές της εταιρείας.</p></div><span class="btn pri">Νέα αναφορά</span></div>
+			<div class="kan">
+				<div class="colk"><h4><span class="st new">Νέα</span><em>3</em></h4>
+					<div class="kc"><div class="r1"><span class="meta">#213</span><span class="when">πριν 1 ώρα</span></div><b>Η Προσφορά δεν βρίσκει τιμή για Volton</b><span class="meta">Γιώργος Α. · Προσφορά</span></div>
+					<div class="kc"><div class="r1"><span class="meta">#211</span><span class="when">χθες</span></div><b>Το SMS υπογραφής δεν έφτασε στον πελάτη</b><span class="meta">Ελένη Λ. · VOL-39210 · 📷</span></div>
+					<div class="kc"><div class="r1"><span class="meta">#209</span><span class="when">πριν 2 μέρες</span></div><b>Στο κινητό κόβεται το κουμπί «Συνέχεια»</b><span class="meta">Δημήτρης Κ. · 📷</span></div></div>
+				<div class="colk"><h4><span class="st prog">Σε εξέλιξη</span><em>1</em></h4>
+					<div class="kc urgent"><div class="r1"><span class="urg">με σταματάει</span><span class="when">πριν 12΄</span></div><b>Δεν ανεβαίνει η ταυτότητα στο βήμα 3</b><span class="meta">#214 · Μαρία Π. · PROT-39231 · 💬 3</span></div></div>
+				<div class="colk closed"><h4><span class="st done">Κλειστές</span><em>20</em></h4>
+					<div class="kc"><div class="r1"><span class="st done">Λύθηκε</span><span class="when">σήμερα</span></div><b>Δεν φαίνεται το λογότυπο της ΔΕΗ</b><span class="meta">#207 · Ελένη Λ.</span></div>
+					<div class="kc"><div class="r1"><span class="st no">Δεν είναι πρόβλημα</span><span class="when">χθες</span></div><b>Πού βρίσκω τις προμήθειες;</b><span class="meta">#205 · Γιώργος Α.</span></div>
+					<div class="more">Και 18 ακόμα →</div></div>
+			</div>
+			<div class="drawer"><p>Πάτημα σε κάρτα → η συζήτηση ανοίγει εδώ, ίδια με το Α (φούσκες, εικόνα, Τεχνικά, απάντηση και κουμπιά κατάστασης).</p></div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){
+	document.querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+</script>
+</body>
+</html>

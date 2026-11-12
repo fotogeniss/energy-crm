@@ -307,11 +307,12 @@ final class ProviderAccessController implements Controller
     }
 
     /**
-     * Τα id με τα ονόματά τους, με τη σειρά του καταλόγου.
+     * Τα id με τα ονόματά τους και το λογότυπο (361, για τη νέα εμφάνιση),
+     * με τη σειρά του καταλόγου.
      *
      * @param list<int> $ids
      *
-     * @return list<array{id: int, name: string}>
+     * @return list<array{id: int, name: string, logo: string}>
      */
     private function named(array $ids): array
     {
@@ -321,7 +322,11 @@ final class ProviderAccessController implements Controller
             $id = (int) $row['id'];
 
             if (in_array($id, $ids, true)) {
-                $out[] = ['id' => $id, 'name' => (string) $row['name']];
+                $out[] = [
+                    'id'   => $id,
+                    'name' => (string) $row['name'],
+                    'logo' => (string) ($row['logo_url'] ?? ''),
+                ];
             }
         }
 

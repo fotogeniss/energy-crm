@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Βάση Γνώσης — δύο νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--rose-t:#ff3c5a1f;
+	--blue:#2f7cf6;--blue-t:#2f7cf61f;--teal:#00a99a;--violet:#7a4de0;--violet-t:#7a4de01c;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:760px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:900px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn svg,.ic svg{width:18px;height:18px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 0;color:var(--ink2);font-size:15px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:3px 9px;border-radius:999px}
+.src svg{width:13px;height:13px}
+.plogo{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;letter-spacing:-.01em;padding:3px 8px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.plogo i{width:9px;height:9px;border-radius:50%}
+.save{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:3px 9px;border-radius:999px}
+
+.q{position:relative;min-width:0;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 18px;border-radius:999px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift)}
+.q svg{width:20px;height:20px;color:var(--ink3);flex:0 0 20px}
+.q input{flex:1;min-width:0;border:0;outline:0;font:inherit;font-size:16px;background:none;color:var(--ink)}
+.ai{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;color:#fff;background:linear-gradient(135deg,#7a4de0,#4d6ef0);box-shadow:0 8px 20px -10px #7a4de0;white-space:nowrap}
+.ai svg{width:16px;height:16px;color:#fff}
+.seg{display:inline-flex;gap:3px;padding:3px;border-radius:999px;background:var(--fill)}
+.seg span{font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.seg span.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.pl{display:inline-grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:#fff;box-shadow:0 0 0 1px var(--hair);font-weight:900;font-size:13px}
+
+/* A */
+.askhero{max-width:760px;margin:6px auto 22px;text-align:center}
+.askhero h3{margin:0 0 14px;font-size:24px;letter-spacing:-.03em}
+.ans{max-width:760px;margin:0 auto 26px;border-radius:22px;padding:18px 20px;background:linear-gradient(160deg,#f4efff,#fff);box-shadow:0 0 0 1px #7a4de033,var(--lift);text-align:left}
+.ans small{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--violet)}
+.ans small svg{width:14px;height:14px}
+.ans p{margin:8px 0 10px;font-size:15px;line-height:1.55}
+.ans ul{margin:0 0 10px;padding-left:20px;font-size:14.5px;line-height:1.6}
+.ans .src{background:#7a4de014;color:var(--violet)}
+.ptiles{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;margin-bottom:12px}
+.pt{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px 10px 10px;border-radius:16px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);cursor:pointer}
+.pt b{font-size:14px;display:block}.pt span{font-size:12px;color:var(--ink3)}
+.pt.on{background:#fff;box-shadow:0 0 0 2px var(--green),var(--lift)}
+.bar2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.col h4{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:14px}
+.col h4 i{width:28px;height:28px;border-radius:9px;display:grid;place-items:center}
+.col h4 i svg{width:16px;height:16px}
+.col h4 em{font-style:normal;font-weight:600;color:var(--ink3);font-size:12.5px}
+.card{border-radius:18px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift);padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.card b{display:block;font-size:14.5px;line-height:1.3}
+.card p{margin:6px 0 8px;font-size:13px;color:var(--ink2);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--fill);color:var(--ink2)}
+.tag.p{background:#ffa01424;color:#9a5300}.tag.g{background:#2f7cf61f;color:#1d5ccc}
+.card.open{box-shadow:0 0 0 2px var(--green),var(--lift)}
+.card.open p{-webkit-line-clamp:unset;display:block}
+.card .full{margin-top:10px;padding-top:10px;border-top:1px dashed var(--hair);font-size:13.5px;line-height:1.55;color:var(--ink)}
+.card .full li{margin-bottom:3px}
+
+/* B */
+.kb2{display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:start}
+.plist{border-radius:22px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);padding:8px;position:sticky;top:12px}
+.pr{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;cursor:pointer}
+.pr b{font-size:14px;flex:1}.pr span{font-size:12px;color:var(--ink3);font-weight:700}
+.pr.on{background:#fff;box-shadow:var(--lift)}
+.sheet{border-radius:24px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--float);overflow:hidden}
+.sh-head{display:flex;align-items:center;gap:14px;padding:20px 22px;border-bottom:1px solid var(--hair2)}
+.sh-head .pl{width:52px;height:52px;flex-basis:52px;border-radius:15px;font-size:20px}
+.sh-head h3{margin:0;font-size:24px;letter-spacing:-.03em}
+.sh-head p{margin:2px 0 0;font-size:13.5px;color:var(--ink2)}
+.sh-head .seg{margin-left:auto}
+.tabs{display:flex;gap:4px;padding:10px 22px 0;border-bottom:1px solid var(--hair2);overflow-x:auto}
+.tabs span{padding:10px 14px;font-size:14px;font-weight:700;color:var(--ink2);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.tabs span em{font-style:normal;font-size:12px;color:var(--ink3);margin-left:4px}
+.tabs span.on{color:var(--ink);border-bottom-color:var(--green)}
+.sh-body{padding:8px 22px 22px}
+.it{padding:16px 0;border-bottom:1px solid var(--hair2)}
+.it:last-child{border-bottom:0}
+.it h4{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;font-size:16px}
+.chk{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.chk li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.45}
+.chk li i{flex:0 0 20px;height:20px;border-radius:7px;background:var(--green-t);color:var(--green-ink);display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:900;margin-top:1px}
+.it p{margin:0;font-size:14.5px;line-height:1.55;color:var(--ink)}
+.copy{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--green-ink)}
+.mini{display:flex;gap:10px;align-items:center;margin-bottom:16px}
+.mini .q{flex:1;min-width:0}
+
+@media (max-width:860px){
+	.frame{padding:16px;border-radius:22px}.head h2{font-size:30px}
+	.cols{grid-template-columns:1fr}
+	.ai .t{display:none}
+	.kb2{grid-template-columns:1fr}
+	.plist{position:static;display:flex;overflow-x:auto;gap:4px}
+	.pr{flex:0 0 auto}
+	.sh-head{flex-wrap:wrap}.sh-head .seg{margin-left:0}
+	.sh-body{padding:4px 16px 16px}.tabs{padding:8px 12px 0}
+	.mini{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="srch" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></g></symbol>
+<symbol id="spark" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6zM18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+<symbol id="doc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></g></symbol>
+<symbol id="shield" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></symbol>
+<symbol id="euro" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 6.5A7 7 0 1 0 17 17.5"/><path d="M5 10.5h9M5 13.5h9"/></g></symbol>
+</defs></svg>
+
+<div class="doc">
+	<div class="intro">
+		<h1>Βάση Γνώσης: δύο νέες ιδέες</h1>
+		<p>Σήμερα η οθόνη είναι ένα κουτί αναζήτησης με τρεις σειρές φίλτρων και από κάτω μια μακριά λίστα από τίτλους που ανοίγουν ένας-ένας. Για να βρεις «τι χαρτιά θέλει η Protergia για επαγγελματικό», ψάχνεις ανάμεσα σε όλους τους παρόχους.</p>
+		<p>Ίδιο περιεχόμενο από πίσω (τα ίδια κείμενα που γράφει ο διαχειριστής) και ίδιος AIde. Η μόνη προσθήκη στον server: το λογότυπο του παρόχου.</p>
+	</div>
+
+	<div class="switch"><button class="on" data-s="a">Α. Ρώτα πρώτα</button><button data-s="b">Β. Ο φάκελος του παρόχου</button></div>
+
+	<section class="stage on" data-stage="a">
+		<p class="note"><b>Η ιδέα:</b> οι περισσότεροι μπαίνουν με μια ερώτηση στο μυαλό. Στη μέση ένα μεγάλο κουτί για ερώτηση, και η απάντηση του AIde ως κάρτα από κάτω. Μετά οι πάροχοι ως πλακίδια με λογότυπο, ένα πάτημα και μένει μόνο ο πάροχος. Το περιεχόμενο μοιράζεται σε τρεις στήλες, Δικαιολογητικά, Εγγυήσεις, Χρεώσεις, με τις δύο πρώτες γραμμές ορατές· πάτημα και ανοίγει ολόκληρο.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Βάση Γνώσης</h2><p>Δικαιολογητικά, εγγυήσεις και χρεώσεις ανά πάροχο</p></div></div>
+			<div class="askhero">
+				<h3>Τι χρειάζεσαι για να κλείσεις τη σύμβαση;</h3>
+				<div class="q"><svg><use href="#srch"/></svg><input value="Τι χαρτιά θέλει η Protergia για επαγγελματικό ρεύμα;"><button class="ai"><svg><use href="#spark"/></svg><span class="t">Ρώτησε τον AIde</span></button></div>
+			</div>
+			<div class="ans">
+				<small><svg><use href="#spark"/></svg>AIde</small>
+				<p>Για επαγγελματικό ρεύμα στην Protergia χρειάζεσαι:</p>
+				<ul><li>Τελευταίο λογαριασμό ρεύματος (όλες τις σελίδες)</li><li>Ταυτότητα ή διαβατήριο του νόμιμου εκπροσώπου</li><li>Καταστατικό ή ΓΕΜΗ (για εταιρεία)</li><li>Μισθωτήριο ή τίτλο ιδιοκτησίας, αν αλλάζει ο δικαιούχος</li></ul>
+				<span class="src">Από: Protergia · Δικαιολογητικά · Επαγγελματικά</span>
+			</div>
+			<div class="ptiles">
+				<div class="pt"><span class="pl" style="color:#1b1d1a">✱</span><div><b>Όλοι</b><span>42 ενότητες</span></div></div>
+				<div class="pt on"><span class="pl" style="color:#f39200">P</span><div><b>Protergia</b><span>14 ενότητες</span></div></div>
+				<div class="pt"><span class="pl" style="color:#1d4fd8">V</span><div><b>Volton</b><span>11 ενότητες</span></div></div>
+				<div class="pt"><span class="pl" style="color:#e30613">Δ</span><div><b>ΔΕΗ</b><span>9 ενότητες</span></div></div>
+				<div class="pt"><span class="pl" style="color:#00a99a">Ζ</span><div><b>ZeniΘ</b><span>8 ενότητες</span></div></div>
+			</div>
+			<div class="bar2"><div class="seg"><span class="on">Όλα</span><span>Ρεύμα</span><span>Αέριο</span></div><div class="seg"><span class="on">Όλοι</span><span>Οικιακά</span><span>Επαγγελματικά</span></div></div>
+			<div class="cols">
+				<div class="col"><h4><i style="background:var(--green-t);color:var(--green-ink)"><svg><use href="#doc"/></svg></i>Δικαιολογητικά <em>5</em></h4>
+					<div class="card open"><b>Επαγγελματικό ρεύμα — νέα σύνδεση ή αλλαγή παρόχου</b><p>Τελευταίος λογαριασμός, ταυτότητα εκπροσώπου, καταστατικό ή ΓΕΜΗ.</p>
+						<div class="tags"><span class="tag p">Ρεύμα</span><span class="tag">Επαγγελματικά</span></div>
+						<div class="full"><ul><li>Τελευταίος λογαριασμός ρεύματος, όλες οι σελίδες</li><li>Ταυτότητα ή διαβατήριο νόμιμου εκπροσώπου</li><li>Καταστατικό ή πιστοποιητικό ΓΕΜΗ</li><li>Αν αλλάζει δικαιούχος: μισθωτήριο ή τίτλος</li></ul></div></div>
+					<div class="card"><b>Οικιακό ρεύμα — αλλαγή παρόχου</b><p>Τελευταίος λογαριασμός και ταυτότητα. Αν ο λογαριασμός δεν είναι στο όνομά του, και μισθωτήριο ή Ε9.</p><div class="tags"><span class="tag p">Ρεύμα</span><span class="tag">Οικιακά</span></div></div>
+					<div class="card"><b>Αέριο — νέα σύνδεση</b><p>Ταυτότητα, ΑΦΜ, αποδεικτικό διεύθυνσης και αριθμός παροχής ΕΔΑ.</p><div class="tags"><span class="tag g">Αέριο</span></div></div>
+				</div>
+				<div class="col"><h4><i style="background:var(--blue-t);color:var(--blue)"><svg><use href="#shield"/></svg></i>Εγγυήσεις <em>3</em></h4>
+					<div class="card"><b>Εγγύηση επαγγελματικού</b><p>Ίση με δύο μέσους λογαριασμούς· επιστρέφεται στη λήξη. Απαλλαγή με πάγια εντολή.</p><div class="tags"><span class="tag p">Ρεύμα</span><span class="tag">Επαγγελματικά</span></div></div>
+					<div class="card"><b>Οικιακά: χωρίς εγγύηση με πάγια</b><p>Δεν ζητείται εγγύηση όταν ο πελάτης βάζει πάγια εντολή σε κάρτα ή λογαριασμό.</p><div class="tags"><span class="tag">Οικιακά</span></div></div>
+				</div>
+				<div class="col"><h4><i style="background:var(--amber-t);color:var(--amber)"><svg><use href="#euro"/></svg></i>Χρεώσεις <em>6</em></h4>
+					<div class="card"><b>Πάγιο και τέλη πρόωρης αποχώρησης</b><p>Πάγιο 5 € τον μήνα στα Picasso. Χωρίς ρήτρα αποχώρησης στα πράσινα τιμολόγια.</p><div class="tags"><span class="tag p">Ρεύμα</span></div></div>
+					<div class="card"><b>Έκπτωση συνέπειας</b><p>Ισχύει μόνο με εξόφληση μέχρι τη λήξη. Χάνεται για τον μήνα που καθυστέρησε.</p><div class="tags"><span class="tag">Όλα</span></div></div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="stage" data-stage="b">
+		<p class="note"><b>Η ιδέα:</b> κάθε πάροχος έχει τον φάκελό του. Αριστερά η λίστα παρόχων με λογότυπο και πόσες ενότητες έχει. Δεξιά ο φάκελος του επιλεγμένου, με καρτέλες Δικαιολογητικά / Εγγυήσεις / Χρεώσεις / Άλλο, και όλα ανοιχτά για διάβασμα, χωρίς να πατάς σε κάθε τίτλο. Οι λίστες γίνονται τσεκ-λίστα, για να τις δείχνεις στον πελάτη. Η αναζήτηση και ο AIde μένουν σε μια γραμμή πάνω. Στο κινητό οι πάροχοι γίνονται οριζόντια σειρά.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Βάση Γνώσης</h2><p>Δικαιολογητικά, εγγυήσεις και χρεώσεις ανά πάροχο</p></div></div>
+			<div class="mini"><div class="q"><svg><use href="#srch"/></svg><input placeholder="Αναζήτηση ή ερώτηση…"><button class="ai"><svg><use href="#spark"/></svg><span class="t">Ρώτησε τον AIde</span></button></div></div>
+			<div class="kb2">
+				<div class="plist">
+					<div class="pr on"><span class="pl" style="color:#f39200">P</span><b>Protergia</b><span>14</span></div>
+					<div class="pr"><span class="pl" style="color:#1d4fd8">V</span><b>Volton</b><span>11</span></div>
+					<div class="pr"><span class="pl" style="color:#e30613">Δ</span><b>ΔΕΗ</b><span>9</span></div>
+					<div class="pr"><span class="pl" style="color:#00a99a">Ζ</span><b>ZeniΘ</b><span>8</span></div>
+				</div>
+				<div class="sheet">
+					<div class="sh-head"><span class="pl" style="color:#f39200">P</span><div><h3>Protergia</h3><p>14 ενότητες · ρεύμα και αέριο</p></div>
+						<div class="seg"><span>Οικιακά</span><span class="on">Επαγγελματικά</span></div></div>
+					<div class="tabs"><span class="on">Δικαιολογητικά<em>5</em></span><span>Εγγυήσεις<em>3</em></span><span>Χρεώσεις<em>6</em></span></div>
+					<div class="sh-body">
+						<div class="it"><h4>Ρεύμα — νέα σύνδεση ή αλλαγή παρόχου <span class="tag p">Ρεύμα</span></h4>
+							<ul class="chk"><li><i>✓</i>Τελευταίος λογαριασμός ρεύματος, όλες οι σελίδες</li><li><i>✓</i>Ταυτότητα ή διαβατήριο νόμιμου εκπροσώπου</li><li><i>✓</i>Καταστατικό ή πιστοποιητικό ΓΕΜΗ</li><li><i>✓</i>Αν αλλάζει δικαιούχος: μισθωτήριο ή τίτλος ιδιοκτησίας</li></ul></div>
+						<div class="it"><h4>Αέριο — νέα σύνδεση <span class="tag g">Αέριο</span></h4>
+							<ul class="chk"><li><i>✓</i>Ταυτότητα εκπροσώπου και ΑΦΜ εταιρείας</li><li><i>✓</i>Αριθμός παροχής ΕΔΑ</li><li><i>✓</i>Αποδεικτικό διεύθυνσης εγκατάστασης</li></ul></div>
+						<div class="it"><h4>Αλλαγή επωνυμίας</h4><p>Αν η εταιρεία άλλαξε επωνυμία από τον τελευταίο λογαριασμό, χρειάζεται και η ανακοίνωση ΓΕΜΗ για την αλλαγή. Χωρίς αυτήν η αίτηση επιστρέφεται.</p></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){
+	document.querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+</script>
+</body>
+</html>

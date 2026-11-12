@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Εκπαίδευση — δύο νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--rose-t:#ff3c5a1f;
+	--blue:#2f7cf6;--blue-t:#2f7cf61f;--teal:#00a99a;--violet:#7a4de0;--violet-t:#7a4de01c;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:760px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:900px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn svg,.ic svg{width:18px;height:18px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 0;color:var(--ink2);font-size:15px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:3px 9px;border-radius:999px}
+.src svg{width:13px;height:13px}
+.plogo{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;letter-spacing:-.01em;padding:3px 8px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.plogo i{width:9px;height:9px;border-radius:50%}
+.save{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:3px 9px;border-radius:999px}
+
+/* A */
+.hero{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:26px}
+.next{position:relative;border-radius:26px;padding:24px;background:linear-gradient(150deg,#0f1a10,#16301a);color:#fff;box-shadow:var(--float);overflow:hidden}
+.next::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 92% 0%,#22cf2355,transparent 45%)}
+.next>*{position:relative}
+.next small{font-size:12.5px;color:#9be59d;font-weight:700}
+.next h3{margin:6px 0 4px;font-size:28px;letter-spacing:-.035em}
+.next p{margin:0 0 18px;color:#c9d3c9;font-size:14.5px;line-height:1.5;max-width:480px}
+.ring{border-radius:26px;padding:20px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);display:flex;align-items:center;gap:18px}
+.ring svg{width:110px;height:110px;flex:0 0 110px}
+.ring b{display:block;font-size:30px;letter-spacing:-.03em}
+.ring span{font-size:13.5px;color:var(--ink2);line-height:1.45}
+.path{position:relative;padding-left:4px}
+.st{position:relative;display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;padding:12px 0}
+.st::before{content:"";position:absolute;left:21px;top:0;bottom:0;width:2px;background:#d5d9d2}
+.st:first-child::before{top:50%}.st:last-child::before{bottom:50%}
+.st.done::before{background:var(--green)}
+.dot{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;background:#fff;box-shadow:0 0 0 2px #d5d9d2;color:var(--ink3)}
+.st.done .dot{background:var(--green);box-shadow:none;color:#fff}
+.st.cur .dot{box-shadow:0 0 0 2px var(--green),0 0 0 8px #16c21722;color:var(--green-ink)}
+.lc{border-radius:18px;padding:14px 16px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift)}
+.st.cur .lc{box-shadow:0 0 0 2px var(--green),var(--lift)}
+.lc b{display:block;font-size:15.5px}
+.lc span{font-size:12.5px;color:var(--ink3)}
+.st.done .lc b{color:var(--ink2)}
+.tick{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:5px 10px;border-radius:999px;white-space:nowrap}
+.tick.no{background:var(--fill);color:var(--ink2)}
+
+/* B */
+.top{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding:14px 18px;border-radius:18px;background:var(--glass);box-shadow:0 0 0 1px var(--hair)}
+.top b{font-size:14px;white-space:nowrap}
+.meter{flex:1;height:10px;border-radius:999px;background:var(--fill);overflow:hidden}
+.meter i{display:block;height:100%;width:37.5%;border-radius:999px;background:linear-gradient(90deg,#22cf23,#0e9a12)}
+.top span{font-size:13px;color:var(--ink2);white-space:nowrap}
+.rd{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+.toc{border-radius:22px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);padding:8px;position:sticky;top:12px}
+.ti{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;font-size:14px;cursor:pointer}
+.ti i{flex:0 0 24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;box-shadow:0 0 0 1.5px #c8ccc5;color:var(--ink3)}
+.ti.done i{background:var(--green);box-shadow:none;color:#fff}
+.ti.done{color:var(--ink2)}
+.ti.on{background:#fff;box-shadow:var(--lift);font-weight:700}
+.ti em{margin-left:auto;font-style:normal;font-size:12px;color:var(--ink3)}
+.page{border-radius:24px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--float);padding:30px 36px}
+.page small{font-size:13px;font-weight:700;color:var(--green-ink)}
+.page h3{margin:6px 0 4px;font-size:30px;letter-spacing:-.035em}
+.page .meta{font-size:13px;color:var(--ink3);margin-bottom:20px}
+.page .txt{font-size:16px;line-height:1.7;max-width:640px}
+.page .txt p{margin:0 0 14px}
+.tipbox{margin:6px 0 16px;padding:12px 16px;border-radius:14px;background:var(--amber-t);font-size:15px;line-height:1.5}
+.pfoot{display:flex;align-items:center;gap:10px;margin-top:26px;padding-top:18px;border-top:1px solid var(--hair2)}
+.pfoot .sp{flex:1}
+
+@media (max-width:860px){
+	.frame{padding:16px;border-radius:22px}.head h2{font-size:30px}
+	.hero{grid-template-columns:1fr}
+	.ring svg{width:84px;height:84px;flex-basis:84px}
+	.st{grid-template-columns:36px 1fr;gap:10px}.st .tick{grid-column:2;justify-self:start}
+	.dot{width:36px;height:36px;font-size:13px}.st::before{left:17px}
+	.rd{grid-template-columns:1fr}
+	.toc{position:static;display:flex;overflow-x:auto;gap:4px}.ti{flex:0 0 auto}.ti em{display:none}
+	.page{padding:20px}.page h3{font-size:24px}
+	.top{flex-wrap:wrap}.meter{flex-basis:100%;order:3}
+	.pfoot{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div class="doc">
+	<div class="intro">
+		<h1>Εκπαίδευση: δύο νέες ιδέες</h1>
+		<p>Σήμερα η οθόνη είναι μια μπάρα προόδου και από κάτω μια λίστα με αριθμημένους τίτλους που ανοίγουν επί τόπου. Δεν φαίνεται από πού να συνεχίσεις, και το κείμενο ενός μαθήματος ανοίγει στριμωγμένο ανάμεσα στους τίτλους.</p>
+		<p>Ίδια μαθήματα και ίδιο «Το διάβασα» από πίσω, με την πρόοδο να έρχεται από τον server. Καμία αλλαγή στον server.</p>
+	</div>
+	<div class="switch"><button class="on" data-s="a">Α. Η διαδρομή</button><button data-s="b">Β. Ο αναγνώστης</button></div>
+
+	<section class="stage on" data-stage="a">
+		<p class="note"><b>Η ιδέα:</b> η οθόνη λέει πρώτα «από πού συνεχίζεις». Μια σκούρα κάρτα με το επόμενο αδιάβαστο μάθημα (τίτλος και η πρώτη πρόταση του κειμένου) και κουμπί «Ξεκίνα», και δίπλα ένας κύκλος προόδου. Από κάτω τα μαθήματα ως διαδρομή με σταθμούς: τα διαβασμένα πράσινα, το επόμενο τονισμένο. Πάτημα σε μάθημα ανοίγει το κείμενο από κάτω του, όπως σήμερα.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Εκπαίδευση</h2><p>Με τη σειρά. Δεν χρειάζεται να τα ξέρεις όλα σήμερα.</p></div></div>
+			<div class="hero">
+				<div class="next"><small>ΣΥΝΕΧΙΣΕ ΑΠΟ ΕΔΩ · ΜΑΘΗΜΑ 4</small><h3>Η υπογραφή του πελάτη</h3>
+					<p>Πώς στέλνεις τον σύνδεσμο υπογραφής, τι βλέπει ο πελάτης και τι κάνεις αν δεν υπογράψει μέσα σε 48 ώρες.</p>
+					<span class="btn pri">Ξεκίνα · 3 λεπτά</span></div>
+				<div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#141e140f" stroke-width="12"/><circle cx="60" cy="60" r="50" fill="none" stroke="#16c217" stroke-width="12" stroke-linecap="round" stroke-dasharray="117.8 314.2" transform="rotate(-90 60 60)"/><text x="60" y="68" text-anchor="middle" font-size="24" font-weight="800" fill="#1b1d1a">38%</text></svg>
+					<div><b>3 από 8</b><span>μαθήματα διαβασμένα. Περίπου 14 λεπτά ακόμα.</span></div></div>
+			</div>
+			<div class="path">
+				<div class="st done"><span class="dot">✓</span><div class="lc"><b>Η πρώτη σου μέρα στο CRM</b><span>2 λεπτά</span></div><span class="tick">✓ Διαβάστηκε</span></div>
+				<div class="st done"><span class="dot">✓</span><div class="lc"><b>Νέα αίτηση σε τέσσερα βήματα</b><span>4 λεπτά</span></div><span class="tick">✓ Διαβάστηκε</span></div>
+				<div class="st done"><span class="dot">✓</span><div class="lc"><b>Η ανάγνωση λογαριασμού με AI</b><span>3 λεπτά</span></div><span class="tick">✓ Διαβάστηκε</span></div>
+				<div class="st cur"><span class="dot">4</span><div class="lc"><b>Η υπογραφή του πελάτη</b><span>3 λεπτά · το επόμενο</span></div><span class="tick no">Το διάβασα</span></div>
+				<div class="st"><span class="dot">5</span><div class="lc"><b>Έγγραφα και τι λείπει</b><span>2 λεπτά</span></div><span class="tick no">Το διάβασα</span></div>
+				<div class="st"><span class="dot">6</span><div class="lc"><b>Υποψήφιοι και επανακλήσεις</b><span>3 λεπτά</span></div><span class="tick no">Το διάβασα</span></div>
+				<div class="st"><span class="dot">7</span><div class="lc"><b>Η Προσφορά από τον λογαριασμό</b><span>4 λεπτά</span></div><span class="tick no">Το διάβασα</span></div>
+				<div class="st"><span class="dot">8</span><div class="lc"><b>Προμήθειες: πότε πληρώνεσαι</b><span>2 λεπτά</span></div><span class="tick no">Το διάβασα</span></div>
+			</div>
+		</div>
+	</section>
+
+	<section class="stage" data-stage="b">
+		<p class="note"><b>Η ιδέα:</b> μάθημα σημαίνει διάβασμα. Αριστερά τα περιεχόμενα με σημάδι στα διαβασμένα. Δεξιά το μάθημα σαν σελίδα, με μεγάλα γράμματα και άνετες γραμμές. Στο τέλος της σελίδας ένα κουμπί «Το διάβασα, επόμενο», που σημειώνει και πάει στο επόμενο. Ανοίγει πάντα στο πρώτο αδιάβαστο. Στο κινητό τα περιεχόμενα γίνονται οριζόντια σειρά.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Εκπαίδευση</h2><p>Με τη σειρά. Δεν χρειάζεται να τα ξέρεις όλα σήμερα.</p></div></div>
+			<div class="top"><b>Η πρόοδός σου</b><div class="meter"><i></i></div><span>3 από 8 · περίπου 14 λεπτά ακόμα</span></div>
+			<div class="rd">
+				<div class="toc">
+					<div class="ti done"><i>✓</i>Η πρώτη σου μέρα<em>2΄</em></div>
+					<div class="ti done"><i>✓</i>Νέα αίτηση σε 4 βήματα<em>4΄</em></div>
+					<div class="ti done"><i>✓</i>Ανάγνωση λογαριασμού<em>3΄</em></div>
+					<div class="ti on"><i>4</i>Η υπογραφή του πελάτη<em>3΄</em></div>
+					<div class="ti"><i>5</i>Έγγραφα και τι λείπει<em>2΄</em></div>
+					<div class="ti"><i>6</i>Υποψήφιοι<em>3΄</em></div>
+					<div class="ti"><i>7</i>Η Προσφορά<em>4΄</em></div>
+					<div class="ti"><i>8</i>Προμήθειες<em>2΄</em></div>
+				</div>
+				<article class="page">
+					<small>Μάθημα 4 από 8</small>
+					<h3>Η υπογραφή του πελάτη</h3>
+					<div class="meta">3 λεπτά διάβασμα</div>
+					<div class="txt">
+						<p>Όταν η αίτηση είναι έτοιμη, στο βήμα 4 διαλέγεις πώς θα υπογράψει ο πελάτης: με σύνδεσμο στο κινητό του, εδώ στην οθόνη σου, ή σε χαρτί.</p>
+						<p>Ο σύνδεσμος ισχύει 48 ώρες. Ο πελάτης γράφει το ΑΦΜ του για να ανοίξει, βλέπει την αίτηση και υπογράφει με το δάχτυλο.</p>
+						<div class="tipbox"><b>Συμβουλή:</b> στείλε τον σύνδεσμο όσο είναι ακόμα μπροστά σου. Οι περισσότεροι υπογράφουν στο πρώτο λεπτό.</div>
+						<p>Αν περάσουν 48 ώρες, η αίτηση εμφανίζεται στις Εκκρεμότητες και στέλνεις νέο σύνδεσμο με ένα πάτημα.</p>
+					</div>
+					<div class="pfoot"><span class="btn gho">← Προηγούμενο</span><span class="sp"></span><span class="btn pri">Το διάβασα, επόμενο →</span></div>
+				</article>
+			</div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){
+	document.querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+</script>
+</body>
+</html>

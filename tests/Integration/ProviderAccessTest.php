@@ -317,6 +317,41 @@ final class ProviderAccessTest extends IntegrationTestCase
         );
     }
 
+    /** (361) Η νέα εμφάνιση δείχνει το λογότυπο κάθε παρόχου στους «Πάροχους ομάδας». */
+    public function testTheTeamSummaryCarriesEachProvidersLogo(): void
+    {
+        global $wpdb;
+
+        $wpdb->update(
+            Tables::name(Tables::PROVIDERS),
+            ['logo_url' => 'https://example.test/alpha.png'],
+            ['id' => $this->alpha]
+        );
+
+        $manager = $this->makeCrmUser(Roles::PARTNER);
+        $member  = $this->makeCrmUser(Roles::PARTNER);
+        $this->team->attach($member, $manager);
+        $this->grants->set($manager, [$this->alpha, $this->beta]);
+        $this->grants->set($member, [$this->alpha]);
+
+        wp_set_current_user($manager);
+
+        $response = rest_do_request(new WP_REST_Request('GET', '/ecrm/v1/team/providers'));
+        self::assertSame(200, $response->get_status());
+
+        /** @var array{providers: list<array<string, mixed>>} $data */
+        $data = $response->get_data();
+        $byId = [];
+
+        foreach ($data['providers'] as $row) {
+            $byId[(int) $row['id']] = $row;
+        }
+
+        self::assertSame('https://example.test/alpha.png', $byId[$this->alpha]['logo'] ?? null);
+        self::assertSame('', $byId[$this->beta]['logo'] ?? null, 'Χωρίς λογότυπο: κενό, όχι null.');
+        self::assertSame(1, $byId[$this->alpha]['has'] ?? null);
+    }
+
     // --- νέο μέλος ------------------------------------------------------------------
 
     public function testANewMemberGetsTheManagersProvidersByDefault(): void

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ιστορικό και Εφαρμογή στο κινητό — νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--rose-t:#ff3c5a1f;
+	--blue:#2f7cf6;--blue-t:#2f7cf61f;--teal:#00a99a;--violet:#7a4de0;--violet-t:#7a4de01c;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:760px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:900px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn svg,.ic svg{width:18px;height:18px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 0;color:var(--ink2);font-size:15px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:3px 9px;border-radius:999px}
+.src svg{width:13px;height:13px}
+.plogo{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;letter-spacing:-.01em;padding:3px 8px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.plogo i{width:9px;height:9px;border-radius:50%}
+.save{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:3px 9px;border-radius:999px}
+
+.part{margin:40px 0 10px;font-size:26px;letter-spacing:-.03em}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip{font-size:13px;font-weight:700;padding:6px 11px;border-radius:999px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);color:var(--ink2);white-space:nowrap}
+.chip b{margin-left:5px;color:var(--ink3)}.chip.on{background:#1b1d1a;color:#fff;box-shadow:none}.chip.on b{color:#9be59d}
+.card{border-radius:22px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift);padding:18px 20px}
+.card h3{margin:0 0 12px;font-size:16px}
+.ref{font-size:12px;font-weight:800;color:var(--green-ink);background:var(--green-t);padding:2px 8px;border-radius:999px;text-decoration:none;margin-left:6px}
+/* history A */
+.tl{position:relative;padding-left:4px}
+.mo{position:sticky;top:0;font-size:12.5px;font-weight:800;color:var(--ink3);margin:14px 0 6px 50px}
+.ev{position:relative;display:grid;grid-template-columns:36px 1fr auto;gap:14px;padding:8px 0}
+.ev::before{content:"";position:absolute;left:17px;top:0;bottom:0;width:2px;background:var(--hair)}
+.dot{position:relative;z-index:1;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:15px;font-weight:800}
+.ok{background:var(--green-t);color:var(--green-ink)}.bad{background:var(--rose-t);color:var(--rose)}.sg{background:var(--blue-t);color:var(--blue)}.tk{background:var(--amber-t);color:var(--amber)}.nt{background:var(--violet-t);color:var(--violet)}.ed{background:var(--fill);color:var(--ink2)}
+.ev b{display:block;font-size:14.5px}
+.ev p{margin:2px 0 0;font-size:13px;color:var(--ink2)}
+.ev small{font-size:12px;color:var(--ink3)}
+.ev .w{font-size:12.5px;color:var(--ink3);white-space:nowrap}
+.morebtn{display:block;margin:10px 0 0 50px;font-size:13px;font-weight:700;color:var(--green-ink)}
+/* history B */
+.split{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start}
+.kinds{display:grid;gap:4px}
+.kd{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:14px;font-size:14px;font-weight:600}
+.kd .dot{width:28px;height:28px;border-radius:9px;font-size:13px}
+.kd em{margin-left:auto;font-style:normal;font-size:12.5px;color:var(--ink3);font-weight:700}
+.kd.on{background:#fff;box-shadow:0 0 0 2px var(--green),var(--lift)}
+.day{margin-bottom:12px}
+.day h4{margin:0 0 6px;font-size:13px;color:var(--ink3)}
+.row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--fill);margin-bottom:6px;font-size:14px}
+.row .dot{width:26px;height:26px;border-radius:8px;font-size:12px}
+.row b{font-weight:600}.row .sp{flex:1}.row small{color:var(--ink3);font-size:12px}
+/* install A */
+.inst{display:grid;grid-template-columns:300px 1fr;gap:28px;align-items:center}
+.phone{position:relative;width:240px;height:480px;margin:0 auto;border-radius:44px;background:#1b1d1a;padding:12px;box-shadow:var(--float)}
+.scr{width:100%;height:100%;border-radius:34px;background:linear-gradient(160deg,#cfe9d0,#9fd2c8);display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;align-content:start;padding:46px 14px 14px}
+.app{display:grid;justify-items:center;gap:4px;font-size:9.5px;color:#1b1d1a;font-weight:600}
+.app i{width:40px;height:40px;border-radius:11px;background:#ffffff99}
+.app.me i{background:linear-gradient(180deg,#2ad62b,#0e9a12);box-shadow:0 0 0 3px #fff,0 8px 18px -6px #0e9a12;display:grid;place-items:center}
+.app.me i::after{content:"";width:14px;height:14px;border-radius:4px;background:#fff}
+.seg{display:inline-flex;gap:3px;padding:3px;border-radius:999px;background:var(--fill);margin-bottom:14px}
+.seg span{font-size:13.5px;font-weight:700;padding:7px 14px;border-radius:999px;color:var(--ink2)}
+.seg span.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.st{display:grid;gap:10px;margin:0 0 18px;padding:0;list-style:none;counter-reset:s}
+.st li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:15px;line-height:1.45}
+.st li::before{content:counter(s);flex:0 0 28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--green-t);color:var(--green-ink)}
+.k{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 5px;border-radius:7px;background:var(--fill);font-weight:800;font-size:13px;vertical-align:middle}
+.qrbox{display:flex;align-items:center;gap:16px;padding:14px;border-radius:20px;background:var(--glass);box-shadow:0 0 0 1px var(--hair)}
+.qrbox .q{width:110px;height:110px;flex:0 0 110px;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--hair)}
+.qrbox .q svg{width:100%;height:100%;display:block}
+.qrbox b{display:block;font-size:15px;margin-bottom:4px}.qrbox p{margin:0 0 10px;font-size:13.5px;color:var(--ink2);line-height:1.45}
+/* install B */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.big{border-radius:22px;padding:18px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift)}
+.big .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--green-t);color:var(--green-ink);margin-bottom:12px}
+.big .ill{height:110px;border-radius:16px;background:var(--fill);display:grid;place-items:center;margin-bottom:12px;font-size:34px}
+.big p{margin:0;font-size:14.5px;line-height:1.45}
+.dark{display:flex;align-items:center;gap:18px;border-radius:24px;padding:18px 20px;background:linear-gradient(150deg,#0f1a10,#16301a);color:#fff;box-shadow:var(--float)}
+.dark .q{width:120px;height:120px;flex:0 0 120px;border-radius:14px;overflow:hidden;background:#fff;padding:6px}
+.dark .q svg{width:100%;height:100%;display:block}
+.dark b{display:block;font-size:18px;margin-bottom:4px}.dark p{margin:0 0 10px;color:#c9d3c9;font-size:14px}
+@media (max-width:860px){
+	.frame{padding:16px;border-radius:22px}.head h2{font-size:30px}
+	.split{grid-template-columns:1fr}.kinds{grid-template-columns:repeat(2,1fr)}
+	.inst{grid-template-columns:1fr}.phone{width:200px;height:400px}
+	.three{grid-template-columns:1fr}
+	.qrbox,.dark{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+<div class="doc">
+	<div class="intro">
+		<h1>Ιστορικό πελάτη και Εφαρμογή στο κινητό</h1>
+		<p>Οι δύο τελευταίες οθόνες χωρίς νέα εμφάνιση. Το Ιστορικό είναι κομμάτι της καρτέλας πελάτη. Ίδια δεδομένα και ίδιες ενέργειες· καμία αλλαγή στον server.</p>
+	</div>
+
+	<h2 class="part">1 · Ιστορικό πελάτη</h2>
+	<div class="switch"><button class="on" data-s="ha" data-g="h">Α. Η γραμμή του χρόνου</button><button data-s="hb" data-g="h">Β. Ανά είδος, ανά μέρα</button></div>
+	<section class="stage on" data-stage="ha" data-g="h">
+		<p class="note"><b>Η ιδέα:</b> τα γεγονότα πάνω σε μια κάθετη γραμμή, με χρωματιστό εικονίδιο ανά είδος (πράσινο ό,τι πήγε καλά, κόκκινο ό,τι στράβωσε, μπλε υπογραφές, πορτοκαλί εργασίες, μωβ σημειώσεις). Ο μήνας ως επικεφαλίδα, η αίτηση ως πράσινο σημαδάκι που την ανοίγει. Τα φίλτρα ως κουμπάκια με αριθμούς, όπως παντού.</p>
+		<div class="frame"><div class="card"><h3>Ιστορικό · 24 γεγονότα</h3>
+			<div class="chips"><span class="chip on">Όλα<b>24</b></span><span class="chip">Συμβάσεις<b>6</b></span><span class="chip">Υπογραφές & SMS<b>5</b></span><span class="chip">Εργασίες & κλήσεις<b>7</b></span><span class="chip">Σημειώσεις<b>3</b></span><span class="chip">Έγγραφα<b>3</b></span></div>
+			<div class="tl">
+				<div class="mo">Νοέμβριος 2026</div>
+				<div class="ev"><span class="dot ok">✓</span><div><b>Η αίτηση ενεργοποιήθηκε <a class="ref">EC-0302</a></b><small>Σύστημα</small></div><span class="w">πριν 2ω</span></div>
+				<div class="ev"><span class="dot sg">✉</span><div><b>Υπέγραψε ηλεκτρονικά <a class="ref">EC-0418</a></b><p>από κινητό, μετά από SMS</p><small>Μαρία Κωνσταντίνου</small></div><span class="w">χθες</span></div>
+				<div class="ev"><span class="dot tk">☎</span><div><b>Κλήση: θέλει να μιλήσει και ο σύζυγος</b><small>Βασίλης Καμπελής</small></div><span class="w">πριν 3μ</span></div>
+				<div class="mo">Οκτώβριος 2026</div>
+				<div class="ev"><span class="dot bad">!</span><div><b>Ο πάροχος επέστρεψε την αίτηση <a class="ref">EC-0302</a></b><p>Λείπει η δεύτερη σελίδα του λογαριασμού</p><small>Σύστημα</small></div><span class="w">14/10</span></div>
+				<div class="ev"><span class="dot nt">✍</span><div><b>Σημείωση: καλεί μετά τις 17:00</b><small>Βασίλης Καμπελής</small></div><span class="w">02/10</span></div>
+				<div class="ev"><span class="dot ed">✎</span><div><b>Άλλαξε το κινητό</b><p>694… → 6941234412</p><small>Βασίλης Καμπελής</small></div><span class="w">01/10</span></div>
+			</div>
+			<span class="morebtn">Δείξε παλαιότερα (18)</span></div></div>
+	</section>
+	<section class="stage" data-stage="hb" data-g="h">
+		<p class="note"><b>Η ιδέα:</b> αριστερά τα είδη ως λίστα-φίλτρο με εικονίδιο και αριθμό· δεξιά τα γεγονότα ανά μέρα, σε συμπαγείς γραμμές, για να χωράνε περισσότερα. Πιο πυκνό από το Α, λιγότερο «ιστορία».</p>
+		<div class="frame"><div class="card"><h3>Ιστορικό · 24 γεγονότα</h3>
+			<div class="split">
+				<div class="kinds"><div class="kd on"><span class="dot ed">≡</span>Όλα<em>24</em></div><div class="kd"><span class="dot ok">+</span>Συμβάσεις<em>6</em></div><div class="kd"><span class="dot sg">✉</span>Υπογραφές<em>5</em></div><div class="kd"><span class="dot tk">☎</span>Εργασίες<em>7</em></div><div class="kd"><span class="dot nt">✍</span>Σημειώσεις<em>3</em></div><div class="kd"><span class="dot ed">▤</span>Έγγραφα<em>3</em></div></div>
+				<div>
+					<div class="day"><h4>Σήμερα</h4><div class="row"><span class="dot ok">✓</span><b>Η αίτηση ενεργοποιήθηκε</b><a class="ref">EC-0302</a><span class="sp"></span><small>Σύστημα · 16:10</small></div></div>
+					<div class="day"><h4>Χθες</h4><div class="row"><span class="dot sg">✉</span><b>Υπέγραψε ηλεκτρονικά</b><a class="ref">EC-0418</a><span class="sp"></span><small>Μαρία Κ. · 11:42</small></div><div class="row"><span class="dot sg">✉</span><b>Στάλθηκε SMS υπογραφής</b><a class="ref">EC-0418</a><span class="sp"></span><small>Βασίλης Κ. · 11:30</small></div></div>
+					<div class="day"><h4>Δευτέρα 9 Νοεμβρίου</h4><div class="row"><span class="dot tk">☎</span><b>Κλήση: θέλει να μιλήσει και ο σύζυγος</b><span class="sp"></span><small>Βασίλης Κ. · 13:05</small></div></div>
+				</div>
+			</div></div></div>
+	</section>
+
+	<h2 class="part">2 · Εφαρμογή στο κινητό</h2>
+	<div class="switch"><button class="on" data-s="ia" data-g="i">Α. Το κινητό σου</button><button data-s="ib" data-g="i">Β. Τρία πατήματα</button></div>
+	<section class="stage on" data-stage="ia" data-g="i">
+		<p class="note"><b>Η ιδέα:</b> αριστερά ένα κινητό με το εικονίδιο του CRM στην αρχική οθόνη, για να φαίνεται τι θα πάρεις. Δεξιά Android / iPhone και τα βήματα σε κάρτες με αριθμό. Από κάτω QR: από τον υπολογιστή το σκανάρεις με την κάμερα του κινητού και ανοίγει κατευθείαν το CRM, χωρίς να στέλνεις σύνδεσμο. Στο κινητό: αντί για QR, το μεγάλο κουμπί «Εγκατάσταση» (Android) ή τα βήματα του Safari, όπως σήμερα.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Εφαρμογή στο κινητό</h2><p>Το CRM μπαίνει στην αρχική οθόνη του κινητού και ανοίγει σαν εφαρμογή.</p></div></div>
+			<div class="inst">
+				<div class="phone"><div class="scr"><span class="app"><i></i>Ρολόι</span><span class="app"><i></i>Χάρτες</span><span class="app"><i></i>Κάμερα</span><span class="app"><i></i>Φωτο</span><span class="app me"><i></i>Energy CRM</span><span class="app"><i></i>Viber</span><span class="app"><i></i>Mail</span><span class="app"><i></i>Chrome</span></div></div>
+				<div>
+					<div class="seg"><span class="on">Android</span><span>iPhone</span></div>
+					<ol class="st"><li>Άνοιξε το CRM στο <b>Chrome</b> και συνδέσου.</li><li>Πάτα το μενού <span class="k">⋮</span> πάνω δεξιά.</li><li>Διάλεξε <b>«Εγκατάσταση εφαρμογής»</b>.</li><li>Επιβεβαίωσε. Το εικονίδιο εμφανίζεται στην αρχική οθόνη.</li></ol>
+					<div class="qrbox"><span class="q"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="M4,4h1v1h-1zM5,4h1v1h-1zM6,4h1v1h-1zM7,4h1v1h-1zM8,4h1v1h-1zM9,4h1v1h-1zM10,4h1v1h-1zM13,4h1v1h-1zM14,4h1v1h-1zM17,4h1v1h-1zM22,4h1v1h-1zM23,4h1v1h-1zM24,4h1v1h-1zM25,4h1v1h-1zM26,4h1v1h-1zM27,4h1v1h-1zM28,4h1v1h-1zM4,5h1v1h-1zM10,5h1v1h-1zM13,5h1v1h-1zM16,5h1v1h-1zM17,5h1v1h-1zM18,5h1v1h-1zM19,5h1v1h-1zM22,5h1v1h-1zM28,5h1v1h-1zM4,6h1v1h-1zM6,6h1v1h-1zM7,6h1v1h-1zM8,6h1v1h-1zM10,6h1v1h-1zM12,6h1v1h-1zM15,6h1v1h-1zM18,6h1v1h-1zM22,6h1v1h-1zM24,6h1v1h-1zM25,6h1v1h-1zM26,6h1v1h-1zM28,6h1v1h-1zM4,7h1v1h-1zM6,7h1v1h-1zM7,7h1v1h-1zM8,7h1v1h-1zM10,7h1v1h-1zM12,7h1v1h-1zM13,7h1v1h-1zM17,7h1v1h-1zM18,7h1v1h-1zM19,7h1v1h-1zM20,7h1v1h-1zM22,7h1v1h-1zM24,7h1v1h-1zM25,7h1v1h-1zM26,7h1v1h-1zM28,7h1v1h-1zM4,8h1v1h-1zM6,8h1v1h-1zM7,8h1v1h-1zM8,8h1v1h-1zM10,8h1v1h-1zM12,8h1v1h-1zM15,8h1v1h-1zM20,8h1v1h-1zM22,8h1v1h-1zM24,8h1v1h-1zM25,8h1v1h-1zM26,8h1v1h-1zM28,8h1v1h-1zM4,9h1v1h-1zM10,9h1v1h-1zM12,9h1v1h-1zM14,9h1v1h-1zM16,9h1v1h-1zM17,9h1v1h-1zM19,9h1v1h-1zM20,9h1v1h-1zM22,9h1v1h-1zM28,9h1v1h-1zM4,10h1v1h-1zM5,10h1v1h-1zM6,10h1v1h-1zM7,10h1v1h-1zM8,10h1v1h-1zM9,10h1v1h-1zM10,10h1v1h-1zM12,10h1v1h-1zM14,10h1v1h-1zM16,10h1v1h-1zM18,10h1v1h-1zM20,10h1v1h-1zM22,10h1v1h-1zM23,10h1v1h-1zM24,10h1v1h-1zM25,10h1v1h-1zM26,10h1v1h-1zM27,10h1v1h-1zM28,10h1v1h-1zM12,11h1v1h-1zM18,11h1v1h-1zM20,11h1v1h-1zM4,12h1v1h-1zM6,12h1v1h-1zM7,12h1v1h-1zM8,12h1v1h-1zM9,12h1v1h-1zM10,12h1v1h-1zM15,12h1v1h-1zM17,12h1v1h-1zM18,12h1v1h-1zM19,12h1v1h-1zM22,12h1v1h-1zM23,12h1v1h-1zM24,12h1v1h-1zM25,12h1v1h-1zM26,12h1v1h-1zM6,13h1v1h-1zM8,13h1v1h-1zM9,13h1v1h-1zM14,13h1v1h-1zM15,13h1v1h-1zM18,13h1v1h-1zM20,13h1v1h-1zM23,13h1v1h-1zM27,13h1v1h-1zM4,14h1v1h-1zM6,14h1v1h-1zM9,14h1v1h-1zM10,14h1v1h-1zM12,14h1v1h-1zM13,14h1v1h-1zM14,14h1v1h-1zM16,14h1v1h-1zM17,14h1v1h-1zM19,14h1v1h-1zM21,14h1v1h-1zM22,14h1v1h-1zM23,14h1v1h-1zM24,14h1v1h-1zM25,14h1v1h-1zM27,14h1v1h-1zM28,14h1v1h-1zM8,15h1v1h-1zM14,15h1v1h-1zM20,15h1v1h-1zM22,15h1v1h-1zM23,15h1v1h-1zM28,15h1v1h-1zM4,16h1v1h-1zM6,16h1v1h-1zM8,16h1v1h-1zM10,16h1v1h-1zM11,16h1v1h-1zM12,16h1v1h-1zM13,16h1v1h-1zM14,16h1v1h-1zM15,16h1v1h-1zM17,16h1v1h-1zM18,16h1v1h-1zM21,16h1v1h-1zM22,16h1v1h-1zM24,16h1v1h-1zM26,16h1v1h-1zM27,16h1v1h-1zM28,16h1v1h-1zM4,17h1v1h-1zM5,17h1v1h-1zM6,17h1v1h-1zM8,17h1v1h-1zM11,17h1v1h-1zM16,17h1v1h-1zM17,17h1v1h-1zM23,17h1v1h-1zM25,17h1v1h-1zM27,17h1v1h-1zM4,18h1v1h-1zM6,18h1v1h-1zM7,18h1v1h-1zM8,18h1v1h-1zM10,18h1v1h-1zM12,18h1v1h-1zM13,18h1v1h-1zM18,18h1v1h-1zM19,18h1v1h-1zM20,18h1v1h-1zM21,18h1v1h-1zM22,18h1v1h-1zM23,18h1v1h-1zM24,18h1v1h-1zM25,18h1v1h-1zM27,18h1v1h-1zM28,18h1v1h-1zM4,19h1v1h-1zM7,19h1v1h-1zM8,19h1v1h-1zM11,19h1v1h-1zM12,19h1v1h-1zM13,19h1v1h-1zM16,19h1v1h-1zM18,19h1v1h-1zM21,19h1v1h-1zM23,19h1v1h-1zM24,19h1v1h-1zM28,19h1v1h-1zM4,20h1v1h-1zM6,20h1v1h-1zM7,20h1v1h-1zM8,20h1v1h-1zM9,20h1v1h-1zM10,20h1v1h-1zM11,20h1v1h-1zM12,20h1v1h-1zM16,20h1v1h-1zM17,20h1v1h-1zM19,20h1v1h-1zM20,20h1v1h-1zM21,20h1v1h-1zM22,20h1v1h-1zM23,20h1v1h-1zM24,20h1v1h-1zM26,20h1v1h-1zM12,21h1v1h-1zM13,21h1v1h-1zM14,21h1v1h-1zM17,21h1v1h-1zM20,21h1v1h-1zM24,21h1v1h-1zM25,21h1v1h-1zM4,22h1v1h-1zM5,22h1v1h-1zM6,22h1v1h-1zM7,22h1v1h-1zM8,22h1v1h-1zM9,22h1v1h-1zM10,22h1v1h-1zM14,22h1v1h-1zM15,22h1v1h-1zM16,22h1v1h-1zM17,22h1v1h-1zM18,22h1v1h-1zM20,22h1v1h-1zM22,22h1v1h-1zM24,22h1v1h-1zM26,22h1v1h-1zM27,22h1v1h-1zM28,22h1v1h-1zM4,23h1v1h-1zM10,23h1v1h-1zM12,23h1v1h-1zM15,23h1v1h-1zM18,23h1v1h-1zM20,23h1v1h-1zM24,23h1v1h-1zM25,23h1v1h-1zM4,24h1v1h-1zM6,24h1v1h-1zM7,24h1v1h-1zM8,24h1v1h-1zM10,24h1v1h-1zM12,24h1v1h-1zM15,24h1v1h-1zM19,24h1v1h-1zM20,24h1v1h-1zM21,24h1v1h-1zM22,24h1v1h-1zM23,24h1v1h-1zM24,24h1v1h-1zM26,24h1v1h-1zM27,24h1v1h-1zM28,24h1v1h-1zM4,25h1v1h-1zM6,25h1v1h-1zM7,25h1v1h-1zM8,25h1v1h-1zM10,25h1v1h-1zM12,25h1v1h-1zM16,25h1v1h-1zM17,25h1v1h-1zM19,25h1v1h-1zM22,25h1v1h-1zM24,25h1v1h-1zM25,25h1v1h-1zM26,25h1v1h-1zM27,25h1v1h-1zM28,25h1v1h-1zM4,26h1v1h-1zM6,26h1v1h-1zM7,26h1v1h-1zM8,26h1v1h-1zM10,26h1v1h-1zM12,26h1v1h-1zM13,26h1v1h-1zM14,26h1v1h-1zM17,26h1v1h-1zM18,26h1v1h-1zM25,26h1v1h-1zM26,26h1v1h-1zM28,26h1v1h-1zM4,27h1v1h-1zM10,27h1v1h-1zM16,27h1v1h-1zM17,27h1v1h-1zM20,27h1v1h-1zM21,27h1v1h-1zM23,27h1v1h-1zM24,27h1v1h-1zM25,27h1v1h-1zM28,27h1v1h-1zM4,28h1v1h-1zM5,28h1v1h-1zM6,28h1v1h-1zM7,28h1v1h-1zM8,28h1v1h-1zM9,28h1v1h-1zM10,28h1v1h-1zM12,28h1v1h-1zM13,28h1v1h-1zM16,28h1v1h-1zM18,28h1v1h-1zM21,28h1v1h-1zM22,28h1v1h-1zM23,28h1v1h-1zM24,28h1v1h-1zM25,28h1v1h-1zM26,28h1v1h-1zM27,28h1v1h-1zM28,28h1v1h-1z" fill="#000"/></svg></span><div><b>Σκάναρέ το με το κινητό</b><p>Άνοιξε την κάμερα και σημάδεψε το τετράγωνο. Ανοίγει το CRM· μετά ακολούθησε τα βήματα.</p><span class="btn gho sm">Αντιγραφή συνδέσμου</span></div></div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section class="stage" data-stage="ib" data-g="i">
+		<p class="note"><b>Η ιδέα:</b> τρεις μεγάλες κάρτες στη σειρά, μία ανά βήμα, με ζωγραφιά του κουμπιού που πατάς. Από κάτω σκούρα κάρτα με το QR και τον σύνδεσμο. Το Android / iPhone πάνω.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Εφαρμογή στο κινητό</h2><p>Το CRM μπαίνει στην αρχική οθόνη του κινητού και ανοίγει σαν εφαρμογή.</p></div><div class="seg" style="margin:0"><span>Android</span><span class="on">iPhone</span></div></div>
+			<div class="three">
+				<div class="big"><span class="n">1</span><div class="ill">⬆︎</div><p>Στο <b>Safari</b>, πάτα το κουμπί κοινοποίησης κάτω στη μπάρα.</p></div>
+				<div class="big"><span class="n">2</span><div class="ill">＋</div><p>Διάλεξε <b>«Προσθήκη στην αρχική οθόνη»</b>.</p></div>
+				<div class="big"><span class="n">3</span><div class="ill">✓</div><p>Πάτα <b>«Προσθήκη»</b> πάνω δεξιά. Έτοιμο.</p></div>
+			</div>
+			<div class="dark"><span class="q"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="M4,4h1v1h-1zM5,4h1v1h-1zM6,4h1v1h-1zM7,4h1v1h-1zM8,4h1v1h-1zM9,4h1v1h-1zM10,4h1v1h-1zM13,4h1v1h-1zM14,4h1v1h-1zM17,4h1v1h-1zM22,4h1v1h-1zM23,4h1v1h-1zM24,4h1v1h-1zM25,4h1v1h-1zM26,4h1v1h-1zM27,4h1v1h-1zM28,4h1v1h-1zM4,5h1v1h-1zM10,5h1v1h-1zM13,5h1v1h-1zM16,5h1v1h-1zM17,5h1v1h-1zM18,5h1v1h-1zM19,5h1v1h-1zM22,5h1v1h-1zM28,5h1v1h-1zM4,6h1v1h-1zM6,6h1v1h-1zM7,6h1v1h-1zM8,6h1v1h-1zM10,6h1v1h-1zM12,6h1v1h-1zM15,6h1v1h-1zM18,6h1v1h-1zM22,6h1v1h-1zM24,6h1v1h-1zM25,6h1v1h-1zM26,6h1v1h-1zM28,6h1v1h-1zM4,7h1v1h-1zM6,7h1v1h-1zM7,7h1v1h-1zM8,7h1v1h-1zM10,7h1v1h-1zM12,7h1v1h-1zM13,7h1v1h-1zM17,7h1v1h-1zM18,7h1v1h-1zM19,7h1v1h-1zM20,7h1v1h-1zM22,7h1v1h-1zM24,7h1v1h-1zM25,7h1v1h-1zM26,7h1v1h-1zM28,7h1v1h-1zM4,8h1v1h-1zM6,8h1v1h-1zM7,8h1v1h-1zM8,8h1v1h-1zM10,8h1v1h-1zM12,8h1v1h-1zM15,8h1v1h-1zM20,8h1v1h-1zM22,8h1v1h-1zM24,8h1v1h-1zM25,8h1v1h-1zM26,8h1v1h-1zM28,8h1v1h-1zM4,9h1v1h-1zM10,9h1v1h-1zM12,9h1v1h-1zM14,9h1v1h-1zM16,9h1v1h-1zM17,9h1v1h-1zM19,9h1v1h-1zM20,9h1v1h-1zM22,9h1v1h-1zM28,9h1v1h-1zM4,10h1v1h-1zM5,10h1v1h-1zM6,10h1v1h-1zM7,10h1v1h-1zM8,10h1v1h-1zM9,10h1v1h-1zM10,10h1v1h-1zM12,10h1v1h-1zM14,10h1v1h-1zM16,10h1v1h-1zM18,10h1v1h-1zM20,10h1v1h-1zM22,10h1v1h-1zM23,10h1v1h-1zM24,10h1v1h-1zM25,10h1v1h-1zM26,10h1v1h-1zM27,10h1v1h-1zM28,10h1v1h-1zM12,11h1v1h-1zM18,11h1v1h-1zM20,11h1v1h-1zM4,12h1v1h-1zM6,12h1v1h-1zM7,12h1v1h-1zM8,12h1v1h-1zM9,12h1v1h-1zM10,12h1v1h-1zM15,12h1v1h-1zM17,12h1v1h-1zM18,12h1v1h-1zM19,12h1v1h-1zM22,12h1v1h-1zM23,12h1v1h-1zM24,12h1v1h-1zM25,12h1v1h-1zM26,12h1v1h-1zM6,13h1v1h-1zM8,13h1v1h-1zM9,13h1v1h-1zM14,13h1v1h-1zM15,13h1v1h-1zM18,13h1v1h-1zM20,13h1v1h-1zM23,13h1v1h-1zM27,13h1v1h-1zM4,14h1v1h-1zM6,14h1v1h-1zM9,14h1v1h-1zM10,14h1v1h-1zM12,14h1v1h-1zM13,14h1v1h-1zM14,14h1v1h-1zM16,14h1v1h-1zM17,14h1v1h-1zM19,14h1v1h-1zM21,14h1v1h-1zM22,14h1v1h-1zM23,14h1v1h-1zM24,14h1v1h-1zM25,14h1v1h-1zM27,14h1v1h-1zM28,14h1v1h-1zM8,15h1v1h-1zM14,15h1v1h-1zM20,15h1v1h-1zM22,15h1v1h-1zM23,15h1v1h-1zM28,15h1v1h-1zM4,16h1v1h-1zM6,16h1v1h-1zM8,16h1v1h-1zM10,16h1v1h-1zM11,16h1v1h-1zM12,16h1v1h-1zM13,16h1v1h-1zM14,16h1v1h-1zM15,16h1v1h-1zM17,16h1v1h-1zM18,16h1v1h-1zM21,16h1v1h-1zM22,16h1v1h-1zM24,16h1v1h-1zM26,16h1v1h-1zM27,16h1v1h-1zM28,16h1v1h-1zM4,17h1v1h-1zM5,17h1v1h-1zM6,17h1v1h-1zM8,17h1v1h-1zM11,17h1v1h-1zM16,17h1v1h-1zM17,17h1v1h-1zM23,17h1v1h-1zM25,17h1v1h-1zM27,17h1v1h-1zM4,18h1v1h-1zM6,18h1v1h-1zM7,18h1v1h-1zM8,18h1v1h-1zM10,18h1v1h-1zM12,18h1v1h-1zM13,18h1v1h-1zM18,18h1v1h-1zM19,18h1v1h-1zM20,18h1v1h-1zM21,18h1v1h-1zM22,18h1v1h-1zM23,18h1v1h-1zM24,18h1v1h-1zM25,18h1v1h-1zM27,18h1v1h-1zM28,18h1v1h-1zM4,19h1v1h-1zM7,19h1v1h-1zM8,19h1v1h-1zM11,19h1v1h-1zM12,19h1v1h-1zM13,19h1v1h-1zM16,19h1v1h-1zM18,19h1v1h-1zM21,19h1v1h-1zM23,19h1v1h-1zM24,19h1v1h-1zM28,19h1v1h-1zM4,20h1v1h-1zM6,20h1v1h-1zM7,20h1v1h-1zM8,20h1v1h-1zM9,20h1v1h-1zM10,20h1v1h-1zM11,20h1v1h-1zM12,20h1v1h-1zM16,20h1v1h-1zM17,20h1v1h-1zM19,20h1v1h-1zM20,20h1v1h-1zM21,20h1v1h-1zM22,20h1v1h-1zM23,20h1v1h-1zM24,20h1v1h-1zM26,20h1v1h-1zM12,21h1v1h-1zM13,21h1v1h-1zM14,21h1v1h-1zM17,21h1v1h-1zM20,21h1v1h-1zM24,21h1v1h-1zM25,21h1v1h-1zM4,22h1v1h-1zM5,22h1v1h-1zM6,22h1v1h-1zM7,22h1v1h-1zM8,22h1v1h-1zM9,22h1v1h-1zM10,22h1v1h-1zM14,22h1v1h-1zM15,22h1v1h-1zM16,22h1v1h-1zM17,22h1v1h-1zM18,22h1v1h-1zM20,22h1v1h-1zM22,22h1v1h-1zM24,22h1v1h-1zM26,22h1v1h-1zM27,22h1v1h-1zM28,22h1v1h-1zM4,23h1v1h-1zM10,23h1v1h-1zM12,23h1v1h-1zM15,23h1v1h-1zM18,23h1v1h-1zM20,23h1v1h-1zM24,23h1v1h-1zM25,23h1v1h-1zM4,24h1v1h-1zM6,24h1v1h-1zM7,24h1v1h-1zM8,24h1v1h-1zM10,24h1v1h-1zM12,24h1v1h-1zM15,24h1v1h-1zM19,24h1v1h-1zM20,24h1v1h-1zM21,24h1v1h-1zM22,24h1v1h-1zM23,24h1v1h-1zM24,24h1v1h-1zM26,24h1v1h-1zM27,24h1v1h-1zM28,24h1v1h-1zM4,25h1v1h-1zM6,25h1v1h-1zM7,25h1v1h-1zM8,25h1v1h-1zM10,25h1v1h-1zM12,25h1v1h-1zM16,25h1v1h-1zM17,25h1v1h-1zM19,25h1v1h-1zM22,25h1v1h-1zM24,25h1v1h-1zM25,25h1v1h-1zM26,25h1v1h-1zM27,25h1v1h-1zM28,25h1v1h-1zM4,26h1v1h-1zM6,26h1v1h-1zM7,26h1v1h-1zM8,26h1v1h-1zM10,26h1v1h-1zM12,26h1v1h-1zM13,26h1v1h-1zM14,26h1v1h-1zM17,26h1v1h-1zM18,26h1v1h-1zM25,26h1v1h-1zM26,26h1v1h-1zM28,26h1v1h-1zM4,27h1v1h-1zM10,27h1v1h-1zM16,27h1v1h-1zM17,27h1v1h-1zM20,27h1v1h-1zM21,27h1v1h-1zM23,27h1v1h-1zM24,27h1v1h-1zM25,27h1v1h-1zM28,27h1v1h-1zM4,28h1v1h-1zM5,28h1v1h-1zM6,28h1v1h-1zM7,28h1v1h-1zM8,28h1v1h-1zM9,28h1v1h-1zM10,28h1v1h-1zM12,28h1v1h-1zM13,28h1v1h-1zM16,28h1v1h-1zM18,28h1v1h-1zM21,28h1v1h-1zM22,28h1v1h-1zM23,28h1v1h-1zM24,28h1v1h-1zM25,28h1v1h-1zM26,28h1v1h-1zM27,28h1v1h-1zM28,28h1v1h-1z" fill="#000"/></svg></span><div><b>Από τον υπολογιστή στο κινητό</b><p>Σκάναρε με την κάμερα του κινητού. Στο iPhone πρέπει να ανοίξει στο Safari.</p><span class="btn pri sm">Αντιγραφή συνδέσμου</span></div></div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){var g=b.getAttribute('data-g');
+	document.querySelectorAll('[data-s][data-g="'+g+'"]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage][data-g="'+g+'"]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+</script>
+</body>
+</html>

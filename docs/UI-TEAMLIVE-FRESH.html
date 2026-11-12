@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ομάδα τώρα — δύο νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--rose-t:#ff3c5a1f;
+	--blue:#2f7cf6;--blue-t:#2f7cf61f;--teal:#00a99a;--violet:#7a4de0;--violet-t:#7a4de01c;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:760px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:900px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn svg,.ic svg{width:18px;height:18px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 0;color:var(--ink2);font-size:15px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:3px 9px;border-radius:999px}
+.src svg{width:13px;height:13px}
+.plogo{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;letter-spacing:-.01em;padding:3px 8px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.plogo i{width:9px;height:9px;border-radius:50%}
+.save{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:3px 9px;border-radius:999px}
+
+.live{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:7px 12px;border-radius:999px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 #16c21788;animation:p 2s infinite}
+@keyframes p{70%{box-shadow:0 0 0 8px #16c21700}100%{box-shadow:0 0 0 0 #16c21700}}
+.strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px}
+.strip div{padding:14px 16px;border-radius:18px;background:var(--glass);box-shadow:0 0 0 1px var(--hair)}
+.strip b{display:block;font-size:26px;letter-spacing:-.03em}
+.strip span{font-size:12.5px;color:var(--ink2)}
+.strip .warn b{color:var(--amber)}
+.sec{display:flex;align-items:center;gap:8px;margin:4px 0 12px;font-size:14px;font-weight:800}
+.sec em{font-style:normal;font-weight:600;color:var(--ink3)}
+/* A */
+.room{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-bottom:24px}
+.pc{position:relative;border-radius:20px;padding:16px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift)}
+.pc .top{display:flex;align-items:center;gap:12px}
+.pc .av{position:relative;width:48px;height:48px;flex-basis:48px;border-radius:50%;font-size:15px}
+.pc .av::after{content:"";position:absolute;right:-1px;bottom:-1px;width:13px;height:13px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px #fff}
+.pc.off .av{filter:grayscale(1);opacity:.55}.pc.off .av::after{background:#c8ccc5}
+.pc .top b{display:block;font-size:15px}.pc .top small{font-size:12.5px;color:var(--ink3)}
+.pc .when{margin-left:auto;font-size:12px;font-weight:700;color:var(--green-ink)}
+.pc.off .when{color:var(--ink3);font-weight:600}
+.pc .nums{display:flex;align-items:baseline;gap:6px;margin:14px 0 10px}
+.pc .nums b{font-size:34px;letter-spacing:-.04em;line-height:1}
+.pc .nums span{font-size:13px;color:var(--ink2)}
+.pc .nums em{margin-left:auto;font-style:normal;font-size:13px;color:var(--ink3)}
+.pc .pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{white-space:nowrap;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:var(--fill);color:var(--ink2)}
+.pill.w{background:var(--amber-t);color:var(--amber)}
+.room.off .pc{background:var(--glass);box-shadow:0 0 0 1px var(--hair)}
+.room.off .nums b{font-size:24px;color:var(--ink2)}
+/* B */
+.bhero{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;margin-bottom:22px}
+.dark{border-radius:26px;padding:22px 24px;background:linear-gradient(150deg,#0f1a10,#16301a);color:#fff;box-shadow:var(--float);position:relative;overflow:hidden}
+.dark::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 92% 0%,#22cf2355,transparent 45%)}
+.dark>*{position:relative}
+.dark small{color:#9be59d;font-weight:700;font-size:12.5px}
+.dark .big{font-size:56px;font-weight:800;letter-spacing:-.05em;line-height:1;margin:8px 0 4px}
+.dark p{margin:0;color:#c9d3c9;font-size:14px}
+.dark .row{display:flex;gap:20px;margin-top:16px}
+.dark .row b{display:block;font-size:22px}.dark .row span{font-size:12px;color:#9be59d}
+.help{border-radius:26px;padding:18px 20px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift)}
+.help h4{margin:0 0 10px;font-size:15px}
+.hr{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--hair2);font-size:14px}
+.hr .av{width:32px;height:32px;flex-basis:32px;border-radius:50%;font-size:11px}
+.hr b{flex:1}
+.board{border-radius:22px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift);overflow:hidden}
+.br{display:grid;grid-template-columns:44px 1.3fr 2fr 80px 90px;align-items:center;gap:14px;padding:12px 18px;border-top:1px solid var(--hair2)}
+.br:first-child{border-top:0}
+.br .av{width:40px;height:40px;flex-basis:40px;border-radius:50%;font-size:13px;position:relative}
+.br .av::after{content:"";position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--green);box-shadow:0 0 0 2px #fff}
+.br.off .av::after{background:#c8ccc5}.br.off .av{opacity:.6}
+.br .who b{display:block;font-size:14.5px}.br .who small{font-size:12px;color:var(--ink3)}
+.bars{display:grid;gap:4px}
+.bars div{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink3)}
+.bars i{display:block;height:8px;border-radius:999px;background:linear-gradient(90deg,#22cf23,#0e9a12)}
+.bars .m i{background:#c8ccc5}
+.br .t{text-align:right}.br .t b{display:block;font-size:22px;letter-spacing:-.03em}.br .t span{font-size:11.5px;color:var(--ink3)}
+.br .l{font-size:12.5px;color:var(--ink3);text-align:right}
+.br.on .l{color:var(--green-ink);font-weight:700}
+@media (max-width:860px){
+	.frame{padding:16px;border-radius:22px}.head h2{font-size:30px}
+	.strip{grid-template-columns:repeat(2,1fr)}.strip div:first-child{grid-column:1/-1}
+	.bhero{grid-template-columns:1fr}
+	.br{grid-template-columns:40px 1fr 56px;gap:10px;padding:12px 14px}.br .bars{grid-column:2/4;grid-row:2}.br .l{display:none}
+}
+</style>
+</head>
+<body>
+<div class="doc">
+	<div class="intro">
+		<h1>Ομάδα τώρα: δύο νέες ιδέες</h1>
+		<p>Σήμερα η οθόνη είναι έξι κουτάκια με αριθμούς και ένας πίνακας επτά στηλών. Το «ποιος δουλεύει αυτή τη στιγμή» είναι μια τελεία στην άκρη της γραμμής.</p>
+		<p>Ίδια δεδομένα από πίσω: ποιος είναι online (τελευταίο μισάωρο), σήμερα, μήνας, σε καταχώρηση, οριστικοποίηση, ανοιχτές εργασίες, τελευταία δραστηριότητα. Ανανέωση κάθε 30″ όπως τώρα. Καμία αλλαγή στον server.</p>
+	</div>
+	<div class="switch"><button class="on" data-s="a">Α. Η αίθουσα</button><button data-s="b">Β. Ο πίνακας της μέρας</button></div>
+
+	<section class="stage on" data-stage="a">
+		<p class="note"><b>Η ιδέα:</b> σαν να κοιτάς την αίθουσα. Πάνω μια λωρίδα με τα σύνολα. Από κάτω, πρώτα όσοι είναι online τώρα, ως κάρτες με μεγάλο το «σήμερα», τον μήνα δίπλα, και πορτοκαλί ό,τι περιμένει (καταχωρήσεις, εργασίες). Πιο κάτω, σβηστοί, όσοι δεν είναι online, με το «πριν από πόσο».</p>
+		<div class="frame">
+			<div class="head"><div><h2>Ομάδα τώρα</h2><p>Ανανεώνεται μόνο του κάθε 30″</p></div><span class="live"><i></i>3 online · 14:32</span></div>
+			<div class="strip"><div><b>11</b><span>αιτήσεις σήμερα</span></div><div><b>148</b><span>αυτόν τον μήνα</span></div><div class="warn"><b>6</b><span>σε καταχώρηση</span></div><div><b>4</b><span>σε οριστικοποίηση</span></div><div><b>97</b><span>ενεργές</span></div></div>
+			<div class="sec">Online τώρα <em>3</em></div>
+			<div class="room">
+				<div class="pc"><div class="top"><span class="av" style="--h:210">ΓΑ</span><div><b>Γιώργος Αγναντόπουλος</b><small>Συνεργάτης</small></div><span class="when">τώρα</span></div>
+					<div class="nums"><b>5</b><span>σήμερα</span><em>41 τον μήνα</em></div><div class="pills"><span class="pill w">2 σε καταχώρηση</span><span class="pill">1 οριστικ.</span></div></div>
+				<div class="pc"><div class="top"><span class="av" style="--h:330">ΜΠ</span><div><b>Μαρία Παπαδοπούλου</b><small>Πωλήτρια</small></div><span class="when">πριν 4΄</span></div>
+					<div class="nums"><b>4</b><span>σήμερα</span><em>28 τον μήνα</em></div><div class="pills"><span class="pill w">3 εργασίες</span></div></div>
+				<div class="pc"><div class="top"><span class="av" style="--h:140">ΚΝ</span><div><b>Κωνσταντίνος Νίκας</b><small>Διαχειριστής · εσύ</small></div><span class="when">τώρα</span></div>
+					<div class="nums"><b>0</b><span>σήμερα</span><em>12 τον μήνα</em></div><div class="pills"><span class="pill">Όλα εντάξει</span></div></div>
+			</div>
+			<div class="sec">Όχι online <em>2</em></div>
+			<div class="room off">
+				<div class="pc off"><div class="top"><span class="av" style="--h:20">ΕΛ</span><div><b>Ελένη Λαμπράκη</b><small>Πωλήτρια</small></div><span class="when">πριν 2 ώρες</span></div>
+					<div class="nums"><b>2</b><span>σήμερα</span><em>17 τον μήνα</em></div><div class="pills"><span class="pill w">1 σε καταχώρηση</span></div></div>
+				<div class="pc off"><div class="top"><span class="av" style="--h:60">ΔΚ</span><div><b>Δημήτρης Κωστόπουλος</b><small>Συνεργάτης</small></div><span class="when">χθες</span></div>
+					<div class="nums"><b>0</b><span>σήμερα</span><em>0 τον μήνα</em></div><div class="pills"><span class="pill">Όλα εντάξει</span></div></div>
+			</div>
+		</div>
+	</section>
+
+	<section class="stage" data-stage="b">
+		<p class="note"><b>Η ιδέα:</b> η μέρα με μια ματιά. Αριστερά σε σκούρα κάρτα το μεγάλο «σήμερα» της ομάδας, πόσοι είναι online και τα σύνολα του μήνα. Δεξιά «Θέλουν προσοχή»: όσοι έχουν καταχωρήσεις ή εργασίες που περιμένουν. Από κάτω όλοι σε κατάταξη της μέρας, με δύο μπάρες ανά άτομο (σήμερα και μήνας) και πότε φάνηκαν τελευταία.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Ομάδα τώρα</h2><p>Ανανεώνεται μόνο του κάθε 30″</p></div><span class="live"><i></i>3 online · 14:32</span></div>
+			<div class="bhero">
+				<div class="dark"><small>ΣΗΜΕΡΑ</small><div class="big">11</div><p>αιτήσεις από την ομάδα · 3 από 5 είναι online</p>
+					<div class="row"><div><b>148</b><span>τον μήνα</span></div><div><b>4</b><span>οριστικοποίηση</span></div><div><b>97</b><span>ενεργές</span></div></div></div>
+				<div class="help"><h4>Θέλουν προσοχή</h4>
+					<div class="hr"><span class="av" style="--h:330">ΜΠ</span><b>Μαρία Παπαδοπούλου</b><span class="pill w">3 εργασίες</span></div>
+					<div class="hr"><span class="av" style="--h:210">ΓΑ</span><b>Γιώργος Αγναντόπουλος</b><span class="pill w">2 σε καταχώρηση</span></div>
+					<div class="hr"><span class="av" style="--h:20">ΕΛ</span><b>Ελένη Λαμπράκη</b><span class="pill w">1 σε καταχώρηση</span></div></div>
+			</div>
+			<div class="board">
+				<div class="br on"><span class="av" style="--h:210">ΓΑ</span><div class="who"><b>Γιώργος Αγναντόπουλος</b><small>Συνεργάτης</small></div><div class="bars"><div><i style="width:100%"></i></div><div class="m"><i style="width:100%"></i></div></div><div class="t"><b>5</b><span>41 μήνας</span></div><div class="l">τώρα</div></div>
+				<div class="br on"><span class="av" style="--h:330">ΜΠ</span><div class="who"><b>Μαρία Παπαδοπούλου</b><small>Πωλήτρια</small></div><div class="bars"><div><i style="width:80%"></i></div><div class="m"><i style="width:68%"></i></div></div><div class="t"><b>4</b><span>28 μήνας</span></div><div class="l">πριν 4΄</div></div>
+				<div class="br off"><span class="av" style="--h:20">ΕΛ</span><div class="who"><b>Ελένη Λαμπράκη</b><small>Πωλήτρια</small></div><div class="bars"><div><i style="width:40%"></i></div><div class="m"><i style="width:41%"></i></div></div><div class="t"><b>2</b><span>17 μήνας</span></div><div class="l">πριν 2 ώρες</div></div>
+				<div class="br on"><span class="av" style="--h:140">ΚΝ</span><div class="who"><b>Κωνσταντίνος Νίκας</b><small>Διαχειριστής · εσύ</small></div><div class="bars"><div><i style="width:0"></i></div><div class="m"><i style="width:29%"></i></div></div><div class="t"><b>0</b><span>12 μήνας</span></div><div class="l">τώρα</div></div>
+				<div class="br off"><span class="av" style="--h:60">ΔΚ</span><div class="who"><b>Δημήτρης Κωστόπουλος</b><small>Συνεργάτης</small></div><div class="bars"><div><i style="width:0"></i></div><div class="m"><i style="width:0"></i></div></div><div class="t"><b>0</b><span>0 μήνας</span></div><div class="l">χθες</div></div>
+			</div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){
+	document.querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+</script>
+</body>
+</html>

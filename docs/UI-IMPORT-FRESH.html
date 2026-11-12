@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Εισαγωγή Excel — δύο νέες ιδέες</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--rose-t:#ff3c5a1f;
+	--blue:#2f7cf6;--blue-t:#2f7cf61f;--teal:#00a99a;--violet:#7a4de0;--violet-t:#7a4de01c;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:760px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:900px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn svg,.ic svg{width:18px;height:18px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 0;color:var(--ink2);font-size:15px}
+.head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.av{width:40px;height:40px;flex:0 0 40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 62% 58%),hsl(var(--h) 62% 40%))}
+.src{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);padding:3px 9px;border-radius:999px}
+.src svg{width:13px;height:13px}
+.plogo{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;letter-spacing:-.01em;padding:3px 8px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.plogo i{width:9px;height:9px;border-radius:50%}
+.save{font-size:12.5px;font-weight:700;color:var(--green-ink);background:var(--green-t);padding:3px 9px;border-radius:999px}
+
+.pl{display:inline-grid;place-items:center;width:44px;height:30px;border-radius:9px;background:#fff;box-shadow:0 0 0 1px var(--hair);font-weight:900;font-size:13px}
+.org{font-size:11.5px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.org.s{background:var(--green-t);color:var(--green-ink)}.org.g{background:var(--amber-t);color:var(--amber)}.org.n{background:var(--blue-t);color:var(--blue)}
+.sel{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;padding:8px 12px;border-radius:12px;background:#fff;box-shadow:0 0 0 1px var(--hair)}
+.sel::after{content:"▾";font-size:11px;color:var(--ink3)}
+/* A */
+.steps{display:flex;gap:8px;margin-bottom:18px}
+.sp{flex:1;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);font-size:14px;font-weight:700;color:var(--ink2)}
+.sp i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:13px;background:var(--fill)}
+.sp.done i{background:var(--green);color:#fff}.sp.on{background:#fff;color:var(--ink);box-shadow:0 0 0 2px var(--green),var(--lift)}.sp.on i{background:var(--green-t);color:var(--green-ink)}
+.box{border-radius:22px;background:var(--solid);box-shadow:0 0 0 1px var(--hair),var(--lift);padding:18px 20px;margin-bottom:14px}
+.box h4{margin:0 0 12px;font-size:15px}
+.filebar{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--green-t);margin-bottom:14px;font-size:14px}
+.filebar b{flex:1}
+.cmap{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cm{padding:12px 14px;border-radius:16px;background:var(--fill)}
+.cm small{display:block;font-size:12px;color:var(--ink2);margin-bottom:6px;font-weight:700}
+.cm .ex{display:block;margin-top:6px;font-size:12px;color:var(--ink3)}
+.pairs{display:grid;gap:8px}
+.pr{display:grid;grid-template-columns:1fr 30px 1fr 110px;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--fill)}
+.pr .from{font-weight:700;font-size:14px}
+.pr .from small{display:block;font-weight:500;color:var(--ink3);font-size:12px}
+.pr .arr{text-align:center;color:var(--ink3)}
+.pr.ign{opacity:.6}
+.res{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.res div{padding:14px 16px;border-radius:18px;background:var(--fill)}
+.res b{display:block;font-size:30px;letter-spacing:-.03em}
+.res span{font-size:13px;color:var(--ink2)}
+.res .g{background:var(--green-t)}.res .g b{color:var(--green-ink)}.res .w{background:var(--amber-t)}.res .w b{color:var(--amber)}
+.miss{font-size:13px;color:var(--ink2);line-height:1.5}
+.go{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.go small{color:var(--ink3);font-size:12.5px}
+/* B */
+.sheet2{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+.live{position:sticky;top:12px;border-radius:24px;padding:20px;background:linear-gradient(150deg,#0f1a10,#16301a);color:#fff;box-shadow:var(--float)}
+.live small{color:#9be59d;font-weight:700;font-size:12.5px}
+.live .big{font-size:52px;font-weight:800;letter-spacing:-.05em;line-height:1;margin:6px 0 2px}
+.live p{margin:0 0 14px;color:#c9d3c9;font-size:14px}
+.live .ln{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid #ffffff1f;font-size:14px}
+.live .ln b{font-size:15px}.live .ln.w b{color:#ffc46b}
+.live .btn{width:100%;margin-top:14px}
+.drop{border-radius:22px;border:2px dashed #c8ccc5;padding:26px;text-align:center;color:var(--ink2);font-size:14px;margin-bottom:14px;background:var(--glass)}
+.drop b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+.ptiles{display:flex;gap:8px;flex-wrap:wrap}
+.pt{display:flex;align-items:center;gap:8px;padding:8px 12px 8px 8px;border-radius:14px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);font-weight:700;font-size:14px}
+.pt.on{background:#fff;box-shadow:0 0 0 2px var(--green),var(--lift)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl td{padding:9px 6px;border-top:1px solid var(--hair2)}
+.tbl tr:first-child td{border-top:0}
+@media (max-width:860px){
+	.frame{padding:16px;border-radius:22px}.head h2{font-size:30px}
+	.steps{flex-direction:column}.cmap{grid-template-columns:1fr}.res{grid-template-columns:repeat(2,1fr)}
+	.pr{grid-template-columns:1fr auto;}.pr .arr{display:none}.pr .sel{grid-column:1/-1;grid-row:2}
+	.sheet2{grid-template-columns:1fr}.live{position:static}
+}
+</style>
+</head>
+<body>
+<div class="doc">
+	<div class="intro">
+		<h1>Εισαγωγή Excel: δύο νέες ιδέες</h1>
+		<p>Σήμερα η οθόνη είναι τέσσερα κουτιά το ένα κάτω από το άλλο, με dropdown για στήλες και έναν πίνακα αντιστοίχισης. Το τι θα γίνει φαίνεται μόνο αν πατήσεις «Προεπισκόπηση», και η εφαρμογή ρωτά με παράθυρο του browser.</p>
+		<p>Ίδια διαδρομή από πίσω: ανάγνωση αρχείου, αντιστοίχιση στηλών και καταστάσεων (με «αποθηκευμένη / εικασία / νέα τιμή»), προεπισκόπηση (dry run) και εφαρμογή. Καμία αλλαγή στον server.</p>
+	</div>
+	<div class="switch"><button class="on" data-s="a">Α. Τρία βήματα</button><button data-s="b">Β. Ζωντανό αποτέλεσμα</button></div>
+
+	<section class="stage on" data-stage="a">
+		<p class="note"><b>Η ιδέα:</b> οδηγός. 1 Πάροχος και αρχείο, 2 Έλεγχος, 3 Αποτέλεσμα. Στον έλεγχο οι στήλες φαίνονται με ένα παράδειγμα τιμής από το αρχείο, και οι καταστάσεις ως ζευγάρια «του παρόχου → δική σου» με χρώμα για το από πού ήρθε η επιλογή. Το βήμα 3 τρέχει αυτόματα την προεπισκόπηση και δείχνει μεγάλα τα νούμερα· μετά ένα κουμπί «Ενημέρωσε 42 αιτήσεις».</p>
+		<div class="frame">
+			<div class="head"><div><h2>Εισαγωγή Excel παρόχου</h2><p>Ενημέρωσε τις καταστάσεις από το αρχείο του παρόχου, με βάση τον αριθμό παροχής.</p></div></div>
+			<div class="steps"><div class="sp done"><i>✓</i>Πάροχος και αρχείο</div><div class="sp on"><i>2</i>Έλεγχος</div><div class="sp"><i>3</i>Αποτέλεσμα</div></div>
+			<div class="filebar"><span class="pl" style="color:#f39200">P</span><b>Protergia · ενημέρωση_νοεμβρίου.xlsx</b><span>186 γραμμές</span></div>
+			<div class="box"><h4>Ποια στήλη είναι τι</h4>
+				<div class="cmap">
+					<div class="cm"><small>Αριθμός παροχής</small><span class="sel">ΗΚΑΣΠ</span><span class="ex">π.χ. 123456789012</span></div>
+					<div class="cm"><small>Κατάσταση</small><span class="sel">Status αίτησης</span><span class="ex">π.χ. Ενεργοποιήθηκε</span></div>
+					<div class="cm"><small>Σχόλιο (προαιρετικό)</small><span class="sel">Παρατηρήσεις</span><span class="ex">π.χ. Λείπει υπογραφή</span></div>
+				</div></div>
+			<div class="box"><h4>Οι καταστάσεις του παρόχου → οι δικές σου</h4>
+				<div class="pairs">
+					<div class="pr"><span class="from">Ενεργοποιήθηκε<small>112 γραμμές</small></span><span class="arr">→</span><span class="sel">Ενεργή</span><span class="org s">αποθηκευμένη</span></div>
+					<div class="pr"><span class="from">Σε επεξεργασία<small>48 γραμμές</small></span><span class="arr">→</span><span class="sel">Αναμονή παρόχου</span><span class="org s">αποθηκευμένη</span></div>
+					<div class="pr"><span class="from">Απορρίφθηκε<small>14 γραμμές</small></span><span class="arr">→</span><span class="sel">Ακυρώθηκε</span><span class="org g">εικασία</span></div>
+					<div class="pr ign"><span class="from">Εκκρεμεί ΔΕΔΔΗΕ<small>12 γραμμές</small></span><span class="arr">→</span><span class="sel">— αγνόησε —</span><span class="org n">νέα τιμή</span></div>
+				</div></div>
+			<div class="box"><h4>3 · Αποτέλεσμα (προεπισκόπηση)</h4>
+				<div class="res"><div class="g"><b>42</b><span>θα ενημερωθούν</span></div><div><b>118</b><span>ίδιες ήδη</span></div><div class="w"><b>3</b><span>δεν επιτρέπονται</span></div><div><b>11</b><span>δεν βρέθηκαν</span></div></div>
+				<p class="miss">Δεν βρέθηκαν: 123456780001, 123456780017, 123456780102 και 8 ακόμα. Η ροή δεν επιτρέπει: PROT-39012 (ακυρωμένη → ενεργή) και 2 ακόμα.</p>
+				<div class="go"><span class="btn pri">Ενημέρωσε 42 αιτήσεις</span><small>Η αντιστοίχιση θα αποθηκευτεί για την επόμενη φορά.</small></div></div>
+		</div>
+	</section>
+
+	<section class="stage" data-stage="b">
+		<p class="note"><b>Η ιδέα:</b> μία σελίδα, με το αποτέλεσμα να φαίνεται συνέχεια. Αριστερά πάροχος (πλακίδια με λογότυπο), αρχείο, στήλες και καταστάσεις. Δεξιά, σε σκούρα κάρτα που μένει στη θέση της, πόσες αιτήσεις θα ενημερωθούν, και ανανεώνεται μόνη της με κάθε αλλαγή στην αντιστοίχιση (προεπισκόπηση στο παρασκήνιο). Το κουμπί εφαρμογής είναι εκεί, με τον αριθμό πάνω του.</p>
+		<div class="frame">
+			<div class="head"><div><h2>Εισαγωγή Excel παρόχου</h2><p>Ενημέρωσε τις καταστάσεις από το αρχείο του παρόχου, με βάση τον αριθμό παροχής.</p></div></div>
+			<div class="sheet2">
+				<div>
+					<div class="box"><h4>Πάροχος</h4><div class="ptiles"><span class="pt on"><span class="pl" style="color:#f39200">P</span>Protergia</span><span class="pt"><span class="pl" style="color:#1d4fd8">V</span>Volton</span><span class="pt"><span class="pl" style="color:#e30613">Δ</span>ΔΕΗ</span><span class="pt"><span class="pl" style="color:#00a99a">Ζ</span>ZeniΘ</span></div></div>
+					<div class="filebar"><b>ενημέρωση_νοεμβρίου.xlsx · 186 γραμμές</b><span class="btn gho sm">Άλλο αρχείο</span></div>
+					<div class="box"><h4>Στήλες</h4><table class="tbl">
+						<tr><td>Αριθμός παροχής</td><td><span class="sel">ΗΚΑΣΠ</span></td><td class="meta" style="color:var(--ink3);font-size:12.5px">π.χ. 123456789012</td></tr>
+						<tr><td>Κατάσταση</td><td><span class="sel">Status αίτησης</span></td><td style="color:var(--ink3);font-size:12.5px">π.χ. Ενεργοποιήθηκε</td></tr>
+						<tr><td>Σχόλιο</td><td><span class="sel">Παρατηρήσεις</span></td><td style="color:var(--ink3);font-size:12.5px">προαιρετικό</td></tr></table></div>
+					<div class="box"><h4>Καταστάσεις</h4><div class="pairs">
+						<div class="pr"><span class="from">Ενεργοποιήθηκε<small>112</small></span><span class="arr">→</span><span class="sel">Ενεργή</span><span class="org s">αποθηκευμένη</span></div>
+						<div class="pr"><span class="from">Σε επεξεργασία<small>48</small></span><span class="arr">→</span><span class="sel">Αναμονή παρόχου</span><span class="org s">αποθηκευμένη</span></div>
+						<div class="pr"><span class="from">Απορρίφθηκε<small>14</small></span><span class="arr">→</span><span class="sel">Ακυρώθηκε</span><span class="org g">εικασία</span></div>
+						<div class="pr ign"><span class="from">Εκκρεμεί ΔΕΔΔΗΕ<small>12</small></span><span class="arr">→</span><span class="sel">— αγνόησε —</span><span class="org n">νέα τιμή</span></div></div></div>
+				</div>
+				<div class="live"><small>ΑΝ ΤΟ ΕΦΑΡΜΟΣΕΙΣ ΤΩΡΑ</small><div class="big">42</div><p>αιτήσεις αλλάζουν κατάσταση</p>
+					<div class="ln"><span>Ίδιες ήδη</span><b>118</b></div><div class="ln w"><span>Δεν επιτρέπονται</span><b>3</b></div><div class="ln"><span>Δεν βρέθηκαν</span><b>11</b></div><div class="ln"><span>Με σχόλιο</span><b>9</b></div>
+					<span class="btn pri">Ενημέρωσε 42 αιτήσεις</span></div>
+			</div>
+		</div>
+	</section>
+</div>
+<script>
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){
+	document.querySelectorAll('[data-s]').forEach(function(x){x.classList.toggle('on',x===b)});
+	document.querySelectorAll('[data-stage]').forEach(function(s){s.classList.toggle('on',s.getAttribute('data-stage')===b.getAttribute('data-s'))});
+}});
+</script>
+</body>
+</html>

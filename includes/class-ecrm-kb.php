@@ -227,12 +227,24 @@ class ECRM_KB {
 		// προόδου και δεν πληρώνει γι' αυτήν.
 		$read = $training ? self::read_ids( get_current_user_id() ) : [];
 
+		// (362) Το λογότυπο κάθε παρόχου, για τη νέα εμφάνιση. Ένα ερώτημα
+		// για όλους· πάροχος ανενεργός ή χωρίς λογότυπο δίνει κενό.
+		$logos = [];
+		foreach ( \EnergyCRM\Services::providers()->active() as $p ) {
+			$logos[ (int) $p['id'] ] = (string) ( $p['logo_url'] ?? '' );
+		}
+
 		// Group by provider (preserve order).
 		$groups = [];
 		foreach ( (array) $rows as $r ) {
 			$key = $r['provider_name'] ?: '—';
 			if ( ! isset( $groups[ $key ] ) ) {
-				$groups[ $key ] = [ 'provider' => $key, 'provider_id' => (int) $r['provider_id'], 'entries' => [] ];
+				$groups[ $key ] = [
+					'provider'    => $key,
+					'provider_id' => (int) $r['provider_id'],
+					'logo'        => $logos[ (int) $r['provider_id'] ] ?? '',
+					'entries'     => [],
+				];
 			}
 			$groups[ $key ]['entries'][] = [
 				'id'            => (int) $r['id'],

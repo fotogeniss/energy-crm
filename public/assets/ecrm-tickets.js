@@ -178,7 +178,16 @@ var TABS = [
 	['resolved', 'Λύθηκε'],
 	['not_issue', 'Δεν είναι πρόβλημα'],
 ];
-var state = { status: 'open' };
+var state = { status: 'open', openId: 0 };
+
+/* (365) «Signature»: τα εισερχόμενα. Αριστερά η λίστα, δεξιά η ανοιχτή
+ * αναφορά χωρίς να φεύγεις από τη λίστα· η συζήτηση σε φούσκες, τα τεχνικά
+ * κλειστά σε «Τεχνικά». Στο κινητό η αναφορά παίρνει όλη την οθόνη, με
+ * «← Όλες». Ίδια data-* και ίδιες κλήσεις. docs/UI-TICKETS-FRESH.html, Α. */
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
 
 function pill(status, label) {
 	return '<span class="ecrm-tk-st ecrm-tk-st--' + esc(status) + '">' + esc(label) + '</span>';
@@ -204,6 +213,7 @@ export function loadTickets() {
 		.then(function (d) {
 			if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">' + esc((d && d.error) || 'Σφάλμα.') + '</div></div>'; return; }
 			renderList(view, d);
+			if (isSignature() && state.openId) { loadPane(view, state.openId); }
 		})
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
 }
@@ -213,6 +223,8 @@ function renderList(view, d) {
 	counts.open = (counts['new'] || 0) + (counts.in_progress || 0);
 	var title = d.can_manage || d.team ? 'Αναφορές προβλημάτων' : 'Οι αναφορές μου';
 	var sub = d.can_manage ? 'Όλες οι αναφορές της εταιρείας.' : d.team ? 'Οι δικές σου και της ομάδας σου.' : 'Ό,τι έχεις αναφέρει, και τι απάντησε ο διαχειριστής.';
+
+	if (isSignature()) { renderSigList(view, d, counts, title, sub); return; }
 
 	var tabs = '<div class="ecrm-xsell__tabs">' + TABS.map(function (t) {
 		return '<button type="button" class="ecrm-xsell__tab' + (state.status === t[0] ? ' is-on' : '') + '" data-tk-tab="' + esc(t[0]) + '">' +
@@ -251,6 +263,11 @@ function renderList(view, d) {
 
 export function openTicket(id) {
 	var view = viewEl('tickets');
+	if (isSignature()) {
+		state.openId = Number(id) || 0;
+		if (view.querySelector('[data-tk-pane]')) { loadPane(view, state.openId); } else { loadTickets(); }
+		return;
+	}
 	view.innerHTML = '<div class="ecrm-card"><div class="ecrm-loading">Φόρτωση…</div></div>';
 
 	fetch(api('/tickets/' + encodeURIComponent(id)), { headers: H() })
@@ -302,7 +319,12 @@ function renderTicket(view, d) {
 		'</div>';
 
 	view.querySelector('[data-tk-back]').addEventListener('click', loadTickets);
+	wireTicket(view, t, function () { openTicket(t.id); });
+}
 
+/* Ό,τι κάνουν τα κουμπιά μιας αναφοράς, ίδιο και στις δύο εμφανίσεις.
+ * reload: τι ξαναζωγραφίζεται μετά από απάντηση ή αλλαγή κατάστασης. */
+function wireTicket(view, t, reload) {
 	var cb = view.querySelector('[data-tk-contract]');
 	if (cb) cb.addEventListener('click', function () { openDetail(cb.getAttribute('data-tk-contract')); });
 
@@ -311,7 +333,7 @@ function renderTicket(view, d) {
 		if (!text) { toast('Γράψε την απάντηση.'); return; }
 		postJson(api('/tickets/' + t.id + '/comments'), { body: text }).then(function (res) {
 			if (!res.d || !res.d.ok) { toast(failureText(res)); return; }
-			openTicket(t.id);
+			reload();
 		});
 	});
 
@@ -319,7 +341,7 @@ function renderTicket(view, d) {
 		b.addEventListener('click', function () {
 			postJson(api('/tickets/' + t.id + '/status'), { status: b.getAttribute('data-tk-status') }).then(function (res) {
 				if (!res.d || !res.d.ok) { toast(failureText(res)); return; }
-				openTicket(t.id);
+				reload();
 			});
 		});
 	});
@@ -328,7 +350,7 @@ function renderTicket(view, d) {
 	if (ro) ro.addEventListener('click', function () {
 		postJson(api('/tickets/' + t.id + '/reopen'), {}).then(function (res) {
 			if (!res.d || !res.d.ok) { toast(failureText(res)); return; }
-			openTicket(t.id);
+			reload();
 		});
 	});
 
@@ -344,6 +366,119 @@ function renderTicket(view, d) {
 			})
 			.catch(function () {});
 	}
+}
+
+/* ---- 3β. «Signature»: τα εισερχόμενα ---------------------------------- */
+
+function renderSigList(view, d, counts, title, sub) {
+	var chips = TABS.map(function (t) {
+		var on = state.status === t[0];
+		return '<button type="button" class="sig-tkchip' + (on ? ' is-on' : '') + '" data-tk-tab="' + esc(t[0]) + '" aria-pressed="' + on + '">' +
+			esc(t[1]) + '<b>' + (Number(counts[t[0]]) || 0) + '</b></button>';
+	}).join('');
+
+	var rows = (d.rows || []).map(function (r) {
+		var meta = ['#' + r.id];
+		if (!r.mine) meta.push(r.reporter);
+		var w = where(r.context);
+		if (w) meta.push(w);
+		if (r.comments) meta.push('💬 ' + r.comments);
+		if (r.has_attachment) meta.push('📷');
+		var on = Number(r.id) === state.openId;
+		return '<button type="button" class="sig-tkitem' + (on ? ' is-on' : '') + '" data-tk-open="' + esc(r.id) + '">' +
+			'<span class="sig-tkitem__top">' + pill(r.status, r.status_label) + (r.urgent ? '<span class="sig-tkurg">με σταματάει</span>' : '') +
+			'<span class="sig-tkitem__when">' + esc(timeAgo(r.updated_at)) + '</span></span>' +
+			'<b>' + esc(titleOf(r.body)) + '</b><small>' + esc(meta.join(' · ')) + '</small></button>';
+	}).join('');
+
+	view.innerHTML = '<header class="sig-cuhead"><div><h2>' + esc(title) + '</h2><p>' + esc(sub) + '</p></div>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary" data-tk-new>Νέα αναφορά</button></header>' +
+		'<div class="sig-tkchips" role="group" aria-label="Κατάσταση">' + chips + '</div>' +
+		'<div class="sig-tkinbox' + (state.openId ? ' has-open' : '') + '">' +
+			'<div class="sig-tklist">' + (rows || '<div class="sig-tkempty">Καμία αναφορά εδώ.</div>') + '</div>' +
+			'<section class="sig-tkpane" data-tk-pane aria-live="polite">' +
+				'<div class="sig-tkpane__idle">' + (rows ? 'Διάλεξε μια αναφορά για να δεις τη συζήτηση.' : 'Όταν έρθει αναφορά, θα τη δεις εδώ.') + '</div>' +
+			'</section>' +
+		'</div>';
+
+	view.querySelectorAll('[data-tk-tab]').forEach(function (b) {
+		b.addEventListener('click', function () { state.status = b.getAttribute('data-tk-tab'); loadTickets(); });
+	});
+	view.querySelectorAll('[data-tk-open]').forEach(function (row) {
+		row.addEventListener('click', function () { openTicket(row.getAttribute('data-tk-open')); });
+	});
+	var nb = view.querySelector('[data-tk-new]');
+	if (nb) nb.addEventListener('click', openReport);
+}
+
+function loadPane(view, id) {
+	var pane = view.querySelector('[data-tk-pane]');
+	if (!pane) { return; }
+	view.querySelectorAll('[data-tk-open]').forEach(function (r) {
+		r.classList.toggle('is-on', Number(r.getAttribute('data-tk-open')) === Number(id));
+	});
+	var box = view.querySelector('.sig-tkinbox');
+	if (box) { box.classList.add('has-open'); }
+	pane.innerHTML = '<div class="sig-tkpane__idle">Φόρτωση…</div>';
+
+	fetch(api('/tickets/' + encodeURIComponent(id)), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) { pane.innerHTML = '<div class="sig-tkpane__idle">' + esc((d && d.error) || 'Σφάλμα.') + '</div>'; return; }
+			renderSigTicket(view, pane, d);
+		})
+		.catch(function () { pane.innerHTML = '<div class="sig-tkpane__idle">Σφάλμα δικτύου.</div>'; });
+}
+
+function renderSigTicket(view, pane, d) {
+	var t = d.ticket;
+	var ctx = t.context || {};
+
+	var thread = '<div class="sig-tkmsg"><small>' + esc(t.reporter) + ' · ' + esc(timeAgo(t.created_at)) + '</small><div>' + esc(t.body) + '</div></div>' +
+		'<div class="sig-tkshot" data-tk-img hidden></div>' +
+		(d.comments || []).map(function (c) {
+			if (c.kind === 'status') {
+				return '<span class="sig-tksys">' + esc(c.author) + ' → ' + esc(c.body) + ' · ' + esc(timeAgo(c.created_at)) + '</span>';
+			}
+			return '<div class="sig-tkmsg' + (c.mine ? ' is-mine' : '') + '"><small>' + esc(c.mine ? 'Εσύ' : c.author) + ' · ' + esc(timeAgo(c.created_at)) + '</small>' +
+				'<div>' + esc(c.body) + '</div></div>';
+		}).join('');
+
+	var status = '';
+	if (t.can_status) {
+		[['in_progress', 'Σε εξέλιξη'], ['resolved', '✓ Λύθηκε'], ['not_issue', 'Δεν είναι πρόβλημα']].forEach(function (s) {
+			if (s[0] !== t.status) status += '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-tk-status="' + esc(s[0]) + '">' + esc(s[1]) + '</button>';
+		});
+	}
+	if (t.can_reopen) status += '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-tk-reopen>Δεν λύθηκε;</button>';
+
+	var extra = [];
+	if (t.has_attachment) extra.push(['Εικόνα', 'μέσα στη συζήτηση']);
+
+	pane.innerHTML =
+		'<button type="button" class="sig-tkback" data-tk-back>← Όλες</button>' +
+		'<div class="sig-tkhead"><div class="sig-tkhead__top">' + pill(t.status, t.status_label) + (t.urgent ? '<span class="sig-tkurg">με σταματάει</span>' : '') + '</div>' +
+			'<h3>#' + esc(t.id) + ' · ' + esc(titleOf(t.body)) + '</h3>' +
+			'<p>' + esc(t.reporter) + (ctx.role ? ' · ' + esc(ctx.role) : '') + ' · ' + esc(timeAgo(t.created_at)) +
+			(ctx.contract_id ? ' · <button type="button" class="sig-tklink" data-tk-contract="' + esc(ctx.contract_id) + '">Άνοιγμα αίτησης ' + esc(ctx.contract_code || '') + '</button>' : '') + '</p></div>' +
+		'<div class="sig-tkthread">' + thread + '</div>' +
+		'<details class="sig-tktech"><summary>Τεχνικά</summary>' + contextRows(ctx, extra) + '</details>' +
+		'<div class="sig-tkreply"><textarea class="ecrm-textarea" rows="3" data-tk-text maxlength="4000" placeholder="Γράψε απάντηση…" aria-label="Απάντηση"></textarea>' +
+			'<div class="sig-tkreply__act"><button type="button" class="ecrm-btn ecrm-btn--primary" data-tk-reply>Απάντηση</button>' +
+			'<span class="sig-tkreply__st">' + status + '</span></div>' +
+			(t.can_status ? '<p class="sig-tkgdpr">Με «Λύθηκε» ή «Δεν είναι πρόβλημα» η εικόνα σβήνεται οριστικά.</p>' : '') +
+		'</div>';
+
+	pane.querySelector('[data-tk-back]').addEventListener('click', function () {
+		state.openId = 0;
+		var box = view.querySelector('.sig-tkinbox');
+		if (box) { box.classList.remove('has-open'); }
+		view.querySelectorAll('[data-tk-open].is-on').forEach(function (r) { r.classList.remove('is-on'); });
+	});
+
+	// Μετά από απάντηση ή αλλαγή κατάστασης ξαναφορτώνονται και η λίστα
+	// (η αναφορά μπορεί να άλλαξε καρτέλα) και η ανοιχτή αναφορά.
+	wireTicket(pane, t, function () { loadTickets(); });
 }
 
 /* ---- 1. και 2.: εκκίνηση ----------------------------------------------- */

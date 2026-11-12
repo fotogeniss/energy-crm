@@ -1842,6 +1842,538 @@
 	.ecrm-app[data-ui="signature"] .sig-qdetails > summary { flex-direction: column; align-items: flex-start; }
 }
 
+/* ═══ (361) Το δίκτυό μου: ο χάρτης ════════════════════════════════════════
+ * Εσύ πάνω, οι άμεσοι υποσυνεργάτες από κάτω δεμένοι με γραμμές, η πρόσκληση
+ * τελευταία κάρτα. Στο κινητό το δέντρο γίνεται κάθετη γραμμή.
+ * docs/UI-NETWORK-FRESH.html, Α. */
+.ecrm-app[data-ui="signature"] .sig-nmap { --sig-nline: var(--sig-ink-3); margin-bottom: 24px; }
+.ecrm-app[data-ui="signature"] .sig-nme {
+	position: relative; max-width: 600px; margin: 0 auto; display: flex; align-items: center; gap: 16px;
+	padding: 20px 22px; border-radius: 26px; color: var(--sig-island-ink);
+	background: linear-gradient(150deg, var(--sig-island), var(--sig-lnext-2)); box-shadow: var(--sig-float);
+}
+.ecrm-app[data-ui="signature"] .sig-nme::before {
+	content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+	background: radial-gradient(circle at 92% 0%, rgba(34, 207, 35, .32), transparent 45%);
+}
+.ecrm-app[data-ui="signature"] .sig-nme__ico {
+	position: relative; width: 52px; height: 52px; flex: 0 0 52px; border-radius: 16px; display: grid; place-items: center;
+	color: var(--sig-on-btn); background: linear-gradient(180deg, var(--sig-btn-top), var(--sig-btn-bottom));
+}
+.ecrm-app[data-ui="signature"] .sig-nme__ico svg { width: 26px; height: 26px; }
+.ecrm-app[data-ui="signature"] .sig-nme__who { position: relative; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-nme__who b { display: block; font-size: var(--fs-22); letter-spacing: -.03em; }
+.ecrm-app[data-ui="signature"] .sig-nme__who span { display: block; margin-top: 3px; font-size: var(--fs-14); color: var(--sig-island-sub); }
+.ecrm-app[data-ui="signature"] .sig-nme__nums { position: relative; margin-left: auto; display: flex; gap: 20px; }
+.ecrm-app[data-ui="signature"] .sig-nme__nums div { text-align: right; }
+.ecrm-app[data-ui="signature"] .sig-nme__nums b { display: block; font-size: var(--fs-26); font-weight: 800; letter-spacing: -.03em; }
+.ecrm-app[data-ui="signature"] .sig-nme__nums span { font-size: var(--fs-12); color: var(--sig-island-sub); }
+
+.ecrm-app[data-ui="signature"] .sig-nbranch {
+	position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px;
+	margin-top: 28px; padding-top: 28px;
+}
+/* Ο κορμός από το «Εσύ» και η οριζόντια γραμμή πάνω από τις κάρτες. */
+.ecrm-app[data-ui="signature"] .sig-nbranch::before { content: ""; position: absolute; top: -28px; left: 50%; width: 2px; height: 28px; background: var(--sig-nline); opacity: .5; }
+/* Η οριζόντια γραμμή: κάθε κάρτα ζωγραφίζει το κομμάτι της, ως τη μέση του
+ * κενού δεξιά και αριστερά· η πρώτη ξεκινά και η τελευταία σταματά στη μέση
+ * τους, ώστε να μην εξέχει. */
+.ecrm-app[data-ui="signature"] .sig-nnode::after { content: ""; position: absolute; top: -28px; left: -7px; right: -7px; height: 2px; background: var(--sig-nline); opacity: .5; }
+.ecrm-app[data-ui="signature"] .sig-nnode:first-child::after { left: 50%; }
+.ecrm-app[data-ui="signature"] .sig-nnode:last-child::after { right: 50%; }
+.ecrm-app[data-ui="signature"] .sig-nnode:only-child::after { display: none; }
+/* Η κάρτα πρόσκλησης έχει περίγραμμα 2px, που μετατοπίζει τις γραμμές της. */
+.ecrm-app[data-ui="signature"] .sig-nnode--add::before { top: -28px; }
+.ecrm-app[data-ui="signature"] .sig-nnode--add::after { top: -30px; left: -9px; }
+.ecrm-app[data-ui="signature"] .sig-nnode--add:last-child::after { right: calc(50% - 1px); }
+/* Χωρίς υποσυνεργάτες: μόνο η πρόσκληση, στη μέση, με μία συνεχή γραμμή. */
+.ecrm-app[data-ui="signature"] .sig-nnode--add:only-child { justify-self: center; width: 100%; max-width: 420px; }
+.ecrm-app[data-ui="signature"] .sig-nnode--add:only-child::before { top: -58px; height: 56px; }
+.ecrm-app[data-ui="signature"] .sig-nbranch:has(> .sig-nnode:only-child)::before { display: none; }
+.ecrm-app[data-ui="signature"] .sig-nnode {
+	position: relative; display: block; text-align: left; font: inherit; color: var(--sig-ink); cursor: pointer;
+	padding: 16px; border: 0; border-radius: 20px; background: var(--sig-solid);
+	box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift); transition: box-shadow .15s;
+}
+.ecrm-app[data-ui="signature"] .sig-nnode::before { content: ""; position: absolute; top: -26px; left: 50%; width: 2px; height: 26px; background: var(--sig-nline); opacity: .5; }
+.ecrm-app[data-ui="signature"] .sig-nnode:hover,
+.ecrm-app[data-ui="signature"] .sig-nnode:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-nnode__top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-nnode__top .sig-member__av { width: 40px; height: 40px; flex-basis: 40px; border-radius: 13px; font-size: var(--fs-13); }
+.ecrm-app[data-ui="signature"] .sig-nnode__who { min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-nnode__who b { display: block; font-size: var(--fs-15); line-height: 1.25; overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-nnode__who small { display: block; font-size: var(--fs-12); color: var(--sig-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ecrm-app[data-ui="signature"] .sig-nnode__stats { display: flex; gap: 8px; margin-top: 14px; }
+.ecrm-app[data-ui="signature"] .sig-nnode__stats div { flex: 1; padding: 8px 10px; border-radius: 12px; background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-nnode__stats b { display: block; font-size: var(--fs-22); font-weight: 800; letter-spacing: -.03em; }
+.ecrm-app[data-ui="signature"] .sig-nnode__stats span { font-size: var(--fs-11-5); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-nnode.is-quiet .sig-nnode__stats b { color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-nnode__note { margin: 10px 0 0; font-size: var(--fs-12-5); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-nnode--add {
+	display: grid; place-items: center; align-content: center; gap: 6px; text-align: center; min-height: 150px;
+	background: transparent; box-shadow: none; border: 2px dashed var(--sig-hair); color: var(--sig-ink-2);
+	font-size: var(--fs-14); font-weight: 700;
+}
+.ecrm-app[data-ui="signature"] .sig-nnode--add svg { width: 26px; height: 26px; color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-nnode--add:hover,
+.ecrm-app[data-ui="signature"] .sig-nnode--add:focus-visible { box-shadow: none; border-color: var(--sig-green); color: var(--sig-green-ink); }
+
+.ecrm-app[data-ui="signature"] .sig-npv { margin-top: 24px; padding: 18px 20px; border-radius: 22px; background: var(--sig-glass); box-shadow: 0 0 0 1px var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-npv h3 { margin: 0 0 4px; font-size: var(--fs-16); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-npv > p { margin: 0 0 12px; font-size: var(--fs-13-5); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-npv__row {
+	display: grid; grid-template-columns: minmax(150px, 200px) 1fr auto auto; align-items: center; gap: 16px;
+	padding: 10px 0; border-top: 1px solid var(--sig-hair-2);
+}
+.ecrm-app[data-ui="signature"] .sig-npv__name { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-npv__name b { font-size: var(--fs-14); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ecrm-app[data-ui="signature"] .sig-npv__bar { height: 8px; border-radius: 999px; background: var(--sig-fill); overflow: hidden; }
+.ecrm-app[data-ui="signature"] .sig-npv__bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--sig-btn-top), var(--sig-btn-bottom)); }
+.ecrm-app[data-ui="signature"] .sig-npv__cnt { font-size: var(--fs-13); color: var(--sig-ink-2); white-space: nowrap; }
+.ecrm-app[data-ui="signature"] .sig-npv__act { display: flex; gap: 6px; justify-content: flex-end; }
+.ecrm-app[data-ui="signature"] .sig-npv__act .ecrm-btn--ghost { background: var(--sig-solid); color: var(--sig-ink); border: 0; box-shadow: 0 0 0 1px var(--sig-hair); }
+
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-nme { flex-wrap: wrap; }
+	.ecrm-app[data-ui="signature"] .sig-nme__nums { margin-left: 0; width: 100%; }
+	.ecrm-app[data-ui="signature"] .sig-nme__nums div { text-align: left; }
+	.ecrm-app[data-ui="signature"] .sig-nbranch { grid-template-columns: 1fr; gap: 10px; margin: 0 0 0 26px; padding: 18px 0 0 22px; border-left: 2px solid transparent; }
+	.ecrm-app[data-ui="signature"] .sig-nbranch::before { top: 0; bottom: 30px; left: -2px; width: 2px; height: auto; }
+	.ecrm-app[data-ui="signature"] .sig-nnode::after { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-nnode::before { top: 50%; left: -22px; width: 22px; height: 2px; }
+	.ecrm-app[data-ui="signature"] .sig-nnode--add { min-height: 64px; grid-auto-flow: column; }
+	.ecrm-app[data-ui="signature"] .sig-npv { padding: 16px; }
+	.ecrm-app[data-ui="signature"] .sig-npv__row { grid-template-columns: 1fr auto; gap: 8px 12px; }
+	.ecrm-app[data-ui="signature"] .sig-npv__bar { grid-column: 1 / -1; grid-row: 2; }
+	.ecrm-app[data-ui="signature"] .sig-npv__act { grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; }
+}
+
+/* ═══ (362) Βάση Γνώσης: ο φάκελος του παρόχου ════════════════════════════
+ * Αριστερά οι πάροχοι, δεξιά ο φάκελος του επιλεγμένου με καρτέλες ανά
+ * ενότητα και όλα ανοιχτά. Οι λίστες του κειμένου γίνονται τσεκ-λίστα.
+ * docs/UI-KB-FRESH.html, Β. */
+.ecrm-app[data-ui="signature"] .sig-kbq {
+	display: flex; align-items: center; gap: 10px; min-width: 0; padding: 7px 7px 7px 18px; border-radius: 999px;
+	background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift);
+}
+.ecrm-app[data-ui="signature"] .sig-kbq > svg { width: 20px; height: 20px; flex: 0 0 20px; fill: none; stroke: var(--sig-ink-3); stroke-width: 1.8; stroke-linecap: round; }
+.ecrm-app[data-ui="signature"] .sig-kbq input { flex: 1; min-width: 0; border: 0; outline: 0; padding: 6px 0; font: inherit; font-size: var(--fs-16); color: var(--sig-ink); background: none; box-shadow: none; }
+.ecrm-app[data-ui="signature"] .sig-kbask {
+	display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto; border: 0; border-radius: 999px; cursor: pointer;
+	padding: 10px 16px; font: inherit; font-size: var(--fs-14); font-weight: 700; color: var(--sig-on-btn);
+	background: linear-gradient(135deg, var(--sig-violet), var(--sig-blue)); box-shadow: 0 8px 20px -10px var(--sig-violet);
+}
+.ecrm-app[data-ui="signature"] .sig-kbask svg { width: 16px; height: 16px; fill: currentColor; }
+.ecrm-app[data-ui="signature"] .sig-kbanswer {
+	margin: 12px 0 0; padding: 16px 18px; border-radius: 20px; background: var(--sig-solid);
+	box-shadow: 0 0 0 1px var(--sig-violet-t), inset 4px 0 0 var(--sig-violet), var(--sig-lift);
+}
+.ecrm-app[data-ui="signature"] .sig-kbanswer .ecrm-kbanswer__head { display: flex; align-items: center; gap: 6px; color: var(--sig-violet); text-transform: none; letter-spacing: 0; font-size: var(--fs-13); }
+.ecrm-app[data-ui="signature"] .sig-kbanswer .ecrm-kbanswer__head svg { width: 14px; height: 14px; fill: currentColor; stroke: none; }
+.ecrm-app[data-ui="signature"] .sig-kbanswer .ecrm-kbanswer__body { font-size: var(--fs-15); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-kbanswer .ecrm-kbanswer__close { margin-top: 10px; border: 0; background: var(--sig-fill); color: var(--sig-ink); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: var(--fs-13); font-weight: 700; cursor: pointer; }
+
+.ecrm-app[data-ui="signature"] .sig-kbfilters { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 16px; }
+.ecrm-app[data-ui="signature"] .sig-kbseg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 999px; background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-kbseg button {
+	border: 0; background: none; cursor: pointer; padding: 6px 12px; border-radius: 999px; white-space: nowrap;
+	font: inherit; font-size: var(--fs-13); font-weight: 600; color: var(--sig-ink-2);
+}
+.ecrm-app[data-ui="signature"] .sig-kbseg button.is-on { background: var(--sig-solid); color: var(--sig-ink); box-shadow: var(--sig-lift); }
+
+.ecrm-app[data-ui="signature"] .sig-kb { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 18px; align-items: start; }
+.ecrm-app[data-ui="signature"] .sig-kbprovs {
+	position: sticky; top: 90px; display: flex; flex-direction: column; gap: 2px; padding: 8px; border-radius: 22px;
+	background: var(--sig-glass); box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-kbprov {
+	display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 14px; cursor: pointer;
+	background: none; font: inherit; color: var(--sig-ink); text-align: left;
+}
+.ecrm-app[data-ui="signature"] .sig-kbprov b { flex: 1; min-width: 0; font-size: var(--fs-14); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ecrm-app[data-ui="signature"] .sig-kbprov span:not(.sig-plogo) { font-size: var(--fs-12); font-weight: 700; color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-kbprov .sig-plogo { width: 48px; height: 30px; }
+.ecrm-app[data-ui="signature"] .sig-kbprov:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-kbprov.is-on { background: var(--sig-solid); box-shadow: var(--sig-lift); }
+
+.ecrm-app[data-ui="signature"] .sig-kbsheet { border-radius: 24px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-float); overflow: hidden; }
+.ecrm-app[data-ui="signature"] .sig-kbsheet--empty { display: grid; gap: 4px; margin-top: 16px; padding: 40px 24px; text-align: center; color: var(--sig-ink-2); font-size: var(--fs-14); }
+.ecrm-app[data-ui="signature"] .sig-kbsheet--empty b { color: var(--sig-ink); font-size: var(--fs-16); }
+.ecrm-app[data-ui="signature"] .sig-kbsheet__head { display: flex; align-items: center; gap: 14px; padding: 20px 22px; border-bottom: 1px solid var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-kbsheet__head .sig-plogo { width: 72px; height: 46px; border-radius: 14px; }
+.ecrm-app[data-ui="signature"] .sig-kbsheet__head .sig-plogo.is-text { width: 52px; font-size: var(--fs-18); }
+.ecrm-app[data-ui="signature"] .sig-kbsheet__head h3 { margin: 0; font-size: var(--fs-22); font-weight: 800; letter-spacing: -.03em; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-kbsheet__head p { margin: 2px 0 0; font-size: var(--fs-13-5); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-kbtabs { display: flex; gap: 4px; padding: 6px 22px 0; border-bottom: 1px solid var(--sig-hair-2); overflow-x: auto; }
+.ecrm-app[data-ui="signature"] .sig-kbtabs button {
+	flex: 0 0 auto; border: 0; background: none; cursor: pointer; padding: 10px 14px; margin-bottom: -1px; white-space: nowrap;
+	font: inherit; font-size: var(--fs-14); font-weight: 700; color: var(--sig-ink-2); border-bottom: 2px solid transparent;
+}
+.ecrm-app[data-ui="signature"] .sig-kbtabs button em { font-style: normal; font-size: var(--fs-12); color: var(--sig-ink-3); margin-left: 5px; }
+.ecrm-app[data-ui="signature"] .sig-kbtabs button.is-on { color: var(--sig-ink); border-bottom-color: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-kbsheet__body { padding: 4px 22px 18px; }
+.ecrm-app[data-ui="signature"] .sig-kbitem { padding: 16px 0; border-bottom: 1px solid var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-kbitem:last-child { border-bottom: 0; }
+.ecrm-app[data-ui="signature"] .sig-kbitem h4 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; font-size: var(--fs-16); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-kbtag { font-size: var(--fs-11-5); font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--sig-fill); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-kbtag.is-power { background: var(--sig-amber-t); color: var(--sig-amber); }
+.ecrm-app[data-ui="signature"] .sig-kbtag.is-gas { background: var(--sig-blue-t); color: var(--sig-blue); }
+.ecrm-app[data-ui="signature"] .sig-kbbody { font-size: var(--fs-15); line-height: 1.55; color: var(--sig-ink); overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-kbbody p { margin: 0 0 8px; }
+.ecrm-app[data-ui="signature"] .sig-kbbody p:last-child { margin-bottom: 0; }
+.ecrm-app[data-ui="signature"] .sig-kbbody ul { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.ecrm-app[data-ui="signature"] .sig-kbbody ul li { position: relative; padding-left: 30px; }
+.ecrm-app[data-ui="signature"] .sig-kbbody ul li::before {
+	content: "✓"; position: absolute; left: 0; top: 1px; width: 20px; height: 20px; border-radius: 7px; display: grid; place-items: center;
+	font-size: var(--fs-12); font-weight: 900; color: var(--sig-green-ink); background: var(--sig-green-tint);
+}
+.ecrm-app[data-ui="signature"] .sig-kbbody ol { margin: 0 0 8px; padding-left: 22px; }
+.ecrm-app[data-ui="signature"] .sig-kbbody a { color: var(--sig-green-ink); }
+
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-kbask span { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-kbask { padding: 10px 12px; }
+	.ecrm-app[data-ui="signature"] .sig-kb { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+	.ecrm-app[data-ui="signature"] .sig-kbprovs { position: static; flex-direction: row; overflow-x: auto; padding: 6px; scrollbar-width: none; }
+	.ecrm-app[data-ui="signature"] .sig-kbprov { width: auto; flex: 0 0 auto; }
+	.ecrm-app[data-ui="signature"] .sig-kbprov b { overflow: visible; }
+	.ecrm-app[data-ui="signature"] .sig-kbsheet__head { padding: 16px; }
+	.ecrm-app[data-ui="signature"] .sig-kbtabs { padding: 4px 10px 0; }
+	.ecrm-app[data-ui="signature"] .sig-kbsheet__body { padding: 2px 16px 14px; }
+}
+
+/* ═══ (363) Εκπαίδευση: η διαδρομή ═══════════════════════════════════════
+ * Πάνω «Συνέχισε από εδώ» και κύκλος προόδου· από κάτω τα μαθήματα ως
+ * σταθμοί σε μια γραμμή. Η κάρτα κάθε μαθήματος είναι η γραμμή του μαζί με
+ * το κείμενο όταν ανοίξει. docs/UI-TRAINING-FRESH.html, Α. */
+.ecrm-app[data-ui="signature"] .sig-thero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; margin-bottom: 26px; }
+.ecrm-app[data-ui="signature"] .sig-tnext {
+	position: relative; padding: 24px; border-radius: 26px; color: var(--sig-island-ink);
+	background: linear-gradient(150deg, var(--sig-island), var(--sig-lnext-2)); box-shadow: var(--sig-float);
+}
+.ecrm-app[data-ui="signature"] .sig-tnext::before {
+	content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+	background: radial-gradient(circle at 92% 0%, rgba(34, 207, 35, .32), transparent 45%);
+}
+.ecrm-app[data-ui="signature"] .sig-tnext > * { position: relative; }
+.ecrm-app[data-ui="signature"] .sig-tnext small { font-size: var(--fs-12-5); font-weight: 700; color: var(--sig-island-sub); }
+.ecrm-app[data-ui="signature"] .sig-tnext h3 { margin: 6px 0 4px; font-size: var(--fs-28); font-weight: 800; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-tnext p { margin: 0 0 18px; max-width: 520px; font-size: var(--fs-15); line-height: 1.5; color: var(--sig-island-ink); opacity: .78; }
+.ecrm-app[data-ui="signature"] .sig-tnext.is-done p { margin-bottom: 0; }
+.ecrm-app[data-ui="signature"] .sig-tring {
+	display: flex; align-items: center; gap: 18px; padding: 20px; border-radius: 26px;
+	background: var(--sig-glass); box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-tring__svg { width: 110px; height: 110px; flex: 0 0 110px; }
+.ecrm-app[data-ui="signature"] .sig-tring__bg { fill: none; stroke: var(--sig-fill); stroke-width: 12; }
+.ecrm-app[data-ui="signature"] .sig-tring__fg { fill: none; stroke: var(--sig-green); stroke-width: 12; stroke-linecap: round; transition: stroke-dasharray .5s ease; }
+.ecrm-app[data-ui="signature"] .sig-tring__svg text { font-size: var(--fs-22); font-weight: 800; fill: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-tring b { display: block; font-size: var(--fs-28); font-weight: 800; letter-spacing: -.03em; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-tring span { font-size: var(--fs-13-5); line-height: 1.45; color: var(--sig-ink-2); }
+
+.ecrm-app[data-ui="signature"] .sig-tpath { margin: 0; }
+.ecrm-app[data-ui="signature"] .sig-tstep {
+	position: relative; margin: 0; padding: 6px 0 6px 58px; border: 0; border-radius: 0; background: none; box-shadow: none; overflow: visible;
+}
+/* Η γραμμή της διαδρομής, ως τη μέση του πρώτου και του τελευταίου σταθμού. */
+.ecrm-app[data-ui="signature"] .sig-tstep::before { content: ""; position: absolute; left: 21px; top: 0; bottom: 0; width: 2px; background: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-tstep:first-child::before { top: 38px; }
+.ecrm-app[data-ui="signature"] .sig-tstep:last-child::before { bottom: auto; height: 38px; }
+.ecrm-app[data-ui="signature"] .sig-tstep:only-child::before { display: none; }
+.ecrm-app[data-ui="signature"] .sig-tstep.is-done::before { background: var(--sig-green); }
+/* Ο σταθμός είναι μέσα στη γραμμή (flex), ώστε να κεντράρεται κάθετα όσο
+ * ψηλή κι αν γίνει η κάρτα· τα αρνητικά περιθώρια τον βγάζουν αριστερά της. */
+.ecrm-app[data-ui="signature"] .sig-tstep__dot {
+	position: relative; z-index: 1; flex: 0 0 44px; margin: 0 18px 0 -74px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+	font-size: var(--fs-15); font-weight: 800; color: var(--sig-ink-3); background: var(--sig-solid); box-shadow: 0 0 0 2px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-tstep__dot::before { content: attr(data-n); }
+.ecrm-app[data-ui="signature"] .sig-tstep.is-done .sig-tstep__dot { color: var(--sig-on-btn); background: var(--sig-green); box-shadow: none; }
+.ecrm-app[data-ui="signature"] .sig-tstep.is-done .sig-tstep__dot::before { content: "✓"; }
+.ecrm-app[data-ui="signature"] .sig-tstep.is-cur .sig-tstep__dot { color: var(--sig-green-ink); box-shadow: 0 0 0 2px var(--sig-green), 0 0 0 8px var(--sig-green-tint); }
+
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__row {
+	gap: 12px; padding: 14px 16px; border-radius: 18px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift);
+}
+.ecrm-app[data-ui="signature"] .sig-tstep.is-cur .ecrm-lesson__row { box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-tstep.is-open .ecrm-lesson__row { border-radius: 18px 18px 0 0; }
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__ttl { font-size: var(--fs-15); font-weight: 700; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-tstep.is-done .ecrm-lesson__ttl { color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__min { font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tstep__next { display: none; font-style: normal; }
+.ecrm-app[data-ui="signature"] .sig-tstep.is-cur .sig-tstep__next { display: inline; color: var(--sig-green-ink); font-weight: 700; }
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__read {
+	border: 0; border-radius: 999px; padding: 6px 12px; font-size: var(--fs-12-5); color: var(--sig-ink-2); background: var(--sig-fill);
+}
+.ecrm-app[data-ui="signature"] .sig-tstep.is-done .ecrm-lesson__read { color: var(--sig-green-ink); background: var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body {
+	padding: 6px 20px 18px; border-top: 1px solid var(--sig-hair-2); border-radius: 0 0 18px 18px;
+	background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift);
+	font-size: var(--fs-15); line-height: 1.65; color: var(--sig-ink); clip-path: inset(0 -40px -40px -40px);
+}
+.ecrm-app[data-ui="signature"] .sig-tstep.is-cur .ecrm-lesson__body { box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); }
+/* Γραμμές που διαβάζονται άνετα, και το «Ξεκίνα» να μη φέρνει το μάθημα
+ * κάτω από την μπάρα πλοήγησης. */
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body > * { max-width: 72ch; }
+.ecrm-app[data-ui="signature"] .sig-tstep { scroll-margin-top: 96px; }
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body h1,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body h2,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body h3,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body strong { color: var(--sig-ink); }
+
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-thero { grid-template-columns: minmax(0, 1fr); }
+	.ecrm-app[data-ui="signature"] .sig-tnext h3 { font-size: var(--fs-22); }
+	.ecrm-app[data-ui="signature"] .sig-tring__svg { width: 84px; height: 84px; flex-basis: 84px; }
+	.ecrm-app[data-ui="signature"] .sig-tstep { padding-left: 46px; }
+	.ecrm-app[data-ui="signature"] .sig-tstep::before { left: 17px; }
+	.ecrm-app[data-ui="signature"] .sig-tstep:first-child::before { top: 44px; }
+	.ecrm-app[data-ui="signature"] .sig-tstep:last-child::before { height: 44px; }
+	.ecrm-app[data-ui="signature"] .sig-tstep__dot { flex-basis: 36px; width: 36px; height: 36px; margin: 0 14px 0 -62px; font-size: var(--fs-13); }
+	.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__row { flex-wrap: nowrap; }
+	.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__read { width: auto; }
+	.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body { padding: 6px 16px 16px; }
+}
+
+/* ═══ (364) Ομάδα τώρα: ο πίνακας της μέρας ═══════════════════════════════
+ * Σκούρα κάρτα με το «σήμερα», «Θέλουν προσοχή» δίπλα, και η κατάταξη της
+ * μέρας με μπάρες σήμερα/μήνας. docs/UI-TEAMLIVE-FRESH.html, Β. */
+.ecrm-app[data-ui="signature"] .sig-tllive {
+	display: inline-flex; align-items: center; gap: 8px; align-self: center; white-space: nowrap;
+	padding: 7px 12px; border-radius: 999px; font-size: var(--fs-13); font-weight: 700; color: var(--sig-green-ink); background: var(--sig-green-tint);
+}
+.ecrm-app[data-ui="signature"] .sig-tllive i { width: 8px; height: 8px; border-radius: 50%; background: var(--sig-green); animation: sig-tlpulse 2s infinite; }
+@keyframes sig-tlpulse { 0% { box-shadow: 0 0 0 0 rgba(22, 194, 23, .5); } 70% { box-shadow: 0 0 0 8px rgba(22, 194, 23, 0); } 100% { box-shadow: 0 0 0 0 rgba(22, 194, 23, 0); } }
+@media (prefers-reduced-motion: reduce) { .ecrm-app[data-ui="signature"] .sig-tllive i { animation: none; } }
+
+.ecrm-app[data-ui="signature"] .sig-tlhero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; margin-bottom: 22px; }
+.ecrm-app[data-ui="signature"] .sig-tlday {
+	position: relative; padding: 22px 24px; border-radius: 26px; color: var(--sig-island-ink);
+	background: linear-gradient(150deg, var(--sig-island), var(--sig-lnext-2)); box-shadow: var(--sig-float);
+}
+.ecrm-app[data-ui="signature"] .sig-tlday::before {
+	content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+	background: radial-gradient(circle at 92% 0%, rgba(34, 207, 35, .32), transparent 45%);
+}
+.ecrm-app[data-ui="signature"] .sig-tlday > * { position: relative; }
+.ecrm-app[data-ui="signature"] .sig-tlday small { font-size: var(--fs-12-5); font-weight: 700; color: var(--sig-island-sub); }
+.ecrm-app[data-ui="signature"] .sig-tlday__big { margin: 6px 0 4px; font-size: calc(var(--fs-40) * 1.4); font-weight: 800; letter-spacing: -.05em; line-height: 1; }
+.ecrm-app[data-ui="signature"] .sig-tlday p { margin: 0; font-size: var(--fs-14); color: var(--sig-island-ink); opacity: .78; }
+.ecrm-app[data-ui="signature"] .sig-tlday__row { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 16px; }
+.ecrm-app[data-ui="signature"] .sig-tlday__row b { display: block; font-size: var(--fs-22); font-weight: 800; }
+.ecrm-app[data-ui="signature"] .sig-tlday__row span { font-size: var(--fs-12); color: var(--sig-island-sub); }
+
+.ecrm-app[data-ui="signature"] .sig-tlhelp { padding: 18px 20px; border-radius: 26px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-tlhelp h3 { margin: 0 0 8px; font-size: var(--fs-15); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-tlneed { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-tlneed b { flex: 1; min-width: 0; font-size: var(--fs-14); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-tlneed__p { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.ecrm-app[data-ui="signature"] .sig-tlpill { white-space: nowrap; padding: 4px 9px; border-radius: 999px; font-size: var(--fs-12); font-weight: 700; color: var(--sig-amber); background: var(--sig-amber-t); }
+.ecrm-app[data-ui="signature"] .sig-tlcalm { margin: 0; padding: 12px 0 4px; border-top: 1px solid var(--sig-hair-2); font-size: var(--fs-14); color: var(--sig-ink-2); }
+
+.ecrm-app[data-ui="signature"] .sig-tlav {
+	position: relative; flex: 0 0 40px; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+	font-size: var(--fs-13); font-weight: 800; color: var(--sig-on-btn);
+	background: linear-gradient(135deg, hsl(var(--h, 140) 62% 58%), hsl(var(--h, 140) 62% 40%));
+}
+.ecrm-app[data-ui="signature"] .sig-tlav::after {
+	content: ""; position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%;
+	background: var(--sig-ink-3); box-shadow: 0 0 0 2px var(--sig-solid);
+}
+.ecrm-app[data-ui="signature"] .sig-tlav.is-on::after { background: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-tlav--sm { flex-basis: 32px; width: 32px; height: 32px; font-size: var(--fs-11); }
+.ecrm-app[data-ui="signature"] .sig-tlav--sm::after { display: none; }
+
+.ecrm-app[data-ui="signature"] .sig-tlboard { border-radius: 22px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift); overflow: hidden; }
+.ecrm-app[data-ui="signature"] .sig-tlboard__key { display: flex; justify-content: flex-end; gap: 14px; padding: 10px 18px 0; font-size: var(--fs-12); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tlboard__key span::before { content: ""; display: inline-block; width: 14px; height: 6px; margin-right: 6px; border-radius: 999px; vertical-align: middle; }
+.ecrm-app[data-ui="signature"] .sig-tlboard__key .is-today::before { background: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-tlboard__key .is-month::before { background: var(--sig-ink-3); opacity: .45; }
+.ecrm-app[data-ui="signature"] .sig-tlrow {
+	display: grid; grid-template-columns: 40px minmax(0, 1.3fr) minmax(0, 2fr) 96px 110px; align-items: center; gap: 14px;
+	padding: 12px 18px; border-top: 1px solid var(--sig-hair-2);
+}
+.ecrm-app[data-ui="signature"] .sig-tlboard__key + .sig-tlrow { border-top: 0; }
+.ecrm-app[data-ui="signature"] .sig-tlrow:not(.is-on) .sig-tlav { opacity: .6; }
+.ecrm-app[data-ui="signature"] .sig-tlrow__who b { display: block; font-size: var(--fs-15); color: var(--sig-ink); overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-tlrow__who small { font-size: var(--fs-12); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tlrow__bars { display: grid; gap: 4px; }
+.ecrm-app[data-ui="signature"] .sig-tlrow__bars span { display: block; height: 8px; border-radius: 999px; background: var(--sig-fill); overflow: hidden; }
+.ecrm-app[data-ui="signature"] .sig-tlrow__bars i { display: block; height: 100%; border-radius: inherit; }
+.ecrm-app[data-ui="signature"] .sig-tlrow__bars .is-today i { background: linear-gradient(90deg, var(--sig-btn-top), var(--sig-btn-bottom)); }
+.ecrm-app[data-ui="signature"] .sig-tlrow__bars .is-month i { background: var(--sig-ink-3); opacity: .45; }
+.ecrm-app[data-ui="signature"] .sig-tlrow__n { text-align: right; }
+.ecrm-app[data-ui="signature"] .sig-tlrow__n b { display: block; font-size: var(--fs-22); font-weight: 800; letter-spacing: -.03em; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-tlrow__n span { font-size: var(--fs-11-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tlrow__last { text-align: right; font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tlrow.is-on .sig-tlrow__last { color: var(--sig-green-ink); font-weight: 700; }
+
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-tlhero { grid-template-columns: minmax(0, 1fr); }
+	.ecrm-app[data-ui="signature"] .sig-tllive { align-self: flex-start; }
+	.ecrm-app[data-ui="signature"] .sig-tlday__big { font-size: calc(var(--fs-40) * 1.2); }
+	.ecrm-app[data-ui="signature"] .sig-tlneed { flex-wrap: wrap; }
+	.ecrm-app[data-ui="signature"] .sig-tlrow { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 6px 10px; padding: 12px 14px; }
+	.ecrm-app[data-ui="signature"] .sig-tlrow__bars { grid-column: 2 / -1; grid-row: 2; }
+	.ecrm-app[data-ui="signature"] .sig-tlrow__last { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-tlboard__key { padding: 10px 14px 0; }
+}
+
+/* ═══ (365) Αναφορές: τα εισερχόμενα ══════════════════════════════════════
+ * Λίστα αριστερά, ανοιχτή αναφορά δεξιά, συζήτηση σε φούσκες. Στο κινητό η
+ * αναφορά παίρνει όλη την οθόνη. docs/UI-TICKETS-FRESH.html, Α. */
+.ecrm-app[data-ui="signature"] .sig-tkchips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.ecrm-app[data-ui="signature"] .sig-tkchip {
+	display: inline-flex; align-items: center; gap: 6px; border: 0; cursor: pointer; white-space: nowrap;
+	padding: 7px 12px; border-radius: 999px; font: inherit; font-size: var(--fs-13); font-weight: 700;
+	color: var(--sig-ink-2); background: var(--sig-glass); box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-tkchip b { color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tkchip.is-on { color: var(--sig-island-ink); background: var(--sig-island); box-shadow: none; }
+.ecrm-app[data-ui="signature"] .sig-tkchip.is-on b { color: var(--sig-island-sub); }
+.ecrm-app[data-ui="signature"] .sig-tkurg { padding: 3px 8px; border-radius: 999px; font-size: var(--fs-11-5); font-weight: 800; white-space: nowrap; color: var(--sig-rose); background: var(--sig-rose-t); }
+
+.ecrm-app[data-ui="signature"] .sig-tkinbox { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.ecrm-app[data-ui="signature"] .sig-tklist { display: grid; gap: 2px; padding: 6px; border-radius: 22px; background: var(--sig-glass); box-shadow: 0 0 0 1px var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-tkitem {
+	display: block; width: 100%; padding: 12px 14px; border: 0; border-radius: 16px; cursor: pointer; text-align: left;
+	font: inherit; color: var(--sig-ink); background: none;
+}
+.ecrm-app[data-ui="signature"] .sig-tkitem:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-tkitem.is-on { background: var(--sig-solid); box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-tkitem__top { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.ecrm-app[data-ui="signature"] .sig-tkitem__when { margin-left: auto; font-size: var(--fs-12); color: var(--sig-ink-3); white-space: nowrap; }
+.ecrm-app[data-ui="signature"] .sig-tkitem b { display: block; margin-bottom: 3px; font-size: var(--fs-14); line-height: 1.35; overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-tkitem small { font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tkempty { padding: 26px 14px; text-align: center; font-size: var(--fs-14); color: var(--sig-ink-2); }
+
+.ecrm-app[data-ui="signature"] .sig-tkpane { position: sticky; top: 90px; border-radius: 24px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-float); overflow: hidden; }
+.ecrm-app[data-ui="signature"] .sig-tkpane__idle { padding: 60px 24px; text-align: center; font-size: var(--fs-14); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tkback { display: none; }
+.ecrm-app[data-ui="signature"] .sig-tkhead { padding: 20px 22px; border-bottom: 1px solid var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-tkhead__top { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+.ecrm-app[data-ui="signature"] .sig-tkhead h3 { margin: 0 0 6px; font-size: var(--fs-22); font-weight: 800; letter-spacing: -.025em; color: var(--sig-ink); overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-tkhead p { margin: 0; font-size: var(--fs-12-5); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-tklink { border: 0; padding: 0; background: none; cursor: pointer; font: inherit; font-weight: 700; color: var(--sig-green-ink); }
+
+.ecrm-app[data-ui="signature"] .sig-tkthread { display: flex; flex-direction: column; gap: 10px; padding: 18px 22px; max-height: 60vh; overflow-y: auto; }
+.ecrm-app[data-ui="signature"] .sig-tkmsg {
+	align-self: flex-start; max-width: 78%; padding: 12px 14px; border-radius: 18px 18px 18px 6px;
+	font-size: var(--fs-15); line-height: 1.5; color: var(--sig-ink); background: var(--sig-fill); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.ecrm-app[data-ui="signature"] .sig-tkmsg small { display: block; margin-bottom: 3px; font-size: var(--fs-11-5); font-weight: 700; color: var(--sig-ink-3); white-space: normal; }
+.ecrm-app[data-ui="signature"] .sig-tkmsg.is-mine { align-self: flex-end; border-radius: 18px 18px 6px 18px; background: var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .sig-tksys {
+	align-self: center; padding: 4px 10px; border-radius: 999px; font-size: var(--fs-12); color: var(--sig-ink-3);
+	background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-tkshot { align-self: flex-start; }
+.ecrm-app[data-ui="signature"] .sig-tkshot img { display: block; max-width: min(320px, 100%); max-height: 260px; border-radius: 14px; box-shadow: 0 0 0 1px var(--sig-hair); }
+
+.ecrm-app[data-ui="signature"] .sig-tktech { margin: 0 22px 14px; padding: 10px 14px; border-radius: 14px; background: var(--sig-fill); font-size: var(--fs-13); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-tktech summary { cursor: pointer; font-weight: 700; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-tktech .ecrm-tk-ctx { margin-top: 8px; }
+.ecrm-app[data-ui="signature"] .sig-tktech .ecrm-tk-ctx dt { color: var(--sig-ink-3); }
+
+.ecrm-app[data-ui="signature"] .sig-tkreply { padding: 14px 22px 18px; border-top: 1px solid var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-tkreply textarea { width: 100%; min-height: 70px; border: 0; border-radius: 16px; padding: 12px 14px; box-shadow: 0 0 0 1px var(--sig-hair); resize: vertical; }
+.ecrm-app[data-ui="signature"] .sig-tkreply__act { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.ecrm-app[data-ui="signature"] .sig-tkreply__st { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.ecrm-app[data-ui="signature"] .sig-tkreply__st .ecrm-btn--ghost { background: var(--sig-solid); color: var(--sig-ink); border: 0; box-shadow: 0 0 0 1px var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-tkgdpr { margin: 8px 0 0; font-size: var(--fs-12); color: var(--sig-ink-3); }
+
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-tkchips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+	.ecrm-app[data-ui="signature"] .sig-tkinbox { grid-template-columns: minmax(0, 1fr); }
+	.ecrm-app[data-ui="signature"] .sig-tkpane { position: static; display: none; }
+	.ecrm-app[data-ui="signature"] .sig-tkinbox.has-open .sig-tklist { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-tkinbox.has-open .sig-tkpane { display: block; }
+	.ecrm-app[data-ui="signature"] .sig-tkback {
+		display: block; margin: 14px 16px 0; padding: 6px 12px; border: 0; border-radius: 999px; cursor: pointer;
+		font: inherit; font-size: var(--fs-13); font-weight: 700; color: var(--sig-ink); background: var(--sig-fill);
+	}
+	.ecrm-app[data-ui="signature"] .sig-tkhead { padding: 14px 16px; }
+	.ecrm-app[data-ui="signature"] .sig-tkthread { padding: 14px 16px; max-height: none; }
+	.ecrm-app[data-ui="signature"] .sig-tkmsg { max-width: 92%; }
+	.ecrm-app[data-ui="signature"] .sig-tktech { margin: 0 16px 12px; }
+	.ecrm-app[data-ui="signature"] .sig-tkreply { padding: 12px 16px 16px; }
+	.ecrm-app[data-ui="signature"] .sig-tkreply__st { margin-left: 0; }
+}
+
+/* ═══ (366) Εισαγωγή Excel: ζωντανό αποτέλεσμα ════════════════════════════
+ * Αριστερά πάροχος, αρχείο, στήλες, καταστάσεις· δεξιά η σκούρα κάρτα με το
+ * τι θα αλλάξει, που ανανεώνεται μόνη της. docs/UI-IMPORT-FRESH.html, Β. */
+.ecrm-app[data-ui="signature"] .sig-imp { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.ecrm-app[data-ui="signature"] .sig-imp__main { display: grid; gap: 14px; min-width: 0; }
+.ecrm-app[data-ui="signature"] .sig-impbox { padding: 18px 20px; border-radius: 22px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-impbox h3 { margin: 0 0 12px; font-size: var(--fs-15); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-imphint { margin: 10px 0 0; font-size: var(--fs-13); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-impbox h3 + .sig-imphint { margin: -4px 0 12px; }
+.ecrm-app[data-ui="signature"] .sig-impidle { font-size: var(--fs-13); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-impprovs { display: flex; flex-wrap: wrap; gap: 8px; }
+.ecrm-app[data-ui="signature"] .sig-impprov {
+	display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border: 0; border-radius: 14px; cursor: pointer;
+	font: inherit; font-size: var(--fs-14); font-weight: 700; color: var(--sig-ink); background: var(--sig-glass); box-shadow: 0 0 0 1px var(--sig-hair);
+}
+.ecrm-app[data-ui="signature"] .sig-impprov:last-child { padding-left: 12px; color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-impprov .sig-plogo { width: 48px; height: 30px; }
+.ecrm-app[data-ui="signature"] .sig-impprov.is-on { background: var(--sig-solid); box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); color: var(--sig-ink); }
+
+.ecrm-app[data-ui="signature"] .sig-impdrop {
+	display: grid; gap: 4px; justify-items: center; padding: 24px; border-radius: 22px; cursor: pointer; text-align: center;
+	border: 2px dashed var(--sig-hair); background: var(--sig-glass); font-size: var(--fs-14); color: var(--sig-ink-2);
+}
+.ecrm-app[data-ui="signature"] .sig-impdrop b { font-size: var(--fs-16); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-impdrop.is-drag,
+.ecrm-app[data-ui="signature"] .sig-impdrop:focus-visible { outline: 0; border-color: var(--sig-green); background: var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .sig-impfile:not(:empty) { margin-top: 6px; padding: 4px 10px; border-radius: 999px; font-weight: 700; color: var(--sig-green-ink); background: var(--sig-green-tint); }
+
+.ecrm-app[data-ui="signature"] .sig-impcol { display: grid; grid-template-columns: 150px minmax(0, 220px) minmax(0, 1fr); align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .sig-impbox h3 + .sig-impcol { border-top: 0; }
+.ecrm-app[data-ui="signature"] .sig-impcol__l { font-size: var(--fs-14); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-impcol__ex { font-size: var(--fs-12-5); color: var(--sig-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ecrm-app[data-ui="signature"] .sig-imppairs { display: grid; gap: 8px; }
+.ecrm-app[data-ui="signature"] .sig-imppair { display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) 110px; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-imppair.is-ignored .sig-imppair__from { opacity: .6; }
+.ecrm-app[data-ui="signature"] .sig-imppair__from b { display: block; font-size: var(--fs-14); color: var(--sig-ink); overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-imppair__from small { font-size: var(--fs-12); color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-imppair__arr { text-align: center; color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-imporg { justify-self: end; padding: 3px 8px; border-radius: 999px; font-size: var(--fs-11-5); font-weight: 800; white-space: nowrap; }
+.ecrm-app[data-ui="signature"] .sig-imporg.is-saved { color: var(--sig-green-ink); background: var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .sig-imporg.is-guess { color: var(--sig-amber); background: var(--sig-amber-t); }
+.ecrm-app[data-ui="signature"] .sig-imporg.is-new { color: var(--sig-blue); background: var(--sig-blue-t); }
+
+.ecrm-app[data-ui="signature"] .sig-implive {
+	position: sticky; top: 90px; padding: 20px; border-radius: 24px; color: var(--sig-island-ink);
+	background: linear-gradient(150deg, var(--sig-island), var(--sig-lnext-2)); box-shadow: var(--sig-float); transition: opacity .2s;
+}
+.ecrm-app[data-ui="signature"] .sig-implive.is-busy { opacity: .7; }
+.ecrm-app[data-ui="signature"] .sig-implive small { font-size: var(--fs-12-5); font-weight: 700; color: var(--sig-island-sub); }
+.ecrm-app[data-ui="signature"] .sig-implive__idle { margin: 8px 0 0; font-size: var(--fs-14); line-height: 1.5; color: var(--sig-island-ink); opacity: .78; }
+.ecrm-app[data-ui="signature"] .sig-implive__big { margin: 6px 0 2px; font-size: calc(var(--fs-40) * 1.3); font-weight: 800; letter-spacing: -.05em; line-height: 1; }
+.ecrm-app[data-ui="signature"] .sig-implive > p { margin: 0 0 14px; font-size: var(--fs-14); color: var(--sig-island-ink); opacity: .78; }
+.ecrm-app[data-ui="signature"] .sig-implive__ln { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, .12); font-size: var(--fs-14); }
+.ecrm-app[data-ui="signature"] .sig-implive__ln.is-warn b { color: var(--sig-amber); }
+.ecrm-app[data-ui="signature"] .sig-implive__more { margin-top: 6px; font-size: var(--fs-12-5); color: var(--sig-island-sub); }
+.ecrm-app[data-ui="signature"] .sig-implive__more summary { cursor: pointer; }
+.ecrm-app[data-ui="signature"] .sig-implive__more p { margin: 6px 0 0; color: var(--sig-island-ink); opacity: .78; overflow-wrap: anywhere; }
+.ecrm-app[data-ui="signature"] .sig-implive .ecrm-btn { width: 100%; justify-content: center; margin-top: 14px; }
+.ecrm-app[data-ui="signature"] .sig-impsel { display: none !important; }
+.ecrm-app[data-ui="signature"] .sig-implive__note { display: block; margin: 8px 0 0; font-size: var(--fs-12); color: var(--sig-island-ink); opacity: .6; }
+.ecrm-app[data-ui="signature"] .sig-implive__done { margin-bottom: 12px; padding: 8px 12px; border-radius: 12px; font-size: var(--fs-14); font-weight: 800; color: var(--sig-island-ink); background: rgba(34, 207, 35, .22); }
+
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-imp { grid-template-columns: minmax(0, 1fr); }
+	.ecrm-app[data-ui="signature"] .sig-implive { position: static; }
+	.ecrm-app[data-ui="signature"] .sig-impbox { padding: 16px; }
+	.ecrm-app[data-ui="signature"] .sig-impcol { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+	.ecrm-app[data-ui="signature"] .sig-imppair { grid-template-columns: minmax(0, 1fr) auto; }
+	.ecrm-app[data-ui="signature"] .sig-imppair__arr { display: none; }
+	.ecrm-app[data-ui="signature"] .sig-imppair .ecrm-select { grid-column: 1 / -1; grid-row: 2; }
+	.ecrm-app[data-ui="signature"] .sig-imporg { grid-row: 1; grid-column: 2; }
+}
+
 @media (prefers-reduced-transparency: reduce) {
 	.ecrm-app[data-ui="signature"] .ecrm-sidebar,
 	.ecrm-app[data-ui="signature"] .ecrm-topbar,
