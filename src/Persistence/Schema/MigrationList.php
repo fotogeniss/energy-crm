@@ -57,6 +57,7 @@ use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
 use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaAwaitingSheets;
 use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaHomeAwaitingSheets;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
+use EnergyCRM\Persistence\Schema\Migrations\ReplaceProtergiaNovember2026;
 use EnergyCRM\Persistence\Schema\Migrations\RepriceProtergiaPicasso;
 use EnergyCRM\Persistence\Schema\Migrations\RetargetContractListIndexToUpdatedAt;
 use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
@@ -141,6 +142,7 @@ final class MigrationList
             new CreateTargetsTable(),
             new ActivateProtergiaHomePicasso(),
             new MarkProtergiaPicassoFixed(),
+            new ReplaceProtergiaNovember2026(),
         ];
     }
 }

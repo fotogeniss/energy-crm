@@ -33,7 +33,8 @@ final class ProtergiaBizSheetsTest extends TestCase
 
     public function testEveryBusinessPowerTariffAndPicassoPackageHasItsOwnSheet(): void
     {
-        self::assertCount(22, ProtergiaBizSheets::programs());
+        // (371) +1: Επαγγελματικό 1 Value Balance 2.0 12M (το παλιό μένει για τις αιτήσεις του).
+        self::assertCount(23, ProtergiaBizSheets::programs());
 
         foreach (ProtergiaBizSheets::programs() as $code) {
             self::assertSame($code, ProtergiaBizSheets::templateKey($code));
@@ -102,7 +103,8 @@ final class ProtergiaBizSheetsTest extends TestCase
         }
 
         // Οι ΓΟΣ κάθε άλλου προγράμματος έχουν δικό του άρθρο 2 (χρεώσεις).
-        self::assertCount(13, array_unique($tails));
+        // (371) +1: οι ΓΟΣ του Value Balance 2.0 12M (Ε1).
+        self::assertCount(14, array_unique($tails));
     }
 
     /**

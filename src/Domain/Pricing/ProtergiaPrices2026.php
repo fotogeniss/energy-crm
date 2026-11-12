@@ -22,6 +22,11 @@
  *   14,90 €/μήνα. Η «Έκπτωση Power+Gas 3,00 €/MWh» δεν μπαίνει: ισχύει μόνο
  *   με ρεύμα Protergia στο ίδιο ακίνητο.
  *
+ * - (371) Αιτήσεις 11/2026 (Protergia 12/11/2026, σελ. 2):
+ *   Value Sure 5.0 12M: 287 €/MWh, «187,00 €/MWh μετά την Έκπτωση
+ *   Συνέπειας», πάγιο 16,90. Value Balance 2.0 12M: 154 έως 150 kWh, 249 από
+ *   151, πάγιο 14,90. Επαγγελματικό Ε1: 174 έως 250, 249 από 251, πάγιο 15,90.
+ *
  * Σταθερά με έκπτωση συνέπειας: μπαίνει η τιμή ΜΕ την έκπτωση, γιατί αυτή
  * πληρώνει ο πελάτης που εξοφλεί εμπρόθεσμα, και η σημείωση το λέει.
  *
@@ -36,6 +41,9 @@ final class ProtergiaPrices2026
 {
     /** Ημερομηνία των εντύπων από τα οποία πάρθηκαν. */
     public const AS_OF = '2026-10-29';
+
+    /** (371) Ημερομηνία των εντύπων 11/2026 (αποστολή Protergia 12/11). */
+    public const AS_OF_NOV = '2026-11-12';
 
     private const HOME_EXCESS = 0.099;
 
@@ -81,6 +89,9 @@ final class ProtergiaPrices2026
         $sure    = [180, 180, 180, 135, 135, 135, 90, 90, 90, 45, 45, 0];
         $biz     = [220, 220, 220, 165, 165, 165, 110, 110, 110, 55, 55, 0];
         $picasso = [120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 0];
+        // (371) Έντυπα 11/2026.
+        $home2 = [240, 240, 240, 180, 180, 180, 120, 120, 120, 60, 60, 0];
+        $e1v2  = [300, 300, 300, 225, 225, 225, 150, 150, 150, 75, 75, 0];
 
         $out = [
             'protergia_value_sure4_12m'   => $sure,
@@ -91,6 +102,9 @@ final class ProtergiaPrices2026
             'protergia_picasso2'          => $picasso,
             'protergia_picasso2_student'  => $picasso,
             'protergia_gas_sure2'         => [160, 160, 132, 132, 104, 104, 76, 76, 48, 48, 20, 0],
+            'protergia_value_sure5_12m'    => $home2,
+            'protergia_value_balance2_12m' => $home2,
+            'protergia_epag1_balance2_12m' => $e1v2,
         ];
 
         foreach (array_keys(self::PACKAGES) as $size) {
@@ -115,6 +129,10 @@ final class ProtergiaPrices2026
             'protergia_epag2_power2' => self::tiered(1000, 0.1849, 0.2149, 14.90),
             'protergia_epag3_sure12m_2' => self::flat(0.1999, 0.0, 'με έκπτωση συνέπειας· χωρίς: 0,269 €/kWh'),
             'protergia_gas_sure2' => self::flat(0.0529, 14.90, 'χωρίς την έκπτωση Power+Gas 3,00 €/MWh'),
+            // (371) Έντυπα 11/2026.
+            'protergia_value_sure5_12m' => self::flat(0.187, 16.90, 'με έκπτωση συνέπειας· χωρίς: 0,287 €/kWh'),
+            'protergia_value_balance2_12m' => self::tiered(150, 0.154, 0.249, 14.90),
+            'protergia_epag1_balance2_12m' => self::tiered(250, 0.174, 0.249, 15.90),
         ];
 
         $home = self::family('h');

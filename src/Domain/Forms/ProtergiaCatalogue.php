@@ -86,6 +86,19 @@ final class ProtergiaCatalogue
             'priceType' => '',
             'sort'      => 6,
         ],
+        // (371) Νέες εκδόσεις, Protergia 12/11/2026 (`REPLACED`).
+        'protergia_value_sure5_12m' => [
+            'label'     => 'Protergia Value Sure 5.0 12M',
+            'energy'    => 'power',
+            'priceType' => 'fixed',
+            'sort'      => 5,
+        ],
+        'protergia_value_balance2_12m' => [
+            'label'     => 'Protergia Value Balance 2.0 12M',
+            'energy'    => 'power',
+            'priceType' => 'fixed',
+            'sort'      => 6,
+        ],
         'protergia_value_bright2' => [
             'label'     => 'Protergia Value Bright 2.0',
             'energy'    => 'power',
@@ -149,6 +162,22 @@ final class ProtergiaCatalogue
     ];
 
     /**
+     * (371) Η Protergia (12/11/2026): «Το Value Sure 4.0 12M έγινε Value Sure
+     * 5.0 12M. Το Value Balance 12M έγινε Value Balance 2.0 12M [...]
+     * καταργήθηκε το σταθερό πρόγραμμα στο φυσικό αέριο Gas Sure 2.0».
+     *
+     * Παλιό => νέο (null: καταργήθηκε χωρίς αντικαταστάτη). Τα παλιά
+     * απενεργοποιούνται, δεν σβήνονται: οι αιτήσεις τους τυπώνουν το φύλλο
+     * τους όπως πριν. Τη μετάβαση την κάνει η 0058
+     * (`ReplaceProtergiaNovember2026`).
+     */
+    public const REPLACED = [
+        'protergia_value_sure4_12m'   => 'protergia_value_sure5_12m',
+        'protergia_value_balance_12m' => 'protergia_value_balance2_12m',
+        'protergia_gas_sure2'         => null,
+    ];
+
+    /**
      * (324) Σε αναμονή εντύπου: ανενεργά ώσπου να στείλει η Protergia το
      * φύλλο τους. Ως τότε θα τύπωναν το γενικό έντυπο -- στο αέριο το
      * `protergia_fa` με τον πίνακα του παλιού Value Gas Sure, στο οικιακό
@@ -189,6 +218,6 @@ final class ProtergiaCatalogue
 
     public static function isRetired(string $code): bool
     {
-        return in_array($code, self::RETIRED, true);
+        return in_array($code, self::RETIRED, true) || array_key_exists($code, self::REPLACED);
     }
 }

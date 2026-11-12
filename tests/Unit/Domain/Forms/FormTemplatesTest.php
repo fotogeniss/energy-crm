@@ -180,6 +180,8 @@ final class FormTemplatesTest extends TestCase
                 'protergia_oik_picasso_s1', 'protergia_oik_picasso_s2', 'protergia_oik_picasso_s3',
                 'protergia_oik_picasso_m1', 'protergia_oik_picasso_m2', 'protergia_oik_picasso_m3',
                 'protergia_oik_picasso_l1', 'protergia_oik_picasso_l2', 'protergia_oik_picasso_l3',
+                // (371) Νέες εκδόσεις Protergia, 11/2026.
+                'protergia_oik_sure5_12m', 'protergia_oik_balance2_12m', 'protergia_epag1_balance2_12m',
                 'volton_fa', 'volton_he', 'zenith_he',
             ] as $key
         ) {

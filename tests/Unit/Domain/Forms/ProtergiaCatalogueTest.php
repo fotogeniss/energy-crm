@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Unit\Domain\Forms;
 
+use EnergyCRM\Domain\Forms\ProtergiaBizCatalogue;
 use EnergyCRM\Domain\Forms\ProtergiaBizPlans;
 use EnergyCRM\Domain\Forms\ProtergiaBizSheets;
 use EnergyCRM\Domain\Forms\ProtergiaCatalogue;
@@ -31,7 +32,8 @@ final class ProtergiaCatalogueTest extends TestCase
         }
 
         // 9 νέα + Power+Gas στο ρεύμα, + το Lite 2.0 που υπήρχε ήδη.
-        self::assertSame(10, $power);
+        // (371) +2: Value Sure 5.0 12M και Value Balance 2.0 12M (11/2026).
+        self::assertSame(12, $power);
         self::assertSame(1, count(ProtergiaCatalogue::KEPT));
         self::assertSame(4, $gas);
     }
@@ -106,5 +108,45 @@ final class ProtergiaCatalogueTest extends TestCase
             self::assertArrayHasKey($code, ProtergiaCatalogue::added());
             self::assertNotContains($code, ProtergiaCatalogue::AWAITING_SHEET);
         }
+    }
+
+    /**
+     * (371) Protergia 12/11/2026: νέες εκδόσεις Sure / Balance, τέλος το Gas
+     * Sure 2.0. Τα παλιά αποσύρονται (όχι σε νέα εγκατάσταση, ανενεργά στη
+     * μετάβαση 0058), τα νέα τυπώνουν το δικό τους φύλλο.
+     */
+    public function testTheNovember2026VersionsReplaceTheOldOnes(): void
+    {
+        self::assertSame([
+            'protergia_value_sure4_12m'   => 'protergia_value_sure5_12m',
+            'protergia_value_balance_12m' => 'protergia_value_balance2_12m',
+            'protergia_gas_sure2'         => null,
+        ], ProtergiaCatalogue::REPLACED);
+        self::assertSame(
+            ['protergia_epag1_balance_12m' => 'protergia_epag1_balance2_12m'],
+            ProtergiaBizCatalogue::REPLACED
+        );
+
+        foreach (array_keys(ProtergiaCatalogue::REPLACED) as $old) {
+            self::assertTrue(ProtergiaCatalogue::isRetired($old), $old);
+        }
+        self::assertTrue(ProtergiaBizCatalogue::isRetired('protergia_epag1_balance_12m'));
+
+        self::assertSame('protergia_oik_sure5_12m', ProtergiaHomeSheets::templateKey('protergia_value_sure5_12m'));
+        $biz = 'protergia_epag1_balance2_12m';
+        $home = ProtergiaHomeSheets::templateKey('protergia_value_balance2_12m');
+        self::assertSame('protergia_oik_balance2_12m', $home);
+        self::assertSame($biz, ProtergiaBizSheets::templateKey($biz));
+        self::assertFalse(ProtergiaCatalogue::isRetired('protergia_value_sure5_12m'));
+        self::assertFalse(ProtergiaBizCatalogue::isRetired('protergia_epag1_balance2_12m'));
+
+        // Οι αιτήσεις των παλιών τυπώνουν ακόμα το φύλλο τους.
+        self::assertSame('protergia_oik_sure4_12m', ProtergiaHomeSheets::templateKey('protergia_value_sure4_12m'));
+        self::assertSame('protergia_epag1_balance_12m', ProtergiaBizSheets::templateKey('protergia_epag1_balance_12m'));
+
+        // Σταθερή τιμολόγηση σε όλα τα έντυπα («ΤΥΠΟΣ ΤΙΜΟΛΟΓΗΣΗΣ: Σταθερή»).
+        self::assertSame('fixed', ProtergiaCatalogue::added()['protergia_value_sure5_12m']['priceType']);
+        self::assertSame('fixed', ProtergiaCatalogue::added()['protergia_value_balance2_12m']['priceType']);
+        self::assertSame('fixed', ProtergiaBizCatalogue::all()['protergia_epag1_balance2_12m']['priceType']);
     }
 }

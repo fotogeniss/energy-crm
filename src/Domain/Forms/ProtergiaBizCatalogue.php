@@ -68,6 +68,13 @@ final class ProtergiaBizCatalogue
             'priceType' => '',
             'sort'      => 40,
         ],
+        // (371) Νέα έκδοση, Protergia 12/11/2026 (`REPLACED`).
+        'protergia_epag1_balance2_12m' => [
+            'label'     => 'Protergia Επαγγελματικό 1 — Value Balance 2.0 12M',
+            'energy'    => 'power',
+            'priceType' => 'fixed',
+            'sort'      => 40,
+        ],
         'protergia_epag1_standard2' => [
             'label'     => 'Protergia Επαγγελματικό 1 — Value Standard 2.0',
             'energy'    => 'power',
@@ -158,6 +165,15 @@ final class ProtergiaBizCatalogue
     /** Όσα επαγγελματικά δεν είναι πια στη λίστα της Protergia. */
     public const RETIRED = [ProtergiaBizPlans::SURE_12];
 
+    /**
+     * (371) Protergia 12/11/2026: «Το Value Balance 12M έγινε Value Balance
+     * 2.0 12M (E1)». Παλιό => νέο· το παλιό απενεργοποιείται (0058), οι
+     * αιτήσεις του τυπώνουν το φύλλο τους όπως πριν.
+     */
+    public const REPLACED = [
+        'protergia_epag1_balance_12m' => 'protergia_epag1_balance2_12m',
+    ];
+
     private function __construct()
     {
     }
@@ -181,6 +197,6 @@ final class ProtergiaBizCatalogue
 
     public static function isRetired(string $code): bool
     {
-        return in_array($code, self::RETIRED, true);
+        return in_array($code, self::RETIRED, true) || array_key_exists($code, self::REPLACED);
     }
 }

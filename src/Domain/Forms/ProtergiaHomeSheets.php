@@ -30,6 +30,9 @@ final class ProtergiaHomeSheets
     private const SHEETS = [
         'protergia_value_sure4_12m'  => 'protergia_oik_sure4_12m',
         'protergia_value_balance_12m' => 'protergia_oik_balance_12m',
+        // (371) Νέες εκδόσεις 11/2026: ίδιο έντυπο, άλλος πίνακας τιμών στη σελ. 2 και νέοι ΓΟΣ.
+        'protergia_value_sure5_12m'    => 'protergia_oik_sure5_12m',
+        'protergia_value_balance2_12m' => 'protergia_oik_balance2_12m',
         'protergia_value_standard2'  => 'protergia_oik_standard2',
         'protergia_value_special'    => 'protergia_oik_special',
         'protergia_student_plan'     => 'protergia_oik_student_plan',

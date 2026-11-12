@@ -151,9 +151,10 @@ final class ProtergiaPrint319Test extends TestCase
     {
         $existing = array_merge(ProtergiaBizPlans::codes(), array_keys(ProtergiaPicassoPlans::all()));
 
-        self::assertCount(15, ProtergiaBizCatalogue::all());
+        // (371) +1: Επαγγελματικό 1 Value Balance 2.0 12M.
+        self::assertCount(16, ProtergiaBizCatalogue::all());
         $power = array_filter(array_keys(ProtergiaBizCatalogue::all()), [ProtergiaBizCatalogue::class, 'isPower']);
-        self::assertCount(13, $power);
+        self::assertCount(14, $power);
 
         foreach (ProtergiaBizCatalogue::all() as $code => $plan) {
             self::assertLessThanOrEqual(32, strlen($code), "{$code}: δεν χωράει στο programs.code");

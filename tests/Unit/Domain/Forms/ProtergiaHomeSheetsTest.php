@@ -42,6 +42,10 @@ final class ProtergiaHomeSheetsTest extends TestCase
     {
         self::assertSame('protergia_oik_balance_12m', ProtergiaHomeSheets::templateKey('protergia_value_balance_12m'));
         self::assertSame('protergia_oik_sure4_12m', ProtergiaHomeSheets::templateKey('protergia_value_sure4_12m'));
+        // (371) Νέες εκδόσεις 11/2026.
+        self::assertSame('protergia_oik_sure5_12m', ProtergiaHomeSheets::templateKey('protergia_value_sure5_12m'));
+        $balance2 = ProtergiaHomeSheets::templateKey('protergia_value_balance2_12m');
+        self::assertSame('protergia_oik_balance2_12m', $balance2);
 
         // Protergia 29/10: Student = Picasso 39,90· το «Picasso 2.0» του 07/10 και το S 39,90 το ίδιο.
         foreach (['protergia_picasso2', 'protergia_picasso2_student', 'protergia_pic_h_s1'] as $code) {

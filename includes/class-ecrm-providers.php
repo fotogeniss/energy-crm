@@ -120,6 +120,10 @@ class ECRM_Providers {
 						$starters[] = [ $plan['label'], $code, 'gas', $plan['priceType'], $plan['fixedCharge'], $plan['priceKwh'] ];
 					}
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaCatalogue::added() as $code => $plan ) {
+						// (371) Όσα αντικαταστάθηκαν από νέα έκδοση δεν μπαίνουν σε νέα εγκατάσταση.
+						if ( \EnergyCRM\Domain\Forms\ProtergiaCatalogue::isRetired( $code ) ) {
+							continue;
+						}
 						$starters[] = [ $plan['label'], $code, $plan['energy'], $plan['priceType'], null, null ];
 					}
 					// (309) Τα Picasso S/M/L, οικιακά και επαγγελματικά.
