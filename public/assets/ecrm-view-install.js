@@ -12,6 +12,7 @@
 
 import { esc, root, toast, viewEl } from '@energy-crm/util';
 import { currentInstallEnv } from '@energy-crm/install-env';
+import { qrSvg } from '@energy-crm/qr';
 
 var DISMISS_KEY = 'ecrm_install_banner_until';
 var DISMISS_DAYS = 30;
@@ -141,6 +142,81 @@ function body(env, tab) {
 		linkBlock('Στείλ’ τον στον εαυτό σου ή σε συνεργάτη. Στο iPhone πρέπει να ανοίξει στο Safari.');
 }
 
+/* ═══ (368) «Signature»: το κινητό σου ═════════════════════════════════════
+ * Αριστερά ένα κινητό με το εικονίδιο του CRM στην αρχική οθόνη· δεξιά τα
+ * βήματα σε κάρτες. Από υπολογιστή, QR που σκανάρεις με την κάμερα του
+ * κινητού (βγαίνει στον browser από το ecrm-qr.js, όπως η αφίσα του «Ο
+ * σύνδεσμός μου»· τίποτα δεν πάει σε τρίτους). Ίδια data-install-* με την
+ * κλασική εμφάνιση. docs/UI-HISTORY-INSTALL-FRESH.html, 2Α. */
+function isSignature() {
+	var app = document.getElementById('ecrm-app');
+	return !!app && app.getAttribute('data-ui') === 'signature';
+}
+
+function sigSteps(items) {
+	return '<ol class="sig-inst__steps">' + items.map(function (s) { return '<li><span>' + s + '</span></li>'; }).join('') + '</ol>';
+}
+
+var SIG_ANDROID = [
+	'Άνοιξε το CRM στο <b>Chrome</b> και συνδέσου.',
+	'Πάτα το μενού ' + ico('⋮') + ' πάνω δεξιά.',
+	'Διάλεξε <b>«Εγκατάσταση εφαρμογής»</b> (ή «Προσθήκη στην αρχική οθόνη»).',
+	'Επιβεβαίωσε. Το εικονίδιο «Energy CRM» εμφανίζεται στην αρχική οθόνη.',
+];
+var SIG_IOS = [
+	'Άνοιξε το CRM στο <b>Safari</b> και πάτα το κουμπί κοινοποίησης ' + ico('⬆︎') + ' κάτω στη μπάρα.',
+	'Κύλησε και διάλεξε <b>«Προσθήκη στην αρχική οθόνη»</b> ' + ico('＋') + '.',
+	'Πάτα <b>«Προσθήκη»</b> πάνω δεξιά.',
+];
+
+function sigPhone() {
+	var apps = ['Ρολόι', 'Χάρτες', 'Κάμερα', 'Φωτογραφίες', 'Energy CRM', 'Viber', 'Mail', 'Ημερολόγιο'];
+	return '<div class="sig-inst__phone" aria-hidden="true"><div class="sig-inst__screen">' + apps.map(function (a) {
+		return '<span class="sig-inst__app' + (a === 'Energy CRM' ? ' is-me' : '') + '"><i></i>' + esc(a) + '</span>';
+	}).join('') + '</div></div>';
+}
+
+function sigQr(note) {
+	var svg = qrSvg(pageUrl());
+	return '<div class="sig-inst__qr">' + (svg ? '<span class="sig-inst__code">' + svg + '</span>' : '') +
+		'<div><b>Σκάναρέ το με το κινητό</b><p>' + note + '</p>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-install-copy>Αντιγραφή συνδέσμου</button></div></div>';
+}
+
+function sigBody(env, tab) {
+	var right;
+	if (env.kind === 'installed') {
+		right = '<div class="sig-inst__ok">✓ Το CRM τρέχει ως εφαρμογή σε αυτό το κινητό.</div>' +
+			'<p class="sig-inst__note">Δεν χρειάζεται τίποτα άλλο. Για να το βάλεις και σε άλλο κινητό, άνοιξε αυτή τη σελίδα από υπολογιστή και σκάναρε το QR.</p>';
+	} else if (env.kind === 'android') {
+		right = deferredPrompt
+			? '<button type="button" class="ecrm-btn ecrm-btn--primary sig-inst__big" data-install-now>Εγκατάσταση εφαρμογής</button>' +
+				'<p class="sig-inst__note">Αν δεν εμφανιστεί παράθυρο: μενού ' + ico('⋮') + ' → «Εγκατάσταση εφαρμογής».</p>'
+			: sigSteps(SIG_ANDROID);
+	} else if (env.kind === 'ios-safari') {
+		right = '<p class="sig-inst__lead">Το iPhone δεν επιτρέπει κουμπί εγκατάστασης. Τρία πατήματα:</p>' + sigSteps(SIG_IOS);
+	} else if (env.kind === 'ios-other') {
+		right = '<div class="sig-inst__warn">Στο iPhone η εγκατάσταση γίνεται μόνο από το Safari.</div>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary sig-inst__big" data-install-copy>Αντιγραφή συνδέσμου</button>' +
+			'<p class="sig-inst__note">Άνοιξε το Safari, πάτησε παρατεταμένα τη γραμμή διεύθυνσης και κάνε «Επικόλληση και μετάβαση». Μετά:</p>' +
+			sigSteps(SIG_IOS);
+	} else {
+		// Υπολογιστής ή άγνωστο: Android / iPhone, και το QR για να ανοίξει στο κινητό.
+		var isIos = tab === 'ios';
+		right = '<div class="sig-inst__seg" role="group" aria-label="Κινητό">' +
+				'<button type="button" class="' + (isIos ? '' : 'is-on') + '" data-install-tab="android" aria-pressed="' + !isIos + '">Android</button>' +
+				'<button type="button" class="' + (isIos ? 'is-on' : '') + '" data-install-tab="ios" aria-pressed="' + isIos + '">iPhone</button></div>' +
+			sigSteps(isIos ? SIG_IOS : SIG_ANDROID) +
+			sigQr(isIos
+				? 'Άνοιξε την κάμερα και σημάδεψε το τετράγωνο. Στο iPhone πρέπει να ανοίξει στο Safari· μετά ακολούθησε τα βήματα.'
+				: 'Άνοιξε την κάμερα και σημάδεψε το τετράγωνο. Ανοίγει το CRM· μετά ακολούθησε τα βήματα.');
+	}
+
+	return '<header class="sig-cuhead"><div><h2>Εφαρμογή στο κινητό</h2>' +
+			'<p>Το CRM μπαίνει στην αρχική οθόνη του κινητού και ανοίγει σαν εφαρμογή, χωρίς γραμμή browser.</p></div></header>' +
+		'<div class="sig-inst">' + sigPhone() + '<div class="sig-inst__main">' + right + '</div></div>';
+}
+
 export function loadInstall() {
 	var view = viewEl('install');
 	if (!view) { return; }
@@ -149,7 +225,7 @@ export function loadInstall() {
 
 	var render = function () {
 		var env = currentInstallEnv();
-		view.innerHTML =
+		view.innerHTML = isSignature() ? sigBody(env, tab) :
 			'<header class="ecrm-head"><h2 class="ecrm-title">Εφαρμογή στο κινητό</h2>' +
 			'<p class="ecrm-sub">Το CRM μπαίνει στην αρχική οθόνη του κινητού και ανοίγει σαν εφαρμογή.</p></header>' +
 			body(env, tab);

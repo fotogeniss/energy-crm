@@ -138,7 +138,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-training'    => [ '@energy-crm/util' ],
 		'@energy-crm/datepick'         => [],
 		'@energy-crm/install-env'      => [],
-		'@energy-crm/view-install'     => [ '@energy-crm/util', '@energy-crm/install-env' ],
+		'@energy-crm/view-install'     => [ '@energy-crm/util', '@energy-crm/install-env', '@energy-crm/qr' ],
 		'@energy-crm/view-network'     => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-partner'     => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-team'        => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
