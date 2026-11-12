@@ -314,7 +314,7 @@ function renderDetail(view, d) {
 			'<p class="ecrm-stuck__p">σε «' + esc(label) + '». Ο συνήθης χρόνος είναι <b>' +
 				esc(String(d.typical)) + (d.typical === 1 ? '\u00a0μέρα' : '\u00a0μέρες') +
 				'</b> <span class="ecrm-stuck__s">(από ' + esc(String(d.sample)) + ' αιτήσεις)</span>.</p>' +
-			'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm ecrm-stuck__ask" data-ask-litsa>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm ecrm-stuck__ask" data-ask-litsa data-aide-ask>' +
 				'Ρώτα τον AIde γι\' αυτή την αίτηση</button>' +
 			'</div>';
 	}

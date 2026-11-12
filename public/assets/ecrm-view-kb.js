@@ -43,6 +43,15 @@ function sigSeg(group, options, current) {
 	}).join('') + '</div>';
 }
 
+/* Όταν η αναζήτηση δεν βρίσκει τίποτα: πρόταση να ρωτήσει τον AIde, με τη
+ * λέξη που έψαξε. Μόνο αν έγραψε κάτι — με κενό κουτί δεν έχει τι να ρωτήσει. */
+function askNotFound() {
+	var q = String(kbState.q || '').trim();
+	if (!q) { return ''; }
+	return '<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm sig-kbnf" data-kbask data-aide-ask>' +
+		'Ρώτησε τον AIde για «' + esc(q.length > 40 ? q.slice(0, 38) + '…' : q) + '»</button>';
+}
+
 function sigKbHTML(d) {
 	var groups = d.groups || [];
 	var sections = d.sections || {};
@@ -60,14 +69,14 @@ function sigKbHTML(d) {
 
 	var search = '<div class="sig-kbq"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
 		'<input type="text" data-kbq placeholder="Αναζήτηση ή ερώτηση…" value="' + esc(kbState.q) + '" aria-label="Αναζήτηση ή ερώτηση">' +
-		'<button type="button" class="sig-kbask" data-kbask>' + SIG_KB_ICON + '<span>Ρώτησε τον AIde</span></button></div>' +
-		'<div class="ecrm-kbanswer sig-kbanswer" data-kbanswer hidden></div>';
+		'<button type="button" class="sig-kbask" data-kbask data-aide-ask>' + SIG_KB_ICON + '<span>Ρώτησε τον AIde</span></button></div>';
 
 	var head = '<header class="sig-cuhead"><div><h2>Βάση Γνώσης</h2><p>Δικαιολογητικά, εγγυήσεις και χρεώσεις ανά πάροχο</p></div></header>';
 
 	if (!cur) {
 		return head + search + '<div class="sig-kbsheet sig-kbsheet--empty"><b>Δεν βρέθηκαν ενότητες.</b>' +
-			(kbState.q || kbState.energy || kbState.type ? '<span>Δοκίμασε άλλη λέξη ή βγάλε τα φίλτρα.</span>' : '') + '</div>';
+			(kbState.q || kbState.energy || kbState.type ? '<span>Δοκίμασε άλλη λέξη ή βγάλε τα φίλτρα.</span>' : '') +
+			askNotFound() + '</div>';
 	}
 
 	// Οι καρτέλες: όσες ενότητες έχει αυτός ο πάροχος, με τη σειρά του λεξιλογίου.
@@ -167,7 +176,7 @@ function renderKB(view, d) {
 			' <span class="ecrm-kbgroup__count">' + g.entries.length + ' ενότητες</span></div>' + entries + '</div>';
 	}).join('');
 
-	if (!(d.groups || []).length) { groupsHTML = '<div class="ecrm-card"><div class="ecrm-empty">Δεν βρέθηκαν ενότητες.</div></div>'; }
+	if (!(d.groups || []).length) { groupsHTML = '<div class="ecrm-card"><div class="ecrm-empty">Δεν βρέθηκαν ενότητες.' + askNotFound() + '</div></div>'; }
 
 	view.innerHTML =
 		'<header class="ecrm-head"><div class="ecrm-eyebrow">Αναφορά</div><h2 class="ecrm-title">Βάση Γνώσης</h2>' +
@@ -175,8 +184,8 @@ function renderKB(view, d) {
 		'<div class="ecrm-kbsearchbox">' +
 			'<div class="ecrm-kbsearchbox__title">Τι χρειάζεσαι για να κλείσεις τη σύμβαση;</div>' +
 			'<div class="ecrm-kbsearchbox__q"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg> <input type="text" data-kbq placeholder="Αναζήτηση ή ρώτησε τον AIde…" value="' + esc(kbState.q) + '">' +
-				'<button type="button" class="ecrm-kbask" data-kbask><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg> Ρώτησε τον AIde</button></div>' +
-			'<div class="ecrm-kbanswer" data-kbanswer hidden></div>' +
+				'<button type="button" class="ecrm-kbask" data-kbask data-aide-ask><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg> Ρώτησε τον AIde</button></div>' +
+			
 			'<div class="ecrm-kbfilters">' +
 				'<div class="ecrm-kbfilter"><span>Ενέργεια</span>' + energyChips + '</div>' +
 				'<div class="ecrm-kbfilter"><span>Ενότητα</span>' + sectionChips + '</div>' +
@@ -193,25 +202,26 @@ function wireKB(view) {
 	var qEl = view.querySelector('[data-kbq]');
 	qEl.addEventListener('input', function () { kbState.q = this.value; kbState.refocus = true; clearTimeout(kbT); kbT = setTimeout(loadKB, 300); });
 
+	/* (367b) Η ερώτηση ανοίγει το πάνελ του AIde αντί να απαντά από κάτω: εκεί
+	 * η απάντηση βγαίνει με μορφοποίηση και η συζήτηση συνεχίζεται. */
 	function kbAsk() {
 		var q = (qEl.value || '').trim();
-		var box = view.querySelector('[data-kbanswer]');
 		if (!q) { toast('Γράψε μια ερώτηση.', false); return; }
-		box.hidden = false;
-		box.innerHTML = '<div class="ecrm-kbanswer__loading">Ο AIde ψάχνει στη Βάση Γνώσης…</div>';
-		fetch(api('/kb/ask'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify({ q: q }) })
-			.then(function (r) { return r.json(); })
-			.then(function (d) {
-				if (!d || !d.ok) { box.innerHTML = '<div class="ecrm-kbanswer__err">' + esc((d && d.error) || 'Αποτυχία.') + '</div>'; return; }
-				var html = esc(d.reply).replace(/\n/g, '<br>');
-				box.innerHTML = '<div class="ecrm-kbanswer__head"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg> AIde</div><div class="ecrm-kbanswer__body">' + html + '</div>' +
-					'<button type="button" class="ecrm-kbanswer__close" data-kbclose>Κλείσιμο</button>';
-				box.querySelector('[data-kbclose]').addEventListener('click', function () { box.hidden = true; box.innerHTML = ''; });
-			})
-			.catch(function () { box.innerHTML = '<div class="ecrm-kbanswer__err">Σφάλμα δικτύου.</div>'; });
+		document.dispatchEvent(new CustomEvent('ecrm:ask-aide', { detail: { q: q } }));
 	}
-	view.querySelector('[data-kbask]').addEventListener('click', kbAsk);
-	qEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); kbAsk(); } });
+	view.querySelectorAll('[data-kbask]').forEach(function (b) { b.addEventListener('click', kbAsk); });
+	// (367c) Το Enter ψάχνει στη Βάση Γνώσης, αμέσως· ΔΕΝ ρωτά τον AIde. Μέχρι
+	// τώρα κάθε Enter πήγαινε στο AI και ξόδευε κλήσεις για κάτι που η απλή
+	// αναζήτηση βρίσκει μόνη της. Ο AIde μόνο με το κουμπί του, ή από το
+	// «Δεν βρέθηκε» όταν η αναζήτηση δεν φέρει τίποτα.
+	qEl.addEventListener('keydown', function (e) {
+		if (e.key !== 'Enter') return;
+		e.preventDefault();
+		clearTimeout(kbT);
+		kbState.q = qEl.value;
+		kbState.refocus = true;
+		loadKB();
+	});
 	view.querySelectorAll('[data-kbf]').forEach(function (b) {
 		b.addEventListener('click', function () { kbState[this.getAttribute('data-kbf')] = this.getAttribute('data-kbv'); loadKB(); });
 	});

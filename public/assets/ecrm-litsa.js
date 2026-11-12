@@ -249,11 +249,23 @@ import { api, esc } from '@energy-crm/util';
 		if (root.getAttribute('data-open') !== '1') return;
 		var t = e.target;
 		if (!t || !t.closest || !document.contains(t)) return;
-		if (root.contains(t) || t.closest('[data-litsa-open]')) return;
+		if (root.contains(t) || t.closest('[data-litsa-open], [data-aide-ask]')) return;
 		toggle();
 	});
 	document.addEventListener('keydown', function (e) {
 		if (e.key === 'Escape' && root.getAttribute('data-open') === '1') { toggle(); }
+	});
+	// (367b) Άλλες οθόνες στέλνουν ερώτηση στον AIde (π.χ. «Ρώτησε τον AIde»
+	// στη Βάση Γνώσης): ανοίγει το πάνελ και η ερώτηση φεύγει από εδώ, ώστε η
+	// συζήτηση να συνεχίζεται στο ίδιο μέρος. Ο server βάζει ήδη τη Βάση
+	// Γνώσης στο πλαίσιο κάθε ερώτησης (ECRM_Assistant → ECRM_KB::context_for).
+	document.addEventListener('ecrm:ask-aide', function (e) {
+		var q = String((e.detail && e.detail.q) || '').trim();
+		if (!q) return;
+		var go = function () { input.value = q; send(); };
+		if (root.getAttribute('data-open') === '1') { go(); return; }
+		root.setAttribute('data-open', '1');
+		loadHistory(function () { render(); go(); });
 	});
 	// Οι έτοιμες ερωτήσεις: πάτημα = στέλνεται αυτούσια.
 	body.addEventListener('click', function (e) {

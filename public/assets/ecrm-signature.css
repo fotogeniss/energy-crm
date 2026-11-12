@@ -1964,14 +1964,6 @@
 	background: linear-gradient(135deg, var(--sig-violet), var(--sig-blue)); box-shadow: 0 8px 20px -10px var(--sig-violet);
 }
 .ecrm-app[data-ui="signature"] .sig-kbask svg { width: 16px; height: 16px; fill: currentColor; }
-.ecrm-app[data-ui="signature"] .sig-kbanswer {
-	margin: 12px 0 0; padding: 16px 18px; border-radius: 20px; background: var(--sig-solid);
-	box-shadow: 0 0 0 1px var(--sig-violet-t), inset 4px 0 0 var(--sig-violet), var(--sig-lift);
-}
-.ecrm-app[data-ui="signature"] .sig-kbanswer .ecrm-kbanswer__head { display: flex; align-items: center; gap: 6px; color: var(--sig-violet); text-transform: none; letter-spacing: 0; font-size: var(--fs-13); }
-.ecrm-app[data-ui="signature"] .sig-kbanswer .ecrm-kbanswer__head svg { width: 14px; height: 14px; fill: currentColor; stroke: none; }
-.ecrm-app[data-ui="signature"] .sig-kbanswer .ecrm-kbanswer__body { font-size: var(--fs-15); color: var(--sig-ink); }
-.ecrm-app[data-ui="signature"] .sig-kbanswer .ecrm-kbanswer__close { margin-top: 10px; border: 0; background: var(--sig-fill); color: var(--sig-ink); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: var(--fs-13); font-weight: 700; cursor: pointer; }
 
 .ecrm-app[data-ui="signature"] .sig-kbfilters { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 16px; }
 .ecrm-app[data-ui="signature"] .sig-kbseg { display: inline-flex; gap: 3px; padding: 3px; border-radius: 999px; background: var(--sig-fill); }
@@ -1999,6 +1991,7 @@
 .ecrm-app[data-ui="signature"] .sig-kbsheet { border-radius: 24px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-float); overflow: hidden; }
 .ecrm-app[data-ui="signature"] .sig-kbsheet--empty { display: grid; gap: 4px; margin-top: 16px; padding: 40px 24px; text-align: center; color: var(--sig-ink-2); font-size: var(--fs-14); }
 .ecrm-app[data-ui="signature"] .sig-kbsheet--empty b { color: var(--sig-ink); font-size: var(--fs-16); }
+.ecrm-app[data-ui="signature"] .sig-kbnf { justify-self: center; margin-top: 12px; }
 .ecrm-app[data-ui="signature"] .sig-kbsheet__head { display: flex; align-items: center; gap: 14px; padding: 20px 22px; border-bottom: 1px solid var(--sig-hair-2); }
 .ecrm-app[data-ui="signature"] .sig-kbsheet__head .sig-plogo { width: 72px; height: 46px; border-radius: 14px; }
 .ecrm-app[data-ui="signature"] .sig-kbsheet__head .sig-plogo.is-text { width: 52px; font-size: var(--fs-18); }
