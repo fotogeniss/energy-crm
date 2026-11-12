@@ -2451,3 +2451,6 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-docup__drop.has-files .ecrm-drop__hint { color: var(--ink); font-weight: 600; }
 .ecrm-docup__drop:focus-within { border-color: var(--accent-hover); box-shadow: 0 0 0 3px var(--accent-wash-2); }
 .ecrm-docup__input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* (367c) «Ρώτησε τον AIde για …» όταν η αναζήτηση της Βάσης Γνώσης δεν βρει τίποτα. */
+.ecrm-empty .sig-kbnf { display: block; margin: 12px auto 0; }

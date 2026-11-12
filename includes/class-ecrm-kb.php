@@ -148,16 +148,36 @@ class ECRM_KB {
 		global $wpdb;
 		$t = ECRM_DB::table( 'kb_entries' );
 
-		$words = array_filter( preg_split( '/\s+/', mb_strtolower( $q ) ), function ( $w ) { return mb_strlen( $w ) > 3; } );
+		// (367b) Από 3 γράμματα και πάνω, όχι 4: τα ονόματα παρόχων είναι συχνά
+		// τριγράμματα (NRG, ΔΕΗ) και χάνονταν, οπότε ο AIde έπαιρνε τις πρώτες
+		// τυχαίες ενότητες και απαντούσε γενικότητες. Η στίξη γύρω από τη λέξη
+		// φεύγει με regex /u (το trim() κόβει ανά byte και θα χάλαγε ελληνικά),
+		// και οι τριγράμματες λέξεις-συνδετικά δεν μετρούν ως λέξεις αναζήτησης.
+		$stop  = [ 'για', 'και', 'τον', 'την', 'της', 'τις', 'των', 'του', 'που', 'στο', 'στη', 'στην', 'στον', 'από', 'ποια', 'ποιο', 'ποιος', 'τι', 'πως', 'πώς', 'θέλει', 'θελει', 'είναι', 'ειναι', 'έχει', 'εχει', 'λέει', 'λεει', 'βάση', 'βαση', 'γνώσης', 'γνωσης', 'the', 'and' ];
+		$words = [];
+		foreach ( preg_split( '/\s+/u', mb_strtolower( $q ) ) as $w ) {
+			$w = (string) preg_replace( '/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/u', '', $w );
+			if ( mb_strlen( $w ) >= 3 && ! in_array( $w, $stop, true ) ) {
+				$words[] = $w;
+			}
+		}
 		$rows  = [];
 		if ( $words ) {
 			$conds = []; $params = [];
+			$byProvider = []; $providerParams = [];
 			foreach ( array_slice( $words, 0, 8 ) as $w ) {
 				$like = '%' . $wpdb->esc_like( $w ) . '%';
 				$conds[] = '( title LIKE %s OR body LIKE %s OR provider_name LIKE %s )';
 				array_push( $params, $like, $like, $like );
+				$byProvider[]     = 'provider_name LIKE %s';
+				$providerParams[] = $like;
 			}
-			$sql  = "SELECT provider_name, title, body FROM {$t} WHERE active = 1 AND ( " . implode( ' OR ', $conds ) . ' ) ORDER BY provider_name, sort_order LIMIT 14';
+			// Πρώτα οι ενότητες του παρόχου που ονομάζει η ερώτηση: αλλιώς, στο
+			// «τι χαρτιά θέλει η nrg», οι ενότητες άλλων παρόχων με «χαρτιά»
+			// γέμιζαν το όριο και η NRG έμενε απ' έξω.
+			$params = array_merge( $params, $providerParams );
+			$sql    = "SELECT provider_name, title, body FROM {$t} WHERE active = 1 AND ( " . implode( ' OR ', $conds ) . ' )'
+				. ' ORDER BY ( ' . implode( ' OR ', $byProvider ) . ' ) DESC, provider_name, sort_order LIMIT 14';
 			$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A );
 		}
 		if ( ! $rows ) {

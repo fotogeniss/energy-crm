@@ -207,6 +207,12 @@ function wireKB(view) {
 	function kbAsk() {
 		var q = (qEl.value || '').trim();
 		if (!q) { toast('Γράψε μια ερώτηση.', false); return; }
+		// Μία-τρεις λέξεις χωρίς ερωτηματικό («nrg») δεν είναι ερώτηση: ο AIde
+		// τις διάβαζε σαν χαιρετισμό και απαντούσε γενικότητες. Στέλνεται ως
+		// ερώτηση για τη Βάση Γνώσης, και φαίνεται έτσι και στο πάνελ.
+		if (q.indexOf('?') < 0 && q.indexOf(';') < 0 && q.split(/\s+/).length <= 3) {
+			q = 'Τι λέει η Βάση Γνώσης για «' + q + '»;';
+		}
 		document.dispatchEvent(new CustomEvent('ecrm:ask-aide', { detail: { q: q } }));
 	}
 	view.querySelectorAll('[data-kbask]').forEach(function (b) { b.addEventListener('click', kbAsk); });
