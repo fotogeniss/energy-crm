@@ -64,6 +64,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/photo-check'      => 'ecrm-photo-check.js',
 		'@energy-crm/close-reason'     => 'ecrm-close-reason.js',
 		'@energy-crm/qr'               => 'ecrm-qr.js',
+		'@energy-crm/datepick'         => 'ecrm-datepick.js',
 		'@energy-crm/qr-poster'        => 'ecrm-qr-poster.js',
 		// Ειχε ξεχαστει απο εδω στο (243) -- το ecrm-app.js το εισαγε, ο
 		// browser δεν μπορουσε να λυσει το bare specifier χωρις καταχωρηση, και
@@ -135,6 +136,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-import'      => [ '@energy-crm/util' ],
 		'@energy-crm/view-kb'          => [ '@energy-crm/util' ],
 		'@energy-crm/view-training'    => [ '@energy-crm/util' ],
+		'@energy-crm/datepick'         => [],
 		'@energy-crm/install-env'      => [],
 		'@energy-crm/view-install'     => [ '@energy-crm/util', '@energy-crm/install-env' ],
 		'@energy-crm/view-network'     => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
@@ -172,6 +174,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/util',
 			'@energy-crm/navigate',
 			'@energy-crm/queue',
+			'@energy-crm/datepick',
 			'@energy-crm/scope',
 			'@energy-crm/view-detail',
 			'@energy-crm/view-contracts',
@@ -385,13 +388,15 @@ class ECRM_Shortcodes {
 			// Helper to print a field. $extra=true marks it for the extra_json bag.
 			// $energy_when, when non-empty, adds data-when-energy so a field can be
 			// scoped to power/gas or mobile without a wrapper element around it.
-			// $ac is the autocomplete token: 'off' by default, since most of these
-			// fields (ΑΦΜ, ΑΔΤ, αριθμός παροχής, μετρητή) have no browser-known
-			// shape and a wrong guess is worse than none. Fields that DO map to a
-			// standard token (name/address/phone/email) pass it explicitly below,
-			// each scoped to its own section (section-cust/rep/contact/supply/
-			// bill) so the browser doesn't offer the customer's mobile for the
-			// legal representative's, or the shipping address for the billing one.
+			// $ac is the autocomplete token, 'off' for every field (367). Until
+			// 12/11 name/address/phone/email carried standard tokens
+			// (section-cust given-name, address-line1, ...). But every value here
+			// belongs to a customer, never to the person typing: the browser's
+			// own suggestions were the seller's address, and the form staying in
+			// the page after a view change made Chrome/Opera offer «Save
+			// address?» with the customer's name and street on every click --
+			// customer data saved in the browser profile (GDPR). The parameter
+			// stays for a field that one day genuinely is the user's own.
 			// $when προστέθηκε 25/08 (αίτημα ιδιοκτήτη, αναδιάταξη Στοιχείων
 			// Πελάτη): ίδιο νόημα με το data-when ενός ολόκληρου .ecrm-grid
 			// wrapper, αλλά ΣΤΟ ΙΔΙΟ το πεδίο — ώστε ένα πεδίο μόνο για
@@ -902,9 +907,9 @@ class ECRM_Shortcodes {
 				     στο ίδιο το πεδίο, νέα δυνατότητα του $ecrm_field). -->
 				<!-- φυσικό πρόσωπο -->
 				<div class="ecrm-grid" data-when="individual,sole_prop">
-					<?php $ecrm_field( 'first_name', 'Όνομα', 'text', false, '', '', 'section-cust given-name' ); ?>
-					<?php $ecrm_field( 'last_name', 'Επίθετο', 'text', false, '', '', 'section-cust family-name' ); ?>
-					<?php $ecrm_field( 'birth_date', 'Ημ. Γέννησης', 'date', false, '', '', 'section-cust bday' ); ?>
+					<?php $ecrm_field( 'first_name', 'Όνομα', 'text', false, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'last_name', 'Επίθετο', 'text', false, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'birth_date', 'Ημ. Γέννησης', 'date', false, '', '', 'off' ); ?>
 					<?php $ecrm_field( 'father_name', 'Πατρώνυμο' ); ?>
 				</div>
 
@@ -927,7 +932,7 @@ class ECRM_Shortcodes {
 
 				<!-- εταιρεία -->
 				<div class="ecrm-grid" data-when="company,sole_prop">
-					<?php $ecrm_field( 'company_name', 'Επωνυμία Εταιρείας', 'text', false, '', '', 'section-cust organization' ); ?>
+					<?php $ecrm_field( 'company_name', 'Επωνυμία Εταιρείας', 'text', false, '', '', 'off' ); ?>
 					<?php $ecrm_field( 'company_type', 'Νομική Μορφή', 'text', true, 'Α.Ε. / Ε.Π.Ε. / Ο.Ε.' ); ?>
 					<?php $ecrm_field( 'activity', 'Αντικείμενο Δραστηριότητας', 'text', true ); ?>
 					<?php // Ζητούνται ρητά στα επαγγελματικά έντυπα NRG και Protergia. ?>
@@ -937,14 +942,14 @@ class ECRM_Shortcodes {
 
 				<div class="ecrm-subhead">Διεύθυνση</div>
 				<div class="ecrm-grid">
-					<?php $ecrm_field( 'region', 'Νομός', 'text', false, '', '', 'section-cust address-level1' ); ?>
-					<?php $ecrm_field( 'city', 'Πόλη', 'text', false, '', '', 'section-cust address-level2' ); ?>
-					<?php $ecrm_field( 'street', 'Οδός', 'text', false, '', '', 'section-cust address-line1' ); ?>
+					<?php $ecrm_field( 'region', 'Νομός', 'text', false, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'city', 'Πόλη', 'text', false, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'street', 'Οδός', 'text', false, '', '', 'off' ); ?>
 					<?php $ecrm_field( 'street_no', 'Αριθμός' ); ?>
 					<?php // Τ.Κ μετακόμισε εδώ 25/08 (ζητήθηκε ρητά) — είναι
 					      // κομμάτι της διεύθυνσης, όχι της ταυτότητας του πελάτη. ?>
 					<div class="ecrm-field-with-suggest">
-						<?php $ecrm_field( 'postal_code', 'Τ.Κ', 'text', false, '', '', 'section-cust postal-code' ); ?>
+						<?php $ecrm_field( 'postal_code', 'Τ.Κ', 'text', false, '', '', 'off' ); ?>
 						<div class="ecrm-postal-suggest" data-tk-suggest="cust" hidden>
 							<span data-tk-suggest-text="cust"></span>
 							<button type="button" class="ecrm-postal-suggest__btn" data-tk-suggest-use="cust" hidden>Χρήση</button>
@@ -954,9 +959,9 @@ class ECRM_Shortcodes {
 
 				<div class="ecrm-subhead">Επικοινωνία</div>
 				<div class="ecrm-grid">
-					<?php $ecrm_field( 'phone', 'Τηλέφωνο', 'text', false, '', '', 'section-cust tel' ); ?>
-					<?php $ecrm_field( 'mobile', 'Κινητό', 'text', false, '', '', 'section-cust tel' ); ?>
-					<?php $ecrm_field( 'email', 'Email', 'email', false, '', '', 'section-cust email' ); ?>
+					<?php $ecrm_field( 'phone', 'Τηλέφωνο', 'text', false, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'mobile', 'Κινητό', 'text', false, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'email', 'Email', 'email', false, '', '', 'off' ); ?>
 				</div>
 			</section>
 
@@ -1007,15 +1012,15 @@ class ECRM_Shortcodes {
 				     πρόσωπο — 9 πεδία που έχουν ήδη γραφτεί στα Στοιχεία Πελάτη. -->
 				<label class="ecrm-syncbar"><input type="checkbox" data-sync="rep"> Ίδια στοιχεία με τον πελάτη — αυτόματος συγχρονισμός</label>
 				<div class="ecrm-grid">
-					<?php $ecrm_field( 'rep_first_name', 'Όνομα', 'text', true, '', '', 'section-rep given-name' ); ?>
-					<?php $ecrm_field( 'rep_last_name', 'Επώνυμο', 'text', true, '', '', 'section-rep family-name' ); ?>
+					<?php $ecrm_field( 'rep_first_name', 'Όνομα', 'text', true, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'rep_last_name', 'Επώνυμο', 'text', true, '', '', 'off' ); ?>
 					<?php $ecrm_field( 'rep_father_name', 'Πατρώνυμο', 'text', true ); ?>
 					<?php $ecrm_field( 'rep_id', 'Αρ. Ταυτότητας / Διαβατηρίου', 'text', true ); ?>
 					<?php $ecrm_field( 'rep_afm', 'ΑΦΜ Νόμιμου Εκπροσώπου', 'text', true ); ?>
-					<?php $ecrm_field( 'rep_birth_date', 'Ημ. Γέννησης', 'date', true, '', '', 'section-rep bday' ); ?>
-					<?php $ecrm_field( 'rep_phone', 'Σταθερό', 'text', true, '', '', 'section-rep tel' ); ?>
-					<?php $ecrm_field( 'rep_mobile', 'Κινητό', 'text', true, '', '', 'section-rep tel' ); ?>
-					<?php $ecrm_field( 'rep_email', 'Email', 'email', true, '', '', 'section-rep email' ); ?>
+					<?php $ecrm_field( 'rep_birth_date', 'Ημ. Γέννησης', 'date', true, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'rep_phone', 'Σταθερό', 'text', true, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'rep_mobile', 'Κινητό', 'text', true, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'rep_email', 'Email', 'email', true, '', '', 'off' ); ?>
 				</div>
 			</section>
 			</div>
@@ -1025,13 +1030,13 @@ class ECRM_Shortcodes {
 				<div class="ecrm-step"><span class="ecrm-step__n">5</span> Υπεύθυνος Επικοινωνίας</div>
 				<label class="ecrm-syncbar"><input type="checkbox" data-sync="contact"> Ίδια στοιχεία με τον πελάτη / εκπρόσωπο — αυτόματος συγχρονισμός</label>
 				<div class="ecrm-grid">
-					<?php $ecrm_field( 'contact_first_name', 'Όνομα', 'text', true, '', '', 'section-contact given-name' ); ?>
-					<?php $ecrm_field( 'contact_last_name', 'Επώνυμο', 'text', true, '', '', 'section-contact family-name' ); ?>
+					<?php $ecrm_field( 'contact_first_name', 'Όνομα', 'text', true, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'contact_last_name', 'Επώνυμο', 'text', true, '', '', 'off' ); ?>
 					<?php $ecrm_field( 'contact_father_name', 'Πατρώνυμο', 'text', true ); ?>
 					<?php $ecrm_field( 'contact_adt', 'Α.Δ.Τ', 'text', true ); ?>
-					<?php $ecrm_field( 'contact_mobile', 'Κινητό', 'text', true, '', '', 'section-contact tel' ); ?>
-					<?php $ecrm_field( 'contact_email', 'Email', 'email', true, '', '', 'section-contact email' ); ?>
-					<?php $ecrm_field( 'contact_phone', 'Τηλέφωνο', 'text', true, '', '', 'section-contact tel' ); ?>
+					<?php $ecrm_field( 'contact_mobile', 'Κινητό', 'text', true, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'contact_email', 'Email', 'email', true, '', '', 'off' ); ?>
+					<?php $ecrm_field( 'contact_phone', 'Τηλέφωνο', 'text', true, '', '', 'off' ); ?>
 					<?php $ecrm_field( 'contact_afm', 'ΑΦΜ Υπεύθυνου', 'text', true ); ?>
 				</div>
 			</section>

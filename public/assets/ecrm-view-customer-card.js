@@ -281,7 +281,7 @@ function editFields(id, name, eyebrow, kpi, fields, current) {
 			var val = current[key] || '';
 			if (type === 'date' && val) { val = String(val).slice(0, 10); }
 			return '<label class="ecrm-field"><span class="ecrm-field__label">' + esc(f[1]) + '</span>' +
-				'<input class="ecrm-input" type="' + type + '" data-ef="' + key + '" value="' + esc(val) + '"></label>';
+				'<input class="ecrm-input" type="' + type + '" data-ef="' + key + '" autocomplete="off" value="' + esc(val) + '"></label>';
 		}).join('') +
 		'</div>' + contractImpactHint(kpi);
 
@@ -466,7 +466,7 @@ function renderCard(view, id, d) {
 			lead: 'Για δική σου χρήση -- δεν τυπώνεται σε κανένα έντυπο.',
 			body: '<div class="ecrm-modal__card ecrm-modal__stack">' +
 				'<label class="ecrm-field"><span class="ecrm-field__label">Τηλέφωνο</span>' +
-				'<input class="ecrm-input" data-phone-value value="' + esc(c.contact_phone || '') + '"></label>' +
+				'<input class="ecrm-input" data-phone-value autocomplete="off" value="' + esc(c.contact_phone || '') + '"></label>' +
 				'</div>',
 			confirm: 'Αποθήκευση',
 			onConfirm: function (el, close, btn) {

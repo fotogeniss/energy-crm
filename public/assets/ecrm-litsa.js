@@ -241,6 +241,20 @@ import { api, esc } from '@energy-crm/util';
 	root.addEventListener('click', function (e) {
 		if (e.target === root && root.getAttribute('data-open') === '1') { toggle(); }
 	});
+	// (367) Και στον υπολογιστή: πάτημα οπουδήποτε έξω από το πάνελ το κλείνει,
+	// όπως και το Esc. Όχι όταν το πάτημα έγινε στο κουμπί που το ανοίγει
+	// (εκείνο το χειρίζεται μόνο του), ούτε σε στοιχείο που αφαιρέθηκε μέσα
+	// στο ίδιο πάτημα (π.χ. ξαναγράφτηκε η συνομιλία).
+	document.addEventListener('click', function (e) {
+		if (root.getAttribute('data-open') !== '1') return;
+		var t = e.target;
+		if (!t || !t.closest || !document.contains(t)) return;
+		if (root.contains(t) || t.closest('[data-litsa-open]')) return;
+		toggle();
+	});
+	document.addEventListener('keydown', function (e) {
+		if (e.key === 'Escape' && root.getAttribute('data-open') === '1') { toggle(); }
+	});
 	// Οι έτοιμες ερωτήσεις: πάτημα = στέλνεται αυτούσια.
 	body.addEventListener('click', function (e) {
 		var chip = e.target.closest('[data-litsa-ask]');

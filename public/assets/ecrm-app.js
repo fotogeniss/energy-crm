@@ -18,6 +18,7 @@ import { initImport } from '@energy-crm/view-import';
 import { loadKB } from '@energy-crm/view-kb';
 import { loadTraining } from '@energy-crm/view-training';
 import { initInstallBanner, loadInstall } from '@energy-crm/view-install';
+import { initDatePick } from '@energy-crm/datepick';
 import { loadNetwork } from '@energy-crm/view-network';
 import { loadTeam } from '@energy-crm/view-team';
 import { openPartner } from '@energy-crm/view-partner';
@@ -747,6 +748,7 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 	initTickets();
 	// (347) Υπενθύμιση «Βάλε το CRM στην αρχική οθόνη» -- αποφασίζει μόνη της αν φαίνεται.
 	initInstallBanner();
+	initDatePick();
 
 	// Initial view: respect a #hash so links are copy/paste-able and bookmarkable.
 	// (313) Χωρίς σύνδεση και χωρίς #hash, ανοίγει κατευθείαν η «Νέα αίτηση»:

@@ -159,7 +159,15 @@ function filesCard(c) {
 	 * ετικέτα, και μετά η καρτέλα έλεγε «λείπουν δικαιολογητικά» για χαρτί που
 	 * ήταν ήδη εκεί. Οι γραμμές γεμίζουν όταν επιλεγούν αρχεία (renderDocupRows). */
 	var upload = '<div class="ecrm-docup" data-docup="' + c.id + '" data-docup-expirable="' + esc(JSON.stringify(expirable)) + '" data-docup-kinds="' + esc(kindMap) + '">' +
-		'<input type="file" multiple accept="image/*,application/pdf" data-docup-file>' +
+		// (367) Η ζώνη αρχείων της υπόλοιπης εφαρμογής αντί για το γυμνό
+		// «Choose files / No file chosen» του browser (αγγλικά, χωρίς στυλ).
+		// Το input μένει μέσα στο label: πάτημα οπουδήποτε ανοίγει την επιλογή,
+		// και δέχεται και σύρσιμο αρχείων.
+		'<label class="ecrm-drop ecrm-docup__drop" data-docup-drop>' +
+			'<input type="file" multiple accept="image/*,application/pdf" data-docup-file class="ecrm-docup__input">' +
+			'<span class="ecrm-drop__title">Σύρε τα έγγραφα εδώ ή πάτα για επιλογή</span>' +
+			'<span class="ecrm-drop__hint" data-docup-picked>Φωτογραφίες ή PDF · μπορείς πολλά μαζί</span>' +
+		'</label>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-docup-go>Προσθήκη</button>' +
 		'<span class="ecrm-docup__msg" data-docup-msg></span>' +
 		'<div class="ecrm-docup__rows" data-docup-rows></div></div>';
@@ -1179,6 +1187,33 @@ function renderDetail(view, d) {
 	}
 
 	if (docupFile) docupFile.addEventListener('change', renderDocupRows);
+
+	/* (367) Τι διαλέχτηκε, μέσα στη ζώνη· και σύρσιμο αρχείων πάνω της. */
+	var docupDrop = docupWrap ? docupWrap.querySelector('[data-docup-drop]') : null;
+	if (docupDrop && docupFile) {
+		var picked = docupDrop.querySelector('[data-docup-picked]');
+		var pickedIdle = picked ? picked.textContent : '';
+		docupFile.addEventListener('change', function () {
+			if (!picked) return;
+			var names = Array.prototype.map.call(docupFile.files || [], function (f) { return f.name; });
+			picked.textContent = names.length
+				? (names.length === 1 ? names[0] : names.length + ' αρχεία: ' + names.join(', '))
+				: pickedIdle;
+			docupDrop.classList.toggle('has-files', names.length > 0);
+		});
+		['dragenter', 'dragover'].forEach(function (t) {
+			docupDrop.addEventListener(t, function (e) { e.preventDefault(); docupDrop.classList.add('is-drag'); });
+		});
+		['dragleave', 'drop'].forEach(function (t) {
+			docupDrop.addEventListener(t, function () { docupDrop.classList.remove('is-drag'); });
+		});
+		docupDrop.addEventListener('drop', function (e) {
+			e.preventDefault();
+			if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+			docupFile.files = e.dataTransfer.files;
+			docupFile.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+	}
 
 	/* Η ανάγνωση των εγγράφων, αφού έχουν ήδη μπει.
 	 *

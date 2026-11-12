@@ -2374,6 +2374,76 @@
 	.ecrm-app[data-ui="signature"] .sig-imporg { grid-row: 1; grid-column: 2; }
 }
 
+/* ═══ (367) Ημερολόγιο και ζώνη αρχείων στη νέα εμφάνιση ════════════════ */
+.ecrm-app[data-ui="signature"] .ecrm-dp {
+	border: 0; border-radius: 20px; background: var(--sig-solid); color: var(--sig-ink);
+	box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-float);
+}
+.ecrm-app[data-ui="signature"] .ecrm-dp__nav { color: var(--sig-ink); background: var(--sig-fill); border-radius: 999px; }
+.ecrm-app[data-ui="signature"] .ecrm-dp__nav:hover { background: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .ecrm-dp__sel { border: 0; border-radius: 999px; color: var(--sig-ink); background: var(--sig-fill); padding: 0 10px; }
+.ecrm-app[data-ui="signature"] .ecrm-dp__wd span { color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .ecrm-dp__day { border-radius: 999px; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-dp__day:hover:not(:disabled) { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .ecrm-dp__day.is-today { box-shadow: inset 0 0 0 1.5px var(--sig-green); color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-dp__day.is-on { color: var(--sig-on-btn); background: linear-gradient(180deg, var(--sig-btn-top), var(--sig-btn-bottom)); box-shadow: none; }
+.ecrm-app[data-ui="signature"] .ecrm-dp__day:focus-visible,
+.ecrm-app[data-ui="signature"] .ecrm-dp__nav:focus-visible,
+.ecrm-app[data-ui="signature"] .ecrm-dp__link:focus-visible { outline-color: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .ecrm-dp__foot { border-top-color: var(--sig-hair-2); }
+.ecrm-app[data-ui="signature"] .ecrm-dp__link { color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .ecrm-dp__link:hover { color: var(--sig-ink); background: var(--sig-fill); }
+
+.ecrm-app[data-ui="signature"] .ecrm-docup__drop { border: 2px dashed var(--sig-hair); border-radius: 18px; background: var(--sig-glass); }
+.ecrm-app[data-ui="signature"] .ecrm-docup__drop:hover,
+.ecrm-app[data-ui="signature"] .ecrm-docup__drop:focus-within,
+.ecrm-app[data-ui="signature"] .ecrm-docup__drop.is-drag { border-color: var(--sig-green); background: var(--sig-green-tint); box-shadow: none; }
+.ecrm-app[data-ui="signature"] .ecrm-docup__drop .ecrm-drop__title { color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-docup__drop .ecrm-drop__hint { color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .ecrm-docup__drop.has-files .ecrm-drop__hint { color: var(--sig-green-ink); }
+
+/* ═══ (367) Πίνακες και λίστες στα κείμενα της Βάσης Γνώσης ═══════════════
+ * Τα κείμενα έρχονται από τον διαχειριστή (HTML): πίνακες με όρια, αριθμημένες
+ * λίστες, υπότιτλοι. Χωρίς αυτά έβγαιναν με τα γυμνά περιγράμματα του browser. */
+.ecrm-app[data-ui="signature"] .sig-kbbody,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body { overflow-x: auto; }
+.ecrm-app[data-ui="signature"] .sig-kbbody h1,
+.ecrm-app[data-ui="signature"] .sig-kbbody h2,
+.ecrm-app[data-ui="signature"] .sig-kbbody h3,
+.ecrm-app[data-ui="signature"] .sig-kbbody h4,
+.ecrm-app[data-ui="signature"] .sig-kbbody h5 { margin: 16px 0 6px; font-size: var(--fs-15); font-weight: 800; letter-spacing: -.01em; color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-kbbody > :first-child { margin-top: 0; }
+.ecrm-app[data-ui="signature"] .sig-kbbody ol { list-style: none; counter-reset: sig-kbol; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+.ecrm-app[data-ui="signature"] .sig-kbbody ol li { counter-increment: sig-kbol; position: relative; padding-left: 32px; }
+.ecrm-app[data-ui="signature"] .sig-kbbody ol li::before {
+	content: counter(sig-kbol); position: absolute; left: 0; top: 1px; width: 22px; height: 22px; border-radius: 50%;
+	display: grid; place-items: center; font-size: var(--fs-12); font-weight: 800; color: var(--sig-green-ink); background: var(--sig-green-tint);
+}
+.ecrm-app[data-ui="signature"] .sig-kbbody em { color: var(--sig-ink-2); }
+
+.ecrm-app[data-ui="signature"] .sig-kbbody table,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body table {
+	width: auto; min-width: min(100%, 360px); margin: 10px 0 14px; border: 0; border-collapse: separate; border-spacing: 0;
+	border-radius: 16px; overflow: hidden; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair);
+	font-size: var(--fs-14); font-variant-numeric: tabular-nums;
+}
+.ecrm-app[data-ui="signature"] .sig-kbbody th,
+.ecrm-app[data-ui="signature"] .sig-kbbody td,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body th,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body td {
+	padding: 10px 16px; border: 0; border-top: 1px solid var(--sig-hair-2); text-align: left; vertical-align: top; color: var(--sig-ink);
+}
+/* Η πρώτη γραμμή είναι κεφαλίδα, είτε γράφτηκε με <th> είτε όχι. */
+.ecrm-app[data-ui="signature"] .sig-kbbody table > :first-child > tr:first-child > *,
+.ecrm-app[data-ui="signature"] .sig-kbbody th,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body table > :first-child > tr:first-child > *,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body th {
+	border-top: 0; background: var(--sig-fill); font-size: var(--fs-12-5); font-weight: 800; color: var(--sig-ink-2); white-space: nowrap;
+	text-transform: none; letter-spacing: 0;
+}
+.ecrm-app[data-ui="signature"] .sig-kbbody tr:hover > td,
+.ecrm-app[data-ui="signature"] .sig-tstep .ecrm-lesson__body tr:hover > td { background: var(--sig-green-tint); }
+
 @media (prefers-reduced-transparency: reduce) {
 	.ecrm-app[data-ui="signature"] .ecrm-sidebar,
 	.ecrm-app[data-ui="signature"] .ecrm-topbar,
