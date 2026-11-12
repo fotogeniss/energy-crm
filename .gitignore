@@ -58,3 +58,7 @@ docs/_measure/
 
 tools/.load-test-credentials.json
 Claude outputs/
+
+# Python bytecode από τα εργαλεία στο tools/ (372).
+__pycache__/
+*.pyc

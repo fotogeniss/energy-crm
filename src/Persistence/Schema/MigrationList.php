@@ -54,6 +54,7 @@ use EnergyCRM\Persistence\Schema\Migrations\MarkProtergiaPicassoFixed;
 use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusVocabulary;
 use EnergyCRM\Persistence\Schema\Migrations\MigrateStatusesToPaperLists;
 use EnergyCRM\Persistence\Schema\Migrations\MoveMeterAddressOutOfExtras;
+use EnergyCRM\Persistence\Schema\Migrations\MoveSlaEscalationToTaskKind;
 use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaAwaitingSheets;
 use EnergyCRM\Persistence\Schema\Migrations\PauseProtergiaHomeAwaitingSheets;
 use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
@@ -143,6 +144,7 @@ final class MigrationList
             new ActivateProtergiaHomePicasso(),
             new MarkProtergiaPicassoFixed(),
             new ReplaceProtergiaNovember2026(),
+            new MoveSlaEscalationToTaskKind(),
         ];
     }
 }

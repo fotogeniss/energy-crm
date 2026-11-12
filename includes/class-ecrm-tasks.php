@@ -29,35 +29,48 @@ class ECRM_Tasks {
 	/**
 	 * Escalate contracts stuck in a non-final status beyond the SLA threshold:
 	 * creates a high-priority task for the owner's manager (ecrm_parent) and
-	 * emails them once. Idempotent via note='sla_escalation'.
+	 * emails them once.
+	 *
+	 * (372) Μία κλιμάκωση ανά «στάσιμη περίοδο»: αν υπάρχει ήδη εργασία
+	 * κλιμάκωσης (σε ΟΠΟΙΑ κατάσταση) φτιαγμένη μετά την τελευταία αλλαγή της
+	 * αίτησης, δεν ξαναγίνεται. Πριν έλεγχε μόνο ανοιχτές εργασίες, οπότε μόλις
+	 * ο υπεύθυνος πατούσε «Έγινε» η ίδια εργασία και το ίδιο email ξαναβγαιναν
+	 * κάθε πρωί. Αν η αίτηση αλλάξει και ξανακολλήσει, κλιμακώνεται ξανά.
+	 * Η σήμανση είναι στο tasks.kind, όχι στη σημείωση (μετάβαση 0059).
+	 * Οι ώρες συγκρίνονται με το ρολόι της βάσης, όπως γράφονται.
+	 *
+	 * @return int Πόσες αιτήσεις κλιμακώθηκαν.
 	 */
-	public static function run_sla_escalation(): void {
+	public static function run_sla_escalation(): int {
 		global $wpdb;
 		$days = class_exists( 'ECRM_Admin' ) ? (int) ECRM_Admin::get( 'sla_escalation_days', 10 ) : 10;
-		if ( $days <= 0 ) { return; }
+		if ( $days <= 0 ) { return 0; }
 
 		$ct = ECRM_DB::table( 'contracts' );
 		$t  = ECRM_DB::table( 'tasks' );
 		$cu = ECRM_DB::table( 'customers' );
 
 		// Non-final, "stuck in pipeline" statuses (drafts excluded — seller's own WIP).
-		$open   = \EnergyCRM\Domain\Contract\ContractStatus::intermediateValues();
-		$ph     = implode( ',', array_fill( 0, count( $open ), '%s' ) );
-		$cutoff = gmdate( 'Y-m-d H:i:s', current_time( 'timestamp' ) - $days * DAY_IN_SECONDS );
+		$open = \EnergyCRM\Domain\Contract\ContractStatus::intermediateValues();
+		$ph   = implode( ',', array_fill( 0, count( $open ), '%s' ) );
+		$kind = \EnergyCRM\Domain\Contract\SlaEscalation::KIND;
 
 		$rows = $wpdb->get_results( $wpdb->prepare(
 			"SELECT c.id, c.code, c.status, c.partner_user_id, c.customer_id,
-			        DATEDIFF(%s, c.updated_at) AS age,
+			        DATEDIFF(NOW(), c.updated_at) AS age,
 			        cu.first_name, cu.last_name, cu.company_name
 			 FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id = c.customer_id
-			 WHERE c.status IN ($ph) AND c.updated_at < %s
+			 WHERE c.status IN ($ph) AND c.updated_at < NOW() - INTERVAL %d DAY
 			   AND c.partner_user_id IS NOT NULL
 			   AND NOT EXISTS (
-			       SELECT 1 FROM {$t} t WHERE t.contract_id = c.id AND t.status='open' AND t.note='sla_escalation'
+			       SELECT 1 FROM {$t} t
+			       WHERE t.contract_id = c.id AND t.kind = %s AND t.created_at >= c.updated_at
 			   )
 			 LIMIT 300",
-			array_merge( [ current_time( 'mysql' ) ], $open, [ $cutoff ] )
+			array_merge( $open, [ $days, $kind ] )
 		), ARRAY_A );
+
+		$count = 0;
 
 		$labels = ECRM_DB::statuses();
 		foreach ( (array) $rows as $r ) {
@@ -71,8 +84,8 @@ class ECRM_Tasks {
 				'customer_id' => $r['customer_id'] ? (int) $r['customer_id'] : null,
 				'assigned_to' => $manager,
 				'created_by'  => 0,
+				'kind'        => $kind,
 				'title'       => sprintf( 'SLA: %s καθυστερεί %d ημέρες (%s)', $r['code'], $age, $labels[ $r['status'] ] ?? $r['status'] ),
-				'note'        => 'sla_escalation',
 				'due_at'      => current_time( 'Y-m-d' ) . ' 10:00:00',
 				'priority'    => 'high',
 				'status'      => 'open',
@@ -81,7 +94,7 @@ class ECRM_Tasks {
 			$wpdb->insert( ECRM_DB::table( 'events' ), [
 				'contract_id' => (int) $r['id'],
 				'user_id'     => 0,
-				'type'        => 'sla_escalation',
+				'type'        => $kind,
 				'message'     => sprintf( 'Κλιμάκωση SLA (>%d ημέρες) στον υπεύθυνο ομάδας', $days ),
 			] );
 
@@ -97,7 +110,10 @@ class ECRM_Tasks {
 					)
 				);
 			}
+			++$count;
 		}
+
+		return $count;
 	}
 
 	/**
