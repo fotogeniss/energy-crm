@@ -152,6 +152,8 @@ function renderCalc(view) {
 
 var ICON_DOC = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg>';
 var ICON_NEW = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+// (376) Βέλος ως SVG: ο χαρακτήρας «→» δεν κάθεται στο κέντρο του κύκλου (γραμμή βάσης).
+var ICON_ARROW = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 var ICON_UP = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M12 11v6M9 14l3-3 3 3"/></svg>';
 var ICON_CAM = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 
@@ -479,7 +481,11 @@ function quotePdf(view, r, btn, d) {
 		customer_name: advisor.manual ? mval(view, 'customer')
 			: (advisor.customer ? [advisor.customer.last_name, advisor.customer.first_name].filter(Boolean).join(' ') || advisor.customer.company_name || '' : ''),
 		provider_name: r.provider,
-		program_name: r.name
+		program_name: r.name,
+		// (376) Για να γράφει το PDF το σωστό είδος, παροχή και τιμολόγιο.
+		energy: bval(view, 'energy_type') === 'gas' ? 'gas' : 'power',
+		category: bval(view, 'category') === 'business' ? 'business' : 'home',
+		price_type: ['fixed', 'variable', 'special', 'dynamic'].indexOf(r.price_type) >= 0 ? r.price_type : ''
 	};
 	var t = btn.innerHTML; btn.disabled = true; btn.textContent = 'Δημιουργία…';
 	fetch(api('/quote/pdf'), { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H()), body: JSON.stringify(body) })
@@ -573,8 +579,8 @@ function sigQuoteHTML(view, d) {
 	var save = cur != null && r.saving != null ? r.saving : null;
 
 	var verdict = '<div class="sig-qv">' +
-		(cur != null ? '<div class="sig-qv__box"><small>' + esc(today) + '</small><b>' + money(cur) + '</b><em>τον χρόνο, ενέργεια και πάγιο</em></div><span class="sig-qv__arrow" aria-hidden="true">→</span>' : '') +
-		'<div class="sig-qv__box is-new"><small>Με ' + esc(withProvider(r.provider, r.name)) + '</small><b>' + money(r.annual) + '</b><em>τον χρόνο</em></div>' +
+		(cur != null ? '<div class="sig-qv__box"><small>' + esc(today) + '</small><b>' + money(cur) + '</b><em>τον χρόνο, ενέργεια και πάγιο</em></div><span class="sig-qv__arrow" aria-hidden="true">' + ICON_ARROW + '</span>' : '') +
+		'<div class="sig-qv__box is-new' + (save != null && save < 0 ? ' is-worse' : '') + '"><small>Με ' + esc(withProvider(r.provider, r.name)) + '</small><b>' + money(r.annual) + '</b><em>τον χρόνο</em></div>' +
 	'</div>';
 
 	var strip = save == null
@@ -633,7 +639,7 @@ function sigGhostHTML() {
 	};
 	return '<div class="sig-qres sig-qghost" data-sig-ghost aria-hidden="true">' +
 		'<div class="sig-qv"><div class="sig-qv__box"><small>Σήμερα</small><b>— €</b><em>τον χρόνο</em></div>' +
-			'<span class="sig-qv__arrow">→</span>' +
+			'<span class="sig-qv__arrow">' + ICON_ARROW + '</span>' +
 			'<div class="sig-qv__box is-new"><small>Με το καλύτερο πρόγραμμα</small><b>— €</b><em>τον χρόνο</em></div></div>' +
 		'<div class="sig-qsave is-plain"><span>Ο πελάτης κερδίζει</span>' +
 			'<b class="is-bill">ανέβασε τον λογαριασμό</b><b class="is-man">γράψε την κατανάλωση</b></div>' +

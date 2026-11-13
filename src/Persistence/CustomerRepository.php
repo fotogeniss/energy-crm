@@ -168,6 +168,126 @@ final class CustomerRepository
     }
 
     /**
+     * (377) Μία σελίδα πελατών, με σύνολο και μετρητές για τα φίλτρα.
+     *
+     * Το `search()` φέρνει ως 500 και σταματά σιωπηλά· με εκατοντάδες πελάτες
+     * οι υπόλοιποι δεν φαίνονταν πουθενά. Εδώ: σελίδα, ταξινόμηση, φίλτρο,
+     * και το σύνολο, ώστε η οθόνη να λέει «1–50 από 1.284».
+     * docs/UI-CUSTOMERS-SCALE.html, κατεύθυνση Α.
+     *
+     * - Επαγγελματικός: έχει έστω μία επαγγελματική αίτηση.
+     * - Παροχές: ρεύμα/αέριο από τις αιτήσεις του, εκτός από τις ακυρωμένες.
+     * - Χωρίς τηλέφωνο: κενό τηλέφωνο και κενό κινητό. Το κενό δεν
+     *   κρυπτογραφείται, οπότε ο έλεγχος δουλεύει και με κρυπτογραφημένη στήλη.
+     *
+     * @return array{
+     *   rows: list<array<string, mixed>>,
+     *   total: int,
+     *   counts: array{all: int, home: int, business: int, nophone: int}
+     * }
+     */
+    public function page(
+        UserScope $scope,
+        string $term,
+        string $filter,
+        string $sort,
+        int $page,
+        int $perPage,
+    ): array {
+        global $wpdb;
+
+        $conditions = ['1 = 1'];
+        $params     = [];
+
+        if (! $scope->isAdministrator()) {
+            $conditions[] = 'c.partner_user_id IN (' . $scope->placeholders() . ')';
+            $params       = [...$params, ...$scope->userIds()];
+        }
+
+        if ($term !== '') {
+            $like         = '%' . $wpdb->esc_like($term) . '%';
+            $conditions[] = "( CONCAT_WS(' ', cu.first_name, cu.last_name, cu.company_name) LIKE %s"
+                . ' OR cu.afm LIKE %s OR cu.phone LIKE %s OR cu.email LIKE %s OR cu.'
+                . CustomerFields::INDEX_COLUMN . ' = %s OR cu.'
+                . CustomerFields::PHONE_INDEX_COLUMN . ' = %s )';
+            $params       = [
+                ...$params,
+                $like,
+                $like,
+                $like,
+                $like,
+                $this->fields->index($term),
+                $this->fields->index($term),
+            ];
+        }
+
+        $where = implode(' AND ', $conditions);
+
+        // Μία γραμμή ανά πελάτη, με ό,τι χρειάζονται φίλτρα και ταξινόμηση.
+        $grouped = "SELECT cu.id, cu.first_name, cu.last_name, cu.company_name,
+                           cu.afm, cu.phone, cu.mobile, cu.email,
+                           COUNT(c.id) AS contracts, MAX(c.updated_at) AS last_at,
+                           MAX(c.category = 'business') AS biz,
+                           MAX(c.energy_type = 'power' AND c.status <> 'cancelled') AS has_power,
+                           MAX(c.energy_type = 'gas' AND c.status <> 'cancelled') AS has_gas,
+                           (COALESCE(cu.phone, '') = '' AND COALESCE(cu.mobile, '') = '') AS nophone,
+                           COALESCE(NULLIF(cu.company_name, ''),
+                                    CONCAT_WS(' ', cu.first_name, cu.last_name)) AS sort_name
+                    FROM %i cu
+                    JOIN %i c ON c.customer_id = cu.id
+                    WHERE {$where}
+                    GROUP BY cu.id";
+        $base    = [$this->table, $this->contractsTable, ...$params];
+
+        $having = [
+            'home'     => 't.biz = 0',
+            'business' => 't.biz = 1',
+            'nophone'  => 't.nophone = 1',
+        ][$filter] ?? '1 = 1';
+
+        $order = [
+            'name'      => 't.sort_name ASC, t.id ASC',
+            'contracts' => 't.contracts DESC, t.last_at DESC, t.id DESC',
+        ][$sort] ?? 't.last_at DESC, t.id DESC';
+
+        $perPage = max(1, min(200, $perPage));
+        $offset  = max(0, $page - 1) * $perPage;
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var array<string, mixed>|null $tally */
+        $tally = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT COUNT(*) AS all_n, SUM(t.biz = 0) AS home_n, SUM(t.biz = 1) AS biz_n,
+                        SUM(t.nophone = 1) AS nophone_n, SUM({$having}) AS filtered_n
+                 FROM ({$grouped}) t",
+                $base
+            ),
+            ARRAY_A
+        );
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT t.* FROM ({$grouped}) t WHERE {$having} ORDER BY {$order} LIMIT %d OFFSET %d",
+                [...$base, $perPage, $offset]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return [
+            'rows'   => $this->fields->fromStorageAll($rows),
+            'total'  => (int) ($tally['filtered_n'] ?? 0),
+            'counts' => [
+                'all'      => (int) ($tally['all_n'] ?? 0),
+                'home'     => (int) ($tally['home_n'] ?? 0),
+                'business' => (int) ($tally['biz_n'] ?? 0),
+                'nophone'  => (int) ($tally['nophone_n'] ?? 0),
+            ],
+        ];
+    }
+
+    /**
      * Existing contracts matching a ΑΦΜ or supply number.
      *
      * Used before saving, to warn that the customer is already on file rather

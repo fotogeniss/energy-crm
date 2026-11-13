@@ -6,16 +6,23 @@
  *
  * (353i) Στη νέα εμφάνιση «Signature» ο πίνακας γίνεται πλέγμα από κάρτες
  * (sigCustomersHTML). Ίδια δεδομένα, ίδιο data-open-customer, ίδια καρτέλα πελάτη.
+ *
+ * (377) Οι κάρτες δεν κλιμακώνονταν: 6 σε μια οθόνη, και ο server σταματούσε
+ * σιωπηλά στους 500. Στη νέα εμφάνιση η λίστα γίνεται πυκνός πίνακας με
+ * σελίδες των 50, ταξινόμηση και φίλτρα με μετρητές από τον server
+ * (GET /customers?page=…). docs/UI-CUSTOMERS-SCALE.html, κατεύθυνση Α.
  */
 
 import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { fmtDate, initials, tint } from '@energy-crm/format';
 import { openCustomerCard, openEdit } from '@energy-crm/navigate';
 
-var customersState = { q: '', scope: 'own', tab: 'all', city: '', category: '' };
+var customersState = { q: '', scope: 'own', tab: 'all', city: '', category: '', page: 1, sort: 'recent', filter: 'all' };
+var SIG_PER = 50;
 export function loadCustomers() {
 	var view = viewEl('customers');
 	if (customersState.tab !== 'all') { loadCrossSell(view); return; }
+	if (isSignature()) { loadSigCustomers(view); return; }
 	fetch(api('/customers') + '?scope=' + customersState.scope + '&q=' + encodeURIComponent(customersState.q), { headers: H() })
 		.then(function (r) { return r.json(); })
 		.then(function (d) {
@@ -60,14 +67,16 @@ function wireCustomers(view) {
 			var v = this.value;
 			t = setTimeout(function () {
 				customersState.q = v;
+				customersState.page = 1;
 				loadCustomers();
 			}, 350);
 		});
 		// (353i) Η λίστα ξαναζωγραφίζεται σε κάθε αναζήτηση: ο κέρσορας μένει στο πεδίο.
 		if (customersState.q) { se.focus(); se.setSelectionRange(se.value.length, se.value.length); }
 	}
-	view.querySelectorAll('[data-cuscope]').forEach(function (b) { b.addEventListener('click', function () { customersState.scope = this.getAttribute('data-cuscope'); loadCustomers(); }); });
+	view.querySelectorAll('[data-cuscope]').forEach(function (b) { b.addEventListener('click', function () { customersState.scope = this.getAttribute('data-cuscope'); customersState.page = 1; loadCustomers(); }); });
 	wireTabs(view);
+	wireSigList(view);
 	view.querySelectorAll('[data-open-customer]').forEach(function (row) {
 		row.addEventListener('click', function (e) {
 			// Το «Κλήση» μέσα στην κάρτα καλεί, δεν ανοίγει τον πελάτη.
@@ -185,11 +194,11 @@ function loadCrossSell(view) {
 				rows = '<div class="ecrm-empty">Κανένας πελάτης ' + (want === 'gas' ? 'με ρεύμα χωρίς αέριο' : 'με αέριο χωρίς ρεύμα') + ' αυτή τη στιγμή.</div>';
 			}
 			var xsub = ((d.counts && d.counts[want]) || 0) + ' πελάτες για ' + (want === 'gas' ? 'αέριο' : 'ρεύμα');
-			view.innerHTML = (isSignature() ? sigHeadHTML(xsub) : headMarkup(xsub)) +
-				tabsMarkup(d.counts) +
+			view.innerHTML = (isSignature() ? sigHeadHTML(xsub) + sigChipsHTML(null, d.counts) : headMarkup(xsub) + tabsMarkup(d.counts)) +
 				'<div class="ecrm-card"><div class="ecrm-xsell__flt"><select class="ecrm-input" data-xs-city>' + cityOpts + '</select><select class="ecrm-input" data-xs-cat>' + catOpts + '</select></div>' + rows + '</div>';
 
 			wireTabs(view);
+			wireSigList(view);
 			view.querySelectorAll('[data-cuscope]').forEach(function (b) { b.addEventListener('click', function () { customersState.scope = this.getAttribute('data-cuscope'); loadCustomers(); }); });
 			view.querySelector('[data-xs-city]').addEventListener('change', function () { customersState.city = this.value; loadCustomers(); });
 			view.querySelector('[data-xs-cat]').addEventListener('change', function () { customersState.category = this.value; loadCustomers(); });
@@ -243,4 +252,154 @@ function snooze(view, customerId, want) {
 			loadCustomers();
 		})
 		.catch(function () { toast('Σφάλμα δικτύου.', false); });
+}
+
+// ---------------------------------------------------------------------
+// (377) «Signature»: πελάτες σε πυκνό πίνακα με σελίδες
+// ---------------------------------------------------------------------
+
+var SUPPLY = { power: 'Ρεύμα', gas: 'Αέριο' };
+
+function loadSigCustomers(view) {
+	var st = customersState;
+	var qs = '?scope=' + encodeURIComponent(st.scope) + '&q=' + encodeURIComponent(st.q) +
+		'&page=' + encodeURIComponent(st.page) + '&per=' + SIG_PER +
+		'&sort=' + encodeURIComponent(st.sort) + '&filter=' + encodeURIComponent(st.filter);
+	fetch(api('/customers') + qs, { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
+			// Σελίδα πέρα από το τέλος (π.χ. μετά από αναζήτηση): πίσω στην τελευταία.
+			var last = Math.max(1, Math.ceil((d.total || 0) / SIG_PER));
+			if (st.page > last) { st.page = last; loadSigCustomers(view); return; }
+			view.innerHTML = sigListHTML(d);
+			wireCustomers(view);
+		})
+		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
+}
+
+function num(n) {
+	return Number(n || 0).toLocaleString('el-GR');
+}
+
+/* Φίλτρα σε μία σειρά. «Χωρίς αέριο / ρεύμα» είναι οι καρτέλες cross-sell (333). */
+function sigChipsHTML(counts, xsell) {
+	var c = counts || {};
+	var x = xsell || {};
+	var st = customersState;
+	var chip = function (attr, key, label, n, on) {
+		return '<button type="button" class="sig-cuchip' + (on ? ' is-on' : '') + '" ' + attr + '="' + key + '">' + esc(label) +
+			(n != null ? '<small>' + esc(num(n)) + '</small>' : '') + '</button>';
+	};
+	var inAll = st.tab === 'all';
+	return '<div class="sig-cuchips">' +
+		chip('data-cufilter', 'all', 'Όλοι', c.all, inAll && st.filter === 'all') +
+		chip('data-cufilter', 'home', 'Οικιακοί', c.home, inAll && st.filter === 'home') +
+		chip('data-cufilter', 'business', 'Επαγγελματικοί', c.business, inAll && st.filter === 'business') +
+		chip('data-cutab', 'gas', 'Χωρίς αέριο', x.gas, st.tab === 'gas') +
+		chip('data-cutab', 'power', 'Χωρίς ρεύμα', x.power, st.tab === 'power') +
+		chip('data-cufilter', 'nophone', 'Χωρίς τηλέφωνο', c.nophone, inAll && st.filter === 'nophone') +
+	'</div>';
+}
+
+function sigListHTML(d) {
+	var st = customersState;
+	var rows = d.rows || [];
+	var total = d.total || 0;
+	var all = (d.counts && d.counts.all) || 0;
+	var sub = num(all) + (all === 1 ? ' πελάτης' : ' πελάτες') + ', ένας ανά ΑΦΜ';
+
+	var sortOpt = function (key, label) {
+		return '<option value="' + key + '"' + (st.sort === key ? ' selected' : '') + '>' + label + '</option>';
+	};
+	var bar = '<div class="sig-cubar">' +
+		'<label class="sig-cusearch"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>' +
+		'<input type="search" placeholder="Όνομα, ΑΦΜ, τηλέφωνο ή email" value="' + esc(st.q) + '" data-cusearch aria-label="Αναζήτηση πελάτη"></label>' +
+		'<label class="sig-cusort"><span>Ταξινόμηση</span><select data-cusort aria-label="Ταξινόμηση">' +
+			sortOpt('recent', 'Τελευταία κίνηση') + sortOpt('name', 'Όνομα Α–Ω') + sortOpt('contracts', 'Περισσότερες αιτήσεις') +
+		'</select></label></div>';
+
+	var head = function (key, label, cls) {
+		var on = st.sort === key;
+		return '<button type="button" class="sig-cut__h' + (cls ? ' ' + cls : '') + (on ? ' is-on' : '') + '" data-cusorthead="' + key + '">' +
+			esc(label) + (on ? ' ▾' : '') + '</button>';
+	};
+
+	var body = rows.map(function (c) {
+		var sup = (c.supplies || []).map(function (k) {
+			return '<span class="sig-cut__sp is-' + esc(k) + '">' + esc(SUPPLY[k] || k) + '</span>';
+		}).join('');
+		var call = c.phone
+			? '<a class="sig-cut__act" href="' + esc(telHref(c.phone)) + '" aria-label="Κλήση ' + esc(c.name) + '" title="Κλήση"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/></svg></a>'
+			: '';
+		return '<div class="sig-cut__r" data-open-customer="' + esc(String(c.id)) + '" role="button" tabindex="0">' +
+			'<span class="sig-cut__av" style="--h:' + tint(c.name) + '">' + esc(initials(c.name)) + '</span>' +
+			'<span class="sig-cut__nm"><b>' + esc(c.name) + '</b><small>' + (c.afm ? 'ΑΦΜ ' + esc(c.afm) : 'χωρίς ΑΦΜ') +
+				' · ' + (c.business ? 'Επαγγελματικός' : 'Οικιακός') + '</small></span>' +
+			'<span class="sig-cut__tel">' + (c.phone ? esc(c.phone) : '<em>χωρίς τηλέφωνο</em>') + '</span>' +
+			'<span class="sig-cut__sup">' + sup + '</span>' +
+			'<span class="sig-cut__n">' + esc(String(Number(c.contracts) || 0)) + '</span>' +
+			'<span class="sig-cut__dt">' + (c.last_at ? esc(fmtDate(c.last_at)) : '—') + '</span>' +
+			'<span class="sig-cut__acts">' + call + '<span class="sig-cut__act" aria-hidden="true">›</span></span>' +
+		'</div>';
+	}).join('');
+
+	var empty = '<div class="ecrm-empty">' + (st.q
+		? 'Δεν βρέθηκαν πελάτες για «' + esc(st.q) + '».'
+		: (st.filter !== 'all' ? 'Κανένας πελάτης σε αυτό το φίλτρο.' : 'Δεν έχεις κανέναν πελάτη ακόμα. Ο πρώτος πελάτης προστίθεται αυτόματα με τη «Νέα αίτηση».')) + '</div>';
+
+	var table = body
+		? '<div class="sig-cut">' +
+			// Κεφαλαία γραμμένα ρητά, χωρίς τόνους (κανόνας ιδιοκτήτη), όχι με text-transform.
+			'<div class="sig-cut__head"><span></span>' + head('name', 'ΠΕΛΑΤΗΣ') + '<span>ΤΗΛΕΦΩΝΟ</span><span>ΠΑΡΟΧΕΣ</span>' +
+				head('contracts', 'ΑΙΤΗΣΕΙΣ', 'is-c') + head('recent', 'ΚΙΝΗΣΗ') + '<span></span></div>' +
+			body + sigPagerHTML(total) + '</div>'
+		: '<div class="ecrm-card">' + empty + '</div>';
+
+	return sigHeadHTML(sub) + bar + sigChipsHTML(d.counts, null) + table;
+}
+
+/* «1–50 από 1.284», σελίδες 1 2 3 … τελευταία, Προηγούμενη / Επόμενη. */
+function sigPagerHTML(total) {
+	var st = customersState;
+	var pages = Math.max(1, Math.ceil(total / SIG_PER));
+	var from = total ? (st.page - 1) * SIG_PER + 1 : 0;
+	var to = Math.min(total, st.page * SIG_PER);
+	if (pages === 1) {
+		return '<div class="sig-cut__pg"><span>' + esc(num(total)) + (total === 1 ? ' πελάτης' : ' πελάτες') + '</span></div>';
+	}
+	var want = [1, st.page - 1, st.page, st.page + 1, pages].filter(function (p, i, a) { return p >= 1 && p <= pages && a.indexOf(p) === i; }).sort(function (a, b) { return a - b; });
+	var nums = '';
+	want.forEach(function (p, i) {
+		if (i > 0 && p - want[i - 1] > 1) { nums += '<span class="sig-cut__gap">…</span>'; }
+		nums += '<button type="button" class="sig-cut__p' + (p === st.page ? ' is-on' : '') + '" data-cupage="' + p + '"' + (p === st.page ? ' aria-current="page"' : '') + '>' + p + '</button>';
+	});
+	return '<div class="sig-cut__pg"><span>' + esc(num(from)) + '–' + esc(num(to)) + ' από ' + esc(num(total)) + '</span>' +
+		'<div class="sig-cut__pages">' + nums + '</div>' +
+		'<div class="sig-cut__nav">' +
+			'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-cupage="' + (st.page - 1) + '"' + (st.page <= 1 ? ' disabled' : '') + '>‹ Προηγούμενη</button>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-cupage="' + (st.page + 1) + '"' + (st.page >= pages ? ' disabled' : '') + '>Επόμενη ›</button>' +
+		'</div></div>';
+}
+
+function wireSigList(view) {
+	var st = customersState;
+	view.querySelectorAll('[data-cufilter]').forEach(function (b) {
+		b.addEventListener('click', function () { st.tab = 'all'; st.filter = b.getAttribute('data-cufilter'); st.page = 1; loadCustomers(); });
+	});
+	var sel = view.querySelector('[data-cusort]');
+	if (sel) { sel.addEventListener('change', function () { st.sort = sel.value; st.page = 1; loadCustomers(); }); }
+	view.querySelectorAll('[data-cusorthead]').forEach(function (b) {
+		b.addEventListener('click', function () { st.sort = b.getAttribute('data-cusorthead'); st.page = 1; loadCustomers(); });
+	});
+	view.querySelectorAll('[data-cupage]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			var p = +b.getAttribute('data-cupage');
+			if (!(p >= 1) || p === st.page) { return; }
+			st.page = p;
+			loadCustomers();
+			var top = view.getBoundingClientRect().top + window.scrollY - 90;
+			window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+		});
+	});
 }

@@ -15,6 +15,7 @@ use ECRM_Docs;
 use ECRM_Files;
 use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\CustomerEventRepository;
@@ -77,6 +78,29 @@ final class CustomersController implements Controller
                     'type'              => 'string',
                     'default'           => '',
                     'sanitize_callback' => 'sanitize_text_field',
+                ],
+                // (377) Με `page` η απάντηση είναι μία σελίδα, με σύνολο και
+                // μετρητές. Χωρίς αυτό, όπως πριν (η κλασική εμφάνιση).
+                'page' => [
+                    'type'    => 'integer',
+                    'default' => 0,
+                    'minimum' => 0,
+                ],
+                'per' => [
+                    'type'    => 'integer',
+                    'default' => 50,
+                    'minimum' => 1,
+                    'maximum' => 200,
+                ],
+                'sort' => [
+                    'type'    => 'string',
+                    'default' => 'recent',
+                    'enum'    => ['recent', 'name', 'contracts'],
+                ],
+                'filter' => [
+                    'type'    => 'string',
+                    'default' => 'all',
+                    'enum'    => ['all', 'home', 'business', 'nophone'],
                 ],
             ],
         ]);
@@ -519,6 +543,10 @@ final class CustomersController implements Controller
             $scope = $scope->toSelfOnly();
         }
 
+        if ((int) $request['page'] > 0) {
+            return $this->page($request, $scope);
+        }
+
         $rows = array_map(
             static function (array $row): array {
                 $name = $row['company_name']
@@ -541,6 +569,57 @@ final class CustomersController implements Controller
             ['ok' => true, 'rows' => $rows, 'count' => count($rows)],
             200
         );
+    }
+
+    /**
+     * (377) Μία σελίδα πελατών για τη νέα εμφάνιση: σύνολο, μετρητές
+     * φίλτρων, τύπος (οικιακός/επαγγελματικός) και παροχές ανά πελάτη.
+     */
+    private function page(WP_REST_Request $request, UserScope $scope): WP_REST_Response
+    {
+        $page = (int) $request['page'];
+        $per  = (int) $request['per'];
+        $out  = $this->customers->page(
+            $scope,
+            trim((string) $request['q']),
+            (string) $request['filter'],
+            (string) $request['sort'],
+            $page,
+            $per
+        );
+
+        $rows = array_map(
+            static function (array $row): array {
+                $name = $row['company_name']
+                    ?: trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+                $supplies = array_values(array_filter([
+                    ! empty($row['has_power']) ? 'power' : '',
+                    ! empty($row['has_gas']) ? 'gas' : '',
+                ]));
+
+                return [
+                    'id'        => (int) $row['id'],
+                    'name'      => $name !== '' ? $name : '—',
+                    'afm'       => $row['afm'],
+                    'phone'     => ($row['phone'] ?? '') !== '' ? $row['phone'] : ($row['mobile'] ?? ''),
+                    'email'     => $row['email'],
+                    'contracts' => (int) $row['contracts'],
+                    'last_at'   => $row['last_at'],
+                    'business'  => ! empty($row['biz']),
+                    'supplies'  => $supplies,
+                ];
+            },
+            $out['rows']
+        );
+
+        return new WP_REST_Response([
+            'ok'     => true,
+            'rows'   => $rows,
+            'total'  => $out['total'],
+            'counts' => $out['counts'],
+            'page'   => $page,
+            'per'    => $per,
+        ], 200);
     }
 
     public function check(WP_REST_Request $request): WP_REST_Response

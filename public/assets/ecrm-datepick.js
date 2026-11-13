@@ -10,6 +10,12 @@
  * Ένας listener για όλη τη σελίδα, όχι ανά πεδίο: τα πεδία ημερομηνίας
  * ζωγραφίζονται και ξαναζωγραφίζονται συνέχεια (φόρμα, παράθυρα, έγγραφα).
  * Καθαρό DOM, καμία εξάρτηση.
+ *
+ * (378) Και τα πεδία ημερομηνίας ΜΕ ώρα (`datetime-local`: προθεσμία
+ * εργασίας, επανάκληση υποψηφίου) ανοίγουν το ίδιο ημερολόγιο, με μια σειρά
+ * «Ώρα» από κάτω· ο ιδιοκτήτης: «κάνε όλα τα ημερολόγια όπως κάναμε το
+ * άλλο» (13/11). Η τιμή μένει YYYY-MM-DDTHH:MM. Εκεί το πάτημα σε μέρα δεν
+ * κλείνει το ημερολόγιο (μένει η ώρα)· κλείνει με «Εντάξει».
  */
 
 var MONTHS = ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
@@ -19,14 +25,20 @@ var DAYS = ['Δε', 'Τρ', 'Τε', 'Πε', 'Πα', 'Σα', 'Κυ'];
 var pop = null;      // το ανοιχτό ημερολόγιο
 var target = null;   // το πεδίο του
 var shown = null;    // ο μήνας που φαίνεται: { y, m }
+var clock = null;    // (378) η ώρα, σε πεδίο datetime-local: { h, mi }
 
 function pad(n) { return (n < 10 ? '0' : '') + n; }
 function iso(y, m, d) { return y + '-' + pad(m + 1) + '-' + pad(d); }
 
 function parse(v) {
-	var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v || ''));
-	return m ? { y: +m[1], m: +m[2] - 1, d: +m[3] } : null;
+	var m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(String(v || ''));
+	return m ? { y: +m[1], m: +m[2] - 1, d: +m[3], h: m[4] != null ? +m[4] : null, mi: m[5] != null ? +m[5] : null } : null;
 }
+
+function withTime() { return !!target && target.type === 'datetime-local'; }
+
+/* Η ημερομηνία μόνο, για σύγκριση με min/max ή για «σήμερα». */
+function datePart(v) { return String(v || '').slice(0, 10); }
 
 function todayParts() {
 	var t = new Date();
@@ -35,8 +47,8 @@ function todayParts() {
 
 function inRange(v) {
 	if (!target) { return true; }
-	if (target.min && v < target.min) { return false; }
-	if (target.max && v > target.max) { return false; }
+	if (target.min && v < datePart(target.min)) { return false; }
+	if (target.max && v > datePart(target.max)) { return false; }
 	return true;
 }
 
@@ -81,10 +93,32 @@ function render() {
 		'</div>' +
 		'<div class="ecrm-dp__wd" aria-hidden="true">' + DAYS.map(function (n) { return '<span>' + n + '</span>'; }).join('') + '</div>' +
 		'<div class="ecrm-dp__grid">' + cells + '</div>' +
+		(withTime() ? timeRow() : '') +
 		'<div class="ecrm-dp__foot">' +
 			'<button type="button" class="ecrm-dp__link" data-dp-clear>Καθαρισμός</button>' +
 			(inRange(tIso) ? '<button type="button" class="ecrm-dp__link" data-dp-day="' + tIso + '">Σήμερα</button>' : '') +
+			(withTime() ? '<button type="button" class="ecrm-dp__ok" data-dp-ok>Εντάξει</button>' : '') +
 		'</div>';
+}
+
+/* (378) «Ώρα 10 : 00»: ώρες 00–23, λεπτά ανά 5 (και το τρέχον, αν δεν είναι). */
+function timeRow() {
+	var hours = '';
+	for (var h = 0; h < 24; h++) {
+		hours += '<option value="' + h + '"' + (h === clock.h ? ' selected' : '') + '>' + pad(h) + '</option>';
+	}
+	var mins = '';
+	var cur = Number(clock.mi) || 0; // πάντα αριθμός
+	for (var mi = 0; mi < 60; mi += 5) {
+		if (cur > mi - 5 && cur < mi && cur % 5) {
+			mins += '<option value="' + cur + '" selected>' + pad(cur) + '</option>';
+		}
+		mins += '<option value="' + mi + '"' + (mi === cur ? ' selected' : '') + '>' + pad(mi) + '</option>';
+	}
+	if (cur > 55) { mins += '<option value="' + cur + '" selected>' + pad(cur) + '</option>'; }
+	return '<div class="ecrm-dp__time"><span>Ώρα</span>' +
+		'<select class="ecrm-dp__sel" data-dp-h aria-label="Ώρα">' + hours + '</select><b>:</b>' +
+		'<select class="ecrm-dp__sel" data-dp-mi aria-label="Λεπτά">' + mins + '</select></div>';
 }
 
 function place() {
@@ -99,6 +133,8 @@ function place() {
 }
 
 function set(value) {
+	// (378) Σε πεδίο με ώρα, η μέρα παίρνει την ώρα της σειράς «Ώρα».
+	if (value && withTime()) { value = datePart(value) + 'T' + pad(clock.h) + ':' + pad(clock.mi); }
 	target.value = value;
 	target.dispatchEvent(new Event('input', { bubbles: true }));
 	target.dispatchEvent(new Event('change', { bubbles: true }));
@@ -123,6 +159,9 @@ function open(input) {
 	target = input;
 	var cur = parse(input.value) || parse(input.min && input.min > iso(todayParts().y, todayParts().m, todayParts().d) ? input.min : '') || todayParts();
 	shown = { y: cur.y, m: cur.m };
+	// Ώρα: του πεδίου, αλλιώς 10:00 (η συνηθισμένη ώρα για κλήση).
+	var had = parse(input.value);
+	clock = { h: had && had.h != null ? had.h : 10, mi: had && had.mi != null ? had.mi : 0 };
 
 	pop = document.createElement('div');
 	pop.className = 'ecrm-dp';
@@ -140,7 +179,18 @@ function open(input) {
 	});
 	pop.addEventListener('click', function (e) {
 		var day = e.target.closest('[data-dp-day]');
-		if (day && !day.disabled) { set(day.getAttribute('data-dp-day')); close(true); return; }
+		if (day && !day.disabled) {
+			set(day.getAttribute('data-dp-day'));
+			if (withTime()) {
+				var p = parse(target.value);
+				shown = { y: p.y, m: p.m };
+				render();
+				return;
+			}
+			close(true);
+			return;
+		}
+		if (e.target.closest('[data-dp-ok]')) { close(true); return; }
 		if (e.target.closest('[data-dp-clear]')) { set(''); close(true); return; }
 		var mv = e.target.closest('[data-dp-move]');
 		if (mv) {
@@ -152,6 +202,11 @@ function open(input) {
 	pop.addEventListener('change', function (e) {
 		if (e.target.matches('[data-dp-month]')) { shown.m = +e.target.value; render(); }
 		if (e.target.matches('[data-dp-year]')) { shown.y = +e.target.value; render(); }
+		// (378) Αλλαγή ώρας: γράφεται αμέσως, αν υπάρχει ήδη μέρα.
+		if (e.target.matches('[data-dp-h], [data-dp-mi]')) {
+			clock = { h: +pop.querySelector('[data-dp-h]').value, mi: +pop.querySelector('[data-dp-mi]').value };
+			if (target.value) { set(target.value); }
+		}
 	});
 	pop.addEventListener('keydown', function (e) {
 		if (e.key === 'Escape') { e.stopPropagation(); close(true); }
@@ -162,7 +217,7 @@ function open(input) {
 }
 
 function eligible(el) {
-	return el && el.matches && el.matches('input[type="date"]') && !el.disabled && !el.readOnly &&
+	return el && el.matches && el.matches('input[type="date"], input[type="datetime-local"]') && !el.disabled && !el.readOnly &&
 		!!el.closest('.ecrm-app, .ecrm-modalov');
 }
 

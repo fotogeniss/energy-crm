@@ -120,7 +120,7 @@ class ECRM_Export {
 				$energy[ $r['energy_type'] ] ?? strtoupper( (string) $r['energy_type'] ),
 				$r['invoice_code'],
 				$r['supply_number'],
-				mb_strtoupper( $st[ $r['status'] ] ?? (string) $r['status'], 'UTF-8' ),
+				\EnergyCRM\Domain\Document\GreekCaps::upper( $st[ $r['status'] ] ?? (string) $r['status'] ),
 				$partner,
 				$pid ? ( $names[ $pid ] ?? '' ) : '',
 				$r['mobile'],

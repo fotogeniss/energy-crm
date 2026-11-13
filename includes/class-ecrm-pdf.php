@@ -263,7 +263,14 @@ class ECRM_PDF {
 	}
 
 	/**
-	 * Build a savings/quote PDF for a sales offer.
+	 * (376) Οικονομική Προσφορά: μία σελίδα Α4, λευκή, σαν επιστολή εταιρείας.
+	 * docs/UI-QUOTE-PDF.html (εγκρίθηκε 13/11/2026).
+	 *
+	 * Πάνω λογότυπο και στοιχεία εταιρείας, «Προς» τον πελάτη και ο σύμβουλος,
+	 * η πρόταση, η σύγκριση (ή μόνο το κόστος της πρότασης όταν δεν υπάρχει
+	 * τιμή σήμερα), το αποτέλεσμα, όροι, υπογραφές, υποσέλιδο. Ελληνικοί
+	 * αριθμοί και κεφαλαία χωρίς τόνους. Πάντα μία σελίδα: το υποσέλιδο
+	 * γράφεται με κλειστό το auto page break (πριν έπεφτε σε δεύτερη σελίδα).
 	 *
 	 * @param array $m Computed figures (see EnergyCRM\Http\QuoteController).
 	 * @return string Raw PDF bytes.
@@ -271,98 +278,300 @@ class ECRM_PDF {
 	public static function build_quote( array $m ): string {
 		self::boot();
 		$navy  = [ 10, 31, 61 ];
-		$amber = [ 245, 158, 11 ];
+		$ink   = [ 15, 23, 42 ];
 		$muted = [ 100, 116, 139 ];
-		$green = [ 21, 128, 61 ];
+		$soft  = [ 148, 163, 184 ];
+		$band  = [ 245, 247, 250 ];
+		$rule  = [ 226, 232, 240 ];
+		$green = [ 22, 163, 74 ];
+
+		$caps = static fn ( string $s ): string => \EnergyCRM\Domain\Document\GreekCaps::upper( $s );
+		$num  = static fn ( float $v, int $d ): string => \EnergyCRM\Domain\Quote\QuoteText::number( $v, $d );
+		$eur  = static fn ( float $v ): string => \EnergyCRM\Domain\Quote\QuoteText::euro( $v );
+		$sgn  = static fn ( float $v ): string => \EnergyCRM\Domain\Quote\QuoteText::signedEuro( $v );
 
 		$pdf = new tFPDF( 'P', 'mm', 'A4' );
 		$pdf->fontpath = __DIR__ . '/lib/tfpdf/font/';
-		$pdf->SetAutoPageBreak( true, 18 );
+		$pdf->SetMargins( 14, 14, 14 );
+		$pdf->SetAutoPageBreak( false );
 		$pdf->AddPage();
 		$pdf->AddFont( 'DejaVu', '', 'DejaVuSans.ttf', true );
 		$pdf->AddFont( 'DejaVu', 'B', 'DejaVuSans-Bold.ttf', true );
 
-		$pdf->SetFillColor( $navy[0], $navy[1], $navy[2] );
-		$pdf->Rect( 0, 0, 210, 28, 'F' );
-		$pdf->SetFillColor( $amber[0], $amber[1], $amber[2] );
-		$pdf->Rect( 0, 28, 210, 1.4, 'F' );
-
-		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '';
-		$logo    = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_logo' ) : '';
-		if ( $logo ) { $path = self::logo_path( $logo ); if ( $path ) { try { $pdf->Image( $path, 170, 7, 26 ); } catch ( \Throwable $e ) {} } }
-
-		$pdf->SetXY( 14, 8 );
-		$pdf->SetTextColor( 255, 255, 255 );
-		$pdf->SetFont( 'DejaVu', 'B', 16 );
-		$pdf->Cell( 0, 8, 'Πρόταση Εξοικονόμησης', 0, 1 );
-		$pdf->SetX( 14 );
-		$pdf->SetFont( 'DejaVu', '', 10 );
-		$pdf->SetTextColor( 203, 213, 225 );
-		$pdf->Cell( 0, 6, ( $company ?: 'Energy CRM' ) . '  ·  ' . gmdate( 'd/m/Y' ), 0, 1 );
-
-		$pdf->SetTextColor( 15, 23, 42 );
-		$pdf->Ln( 8 );
-
-		self::section( $pdf, $navy, 'Στοιχεία πρότασης' );
-		self::grid( $pdf, $muted, [
-			[ 'Πελάτης', $m['customer'] ?: '—' ],
-			[ 'Πάροχος', $m['provider'] ?: '—' ],
-			[ 'Πρόγραμμα', $m['program'] ?: '—' ],
-			[ 'Υπηρεσία', $m['energy'] ?? '' ],
-			[ 'Ετήσια κατανάλωση', number_format( (float) $m['consumption'], 0 ) . ' kWh' ],
-			[ 'Τιμή πρότασης', number_format( (float) $m['offered_price'], 5 ) . ' €/kWh' ],
-		] );
-
-		$pdf->Ln( 4 );
-		self::section( $pdf, $navy, 'Σύγκριση ετήσιου κόστους (ενέργεια)' );
-
-		// comparison table
-		$pdf->SetFont( 'DejaVu', 'B', 9 );
-		$pdf->SetFillColor( 241, 245, 249 );
-		$pdf->SetTextColor( $navy[0], $navy[1], $navy[2] );
-		$w = [ 92, 45, 45 ];
-		$pdf->Cell( $w[0], 8, '', 0, 0, 'L', true );
-		$pdf->Cell( $w[1], 8, 'Τρέχον', 0, 0, 'R', true );
-		$pdf->Cell( $w[2], 8, 'Πρόταση', 0, 1, 'R', true );
-
-		$pdf->SetFont( 'DejaVu', '', 9 );
-		$pdf->SetTextColor( 15, 23, 42 );
-		$rowf = function ( $label, $a, $b, $suffix ) use ( $pdf, $w ) {
-			$pdf->Cell( $w[0], 7, $label, 0, 0, 'L' );
-			$pdf->Cell( $w[1], 7, $a . $suffix, 0, 0, 'R' );
-			$pdf->Cell( $w[2], 7, $b . $suffix, 0, 1, 'R' );
+		$color = static function ( array $c ) use ( $pdf ): void {
+			$pdf->SetTextColor( $c[0], $c[1], $c[2] );
 		};
-		$rowf( 'Τιμή ενέργειας', number_format( (float) $m['current_price'], 5 ), number_format( (float) $m['offered_price'], 5 ), ' €/kWh' );
-		$rowf( 'Πάγιο', number_format( (float) $m['current_fixed'], 2 ), number_format( (float) $m['offered_fixed'], 2 ), ' €/μήνα' );
 
+		$company = class_exists( 'ECRM_Admin' ) ? trim( (string) ECRM_Admin::get( 'company_name' ) ) : '';
+		$info    = class_exists( 'ECRM_Admin' ) ? trim( (string) ECRM_Admin::get( 'company_info' ) ) : '';
+		$footer  = class_exists( 'ECRM_Admin' ) ? trim( (string) ECRM_Admin::get( 'pdf_footer' ) ) : '';
+		$logo    = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_logo' ) : '';
+		$company = $company !== '' ? $company : 'Energy CRM';
+		$info    = trim( (string) preg_replace( '/\s*\R\s*/u', ' · ', $info ) );
+		$is_gas  = ( $m['energy_key'] ?? 'power' ) === 'gas';
+
+		// --- Κεφαλίδα: λογότυπο και εταιρεία αριστερά, τίτλος δεξιά ---
+		$text_x = 14;
+		$path   = $logo ? self::logo_path( $logo ) : null;
+		if ( $path ) {
+			$size = @getimagesize( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			$w    = ( $size && $size[1] > 0 ) ? min( 40.0, 14 * $size[0] / $size[1] ) : 14.0;
+			try {
+				$pdf->Image( $path, 14, 14, $w, 14 );
+				$text_x = 14 + $w + 4;
+			} catch ( \Throwable $e ) {
+				$path = null;
+			}
+		}
+		if ( ! $path ) {
+			$pdf->SetFillColor( $navy[0], $navy[1], $navy[2] );
+			$pdf->Rect( 14, 14, 14, 14, 'F' );
+			$pdf->SetXY( 14, 14 );
+			$pdf->SetFont( 'DejaVu', 'B', 13 );
+			$pdf->SetTextColor( 255, 255, 255 );
+			$pdf->Cell( 14, 14, mb_substr( $caps( $company ), 0, 1 ), 0, 0, 'C' );
+			$text_x = 32;
+		}
+
+		$pdf->SetXY( $text_x, 15 );
+		$pdf->SetFont( 'DejaVu', 'B', 12 );
+		$color( $navy );
+		$pdf->Cell( 108 - $text_x, 6, self::clip( $company, 40 ), 0, 2 );
+		if ( $info !== '' ) {
+			$pdf->SetFont( 'DejaVu', '', 7.5 );
+			$color( $muted );
+			$pdf->MultiCell( 108 - $text_x, 3.6, self::clip( $info, 180 ), 0, 'L' );
+		}
+		$left_bottom = max( 28.0, $pdf->GetY() );
+
+		$pdf->SetXY( 110, 14 );
+		$pdf->SetFont( 'DejaVu', 'B', 15 );
+		$color( $navy );
+		$pdf->Cell( 86, 8, 'Οικονομική Προσφορά', 0, 2, 'R' );
+		$pdf->SetFont( 'DejaVu', '', 8.5 );
+		$color( $muted );
+		$pdf->Cell( 86, 4.5, $is_gas ? 'Προμήθεια φυσικού αερίου' : 'Προμήθεια ηλεκτρικής ενέργειας', 0, 2, 'R' );
+		$pdf->Cell( 86, 4.5, 'Ημερομηνία ' . ( $m['date'] ?? gmdate( 'd/m/Y' ) ), 0, 2, 'R' );
+
+		$y = max( $left_bottom, $pdf->GetY() ) + 4;
+		$pdf->SetDrawColor( $navy[0], $navy[1], $navy[2] );
+		$pdf->SetLineWidth( 0.6 );
+		$pdf->Line( 14, $y, 196, $y );
+		$pdf->SetLineWidth( 0.2 );
+
+		$label = static function ( float $x, float $y, string $text ) use ( $pdf, $muted, $caps ): void {
+			$pdf->SetXY( $x, $y );
+			$pdf->SetFont( 'DejaVu', 'B', 7 );
+			$pdf->SetTextColor( $muted[0], $muted[1], $muted[2] );
+			$pdf->Cell( 80, 4, $caps( $text ), 0, 0 );
+		};
+
+		// --- Προς / Σύμβουλος ---
+		$y += 7;
+		$label( 14, $y, 'Προς' );
+		$pdf->SetXY( 14, $y + 5 );
 		$pdf->SetFont( 'DejaVu', 'B', 11 );
-		$pdf->SetTextColor( $navy[0], $navy[1], $navy[2] );
-		$pdf->Cell( $w[0], 10, 'Εκτιμώμενο ετήσιο κόστος', 0, 0, 'L' );
-		$pdf->Cell( $w[1], 10, number_format( (float) $m['current_annual'], 2 ) . ' €', 0, 0, 'R' );
-		$pdf->Cell( $w[2], 10, number_format( (float) $m['offered_annual'], 2 ) . ' €', 0, 1, 'R' );
+		$color( $ink );
+		$pdf->Cell( 96, 6, self::clip( (string) ( $m['customer'] ?: '—' ), 44 ), 0, 2 );
+		$pdf->SetFont( 'DejaVu', '', 8.5 );
+		$color( $muted );
+		$supply = ( $m['category'] ?? '' ) === 'business' ? 'Επαγγελματική παροχή' : ( ( $m['category'] ?? '' ) === 'home' ? 'Οικιακή παροχή' : 'Παροχή' );
+		$pdf->Cell( 96, 5, $supply . ' · ' . ( $m['energy'] ?? '' ), 0, 2 );
 
-		// savings box
-		$pdf->Ln( 6 );
-		$save = (float) $m['savings'];
-		$pos  = $save >= 0;
-		$boxc = $pos ? [ 240, 253, 244 ] : [ 254, 242, 242 ];
-		$txtc = $pos ? $green : [ 185, 28, 28 ];
-		$y = $pdf->GetY();
-		$pdf->SetFillColor( $boxc[0], $boxc[1], $boxc[2] );
-		$pdf->Rect( 14, $y, 182, 26, 'F' );
-		$pdf->SetXY( 18, $y + 4 );
-		$pdf->SetFont( 'DejaVu', '', 10 );
-		$pdf->SetTextColor( $txtc[0], $txtc[1], $txtc[2] );
-		$pdf->Cell( 0, 6, $pos ? 'Εκτιμώμενη ετήσια εξοικονόμηση' : 'Εκτιμώμενη ετήσια διαφορά', 0, 1 );
-		$pdf->SetX( 18 );
-		$pdf->SetFont( 'DejaVu', 'B', 20 );
-		$pdf->Cell( 0, 12, number_format( abs( $save ), 2 ) . ' €  (' . number_format( (float) $m['pct'], 1 ) . '%)', 0, 1 );
+		$label( 118, $y, 'Σύμβουλος' );
+		$agent = array_filter( [
+			[ 'Όνομα', (string) ( $m['agent_name'] ?? '' ) ],
+			[ 'Email', (string) ( $m['agent_email'] ?? '' ) ],
+		], static fn ( array $p ): bool => $p[1] !== '' );
+		$ay = $y + 5;
+		foreach ( $agent as $p ) {
+			$pdf->SetXY( 118, $ay );
+			$pdf->SetFont( 'DejaVu', '', 8.5 );
+			$color( $muted );
+			$pdf->Cell( 20, 5, $p[0], 0, 0 );
+			$pdf->SetFont( 'DejaVu', 'B', 8.5 );
+			$color( $ink );
+			$pdf->Cell( 58, 5, self::clip( $p[1], 34 ), 0, 0, 'R' );
+			$ay += 5;
+		}
 
-		// disclaimer
-		$pdf->SetY( -22 );
+		$y = max( $pdf->GetY() + 5, $ay ) + 6;
+
+		// --- Πίνακες ---
+		$head = static function ( array $cols, float $y ) use ( $pdf, $band, $navy, $caps ): void {
+			$pdf->SetXY( 14, $y );
+			$pdf->SetFillColor( $band[0], $band[1], $band[2] );
+			$pdf->SetFont( 'DejaVu', 'B', 7 );
+			$pdf->SetTextColor( $navy[0], $navy[1], $navy[2] );
+			foreach ( $cols as $i => $c ) {
+				$pdf->Cell( $c[1], 7, $caps( $c[0] ), 0, 0, $i === 0 ? 'L' : 'R', true );
+			}
+		};
+		$row = static function ( array $cols, array $vals, float $y, bool $total = false ) use ( $pdf, $ink, $navy, $rule ): float {
+			$h = $total ? 9 : 7.5;
+			$pdf->SetXY( 14, $y );
+			$pdf->SetFont( 'DejaVu', $total ? 'B' : '', $total ? 10 : 8.5 );
+			$c = $total ? $navy : $ink;
+			$pdf->SetTextColor( $c[0], $c[1], $c[2] );
+			foreach ( $cols as $i => $col ) {
+				$pdf->Cell( $col[1], $h, (string) ( $vals[ $i ] ?? '' ), 0, 0, $i === 0 ? 'L' : 'R' );
+			}
+			if ( $total ) {
+				$pdf->SetDrawColor( $navy[0], $navy[1], $navy[2] );
+				$pdf->SetLineWidth( 0.4 );
+				$pdf->Line( 14, $y, 196, $y );
+				$pdf->SetLineWidth( 0.2 );
+			} else {
+				$pdf->SetDrawColor( $rule[0], $rule[1], $rule[2] );
+				$pdf->Line( 14, $y + $h, 196, $y + $h );
+			}
+			return $y + $h;
+		};
+
+		$cons     = (float) $m['consumption'];
+		$tariff   = (string) ( $m['tariff'] ?? '' );
+		$label( 14, $y, 'Η πρόταση' );
+		$y += 5;
+		$pcols = [ [ 'Πάροχος', 46 ], [ 'Πρόγραμμα', 72 ], [ 'Τιμολόγιο', 28 ], [ 'Κατανάλωση / έτος', 36 ] ];
+		$head( $pcols, $y );
+		$y = $row( $pcols, [
+			self::clip( (string) ( $m['provider'] ?: '—' ), 24 ),
+			self::clip( (string) ( $m['program'] ?: '—' ), 40 ),
+			$tariff !== '' ? $tariff : '—',
+			$num( $cons, 0 ) . ' kWh',
+		], $y + 7 );
+
+		$cur_price = (float) $m['current_price'];
+		$cur_fixed = (float) $m['current_fixed'];
+		$off_price = (float) $m['offered_price'];
+		$off_fixed = (float) $m['offered_fixed'];
+		$has_cur   = $cur_price > 0 || $cur_fixed > 0;
+
+		$y += 7;
+		$label( 14, $y, $has_cur ? 'Σύγκριση ετήσιου κόστους' : 'Εκτιμώμενο ετήσιο κόστος' );
+		$y += 5;
+		$kwh = $num( $cons, 0 ) . ' kWh';
+		if ( $has_cur ) {
+			$ccols = [ [ '', 64 ], [ 'Σήμερα', 40 ], [ 'Με την πρόταση', 42 ], [ 'Διαφορά', 36 ] ];
+			$head( $ccols, $y );
+			$y += 7;
+			$dp = $off_price - $cur_price;
+			$y  = $row( $ccols, [ 'Τιμή ενέργειας', $num( $cur_price, 5 ) . ' €/kWh', $num( $off_price, 5 ) . ' €/kWh', ( $dp < 0 ? '−' : ( $dp > 0 ? '+' : '' ) ) . $num( abs( $dp ), 5 ) ], $y );
+			$y  = $row( $ccols, [ 'Πάγιο', $num( $cur_fixed, 2 ) . ' €/μήνα', $num( $off_fixed, 2 ) . ' €/μήνα', $sgn( $off_fixed - $cur_fixed ) ], $y );
+			$y  = $row( $ccols, [ 'Ενέργεια (' . $kwh . ')', $eur( $cons * $cur_price ), $eur( $cons * $off_price ), $sgn( $cons * ( $off_price - $cur_price ) ) ], $y );
+			$y  = $row( $ccols, [ 'Πάγιο (12 μήνες)', $eur( 12 * $cur_fixed ), $eur( 12 * $off_fixed ), $sgn( 12 * ( $off_fixed - $cur_fixed ) ) ], $y );
+			$y  = $row( $ccols, [ 'Εκτιμώμενο ετήσιο κόστος', $eur( (float) $m['current_annual'] ), $eur( (float) $m['offered_annual'] ), $sgn( (float) $m['offered_annual'] - (float) $m['current_annual'] ) ], $y, true );
+		} else {
+			$ccols = [ [ '', 112 ], [ 'Με την πρόταση', 70 ] ];
+			$head( $ccols, $y );
+			$y += 7;
+			$y  = $row( $ccols, [ 'Τιμή ενέργειας', $num( $off_price, 5 ) . ' €/kWh' ], $y );
+			$y  = $row( $ccols, [ 'Πάγιο', $num( $off_fixed, 2 ) . ' €/μήνα' ], $y );
+			$y  = $row( $ccols, [ 'Ενέργεια (' . $kwh . ')', $eur( $cons * $off_price ) ], $y );
+			$y  = $row( $ccols, [ 'Πάγιο (12 μήνες)', $eur( 12 * $off_fixed ) ], $y );
+			$y  = $row( $ccols, [ 'Εκτιμώμενο ετήσιο κόστος', $eur( (float) $m['offered_annual'] ) ], $y, true );
+		}
+
+		// --- Το αποτέλεσμα ---
+		$y    += 7;
+		$save  = (float) $m['savings'];
+		$gain  = $has_cur && $save > 0.005;
+		if ( $gain ) {
+			$title = 'Εκτιμώμενη ετήσια εξοικονόμηση';
+			$big   = $eur( $save );
+			$side  = [ $num( (float) $m['pct'], 1 ) . '% λιγότερο', '≈ ' . $eur( $save / 12 ) . ' τον μήνα' ];
+		} elseif ( $has_cur ) {
+			$title = 'Εκτιμώμενη ετήσια διαφορά';
+			$big   = $sgn( -$save );
+			$side  = [ $save < -0.005 ? 'πιο ακριβό από σήμερα' : 'ίδιο κόστος με σήμερα', '' ];
+		} else {
+			$title = 'Εκτιμώμενο ετήσιο κόστος';
+			$big   = $eur( (float) $m['offered_annual'] );
+			$side  = [ '≈ ' . $eur( (float) $m['offered_annual'] / 12 ) . ' τον μήνα', '' ];
+		}
+		$fill   = $gain ? $navy : $band;
+		$stripe = $gain ? $green : $navy;
+		$pdf->SetFillColor( $fill[0], $fill[1], $fill[2] );
+		$pdf->Rect( 14, $y, 182, 20, 'F' );
+		$pdf->SetFillColor( $stripe[0], $stripe[1], $stripe[2] );
+		$pdf->Rect( 14, $y, 1.6, 20, 'F' );
+		$pdf->SetXY( 20, $y + 3.5 );
 		$pdf->SetFont( 'DejaVu', '', 7.5 );
-		$pdf->SetTextColor( 148, 163, 184 );
-		$pdf->MultiCell( 0, 4, 'Η εκτίμηση αφορά τη χρέωση ενέργειας και το πάγιο βάσει της δηλωθείσας κατανάλωσης. Ρυθμιζόμενες χρεώσεις, χρεώσεις δικτύου, φόροι και δημοτικά τέλη δεν περιλαμβάνονται καθώς είναι κοινά μεταξύ παρόχων. Τελικές τιμές κατά την ενεργοποίηση.', 0, 'C' );
+		if ( $gain ) {
+			$pdf->SetTextColor( 203, 213, 225 );
+		} else {
+			$color( $muted );
+		}
+		$pdf->Cell( 110, 4, $caps( $title ), 0, 2 );
+		$pdf->SetFont( 'DejaVu', 'B', 18 );
+		if ( $gain ) {
+			$pdf->SetTextColor( 255, 255, 255 );
+		} else {
+			$color( $navy );
+		}
+		$pdf->Cell( 110, 9, $big, 0, 0 );
+		$pdf->SetFont( 'DejaVu', '', 9 );
+		if ( $gain ) {
+			$pdf->SetTextColor( 203, 213, 225 );
+		} else {
+			$color( $muted );
+		}
+		$pdf->SetXY( 120, $y + ( $side[1] !== '' ? 5.5 : 8 ) );
+		$pdf->Cell( 72, 4.5, $side[0], 0, 2, 'R' );
+		if ( $side[1] !== '' ) {
+			$pdf->Cell( 72, 4.5, $side[1], 0, 2, 'R' );
+		}
+		$y += 20;
+
+		// --- Όροι ---
+		$y += 7;
+		$pdf->SetXY( 14, $y );
+		$pdf->SetFont( 'DejaVu', 'B', 8.5 );
+		$color( $ink );
+		$pdf->Cell( 0, 5, 'Όροι και σημειώσεις', 0, 2 );
+		$notes = [];
+		if ( ! $has_cur ) {
+			$notes[] = 'Χωρίς στοιχεία του σημερινού λογαριασμού δεν γίνεται σύγκριση· φαίνεται μόνο το κόστος της πρότασης.';
+		}
+		$notes[] = 'Η εκτίμηση αφορά τη χρέωση προμήθειας (ενέργεια και πάγιο) για τη δηλωμένη κατανάλωση. Ρυθμιζόμενες χρεώσεις, ΥΚΩ, φόροι και δημοτικά τέλη δεν περιλαμβάνονται, γιατί είναι ίδια σε όλους τους παρόχους.';
+		$notes[] = 'Τιμές του παρόχου κατά την ημερομηνία έκδοσης. Οι τελικοί όροι είναι αυτοί της σύμβασης κατά την ενεργοποίηση.';
+		$notes[] = 'Η προσφορά είναι ενημερωτική και δεν αποτελεί σύμβαση.';
+		$pdf->SetFont( 'DejaVu', '', 7.5 );
+		$color( $muted );
+		foreach ( $notes as $i => $note ) {
+			$pdf->SetX( 14 );
+			$pdf->Cell( 5, 4, ( $i + 1 ) . '.', 0, 0 );
+			$pdf->MultiCell( 177, 4, $note, 0, 'L' );
+		}
+
+		// --- Υπογραφές ---
+		$y = max( $pdf->GetY() + 16, 240.0 );
+		$y = min( $y, 262.0 );
+		$pdf->SetDrawColor( $soft[0], $soft[1], $soft[2] );
+		$pdf->Line( 14, $y, 94, $y );
+		$pdf->Line( 116, $y, 196, $y );
+		$sign = static function ( float $x, string $who, string $sub ) use ( $pdf, $ink, $muted, $y ): void {
+			$pdf->SetXY( $x, $y + 1.5 );
+			$pdf->SetFont( 'DejaVu', 'B', 8.5 );
+			$pdf->SetTextColor( $ink[0], $ink[1], $ink[2] );
+			$pdf->Cell( 80, 4.5, $who, 0, 2 );
+			$pdf->SetFont( 'DejaVu', '', 7.5 );
+			$pdf->SetTextColor( $muted[0], $muted[1], $muted[2] );
+			$pdf->Cell( 80, 4, $sub, 0, 2 );
+		};
+		$agent_name = (string) ( $m['agent_name'] ?? '' );
+		$sign( 14, 'Για την εταιρεία', $agent_name !== '' ? self::clip( $agent_name, 40 ) . ', σύμβουλος ενέργειας' : $company );
+		$sign( 116, 'Ο πελάτης', 'Έλαβα γνώση' );
+
+		// --- Υποσέλιδο: πάντα στην ίδια σελίδα ---
+		$pdf->SetDrawColor( $rule[0], $rule[1], $rule[2] );
+		$pdf->Line( 14, 283, 196, 283 );
+		$pdf->SetXY( 14, 284.5 );
+		$pdf->SetFont( 'DejaVu', '', 7 );
+		$color( $soft );
+		$foot = $footer !== '' ? $footer : trim( $company . ( $info !== '' ? ' · ' . $info : '' ) );
+		$pdf->Cell( 150, 4, self::clip( $foot, 120 ), 0, 0 );
+		$pdf->Cell( 32, 4, 'Σελίδα 1 από 1', 0, 0, 'R' );
 
 		return $pdf->Output( '', 'S' );
 	}
@@ -536,7 +745,8 @@ class ECRM_PDF {
 			$pdf->SetXY( $x, $y );
 			$pdf->SetFont( 'DejaVu', '', 7.5 );
 			$pdf->SetTextColor( $muted[0], $muted[1], $muted[2] );
-			$pdf->Cell( $col_w, 4, mb_strtoupper( (string) $label, 'UTF-8' ), 0, 0 );
+			// (376) Κεφαλαία χωρίς τόνους.
+			$pdf->Cell( $col_w, 4, \EnergyCRM\Domain\Document\GreekCaps::upper( (string) $label ), 0, 0 );
 
 			$pdf->SetXY( $x, $y + 4.5 );
 			$pdf->SetFont( 'DejaVu', '', 10 );

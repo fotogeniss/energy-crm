@@ -458,11 +458,6 @@ function wireStore(view) {
 	});
 }
 
-function greeting() {
-	var h = new Date().getHours();
-	return h < 5 ? 'Καλό ξημέρωμα' : h < 12 ? 'Καλημέρα' : h < 18 ? 'Καλησπέρα' : 'Καλό βράδυ';
-}
-
 /* €1.820 — σύμβολο ΜΠΡΟΣΤΑ και τελεία στις χιλιάδες, όπως το kit A1.
  *
  * Χωρίς λεπτά: το πλακίδιο δείχνει άθροισμα μήνα, όπου τα δύο δεκαδικά είναι
@@ -963,7 +958,8 @@ function sigNeedsHTML(d) {
 	}).join('');
 
 	return '<section class="ecrm-card sig-panel">' + head + '<div class="sig-stack" data-sig-stack>' + notes + '</div>' +
-		(rows.length > 1 ? '<button type="button" class="sig-more" data-sig-more data-n="' + rows.length + '">Δες και τα ' + rows.length + '</button>' : '') +
+		// (376) «Περισσότερα / Λιγότερα» αντί για «Δες και τα N / Μάζεψέ τα» (13/11).
+		(rows.length > 1 ? '<button type="button" class="sig-more" data-sig-more aria-expanded="false">Περισσότερα</button>' : '') +
 		'</section>';
 }
 
@@ -1025,13 +1021,14 @@ function wireIsland(view) {
 }
 
 function sigDashboardHTML(d) {
-	var rows = sigNeedsRows(d).length;
-	var lead = rows === 0 ? 'Όλα είναι σε τάξη.' : rows === 1 ? 'Ένα πράγμα περιμένει εσένα.' : rows + ' πράγματα περιμένουν εσένα.';
+	// (376) Χωρίς την κεφαλίδα «Παρασκευή 13 Νοεμβρίου / Καλό βράδυ, … / 6
+	// πράγματα περιμένουν εσένα»: ο ιδιοκτήτης δεν τη θέλει (13/11). Μένουν
+	// μόνο οι καρτέλες «Εγώ / Η ομάδα μου», για όποιον τις έχει. Το «τι
+	// περιμένει» το λέει ήδη η κάρτα «Χρειάζεται ενέργεια» από κάτω.
+	var tabs = tabsHTML(false);
 
 	return sigIslandHTML(d.feed) +
-		'<header class="sig-hello' + (hasStore() ? ' has-tabs' : '') + '"><div><p class="sig-date">' +
-		esc(new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' })) + '</p>' +
-		'<h2>' + greeting() + ', ' + esc(d.user || '') + '.</h2><p class="sig-lead">' + esc(lead) + '</p></div>' + tabsHTML(false) + '</header>' +
+		(tabs ? '<header class="sig-hello has-tabs is-tabs-only">' + tabs + '</header>' : '') +
 		sigChipsHTML(d.tiles || {}) +
 		'<div class="sig-grid">' + sigRingsHTML(d) + sigPaceHTML(d) + '</div>' +
 		'<div class="sig-grid sig-grid--3">' + sigNeedsHTML(d) + sigProvidersHTML(d.by_provider) + sigFeedHTML(d.feed) + '</div>';
@@ -1044,7 +1041,8 @@ function wireSignature(view) {
 	if (!more || !stack) return;
 	more.addEventListener('click', function () {
 		var open = stack.classList.toggle('is-open');
-		more.textContent = open ? 'Μάζεψέ τα' : 'Δες και τα ' + more.getAttribute('data-n');
+		more.textContent = open ? 'Λιγότερα' : 'Περισσότερα';
+		more.setAttribute('aria-expanded', open ? 'true' : 'false');
 	});
 }
 
@@ -1056,7 +1054,7 @@ function dashboardHTML(d) {
 	return '' +
 		'<header class="ecrm-head' + (hasStore() ? ' ecrm-head--row' : '') + '"><div><div class="ecrm-eyebrow">' +
 		new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' }) + '</div>' +
-		'<h2 class="ecrm-title">' + greeting() + ', ' + esc(d.user || '') + '</h2></div>' + tabsHTML(false) + '</header>' +
+		'<h2 class="ecrm-title">Αρχική</h2></div>' + tabsHTML(false) + '</header>' +
 		tilesHTML(tiles) +
 		levelHTML(lvl) +
 		myTargetHTML(d.target) +

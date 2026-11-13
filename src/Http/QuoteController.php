@@ -16,6 +16,7 @@ namespace EnergyCRM\Http;
 
 use ECRM_DB;
 use ECRM_PDF;
+use EnergyCRM\Domain\Quote\QuoteText;
 use EnergyCRM\Domain\Quote\SavingsEstimate;
 use Throwable;
 use WP_REST_Request;
@@ -70,6 +71,17 @@ final class QuoteController implements Controller
                     'default' => 'power',
                     'enum'    => ['power', 'gas', 'mobile'],
                 ],
+                // (376) Για το «Προς» και τον πίνακα της πρότασης.
+                'category'      => [
+                    'type'    => 'string',
+                    'default' => '',
+                    'enum'    => ['', 'home', 'business'],
+                ],
+                'price_type'    => [
+                    'type'    => 'string',
+                    'default' => '',
+                    'enum'    => ['', 'fixed', 'variable', 'special', 'dynamic'],
+                ],
             ],
         ]);
     }
@@ -84,12 +96,21 @@ final class QuoteController implements Controller
             (float) $request['offered_fixed'],
         );
 
+        $agent = wp_get_current_user();
+
         try {
             $bytes = ECRM_PDF::build_quote([
                 'customer'       => (string) $request['customer_name'],
                 'provider'       => (string) $request['provider_name'],
                 'program'        => (string) $request['program_name'],
                 'energy'         => ECRM_DB::energy_label((string) $request['energy']),
+                'energy_key'     => (string) $request['energy'],
+                'category'       => (string) $request['category'],
+                'tariff'         => QuoteText::tariff((string) $request['price_type']),
+                // (376) Ο σύμβουλος είναι όποιος βγάζει το PDF.
+                'agent_name'     => $agent->display_name,
+                'agent_email'    => $agent->user_email,
+                'date'           => wp_date('d/m/Y'),
                 'consumption'    => (float) $request['consumption'],
                 'current_price'  => (float) $request['current_price'],
                 'current_fixed'  => (float) $request['current_fixed'],

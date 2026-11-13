@@ -2411,8 +2411,9 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
  * Σε υπολογιστή το πάτημα σε πεδίο ημερομηνίας ανοίγει το δικό μας ημερολόγιο
  * αντί για του browser (αγγλικά, χωρίς στυλ). Το εικονίδιο του browser μένει
  * ως ένδειξη, αλλά δεν ανοίγει πια το δικό του. */
-.ecrm-dp-on input[type="date"] { cursor: pointer; }
-.ecrm-dp-on input[type="date"]::-webkit-calendar-picker-indicator { pointer-events: none; }
+.ecrm-dp-on input[type="date"], .ecrm-dp-on input[type="datetime-local"] { cursor: pointer; }
+.ecrm-dp-on input[type="date"]::-webkit-calendar-picker-indicator,
+.ecrm-dp-on input[type="datetime-local"]::-webkit-calendar-picker-indicator { pointer-events: none; }
 .ecrm-dp {
 	position: fixed; z-index: 100; width: 288px; padding: 12px; border-radius: 16px;
 	background: var(--surface); color: var(--ink); border: 1px solid var(--line);
@@ -2437,12 +2438,17 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 }
 .ecrm-dp__day:hover:not(:disabled) { background: var(--surface-sunk); }
 .ecrm-dp__day.is-today { box-shadow: inset 0 0 0 1.5px var(--amber); font-weight: 800; }
-.ecrm-dp__day.is-on { background: var(--amber); color: var(--on-accent); font-weight: 800; box-shadow: none; }
+.ecrm-dp__day.is-on, .ecrm-dp__day.is-on:hover:not(:disabled) { background: var(--amber); color: var(--on-accent); font-weight: 800; box-shadow: none; }
 .ecrm-dp__day:disabled { opacity: .3; cursor: default; }
 .ecrm-dp__day:focus-visible, .ecrm-dp__nav:focus-visible, .ecrm-dp__link:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 .ecrm-dp__foot { display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 .ecrm-dp__link { border: 0; background: none; cursor: pointer; padding: 4px 6px; border-radius: 8px; font: inherit; font-size: var(--fs-13); font-weight: 700; color: var(--muted-strong); }
 .ecrm-dp__link:hover { color: var(--ink); background: var(--surface-sunk); }
+/* (378) Ώρα, για τα πεδία ημερομηνίας με ώρα. */
+.ecrm-dp__time { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: var(--fs-13); font-weight: 700; color: var(--muted-strong); }
+.ecrm-dp__time span { margin-right: auto; }
+.ecrm-dp__time .ecrm-dp__sel { flex: 0 0 64px; }
+.ecrm-dp__ok { border: 0; cursor: pointer; padding: 5px 14px; border-radius: 999px; font: inherit; font-size: var(--fs-13); font-weight: 700; background: var(--amber); color: var(--on-accent); }
 
 /* ═══ (367) Έγγραφα αίτησης: ζώνη αρχείων ═══════════════════════════════════ */
 .ecrm-docup__drop { position: relative; flex: 1 0 100%; display: grid; justify-items: center; gap: 2px; padding: 16px; }
