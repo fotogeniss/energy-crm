@@ -734,6 +734,87 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	background: var(--surface-inverse);
 	color: var(--amber); display: grid; place-items: center; font-weight: 800; font-size: var(--fs-13);
 }
+/* (379) Το avatar ανοίγει το μενού του χρήστη. docs/UI-PROFILE.html. */
+button.ecrm-avatar { border: 0; padding: 0; font-family: inherit; cursor: pointer; }
+button.ecrm-avatar:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.ecrm-mewrap { position: relative; }
+.ecrm-memenu {
+	position: absolute; right: 0; top: calc(100% + 10px); z-index: 70; width: 260px; padding: 6px;
+	background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 60px -20px rgba(10, 31, 61, .4);
+}
+.ecrm-memenu[hidden] { display: none; }
+.ecrm-memenu__who { display: flex; align-items: center; gap: 10px; padding: 10px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.ecrm-memenu__who b { display: block; font-size: var(--fs-14); color: var(--ink); }
+.ecrm-memenu__who small { display: block; font-size: var(--fs-12); color: var(--muted); overflow-wrap: anywhere; }
+.ecrm-memenu__i {
+	display: block; width: 100%; padding: 9px 10px; border: 0; border-radius: 10px; background: none; text-align: left;
+	font: inherit; font-size: var(--fs-14); font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer;
+}
+.ecrm-memenu__i:hover { background: var(--surface-sunk); }
+.ecrm-memenu__i.is-out { color: var(--st-cancel); }
+
+/* (379) «Μεγάλα γράμματα» από «Το προφίλ μου». */
+.ecrm-app[data-fs="large"] .ecrm-content { zoom: 1.1; }
+
+/* (379) «Το προφίλ μου». Χρώματα της κλασικής· η νέα εμφάνιση τα αλλάζει στο ecrm-signature.css. */
+.sig-pf { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 20px; align-items: start; max-width: 1100px; }
+.sig-pf__side { padding: 14px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+.sig-pf__me { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 8px 6px 14px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+.sig-pf__av { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; font-size: var(--fs-26); font-weight: 800; background: var(--surface-inverse); color: var(--amber); }
+.sig-pf__me b { margin-top: 10px; font-size: var(--fs-16); color: var(--ink); }
+.sig-pf__me small { font-size: var(--fs-12); color: var(--muted); overflow-wrap: anywhere; }
+.sig-pf__title { margin-top: 8px; padding: 2px 10px; border-radius: 999px; font-size: var(--fs-12); font-weight: 700; background: var(--surface-sunk); color: var(--muted-strong); }
+.sig-pf__navs { display: grid; gap: 2px; }
+.sig-pf__nav { padding: 9px 12px; border: 0; border-radius: 12px; background: none; text-align: left; font: inherit; font-size: var(--fs-14); font-weight: 600; color: var(--muted-strong); cursor: pointer; }
+.sig-pf__nav:hover { background: var(--surface-sunk); }
+.sig-pf__nav.is-on { background: var(--surface-sunk); color: var(--ink); }
+.sig-pf__card { padding: 22px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+.sig-pf__card h3 { margin: 0 0 4px; font-size: var(--fs-17); color: var(--ink); }
+.sig-pf__lead { margin: 0 0 16px; font-size: var(--fs-13); color: var(--muted); }
+.sig-pf__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.sig-pf__f { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.sig-pf__f > span { font-size: var(--fs-12); font-weight: 700; color: var(--muted-strong); }
+.sig-pf__f > small { font-size: var(--fs-12); color: var(--muted); }
+.sig-pf__f .ecrm-input[readonly] { background: var(--surface-sunk); color: var(--muted-strong); }
+.sig-pf__f textarea.ecrm-input { resize: vertical; min-height: 76px; }
+.sig-pf__prev { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--surface-sunk); font-size: var(--fs-12-5); color: var(--muted-strong); }
+.sig-pf__prev b { color: var(--ink); }
+.sig-pf__foot { display: flex; justify-content: flex-end; margin-top: 16px; }
+.sig-pf__row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 0; border-top: 1px solid var(--line); }
+.sig-pf__row:first-of-type { border-top: 0; }
+.sig-pf__row b { display: block; font-size: var(--fs-14); color: var(--ink); }
+.sig-pf__row small { display: block; font-size: var(--fs-12); color: var(--muted); }
+.sig-pf__row.is-wrap { display: block; }
+.sig-pf__row.is-wrap > div:first-child { margin-bottom: 10px; }
+.sig-pf__row.is-block { display: block; }
+.sig-pf__row.is-block > div:first-child { margin-bottom: 10px; }
+.sig-pf__sw { position: relative; flex: 0 0 44px; width: 44px; height: 26px; padding: 0; border: 0; border-radius: 999px; background: var(--line); cursor: pointer; }
+.sig-pf__sw::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: left .15s; }
+.sig-pf__sw.is-on { background: var(--amber); }
+.sig-pf__sw.is-on::after { left: 21px; }
+.sig-pf__sw:focus-visible, .sig-pf__seg button:focus-visible, .sig-pf__chip:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.sig-pf__seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; border-radius: 999px; background: var(--surface-sunk); }
+.sig-pf__seg button { padding: 6px 13px; border: 0; border-radius: 999px; background: none; font: inherit; font-size: var(--fs-13); font-weight: 600; color: var(--muted-strong); cursor: pointer; }
+.sig-pf__seg button.is-on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); }
+.sig-pf__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sig-pf__chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 6px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font: inherit; font-size: var(--fs-13); font-weight: 600; color: var(--ink); cursor: pointer; }
+.sig-pf__chip.is-on { border-color: var(--amber); background: var(--accent-wash); }
+.sig-pf__chip .sig-plogo { width: 24px; height: 24px; padding: 2px; border-radius: 50%; }
+.sig-pf__muted { font-size: var(--fs-13); color: var(--muted); }
+.sig-pf__link { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sig-pf__link .ecrm-input { flex: 1 1 260px; min-width: 0; }
+.sig-pf__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px; }
+.sig-pf__stat { padding: 14px; border-radius: 14px; background: var(--surface-sunk); }
+.sig-pf__stat small { font-size: var(--fs-12); color: var(--muted); }
+.sig-pf__stat b { display: block; margin-top: 2px; font-size: var(--fs-22); color: var(--ink); }
+.sig-pf__bar { display: block; height: 8px; margin-top: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.sig-pf__bar i { display: block; height: 100%; background: var(--amber); }
+@media (max-width: 860px) {
+	.sig-pf { grid-template-columns: minmax(0, 1fr); }
+	.sig-pf__grid, .sig-pf__stats { grid-template-columns: minmax(0, 1fr); }
+	.sig-pf__row { flex-wrap: wrap; }
+	.sig-pf__row.is-desk { display: none; }
+}
 
 .ecrm-nav__icon { position: relative; }
 .ecrm-nav__badge {

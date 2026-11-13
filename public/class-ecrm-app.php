@@ -82,6 +82,8 @@ class ECRM_App {
 		// Το φύλλο της φορτώνεται μόνο όταν είναι ανοιχτή, ώστε οι άλλοι να μην
 		// κατεβάζουν τίποτα παραπάνω. docs/UI-REDESIGN-WOW.html.
 		$ui     = \EnergyCRM\Infrastructure\UiPreference::forUser( (int) $user->ID );
+		// (379) «Μέγεθος γραμμάτων» από «Το προφίλ μου», πριν τυπωθεί το HTML.
+		$font   = \EnergyCRM\Infrastructure\UserProfile::prefs( (int) $user->ID )['font'];
 		$ui_try = \EnergyCRM\Infrastructure\UiPreference::mayTry( (int) $user->ID );
 		if ( 'signature' === $ui ) {
 			wp_enqueue_style( 'ecrm-signature', ECRM_URL . 'public/assets/ecrm-signature.css', [ 'ecrm-app' ], ECRM_Shortcodes::asset_version( 'ecrm-signature.css' ) );
@@ -206,7 +208,7 @@ class ECRM_App {
 		ob_start();
 		?>
 		<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $style is a whole attribute fragment, ' style="…"', whose only variable part went through esc_attr() where it was built. Escaping it here would escape the attribute syntax itself. ?>
-		<div class="ecrm ecrm-app" id="ecrm-app" lang="el" data-view="dashboard" data-collapsed="0" data-theme="<?php echo esc_attr( $theme ); ?>" data-ui="<?php echo esc_attr( $ui ); ?>"<?php echo $style; ?>>
+		<div class="ecrm ecrm-app" id="ecrm-app" lang="el" data-view="dashboard" data-collapsed="0" data-theme="<?php echo esc_attr( $theme ); ?>" data-ui="<?php echo esc_attr( $ui ); ?>" data-fs="<?php echo esc_attr( $font ); ?>"<?php echo $style; ?>>
 
 			<div class="ecrm-backdrop" data-mobnav-close></div>
 
@@ -435,7 +437,22 @@ class ECRM_App {
 						<?php if ( $company ) : ?>
 						<div class="ecrm-org"><strong><?php echo esc_html( $company ); ?></strong><span><?php echo esc_html( $role_label ); ?></span></div>
 						<?php endif; ?>
-						<span class="ecrm-avatar" title="<?php echo esc_attr( $user->display_name ); ?>"><?php echo esc_html( $initials ); ?></span>
+						<?php
+						/*
+						 * (379) Το avatar ανοίγει το μενού του χρήστη: «Το προφίλ μου»,
+						 * εμφάνιση, ο σύνδεσμός του, έξοδος. docs/UI-PROFILE.html.
+						 */
+						?>
+						<div class="ecrm-mewrap">
+							<button type="button" class="ecrm-avatar" data-me-toggle aria-haspopup="true" aria-expanded="false" title="<?php echo esc_attr( $user->display_name ); ?>"><?php echo esc_html( $initials ); ?></button>
+							<div class="ecrm-memenu" data-me-menu hidden>
+								<div class="ecrm-memenu__who"><span class="ecrm-avatar" aria-hidden="true"><?php echo esc_html( $initials ); ?></span><span><b><?php echo esc_html( $user->display_name ); ?></b><small><?php echo esc_html( $user->user_email ); ?></small></span></div>
+								<button type="button" class="ecrm-memenu__i" data-me-go="profile">Το προφίλ μου</button>
+								<button type="button" class="ecrm-memenu__i" data-me-go="profile/notifications">Ειδοποιήσεις</button>
+								<button type="button" class="ecrm-memenu__i" data-me-go="profile/work">Ο σύνδεσμός μου</button>
+								<a class="ecrm-memenu__i is-out" href="<?php echo esc_url( wp_logout_url() ); ?>">Έξοδος</a>
+							</div>
+						</div>
 					</div>
 				</header>
 
@@ -510,6 +527,8 @@ class ECRM_App {
 
 					<!-- Βάση Γνώσης -->
 					<section class="ecrm-view" data-view="kb"><div class="ecrm-loading">Φόρτωση…</div></section>
+					<?php // (379) «Το προφίλ μου» -- ecrm-view-profile.js. ?>
+					<section class="ecrm-view" data-view="profile"><div class="ecrm-loading">Φόρτωση…</div></section>
 
 					<!-- Εκπαίδευση -->
 					<section class="ecrm-view" data-view="training"><div class="ecrm-loading">Φόρτωση…</div></section>

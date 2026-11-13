@@ -18,6 +18,7 @@ use ECRM_DB;
 use ECRM_PDF;
 use EnergyCRM\Domain\Quote\QuoteText;
 use EnergyCRM\Domain\Quote\SavingsEstimate;
+use EnergyCRM\Infrastructure\UserProfile;
 use Throwable;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -96,7 +97,8 @@ final class QuoteController implements Controller
             (float) $request['offered_fixed'],
         );
 
-        $agent = wp_get_current_user();
+        $agent   = wp_get_current_user();
+        $profile = UserProfile::prefs((int) $agent->ID);
 
         try {
             $bytes = ECRM_PDF::build_quote([
@@ -110,6 +112,9 @@ final class QuoteController implements Controller
                 // (376) Ο σύμβουλος είναι όποιος βγάζει το PDF.
                 'agent_name'     => $agent->display_name,
                 'agent_email'    => $agent->user_email,
+                // (379) Από «Το προφίλ μου».
+                'agent_phone'    => $profile['phone'],
+                'agent_title'    => $profile['title'],
                 'date'           => wp_date('d/m/Y'),
                 'consumption'    => (float) $request['consumption'],
                 'current_price'  => (float) $request['current_price'],

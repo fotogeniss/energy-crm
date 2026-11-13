@@ -22,6 +22,9 @@
  * server κρίνει ξανά τι επιστρέφει. */
 function initialScope() {
 	var cfg = typeof window !== 'undefined' ? window.ECRM : undefined;
+	// (379) Ρητή επιλογή από «Το προφίλ μου» πρώτα.
+	var pref = cfg && cfg.prefs && cfg.prefs.scope;
+	if (pref === 'own' || pref === 'team') { return pref; }
 	return cfg && cfg.caps && cfg.caps.ecrm_view_all && !cfg.isAdmin ? 'team' : 'own';
 }
 

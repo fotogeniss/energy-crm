@@ -1339,6 +1339,17 @@ import { openDialog } from '@energy-crm/dialog';
 				return;
 			}
 			wrap.innerHTML = '';
+			// (379) Οι «αγαπημένοι πάροχοι» από «Το προφίλ μου» πρώτοι, με τη σειρά τους·
+			// οι υπόλοιποι όπως ήρθαν.
+			var favs = (window.ECRM && window.ECRM.prefs && window.ECRM.prefs.fav_providers) || [];
+			if (favs.length) {
+				list = list.map(function (p, i) { return { p: p, i: i, f: favs.indexOf(+p.id) }; })
+					.sort(function (a, b) {
+						var fa = a.f < 0 ? 1e6 : a.f, fb = b.f < 0 ? 1e6 : b.f;
+						return fa - fb || a.i - b.i;
+					})
+					.map(function (x) { return x.p; });
+			}
 			list.forEach(function (p) {
 				var b = document.createElement('button');
 				b.type = 'button'; b.className = 'ecrm-provider'; b.setAttribute('data-pid', p.id);

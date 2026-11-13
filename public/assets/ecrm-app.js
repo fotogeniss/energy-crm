@@ -26,6 +26,7 @@ import { openCustomerCard } from '@energy-crm/view-customer-card';
 import { loadTeamLive } from '@energy-crm/view-team-live';
 import { loadEscalations } from '@energy-crm/view-escalations';
 import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
+import { loadProfile } from '@energy-crm/view-profile';
 
 /* Energy CRM — το κέλυφος, και μόνο αυτό.
  *
@@ -50,8 +51,10 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 
 	// ---- routing ----------------------------------------------------------
 	var loaded = {};
-	var VIEWS = ['dashboard','new-contract','leads','contracts','pending','documents','tasks','customers','renewals','network','team','commissions','calc','kb','teamlive','escalations','tickets','analytics','import'];
+	var VIEWS = ['dashboard','new-contract','leads','contracts','pending','documents','tasks','customers','renewals','network','team','commissions','calc','kb','teamlive','escalations','tickets','analytics','import','profile'];
 	var suppressHash = false;
+	// (379) «Το προφίλ μου»: ποια ενότητα ανοίγει (#profile/notifications).
+	var profileSection = '';
 	function go(view) {
 		app.setAttribute('data-view', view);
 		app.querySelectorAll('.ecrm-view').forEach(function (v) { v.classList.toggle('is-active', v.getAttribute('data-view') === view); });
@@ -81,6 +84,7 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 		if (view === 'documents') loadDocuments();
 		if (view === 'tasks') loadTasks();
 		if (view === 'renewals') loadRenewals();
+		if (view === 'profile') loadProfile(profileSection);
 		if (view === 'new-contract' && !loaded.form) {
 			var formRoot = app.querySelector('.ecrm-view[data-view="new-contract"] .ecrm-form');
 			if (formRoot && window.ECRMForm) { window.ECRMForm.init(formRoot); loaded.form = true; }
@@ -741,6 +745,14 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 			suppressHash = true; go('dashboard'); suppressHash = false;
 			return;
 		}
+		// (379) `#profile/notifications`: «Το προφίλ μου» σε μία ενότητα.
+		var prof = /^profile(?:\/([a-z]+))?$/.exec(v);
+		if (prof) {
+			profileSection = prof[1] || '';
+			if (push) { try { history.pushState({ v: v }, '', '#' + v); } catch (e) {} }
+			suppressHash = true; go('profile'); suppressHash = false;
+			return;
+		}
 		var ticket = /^tickets\/(\d+)$/.exec(v);
 		if (ticket) {
 			if (push) { try { history.pushState({ v: v }, '', '#' + v); } catch (e) {} }
@@ -752,6 +764,20 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 		suppressHash = true; go(v); suppressHash = false;
 	}
 	window.addEventListener('popstate', function () { route((location.hash || '').slice(1), false); });
+
+	// (379) Το μενού του avatar. docs/UI-PROFILE.html.
+	(function () {
+		var btn = app.querySelector('[data-me-toggle]');
+		var menu = app.querySelector('[data-me-menu]');
+		if (!btn || !menu) return;
+		function show(on) { menu.hidden = !on; btn.setAttribute('aria-expanded', on ? 'true' : 'false'); }
+		btn.addEventListener('click', function (e) { e.stopPropagation(); show(menu.hidden); });
+		document.addEventListener('click', function (e) { if (!menu.hidden && !menu.contains(e.target)) show(false); });
+		document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { show(false); btn.focus(); } });
+		menu.querySelectorAll('[data-me-go]').forEach(function (b) {
+			b.addEventListener('click', function () { show(false); route(b.getAttribute('data-me-go'), true); });
+		});
+	})();
 	initTickets();
 	// (347) Υπενθύμιση «Βάλε το CRM στην αρχική οθόνη» -- αποφασίζει μόνη της αν φαίνεται.
 	initInstallBanner();
@@ -763,6 +789,9 @@ import { initTickets, loadTickets, openTicket } from '@energy-crm/tickets';
 	(function () {
 		var v = (location.hash || '').slice(1);
 		if (!v && !navigator.onLine) v = 'new-contract';
+		// (379) Η «Πρώτη οθόνη» από «Το προφίλ μου».
+		var cfgPrefs = (window.ECRM && window.ECRM.prefs) || {};
+		if (!v && cfgPrefs.start_view && VIEWS.indexOf(cfgPrefs.start_view) >= 0) v = cfgPrefs.start_view;
 		route(v, false);
 	})();
 })();

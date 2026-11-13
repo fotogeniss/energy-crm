@@ -1989,6 +1989,54 @@
 	.ecrm-app[data-ui="signature"] .sig-qmanbar { flex-direction: column; align-items: flex-start; }
 }
 
+/* ═══ (379) «Το προφίλ μου» και το μενού του avatar: χρώματα της νέας εμφάνισης ═══ */
+.ecrm-app[data-ui="signature"] .ecrm-memenu { border: 0; border-radius: 18px; background: var(--sig-solid); box-shadow: var(--sig-float), 0 0 0 1px var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .ecrm-memenu__who { border-bottom-color: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .ecrm-memenu__who b,
+.ecrm-app[data-ui="signature"] .ecrm-memenu__i { color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-memenu__who small { color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .ecrm-memenu__i:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .ecrm-memenu__i.is-out { color: var(--sig-rose); }
+.ecrm-app[data-ui="signature"] button.ecrm-avatar:focus-visible { outline-color: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-pf__side,
+.ecrm-app[data-ui="signature"] .sig-pf__card { border: 0; border-radius: 22px; background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-pf__card { background: var(--sig-solid); }
+.ecrm-app[data-ui="signature"] .sig-pf__me { border-bottom-color: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-pf__av { color: var(--sig-on-btn); background: linear-gradient(135deg, var(--sig-btn-top), var(--sig-btn-bottom)); }
+.ecrm-app[data-ui="signature"] .sig-pf__me b,
+.ecrm-app[data-ui="signature"] .sig-pf__card h3,
+.ecrm-app[data-ui="signature"] .sig-pf__row b,
+.ecrm-app[data-ui="signature"] .sig-pf__stat b,
+.ecrm-app[data-ui="signature"] .sig-pf__prev b { color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-pf__me small,
+.ecrm-app[data-ui="signature"] .sig-pf__lead,
+.ecrm-app[data-ui="signature"] .sig-pf__row small,
+.ecrm-app[data-ui="signature"] .sig-pf__f > small,
+.ecrm-app[data-ui="signature"] .sig-pf__stat small,
+.ecrm-app[data-ui="signature"] .sig-pf__muted { color: var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .sig-pf__title { color: var(--sig-green-ink); background: var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .sig-pf__nav { color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-pf__nav:hover { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-pf__nav.is-on { background: var(--sig-solid); color: var(--sig-ink); box-shadow: var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-pf__f > span { color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-pf__f .ecrm-input[readonly],
+.ecrm-app[data-ui="signature"] .sig-pf__prev,
+.ecrm-app[data-ui="signature"] .sig-pf__stat,
+.ecrm-app[data-ui="signature"] .sig-pf__seg { background: var(--sig-fill); color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-pf__row { border-top-color: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-pf__sw { background: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-pf__sw.is-on { background: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-pf__sw::after { background: var(--sig-solid); }
+.ecrm-app[data-ui="signature"] .sig-pf__seg button { color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .sig-pf__seg button.is-on { background: var(--sig-solid); color: var(--sig-ink); box-shadow: var(--sig-lift); }
+.ecrm-app[data-ui="signature"] .sig-pf__chip { border: 0; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair); color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-pf__chip.is-on { background: var(--sig-green-tint); box-shadow: 0 0 0 1.5px var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-pf__sw:focus-visible,
+.ecrm-app[data-ui="signature"] .sig-pf__seg button:focus-visible,
+.ecrm-app[data-ui="signature"] .sig-pf__chip:focus-visible { outline-color: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-pf__bar { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-pf__bar i { background: linear-gradient(90deg, var(--sig-btn-top), var(--sig-btn-bottom)); }
+
 /* ═══ (377) Πελάτες: πυκνός πίνακας με σελίδες ═══
  * docs/UI-CUSTOMERS-SCALE.html, κατεύθυνση Α. Markup: sigListHTML(),
  * sigChipsHTML(), sigPagerHTML() στο ecrm-view-customers.js. */

@@ -531,6 +531,11 @@ class ECRM_Notifications {
 		if ( ! $user || ! is_email( $user->user_email ) ) {
 			return;
 		}
+		// (379) «Το προφίλ μου»: ο ίδιος μπορεί να κλείσει αυτά τα email, ή να
+		// μην τα θέλει τις ώρες ησυχίας. Το καμπανάκι στο CRM μένει κανονικά.
+		if ( ! \EnergyCRM\Infrastructure\UserProfile::wantsEmail( (int) $user->ID, 'notify_status_email' ) ) {
+			return;
+		}
 		$name    = $row ? ( $row['company_name'] ?: trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) ) ) : '';
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name', get_bloginfo( 'name' ) ) : get_bloginfo( 'name' );
 		$subject = '⚠ ' . $status->label() . ': ' . ( $row['code'] ?? '' ) . ' - ' . $name;
@@ -561,6 +566,8 @@ class ECRM_Notifications {
 		$users = get_users( [ 'role__in' => array_keys( ECRM_DB::roles() ), 'fields' => [ 'ID', 'user_email', 'display_name' ] ] );
 		foreach ( $users as $u ) {
 			if ( ! is_email( $u->user_email ) ) { continue; }
+			// (379) Όποιος έκλεισε την ημερήσια σύνοψη από «Το προφίλ μου».
+			if ( ! \EnergyCRM\Infrastructure\UserProfile::prefs( (int) $u->ID )['notify_digest_email'] ) { continue; }
 			$data  = self::followups_for( [ (int) $u->ID ] );
 			$tasks = class_exists( 'ECRM_Tasks' ) ? ECRM_Tasks::due_list( (int) $u->ID ) : [];
 			$missing_docs = self::missing_docs_for( [ (int) $u->ID ] );

@@ -52,6 +52,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-dashboard'   => 'ecrm-view-dashboard.js',
 		'@energy-crm/view-import'      => 'ecrm-view-import.js',
 		'@energy-crm/view-kb'          => 'ecrm-view-kb.js',
+		'@energy-crm/view-profile'     => 'ecrm-view-profile.js',
 		'@energy-crm/view-training'    => 'ecrm-view-training.js',
 		'@energy-crm/install-env'      => 'ecrm-install-env.js',
 		'@energy-crm/view-install'     => 'ecrm-view-install.js',
@@ -135,6 +136,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-dashboard'   => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate', '@energy-crm/dialog' ],
 		'@energy-crm/view-import'      => [ '@energy-crm/util' ],
 		'@energy-crm/view-kb'          => [ '@energy-crm/util' ],
+		'@energy-crm/view-profile'     => [ '@energy-crm/util', '@energy-crm/qr-poster' ],
 		'@energy-crm/view-training'    => [ '@energy-crm/util' ],
 		'@energy-crm/datepick'         => [],
 		'@energy-crm/install-env'      => [],
@@ -199,6 +201,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/view-team-live',
 			'@energy-crm/view-escalations',
 			'@energy-crm/tickets',
+			'@energy-crm/view-profile',
 		],
 		'@energy-crm/litsa'            => [ '@energy-crm/util' ],
 	];
@@ -324,6 +327,8 @@ class ECRM_Shortcodes {
 			'version'  => ECRM_VERSION,
 			// (342) Λόγοι απόρριψης/ακύρωσης ανά κατάσταση (CloseReason).
 			'closeReasons' => \EnergyCRM\Domain\Contract\CloseReason::all(),
+			// (379) «Το προφίλ μου»: πρώτη οθόνη, «Δικά μου / Ομάδας», αγαπημένοι πάροχοι.
+			'prefs'        => \EnergyCRM\Infrastructure\UserProfile::clientPrefs( get_current_user_id() ),
 		] );
 	}
 

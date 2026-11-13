@@ -381,6 +381,7 @@ class ECRM_PDF {
 		$label( 118, $y, 'Σύμβουλος' );
 		$agent = array_filter( [
 			[ 'Όνομα', (string) ( $m['agent_name'] ?? '' ) ],
+			[ 'Τηλέφωνο', (string) ( $m['agent_phone'] ?? '' ) ],
 			[ 'Email', (string) ( $m['agent_email'] ?? '' ) ],
 		], static fn ( array $p ): bool => $p[1] !== '' );
 		$ay = $y + 5;
@@ -560,7 +561,9 @@ class ECRM_PDF {
 			$pdf->Cell( 80, 4, $sub, 0, 2 );
 		};
 		$agent_name = (string) ( $m['agent_name'] ?? '' );
-		$sign( 14, 'Για την εταιρεία', $agent_name !== '' ? self::clip( $agent_name, 40 ) . ', σύμβουλος ενέργειας' : $company );
+		$agent_title = trim( (string) ( $m['agent_title'] ?? '' ) );
+		$agent_title = $agent_title !== '' ? mb_strtolower( $agent_title, 'UTF-8' ) : 'σύμβουλος ενέργειας';
+		$sign( 14, 'Για την εταιρεία', $agent_name !== '' ? self::clip( $agent_name . ', ' . $agent_title, 60 ) : $company );
 		$sign( 116, 'Ο πελάτης', 'Έλαβα γνώση' );
 
 		// --- Υποσέλιδο: πάντα στην ίδια σελίδα ---

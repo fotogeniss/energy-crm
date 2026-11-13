@@ -62,6 +62,7 @@ use EnergyCRM\Domain\Contract\SignatureRoles;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Infrastructure\SignatureState;
+use EnergyCRM\Infrastructure\UserProfile;
 use ECRM_Messaging;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\EventRepository;
@@ -513,6 +514,8 @@ final class SignLinkController implements Controller
         }
 
         $company = (string) ECRM_Admin::get('company_name', get_bloginfo('name'));
+        // (379) Η «Υπογραφή στα email» του χρήστη που στέλνει, από «Το προφίλ μου».
+        $signature = trim(UserProfile::prefs(get_current_user_id())['signature']);
 
         return wp_mail(
             $to,
@@ -523,7 +526,7 @@ final class SignLinkController implements Controller
                 . "Με εκτίμηση,\n%s",
                 $this->customerName($contract) ?: 'πελάτη',
                 $url,
-                $company
+                $signature !== '' ? $signature : $company
             )
         );
     }

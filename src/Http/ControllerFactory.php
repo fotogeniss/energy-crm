@@ -219,6 +219,7 @@ final class ControllerFactory
             new ThemeController($scope),
             // (353) Νέα εμφάνιση «Signature», σε δοκιμή από τον διαχειριστή.
             new UiController(),
+            new ProfileController(),
 
             // Catalogue and form metadata.
             new CatalogueController(
