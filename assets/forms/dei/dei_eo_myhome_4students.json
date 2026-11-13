@@ -1,0 +1,32 @@
+{
+ "page_w": 210.0,
+ "page_h": 297.0,
+ "fields": {
+  "onomateponymo_pelati": {
+   "page": 3,
+   "x": 146.2,
+   "y": 85.5,
+   "maxw": 44,
+   "size": 7.5,
+   "when": "not_company"
+  },
+  "onomateponymo_ekprosopou": {
+   "page": 3,
+   "x": 146.2,
+   "y": 85.5,
+   "maxw": 44,
+   "size": 7.5,
+   "when": "company"
+  }
+ },
+ "sigs": [
+  {
+   "page": 3,
+   "x": 146.2,
+   "y": 73.5,
+   "w": 44,
+   "h": 0,
+   "fit_h": 11.0
+  }
+ ]
+}

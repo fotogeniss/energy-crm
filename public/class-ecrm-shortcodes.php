@@ -523,6 +523,8 @@ class ECRM_Shortcodes {
 					<span class="ecrm-row__label">Πρόγραμμα</span>
 					<select class="ecrm-select" data-program data-field="program_id"><option value="">—</option></select>
 				</div>
+				<?php // (380) Προϋπόθεση του παρόχου για το πρόγραμμα (ΔΕΗ) -- ecrm-form.js (showProgramNote). ?>
+				<p class="ecrm-hint ecrm-prognote" data-program-note hidden></p>
 				<?php // (332) Σωστό μέγεθος Picasso -- ecrm-form.js (refreshPackageFit). Mockup docs/UI-PICASSO-SIZE.html. ?>
 				<div class="ecrm-fit" data-package-fit hidden>
 					<label class="ecrm-fit__kwh"><span>Κατανάλωση / έτος (kWh)</span>

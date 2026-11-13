@@ -120,6 +120,14 @@ class ECRM_FormFill {
 		if ( $has( 'enerwave' ) && $e === 'power' )                       { return 'enerwave_he'; }
 		if ( $has( 'enerwave' ) && $e === 'gas' )                         { return 'enerwave_fa'; }
 		if ( $has( 'zenith' ) || $has( 'ζενιθ' ) || $has( 'zeniθ' ) )      { return 'zenith_he'; }
+		// (380) ΔΕΗ: η αίτηση εξαρτάται από το πρόγραμμα (δυναμικό ή όχι). Η
+		// ισχύς (έως ή πάνω από 25 kVA) και τα υπόλοιπα φύλλα -- Ειδικοί
+		// Όροι, Γενικοί Όροι, Προσυμβατική -- έρχονται από το template_keys().
+		// Και για πρόγραμμα χωρίς κωδικό (φτιαγμένο με το χέρι): η αίτηση και
+		// οι Γενικοί Όροι, χωρίς Ειδικούς.
+		if ( ( $p === 'δεη' || $p === 'dei' || $has( 'δεη ' ) || $has( 'ppc' ) ) && $e === 'power' ) {
+			return \EnergyCRM\Domain\Forms\DeiCatalogue::application( $program, 0.0 );
+		}
 		// Η Orizon είναι κινητή τηλεφωνία: ένα συμβόλαιο, πολλά έντυπα. Εδώ
 		// επιστρέφεται μόνο η σύμβαση — ποια φύλλα τη συνοδεύουν το αποφασίζει
 		// το MobilePaperwork, μέσω του template_keys().
@@ -392,6 +400,12 @@ class ECRM_FormFill {
 			'dieuthynsi_apostolis_diaforetiki' => ( $addr->billingIsHome() ? '' : $addr->billing->oneLine() ),
 			'kodikos_timologiou'       => (string) ( $c['invoice_code'] ?? '' ),
 			'onoma_programmatos'       => (string) ( $c['program_name'] ?? '' ),
+			// (380) Το «Τιμολόγιο:» της αίτησης ΔΕΗ: όνομα με την έκδοση του
+			// εντύπου («ΔΕΗ myHome Enter 11.26»). Αλλού το όνομα του προγράμματος.
+			'onoma_timologiou'         => \EnergyCRM\Domain\Forms\DeiCatalogue::tariff( (string) ( $c['program_code'] ?? '' ), self::has_night( $c ) )
+				?: (string) ( $c['program_name'] ?? '' ),
+			// (380) «υπό τάση …» της αίτησης ΔΕΗ: οι παροχές του CRM είναι ΧΤ.
+			'tasi_paroxis'             => 'Χαμηλή',
 			'diarkeia_symvasis'        => $diarkeia,
 			// «Κωδικός Αίτησης» στο επίσημο έντυπο του παρόχου είναι δικό ΤΟΥ
 			// πεδίο, όχι δικό μας stamp: τύπωνε τον εσωτερικό κωδικό της CRM
@@ -714,6 +728,17 @@ class ECRM_FormFill {
 			return [];
 		}
 
+		// (380) ΔΕΗ: αίτηση (έως / πάνω από 25 kVA), Ειδικοί Όροι του
+		// προγράμματος, Γενικοί Όροι, και στα δυναμικά η Προσυμβατική.
+		if ( \EnergyCRM\Domain\Forms\FormTemplates::provider( $key ) === \EnergyCRM\Domain\Forms\DeiCatalogue::SLUG ) {
+			$x = self::extras( $c );
+
+			return \EnergyCRM\Domain\Forms\DeiCatalogue::paperwork(
+				(string) ( $c['program_code'] ?? '' ),
+				\EnergyCRM\Domain\Forms\DeiCatalogue::kva( (string) ( $x['agreed_power'] ?? '' ) )
+			);
+		}
+
 		if ( $key !== \EnergyCRM\Domain\Forms\MobilePaperwork::CONTRACT ) {
 			// Στάδιο 4 (05/09/2026): το COMBO Volton+Orizon μπορεί να ξεκινήσει
 			// και από εδώ -- ρητά μόνο volton_he (ρεύμα), όχι volton_fa ή
@@ -937,7 +962,9 @@ class ECRM_FormFill {
 			throw new \RuntimeException( 'Λείπει το αρχείο προτύπου για ' . $key . '.' );
 		}
 		$map = json_decode( (string) file_get_contents( $mapf ), true );
-		if ( ! is_array( $map ) || empty( $map['fields'] ) ) {
+		// (380) Φύλλο μόνο για εκτύπωση (Γενικοί Όροι ΔΕΗ): χωρίς πεδία.
+		$print_only = is_array( $map ) && ! empty( $map['print_only'] ) && is_array( $map['fields'] ?? null );
+		if ( ! is_array( $map ) || ( empty( $map['fields'] ) && ! $print_only ) ) {
 			throw new \RuntimeException( 'Άκυρος χάρτης πεδίων για ' . $key . '.' );
 		}
 		return $map;

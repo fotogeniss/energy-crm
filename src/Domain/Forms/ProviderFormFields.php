@@ -57,6 +57,8 @@ final class ProviderFormFields
         'fa_aftonomo', 'fa_koinoxristo',
         // (319) Όρος Θ των οικιακών Protergia: τσεκάρεται πάντα, δεν το ρωτά κανείς.
         'protergia_oros_th',
+        // (380) ΔΕΗ: «Τιμολόγιο:» με την έκδοση και «υπό τάση», τα βάζει η μηχανή.
+        'onoma_timologiou', 'tasi_paroxis',
         // (321) Φύλλα αερίου Protergia 2026: σταθερά της ίδιας της Protergia --
         // 12 μήνες, «Εμπορικό» στο επαγγελματικό, όροι που τικάρονται πάντα.
         'fa_diarkeia', 'fa_emporiko', 'fa_oros_panta',
@@ -286,6 +288,8 @@ final class ProviderFormFields
         // chips του βήματος 1, από τη βάση, ή από τον ίδιο τον λογαριασμό.
         'kodikos_timologiou'             => [],
         'onoma_programmatos'             => [],
+        'onoma_timologiou'               => [],
+        'tasi_paroxis'                   => [],
         'diarkeia_symvasis'              => [],
         // (349) Ο «Αριθμός Αίτησης» που γράφει ο agent στο βήμα 1.
         'arithmos_aitisis'               => ['provider_ref'],

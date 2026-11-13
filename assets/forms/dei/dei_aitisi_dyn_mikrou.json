@@ -1,0 +1,249 @@
+{
+ "page_w": 210.0,
+ "page_h": 297.0,
+ "fields": {
+  "arithmos_aitisis": {
+   "page": 1,
+   "x": 41.5,
+   "y": 38.5,
+   "maxw": 25
+  },
+  "kodikos_synergati": {
+   "page": 1,
+   "x": 42,
+   "y": 42.1,
+   "maxw": 25
+  },
+  "onoma_timologiou": {
+   "page": 1,
+   "x": 123.5,
+   "y": 38.5,
+   "maxw": 73
+  },
+  "topos_aitisis": {
+   "page": 1,
+   "x": 45,
+   "y": 56.8,
+   "maxw": 55
+  },
+  "imerominia_aitisis": [
+   {
+    "page": 1,
+    "x": 112,
+    "y": 56.8,
+    "maxw": 31
+   },
+   {
+    "page": 1,
+    "x": 26.5,
+    "y": 137.1,
+    "maxw": 22,
+    "size": 8
+   }
+  ],
+  "onomateponymo_pelati": [
+   {
+    "page": 1,
+    "x": 37,
+    "y": 60.4,
+    "maxw": 75,
+    "when": "not_company"
+   },
+   {
+    "page": 1,
+    "x": 100,
+    "y": 274.4,
+    "maxw": 55,
+    "size": 8,
+    "when": "not_company"
+   }
+  ],
+  "patronymo_pelati": {
+   "page": 1,
+   "x": 121,
+   "y": 60.4,
+   "maxw": 9.5,
+   "size": 7,
+   "when": "not_company"
+  },
+  "afm_pelati": [
+   {
+    "page": 1,
+    "x": 150.5,
+    "y": 60.4,
+    "maxw": 35,
+    "when": "not_company"
+   },
+   {
+    "page": 1,
+    "x": 24.5,
+    "y": 78.6,
+    "maxw": 31,
+    "when": "company"
+   }
+  ],
+  "doy_pelati": [
+   {
+    "page": 1,
+    "x": 13,
+    "y": 64.0,
+    "maxw": 37,
+    "when": "not_company"
+   },
+   {
+    "page": 1,
+    "x": 69,
+    "y": 78.6,
+    "maxw": 31,
+    "when": "company"
+   }
+  ],
+  "adt_pelati": {
+   "page": 1,
+   "x": 87,
+   "y": 64.0,
+   "maxw": 33,
+   "when": "not_company"
+  },
+  "poli_katoikias": {
+   "page": 1,
+   "x": 135,
+   "y": 64.0,
+   "maxw": 41,
+   "when": "not_company"
+  },
+  "odos_arithmos_katoikias": {
+   "page": 1,
+   "x": 13,
+   "y": 67.7,
+   "maxw": 82,
+   "when": "not_company"
+  },
+  "eponymia_etaireias": {
+   "page": 1,
+   "x": 29.5,
+   "y": 75.0,
+   "maxw": 61,
+   "when": "company"
+  },
+  "dieuthynsi_katoikias": {
+   "page": 1,
+   "x": 116,
+   "y": 75.0,
+   "maxw": 76,
+   "when": "company"
+  },
+  "onomateponymo_ekprosopou": [
+   {
+    "page": 1,
+    "x": 31.5,
+    "y": 82.3,
+    "maxw": 118,
+    "when": "company"
+   },
+   {
+    "page": 1,
+    "x": 100,
+    "y": 274.4,
+    "maxw": 55,
+    "size": 8,
+    "when": "company"
+   }
+  ],
+  "tasi_paroxis": {
+   "page": 1,
+   "x": 42,
+   "y": 140.7,
+   "maxw": 13.5,
+   "size": 8
+  },
+  "isxis_paroxis": {
+   "page": 1,
+   "x": 82,
+   "y": 140.7,
+   "maxw": 11,
+   "size": 8.5
+  },
+  "odos_paroxis": {
+   "page": 1,
+   "x": 31,
+   "y": 144.4,
+   "maxw": 46,
+   "size": 8
+  },
+  "arithmos_odou_paroxis": {
+   "page": 1,
+   "x": 93.5,
+   "y": 144.4,
+   "maxw": 14,
+   "size": 7.5
+  },
+  "poli_paroxis": {
+   "page": 1,
+   "x": 124.5,
+   "y": 144.4,
+   "maxw": 29,
+   "size": 8
+  },
+  "tk_paroxis": {
+   "page": 1,
+   "x": 166.5,
+   "y": 144.4,
+   "maxw": 22,
+   "size": 7.5
+  },
+  "arithmos_paroxis": {
+   "page": 1,
+   "x": 89.5,
+   "y": 148.0,
+   "maxw": 42,
+   "size": 8.5
+  },
+  "odos_arithmos_apostolis": {
+   "page": 1,
+   "x": 95,
+   "y": 195.5,
+   "maxw": 72
+  },
+  "tk_apostolis": {
+   "page": 1,
+   "x": 95,
+   "y": 199.2,
+   "maxw": 14
+  },
+  "poli_apostolis": {
+   "page": 1,
+   "x": 110,
+   "y": 199.2,
+   "maxw": 57
+  },
+  "kinito_pelati": {
+   "page": 1,
+   "x": 95,
+   "y": 202.9,
+   "maxw": 34
+  },
+  "tilefono_pelati": {
+   "page": 1,
+   "x": 131,
+   "y": 202.9,
+   "maxw": 36
+  },
+  "email_pelati": {
+   "page": 1,
+   "x": 95,
+   "y": 206.5,
+   "maxw": 72
+  }
+ },
+ "sigs": [
+  {
+   "page": 1,
+   "x": 100.0,
+   "y": 261.9,
+   "w": 50,
+   "h": 0,
+   "fit_h": 12.0
+  }
+ ]
+}

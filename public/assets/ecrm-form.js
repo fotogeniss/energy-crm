@@ -72,6 +72,8 @@ import { openDialog } from '@energy-crm/dialog';
 			signatures: null, sendComms: null, sendNames: null, sendRole: 'mobile'
 		};
 		var programsCache = [];
+		// (380) Προϋποθέσεις ανά κωδικό προγράμματος (CatalogueController).
+		var programNotes = {};
 		var providersCache = [];
 		var mobilePricing = {};
 		var providersLoaded = false;
@@ -1300,7 +1302,7 @@ import { openDialog } from '@energy-crm/dialog';
 		fetch(api('/providers'), { headers: headers() })
 			.then(function (r) { return r.json(); })
 			.then(function (d) {
-				programsCache = d.programs || []; providersCache = d.providers || []; mobilePricing = d.mobile_pricing || {}; renderProviders(d.providers || []); providersLoaded = true; renderVoltonPrograms();
+				programsCache = d.programs || []; providersCache = d.providers || []; mobilePricing = d.mobile_pricing || {}; programNotes = d.program_notes || {}; renderProviders(d.providers || []); providersLoaded = true; renderVoltonPrograms();
 				// Επεξεργασία υπάρχουσας αίτησης: το applyEdit() καλεί selectProviderForEdit(c.provider_id)
 				// ΠΡΙΝ προλάβει να απαντήσει αυτό εδώ το fetch -- selectProvider() το βλέπει και
 				// απλώς αποθηκεύει pendingProvider, χωρίς state.provider_id/κλάση is-on ακόμα.
@@ -1579,7 +1581,20 @@ import { openDialog } from '@energy-crm/dialog';
 				refreshProviderFields();
 				refreshGuaranteeSuggestion();
 				updateMobilePricing();
+				showProgramNote();
 			};
+			showProgramNote();
+		}
+
+		// (380) Η προϋπόθεση του παρόχου για το επιλεγμένο πρόγραμμα («Μόνο με
+		// τηλεμετρούμενο μετρητή»), ή τίποτα. Κείμενο, όχι HTML.
+		function showProgramNote() {
+			var el = q('[data-program-note]');
+			if (!el) return;
+			var pr = programsCache.filter(function (p) { return parseInt(p.id, 10) === state.program_id; })[0];
+			var note = pr && pr.code ? (programNotes[pr.code] || '') : '';
+			el.textContent = note;
+			el.hidden = note === '';
 		}
 
 		function selectProvider(pid) {
@@ -2005,7 +2020,7 @@ import { openDialog } from '@energy-crm/dialog';
 			selectProviderForEdit(c.provider_id);
 			state.program_id = c.program_id ? parseInt(c.program_id, 10) : null;
 			renderPrograms();
-			var sel = q('[data-program]'); if (sel && c.program_id) sel.value = c.program_id;
+			var sel = q('[data-program]'); if (sel && c.program_id) sel.value = c.program_id; showProgramNote();
 			CUST_FIELDS.forEach(function (k) { setField(k, c[k], false, true); });
 			ADDR_PARTS.forEach(function (which) {
 				var cb = root.querySelector('[data-addr-same="' + which + '"]');

@@ -138,6 +138,20 @@ class ECRM_Providers {
 						}
 						$starters[] = [ $plan['label'], $code, $plan['energy'], $plan['priceType'], null, null, 'business' ];
 					}
+				} elseif ( $row['slug'] === \EnergyCRM\Domain\Forms\DeiCatalogue::SLUG ) {
+					// (380) Τα 13 προγράμματα ρεύματος της ΔΕΗ, καθένα με το δικό
+					// του έντυπο. Ένα γενικό «Σταθερό Οικιακό» δεν θα τύπωνε
+					// Ειδικούς Όρους. Από τις τιμές των εντύπων 11.26 μπαίνει εδώ
+					// η ενιαία· τις κλιμακωτές τις γράφει η 0062 στις υπάρχουσες
+					// εγκαταστάσεις, και σε νέα ο διαχειριστής.
+					$dei_prices = \EnergyCRM\Domain\Pricing\DeiPrices2026::all();
+					foreach ( \EnergyCRM\Domain\Forms\DeiCatalogue::all() as $code => $plan ) {
+						$starters[] = [
+							$plan['label'], $code, 'power', $plan['priceType'],
+							$dei_prices[ $code ]['fixed_charge'] ?? null, $dei_prices[ $code ]['price_kwh'] ?? null,
+							$plan['category'],
+						];
+					}
 				} elseif ( $row['slug'] === 'volton' ) {
 					// Η Volton δίνει 23 προγράμματα, σε ρεύμα ΚΑΙ σε αέριο, και σε
 					// τρεις κατηγορίες. Το γενικό «Σταθερό Οικιακό» δεν αντιστοιχεί

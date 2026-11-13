@@ -132,6 +132,12 @@ final class ProviderFormFieldsColumnsTest extends TestCase
         $out = [];
 
         foreach (FormTemplates::keys(self::formsDir()) as $key) {
+            // (380) Φύλλα μόνο για εκτύπωση (Γενικοί Όροι ΔΕΗ): δεν ζητούν τίποτα.
+            $map = json_decode((string) file_get_contents(FormTemplates::mapPath(self::formsDir(), $key)), true);
+            if (is_array($map) && ! empty($map['print_only'])) {
+                continue;
+            }
+
             $out[] = [$key];
         }
 

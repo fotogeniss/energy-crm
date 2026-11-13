@@ -20,6 +20,7 @@ use ECRM_DB;
 use EnergyCRM\Access\ProviderVisibility;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Forms\DeiCatalogue;
 use EnergyCRM\Domain\Forms\MobilePlans;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\ContractRepository;
@@ -107,6 +108,9 @@ final class CatalogueController implements Controller
             // next to a figure the paper form fixes in advance. No PII, no DB
             // read — the same static table the renderer already uses.
             'mobile_pricing'   => MobilePlans::pricingTable(),
+            // (380) Προϋποθέσεις παρόχου ανά πρόγραμμα (κωδικός => κείμενο),
+            // κάτω από το πρόγραμμα στη «Νέα αίτηση». Σταθερό κείμενο, όχι βάση.
+            'program_notes'    => DeiCatalogue::notes(),
             // Τι βάζει συνήθως ΑΥΤΟΣ ο πωλητής -- ταξιδεύει εδώ και όχι σε δική
             // του διαδρομή επειδή η φόρμα ζητά ούτως ή άλλως τον κατάλογο στο
             // άνοιγμα: δεύτερη κλήση θα ήταν δεύτερη αναμονή σε κινητό, για ένα
