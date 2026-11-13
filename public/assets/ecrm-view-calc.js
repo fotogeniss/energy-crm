@@ -16,6 +16,13 @@
  * κατάταξη, ίδια «Νέα αίτηση με αυτό» και PDF (data-bill-apply,
  * data-bill-pdf)· η αναλυτική λίστα μένει στις «Λεπτομέρειες», ο
  * χειροκίνητος υπολογισμός σε ένα «Χωρίς λογαριασμό;».
+ *
+ * (375) Πριν τον λογαριασμό και χωρίς λογαριασμό, mockup
+ * docs/UI-QUOTE-EMPTY.html (εγκρίθηκε 13/11). Η σελίδα έχει από την αρχή το
+ * ίδιο σχήμα: αριστερά ο λογαριασμός ως «χαρτί» για ανέβασμα, δεξιά το σχήμα
+ * της απάντησης σβηστό. Το «Χειροκίνητα» δεν ανοίγει πια τη φόρμα ενός
+ * προγράμματος: αριστερά γίνεται τρία πεδία, και δεξιά η ίδια κούρσα με όλα
+ * τα προγράμματα, από το ίδιο /bill/compare. Η κλασική εμφάνιση μένει ως είχε.
  */
 
 import { api, esc, fetch, H, providerMark, toast, viewEl } from '@energy-crm/util';
@@ -35,6 +42,15 @@ function renderCalc(view) {
 	var provOpts = '<option value="">— Επιλογή —</option>' + provs.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('');
 
 	var sig = isSignature();
+	if (sig) {
+		// (375) Χωρίς την παλιά φόρμα ενός προγράμματος: το χειροκίνητο γεμίζει την κούρσα.
+		advisor.manual = false;
+		view.innerHTML = '<header class="sig-cuhead"><div><h2>Προσφορά</h2><p>Πόσα κερδίζει ο πελάτης, από τον λογαριασμό του</p></div></header>' +
+			advisorMarkup() + sigManualBar();
+		wireAdvisor(view);
+		wireSigManual(view);
+		return;
+	}
 	view.innerHTML = (sig
 		? '<header class="sig-cuhead"><div><h2>Προσφορά</h2><p>Πόσα κερδίζει ο πελάτης, από τον λογαριασμό του</p></div></header>' +
 			advisorMarkup() + '<details class="sig-qmanual"><summary><span><b>Χωρίς λογαριασμό;</b> Βάλε κατανάλωση και τιμή με το χέρι.</span><i>Χειροκίνητα</i></summary>'
@@ -136,11 +152,12 @@ function renderCalc(view) {
 
 var ICON_DOC = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg>';
 var ICON_NEW = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+var ICON_UP = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M12 11v6M9 14l3-3 3 3"/></svg>';
 var ICON_CAM = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 
 // Ο λογαριασμός και ό,τι διάβασε το AI για τον πελάτη. Μόνο στη μνήμη της
 // σελίδας -- φεύγουν με την ανανέωση ή με νέο λογαριασμό.
-var advisor = { file: null, customer: null, result: null, timer: null };
+var advisor = { file: null, customer: null, result: null, timer: null, manual: false };
 
 function money(v) {
 	return Math.round(v).toLocaleString('el-GR') + ' €';
@@ -151,13 +168,16 @@ function num4(v) {
 }
 
 function advisorMarkup() {
+	var sig = isSignature();
 	return '<div class="ecrm-card ecrm-bill">' +
 		'<div class="ecrm-bill__step">1 · Ο λογαριασμός</div>' +
 		'<div class="ecrm-bill__drop" data-bill-drop>' +
-			'<b>Φωτογραφία ή PDF του λογαριασμού ρεύματος / αερίου</b>' +
-			'<span>Το AI διαβάζει κατανάλωση, περίοδο, τιμή προμήθειας και πάγιο</span>' +
+			(sig ? '<i class="sig-qdrop__ic" aria-hidden="true">' + ICON_UP + '</i>' : '') +
+			(sig
+				? '<b>Ο λογαριασμός του πελάτη</b><span>Φωτογραφία ή PDF, ρεύματος ή αερίου. Το AI διαβάζει κατανάλωση, περίοδο, τιμή και πάγιο.</span>'
+				: '<b>Φωτογραφία ή PDF του λογαριασμού ρεύματος / αερίου</b><span>Το AI διαβάζει κατανάλωση, περίοδο, τιμή προμήθειας και πάγιο</span>') +
 			'<div class="ecrm-bill__picks">' +
-				'<button type="button" class="ecrm-btn" data-bill-cam>' + ICON_CAM + ' Φωτογραφία</button>' +
+				'<button type="button" class="ecrm-btn' + (sig ? ' ecrm-btn--primary' : '') + '" data-bill-cam>' + ICON_CAM + ' Φωτογραφία</button>' +
 				'<button type="button" class="ecrm-btn" data-bill-pick>' + ICON_DOC + ' Επιλογή αρχείου</button>' +
 			'</div>' +
 			'<input type="file" accept="image/*" capture="environment" data-bill-camera hidden>' +
@@ -179,7 +199,9 @@ function advisorMarkup() {
 				readField('Πάγιο €/μήνα', '<input type="number" step="0.01" min="0" class="ecrm-input" data-b="fixed_month">') +
 			'</div>' +
 		'</div>' +
+		(sig ? sigManualForm() : '') +
 		'<div data-bill-rank hidden></div>' +
+		(sig ? sigGhostHTML() : '') +
 	'</div>';
 }
 
@@ -289,6 +311,7 @@ function compare(view) {
 	var box = view.querySelector('[data-bill-rank]');
 	advisor.pick = null; // νέα κατάταξη, η κάρτα ξεκινά από το καλύτερο
 	var kwh = +bval(view, 'annual_kwh');
+	if (!(kwh > 0) && isSignature()) { box.hidden = true; box.innerHTML = ''; sigGhost(view, true); return; }
 	if (!(kwh > 0)) { box.hidden = false; box.innerHTML = '<div class="ecrm-bill__miss">Συμπλήρωσε κατανάλωση για να γίνει η σύγκριση.</div>'; return; }
 
 	var qs = '?kwh=' + encodeURIComponent(kwh) +
@@ -393,6 +416,7 @@ function renderRank(view, d) {
 
 	var hint = '<p class="ecrm-hint">Ρυθμιζόμενες χρεώσεις, ΥΚΩ, φόροι και δημοτικά είναι ίδια σε όλους τους παρόχους και δεν υπολογίζονται. Κλιμακωτά και πακέτα υπολογίζονται με τον κανόνα τους· στα πακέτα δεν υπολογίζεται επιστροφή για κατανάλωση κάτω από το πακέτο.</p>';
 	if (isSignature()) {
+		sigGhost(view, false);
 		box.innerHTML = sigQuoteHTML(view, d) +
 			'<details class="sig-qdetails"><summary><span><b>Θες τα νούμερα αναλυτικά;</b> Τιμές ανά kWh, κλιμάκια, πακέτα, όλα τα προγράμματα.</span><i>Λεπτομέρειες</i></summary>' +
 			head + rows + miss + hint + '</details>';
@@ -415,7 +439,8 @@ function d0kwh(view) {
 
 function applyProgram(view, r) {
 	if (!r) { return; }
-	var cust = advisor.customer || {};
+	// (375) Χειροκίνητα: ούτε λογαριασμός ούτε στοιχεία από παλιότερο ανέβασμα.
+	var cust = (!advisor.manual && advisor.customer) || {};
 	var c = {};
 	Object.keys(cust).forEach(function (k) { if (cust[k] != null && cust[k] !== '') { c[k] = cust[k]; } });
 	c.provider_id = r.provider_id;
@@ -425,7 +450,7 @@ function applyProgram(view, r) {
 	if (r.price_type) { c.price_type = r.price_type; }
 	if (!c.customer_type) { c.customer_type = 'individual'; }
 
-	var file = advisor.file;
+	var file = advisor.manual ? null : advisor.file;
 	openEdit(c);
 	// Η φόρμα ανοίγει σε επόμενο tick (openEdit → setTimeout 30)· ο
 	// λογαριασμός μπαίνει στα έγγραφά της μετά από αυτό.
@@ -451,7 +476,8 @@ function quotePdf(view, r, btn, d) {
 		current_fixed: +bval(view, 'fixed_month') || 0,
 		offered_price: Math.round(price * 100000) / 100000,
 		offered_fixed: fixed,
-		customer_name: advisor.customer ? [advisor.customer.last_name, advisor.customer.first_name].filter(Boolean).join(' ') || advisor.customer.company_name || '' : '',
+		customer_name: advisor.manual ? mval(view, 'customer')
+			: (advisor.customer ? [advisor.customer.last_name, advisor.customer.first_name].filter(Boolean).join(' ') || advisor.customer.company_name || '' : ''),
 		provider_name: r.provider,
 		program_name: r.name
 	};
@@ -542,11 +568,12 @@ function sigQuoteHTML(view, d) {
 	var i = advisor.pick != null && ranked[advisor.pick] ? advisor.pick : 0;
 	var r = ranked[i];
 	var cur = d.current_annual;
-	var today = bval(view, 'provider_name') || 'Σήμερα';
+	var named = bval(view, 'provider_name');
+	var today = named ? 'Σήμερα, ' + named : 'Σήμερα';
 	var save = cur != null && r.saving != null ? r.saving : null;
 
 	var verdict = '<div class="sig-qv">' +
-		(cur != null ? '<div class="sig-qv__box"><small>Σήμερα, ' + esc(today) + '</small><b>' + money(cur) + '</b><em>τον χρόνο, ενέργεια και πάγιο</em></div><span class="sig-qv__arrow" aria-hidden="true">→</span>' : '') +
+		(cur != null ? '<div class="sig-qv__box"><small>' + esc(today) + '</small><b>' + money(cur) + '</b><em>τον χρόνο, ενέργεια και πάγιο</em></div><span class="sig-qv__arrow" aria-hidden="true">→</span>' : '') +
 		'<div class="sig-qv__box is-new"><small>Με ' + esc(withProvider(r.provider, r.name)) + '</small><b>' + money(r.annual) + '</b><em>τον χρόνο</em></div>' +
 	'</div>';
 
@@ -565,7 +592,7 @@ function sigQuoteHTML(view, d) {
 	var race = lanes.map(function (l) {
 		var w = esc(String(Math.max(2, Math.round(l.annual / top * 100))));
 		if (l.cur) {
-			return '<div class="sig-qlane is-cur"><span class="sig-qlane__nm">Σήμερα · ' + esc(today) + '</span>' +
+			return '<div class="sig-qlane is-cur"><span class="sig-qlane__nm">' + esc(named ? 'Σήμερα · ' + named : 'Σήμερα') + '</span>' +
 				'<span class="sig-qlane__tr"><i style="width:' + w + '%"></i></span><span class="sig-qlane__v">' + money(l.annual) + '<small>τώρα</small></span></div>';
 		}
 		var x = l.x;
@@ -591,5 +618,133 @@ function sigQuoteHTML(view, d) {
 function wireSigQuote(view, d) {
 	view.querySelectorAll('[data-q-pick]').forEach(function (b) {
 		b.addEventListener('click', function () { advisor.pick = +b.getAttribute('data-q-pick'); renderRank(view, d); });
+	});
+}
+
+// ---------------------------------------------------------------------
+// (375) «Signature»: πριν τον λογαριασμό, και χωρίς λογαριασμό
+// ---------------------------------------------------------------------
+
+/* Δεξιά, πριν υπάρξει απάντηση: το σχήμα της, σβηστό. */
+function sigGhostHTML() {
+	var lane = function (w) {
+		return '<div class="sig-qlane"><span class="sig-qlane__nm"><span>&nbsp;</span></span>' +
+			'<span class="sig-qlane__tr"><i style="width:' + w + '%"></i></span><span class="sig-qlane__v">—</span></div>';
+	};
+	return '<div class="sig-qres sig-qghost" data-sig-ghost aria-hidden="true">' +
+		'<div class="sig-qv"><div class="sig-qv__box"><small>Σήμερα</small><b>— €</b><em>τον χρόνο</em></div>' +
+			'<span class="sig-qv__arrow">→</span>' +
+			'<div class="sig-qv__box is-new"><small>Με το καλύτερο πρόγραμμα</small><b>— €</b><em>τον χρόνο</em></div></div>' +
+		'<div class="sig-qsave is-plain"><span>Ο πελάτης κερδίζει</span>' +
+			'<b class="is-bill">ανέβασε τον λογαριασμό</b><b class="is-man">γράψε την κατανάλωση</b></div>' +
+		'<div class="sig-qrace"><h4>Όλα τα προγράμματα <small class="is-bill">από τον λογαριασμό</small>' +
+			'<small class="is-man">από τα νούμερα αριστερά</small></h4>' +
+			lane(62) + lane(70) + lane(76) + lane(84) + '</div>' +
+	'</div>';
+}
+
+function sigGhost(view, on) {
+	var g = view.querySelector('[data-sig-ghost]');
+	if (g) { g.hidden = !on; }
+}
+
+function sigManualBar() {
+	return '<div class="sig-qmanbar" data-sig-manbar><span><b>Δεν έχεις λογαριασμό;</b> Βάλε κατανάλωση και τιμή με το χέρι.</span>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost" data-sig-manual>Χειροκίνητα</button></div>';
+}
+
+function sigManualForm() {
+	var seg = function (attr, items) {
+		return '<span class="sig-qmseg" role="group">' + items.map(function (it, i) {
+			return '<button type="button" ' + attr + '="' + it[0] + '" aria-pressed="' + (i === 0 ? 'true' : 'false') + '"' +
+				(i === 0 ? ' class="is-on"' : '') + '>' + it[1] + '</button>';
+		}).join('') + '</span>';
+	};
+	var fld = function (label, key, unit, extra) {
+		return '<label class="sig-qmfld"><span>' + label + '</span><span><input ' + extra + ' data-m="' + key + '">' +
+			(unit ? '<em>' + unit + '</em>' : '') + '</span></label>';
+	};
+	return '<div class="sig-qmform" data-sig-mform hidden>' +
+		'<h3>Χωρίς λογαριασμό</h3><p>Τα νούμερα από τον λογαριασμό του πελάτη, με το χέρι.</p>' +
+		'<div class="sig-qmsegs">' +
+			seg('data-m-energy', [['power', 'Ρεύμα'], ['gas', 'Αέριο']]) +
+			seg('data-m-cat', [['home', 'Οικιακό'], ['business', 'Επαγγελματικό']]) +
+		'</div>' +
+		fld('Κατανάλωση τον χρόνο', 'annual_kwh', 'kWh', 'type="number" min="0" step="1" inputmode="numeric" placeholder="π.χ. 3500"') +
+		fld('Τιμή σήμερα', 'price_kwh', '€/kWh', 'type="number" min="0" step="0.0001" inputmode="decimal" placeholder="π.χ. 0,159"') +
+		fld('Πάγιο σήμερα', 'fixed_month', '€/μήνα', 'type="number" min="0" step="0.01" inputmode="decimal" placeholder="π.χ. 5"') +
+		fld('Όνομα πελάτη <small>(για το PDF)</small>', 'customer', '', 'type="text" autocomplete="off"') +
+		'<button type="button" class="sig-qmback" data-sig-back>← Έχω λογαριασμό</button>' +
+	'</div>';
+}
+
+function mval(view, k) {
+	var el = view.querySelector('[data-m="' + k + '"]');
+	return el ? el.value.trim() : '';
+}
+
+function segValue(view, attr) {
+	var on = view.querySelector('[' + attr + '].is-on');
+	return on ? on.getAttribute(attr) : '';
+}
+
+/* Τα χειροκίνητα νούμερα γράφονται στα ίδια πεδία (data-b) που γεμίζει ο
+ * λογαριασμός, ώστε σύγκριση, PDF και «Νέα αίτηση» να είναι ο ίδιος κώδικας. */
+function syncManual(view) {
+	var set = function (k, v) { var el = view.querySelector('[data-b="' + k + '"]'); if (el) { el.value = v; } };
+	set('provider_name', '');
+	set('energy_type', segValue(view, 'data-m-energy') || 'power');
+	set('category', segValue(view, 'data-m-cat') || 'home');
+	set('annual_kwh', mval(view, 'annual_kwh'));
+	set('price_kwh', mval(view, 'price_kwh'));
+	set('fixed_month', mval(view, 'fixed_month'));
+}
+
+function wireSigManual(view) {
+	var card = view.querySelector('.ecrm-bill');
+	var form = view.querySelector('[data-sig-mform]');
+	var bar = view.querySelector('[data-sig-manbar]');
+	var box = view.querySelector('[data-bill-rank]');
+	if (!card || !form || !bar) { return; }
+
+	sigGhost(view, !advisor.result);
+
+	bar.querySelector('[data-sig-manual]').addEventListener('click', function () {
+		advisor.manual = true; advisor.pick = null;
+		card.classList.add('is-manual');
+		form.hidden = false; bar.hidden = true;
+		syncManual(view);
+		compare(view);
+		var first = form.querySelector('[data-m="annual_kwh"]');
+		if (first) { first.focus(); }
+	});
+
+	form.querySelector('[data-sig-back]').addEventListener('click', function () {
+		advisor.manual = false; advisor.pick = null;
+		card.classList.remove('is-manual');
+		form.hidden = true; bar.hidden = false;
+		if (advisor.result) { fillRead(view, advisor.result); compare(view); return; }
+		box.hidden = true; box.innerHTML = '';
+		sigGhost(view, true);
+	});
+
+	form.querySelectorAll('[data-m]').forEach(function (el) {
+		el.addEventListener('input', function () {
+			if (el.getAttribute('data-m') === 'customer') { return; }
+			syncManual(view);
+			scheduleCompare(view);
+		});
+	});
+
+	form.querySelectorAll('[data-m-energy], [data-m-cat]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			var attr = b.hasAttribute('data-m-energy') ? 'data-m-energy' : 'data-m-cat';
+			form.querySelectorAll('[' + attr + ']').forEach(function (x) {
+				x.classList.toggle('is-on', x === b);
+				x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+			});
+			syncManual(view);
+			compare(view);
+		});
 	});
 }

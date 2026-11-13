@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Προσφορά — πριν τον λογαριασμό και χειροκίνητα</title>
+<style>
+:root{
+	--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,sans-serif;
+	--canvas:#eef0ed;--solid:#fff;--glass:#ffffffeb;--hair:#141e1417;--hair2:#141e140d;--fill:#141e140f;
+	--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;
+	--btn-top:#22cf23;--btn-bot:#0e9a12;--amber:#c46a00;--amber-t:#ffa01424;--rose:#d70f3c;--teal:#00a99a;--blue:#2f7cf6;
+	--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);
+	--float:0 24px 60px -24px rgba(16,24,16,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--canvas);
+	background-image:radial-gradient(900px 500px at 10% -10%,#b6f59a55,transparent 60%),radial-gradient(800px 500px at 100% 0,#a8efe655,transparent 60%)}
+.doc{max-width:1240px;margin:0 auto;padding:32px 20px 80px}
+.intro h1{font-size:30px;letter-spacing:-.03em;margin:0 0 8px}
+.intro p{color:var(--ink2);line-height:1.55;margin:0 0 6px;font-size:15px;max-width:780px}
+.switch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--fill);margin:22px 0 26px}
+.switch button{border:0;background:none;font:inherit;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;color:var(--ink2);cursor:pointer}
+.switch button.on{background:var(--solid);color:var(--ink);box-shadow:var(--lift)}
+.stage{display:none}.stage.on{display:block}
+.note{margin:0 0 18px;padding:12px 16px;border-radius:14px;background:var(--solid);box-shadow:0 0 0 1px var(--hair);font-size:14px;color:var(--ink2);line-height:1.5;max-width:920px}
+.note b{color:var(--ink)}
+.frame{border-radius:28px;background:#f6f7f5;box-shadow:var(--float),0 0 0 1px var(--hair);padding:28px;overflow:hidden}
+.head h2{margin:0;font-size:40px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
+.head p{margin:6px 0 22px;color:var(--ink2);font-size:15px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;white-space:nowrap;text-decoration:none}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btn-top),var(--btn-bot));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 20px -8px var(--btn-bot)}
+.btn.gho{background:var(--solid);color:var(--ink);box-shadow:0 0 0 1px var(--hair)}
+.btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.logo{display:inline-flex;align-items:center;gap:6px;font-weight:800;letter-spacing:-.02em;font-size:14px}
+.logo i{width:12px;height:12px;border-radius:50%}
+.card{border-radius:24px;background:var(--glass);box-shadow:0 0 0 1px var(--hair),var(--lift);padding:22px}
+
+/* ---------- A ---------- */
+.a-grid>*,.show>*{min-width:0}.a-grid{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr);gap:18px;align-items:start}
+.bill{position:relative;border-radius:16px;background:#fff;box-shadow:0 0 0 1px var(--hair);padding:18px;font-size:12px;color:var(--ink3);aspect-ratio:1/1.25;overflow:hidden}
+.bill .ln{height:8px;border-radius:4px;background:#eef0ed;margin:8px 0}
+.bill .ln.s{width:60%}.bill .ln.m{width:80%}
+.bill .hl{position:relative;display:flex;justify-content:space-between;align-items:center;margin:10px -6px;padding:8px 10px;border-radius:10px;background:var(--green-t);box-shadow:0 0 0 1.5px var(--green);color:var(--ink);font-size:13px}
+.bill .hl b{font-size:14px}
+.bill .hl small{position:absolute;right:-2px;top:-10px;font-size:10.5px;font-weight:700;color:#fff;background:var(--green);padding:2px 7px;border-radius:999px}
+.bill .hd{display:flex;justify-content:space-between;margin-bottom:14px}
+.read{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.read span{font-size:12.5px;padding:6px 10px;border-radius:999px;background:var(--fill);color:var(--ink2)}
+.read span b{color:var(--ink)}
+.verdict{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin-bottom:18px}
+.vbox small{display:block;font-size:13px;color:var(--ink2)}
+.vbox b{display:block;font-size:30px;letter-spacing:-.04em;margin-top:2px}
+.vbox em{font-style:normal;font-size:12.5px;color:var(--ink3)}
+.vbox.new b{color:var(--green-ink)}
+.varrow{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--fill)}
+.save{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-radius:20px;background:linear-gradient(150deg,#0f1a10,#16301a);color:#fff;margin-bottom:18px}
+.save b{font-size:34px;letter-spacing:-.04em;color:#b6f59a}
+.save span{color:#c9d3c9;font-size:14px}
+.race h4{margin:0 0 10px;font-size:15px;display:flex;justify-content:space-between}
+.race h4 small{color:var(--ink3);font-weight:600}
+.lane{display:grid;grid-template-columns:150px 1fr 96px;gap:12px;align-items:center;padding:8px 0;cursor:pointer}
+.lane .nm{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;min-width:0}
+.lane .nm span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{position:relative;height:26px;border-radius:9px;background:var(--fill)}
+.track i{position:absolute;left:0;top:0;bottom:0;border-radius:9px;background:var(--teal)}
+.lane.best .track i{background:linear-gradient(90deg,var(--btn-top),var(--btn-bot))}
+.lane.cur .track i{background:#c8ccc5}
+.track .now{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:2px}
+.lane .v{text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.lane .v small{display:block;font-size:11.5px;font-weight:700;color:var(--green-ink)}
+.lane.cur .v small{color:var(--ink3)}
+.lane.on{background:var(--green-t);border-radius:12px;margin:0 -10px;padding:8px 10px}
+.pick{margin-top:14px;padding:14px 16px;border-radius:18px;background:#fff;box-shadow:0 0 0 1px var(--hair);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pick p{margin:0;font-size:13px;color:var(--ink2)}
+.pick p b{color:var(--ink)}
+.pick div{display:flex;gap:8px}
+.manual{margin-top:16px;padding:14px 18px;border-radius:18px;border:1px dashed #c8ccc5;color:var(--ink2);font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.manual b{color:var(--ink)}
+
+/* ---------- B ---------- */
+.in{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px;border-radius:22px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);margin-bottom:22px}
+.in .drop{flex:1;min-width:240px;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:var(--green-t);color:var(--green-ink);font-weight:700;font-size:14px}
+.in .drop small{font-weight:600;color:var(--ink2)}
+.in .or{color:var(--ink3);font-size:13px}
+.in input{height:42px;border-radius:12px;border:1px solid var(--hair);padding:0 12px;font:inherit;width:150px;background:#fff}
+.show{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:stretch}
+.hero{position:relative;border-radius:32px;padding:30px;background:#fff;box-shadow:var(--float),0 0 0 1px var(--hair);overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 100% 0,#b6f59a66,transparent 50%);pointer-events:none}
+.hero .top{position:relative;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.hero .top small{font-size:13px;color:var(--ink2)}
+.hero .big{position:relative;font-size:76px;font-weight:800;letter-spacing:-.06em;line-height:.95;color:var(--green-ink)}
+.hero .big span{font-size:28px;letter-spacing:-.03em;color:var(--ink)}
+.hero .sub{position:relative;font-size:18px;color:var(--ink2);margin:10px 0 24px}
+.hero .sub b{color:var(--ink)}
+.duo{position:relative;display:grid;gap:10px}
+.duo div{display:grid;grid-template-columns:110px 1fr 96px;gap:12px;align-items:center;font-size:14px}
+.duo .bar{height:16px;border-radius:999px;background:#c8ccc5}
+.duo .bar.g{background:linear-gradient(90deg,var(--btn-top),var(--btn-bot))}
+.duo b{text-align:right;font-variant-numeric:tabular-nums}
+.hero .acts{position:relative;display:flex;gap:8px;margin-top:24px;flex-wrap:wrap}
+.alts{display:flex;flex-direction:column;gap:10px}
+.alts h4{margin:4px 4px 2px;font-size:15px}
+.alt{border-radius:20px;background:var(--glass);box-shadow:0 0 0 1px var(--hair);padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:4px 10px;cursor:pointer}
+.alt:hover{box-shadow:0 0 0 1px var(--green)}
+.alt .nm{font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:8px}
+.alt .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--fill);color:var(--ink2)}
+.alt .tag.fx{background:#2f7cf61f;color:var(--blue)}
+.alt b{grid-row:span 2;align-self:center;font-size:18px;color:var(--green-ink);letter-spacing:-.02em}
+.alt small{color:var(--ink3);font-size:12.5px}
+.present{margin-top:6px;display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:20px;background:#0f1a10;color:#fff;font-size:14px}
+.present svg{width:20px;height:20px;fill:none;stroke:#b6f59a;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.present span{flex:1}
+.present small{display:block;color:#c9d3c9;font-size:12.5px}
+
+@media (max-width:900px){
+	.frame{padding:18px}.head h2{font-size:30px}
+	.a-grid,.show{grid-template-columns:1fr}
+	.bill{aspect-ratio:auto}
+	.verdict{grid-template-columns:1fr;text-align:left}.varrow{display:none}
+	.lane{grid-template-columns:96px 1fr 76px}
+	.hero{padding:22px}.hero .big{font-size:54px}
+	.save{flex-direction:column;align-items:flex-start;gap:2px}.save b{font-size:28px}
+	.lane .v{font-size:13px}
+	.pick div{flex-wrap:wrap}
+	.bill .hl{margin:10px 0}
+	.duo div{grid-template-columns:80px 1fr 76px}
+}
+
+.drop{position:relative;border-radius:16px;background:#fff;box-shadow:0 0 0 1px var(--hair);aspect-ratio:1/1.25;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;overflow:hidden}
+.drop:before{content:"";position:absolute;inset:12px;border:2px dashed #cfd3cc;border-radius:12px}
+.drop .ic{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:var(--green-t);color:var(--green-ink);margin-bottom:14px;position:relative}
+.drop .ic svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.drop h3{margin:0 0 6px;font-size:18px;letter-spacing:-.02em;position:relative}
+.drop p{margin:0 0 16px;color:var(--ink2);font-size:13.5px;position:relative;max-width:260px}
+.drop .row{display:flex;gap:8px;position:relative;flex-wrap:wrap;justify-content:center}
+.consent{position:relative;display:flex;gap:8px;align-items:flex-start;margin-top:16px;font-size:12px;color:var(--ink2);text-align:left;max-width:280px}
+.consent i{flex:0 0 18px;height:18px;border-radius:6px;background:var(--green);display:grid;place-items:center;color:#fff;font-style:normal;font-size:12px}
+.ghost .vbox b{color:var(--ink3)}
+.ghost .save{background:var(--fill);color:var(--ink2)}.ghost .save b{color:var(--ink3);font-size:22px}
+.ghost .track i{background:#e3e6e1!important}
+.ghost .lane .v{color:var(--ink3)}
+.ghost .lane .nm{color:var(--ink2)}
+.hint{margin-top:10px;font-size:12.5px;color:var(--ink3)}
+.mform{border-radius:16px;background:#fff;box-shadow:0 0 0 1px var(--hair);padding:18px}
+.mform h3{margin:0 0 4px;font-size:15px}.mform>p{margin:0 0 14px;font-size:12.5px;color:var(--ink3)}
+.seg{display:inline-flex;gap:3px;padding:3px;border-radius:999px;background:var(--fill);margin:0 6px 12px 0}
+.seg span{font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;color:var(--ink2)}
+.seg span.on{background:#fff;color:var(--ink);box-shadow:var(--lift)}
+.fld{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;box-shadow:0 0 0 1px var(--hair);margin-bottom:8px;font-size:13px}
+.fld input{width:110px;border:0;text-align:right;font:inherit;font-weight:700;font-size:14px;background:transparent;outline:none}
+.fld.on{box-shadow:0 0 0 1.5px var(--green);background:var(--green-t)}
+.fld em{font-style:normal;color:var(--ink3);font-size:12px;margin-left:4px}
+.back{margin-top:12px;font-size:13px;color:var(--green-ink);font-weight:700}
+</style></head><body><div class="doc">
+<div class="intro"><h1>Προσφορά: πριν τον λογαριασμό, και χωρίς λογαριασμό</h1>
+<p>Το mockup της κατεύθυνσης Α (360b) έδειχνε μόνο τη σελίδα <b>αφού</b> διαβαστεί ο λογαριασμός. Πριν από αυτό, η σελίδα πέφτει στο παλιό κουτί ανεβάσματος, και το «Χειροκίνητα» ανοίγει την παλιά φόρμα με ένα πρόγραμμα. Αυτό είδες.</p>
+<p>Πρόταση: η σελίδα έχει από την αρχή το ίδιο σχήμα, αριστερά λογαριασμός και δεξιά η απάντηση με την κούρσα. Και το χειροκίνητο γεμίζει την ίδια κούρσα με όλα τα προγράμματα, όχι ένα.</p></div>
+<div class="switch"><button class="on" data-s="1">1. Πριν τον λογαριασμό</button><button data-s="2">2. Χωρίς λογαριασμό (χειροκίνητα)</button></div>
+
+<div class="stage on" id="s1">
+<div class="note"><b>Πριν τον λογαριασμό:</b> αριστερά ο λογαριασμός είναι «χαρτί» για να ρίξεις φωτογραφία ή PDF, με το τικ συναίνεσης εκεί που πατάς. Δεξιά φαίνεται ήδη το σχήμα της απάντησης, σβηστό, ώστε ο πωλητής να ξέρει τι θα πάρει. Κάτω, ήπια, το «Δεν έχεις λογαριασμό;».</div>
+<div class="frame"><div class="head"><h2>Προσφορά</h2><p>Πόσα κερδίζει ο πελάτης, από τον λογαριασμό του</p></div>
+<div class="a-grid">
+ <div>
+  <div class="drop">
+   <div class="ic"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M12 11v6M9 14l3-3 3 3"/></svg></div>
+   <h3>Ο λογαριασμός του πελάτη</h3>
+   <p>Φωτογραφία ή PDF, ρεύματος ή αερίου. Το AI διαβάζει κατανάλωση, περίοδο, τιμή και πάγιο.</p>
+   <div class="row"><span class="btn pri">Φωτογραφία</span><span class="btn gho">Επιλογή αρχείου</span></div>
+   <div class="consent"><i>✓</i>Ο πελάτης ενημερώθηκε ότι ο λογαριασμός του διαβάζεται από υπηρεσία AI για τον υπολογισμό.</div>
+  </div>
+ </div>
+ <div class="card ghost">
+  <div class="verdict"><div class="vbox"><small>Σήμερα</small><b>— €</b><em>τον χρόνο</em></div><div class="varrow">→</div><div class="vbox new"><small>Με το καλύτερο πρόγραμμα</small><b>— €</b><em>τον χρόνο</em></div></div>
+  <div class="save"><span>Ο πελάτης κερδίζει</span><b>ανέβασε τον λογαριασμό</b><span></span></div>
+  <div class="race"><h4>Όλα τα προγράμματα <small>από τον λογαριασμό</small></h4>
+   <div class="lane"><div class="nm"><span>&nbsp;</span></div><div class="track"><i style="width:62%"></i></div><div class="v">—</div></div>
+   <div class="lane"><div class="nm"><span>&nbsp;</span></div><div class="track"><i style="width:70%"></i></div><div class="v">—</div></div>
+   <div class="lane"><div class="nm"><span>&nbsp;</span></div><div class="track"><i style="width:76%"></i></div><div class="v">—</div></div>
+   <div class="lane"><div class="nm"><span>&nbsp;</span></div><div class="track"><i style="width:84%"></i></div><div class="v">—</div></div>
+  </div>
+ </div>
+</div>
+<div class="manual"><span><b>Δεν έχεις λογαριασμό;</b> Βάλε κατανάλωση και τιμή με το χέρι.</span><span class="btn gho">Χειροκίνητα</span></div>
+</div></div>
+
+<div class="stage" id="s2">
+<div class="note"><b>Χειροκίνητα:</b> το «χαρτί» αριστερά γίνεται τρία πεδία (κατανάλωση τον χρόνο, τιμή σήμερα, πάγιο), με Ρεύμα/Αέριο και Οικιακό/Επαγγελματικό. Δεξιά η <b>ίδια</b> απάντηση και κούρσα με όλα τα προγράμματα, από τον ίδιο υπολογισμό του server (τον ίδιο που τρέχει μετά τον λογαριασμό). Η παλιά φόρμα με «Πάροχος → Πρόγραμμα» φεύγει: διαλέγεις πρόγραμμα πατώντας μπάρα. PDF και «Νέα αίτηση με αυτό» ίδια.</div>
+<div class="frame"><div class="head"><h2>Προσφορά</h2><p>Πόσα κερδίζει ο πελάτης, από τον λογαριασμό του</p></div>
+<div class="a-grid">
+ <div>
+  <div class="mform"><h3>Χωρίς λογαριασμό</h3><p>Τα νούμερα από τον λογαριασμό του πελάτη, με το χέρι.</p>
+   <div><span class="seg"><span class="on">Ρεύμα</span><span>Αέριο</span></span><span class="seg"><span class="on">Οικιακό</span><span>Επαγγελματικό</span></span></div>
+   <div class="fld on"><span>Κατανάλωση τον χρόνο</span><span><input value="3.660"><em>kWh</em></span></div>
+   <div class="fld on"><span>Τιμή σήμερα</span><span><input value="0,1590"><em>€/kWh</em></span></div>
+   <div class="fld on"><span>Πάγιο σήμερα</span><span><input value="5,00"><em>€/μήνα</em></span></div>
+   <div class="fld"><span>Όνομα πελάτη <em>(για το PDF)</em></span><span><input placeholder="—"></span></div>
+   <div class="back">← Έχω λογαριασμό</div>
+  </div>
+ </div>
+ <div class="card">
+  <div class="verdict"><div class="vbox"><small>Σήμερα</small><b>642 €</b><em>τον χρόνο, ενέργεια + πάγιο</em></div><div class="varrow">→</div><div class="vbox new"><small>Με Protergia Value Special</small><b>524 €</b><em>τον χρόνο</em></div></div>
+  <div class="save"><span>Ο πελάτης κερδίζει</span><b>118 € τον χρόνο</b><span>≈ 10 € τον μήνα</span></div>
+  <div class="race"><h4>Όλα τα προγράμματα <small>3.660 kWh/έτος</small></h4>
+   <div class="lane best on"><div class="nm"><span>Value Special</span></div><div class="track"><i style="width:68%"></i><span class="now" style="left:83%"></span></div><div class="v">524 €<small>−118 €</small></div></div>
+   <div class="lane"><div class="nm"><span>Volton Blue</span></div><div class="track"><i style="width:72%"></i><span class="now" style="left:83%"></span></div><div class="v">556 €<small>−86 €</small></div></div>
+   <div class="lane"><div class="nm"><span>Picasso M 82,90 €</span></div><div class="track"><i style="width:76%"></i><span class="now" style="left:83%"></span></div><div class="v">588 €<small>−54 €</small></div></div>
+   <div class="lane cur"><div class="nm"><span>Σήμερα</span></div><div class="track"><i style="width:83%"></i></div><div class="v">642 €<small>τώρα</small></div></div>
+   <div class="lane"><div class="nm"><span>NRG Fixed</span></div><div class="track"><i style="width:88%"></i><span class="now" style="left:83%"></span></div><div class="v">681 €<small style="color:var(--rose)">+39 €</small></div></div>
+  </div>
+  <div class="pick"><p>Διάλεξες <b>Protergia Value Special</b> · σταθερό</p><div><span class="btn gho">PDF προσφοράς</span><span class="btn pri">Νέα αίτηση με αυτό</span></div></div>
+ </div>
+</div>
+</div></div>
+<p class="hint">Χωρίς τιμή σήμερα: η κούρσα δείχνει μόνο το ετήσιο κόστος κάθε προγράμματος (χωρίς «κερδίζει»), όπως κάνει ήδη και με τον λογαριασμό. Η «Νέα αίτηση με αυτό» από το χειροκίνητο ανοίγει τη φόρμα με πάροχο/πρόγραμμα, χωρίς έγγραφο.</p>
+</div>
+<script>document.querySelectorAll('.switch button').forEach(function(b){b.onclick=function(){document.querySelectorAll('.switch button').forEach(function(x){x.classList.toggle('on',x===b)});document.querySelectorAll('.stage').forEach(function(s){s.classList.toggle('on',s.id==='s'+b.dataset.s)})}});</script>
+</body></html>
