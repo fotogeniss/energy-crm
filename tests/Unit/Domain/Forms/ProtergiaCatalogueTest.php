@@ -159,4 +159,20 @@ final class ProtergiaCatalogueTest extends TestCase
         self::assertSame('', ProtergiaCatalogue::added()['protergia_power_gas_he']['priceType']);
         self::assertSame('', ProtergiaCatalogue::added()['protergia_power_gas_fa']['priceType']);
     }
+
+    /** (374) Protergia 13/11: τέλος τα Value Seasonal 2026 (Ε1) και Value Sure 2.0 (Ε3). */
+    public function testTheNovember2026BusinessRetirements(): void
+    {
+        self::assertTrue(ProtergiaBizCatalogue::isRetired(ProtergiaBizPlans::SEASONAL));
+        self::assertTrue(ProtergiaBizCatalogue::isRetired('protergia_epag3_sure12m_2'));
+
+        // Τα υπόλοιπα της Ε1/Ε3 μένουν.
+        self::assertFalse(ProtergiaBizCatalogue::isRetired(ProtergiaBizPlans::SIMPLE_2));
+        self::assertFalse(ProtergiaBizCatalogue::isRetired('protergia_epag1_balance2_12m'));
+        self::assertFalse(ProtergiaBizCatalogue::isRetired('protergia_epag3_standard2'));
+
+        // Οι αιτήσεις τους τυπώνουν ακόμα το φύλλο τους.
+        self::assertSame(ProtergiaBizPlans::SEASONAL, ProtergiaBizPlans::templateKey(ProtergiaBizPlans::SEASONAL));
+        self::assertSame('protergia_epag3_sure12m_2', ProtergiaBizSheets::templateKey('protergia_epag3_sure12m_2'));
+    }
 }

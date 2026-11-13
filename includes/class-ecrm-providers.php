@@ -132,6 +132,10 @@ class ECRM_Providers {
 					}
 					// (319) Τα επαγγελματικά «1/2/3» της λίστας της Protergia.
 					foreach ( \EnergyCRM\Domain\Forms\ProtergiaBizCatalogue::all() as $code => $plan ) {
+						// (374) Όσα καταργήθηκαν ή αντικαταστάθηκαν δεν μπαίνουν σε νέα εγκατάσταση.
+						if ( \EnergyCRM\Domain\Forms\ProtergiaBizCatalogue::isRetired( $code ) ) {
+							continue;
+						}
 						$starters[] = [ $plan['label'], $code, $plan['energy'], $plan['priceType'], null, null, 'business' ];
 					}
 				} elseif ( $row['slug'] === 'volton' ) {

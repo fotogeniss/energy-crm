@@ -32,7 +32,8 @@
  *
  * Το «Γ21 Value Sure 12 Μήνες 3.0» (`ProtergiaBizPlans::SURE_12`) δεν είναι πια
  * στη λίστα της Protergia· ο ιδιοκτήτης είπε να απενεργοποιηθεί (17/10/2026).
- * Δεν σβήνεται: οι παλιές αιτήσεις το κρατάνε και τυπώνουν το φύλλο τους.
+ * (374) Το ίδιο το Value Seasonal 2026 (Ε1) και το Ε3 Value Sure 12M 2.0.
+ * Δεν σβήνονται: οι παλιές αιτήσεις τα κρατάνε και τυπώνουν το φύλλο τους.
  *
  * ## Τιμές
  *
@@ -163,8 +164,16 @@ final class ProtergiaBizCatalogue
         ],
     ];
 
-    /** Όσα επαγγελματικά δεν είναι πια στη λίστα της Protergia. */
-    public const RETIRED = [ProtergiaBizPlans::SURE_12];
+    /**
+     * Όσα επαγγελματικά δεν είναι πια στη λίστα της Protergia.
+     * (374) Protergia 13/11/2026: «Καταργούνται τα επαγγελματικά Value
+     * Seasonal 2026 (Ε1) και Value Sure 2.0 (Ε3)» (μετάβαση 0061).
+     */
+    public const RETIRED = [
+        ProtergiaBizPlans::SURE_12,
+        ProtergiaBizPlans::SEASONAL,
+        'protergia_epag3_sure12m_2',
+    ];
 
     /**
      * (371) Protergia 12/11/2026: «Το Value Balance 12M έγινε Value Balance

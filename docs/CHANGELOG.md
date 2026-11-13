@@ -6,6 +6,18 @@
 Νεότερα πρώτα. Κάθε εγγραφή αναφέρει το πρόβλημα, όχι μόνο τη λύση.
 
 ---
+### (374) Protergia: τέλος τα επαγγελματικά Value Seasonal 2026 (Ε1) και Value Sure 2.0 (Ε3)
+
+Protergia 13/11/2026: «Καταργούνται τα επαγγελματικά προγράμματα ηλεκτρικής ενέργειας Value Seasonal 2026 (Ε1) και Value Sure 2.0 (Ε3)».
+
+- Στο CRM είναι το «Protergia Επαγγελματικό — Value Seasonal (2026)» (`protergia_epag_seasonal`) και το «Protergia Επαγγελματικό 3 — Value Sure 12M 2.0» (`protergia_epag3_sure12m_2`).
+- **Μετάβαση 0061** (`RetireProtergiaBizNovember2026`): απενεργοποιούνται, δεν σβήνονται. Φεύγουν από τη «Νέα αίτηση», αλλά οι αιτήσεις που έγιναν μ' αυτά τα κρατάνε και τυπώνουν το φύλλο τους όπως πριν. Ίδιο σχήμα με το Γ21 Sure 12 3.0 (319). Αντικαταστάτης δεν δόθηκε, οπότε κανόνες προμήθειας και εγγύησης δεν μεταφέρονται πουθενά.
+- `ProtergiaBizCatalogue::RETIRED`: και τα δύο, ώστε μια νέα εγκατάσταση να μην τα φτιάχνει. Στην ίδια διαδρομή (`ECRM_Providers`, προγράμματα εκκίνησης) ο κατάλογος «1/2/3» δεν ρωτούσε καθόλου αν ένα πρόγραμμα έχει αποσυρθεί, οπότε σε νέα εγκατάσταση έμπαινε ενεργό και το παλιό Ε1 Value Balance 12M του 371. Τώρα ρωτά.
+
+**Laravel-ready;** Ναι. Τι αποσύρεται ζει στο Domain (`ProtergiaBizCatalogue::RETIRED`)· η μετάβαση στο Persistence, με τους κωδικούς γραμμένους μέσα της.
+
+Τεστ: `ProtergiaCatalogueTest::testTheNovember2026BusinessRetirements` (unit), νέο integration `ProtergiaBizRetirementsTest`.
+
 ### (373) Protergia: χρώμα από το έντυπο για Standard 2.0, Student Plan και Value Power 2.0
 
 Τρία ενεργά προγράμματα της Protergia δεν είχαν χρώμα (`price_type`), οπότε η «Νέα αίτηση» τα έδειχνε σε **κάθε** χρώμα, όπως το Picasso πριν το 351: το Value Standard 2.0 και το Student Plan έβγαιναν και στο «Σταθερό», ενώ είναι κυμαινόμενα. Mockup `docs/UI-PROTERGIA-COLOURS.html`, εγκρίθηκε 12/11.

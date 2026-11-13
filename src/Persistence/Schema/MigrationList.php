@@ -61,6 +61,7 @@ use EnergyCRM\Persistence\Schema\Migrations\PurgeOrphanFiles;
 use EnergyCRM\Persistence\Schema\Migrations\ReplaceProtergiaNovember2026;
 use EnergyCRM\Persistence\Schema\Migrations\RepriceProtergiaPicasso;
 use EnergyCRM\Persistence\Schema\Migrations\RetargetContractListIndexToUpdatedAt;
+use EnergyCRM\Persistence\Schema\Migrations\RetireProtergiaBizNovember2026;
 use EnergyCRM\Persistence\Schema\Migrations\SeedMobilePrograms;
 use EnergyCRM\Persistence\Schema\Migrations\SeedOrizonPlans;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaBizCatalogue2026;
@@ -147,6 +148,7 @@ final class MigrationList
             new ReplaceProtergiaNovember2026(),
             new MoveSlaEscalationToTaskKind(),
             new SetProtergiaColoursFromForms(),
+            new RetireProtergiaBizNovember2026(),
         ];
     }
 }
