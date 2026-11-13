@@ -149,4 +149,14 @@ final class ProtergiaCatalogueTest extends TestCase
         self::assertSame('fixed', ProtergiaCatalogue::added()['protergia_value_balance2_12m']['priceType']);
         self::assertSame('fixed', ProtergiaBizCatalogue::all()['protergia_epag1_balance2_12m']['priceType']);
     }
+
+    /** (373) Το χρώμα από τον «Τύπο τιμολόγησης» του εντύπου· το Power+Gas μένει χωρίς. */
+    public function testColoursReadFromTheForms(): void
+    {
+        self::assertSame('variable', ProtergiaCatalogue::added()['protergia_value_standard2']['priceType']);
+        self::assertSame('variable', ProtergiaCatalogue::added()['protergia_student_plan']['priceType']);
+        self::assertSame('fixed', ProtergiaBizCatalogue::all()['protergia_epag2_power2']['priceType']);
+        self::assertSame('', ProtergiaCatalogue::added()['protergia_power_gas_he']['priceType']);
+        self::assertSame('', ProtergiaCatalogue::added()['protergia_power_gas_fa']['priceType']);
+    }
 }

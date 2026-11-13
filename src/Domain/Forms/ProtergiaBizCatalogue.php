@@ -40,8 +40,9 @@
  * θα ήταν λάθος από τον επόμενο μήνα. Ίδια απόφαση με το `ProtergiaCatalogue`.
  * Το χρώμα (price_type) μόνο όπου το λέει το όνομα ή ο πίνακας της Protergia:
  * Sure = σταθερό, Dynamic = δυναμικό, Special = ειδικό, Standard/Simple με
- * μηνιαία τιμή = κυμαινόμενο. Balance/Power έχουν κλιμακωτή τιμή και μένουν
- * χωρίς χρώμα (φαίνονται σε κάθε φίλτρο)· ο διαχειριστής το αλλάζει από τη
+ * μηνιαία τιμή = κυμαινόμενο. (373) Value Power 2.0: σταθερό, από τον «Τύπο
+ * τιμολόγησης» του εντύπου του (κλιμακωτή, αλλά σταθερή χρέωση). Ό,τι μένει
+ * χωρίς χρώμα φαίνεται σε κάθε φίλτρο· ο διαχειριστής το αλλάζει από τη
  * σελίδα παρόχων.
  *
  * @package EnergyCRM
@@ -96,7 +97,7 @@ final class ProtergiaBizCatalogue
         'protergia_epag2_power2' => [
             'label'     => 'Protergia Επαγγελματικό 2 — Value Power 2.0',
             'energy'    => 'power',
-            'priceType' => '',
+            'priceType' => 'fixed',
             'sort'      => 44,
         ],
         'protergia_epag2_standard2' => [

@@ -27,8 +27,11 @@
  *
  * Μόνο όπου το λέει το ίδιο το όνομα ή το προηγούμενο πρόγραμμα: Sure =
  * σταθερό, Dynamic = δυναμικό, Special = ειδικό, Κυμαινόμενο = variable.
- * Όπου δεν ξέρουμε, μένει κενό και το πρόγραμμα φαίνεται σε κάθε χρώμα. Ο
- * διαχειριστής το διορθώνει από τη σελίδα παρόχων.
+ * (373) Student Plan και Value Standard 2.0: κυμαινόμενο, από τον «Τύπο
+ * τιμολόγησης» στη σελ. 2 του εντύπου τους. Όπου δεν ξέρουμε (Power+Gas, που
+ * δεν έχει δικό του έντυπο: απόφαση ιδιοκτήτη 12/11), μένει κενό και το
+ * πρόγραμμα φαίνεται σε κάθε χρώμα. Ο διαχειριστής το διορθώνει από τη
+ * σελίδα παρόχων.
  *
  * ## Τα παλιά
  *
@@ -108,13 +111,13 @@ final class ProtergiaCatalogue
         'protergia_student_plan' => [
             'label'     => 'Protergia Student Plan',
             'energy'    => 'power',
-            'priceType' => '',
+            'priceType' => 'variable',
             'sort'      => 8,
         ],
         'protergia_value_standard2' => [
             'label'     => 'Protergia Value Standard 2.0',
             'energy'    => 'power',
-            'priceType' => '',
+            'priceType' => 'variable',
             'sort'      => 10,
         ],
         'protergia_power_gas_he' => [

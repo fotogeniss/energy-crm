@@ -72,6 +72,7 @@ use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaPicasso;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProtergiaPrices2026;
 use EnergyCRM\Persistence\Schema\Migrations\SeedProviderGrants;
 use EnergyCRM\Persistence\Schema\Migrations\SeedVoltonPlans;
+use EnergyCRM\Persistence\Schema\Migrations\SetProtergiaColoursFromForms;
 use EnergyCRM\Persistence\Schema\Migrations\WidenCustomerPhoneColumn;
 use EnergyCRM\Persistence\Schema\Migrations\WidenEncryptedColumns;
 
@@ -145,6 +146,7 @@ final class MigrationList
             new MarkProtergiaPicassoFixed(),
             new ReplaceProtergiaNovember2026(),
             new MoveSlaEscalationToTaskKind(),
+            new SetProtergiaColoursFromForms(),
         ];
     }
 }
