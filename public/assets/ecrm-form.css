@@ -936,6 +936,12 @@
 .ecrm-toast.is-show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .ecrm-toast.is-ok { border-left: 4px solid var(--ok); }
 .ecrm-toast.is-err { border-left: 4px solid var(--err); }
+/* (384) Κουμπί μέσα στο μήνυμα («Αναίρεση»): μόνο τότε δέχεται κλικ. */
+.ecrm-toast.has-act.is-show { pointer-events: auto; }
+.ecrm-toast__act {
+	margin-left: 14px; padding: 0; border: 0; background: none; color: inherit;
+	font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer;
+}
 .ecrm-loading, .ecrm-empty { color: var(--muted); font-size: var(--fs-14); padding: 8px 0; }
 .ecrm-gate { padding: 20px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); }
 

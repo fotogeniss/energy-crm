@@ -103,17 +103,35 @@ test('minutesAgo() reads local time like timeAgo, and null for nothing or junk',
 	assert.equal(minutesAgo('όχι ημερομηνία'), null);
 });
 
-test('contractStages() reads facts, not only the status name', () => {
+test('contractStages() follows the status; facts tick the steps', () => {
 	const states = (c) => contractStages(c).map((s) => s.state).join(',');
 	assert.equal(states({ status: 'draft' }), 'now,next,next,next,next');
 	assert.equal(states({ status: 'awaiting_signature', doc_checklist: { items: [{ ok: true }], complete: true } }), 'ok,ok,now,next,next');
-	assert.equal(states({ status: 'awaiting_signature', signed_at: '2026-11-11 10:00:00', doc_checklist: { items: [{ ok: false }], complete: false } }), 'ok,now,ok,next,next');
+	// Η κατάσταση προσπέρασε τα χαρτιά χωρίς αυτά: «!».
+	assert.equal(states({ status: 'awaiting_signature', signed_at: '2026-11-11 10:00:00', doc_checklist: { items: [{ ok: false }], complete: false } }), 'ok,warn,now,next,next');
 	assert.equal(states({ status: 'to_finalisation', files: [{}] }), 'ok,ok,ok,now,next');
 	assert.equal(states({ status: 'pending_issue', files: [{}] }), 'ok,ok,ok,warn,next');
+	assert.equal(states({ status: 'finalisation', files: [{}] }), 'ok,ok,ok,ok,now');
 	assert.equal(states({ status: 'active' }), 'ok,ok,ok,ok,ok');
 	assert.equal(states({ status: 'cancelled', files: [{}] }), 'ok,ok,stop,next,next');
 	assert.equal(states({ status: 'registration', files: [{}], signatures: { required: ['mobile', 'energy'], collected: ['mobile'] } }), 'ok,ok,now,next,next');
-	assert.deepEqual(contractStages({}).map((s) => s.label), ['Πρόχειρο', 'Χαρτιά', 'Υπογραφή', 'Πάροχος', 'Ενεργή']);
+	// (385) Το screenshot: Presale με πλήρη χαρτιά και υπογραφή → ● Χαρτιά, ✓ Υπογραφή.
+	assert.equal(states({ status: 'presale', files: [{}], signed_at: '2026-11-13 10:00:00' }), 'ok,now,ok,next,next');
+	assert.deepEqual(contractStages({}).map((s) => s.label), ['Πρόχειρο', 'Χαρτιά', 'Υπογραφή', 'Αποστολή', 'Ενεργή']);
+});
+
+test('(385) «Όλα έτοιμα» only while the status lags behind complete facts', () => {
+	const ready = (c) => contractStages(c).some((s) => s.ready);
+	const cur = (c) => contractStages(c).findIndex((s) => s.current);
+	const done = { files: [{}], signed_at: '2026-11-13 10:00:00' };
+	assert.equal(ready(Object.assign({ status: 'presale' }, done)), true);
+	assert.equal(ready(Object.assign({ status: 'registration' }, done)), true);
+	assert.equal(ready(Object.assign({ status: 'awaiting_signature' }, done)), true);
+	assert.equal(ready(Object.assign({ status: 'to_finalisation' }, done)), false, 'ήδη στην αποστολή');
+	assert.equal(ready(Object.assign({ status: 'cancelled' }, done)), false);
+	assert.equal(ready({ status: 'presale', files: [{}] }), false, 'χωρίς υπογραφή');
+	assert.equal(cur(Object.assign({ status: 'presale' }, done)), 1);
+	assert.equal(cur({ status: 'active' }), -1);
 });
 
 test('dueBucket() groups by local day; overdue and done come from the row', () => {

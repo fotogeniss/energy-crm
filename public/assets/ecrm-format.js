@@ -126,18 +126,25 @@ export function svgIcon(name) {
 
 /* (353h) Οι πέντε σταθμοί μιας αίτησης, για τη λωρίδα της «Signature» καρτέλας.
  *
- * Πρόχειρο → Χαρτιά → Υπογραφή → Πάροχος → Ενεργή. Δεν είναι νέα κατάσταση:
- * διαβάζει την κατάσταση ΚΑΙ τα γεγονότα που ήδη ταξιδεύουν με την αίτηση.
- * «Χαρτιά» και «Υπογραφή» κρίνονται από τα ίδια τα στοιχεία (checklist,
- * signed_at, signatures), όχι από το όνομα της κατάστασης: μια αίτηση που
- * υπογράφηκε αλλά της λείπει λογαριασμός δείχνει ✓ στην υπογραφή και ● στα
- * χαρτιά, γιατί αυτό ακριβώς την κρατά. Ο server παραμένει ο φύλακας των
- * μεταβάσεων (ContractStatus::allowedNext()) -- εδώ μόνο ζωγραφίζεται.
+ * Πρόχειρο → Χαρτιά → Υπογραφή → Αποστολή → Ενεργή. Δεν είναι νέα κατάσταση.
  *
- * state: 'ok' πέρασε, 'now' εδώ είναι, 'warn' εδώ με εκκρεμότητα,
- * 'stop' σταμάτησε εδώ (απόρριψη/ακύρωση), 'next' δεν έφτασε ακόμα. */
+ * (385) Το «πού είναι» το λέει η ΚΑΤΑΣΤΑΣΗ (docs/UI-STAGE-PROVIDER.html,
+ * εκδοχή Β): Presale = στα Χαρτιά, Καταχώρηση/Αναμονή υπογραφής = στην
+ * Υπογραφή, Προς οριστικοποίηση κ.λπ. = στην Αποστολή. Ως τώρα το έλεγαν τα
+ * στοιχεία, και μια αίτηση σε Presale με πλήρη χαρτιά και υπογραφή έδειχνε
+ * «● Πάροχος / Presale» -- ο ιδιοκτήτης ρώτησε δύο φορές τι σημαίνει.
+ *
+ * «Χαρτιά» και «Υπογραφή» κρίνονται ακόμα από τα ίδια τα στοιχεία (checklist,
+ * signed_at, signatures): ✓ όταν υπάρχουν, ακόμα κι αν η κατάσταση δεν έφτασε
+ * εκεί· «!» όταν η κατάσταση τα προσπέρασε χωρίς αυτά. Όταν είναι όλα έτοιμα
+ * και η κατάσταση έμεινε πίσω, `ready` στο τρέχον βήμα: η καρτέλα λέει «Όλα
+ * έτοιμα». Ο server παραμένει ο φύλακας των μεταβάσεων -- εδώ μόνο ζωγραφίζεται.
+ *
+ * state: 'ok' πέρασε, 'now' εδώ είναι, 'warn' εδώ με εκκρεμότητα (ή λείπει
+ * κάτι που η κατάσταση προσπέρασε), 'stop' σταμάτησε εδώ (απόρριψη/ακύρωση),
+ * 'next' δεν έφτασε ακόμα. */
 var STAGE_RANK = {
-	draft: 0, presale: 1, registration: 1, awaiting_signature: 1,
+	draft: 0, presale: 1, registration: 2, awaiting_signature: 2,
 	to_finalisation: 3, signature_complete: 3, awaiting_sim: 3, sim_delivered: 3,
 	pending_issue: 3, recheck: 3, debt: 3, for_review: 3,
 	finalisation: 4, thalis_confirmed: 4, active: 5
@@ -148,6 +155,7 @@ var STAGE_STOP = { cancelled: 1, thalis_rejected: 1, mnp_reject: 1 };
 export function contractStages(c) {
 	c = c || {};
 	var st = String(c.status || 'draft');
+	var stop = !!STAGE_STOP[st];
 	var rank = STAGE_RANK[st] !== undefined ? STAGE_RANK[st] : 0;
 	var ck = c.doc_checklist && c.doc_checklist.items && c.doc_checklist.items.length ? c.doc_checklist : null;
 	var expired = (c.doc_expired || []).length > 0;
@@ -164,16 +172,18 @@ export function contractStages(c) {
 		rank >= 4,
 		st === 'active'
 	];
-	var now = ok.indexOf(false);
-	var labels = ['Πρόχειρο', 'Χαρτιά', 'Υπογραφή', 'Πάροχος', 'Ενεργή'];
+	// Απόρριψη/ακύρωση: σταματά στο πρώτο βήμα που δεν έγινε, όπως πριν.
+	var now = stop ? ok.indexOf(false) : (st === 'active' ? -1 : rank);
+	var ready = !stop && now >= 1 && now < 3 && ok[1] && ok[2];
+	var labels = ['Πρόχειρο', 'Χαρτιά', 'Υπογραφή', 'Αποστολή', 'Ενεργή'];
 	var keys = ['draft', 'docs', 'sign', 'provider', 'active'];
 
 	return labels.map(function (label, i) {
-		var state = ok[i] ? 'ok' : 'next';
+		var state = ok[i] ? 'ok' : (i < now ? 'warn' : 'next');
 		if (i === now) {
-			state = STAGE_STOP[st] ? 'stop' : (STAGE_WARN[st] ? 'warn' : 'now');
+			state = stop ? 'stop' : (STAGE_WARN[st] ? 'warn' : 'now');
 		}
-		return { key: keys[i], label: label, state: state };
+		return { key: keys[i], label: label, state: state, current: i === now, ready: ready && i === now };
 	});
 }
 

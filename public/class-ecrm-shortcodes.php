@@ -64,6 +64,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/tickets'          => 'ecrm-tickets.js',
 		'@energy-crm/photo-check'      => 'ecrm-photo-check.js',
 		'@energy-crm/close-reason'     => 'ecrm-close-reason.js',
+		'@energy-crm/status-menu'      => 'ecrm-status-menu.js',
 		'@energy-crm/qr'               => 'ecrm-qr.js',
 		'@energy-crm/datepick'         => 'ecrm-datepick.js',
 		'@energy-crm/qr-poster'        => 'ecrm-qr-poster.js',
@@ -96,6 +97,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/ai-docs',
 			'@energy-crm/photo-check',
 			'@energy-crm/close-reason',
+			'@energy-crm/status-menu',
 		],
 		'@energy-crm/view-contracts'   => [
 			'@energy-crm/util',
@@ -105,6 +107,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/dialog',
 			'@energy-crm/scope',
 			'@energy-crm/close-reason',
+			'@energy-crm/status-menu',
 		],
 		'@energy-crm/view-pending'     => [
 			'@energy-crm/util',
@@ -170,6 +173,7 @@ class ECRM_Shortcodes {
 		],
 		'@energy-crm/photo-check'      => [],
 		'@energy-crm/close-reason'     => [ '@energy-crm/util', '@energy-crm/dialog' ],
+		'@energy-crm/status-menu'      => [ '@energy-crm/util', '@energy-crm/close-reason' ],
 		'@energy-crm/qr'               => [],
 		'@energy-crm/qr-poster'        => [ '@energy-crm/util', '@energy-crm/qr' ],
 		'@energy-crm/app'              => [

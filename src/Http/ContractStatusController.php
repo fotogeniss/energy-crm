@@ -204,7 +204,12 @@ final class ContractStatusController implements Controller
             'reason'  => CloseReason::required($target->value, $from) ? $reason : null,
         ]);
 
-        return new WP_REST_Response(['ok' => true, 'status' => $target->value], 200);
+        // (384) Η λίστα αλλάζει τη γραμμή επιτόπου: χρειάζεται τις επόμενες.
+        return new WP_REST_Response([
+            'ok'           => true,
+            'status'       => $target->value,
+            'allowed_next' => ContractStatus::nextSlugsFor(['status' => $target->value] + $current),
+        ], 200);
     }
 
     public function destroy(WP_REST_Request $request): WP_REST_Response

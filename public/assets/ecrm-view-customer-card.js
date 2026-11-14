@@ -31,7 +31,7 @@ var TYPE_LABEL = { individual: 'ΙΔΙΩΤΗΣ', company: 'ΕΤΑΙΡΕΙΑ', so
 
 export function openCustomerCard(id) {
 	go('customer-detail');
-	markSubViewOpen();
+	markSubViewOpen('customer/' + id);
 	var view = viewEl('customer-detail');
 	if (!view) { return; }
 	view.innerHTML = '<div class="ecrm-loading">Φόρτωση…</div>';

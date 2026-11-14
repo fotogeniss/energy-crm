@@ -20,6 +20,7 @@ import { openExportModal } from '@energy-crm/export-modal';
 import { confirmTyped, confirmTypedWithReason } from '@energy-crm/dialog';
 import { scope, setScope } from '@energy-crm/scope';
 import { pickReason } from '@energy-crm/close-reason';
+import { statusBadgeHTML, wireStatusMenus } from '@energy-crm/status-menu';
 
 var contractsState = { status: '', q: '', page: 1, pageSize: 12, reason: '', reasonLabel: '' };
 
@@ -322,7 +323,7 @@ function sigCardsHTML(rows, statuses, showOwner) {
 			'<span class="sig-crow__prov">' + providerMark(r.provider_name, r.provider_logo) + '<span><b>' + esc(r.provider_name || '—') + '</b>' +
 			'<small>' + esc(r.program_name || '') + '</small></span></span>' +
 			(showOwner ? '<span class="sig-crow__owner">' + esc(r.partner_name || '—') + '</span>' : '') +
-			'<span class="sig-crow__st"><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(statuses[r.status] || r.status) + '</span>' + sig + '</span>' +
+			'<span class="sig-crow__st">' + statusBadgeHTML(r, statuses[r.status] || r.status) + sig + '</span>' +
 			'<span class="sig-crow__when">' + esc(sigWhen(r.updated_at, group)) + '</span>' +
 			'<span class="sig-crow__act' + (act.quiet ? ' is-quiet' : '') + '">' + esc(act.txt) + '</span>' +
 			'</div>';
@@ -374,7 +375,7 @@ document.addEventListener('click', function (e) {
 	var t = e.target;
 	if (!panel || !t || !t.closest || !document.contains(t)) return;
 	if (panel.contains(t)) return;
-	if (t.closest('.ecrm-rowlink, [role="dialog"], dialog, .ecrm-modalov, .ecrm-toast')) return;
+	if (t.closest('.ecrm-rowlink, [role="dialog"], dialog, .ecrm-modalov, .ecrm-toast, .ecrm-stmenu, .ecrm-stmenu-shade')) return;
 	closeInspector(view);
 });
 
@@ -425,7 +426,7 @@ function renderContracts(view, d) {
 			// όταν ολοκληρωθούν, το status το λέει ήδη (π.χ. «Υπογράφηκε»),
 			// δεύτερη σήμανση θα ήταν διπλή πληροφορία. Κάθε άλλη σύμβαση
 			// (η συντριπτική πλειοψηφία) δεν βλέπει τίποτα νέο εδώ.
-			'<td class="ecrm-c-status"><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(stLabel) + '</span>' +
+			'<td class="ecrm-c-status">' + statusBadgeHTML(r, stLabel) +
 			(r.signatures && !r.signatures.complete
 				? '<span class="ecrm-sigpill" title="Υπογραφές: ' + r.signatures.collected.length + ' από ' + r.signatures.required.length + '">' + r.signatures.collected.length + '/' + r.signatures.required.length + '</span>'
 				: '') +
@@ -599,6 +600,37 @@ function renderContracts(view, d) {
 			e.stopPropagation();
 			toggleExpand(this.getAttribute('data-expand'));
 		});
+	});
+	// (384) Αλλαγή κατάστασης από το σήμα της γραμμής. docs/UI-STATUS-INLINE.html.
+	var rowsById = {};
+	rowsPage.forEach(function (r) { rowsById[String(r.id)] = r; });
+	wireStatusMenus(view, {
+		rows: rowsById,
+		statuses: statuses,
+		open: function (id) {
+			if (!isMobile() && isSignature()) { openInspector(view, id); return; }
+			openDetail(id);
+		},
+		changed: function (id, to) {
+			delete expandCache[id];
+			var act = primaryAction(to);
+			view.querySelectorAll('.ecrm-rowlink[data-id="' + id + '"], [data-exprow="' + id + '"]').forEach(function (el) {
+				el.setAttribute('data-status', to);
+			});
+			var line = view.querySelector('.ecrm-rowlink[data-id="' + id + '"]');
+			if (!line) return;
+			var btn = line.querySelector('.sig-crow__act, .ecrm-rowact');
+			if (btn) { btn.textContent = act.txt; btn.classList.toggle('is-quiet', act.quiet); }
+			// Σε λίστα φιλτραρισμένη σε μία κατάσταση η γραμμή μένει ως την
+			// επόμενη φόρτωση, θολή: φαίνεται τι έγινε, δεν «εξαφανίζεται».
+			line.classList.toggle('is-moved', !!contractsState.status && contractsState.status !== to);
+			line.classList.remove('is-flash');
+			void line.offsetWidth;
+			line.classList.add('is-flash');
+			var exp = view.querySelector('[data-exprow="' + id + '"]');
+			if (exp && !exp.hidden) loadExpand(id, view);
+			if (line.classList.contains('is-sel') && view.querySelector('[data-insp].is-open')) openInspector(view, id);
+		},
 	});
 	view.querySelectorAll('[data-page]').forEach(function (b) {
 		b.addEventListener('click', function () {

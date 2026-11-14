@@ -690,7 +690,10 @@ import { loadProfile } from '@energy-crm/view-profile';
 			!window.confirm('Η τρέχουσα αίτηση έχει μη αποθηκευμένες αλλαγές. Να ανοίξει η επεξεργασία και να χαθούν;')) {
 			return;
 		}
-		go('new-contract');
+		// (386) `#edit/123`: η ανανέωση ξανανοίγει την ίδια αίτηση στη φόρμα.
+		suppressHash = true; go('new-contract'); suppressHash = false;
+		var editHash = c && c.id ? '#edit/' + c.id : '#new-contract';
+		try { if (location.hash !== editHash) history.pushState({ v: editHash.slice(1) }, '', editHash); } catch (e) {}
 		if (window.ECRMForm && window.ECRMForm.edit) {
 			// Clear whatever a previous edit session left behind before
 			// prefilling this contract. Without this, a field this contract
@@ -753,6 +756,14 @@ import { loadProfile } from '@energy-crm/view-profile';
 			suppressHash = true; go('profile'); suppressHash = false;
 			return;
 		}
+		// (386) Καρτέλες με δικό τους hash: η ανανέωση μένει στην ίδια σελίδα
+		// αντί να πηγαίνει στη λίστα (ή στην Αρχική).
+		var sub = /^(contract|customer|partner|edit)\/(\d+)$/.exec(v);
+		if (sub) {
+			if (push) { try { history.pushState({ v: v }, '', '#' + v); } catch (e) {} }
+			openSub(sub[1], +sub[2]);
+			return;
+		}
 		var ticket = /^tickets\/(\d+)$/.exec(v);
 		if (ticket) {
 			if (push) { try { history.pushState({ v: v }, '', '#' + v); } catch (e) {} }
@@ -764,6 +775,21 @@ import { loadProfile } from '@energy-crm/view-profile';
 		suppressHash = true; go(v); suppressHash = false;
 	}
 	window.addEventListener('popstate', function () { route((location.hash || '').slice(1), false); });
+
+	function openSub(kind, id) {
+		if (kind === 'contract') { openDetail(id); return; }
+		if (kind === 'customer') { openCustomerCard(id); return; }
+		if (kind === 'partner') { openPartner(id); return; }
+		// Η φόρμα θέλει ολόκληρη την αίτηση, όπως της τη δίνει η καρτέλα.
+		fetch(api('/contracts/' + id), { headers: H() })
+			.then(function (r) { return r.json(); })
+			.then(function (d) {
+				if (d && d.ok && d.contract) { openEdit(d.contract); return; }
+				toast((d && d.error) || 'Η αίτηση δεν βρέθηκε.', false);
+				route('contracts', false);
+			})
+			.catch(function () { toast('Σφάλμα φόρτωσης.', false); });
+	}
 
 	// (379) Το μενού του avatar. docs/UI-PROFILE.html.
 	(function () {

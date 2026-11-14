@@ -8,13 +8,14 @@
  * shared module. Both have exactly one caller, here, and a helper with one
  * user is not shared — it is misplaced. */
 
-import { api, esc, fetch, H, markSubViewOpen, providerMark, rejectedNote, toast, viewEl } from '@energy-crm/util';
+import { api, can, esc, fetch, H, markSubViewOpen, providerMark, rejectedNote, toast, viewEl } from '@energy-crm/util';
 import { contractStages, energyLabel, fmtDate, initials, svgIcon, timeAgo, tint } from '@energy-crm/format';
 import { go, openEdit } from '@energy-crm/navigate';
 import { confirmTyped, confirmTypedWithReason, openDialog } from '@energy-crm/dialog';
 import { storedForAi } from '@energy-crm/ai-docs';
 import { checkPhoto } from '@energy-crm/photo-check';
 import { pickReason } from '@energy-crm/close-reason';
+import { wireStatusMenus } from '@energy-crm/status-menu';
 
 function copyText(text) {
 	text = String(text == null ? '' : text);
@@ -54,7 +55,7 @@ function isSignature() {
 }
 export function openDetail(id) {
 	go('contract-detail');
-	markSubViewOpen();
+	markSubViewOpen('contract/' + id);
 	var view = viewEl('contract-detail');
 	view.innerHTML = '<div class="ecrm-loading">Φόρτωση…</div>';
 	fetch(api('/contracts/' + id), { headers: H() })
@@ -456,6 +457,21 @@ function renderDetail(view, d) {
 	 * δεξιά. ΤΑ ΙΔΙΑ κομμάτια με την κλασική (timeline, statusFlow, filesCard,
 	 * stuckCard, auditCard, checklist, παρατηρήσεις, κουμπιά): αλλάζει μόνο η
 	 * θέση τους, όχι τι κάνουν, οπότε καμία καλωδίωση δεν διπλασιάζεται. */
+	/* (385) Χαρτιά και υπογραφή πλήρη, η κατάσταση έμεινε πίσω: μια γραμμή το
+	 * λέει, με το ίδιο μενού αλλαγής κατάστασης με τη λίστα (384).
+	 * docs/UI-STAGE-PROVIDER.html, εκδοχή Β. */
+	function readyHTML() {
+		var ready = contractStages(c).some(function (st) { return st.ready; });
+		if (!ready) return '';
+		var id = esc(String(c.id));
+		var btn = can('ecrm_change_status') && (d.allowed_next || []).length
+			? '<button type="button" class="sig-ready__btn" data-stmenu="' + id + '" aria-haspopup="menu"' +
+				' aria-expanded="false">Αλλαγή κατάστασης <span aria-hidden="true">▾</span></button>'
+			: '';
+		return '<div class="sig-ready"><span><b>Όλα έτοιμα.</b> Δικαιολογητικά και υπογραφή πλήρη· η αίτηση' +
+			' μπορεί να σταλεί στον πάροχο.</span>' + btn + '</div>';
+	}
+
 	function sigDetailHTML() {
 		function fact(label, val, wide) {
 			return '<div class="sig-fact' + (val ? '' : ' is-empty') + (wide ? ' is-wide' : '') + '"><small>' + esc(label) + '</small><b>' + (val ? esc(val) : '—') + '</b></div>';
@@ -475,13 +491,11 @@ function renderDetail(view, d) {
 		];
 		var marks = { ok: '✓ ', now: '● ', warn: '! ', stop: '✕ ', next: '' };
 		var stageHTML = '<ol class="sig-stage">' + stages.map(function (st, i) {
-			var sub = subs[i];
-			if (st.state === 'now' || st.state === 'warn' || st.state === 'stop') {
-				if (i >= 3 || st.state !== 'now') sub = statuses[c.status] || c.status;
-			}
+			// (385) Κάτω από το τρέχον βήμα, η κατάσταση· στα άλλα, τα στοιχεία.
+			var sub = st.current ? statuses[c.status] || c.status : subs[i];
 			if (i === 3 && st.state === 'ok' && c.status !== 'active') sub = statuses[c.status] || c.status;
 			return '<li class="sig-stage__s is-' + esc(st.state) + '"><b>' + marks[st.state] + esc(st.label) + '</b><small>' + (sub ? esc(sub) : ' ') + '</small></li>';
-		}).join('') + '</ol>';
+		}).join('') + '</ol>' + readyHTML();
 
 		var sub = ['#' + (c.code || c.id), [c.provider_name, c.program_name].filter(Boolean).join(' '),
 			c.created_at ? 'δημιουργήθηκε ' + fmtDate(c.created_at) : ''].filter(Boolean).join(' · ');
@@ -528,6 +542,15 @@ function renderDetail(view, d) {
 
 	if (isSignature()) {
 		view.innerHTML = sigDetailHTML();
+		var readyRow = {};
+		readyRow[String(c.id)] = Object.assign({}, c, { allowed_next: d.allowed_next || [] });
+		wireStatusMenus(view.querySelector('.sig-ready') || document.createElement('div'), {
+			rows: readyRow,
+			statuses: statuses,
+			openLink: false,
+			open: function () {},
+			changed: function () { openDetail(c.id); },
+		});
 	} else view.innerHTML = '' +
 		'<div class="ecrm-detail2"><div class="ecrm-detail2__main">' +
 

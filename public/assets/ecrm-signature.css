@@ -2981,3 +2981,52 @@
 	.ecrm-app[data-ui="signature"] .ecrm-card,
 	.ecrm-app[data-ui="signature"] .ecrm-botnav { background: var(--sig-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
+
+/* (384) Αλλαγή κατάστασης από τη λίστα: το μενού στο ύφος Signature, και το
+   φως της γραμμής στο περίγραμμα (το φόντο της κάρτας είναι συμπαγές). */
+.ecrm-app[data-ui="signature"] .ecrm-stmenu {
+	background: var(--sig-solid); border: 0; border-radius: 16px;
+	box-shadow: 0 0 0 1px var(--sig-hair), var(--sig-lift); color: var(--sig-ink);
+}
+.ecrm-app[data-ui="signature"] .ecrm-stmenu.is-sheet { border-radius: 22px 22px 0 0; }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__opt:hover,
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__opt:focus-visible { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__sep,
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__f { border-color: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__sep { background: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__link { color: var(--sig-green-ink); }
+/* (384b) Το σήμα γεμίζει τη στήλη της κατάστασης (190px), ίδιο πλάτος σε
+   κάθε γραμμή· το «1/2» των υπογραφών μένει δίπλα του. */
+.ecrm-app[data-ui="signature"] .sig-crow__st .ecrm-badge {
+	flex: 1 1 auto; min-width: 0; padding: 6px 12px; gap: 6px; font-size: var(--fs-12);
+}
+.ecrm-app[data-ui="signature"] .sig-crow__st > span.ecrm-badge { overflow: hidden; text-overflow: ellipsis; }
+/* Στενότερες οθόνες: η στήλη είναι «auto», οπότε σταθερό πλάτος στο ίδιο το
+   σήμα, για να μένουν στοιχισμένα και να μην πνίγεται το όνομα. */
+@media (max-width: 1100px) {
+	.ecrm-app[data-ui="signature"] .sig-crow__st .ecrm-badge { flex: 0 0 auto; width: 156px; }
+}
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-crow__st .ecrm-badge { width: 116px; padding: 6px 9px; }
+}
+.ecrm-app[data-ui="signature"] .sig-crow.is-flash { animation: sig-stflash 1.6s ease-out; }
+@keyframes sig-stflash {
+	from { box-shadow: 0 0 0 2px var(--sig-green), var(--sig-lift); }
+	to { box-shadow: 0 0 0 1px var(--sig-hair); }
+}
+
+/* (385) «Όλα έτοιμα» κάτω από τη λωρίδα της αίτησης: χαρτιά και υπογραφή
+   πλήρη, η κατάσταση έμεινε πίσω. docs/UI-STAGE-PROVIDER.html (εκδοχή Β). */
+.ecrm-app[data-ui="signature"] .sig-ready {
+	display: flex; align-items: center; gap: 12px; margin: -10px 0 20px; padding: 10px 14px;
+	border-radius: 16px; background: var(--sig-green-tint); color: var(--sig-green-ink); font-size: var(--fs-13);
+}
+.ecrm-app[data-ui="signature"] .sig-ready b { font-weight: 700; }
+.ecrm-app[data-ui="signature"] .sig-ready__btn {
+	flex: 0 0 auto; margin-left: auto; padding: 7px 14px; border: 0; border-radius: 999px; cursor: pointer;
+	background: var(--sig-ink); color: var(--sig-solid); font: inherit; font-size: var(--fs-12-5); font-weight: 600;
+}
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-ready { flex-wrap: wrap; }
+	.ecrm-app[data-ui="signature"] .sig-ready__btn { margin-left: 0; }
+}

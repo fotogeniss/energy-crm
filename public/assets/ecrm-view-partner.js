@@ -34,7 +34,7 @@ var MIN_SAMPLE = 5;
 
 export function openPartner(id) {
 	go('partner');
-	markSubViewOpen();
+	markSubViewOpen('partner/' + id);
 	loadPartner(id);
 }
 

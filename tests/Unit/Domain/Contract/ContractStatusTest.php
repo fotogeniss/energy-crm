@@ -142,6 +142,34 @@ final class ContractStatusTest extends TestCase
         self::assertNotContains(ContractStatus::ThalisConfirmed, $mobile);
     }
 
+    /** (384) Η λίστα και η καρτέλα παίρνουν τις επόμενες από το ίδιο σημείο. */
+    public function testNextSlugsForFollowTheRowsTrack(): void
+    {
+        self::assertSame(
+            ['presale', 'registration', 'cancelled'],
+            ContractStatus::nextSlugsFor(['status' => 'draft', 'energy_type' => 'power'])
+        );
+        self::assertSame([], ContractStatus::nextSlugsFor(['status' => 'cancelled']));
+
+        $power  = ContractStatus::nextSlugsFor(['status' => 'presale', 'energy_type' => 'power']);
+        $mobile = ContractStatus::nextSlugsFor(['status' => 'presale', 'energy_type' => 'mobile']);
+
+        self::assertContains('thalis_confirmed', $power);
+        self::assertNotContains('thalis_confirmed', $mobile);
+        self::assertContains('awaiting_sim', $mobile);
+        self::assertNotContains('presale', $power, 'όχι η ίδια κατάσταση');
+        self::assertNotContains('draft', $power, 'ποτέ πίσω στο πρόχειρο');
+    }
+
+    /** Άγνωστη κατάσταση: όλες, όπως η καρτέλα πριν, ώστε να μη «παγώνει». */
+    public function testNextSlugsForAnUnknownStatusOffersEverything(): void
+    {
+        self::assertSame(
+            array_keys(ContractStatus::labels()),
+            ContractStatus::nextSlugsFor(['status' => 'signed'])
+        );
+    }
+
     public function testOnlyActiveIsPayable(): void
     {
         foreach (ContractStatus::cases() as $status) {

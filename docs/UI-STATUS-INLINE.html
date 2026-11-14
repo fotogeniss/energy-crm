@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>(384) Αλλαγή κατάστασης από τη λίστα</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#16202b;--mute:#6b7785;--line:#e3e8ee;--teal:#0f766e;--teal-t:#e6f4f2;--red:#b42318;--red-t:#fdecea;--amb:#a15c07;--amb-t:#fdf3e1;--blu:#1d4ed8;--blu-t:#e8efff;--vio:#6d28d9;--vio-t:#f1eafe;--grn:#15803d;--grn-t:#e7f6ec;--gry:#475467;--gry-t:#eef1f4}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px 16px 60px}
+h2{font-size:15px;margin:34px 0 6px}p.note{color:var(--mute);margin:0 0 12px;max-width:820px}
+.wrap{max-width:1080px;margin:0 auto}
+.list{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:visible}
+.day{padding:10px 18px 4px;font-size:12px;color:var(--mute);font-weight:600}
+.row{display:grid;grid-template-columns:20px 44px minmax(0,1.4fr) minmax(0,1fr) 190px 72px 150px;gap:12px;align-items:center;padding:10px 18px;border-top:1px solid var(--line);position:relative}
+.row.sel{background:#f7fbfa}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;background:var(--teal-t);color:var(--teal)}
+.who b,.prov b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.who small,.prov small{color:var(--mute);font-size:12px}
+.when{color:var(--mute);font-size:12px;text-align:right}
+.act{border:1px solid var(--line);border-radius:8px;padding:7px 10px;text-align:center;font-size:12px;font-weight:600;background:#fff}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;border:0;cursor:pointer;font-family:inherit}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge .car{margin-left:2px;font-size:10px;opacity:.7}
+.badge:hover{box-shadow:0 0 0 2px rgba(15,118,110,.25)}
+.b-new{background:var(--blu-t);color:var(--blu)}.b-sig{background:var(--vio-t);color:var(--vio)}.b-fin{background:var(--amb-t);color:var(--amb)}
+.b-act{background:var(--grn-t);color:var(--grn)}.b-can{background:var(--red-t);color:var(--red)}.b-pend{background:var(--amb-t);color:var(--amb)}.b-gry{background:var(--gry-t);color:var(--gry)}
+.b-can .car{display:none}.b-can{cursor:default}.b-can:hover{box-shadow:none}
+.stcell{position:relative}.pop{white-space:normal;position:absolute;z-index:5;top:30px;left:0;width:268px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(16,24,40,.16);padding:6px}
+.pop__h{padding:8px 10px 6px;font-size:11px;color:var(--mute);font-weight:700;letter-spacing:.02em}
+.pop__cur{padding:6px 10px 8px;border-bottom:1px solid var(--line);margin-bottom:4px;font-size:12px;color:var(--mute)}
+.pop__list{max-height:260px;overflow:auto}
+.opt{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;background:none;border-radius:8px;font:inherit;text-align:left;cursor:pointer}
+.opt:hover,.opt.kb{background:var(--gry-t)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.opt small{margin-left:auto;color:var(--mute);font-size:11px}
+.opt.danger{color:var(--red)}
+.sep{height:1px;background:var(--line);margin:4px 6px}
+.pop__f{padding:8px 10px 4px;border-top:1px solid var(--line);margin-top:4px;font-size:12px}
+.pop__f a{color:var(--teal);text-decoration:none;font-weight:600}
+.spin{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:r .8s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+.flash{animation:fl 1.6s ease-out}@keyframes fl{0%{background:#e6f4f2}100%{background:transparent}}
+.toast{display:inline-flex;gap:12px;align-items:center;background:#16202b;color:#fff;border-radius:10px;padding:10px 14px;font-size:13px}
+.toast a{color:#7dd3c8;font-weight:600;text-decoration:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.dlg{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(16,24,40,.12);padding:18px;max-width:420px}
+.dlg .eb{font-size:11px;color:var(--red);font-weight:700}.dlg h3{margin:2px 0 12px;font-size:17px}
+.dlg label{display:flex;gap:8px;padding:6px 0;font-size:13px}
+.dlg textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;margin-top:4px}
+.dlg .ft{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600}.btn.red{background:var(--red);color:#fff;border-color:var(--red)}
+.phone{width:360px;border:1px solid var(--line);border-radius:28px;background:var(--bg);padding:14px;position:relative;overflow:hidden;height:600px}
+.mcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:center}
+.mcard .who{flex:1;min-width:0}
+.shade{position:absolute;inset:0;background:rgba(16,24,40,.35)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:8px 10px 18px}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 10px}
+.sheet .opt{padding:12px 10px;font-size:15px}
+.legend{font-size:13px;line-height:1.7;max-width:820px}
+.legend b{color:var(--teal)}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}.row{grid-template-columns:20px 36px 1fr 150px}.row .prov,.row .when,.row .act{display:none}.pop{white-space:normal;left:auto;right:8px}}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="note"><b>(384)</b> Αλλαγή κατάστασης απευθείας από τη λίστα αιτήσεων, χωρίς να ανοίξει η καρτέλα. Ίδιοι κανόνες με την καρτέλα: μόνο οι επιτρεπτές επόμενες καταστάσεις, λόγος στην απόρριψη/ακύρωση, ίδιο endpoint <code>POST /contracts/{id}/status</code>.</p>
+
+<h2>1. Η κατάσταση γίνεται κουμπί</h2>
+<p class="note">Το σήμα δείχνει ένα μικρό ▾. Κλικ στο σήμα ανοίγει το μενού· κλικ οπουδήποτε αλλού στη γραμμή ανοίγει την αίτηση όπως σήμερα. Στο «Ακυρώθηκε» δεν υπάρχει ▾ (τελική κατάσταση).</p>
+<div class="list">
+  <div class="day">Σήμερα</div>
+  <div class="row"><input type="checkbox"><span class="av">ΠΓ</span><span class="who"><b>Παπαδόπουλος Γιώργος</b><small>Οικιακό · ΑΦΜ 123456789</small></span><span class="prov"><b>ΔΕΗ</b><small>myHome Enter</small></span><span><button class="badge b-sig">Αναμονή υπογραφής <span class="car">▾</span></button></span><span class="when">10:42</span><span class="act">Στείλε για υπογραφή</span></div>
+  <div class="row"><input type="checkbox"><span class="av">ΚΜ</span><span class="who"><b>Κωνσταντίνου Μαρία</b><small>Επαγγελματικό · ΑΦΜ 998877665</small></span><span class="prov"><b>Protergia</b><small>Value Special</small></span><span><button class="badge b-can">Ακυρώθηκε <span class="car">▾</span></button></span><span class="when">09:15</span><span class="act">Προβολή</span></div>
+</div>
+
+<h2>2. Το μενού</h2>
+<p class="note">Ίδια λίστα με τα κουμπιά της καρτέλας (<code>allowed_next</code>, ανά ρεύμα/αέριο/κινητή). Η «Ακύρωση» χωριστά στο τέλος, κόκκινη. Πληκτρολόγιο: ↑ ↓ Enter, Esc κλείνει.</p>
+<div class="list">
+  <div class="day">Σήμερα</div>
+  <div class="row sel"><input type="checkbox"><span class="av">ΠΓ</span><span class="who"><b>Παπαδόπουλος Γιώργος</b><small>Οικιακό · ΑΦΜ 123456789</small></span><span class="prov"><b>ΔΕΗ</b><small>myHome Enter</small></span><span class="stcell"><button class="badge b-sig">Αναμονή υπογραφής <span class="car">▴</span></button>
+    <div class="pop" role="menu">
+      <div class="pop__h">ΑΛΛΑΓΗ ΚΑΤΑΣΤΑΣΗΣ</div>
+      <div class="pop__list">
+        <button class="opt"><span class="dot" style="background:var(--blu)"></span>Καταχώρηση</button>
+        <button class="opt kb"><span class="dot" style="background:var(--vio)"></span>Ολοκλήρωση υπογραφής</button>
+        <button class="opt"><span class="dot" style="background:var(--amb)"></span>Προς οριστικοποίηση</button>
+        <button class="opt"><span class="dot" style="background:var(--amb)"></span>Οριστικοποίηση</button>
+        <button class="opt"><span class="dot" style="background:var(--grn)"></span>Επιβεβαίωση ΘΑΛΗΣ</button>
+        <button class="opt"><span class="dot" style="background:var(--red)"></span>Απόρριψη ΘΑΛΗΣ <small>λόγος</small></button>
+        <button class="opt"><span class="dot" style="background:var(--amb)"></span>Εκκρεμότητα</button>
+        <button class="opt"><span class="dot" style="background:var(--gry)"></span>Επανέλεγχος</button>
+        <button class="opt"><span class="dot" style="background:var(--grn)"></span>Ενεργός</button>
+      </div>
+      <div class="sep"></div>
+      <button class="opt danger"><span class="dot" style="background:var(--red)"></span>Ακυρώθηκε <small>λόγος</small></button>
+      <div class="pop__f"><a href="#">Άνοιγμα αίτησης →</a></div>
+    </div></span><span class="when">10:42</span><span class="act">Στείλε για υπογραφή</span>
+  </div>
+  <div class="row"><input type="checkbox"><span class="av">ΚΜ</span><span class="who"><b>Κωνσταντίνου Μαρία</b><small>Επαγγελματικό</small></span><span class="prov"><b>Protergia</b><small>Value Special</small></span><span><button class="badge b-pend">Εκκρεμότητα <span class="car">▾</span></button></span><span class="when">09:15</span><span class="act">Λύσε την εκκρεμότητα</span></div>
+  <div class="row"><input type="checkbox"><span class="av">ΑΝ</span><span class="who"><b>Αλεξίου Νίκος</b><small>Οικιακό</small></span><span class="prov"><b>Heron</b><small>Basic Home</small></span><span><button class="badge b-gry">Επανέλεγχος <span class="car">▾</span></button></span><span class="when">08:03</span><span class="act">Προβολή</span></div>
+  <div class="row"><input type="checkbox"><span class="av">ΣΕ</span><span class="who"><b>Σταύρου Ελένη</b><small>Οικιακό</small></span><span class="prov"><b>ΔΕΗ</b><small>myHome 4All</small></span><span><button class="badge b-act">Ενεργός <span class="car">▾</span></button></span><span class="when">07:50</span><span class="act">Προβολή</span></div>
+</div>
+
+<div style="height:200px"></div>
+<h2>3. Μετά την επιλογή</h2>
+<div class="grid2">
+  <div>
+    <p class="note"><b>Απλή αλλαγή:</b> χωρίς επιβεβαίωση. Το σήμα δείχνει «φόρτωση», αλλάζει επιτόπου, η γραμμή αναβοσβήνει απαλά και βγαίνει μήνυμα με «Αναίρεση» (επιστρέφει στην προηγούμενη, αν το επιτρέπει ο κανόνας).</p>
+    <div class="list">
+      <div class="row" style="grid-template-columns:44px 1fr 220px"><span class="av">ΠΓ</span><span class="who"><b>Παπαδόπουλος Γιώργος</b><small>ΔΕΗ · myHome Enter</small></span><span><button class="badge b-sig"><span class="spin"></span> Ολοκλήρωση υπογραφής</button></span></div>
+      <div class="row flash" style="grid-template-columns:44px 1fr 220px"><span class="av">ΠΓ</span><span class="who"><b>Παπαδόπουλος Γιώργος</b><small>ΔΕΗ · myHome Enter</small></span><span><button class="badge b-sig">Ολοκλήρωση υπογραφής <span class="car">▾</span></button></span></div>
+    </div>
+    <p style="margin-top:12px"><span class="toast">Η κατάσταση άλλαξε σε «Ολοκλήρωση υπογραφής». <a href="#">Αναίρεση</a></span></p>
+    <p class="note" style="margin-top:12px">Αν ο server αρνηθεί (409, π.χ. λείπουν δικαιολογητικά), το σήμα μένει ως ήταν και φαίνεται το μήνυμά του.</p>
+    <p class="note">Αν η λίστα είναι φιλτραρισμένη σε μία κατάσταση (π.χ. «Εκκρεμότητα») και η αίτηση φύγει από αυτήν, η γραμμή μένει μέχρι την επόμενη ανανέωση, θολή, ώστε να φαίνεται τι έγινε.</p>
+  </div>
+  <div>
+    <p class="note"><b>Απόρριψη/ακύρωση:</b> ο ίδιος διάλογος λόγου με την καρτέλα και τη μαζική αλλαγή.</p>
+    <div class="dlg">
+      <div class="eb">ΑΚΥΡΩΘΗΚΕ</div><h3>Γιατί ακυρώθηκε;</h3>
+      <label><input type="radio" name="r"> Ο πελάτης άλλαξε γνώμη</label>
+      <label><input type="radio" name="r" checked> Βρήκε καλύτερη προσφορά</label>
+      <label><input type="radio" name="r"> Λάθος στοιχεία</label>
+      <label><input type="radio" name="r"> Άλλο</label>
+      <div style="font-size:12px;color:var(--mute);margin-top:6px">Σημείωση (προαιρετική)</div><textarea rows="2"></textarea>
+      <div class="ft"><button class="btn">Άκυρο</button><button class="btn red">Αλλαγή κατάστασης</button></div>
+    </div>
+  </div>
+</div>
+
+<h2>4. Κινητό</h2>
+<div class="grid2">
+  <div class="phone">
+    <div class="mcard"><span class="av">ΠΓ</span><span class="who"><b>Παπαδόπουλος Γιώργος</b><small>ΔΕΗ · myHome Enter</small></span><button class="badge b-sig">Αναμ. υπογραφής ▾</button></div>
+    <div class="mcard"><span class="av">ΚΜ</span><span class="who"><b>Κωνσταντίνου Μαρία</b><small>Protergia · Value</small></span><button class="badge b-pend">Εκκρεμότητα ▾</button></div>
+    <div class="mcard"><span class="av">ΑΝ</span><span class="who"><b>Αλεξίου Νίκος</b><small>Heron · Basic</small></span><button class="badge b-gry">Επανέλεγχος ▾</button></div>
+    <div class="shade"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="pop__h">ΠΑΠΑΔΟΠΟΥΛΟΣ ΓΙΩΡΓΟΣ · ΑΝΑΜΟΝΗ ΥΠΟΓΡΑΦΗΣ</div>
+      <button class="opt"><span class="dot" style="background:var(--blu)"></span>Καταχώρηση</button>
+      <button class="opt"><span class="dot" style="background:var(--vio)"></span>Ολοκλήρωση υπογραφής</button>
+      <button class="opt"><span class="dot" style="background:var(--amb)"></span>Οριστικοποίηση</button>
+      <button class="opt"><span class="dot" style="background:var(--grn)"></span>Ενεργός</button>
+      <button class="opt"><span class="dot" style="background:var(--amb)"></span>Εκκρεμότητα</button>
+      <div class="sep"></div>
+      <button class="opt danger"><span class="dot" style="background:var(--red)"></span>Ακυρώθηκε</button>
+    </div>
+  </div>
+  <div class="legend">
+    <p>Στο κινητό το σήμα ανοίγει <b>φύλλο από κάτω</b> με μεγάλα κουμπιά (κύλιση όταν είναι πολλά). Πάτημα στην υπόλοιπη κάρτα ανοίγει την αίτηση όπως σήμερα· το «κράτα πατημένο» για μαζική επιλογή δεν αλλάζει.</p>
+    <h2 style="margin-top:8px">Τι αλλάζει στον κώδικα</h2>
+    <p>• <b>Server:</b> η λίστα (<code>GET /contracts</code>) στέλνει σε κάθε γραμμή και <code>allowed_next</code>, με τον ίδιο υπολογισμό της καρτέλας (<code>ContractStatus::allowedNextFor(StatusTrack::of($row))</code>). Τίποτα νέο στην αλλαγή: ίδιο <code>POST /contracts/{id}/status</code> με τους ίδιους ελέγχους δικαιωμάτων.</p>
+    <p>• <b>JS:</b> νέο μικρό module <code>ecrm-status-menu.js</code> (μενού/φύλλο + <code>pickReason</code> + κλήση), ώστε να το χρησιμοποιήσει αργότερα και ο «Χρειάζονται εσένα».</p>
+    <p>• Ισχύει στο νέο UI (signature) και στο κλασικό (πίνακας): στο κλασικό το σήμα της στήλης «Κατάσταση» γίνεται το ίδιο κουμπί.</p>
+    <p>• Χρήστης που δεν μπορεί να αλλάξει την αίτηση (π.χ. όχι δική του, χωρίς δικαίωμα) βλέπει το σήμα χωρίς ▾.</p>
+  </div>
+</div>
+
+</div></body>
+</html>

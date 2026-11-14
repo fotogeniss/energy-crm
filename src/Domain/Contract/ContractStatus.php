@@ -260,6 +260,28 @@ enum ContractStatus: string
         ));
     }
 
+    /**
+     * (384) Οι επόμενες καταστάσεις μιας αίτησης ως slugs, για την καρτέλα
+     * και τη λίστα. Άγνωστη κατάσταση: όλες, όπως η καρτέλα από πριν (καμία
+     * δεν θα «πάγωνε» τη γραμμή).
+     *
+     * @param array<string, mixed> $contract Χρειάζεται `status`, `energy_type`, `extra_json`.
+     * @return list<string>
+     */
+    public static function nextSlugsFor(array $contract): array
+    {
+        $current = self::tryFromSlug((string) ($contract['status'] ?? ''));
+
+        if ($current === null) {
+            return array_keys(self::labels());
+        }
+
+        return array_map(
+            static fn (self $s): string => $s->value,
+            $current->allowedNextFor(StatusTrack::of($contract))
+        );
+    }
+
     public function canMoveTo(self $target): bool
     {
         return in_array($target, $this->allowedNext(), true);

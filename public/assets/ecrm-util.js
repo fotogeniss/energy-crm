@@ -177,8 +177,10 @@ export function root() {
  * κάτω και να πηδά σε ό,τι όψη ήταν ενεργή πριν από αυτήν.
  *
  * Το go('contract-detail')/go('customer-detail') δεν αγγίζει καθόλου το
- * hash/ιστορικό -- τα ονόματα αυτά δεν είναι στο VIEWS του ecrm-app.js (δεν
- * έχουν δικό τους URL, δεν παίρνουν id σε refresh). Αυτό σημαίνει ότι το
+ * hash/ιστορικό -- τα ονόματα αυτά δεν είναι στο VIEWS του ecrm-app.js. Από
+ * το (386) το hash το βάζει αυτή η συνάρτηση (`#contract/123`), και το
+ * route() του ecrm-app.js το ξανανοίγει σε refresh. Το ιστορικό παρακάτω
+ * περιγράφει πώς ήταν πριν. Αυτό σημαίνει ότι το
  * πραγματικό ιστορικό του browser ΔΕΝ ξέρει καν ότι ανοίξαμε μια καρτέλα --
  * παραμένει στην εγγραφή της λίστας (π.χ. #contracts) από πριν. Πατώντας
  * back, ο browser προσπερνά λοιπόν τη λίστα (αφού δεν άλλαξε ποτέ hash) και
@@ -194,8 +196,15 @@ export function root() {
  * ο χρήστης βλέπει ακριβώς τη λίστα που άφησε. Ενα δεύτερο back προχωράει
  * κανονικά παραπέρα, σαν να μην υπήρχε καν η καρτέλα.
  */
-export function markSubViewOpen() {
-	try { history.pushState({}, '', location.hash || location.pathname); } catch (e) {}
+export function markSubViewOpen(sub) {
+	// (386) Με `sub` (π.χ. 'contract/123') η καρτέλα παίρνει δικό της hash,
+	// ώστε η ανανέωση της σελίδας να ξανανοίγει την ίδια καρτέλα αντί για τη
+	// λίστα. Το back δουλεύει όπως πριν: γυρνά στο hash της λίστας. Όταν το
+	// hash είναι ήδη αυτό (ανανέωση, forward, ξαναφόρτωμα της ίδιας καρτέλας),
+	// καμία νέα εγγραφή ιστορικού.
+	var target = sub ? '#' + sub : (location.hash || location.pathname);
+	if (sub && location.hash === target) { return; }
+	try { history.pushState({ v: sub || '' }, '', target); } catch (e) {}
 }
 
 /**
@@ -317,7 +326,15 @@ export function banner(el, text, ok) {
 		esc(text) + '</div>';
 }
 
-export function toast(msg, ok) {
+var toastTimer = null;
+
+/**
+ * @param {string}  msg
+ * @param {boolean} [ok]     false = σφάλμα.
+ * @param {{label: string, run: Function}} [action] (384) Ένα κουμπί μέσα στο
+ *        μήνυμα, π.χ. «Αναίρεση». Τότε μένει 7″ αντί για 4″.
+ */
+export function toast(msg, ok, action) {
 	var t = document.getElementById('ecrm-toast');
 
 	if (!t) {
@@ -329,5 +346,22 @@ export function toast(msg, ok) {
 
 	t.textContent = msg;
 	t.className = 'ecrm-toast is-show ' + (ok === false ? 'is-err' : 'is-ok');
-	setTimeout(function () { t.className = 'ecrm-toast'; }, 4000);
+
+	if (action && action.label) {
+		var b = document.createElement('button');
+		b.type = 'button';
+		b.className = 'ecrm-toast__act';
+		b.textContent = action.label;
+		b.addEventListener('click', function () {
+			t.className = 'ecrm-toast';
+			action.run();
+		});
+		t.appendChild(b);
+		t.classList.add('has-act');
+	}
+
+	// Ένα νέο μήνυμα κρατά τον δικό του χρόνο: το χρονόμετρο του
+	// προηγούμενου δεν το σβήνει πριν την ώρα του.
+	clearTimeout(toastTimer);
+	toastTimer = setTimeout(function () { t.className = 'ecrm-toast'; }, action ? 7000 : 4000);
 }

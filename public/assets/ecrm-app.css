@@ -2572,3 +2572,70 @@ button.ecrm-avatar:focus-visible { outline: 2px solid var(--amber); outline-offs
 
 /* (367c) «Ρώτησε τον AIde για …» όταν η αναζήτηση της Βάσης Γνώσης δεν βρει τίποτα. */
 .ecrm-empty .sig-kbnf { display: block; margin: 12px auto 0; }
+
+/* ═══ (384) Αλλαγή κατάστασης από τη λίστα · docs/UI-STATUS-INLINE.html ═══
+   Το σήμα γίνεται κουμπί με ▾· μενού κάτω του (υπολογιστής) ή φύλλο από κάτω
+   (κινητό). Ίδια χρώματα με τα σήματα (.ecrm-badge--*). */
+button.ecrm-stbtn { border: 0; font-family: inherit; line-height: inherit; cursor: pointer; }
+.ecrm-stbtn:hover, .ecrm-stbtn[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--accent-soft); }
+.ecrm-stbtn:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+/* (384b) Μεγαλύτερα και ίδιου πλάτους σήματα στη λίστα, ώστε να στοιχίζονται
+   (ο ιδιοκτήτης, 14/11). Και τα απλά (ακυρωμένη, χωρίς δικαίωμα), για να
+   μη σπάει η στήλη. Το ▾ πάει στη δεξιά άκρη. */
+.ecrm-c-status .ecrm-badge { width: 172px; max-width: 100%; padding: 5px 11px; gap: 6px; font-size: var(--fs-12); }
+/* Στενή κάρτα: κόβεται το κείμενο, ποτέ το ▾. */
+.ecrm-stbtn__t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ecrm-stbtn__car { flex: 0 0 auto; margin-left: auto; font-size: var(--fs-10); opacity: .7; }
+.ecrm-stbtn.is-busy { opacity: .6; cursor: progress; }
+.ecrm-stbtn.is-busy .ecrm-stbtn__car { display: none; }
+.ecrm-stbtn.is-busy::after {
+	content: ""; width: 9px; height: 9px; border: 2px solid currentColor; border-right-color: transparent;
+	border-radius: 50%; animation: ecrm-stspin .8s linear infinite;
+}
+@keyframes ecrm-stspin { to { transform: rotate(360deg); } }
+
+.ecrm-stmenu {
+	position: fixed; z-index: 55; width: 268px; padding: 6px; background: var(--surface);
+	border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgba(16,24,40,.16);
+	font-size: var(--fs-14); color: var(--ink);
+}
+.ecrm-stmenu__h { padding: 8px 10px 6px; font-size: var(--fs-11); font-weight: 700; color: var(--muted); }
+.ecrm-stmenu:not(.is-sheet) .ecrm-stmenu__h { text-transform: uppercase; letter-spacing: .02em; }
+.ecrm-stmenu__list { max-height: 280px; overflow: auto; }
+.ecrm-stmenu__opt {
+	display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 8px;
+	background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.ecrm-stmenu__opt:hover, .ecrm-stmenu__opt:focus-visible { background: var(--surface-sunk); outline: none; }
+.ecrm-stmenu__opt small { margin-left: auto; font-size: var(--fs-11); color: var(--muted); }
+.ecrm-stmenu__opt.is-danger { color: var(--err); }
+/* Το χρώμα της κατάστασης από το ίδιο .ecrm-badge--* του σήματος. */
+.ecrm-stmenu .ecrm-stmenu__dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+/* Τα σύμβολα «!»/«×» του σήματος (::before) δεν ανήκουν στην κουκκίδα. */
+.ecrm-stmenu .ecrm-stmenu__dot::before { content: none; }
+.ecrm-stmenu__sep { height: 1px; margin: 4px 6px; background: var(--line); }
+.ecrm-stmenu__f { margin-top: 4px; padding: 6px 4px 2px; border-top: 1px solid var(--line); }
+.ecrm-stmenu__link {
+	padding: 4px 6px; border: 0; background: none; color: var(--accent-ink); font: inherit;
+	font-size: var(--fs-12); font-weight: 600; cursor: pointer;
+}
+.ecrm-stmenu__link:hover { text-decoration: underline; }
+
+/* Κινητό: φύλλο από κάτω, μεγάλα κουμπιά. */
+.ecrm-stmenu-shade { position: fixed; inset: 0; z-index: 54; background: rgba(6,20,41,.35); }
+.ecrm-stmenu.is-sheet {
+	left: 0; right: 0; bottom: 0; width: auto; padding: 8px 10px calc(14px + env(safe-area-inset-bottom));
+	border-radius: 18px 18px 0 0; border-bottom: 0;
+}
+.ecrm-stmenu__grab { width: 40px; height: 4px; margin: 4px auto 8px; border-radius: 2px; background: var(--line-mid); }
+.ecrm-stmenu.is-sheet .ecrm-stmenu__list { max-height: 55vh; }
+.ecrm-stmenu.is-sheet .ecrm-stmenu__opt { padding: 12px 10px; font-size: var(--fs-15); }
+
+/* Μετά την αλλαγή: απαλό φως στη γραμμή· θολή όταν βγήκε από το φίλτρο. */
+.ecrm-rowlink.is-flash { animation: ecrm-stflash 1.6s ease-out; }
+@keyframes ecrm-stflash { from { background: var(--accent-wash); } to { background: transparent; } }
+.ecrm-rowlink.is-moved { opacity: .5; }
+@media (prefers-reduced-motion: reduce) {
+	.ecrm-rowlink.is-flash { animation: none; }
+	.ecrm-stbtn.is-busy::after { animation: none; }
+}

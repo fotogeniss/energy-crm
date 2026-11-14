@@ -28,7 +28,6 @@ use EnergyCRM\Domain\Contract\CloseReason;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\PendingRemarks;
 use EnergyCRM\Domain\Contract\SignatureRoles;
-use EnergyCRM\Domain\Contract\StatusTrack;
 use EnergyCRM\Domain\Contract\StuckRule;
 use EnergyCRM\Domain\Document\SystemKind;
 use EnergyCRM\Infrastructure\SignatureState;
@@ -109,7 +108,7 @@ final class ContractsReadController implements Controller
 
         return new WP_REST_Response([
             'ok'       => true,
-            'rows'     => $this->withSignatureWait($this->withOwnerNames($rows)),
+            'rows'     => $this->withSignatureWait($this->withAllowedNext($this->withOwnerNames($rows))),
             'counts'   => $this->counts($scope),
             'statuses' => ECRM_DB::statuses(),
         ], 200);
@@ -231,8 +230,6 @@ final class ContractsReadController implements Controller
         // status falls back to every slug rather than none, so a row this
         // never happens to hits the old (permissive) behaviour, not a
         // frozen one.
-        $currentStatus = ContractStatus::tryFromSlug((string) ($row['status'] ?? ''));
-
         return new WP_REST_Response([
             'ok'               => true,
             'contract'         => $row,
@@ -240,12 +237,7 @@ final class ContractsReadController implements Controller
             'activation_types' => ECRM_DB::activation_types(),
             // 05/10/2026: μόνο οι καταστάσεις της λίστας της αίτησης (ρεύμα,
             // αέριο ή κινητή), ίδιο φίλτρο με τον ContractLifecycle.
-            'allowed_next'     => $currentStatus === null
-                ? array_keys(ECRM_DB::statuses())
-                : array_map(
-                    static fn (ContractStatus $s): string => $s->value,
-                    $currentStatus->allowedNextFor(StatusTrack::of($row))
-                ),
+            'allowed_next'     => ContractStatus::nextSlugsFor($row),
         ], 200);
     }
 
@@ -432,6 +424,27 @@ final class ContractsReadController implements Controller
 
         foreach ($rows as $index => $row) {
             $rows[$index]['partner_name'] = $names[(int) ($row['partner_user_id'] ?? 0)] ?? '—';
+        }
+
+        return $rows;
+    }
+
+    /**
+     * (384) Η κατάσταση αλλάζει και από τη λίστα (docs/UI-STATUS-INLINE.html):
+     * κάθε γραμμή φέρει τις επιτρεπτές επόμενες, ίδιος υπολογισμός με την
+     * καρτέλα. Χωρίς δικαίωμα αλλαγής: κενή λίστα, το σήμα μένει απλό. Πριν
+     * από το `withSignatureWait()`, που πετά το `extra_json`.
+     *
+     * @param list<array<string, mixed>> $rows
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function withAllowedNext(array $rows): array
+    {
+        $may = current_user_can(Capability::CHANGE_STATUS);
+
+        foreach ($rows as $index => $row) {
+            $rows[$index]['allowed_next'] = $may ? ContractStatus::nextSlugsFor($row) : [];
         }
 
         return $rows;
