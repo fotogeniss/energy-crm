@@ -74,6 +74,10 @@ final class DashboardController implements Controller
         $todayStart     = $today . ' 00:00:00';
         $yesterdayStart = $yesterday . ' 00:00:00';
         $monthStart     = sprintf('%04d-%02d-01 00:00:00', $year, $month);
+        // (381) Ο προηγούμενος μήνας, για τη σύγκριση των ενεργοποιήσεων.
+        $prevMonthStart = $month === 1
+            ? sprintf('%04d-12-01 00:00:00', $year - 1)
+            : sprintf('%04d-%02d-01 00:00:00', $year, $month - 1);
 
         $cards = $this->dashboard->cards($actor, $todayStart, $monthStart, $yesterdayStart);
 
@@ -84,6 +88,10 @@ final class DashboardController implements Controller
             // $year, όχι gmdate('Y'): το ίδιο σφάλμα ζώνης, μία φορά τον χρόνο.
             // Τις πρώτες ώρες της πρωτοχρονιάς το γράφημα θα έδειχνε τον περσινό χρόνο.
             'monthly'     => array_values($this->dashboard->monthlyTotals($actor, $year)),
+            // (381) Ο περσινός χρόνος, διακεκομμένος στο γράφημα για σύγκριση.
+            'monthly_prev' => array_values($this->dashboard->monthlyTotals($actor, $year - 1)),
+            // (381) «Τι πουλάμε»: τα πέντε προγράμματα με τις περισσότερες αιτήσεις του μήνα.
+            'by_program'  => $this->dashboard->byProgramSince($actor, $monthStart),
             'feed'        => $this->dashboard->recentActivity($actor),
             'level'       => PerformanceTier::forVolume($cards['month']),
 
@@ -110,7 +118,7 @@ final class DashboardController implements Controller
             ],
 
             // Τα τέσσερα πλακίδια, 25/08/2026 — δες DashboardRepository::tiles().
-            'tiles'       => $this->tilesFor($actor, $monthStart),
+            'tiles'       => $this->tilesFor($actor, $monthStart, $prevMonthStart),
 
             // (345) Ο στόχος αιτήσεων του μήνα, αν του έχει μπει. Ίδιο «μήνας»
             // με την καρτέλα «Κατάστημα»: αιτήσεις που στάλθηκαν, όχι πρόχειρα.
@@ -144,9 +152,9 @@ final class DashboardController implements Controller
      *
      * @return array<string, int|float>
      */
-    private function tilesFor(int $actor, string $monthStart): array
+    private function tilesFor(int $actor, string $monthStart, string $prevMonthStart): array
     {
-        $tiles = $this->dashboard->tiles($actor, $monthStart);
+        $tiles = $this->dashboard->tiles($actor, $monthStart, $prevMonthStart);
 
         if (! current_user_can(Capability::VIEW_COMMISSIONS)) {
             unset($tiles['closed_month_commission']);

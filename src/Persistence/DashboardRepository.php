@@ -198,6 +198,46 @@ final class DashboardRepository
     }
 
     /**
+     * (381) «Τι πουλάμε»: αιτήσεις ανά πρόγραμμα από μια ημερομηνία, οι πιο
+     * πολλές πρώτες. Χωρίς τα πρόχειρα, όπως ο στόχος του μήνα.
+     *
+     * @return list<array{name: string, provider: string, price_type: string, energy_type: string, c: int}>
+     */
+    public function byProgramSince(int $userId, string $since, int $limit = 5): array
+    {
+        global $wpdb;
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT MAX(pg.name) name, MAX(pv.name) provider, MAX(pg.price_type) price_type,
+                        MAX(ct.energy_type) energy_type, COUNT(*) c
+                 FROM %i ct
+                 JOIN %i pg ON pg.id = ct.program_id
+                 LEFT JOIN %i pv ON pv.id = ct.provider_id
+                 WHERE ct.partner_user_id = %d AND ct.created_at >= %s AND ct.status <> %s
+                 GROUP BY ct.program_id ORDER BY c DESC, name ASC LIMIT %d',
+                Tables::name(Tables::CONTRACTS),
+                Tables::name(Tables::PROGRAMS),
+                Tables::name(Tables::PROVIDERS),
+                $userId,
+                $since,
+                'draft',
+                $limit
+            ),
+            ARRAY_A
+        );
+
+        return array_map(static fn (array $r): array => [
+            'name'        => (string) $r['name'],
+            'provider'    => (string) ($r['provider'] ?? ''),
+            'price_type'  => (string) ($r['price_type'] ?? ''),
+            'energy_type' => (string) ($r['energy_type'] ?? ''),
+            'c'           => (int) $r['c'],
+        ], $rows);
+    }
+
+    /**
      * Contracts per month for a year, indexed 1-12 with gaps filled.
      *
      * @return array<int, int>
@@ -423,13 +463,16 @@ final class DashboardRepository
      *     expiring_today: int,
      *     closed_month: int,
      *     closed_month_commission: float,
+     *     closed_prev_month: int,
      *     tasks_open: int,
      *     tasks_overdue: int
      * }
      */
-    public function tiles(int $userId, string $monthStart): array
+    public function tiles(int $userId, string $monthStart, string $prevMonthStart = ''): array
     {
         [$closedCount, $closedCommission] = $this->closedThisMonth($userId, $monthStart);
+        // (381) Για το «+12% από τον Οκτώβριο» της κάρτας Ενεργοποιήσεις.
+        $closedPrev = $prevMonthStart === '' ? 0 : $this->closedBetween($userId, $prevMonthStart, $monthStart);
 
         return [
             'open'                    => $this->countOpen($userId),
@@ -442,6 +485,7 @@ final class DashboardRepository
             'expiring_today'          => $this->countExpiringToday($userId),
             'closed_month'            => $closedCount,
             'closed_month_commission' => $closedCommission,
+            'closed_prev_month'       => $closedPrev,
             'tasks_open'              => $this->countOpenTasks($userId),
             'tasks_overdue'           => $this->countOverdueTasks($userId),
         ];
@@ -634,6 +678,34 @@ final class DashboardRepository
         }
 
         return [count($rows), $commission];
+    }
+
+    /**
+     * (381) Πόσες ενεργοποιήθηκαν μέσα σε κλειστό παράθυρο (τον προηγούμενο
+     * μήνα). Ίδιος ορισμός με το closedThisMonth(): σήμερα ενεργές, με γεγονός
+     * `to_status=active` μέσα στο παράθυρο, η καθεμία μία φορά.
+     */
+    private function closedBetween(int $userId, string $from, string $to): int
+    {
+        global $wpdb;
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(DISTINCT c.id) FROM %i c
+                 WHERE c.partner_user_id = %d AND c.status = %s
+                   AND c.id IN (
+                       SELECT e.contract_id FROM %i e
+                       WHERE e.to_status = %s AND e.created_at >= %s AND e.created_at < %s
+                   )',
+                Tables::name(Tables::CONTRACTS),
+                $userId,
+                'active',
+                Tables::name(Tables::EVENTS),
+                'active',
+                $from,
+                $to
+            )
+        );
     }
 
     /** «Εργασίες μου» — προσωπικές, όπως όλη η υπόλοιπη οθόνη. */

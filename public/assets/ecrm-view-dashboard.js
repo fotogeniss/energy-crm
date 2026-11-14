@@ -18,7 +18,7 @@
  *     δίνει 2,33:1 σε λευκό, κάτω από το 3:1 που θέλουν τα γραφικά.
  */
 
-import { api, can, esc, fetch, H, providerMark, toast, viewEl } from '@energy-crm/util';
+import { api, can, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { minutesAgo, timeAgo } from '@energy-crm/format';
 import { openDetail, openPartner, openStoreList, go } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
@@ -26,6 +26,9 @@ import { openDialog } from '@energy-crm/dialog';
 var MONTHS = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
 var MONTHS_LONG_NOM = ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος', 'Ιούλιος',
 	'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'];
+// (381) Αιτιατική, για «από τον Οκτώβριο».
+var MONTHS_ACC = ['Ιανουάριο', 'Φεβρουάριο', 'Μάρτιο', 'Απρίλιο', 'Μάιο', 'Ιούνιο', 'Ιούλιο',
+	'Αύγουστο', 'Σεπτέμβριο', 'Οκτώβριο', 'Νοέμβριο', 'Δεκέμβριο'];
 var MONTHS_LONG = ['Ιανουαρίου', 'Φεβρουαρίου', 'Μαρτίου', 'Απριλίου', 'Μαΐου', 'Ιουνίου', 'Ιουλίου',
 	'Αυγούστου', 'Σεπτεμβρίου', 'Οκτωβρίου', 'Νοεμβρίου', 'Δεκεμβρίου'];
 
@@ -800,113 +803,206 @@ function isSignature() {
 	return !!app && app.getAttribute('data-ui') === 'signature';
 }
 
-var SIG_R = [88, 68, 48];
+/* (381) Αρχική με κάρτες -- mockup docs/UI-HOME-CARDS.html, εγκρίθηκε 14/11.
+ * Τέσσερις κάρτες με εικονίδιο, αριθμό και σύγκριση· στόχος σε ημικύκλιο·
+ * «Τι πουλάμε» με μπάρες· αιτήσεις ανά μήνα με τον περσινό χρόνο. */
+var SIG_KPI_ICON = {
+	doc: '<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 13h6M10 17h4"/>',
+	pen: '<path d="M3 21l3-1 12-12-2-2L4 18z"/><path d="M14 6l2 2"/>',
+	bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+	task: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'
+};
 
-function sigRing(i, pct, cls) {
-	var r = SIG_R[i];
-	var c = 2 * Math.PI * r;
-	var to = Math.round(c * Math.max(0, Math.min(100, pct)) / 100);
-
-	return '<circle class="sig-ring__trk ' + cls + '" cx="100" cy="100" r="' + r + '"/>' +
-		'<circle class="sig-ring__arc ' + cls + '" cx="100" cy="100" r="' + r + '" style="--to:' + to + '"/>';
+function sigKpiIcon(name) {
+	return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+		SIG_KPI_ICON[name] + '</svg>';
 }
 
-function sigRingsHTML(d) {
-	var tiles = d.tiles || {};
-	var monthly = (d.monthly || []).map(function (v) { return Number(v) || 0; });
-	var mi = new Date().getMonth();
-	var now = monthly[mi] || 0;
-	var prev = mi > 0 ? (monthly[mi - 1] || 0) : 0;
-	var target = d.target || {};
-	var goal = Number(target.target) || 0;
-	var done = goal ? (Number(target.done) || 0) : now;
-	var rows = [];
+/* Σύγκριση «+2 από χθες»: πράσινο όταν ανεβαίνει, σβηστό όταν μένει ίδιο ή πέφτει. */
+function sigDelta(now, before, label) {
+	var diff = now - before;
+	if (diff > 0) return { t: '+' + diff + ' ' + label, cls: 'is-up' };
+	if (diff < 0) return { t: '−' + Math.abs(diff) + ' ' + label, cls: 'is-mute' };
+	return { t: 'όσες και ' + label.replace(/^από /, ''), cls: 'is-mute' };
+}
 
-	if (goal) {
-		var left = Math.max(0, goal - done);
-		rows.push({ cls: 'is-a', label: 'Αιτήσεις', v: done, of: goal,
-			sub: left ? left + ' ακόμα για τον στόχο' : 'Ο στόχος πιάστηκε', pct: done * 100 / goal });
+function sigKpisHTML(d) {
+	var t = d.tiles || {}, c = d.cards || {};
+	var mi = new Date().getMonth();
+	var prevName = MONTHS_ACC[(mi + 11) % 12];
+	var prevNom = MONTHS_LONG_NOM[(mi + 11) % 12];
+
+	var today = Number(c.today) || 0;
+	var yest = Number(c.yesterday) || 0;
+	var d1 = sigDelta(today, yest, 'από χθες');
+
+	var waiting = Number(t.awaiting_signature) || 0;
+	var exp = Number(t.expiring_today) || 0;
+	var d2 = exp ? { t: exp + ' λήγ' + (exp === 1 ? 'ει' : 'ουν') + ' σήμερα', cls: 'is-warn' }
+		: { t: waiting ? 'καμία δεν λήγει σήμερα' : 'καμία σε αναμονή', cls: 'is-mute' };
+
+	var closed = Number(t.closed_month) || 0;
+	var prev = Number(t.closed_prev_month) || 0;
+	var d3;
+	if (prev > 0) {
+		var pct = Math.round((closed - prev) * 100 / prev);
+		d3 = { t: (pct >= 0 ? '+' : '−') + Math.abs(pct) + '% από τον ' + prevName, cls: pct >= 0 ? 'is-up' : 'is-mute' };
 	} else {
-		rows.push({ cls: 'is-a', label: 'Αιτήσεις', v: now, of: prev || null,
-			sub: prev ? 'ο ' + MONTHS_LONG_NOM[mi - 1] + ' είχε ' + prev : 'αυτόν τον μήνα',
-			pct: prev ? now * 100 / prev : (now ? 100 : 0) });
+		d3 = { t: closed ? 'ο ' + prevNom + ' είχε 0' : 'καμία ακόμα αυτόν τον μήνα', cls: closed ? 'is-up' : 'is-mute' };
 	}
 
-	var closed = Number(tiles.closed_month) || 0;
-	var commission = Number(tiles.closed_month_commission) || 0;
-	rows.push({ cls: 'is-b', label: 'Ενεργοποιήσεις', v: closed, of: null,
-		sub: commission > 0 ? euro(commission) + ' προμήθεια' : 'ενεργές αυτόν τον μήνα',
-		pct: now ? closed * 100 / now : 0 });
+	var tasks = Number(t.tasks_open) || 0;
+	var over = Number(t.tasks_overdue) || 0;
+	var d4 = over ? { t: over + ' εκπρόθεσμ' + (over === 1 ? 'η' : 'ες'), cls: 'is-bad' }
+		: { t: tasks ? 'καμία εκπρόθεσμη' : 'όλες κλεισμένες', cls: 'is-up' };
 
-	var lvl = d.level || {};
-	if (lvl.current && Number(lvl.next_at)) {
-		var at = Number(lvl.next_at);
-		var got = at - (Number(lvl.remaining) || 0);
-		rows.push({ cls: 'is-c', label: String(lvl.current), v: got, of: at,
-			sub: lvl.next ? (Number(lvl.remaining) || 0) + ' ακόμα για ' + lvl.next : 'ανώτατο επίπεδο', pct: got * 100 / at });
-	}
-
-	var center = Math.round(Math.min(999, rows[0].pct));
-	var svg = rows.map(function (r, i) { return sigRing(i, r.pct, r.cls); }).join('');
-	var legend = rows.map(function (r) {
-		var of = r.of ? '<small> / ' + esc(r.of) + '</small>' : '';
-		return '<div class="sig-leg__row"><i class="sig-dot ' + esc(r.cls) + '"></i><span>' + esc(r.label) + '</span>' +
-			'<b>' + esc(r.v) + of + '</b><em>' + esc(r.sub) + '</em></div>';
-	}).join('');
-
-	return '<section class="ecrm-card sig-panel sig-rings"><div class="sig-ph"><h3>' + esc(MONTHS_LONG_NOM[mi]) + '</h3>' +
-		(goal ? '' : '<span class="sig-ph__note">Χωρίς στόχο μήνα</span>') + '</div>' +
-		'<div class="sig-rings__body"><div class="sig-ring"><svg viewBox="0 0 200 200" aria-hidden="true">' + svg + '</svg>' +
-		'<div class="sig-ring__c"><div><b>' + center + '%</b><small>' + (goal ? 'του στόχου' : 'του προηγούμενου') + '</small></div></div></div>' +
-		'<div class="sig-leg">' + legend + '</div></div></section>';
-}
-
-function sigPaceHTML(d) {
-	var vals = (d.monthly || []).map(function (v) { return Number(v) || 0; });
-	var mi = new Date().getMonth();
-	vals = vals.slice(0, Math.max(2, mi + 1));
-	var now = vals[mi] || 0;
-	var prev = mi > 0 ? (vals[mi - 1] || 0) : 0;
-	var chg = prev ? Math.round((now - prev) * 100 / prev) : null;
-
-	var W = 400, HH = 150, P = 10;
-	var max = Math.max.apply(null, vals.concat([1]));
-	var x = function (i) { return vals.length < 2 ? W / 2 : i * W / (vals.length - 1); };
-	var y = function (v) { return P + (HH - 2 * P) - (v / max) * (HH - 2 * P); };
-	var pts = vals.map(function (v, i) { return x(i) + ' ' + y(v); });
-	var line = 'M' + pts.join(' L');
-	var li = vals.length - 1;
-
-	var chgTxt = chg === null ? '' : (chg >= 0 ? '+' : '') + chg + '% από τον ' + MONTHS_LONG_NOM[mi - 1];
-
-	return '<section class="ecrm-card sig-panel sig-pace"><div class="sig-ph"><h3>Ρυθμός</h3>' +
-		(can('ecrm_view_analytics') ? '<button type="button" class="sig-link" data-go="analytics">Στατιστικά</button>' : '') + '</div>' +
-		'<div class="sig-big">' + now + (chgTxt ? '<small class="' + (chg >= 0 ? 'is-up' : 'is-down') + '">' + esc(chgTxt) + '</small>' : '') + '</div>' +
-		'<p class="sig-subt">αιτήσεις αυτόν τον μήνα</p>' +
-		'<svg class="sig-chart" viewBox="0 0 ' + W + ' ' + HH + '" preserveAspectRatio="none" role="img" aria-label="Αιτήσεις ανά μήνα">' +
-		'<path class="sig-chart__area" d="' + line + ' L' + x(li) + ' ' + HH + ' L0 ' + HH + ' Z"/>' +
-		'<path class="sig-chart__line" d="' + line + '" vector-effect="non-scaling-stroke"/>' +
-		'<circle class="sig-chart__dot" cx="' + x(li) + '" cy="' + y(vals[li]) + '" r="5" vector-effect="non-scaling-stroke"/></svg>' +
-		'<div class="sig-axis"><span>' + MONTHS[0] + '</span><span>' + MONTHS[li] + '</span></div></section>';
-}
-
-/* Τα τέσσερα πλακίδια της κλασικής, ως μικρά «χάπια» κάτω από τον χαιρετισμό. */
-function sigChipsHTML(t) {
-	var week = Number(t.open_this_week) || 0, expiring = Number(t.expiring_today) || 0;
-	var overdue = Number(t.tasks_overdue) || 0;
-	var chips = [
-		{ label: 'Ανοιχτές', v: Number(t.open) || 0, foot: week ? '+' + week + ' την εβδομάδα' : '' },
-		{ label: 'Αναμονή υπογραφής', v: Number(t.awaiting_signature) || 0, foot: expiring ? expiring + ' λήγ' + (expiring === 1 ? 'ει' : 'ουν') + ' σήμερα' : '', warn: expiring > 0 },
-		{ label: 'Κλεισμένες', v: Number(t.closed_month) || 0, go: 'contracts', status: 'active' },
-		{ label: 'Εργασίες', v: Number(t.tasks_open) || 0, foot: overdue ? overdue + ' εκπρόθεσμ' + (overdue === 1 ? 'η' : 'ες') : '', warn: overdue > 0, go: 'tasks' }
+	var cards = [
+		{ ic: 'doc', tone: 'is-green', v: today, l: 'Αιτήσεις σήμερα', d: d1, go: 'contracts' },
+		{ ic: 'pen', tone: 'is-amber', v: waiting, l: 'Αναμονή υπογραφής', d: d2, go: 'contracts', status: 'awaiting_signature' },
+		{ ic: 'bolt', tone: 'is-blue', v: closed, l: 'Ενεργοποιήσεις μήνα', d: d3, go: 'contracts', status: 'active' },
+		{ ic: 'task', tone: 'is-violet', v: tasks, l: 'Ανοιχτές εργασίες', d: d4, go: 'tasks' }
 	];
 
-	return '<div class="sig-chips">' + chips.map(function (c) {
-		var tag = c.go ? 'button' : 'div';
-		var att = c.go ? ' type="button" data-go="' + esc(c.go) + '"' + (c.status ? ' data-status="' + esc(c.status) + '"' : '') : '';
-		return '<' + tag + ' class="sig-chip' + (c.warn ? ' is-warn' : '') + '"' + att + '><b>' + esc(c.v) + '</b><span>' + esc(c.label) +
-			(c.foot ? '<small>' + esc(c.foot) + '</small>' : '') + '</span></' + tag + '>';
+	return '<div class="sig-kpis">' + cards.map(function (k) {
+		return '<button type="button" class="ecrm-card sig-kpi" data-go="' + esc(k.go) + '"' +
+			(k.status ? ' data-status="' + esc(k.status) + '"' : '') + '>' +
+			'<span class="sig-kpi__ic ' + esc(k.tone) + '">' + sigKpiIcon(k.ic) + '</span>' +
+			'<b class="sig-kpi__v">' + esc(k.v) + '</b><span class="sig-kpi__l">' + esc(k.l) + '</span>' +
+			'<small class="sig-kpi__d ' + esc(k.d.cls) + '">' + esc(k.d.t) + '</small></button>';
 	}).join('') + '</div>';
+}
+
+/* Ημικύκλιο: ο στόχος αιτήσεων του μήνα. Χωρίς στόχο, σύγκριση με τον
+ * προηγούμενο μήνα. Δίπλα: πόσες μένουν και η προμήθεια (όπου τη βλέπει) ή
+ * το επίπεδο. */
+function sigGoalHTML(d) {
+	var mi = new Date().getMonth();
+	var target = d.target || {};
+	var goal = Number(target.target) || 0;
+	var monthly = (d.monthly || []).map(function (v) { return Number(v) || 0; });
+	var now = monthly[mi] || 0;
+	var prev = mi > 0 ? (monthly[mi - 1] || 0) : ((d.monthly_prev || [])[11] || 0);
+	var done = goal ? (Number(target.done) || 0) : now;
+	var of = goal || prev;
+	var pct = of ? Math.round(done * 100 / of) : (done ? 100 : 0);
+	var arc = Math.max(0, Math.min(100, pct));
+
+	var lastDay = new Date(new Date().getFullYear(), mi + 1, 0).getDate();
+	var daysLeft = Math.max(0, lastDay - new Date().getDate());
+	var left = Math.max(0, of - done);
+	var box1 = goal
+		? { v: left, s: left ? 'ακόμα, σε ' + daysLeft + ' μέρ' + (daysLeft === 1 ? 'α' : 'ες') : 'ο στόχος πιάστηκε' }
+		: { v: of ? left : now, s: of ? 'για να φτάσεις τον ' + MONTHS_ACC[(mi + 11) % 12] : 'αιτήσεις αυτόν τον μήνα' };
+
+	var t = d.tiles || {}, lvl = d.level || {};
+	var box2;
+	if (t.closed_month_commission !== undefined) {
+		box2 = { v: euro(t.closed_month_commission), s: 'προμήθεια μήνα' };
+	} else if (lvl.current) {
+		box2 = { v: String(lvl.current), s: lvl.next ? (Number(lvl.remaining) || 0) + ' ακόμα για ' + lvl.next : 'ανώτατο επίπεδο' };
+	} else {
+		box2 = { v: Number(t.closed_month) || 0, s: 'ενεργοποιήσεις μήνα' };
+	}
+
+	var title = goal ? 'Στόχος ' + MONTHS_LONG[mi] : MONTHS_LONG_NOM[mi];
+	var sub = goal ? done + ' από ' + goal : (of ? done + ' / ' + of + ' του ' + MONTHS_LONG[(mi + 11) % 12] : done + ' αιτήσεις');
+
+	return '<section class="ecrm-card sig-panel sig-goal"><div class="sig-ph"><h3>' + esc(title) + '</h3>' +
+		'<span class="sig-ph__note">' + (goal ? 'αιτήσεις' : 'χωρίς στόχο μήνα') + '</span></div>' +
+		'<svg class="sig-gauge" viewBox="0 0 240 140" role="img" aria-label="' + esc(sub + ', ' + pct + '%') + '">' +
+		'<path class="sig-gauge__trk" d="M24 124 A96 96 0 0 1 216 124"/>' +
+		(arc > 0 ? '<path class="sig-gauge__arc" d="M24 124 A96 96 0 0 1 216 124" pathLength="100" stroke-dasharray="' + arc + ' 100"/>' : '') +
+		'<text class="sig-gauge__v" x="120" y="108" text-anchor="middle">' + esc(pct) + '%</text>' +
+		'<text class="sig-gauge__s" x="120" y="131" text-anchor="middle">' + esc(sub) + '</text></svg>' +
+		'<div class="sig-goal__boxes"><div><b>' + esc(box1.v) + '</b><small>' + esc(box1.s) + '</small></div>' +
+		'<div><b>' + esc(box2.v) + '</b><small>' + esc(box2.s) + '</small></div></div></section>';
+}
+
+var SIG_PRICE_TONE = { fixed: 'is-blue', variable: 'is-amber', dynamic: 'is-violet', special: 'is-teal' };
+var SIG_PRICE_LABEL = { fixed: 'σταθερό', variable: 'κυμαινόμενο', dynamic: 'δυναμικό', special: 'ειδικό' };
+
+/* «Τι πουλάμε»: τα προγράμματα του μήνα, με μπάρα μεριδίου. */
+function sigProgramsHTML(list) {
+	list = list || [];
+	var max = Math.max.apply(null, list.map(function (p) { return Number(p.c) || 0; }).concat([1]));
+	var head = '<div class="sig-ph"><h3>Τι πουλάμε</h3><span class="sig-ph__note">προγράμματα, αυτόν τον μήνα</span></div>';
+
+	if (!list.length) {
+		return '<section class="ecrm-card sig-panel">' + head + '<p class="sig-empty">Καμία αίτηση αυτόν τον μήνα ακόμα.</p></section>';
+	}
+
+	var rows = list.map(function (p, i) {
+		var c = Number(p.c) || 0;
+		var tone = SIG_PRICE_TONE[p.price_type] || 'is-green';
+		var kind = [p.provider || '', SIG_PRICE_LABEL[p.price_type] || '', p.energy_type === 'gas' ? 'αέριο' : '']
+			.filter(Boolean).join(', ');
+		return '<tr><td class="sig-prog__n">' + esc(('0' + (i + 1)).slice(-2)) + '</td>' +
+			'<td><b>' + esc(p.name || '—') + '</b><small>' + esc(kind) + '</small></td>' +
+			'<td class="sig-prog__bar"><i><b class="' + esc(tone) + '" style="width:' + Math.round(c * 100 / max) + '%"></b></i></td>' +
+			'<td><span class="sig-prog__pill ' + esc(tone) + '">' + esc(c) + '</span></td></tr>';
+	}).join('');
+
+	return '<section class="ecrm-card sig-panel">' + head + '<table class="sig-prog"><thead><tr><th>#</th><th>ΠΡΟΓΡΑΜΜΑ</th>' +
+		'<th class="sig-prog__bar">ΜΕΡΙΔΙΟ</th><th>ΑΙΤΗΣΕΙΣ</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
+}
+
+/* Στρογγυλό βήμα άξονα (1, 2, 5, 10, 20, 25, 50 …) που χωράει το `raw`. */
+function sigNiceStep(raw) {
+	var p = Math.pow(10, Math.floor(Math.log10(Math.max(1, raw))));
+	var steps = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+	for (var i = 0; i < steps.length; i++) {
+		var st = steps[i] * p;
+		if (st >= raw && Math.round(st) === st) return st;
+	}
+	return 10 * p;
+}
+
+/* Αιτήσεις ανά μήνα: φέτος ως τον τρέχοντα μήνα, πέρσι διακεκομμένο.
+ * Οι γραμμές σε SVG που τεντώνει στο πλάτος· γράμματα, τελεία και ετικέτα σε
+ * HTML από πάνω (σε ποσοστά), για να μη στραβώνουν στο κινητό. */
+function sigYearHTML(d) {
+	var mi = new Date().getMonth();
+	var year = new Date().getFullYear();
+	var cur = (d.monthly || []).map(function (v) { return Number(v) || 0; }).slice(0, mi + 1);
+	var old = (d.monthly_prev || []).map(function (v) { return Number(v) || 0; });
+	var step = sigNiceStep(Math.max.apply(null, cur.concat(old, [4])) / 4);
+	var max = step * 4;
+
+	var W = 1000, H = 200, X0 = 40, X1 = 980, Y0 = 12, Y1 = 188;
+	var x = function (i) { return X0 + i * (X1 - X0) / 11; };
+	var y = function (v) { return Y1 - v * (Y1 - Y0) / max; };
+	var px = function (i) { return (x(i) * 100 / W).toFixed(2); };
+	var py = function (v) { return (y(v) * 100 / H).toFixed(2); };
+	var path = function (vals) { return 'M' + vals.map(function (v, i) { return x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' L'); };
+
+	var grid = '', ylab = '';
+	for (var g = 0; g <= 4; g++) {
+		grid += '<line x1="' + X0 + '" x2="' + X1 + '" y1="' + y(step * g).toFixed(1) + '" y2="' + y(step * g).toFixed(1) + '"/>';
+		ylab += '<span class="sig-year__y" style="top:' + py(step * g) + '%">' + esc(step * g) + '</span>';
+	}
+	var months = MONTHS.map(function (m, i) {
+		return '<span style="left:' + px(i) + '%"' + (i === mi ? ' class="is-now"' : '') + '>' + esc(m) + '</span>';
+	}).join('');
+
+	var line = path(cur);
+	var now = cur[mi] || 0;
+	var tip = MONTHS[mi] + ': ' + now + ' ως τώρα';
+
+	return '<section class="ecrm-card sig-panel sig-year"><div class="sig-ph"><h3>Αιτήσεις ανά μήνα</h3>' +
+		'<div class="sig-year__leg"><span><i class="is-cur"></i>' + year + '</span><span><i class="is-old"></i>' + (year - 1) + '</span>' +
+		(can('ecrm_view_analytics') ? '<button type="button" class="sig-link" data-go="analytics">Στατιστικά</button>' : '') + '</div></div>' +
+		'<div class="sig-year__plot">' +
+		'<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Αιτήσεις ανά μήνα ' + year + ' με σύγκριση ' + (year - 1) + '">' +
+		'<defs><linearGradient id="sigYearFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="sig-year__g0"/><stop offset="1" class="sig-year__g1"/></linearGradient></defs>' +
+		'<g class="sig-year__grid">' + grid + '</g>' +
+		(old.length ? '<path class="sig-year__old" d="' + path(old) + '" vector-effect="non-scaling-stroke"/>' : '') +
+		'<path class="sig-year__area" d="' + line + ' L' + x(mi).toFixed(1) + ' ' + Y1 + ' L' + X0 + ' ' + Y1 + ' Z"/>' +
+		'<path class="sig-year__line" d="' + line + '" vector-effect="non-scaling-stroke"/>' +
+		'<line class="sig-year__mark" x1="' + x(mi).toFixed(1) + '" x2="' + x(mi).toFixed(1) + '" y1="' + Y0 + '" y2="' + Y1 + '" vector-effect="non-scaling-stroke"/></svg>' +
+		ylab +
+		'<span class="sig-year__dot" style="left:' + px(mi) + '%;top:' + py(now) + '%"></span>' +
+		'<span class="sig-year__tip' + (mi > 8 ? ' is-left' : mi < 2 ? ' is-right' : '') + '" style="left:' + px(mi) + '%">' + esc(tip) + '</span>' +
+		'</div><div class="sig-year__x">' + months + '</div></section>';
 }
 
 /* «Χρειάζονται εσένα»: οι δύο λίστες της κλασικής σε μία στοίβα, η πιο
@@ -930,49 +1026,42 @@ function sigNeedsRows(d) {
 			act: 'Άνοιγμα', attr: ' data-attnx-contract="' + esc(r.contract_id) + '"', age: Number(r.age_days) || 0 });
 	});
 	(extra.overdue_leads || []).forEach(function (r) {
-		rows.push({ kind: 'is-bad', title: 'Πέρασε η επανάκληση', name: r.name || '—', meta: r.phone || '',
+		rows.push({ kind: 'is-call', title: 'Πέρασε η επανάκληση', name: r.name || '—', meta: r.phone || '',
 			act: 'Άνοιγμα', attr: ' data-attnx-lead="' + esc(r.id) + '"', age: Number(r.age_days) || 0 });
 	});
 	rows.sort(function (a, b) { return b.age - a.age; });
 	return rows;
 }
 
-var SIG_ICON = { 'is-sign': '✎', 'is-draft': '…', 'is-docs': '!', 'is-bad': '×' };
+var SIG_ICON = { 'is-sign': '✎', 'is-draft': '…', 'is-docs': '!', 'is-bad': '×', 'is-call': '☎' };
+
+/* (381) «Χρειάζονται εσένα» ως γραμμές με κουμπί ενέργειας δίπλα, οι πιο
+ * στάσιμες πάνω. Οι τέσσερις φαίνονται, οι υπόλοιπες με «Όλες (N)». */
+var SIG_NEEDS_SHOWN = 4;
 
 function sigNeedsHTML(d) {
 	var rows = sigNeedsRows(d);
-	var head = '<div class="sig-ph"><h3>Χρειάζονται εσένα</h3>' + (rows.length ? '<span class="sig-count">' + rows.length + '</span>' : '') + '</div>';
+	var more = rows.length > SIG_NEEDS_SHOWN
+		? '<button type="button" class="sig-link" data-sig-more data-all="' + rows.length + '" aria-expanded="false">Όλες (' + rows.length + ')</button>'
+		: (rows.length ? '<span class="sig-count">' + rows.length + '</span>' : '');
+	var head = '<div class="sig-ph"><h3>Χρειάζονται εσένα</h3>' + more + '</div>';
 
 	if (!rows.length) {
 		return '<section class="ecrm-card sig-panel">' + head + '<p class="sig-empty">Τίποτα δεν περιμένει εσένα αυτή τη στιγμή.</p></section>';
 	}
 
-	var notes = rows.map(function (r, i) {
-		var attr = r.attr;
+	var list = rows.map(function (r, i) {
 		var days = r.age === 0 ? 'σήμερα' : r.age === 1 ? 'χθες' : r.age + ' μέρες';
-		return '<div class="sig-note' + (i === 0 ? ' is-top' : i < 3 ? ' is-peek is-peek' + i : ' is-rest') + '">' +
-			'<span class="sig-note__ic ' + esc(r.kind) + '">' + esc(SIG_ICON[r.kind]) + '</span>' +
-			'<div class="sig-note__b"><b>' + esc(r.title) + '</b><p>' + esc(r.name) + (r.meta ? ', ' + esc(r.meta) : '') + '</p>' +
-			'<button type="button" class="sig-note__go"' + attr + '>' + esc(r.act) + '</button></div>' +
-			'<time>' + esc(days) + '</time></div>';
+		// Τα data-attn* χτίζονται με esc() στο sigNeedsRows().
+		var attr = r.attr;
+		return '<div class="sig-need' + (i >= SIG_NEEDS_SHOWN ? ' is-rest' : '') + '">' +
+			'<span class="sig-need__ic ' + esc(r.kind) + '">' + esc(SIG_ICON[r.kind] || '!') + '</span>' +
+			'<div class="sig-need__b"><b>' + esc(r.title) + '</b><p>' + esc(r.name) + (r.meta ? ', ' + esc(r.meta) : '') + '</p></div>' +
+			'<time>' + esc(days) + '</time>' +
+			'<button type="button" class="sig-need__go' + (i === 0 ? ' is-main' : '') + '"' + attr + '>' + esc(r.act) + '</button></div>';
 	}).join('');
 
-	return '<section class="ecrm-card sig-panel">' + head + '<div class="sig-stack" data-sig-stack>' + notes + '</div>' +
-		// (376) «Περισσότερα / Λιγότερα» αντί για «Δες και τα N / Μάζεψέ τα» (13/11).
-		(rows.length > 1 ? '<button type="button" class="sig-more" data-sig-more aria-expanded="false">Περισσότερα</button>' : '') +
-		'</section>';
-}
-
-function sigProvidersHTML(list) {
-	list = list || [];
-	var max = Math.max.apply(null, list.map(function (p) { return Number(p.c) || 0; }).concat([1]));
-	var body = list.length ? list.map(function (p, i) {
-		var c = Number(p.c) || 0;
-		return '<div class="sig-pbar"><span>' + providerMark(p.name, p.logo) + esc(p.name || '—') + '</span><i><b class="sig-pbar__f is-' + (i % 3) + '" style="width:' +
-			Math.round(c * 100 / max) + '%"></b></i><em>' + c + '</em></div>';
-	}).join('') : '<p class="sig-empty">Καμία αίτηση αυτόν τον μήνα ακόμα.</p>';
-
-	return '<section class="ecrm-card sig-panel"><div class="sig-ph"><h3>Ανά πάροχο</h3><span class="sig-ph__note">αυτόν τον μήνα</span></div>' + body + '</section>';
+	return '<section class="ecrm-card sig-panel sig-needs">' + head + '<div class="sig-needlist" data-sig-stack>' + list + '</div></section>';
 }
 
 function sigFeedHTML(feed) {
@@ -1021,27 +1110,28 @@ function wireIsland(view) {
 }
 
 function sigDashboardHTML(d) {
-	// (376) Χωρίς την κεφαλίδα «Παρασκευή 13 Νοεμβρίου / Καλό βράδυ, … / 6
-	// πράγματα περιμένουν εσένα»: ο ιδιοκτήτης δεν τη θέλει (13/11). Μένουν
-	// μόνο οι καρτέλες «Εγώ / Η ομάδα μου», για όποιον τις έχει. Το «τι
-	// περιμένει» το λέει ήδη η κάρτα «Χρειάζεται ενέργεια» από κάτω.
+	// (376) Χωρίς την κεφαλίδα «Παρασκευή 13 Νοεμβρίου / Καλό βράδυ, …»: ο
+	// ιδιοκτήτης δεν τη θέλει (13/11). Μένουν μόνο οι καρτέλες «Εγώ / Η ομάδα
+	// μου», για όποιον τις έχει.
+	// (381) Κάρτες, στόχος, «Τι πουλάμε», αιτήσεις ανά μήνα (UI-HOME-CARDS).
 	var tabs = tabsHTML(false);
 
 	return sigIslandHTML(d.feed) +
 		(tabs ? '<header class="sig-hello has-tabs is-tabs-only">' + tabs + '</header>' : '') +
-		sigChipsHTML(d.tiles || {}) +
-		'<div class="sig-grid">' + sigRingsHTML(d) + sigPaceHTML(d) + '</div>' +
-		'<div class="sig-grid sig-grid--3">' + sigNeedsHTML(d) + sigProvidersHTML(d.by_provider) + sigFeedHTML(d.feed) + '</div>';
+		sigKpisHTML(d) +
+		'<div class="sig-grid sig-grid--home">' + sigNeedsHTML(d) + sigGoalHTML(d) + '</div>' +
+		'<div class="sig-grid sig-grid--home">' + sigProgramsHTML(d.by_program) + sigFeedHTML(d.feed) + '</div>' +
+		sigYearHTML(d);
 }
 
 function wireSignature(view) {
 	wireIsland(view);
 	var more = view.querySelector('[data-sig-more]');
-	var stack = view.querySelector('[data-sig-stack]');
-	if (!more || !stack) return;
+	var list = view.querySelector('[data-sig-stack]');
+	if (!more || !list) return;
 	more.addEventListener('click', function () {
-		var open = stack.classList.toggle('is-open');
-		more.textContent = open ? 'Λιγότερα' : 'Περισσότερα';
+		var open = list.classList.toggle('is-open');
+		more.textContent = open ? 'Λιγότερα' : 'Όλες (' + more.getAttribute('data-all') + ')';
 		more.setAttribute('aria-expanded', open ? 'true' : 'false');
 	});
 }
