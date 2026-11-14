@@ -340,7 +340,8 @@
 .ecrm-app[data-ui="signature"] .sig-grid--home { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: stretch; }
 
 /* «Χρειάζονται εσένα»: γραμμές με κουμπί ενέργειας */
-.ecrm-app[data-ui="signature"] .sig-need { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--sig-hair); }
+/* (383) Σταθερές στήλες δεξιά (χρόνος, κουμπί), ώστε να στοιχίζονται όλες οι γραμμές. */
+.ecrm-app[data-ui="signature"] .sig-need { display: grid; grid-template-columns: auto minmax(0, 1fr) 72px 132px; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--sig-hair); }
 .ecrm-app[data-ui="signature"] .sig-need:first-child { border-top: 0; padding-top: 2px; }
 .ecrm-app[data-ui="signature"] .sig-needlist:not(.is-open) .sig-need.is-rest { display: none; }
 .ecrm-app[data-ui="signature"] .sig-need__ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; font-size: var(--fs-15); }
@@ -351,10 +352,11 @@
 .ecrm-app[data-ui="signature"] .sig-need__ic.is-call { background: var(--sig-blue-t); color: var(--sig-blue); }
 .ecrm-app[data-ui="signature"] .sig-need__b b { display: block; font-size: var(--fs-13-5); font-weight: 600; color: var(--sig-ink); }
 .ecrm-app[data-ui="signature"] .sig-need__b p { margin: 1px 0 0; font-size: var(--fs-12-5); color: var(--sig-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ecrm-app[data-ui="signature"] .sig-need time { font-size: var(--fs-12); color: var(--sig-ink-3); white-space: nowrap; }
+.ecrm-app[data-ui="signature"] .sig-need time { font-size: var(--fs-12); color: var(--sig-ink-3); white-space: nowrap; text-align: right; }
 .ecrm-app[data-ui="signature"] .sig-need__go {
 	border: 1px solid var(--sig-hair); border-radius: 10px; padding: 7px 12px; font: inherit; font-size: var(--fs-12-5); font-weight: 700;
 	background: var(--sig-fill); color: var(--sig-ink); cursor: pointer; white-space: nowrap;
+	width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis;
 }
 .ecrm-app[data-ui="signature"] .sig-need__go.is-main {
 	border-color: transparent; color: var(--sig-on-btn);
@@ -431,7 +433,8 @@
 	.ecrm-app[data-ui="signature"] .sig-kpis { gap: 10px; }
 	.ecrm-app[data-ui="signature"] .sig-kpi { padding: 14px; }
 	.ecrm-app[data-ui="signature"] .sig-kpi__v { font-size: var(--fs-22); }
-	.ecrm-app[data-ui="signature"] .sig-need { grid-template-columns: auto minmax(0, 1fr) auto; }
+	.ecrm-app[data-ui="signature"] .sig-need { grid-template-columns: auto minmax(0, 1fr) 124px; gap: 10px; }
+	.ecrm-app[data-ui="signature"] .sig-need__go { padding: 7px 6px; }
 	.ecrm-app[data-ui="signature"] .sig-need time { display: none; }
 	.ecrm-app[data-ui="signature"] .sig-prog .sig-prog__bar { display: none; }
 	.ecrm-app[data-ui="signature"] .sig-year__plot { height: 170px; }
@@ -798,8 +801,10 @@
 .ecrm-app[data-ui="signature"] .sig-crow__owner { font-size: var(--fs-13); color: var(--sig-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ecrm-app[data-ui="signature"] .sig-crow__st { display: flex; align-items: center; gap: 6px; }
 .ecrm-app[data-ui="signature"] .sig-crow__when { font-size: var(--fs-12-5); color: var(--sig-ink-3); text-align: right; }
+/* (383) Όλα τα κουμπιά ίδιου πλάτους (όσο η στήλη), ώστε να στοιχίζονται. */
 .ecrm-app[data-ui="signature"] .sig-crow__act {
-	justify-self: end; padding: 7px 14px; border-radius: 999px; font-size: var(--fs-13); font-weight: 600; white-space: nowrap;
+	justify-self: stretch; text-align: center; padding: 7px 10px; border-radius: 999px; font-size: var(--fs-13); font-weight: 600; white-space: nowrap;
+	overflow: hidden; text-overflow: ellipsis;
 	background: var(--sig-ink); color: var(--sig-solid);
 }
 .ecrm-app[data-ui="signature"] .sig-crow__act.is-quiet { background: var(--sig-fill); color: var(--sig-ink-2); }
