@@ -80,7 +80,9 @@ final class DashboardHomeCardsTest extends IntegrationTestCase
     {
         global $wpdb;
 
-        $since = (string) $wpdb->get_var('SELECT NOW() - INTERVAL 1 DAY');
+        // Σταθερό «από», όχι σχετικό με το ρολόι της βάσης: το τεστ ελέγχει
+        // την κατάταξη, όχι το παράθυρο ημερομηνιών.
+        $since = '2000-01-01 00:00:00';
         $sure  = $this->program('Δοκιμή Sure', 'fixed');
         $flex  = $this->program('Δοκιμή Flex', 'variable');
 
@@ -96,7 +98,19 @@ final class DashboardHomeCardsTest extends IntegrationTestCase
             UserScope::forSelf($other)
         );
 
+        $stored = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE partner_user_id = %d AND program_id IN (%d, %d)',
+                Tables::name(Tables::CONTRACTS),
+                $this->partner,
+                $sure,
+                $flex
+            )
+        );
+        self::assertSame(5, $stored, 'Οι αιτήσεις του τεστ δεν γράφτηκαν με το πρόγραμμά τους.');
+
         $rows = $this->dashboard->byProgramSince($this->partner, $since);
+        self::assertSame('', $wpdb->last_error, 'Το ερώτημα του byProgramSince() απέτυχε.');
 
         self::assertSame(['Δοκιμή Sure', 'Δοκιμή Flex'], array_column($rows, 'name'));
         self::assertSame([2, 1], array_column($rows, 'c'));
@@ -136,7 +150,10 @@ final class DashboardHomeCardsTest extends IntegrationTestCase
             'active'      => 1,
         ]);
 
-        return (int) $wpdb->insert_id;
+        $id = (int) $wpdb->insert_id;
+        self::assertGreaterThan(0, $id, 'Το πρόγραμμα του τεστ δεν μπήκε: ' . $wpdb->last_error);
+
+        return $id;
     }
 
     private function activatedDaysAgo(int $contractId, int $days): void
