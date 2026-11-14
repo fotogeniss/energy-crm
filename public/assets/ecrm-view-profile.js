@@ -44,6 +44,22 @@ function initialsOf(name) {
 	return ((p[0] || '').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase() || '·';
 }
 
+/* (382) Η φωτογραφία ή, χωρίς αυτή, τα αρχικά. */
+function avatarInner(p) {
+	return p.photo_url ? '<img src="' + esc(p.photo_url) + '" alt="">' : esc(initialsOf(p.display_name));
+}
+
+/* Τα avatar της πάνω μπάρας και του μενού ακολουθούν χωρίς ανανέωση σελίδας. */
+function syncShellAvatars(url) {
+	document.querySelectorAll('[data-me-av]').forEach(function (el) {
+		if (url) {
+			el.innerHTML = '<img src="' + esc(url) + '" alt="">';
+		} else {
+			el.textContent = el.getAttribute('data-initials') || '';
+		}
+	});
+}
+
 function render(view) {
 	var p = state.data.profile;
 	var nav = SECTIONS.map(function (s) {
@@ -52,7 +68,7 @@ function render(view) {
 
 	view.innerHTML = '<div class="sig-pf">' +
 		'<aside class="sig-pf__side">' +
-			'<div class="sig-pf__me"><span class="sig-pf__av">' + esc(initialsOf(p.display_name)) + '</span>' +
+			'<div class="sig-pf__me"><span class="sig-pf__av' + (p.photo_url ? ' has-photo' : '') + '">' + avatarInner(p) + '</span>' +
 			'<b>' + esc(p.display_name) + '</b><small>' + esc(p.email) + '</small>' +
 			(p.title ? '<span class="sig-pf__title">' + esc(p.title) + '</span>' : '') + '</div>' +
 			'<nav class="sig-pf__navs">' + nav + '</nav>' +
@@ -99,6 +115,188 @@ function save(patch, done) {
 		.catch(function () { toast('Σφάλμα δικτύου.', false); });
 }
 
+/* ---- 1α. Φωτογραφία προφίλ (382) — docs/UI-PROFILE-PHOTO.html --------
+ *
+ * Το κόψιμο σε κύκλο γίνεται εδώ, σε canvas· στον server πάει μόνο το
+ * τετράγωνο αποτέλεσμα (512×512 JPEG), που εκείνος ξαναφτιάχνει 256×256
+ * χωρίς μεταδεδομένα (Infrastructure\ProfilePhoto). */
+
+var PHOTO_MIN = 128;
+var PHOTO_MAX_BYTES = 8 * 1024 * 1024;
+var PHOTO_OUT = 512;
+
+function photoRowHTML(p) {
+	var has = !!p.photo_url;
+	return '<div class="sig-pf__photo">' +
+		'<span class="sig-pf__photoav' + (has ? ' has-photo' : '') + '">' + avatarInner(p) + '</span>' +
+		'<div><b>Φωτογραφία προφίλ</b><div class="sig-pf__photobtns">' +
+			(has
+				? '<button type="button" class="ecrm-btn ecrm-btn--ghost" data-photo-pick>Αλλαγή</button>' +
+					'<button type="button" class="ecrm-btn ecrm-btn--ghost sig-pf__danger" data-photo-remove>Αφαίρεση</button>'
+				: '<button type="button" class="ecrm-btn ecrm-btn--primary" data-photo-pick>Ανέβασμα φωτογραφίας</button>') +
+		'</div>' +
+		'<small>' + (has ? 'Η αφαίρεση σβήνει το αρχείο από τον server.' : 'JPG, PNG ή WEBP, έως 8 MB. Στο κινητό ανοίγει και η κάμερα.') + '</small>' +
+		(has ? '<label class="sig-pf__chk"><input type="checkbox" data-photo-pdf' + (p.photo_in_pdf ? ' checked' : '') + '> Να φαίνεται στο PDF προσφοράς</label>' : '') +
+		'<div class="sig-pf__err" data-photo-err hidden></div>' +
+		'<input type="file" accept="image/jpeg,image/png,image/webp" data-photo-file hidden></div></div>';
+}
+
+function wirePhoto(main) {
+	var file = main.querySelector('[data-photo-file]');
+	var err = main.querySelector('[data-photo-err]');
+	function fail(msg) { err.textContent = msg; err.hidden = false; }
+
+	main.querySelector('[data-photo-pick]').addEventListener('click', function () { err.hidden = true; file.value = ''; file.click(); });
+
+	file.addEventListener('change', function () {
+		var f = file.files && file.files[0];
+		if (!f) return;
+		if (['image/jpeg', 'image/png', 'image/webp'].indexOf(f.type) < 0) { fail('Μόνο φωτογραφία JPG, PNG ή WebP.'); return; }
+		if (f.size > PHOTO_MAX_BYTES) { fail('Η φωτογραφία πρέπει να είναι έως 8 MB.'); return; }
+		var url = URL.createObjectURL(f);
+		var img = new Image();
+		img.onload = function () {
+			if (Math.min(img.naturalWidth, img.naturalHeight) < PHOTO_MIN) {
+				URL.revokeObjectURL(url);
+				fail('Η εικόνα είναι πολύ μικρή (κάτω από ' + PHOTO_MIN + '×' + PHOTO_MIN + '). Διάλεξε μεγαλύτερη.');
+				return;
+			}
+			openCropper(img, url, function (blob) { uploadPhoto(blob, fail); });
+		};
+		img.onerror = function () { URL.revokeObjectURL(url); fail('Η φωτογραφία δεν διαβάζεται.'); };
+		img.src = url;
+	});
+
+	var rm = main.querySelector('[data-photo-remove]');
+	if (rm) {
+		rm.addEventListener('click', function () {
+			if (!window.confirm('Να αφαιρεθεί η φωτογραφία προφίλ;')) return;
+			fetch(api('/me/photo'), { method: 'DELETE', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (d) {
+					if (!d || !d.ok) { fail((d && d.error) || 'Δεν αφαιρέθηκε.'); return; }
+					photoChanged('');
+					toast('Η φωτογραφία αφαιρέθηκε.');
+				})
+				.catch(function () { fail('Σφάλμα δικτύου.'); });
+		});
+	}
+
+	var pdf = main.querySelector('[data-photo-pdf]');
+	if (pdf) {
+		pdf.addEventListener('change', function () {
+			save({ photo_in_pdf: pdf.checked }, function () {
+				toast(pdf.checked ? 'Η φωτογραφία θα μπαίνει στο PDF προσφοράς.' : 'Η φωτογραφία δεν θα μπαίνει στο PDF προσφοράς.');
+			});
+		});
+	}
+}
+
+function photoChanged(url) {
+	state.data.profile.photo_url = url;
+	syncShellAvatars(url);
+	render(viewEl('profile'));
+}
+
+function uploadPhoto(blob, fail) {
+	var fd = new FormData();
+	fd.append('photo', blob, 'photo.jpg');
+	fetch(api('/me/photo'), { method: 'POST', headers: H(), body: fd })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) { fail((d && d.error) || 'Η φωτογραφία δεν αποθηκεύτηκε.'); return; }
+			photoChanged(d.photo_url || '');
+			toast('Η φωτογραφία αποθηκεύτηκε.');
+		})
+		.catch(function () { fail('Σφάλμα δικτύου.'); });
+}
+
+/* Κόψιμο σε κύκλο: σύρσιμο για μετακίνηση, μπάρα για ζουμ. Η εικόνα
+ * καλύπτει πάντα όλο τον κύκλο. */
+function openCropper(img, url, done) {
+	var box = document.createElement('div');
+	box.className = 'sig-crop';
+	box.innerHTML = '<div class="sig-crop__dlg" role="dialog" aria-modal="true" aria-label="Φωτογραφία προφίλ">' +
+		'<header><b>Φωτογραφία προφίλ</b><button type="button" class="sig-crop__x" data-crop-x aria-label="Κλείσιμο">✕</button></header>' +
+		'<div class="sig-crop__stage" data-crop-stage><img alt="" data-crop-img><span class="sig-crop__mask"></span>' +
+		'<span class="sig-crop__tip">Σύρε για να μετακινήσεις</span></div>' +
+		'<div class="sig-crop__zoom"><span>−</span><input type="range" min="100" max="300" value="100" aria-label="Μεγέθυνση" data-crop-zoom><span>+</span></div>' +
+		'<footer><button type="button" class="ecrm-btn ecrm-btn--ghost" data-crop-x>Άκυρο</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-crop-ok>Αποθήκευση</button></footer></div>';
+	// Μέσα στο #ecrm-app: εκεί ζουν τα χρώματα (tokens) της εφαρμογής.
+	(document.getElementById('ecrm-app') || document.body).appendChild(box);
+
+	var stage = box.querySelector('[data-crop-stage]');
+	var el = box.querySelector('[data-crop-img]');
+	var zoom = box.querySelector('[data-crop-zoom]');
+	el.src = url;
+
+	var W = img.naturalWidth, Hh = img.naturalHeight;
+	var S = stage.clientWidth, Sh = stage.clientHeight;
+	var D = Math.min(S, Sh) - 40;
+	var cx = (S - D) / 2, cy = (Sh - D) / 2;
+	stage.style.setProperty('--r', (D / 2) + 'px');
+	var base = D / Math.min(W, Hh);
+	var scale = base;
+	var ox = (D - W * scale) / 2, oy = (D - Hh * scale) / 2;
+
+	function clamp() {
+		ox = Math.min(0, Math.max(D - W * scale, ox));
+		oy = Math.min(0, Math.max(D - Hh * scale, oy));
+	}
+	function draw() {
+		clamp();
+		el.style.width = (W * scale) + 'px';
+		el.style.height = (Hh * scale) + 'px';
+		el.style.transform = 'translate(' + (cx + ox) + 'px,' + (cy + oy) + 'px)';
+	}
+	draw();
+
+	zoom.addEventListener('input', function () {
+		var mid = { x: (D / 2 - ox) / scale, y: (D / 2 - oy) / scale };
+		scale = base * (Number(zoom.value) / 100);
+		ox = D / 2 - mid.x * scale;
+		oy = D / 2 - mid.y * scale;
+		draw();
+	});
+
+	var drag = null;
+	stage.addEventListener('pointerdown', function (e) {
+		drag = { x: e.clientX, y: e.clientY, ox: ox, oy: oy };
+		try { stage.setPointerCapture(e.pointerId); } catch (x) {}
+	});
+	stage.addEventListener('pointermove', function (e) {
+		if (!drag) return;
+		ox = drag.ox + (e.clientX - drag.x);
+		oy = drag.oy + (e.clientY - drag.y);
+		draw();
+	});
+	['pointerup', 'pointercancel'].forEach(function (t) { stage.addEventListener(t, function () { drag = null; }); });
+
+	function close() {
+		document.removeEventListener('keydown', onKey);
+		URL.revokeObjectURL(url);
+		if (box.parentNode) box.parentNode.removeChild(box);
+	}
+	function onKey(e) { if (e.key === 'Escape') close(); }
+	document.addEventListener('keydown', onKey);
+	box.querySelectorAll('[data-crop-x]').forEach(function (b) { b.addEventListener('click', close); });
+
+	box.querySelector('[data-crop-ok]').addEventListener('click', function () {
+		var c = document.createElement('canvas');
+		c.width = PHOTO_OUT;
+		c.height = PHOTO_OUT;
+		var g = c.getContext('2d');
+		g.fillStyle = '#fff';
+		g.fillRect(0, 0, PHOTO_OUT, PHOTO_OUT);
+		g.drawImage(img, -ox / scale, -oy / scale, D / scale, D / scale, 0, 0, PHOTO_OUT, PHOTO_OUT);
+		c.toBlob(function (blob) {
+			close();
+			if (blob) done(blob);
+		}, 'image/jpeg', 0.9);
+	});
+}
+
 /* ---- 1. Τα στοιχεία μου -------------------------------------------- */
 
 function field(label, key, value, attrs, hint) {
@@ -110,6 +308,7 @@ function field(label, key, value, attrs, hint) {
 function detailsHTML(main) {
 	var p = state.data.profile;
 	main.innerHTML = '<section class="sig-pf__card"><h3>Τα στοιχεία μου</h3><p class="sig-pf__lead">Μπαίνουν στο PDF προσφοράς και στην αφίσα QR.</p>' +
+		photoRowHTML(p) +
 		'<div class="sig-pf__grid">' +
 			field('Όνομα', 'first_name', p.first_name, 'maxlength="60" autocomplete="off"') +
 			field('Επώνυμο', 'last_name', p.last_name, 'maxlength="60" autocomplete="off"') +
@@ -128,6 +327,8 @@ function detailsHTML(main) {
 	}
 	preview();
 	main.querySelectorAll('[data-pf]').forEach(function (el) { el.addEventListener('input', preview); });
+
+	wirePhoto(main);
 
 	main.querySelector('[data-pf-save]').addEventListener('click', function () {
 		var body = {};

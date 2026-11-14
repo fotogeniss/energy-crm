@@ -136,6 +136,8 @@ final class Plugin
             Services::leads(),
             Services::tasks()
         ))->register();
+        // (382) Η φωτογραφία προφίλ σβήνεται μαζί με τον χρήστη.
+        Services::profilePhoto()->register();
         (new Retention(Services::contracts()))->register();
         (new DocumentProtection(Services::unprotectedDocuments()))->register();
 

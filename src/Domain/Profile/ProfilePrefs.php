@@ -40,7 +40,7 @@ final class ProfilePrefs
      * @return array{
      *   phone: string, title: string, signature: string, start_view: string, scope: string,
      *   font: string, notify_status_email: bool, notify_digest_email: bool, quiet: bool,
-     *   fav_providers: list<int>
+     *   fav_providers: list<int>, photo_in_pdf: bool
      * }
      */
     public static function defaults(): array
@@ -56,6 +56,9 @@ final class ProfilePrefs
             'notify_digest_email' => true,
             'quiet'               => false,
             'fav_providers'       => [],
+            // (382) Η φωτογραφία στο «Σύμβουλος» του PDF προσφοράς: κλειστό
+            // από προεπιλογή, για να μένει το PDF επίσημο.
+            'photo_in_pdf'        => false,
         ];
     }
 
@@ -67,7 +70,7 @@ final class ProfilePrefs
      * @return array{
      *   phone: string, title: string, signature: string, start_view: string, scope: string,
      *   font: string, notify_status_email: bool, notify_digest_email: bool, quiet: bool,
-     *   fav_providers: list<int>
+     *   fav_providers: list<int>, photo_in_pdf: bool
      * }
      */
     public static function clean(array $input): array
@@ -87,7 +90,7 @@ final class ProfilePrefs
         $font = (string) ($input['font'] ?? '');
         $out['font'] = in_array($font, self::FONTS, true) ? $font : 'normal';
 
-        foreach (['notify_status_email', 'notify_digest_email', 'quiet'] as $flag) {
+        foreach (['notify_status_email', 'notify_digest_email', 'quiet', 'photo_in_pdf'] as $flag) {
             if (array_key_exists($flag, $input)) {
                 $out[$flag] = filter_var($input[$flag], FILTER_VALIDATE_BOOLEAN);
             }

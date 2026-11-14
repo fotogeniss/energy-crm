@@ -24,6 +24,8 @@ final class ProfilePrefsTest extends TestCase
         self::assertSame('normal', $p['font']);
         self::assertArrayNotHasKey('is_admin', $p);
         self::assertTrue($p['notify_status_email']);
+        // (382) Η φωτογραφία στο PDF: κλειστό από προεπιλογή.
+        self::assertFalse($p['photo_in_pdf']);
     }
 
     public function testValuesAreKept(): void
@@ -38,6 +40,7 @@ final class ProfilePrefsTest extends TestCase
             'notify_digest_email' => false,
             'quiet'               => 'true',
             'fav_providers'       => ['3', 1, 3, -2, 'x'],
+            'photo_in_pdf'        => '1',
         ]);
 
         self::assertSame('+30 698 277 4563', $p['phone']);
@@ -48,6 +51,7 @@ final class ProfilePrefsTest extends TestCase
         self::assertFalse($p['notify_digest_email']);
         self::assertTrue($p['quiet']);
         self::assertSame([3, 1], $p['fav_providers']);
+        self::assertTrue($p['photo_in_pdf']);
     }
 
     public function testLongTextIsCut(): void

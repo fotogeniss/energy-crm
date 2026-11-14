@@ -31,7 +31,7 @@ final class UserProfile
      * @return array{
      *   phone: string, title: string, signature: string, start_view: string, scope: string,
      *   font: string, notify_status_email: bool, notify_digest_email: bool, quiet: bool,
-     *   fav_providers: list<int>
+     *   fav_providers: list<int>, photo_in_pdf: bool
      * }
      */
     public static function prefs(int $userId): array
@@ -59,6 +59,8 @@ final class UserProfile
             'last_name'    => $user ? (string) $user->last_name : '',
             'display_name' => $user ? (string) $user->display_name : '',
             'email'        => $user ? (string) $user->user_email : '',
+            // (382) Υπογεγραμμένος σύνδεσμος, ή '' χωρίς φωτογραφία.
+            'photo_url'    => ProfilePhoto::url($userId),
         ]);
     }
 

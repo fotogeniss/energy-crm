@@ -24,6 +24,7 @@ use ECRM_DB;
 use ECRM_Notifications;
 use EnergyCRM\Domain\Commission\CommissionAmount;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Infrastructure\ProfilePhoto;
 use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Persistence\CommissionRepository;
 use EnergyCRM\Persistence\ContractRepository;
@@ -168,6 +169,8 @@ final class TeamController implements Controller
                     'role_label' => $roles[$role]['label'] ?? '—',
                     'active'     => ! $this->team->isDisabled((int) $user->ID),
                     'contracts'  => $counts[(int) $user->ID] ?? 0,
+                    // (382) Η φωτογραφία προφίλ, ή '' (τότε τα αρχικά).
+                    'photo_url'  => ProfilePhoto::url((int) $user->ID),
                 ];
             },
             $staff
@@ -281,6 +284,7 @@ final class TeamController implements Controller
                 'active'     => ! $this->team->isDisabled($member),
                 'is_self'    => $member === $scope->actorId(),
                 'joined'     => $user->user_registered,
+                'photo_url'  => ProfilePhoto::url($member),
             ],
             'kpi' => [
                 'month'      => $counts,

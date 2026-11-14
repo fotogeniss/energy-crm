@@ -384,16 +384,31 @@ class ECRM_PDF {
 			[ 'Τηλέφωνο', (string) ( $m['agent_phone'] ?? '' ) ],
 			[ 'Email', (string) ( $m['agent_email'] ?? '' ) ],
 		], static fn ( array $p ): bool => $p[1] !== '' );
+		// (382) Η φωτογραφία του συμβούλου, αν τη ζήτησε («Το προφίλ μου»):
+		// στρογγυλή, 14 mm, αριστερά· οι γραμμές μετακινούνται δεξιά της.
+		$ax    = 118;
+		$photo = (string) ( $m['agent_photo'] ?? '' );
+		if ( $photo !== '' && is_readable( $photo ) ) {
+			try {
+				$pdf->Image( $photo, 118, $y + 5.5, 14, 14 );
+				$ax = 135;
+			} catch ( \Throwable $e ) {
+				$ax = 118;
+			}
+		}
 		$ay = $y + 5;
 		foreach ( $agent as $p ) {
-			$pdf->SetXY( 118, $ay );
+			$pdf->SetXY( $ax, $ay );
 			$pdf->SetFont( 'DejaVu', '', 8.5 );
 			$color( $muted );
 			$pdf->Cell( 20, 5, $p[0], 0, 0 );
 			$pdf->SetFont( 'DejaVu', 'B', 8.5 );
 			$color( $ink );
-			$pdf->Cell( 58, 5, self::clip( $p[1], 34 ), 0, 0, 'R' );
+			$pdf->Cell( 196 - $ax - 20, 5, self::clip( $p[1], $ax === 118 ? 34 : 28 ), 0, 0, 'R' );
 			$ay += 5;
+		}
+		if ( $ax !== 118 ) {
+			$ay = max( $ay, $y + 20 );
 		}
 
 		$y = max( $pdf->GetY() + 5, $ay ) + 6;

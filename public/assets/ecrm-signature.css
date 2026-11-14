@@ -2128,6 +2128,12 @@
 .ecrm-app[data-ui="signature"] .sig-pf__card { background: var(--sig-solid); }
 .ecrm-app[data-ui="signature"] .sig-pf__me { border-bottom-color: var(--sig-hair); }
 .ecrm-app[data-ui="signature"] .sig-pf__av { color: var(--sig-on-btn); background: linear-gradient(135deg, var(--sig-btn-top), var(--sig-btn-bottom)); }
+/* (382) Φωτογραφία προφίλ */
+.ecrm-app[data-ui="signature"] .sig-pf__photoav { color: var(--sig-on-btn); background: linear-gradient(135deg, var(--sig-btn-top), var(--sig-btn-bottom)); }
+.ecrm-app[data-ui="signature"] .sig-pf__av.has-photo, .ecrm-app[data-ui="signature"] .sig-pf__photoav.has-photo { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-pf__err { background: var(--sig-rose-t); color: var(--sig-rose); }
+.ecrm-app[data-ui="signature"] .sig-crop__zoom input { accent-color: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-crop__dlg { background: var(--sig-solid); }
 .ecrm-app[data-ui="signature"] .sig-pf__me b,
 .ecrm-app[data-ui="signature"] .sig-pf__card h3,
 .ecrm-app[data-ui="signature"] .sig-pf__row b,

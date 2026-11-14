@@ -18,6 +18,7 @@ use ECRM_DB;
 use ECRM_PDF;
 use EnergyCRM\Domain\Quote\QuoteText;
 use EnergyCRM\Domain\Quote\SavingsEstimate;
+use EnergyCRM\Infrastructure\ProfilePhoto;
 use EnergyCRM\Infrastructure\UserProfile;
 use Throwable;
 use WP_REST_Request;
@@ -32,6 +33,11 @@ final class QuoteController implements Controller
     private const MAX_UNIT_PRICE = 10.0;
 
     private const MAX_FIXED_CHARGE = 10000.0;
+
+    /** (382) Η φωτογραφία του συμβούλου, όταν τη θέλει στο PDF. */
+    public function __construct(private readonly ?ProfilePhoto $photos = null)
+    {
+    }
 
     public function routes(): void
     {
@@ -99,6 +105,10 @@ final class QuoteController implements Controller
 
         $agent   = wp_get_current_user();
         $profile = UserProfile::prefs((int) $agent->ID);
+        // (382) Στρογγυλό αντίγραφο σε προσωρινό αρχείο, μόνο αν το ζήτησε.
+        $photo   = $profile['photo_in_pdf'] && $this->photos !== null
+            ? $this->photos->roundCopy((int) $agent->ID)
+            : null;
 
         try {
             $bytes = ECRM_PDF::build_quote([
@@ -115,6 +125,7 @@ final class QuoteController implements Controller
                 // (379) Από «Το προφίλ μου».
                 'agent_phone'    => $profile['phone'],
                 'agent_title'    => $profile['title'],
+                'agent_photo'    => $photo,
                 'date'           => wp_date('d/m/Y'),
                 'consumption'    => (float) $request['consumption'],
                 'current_price'  => (float) $request['current_price'],
@@ -127,6 +138,10 @@ final class QuoteController implements Controller
                 'pct'            => $estimate->percentage,
             ]);
         } catch (Throwable $e) {
+            if ($photo !== null) {
+                wp_delete_file($photo);
+            }
+
             // The message names a font or a temp path, so it stays in the log.
             error_log('ECRM quote PDF: ' . $e->getMessage());
 
@@ -134,6 +149,10 @@ final class QuoteController implements Controller
                 ['ok' => false, 'error' => 'Δεν ήταν δυνατή η δημιουργία της προσφοράς.'],
                 500
             );
+        }
+
+        if ($photo !== null) {
+            wp_delete_file($photo);
         }
 
         return new WP_REST_Response([

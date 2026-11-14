@@ -15,6 +15,11 @@ export function loadTeam(flash) {
 		.then(function (d) { renderTeam(view, d, flash); })
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα φόρτωσης.</div></div>'; });
 }
+
+/* (382) Η φωτογραφία προφίλ του μέλους, ή τα αρχικά του. */
+function memberMark(m) {
+	return m.photo_url ? '<img class="ecrm-avimg" src="' + esc(m.photo_url) + '" alt="">' : esc(initials(m.name));
+}
 function renderTeam(view, d, flash) {
 	// Ο Καταχωρητής συγχωνεύτηκε στον Πωλητή (Roles::matrix() v6, 25/08) --
 	// το /team επιστρέφει πλέον μόνο Πωλητές (οι Συνεργάτες φιλτράρονται ήδη
@@ -39,7 +44,7 @@ function renderTeam(view, d, flash) {
 			: '';
 
 		return '<tr class="ecrm-rowlink" data-member="' + m.id + '">' +
-			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(m.name) + '">' + esc(initials(m.name)) + '</span><span>' + esc(m.name) + '</span></span></td>' +
+			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(m.name) + '">' + memberMark(m) + '</span><span>' + esc(m.name) + '</span></span></td>' +
 			'<td class="ecrm-col-sec">' + esc(m.email) + '</td>' +
 			'<td class="ecrm-tlnum">' + (m.contracts || 0) + '</td>' +
 			'<td>' + (m.active ? '<span class="ecrm-badge ecrm-badge--active">Ενεργός</span>' : '<span class="ecrm-badge ecrm-badge--cancelled">Ανενεργός</span>') + '</td>' +
@@ -396,7 +401,7 @@ function sigTeamHTML(members, canManage, flash) {
 
 		return '<div class="sig-member' + (m.active ? '' : ' is-off') + '" data-member="' + esc(String(m.id)) + '" role="button" tabindex="0">' +
 			'<div class="sig-member__top">' +
-				'<span class="sig-member__av" style="--h:' + tint(m.name) + '">' + esc(initials(m.name)) + '<i class="' + (m.active ? 'is-on' : '') + '" aria-hidden="true"></i></span>' +
+				'<span class="sig-member__av" style="--h:' + tint(m.name) + '">' + memberMark(m) + '<i class="' + (m.active ? 'is-on' : '') + '" aria-hidden="true"></i></span>' +
 				'<span class="sig-member__who"><b>' + esc(m.name) + '</b><small>' + esc(m.email || '') + '</small></span>' +
 				menu +
 			'</div>' +

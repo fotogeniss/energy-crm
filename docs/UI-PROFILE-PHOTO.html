@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="el" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup — Φωτογραφία προφίλ</title>
+<style>
+:root{--canvas:#eef0ed;--card:#fff;--card-2:#f6f7f5;--hair:#141e1417;--ink:#1b1d1a;--ink-2:#5f635d;--ink-3:#9a9e97;--green:#16c217;--green-ink:#0a6b1d;--green-t:#16c2171f;--rose:#d70f3c;--rose-t:#ff3c5a1f;--amber:#c46a00;--amber-t:#ffa01424;--lift:0 1px 1px rgba(16,24,16,.04),0 10px 30px -14px rgba(16,24,16,.22);--shade:#0b0d0bb3}
+[data-theme=dark]{--canvas:#0d0f0d;--card:#1b1e1b;--card-2:#232723;--hair:#ffffff1a;--ink:#f2f4f1;--ink-2:#a6aba3;--ink-3:#6f746d;--green:#3ddc3e;--green-ink:#8bea4f;--green-t:#3ddc3e24;--rose:#ff6b85;--rose-t:#ff6b8524;--amber:#ffb547;--amber-t:#ffb54724;--lift:0 12px 30px -16px #000;--shade:#000000c0}
+*{box-sizing:border-box}html,body{background:var(--canvas)}
+body{margin:0;color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:16px;display:grid;gap:22px}
+.note{color:var(--ink-2);font-size:13px}.note b{color:var(--ink)}
+.switch{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--hair);border-radius:99px;padding:3px;margin-top:8px}
+.switch button{border:0;background:none;color:var(--ink-2);font:inherit;font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:99px;cursor:pointer}
+.switch button.on{background:var(--green);color:#fff}
+.lbl{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px}
+.card{background:var(--card);border:1px solid var(--hair);border-radius:18px;box-shadow:var(--lift);padding:18px 20px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+h3{margin:0 0 4px;font-size:16px}.lead{margin:0 0 14px;color:var(--ink-2);font-size:13px}
+.ava{border-radius:50%;display:grid;place-items:center;font-weight:800;color:var(--green-ink);background:var(--green-t);overflow:hidden;flex:none}
+.ava svg{width:100%;height:100%;display:block}
+.photo-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{border:0;border-radius:10px;padding:9px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:linear-gradient(180deg,#22cf23,#0e9a12);color:#fff}
+.btn.ghost{background:var(--card-2);color:var(--ink);border:1px solid var(--hair)}
+.btn.danger{background:var(--rose-t);color:var(--rose)}
+.hint{font-size:12px;color:var(--ink-3);margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.f{display:grid;gap:4px}.f span{font-size:12px;color:var(--ink-2);font-weight:600}
+.f div{border:1px solid var(--hair);border-radius:10px;padding:9px 11px;background:var(--card-2)}
+/* crop dialog */
+.dlg{background:var(--card);border:1px solid var(--hair);border-radius:20px;box-shadow:var(--lift);overflow:hidden;max-width:420px;width:100%}
+.dlg header{padding:14px 18px;border-bottom:1px solid var(--hair);font-weight:700;display:flex;justify-content:space-between}
+.stage{position:relative;height:300px;background:#222;overflow:hidden}
+.stage .img{position:absolute;inset:-30px -60px;background:linear-gradient(135deg,#7aa6d6,#c9a37a 55%,#6b4e3a)}
+.stage .face{position:absolute;left:50%;top:46%;width:120px;height:150px;transform:translate(-50%,-50%);border-radius:50% 50% 45% 45%;background:#e4c2a1}
+.stage .body{position:absolute;left:50%;top:86%;width:240px;height:140px;transform:translate(-50%,-30%);border-radius:50% 50% 0 0;background:#2f3b4f}
+.stage .mask{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 112px,var(--shade) 113px)}
+.stage .ring{position:absolute;left:50%;top:50%;width:226px;height:226px;transform:translate(-50%,-50%);border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #0004}
+.stage .tip{position:absolute;left:0;right:0;bottom:10px;text-align:center;color:#fff;font-size:12px;opacity:.85}
+.zoom{display:flex;gap:10px;align-items:center;padding:14px 18px}
+.zoom input{flex:1;accent-color:var(--green)}
+.dlg footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--hair)}
+/* where */
+.where{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.w{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:14px;box-shadow:var(--lift)}
+.w b{display:block;margin-bottom:10px;font-size:13px}
+.bar{display:flex;align-items:center;justify-content:flex-end;gap:10px;background:var(--card-2);border-radius:12px;padding:8px 10px}
+.bell{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid var(--hair);font-size:13px}
+.menu{background:var(--card-2);border-radius:12px;padding:10px;display:flex;gap:10px;align-items:center}
+.menu small{display:block;color:var(--ink-3);font-size:11.5px}
+.pdf{background:#fff;color:#1b1d1a;border:1px solid #e3e5e1;border-radius:6px;padding:12px;font-size:11px}
+.pdf .h{font-size:9px;letter-spacing:.08em;color:#9a9e97;font-weight:700;margin-bottom:6px}
+.pdf .row{display:flex;gap:10px;align-items:center}
+.row small{display:block;color:#5f635d}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:6px;background:var(--amber-t);color:var(--amber)}
+.ann{display:grid;gap:6px}
+.ann div{font-size:12.5px;color:var(--ink-2);background:var(--card);border:1px dashed var(--hair);border-radius:10px;padding:8px 10px}
+.ann b{color:var(--ink)}
+.err{display:flex;gap:8px;align-items:center;background:var(--rose-t);color:var(--rose);border-radius:10px;padding:8px 10px;font-size:12.5px;margin-top:10px}
+@media (max-width:560px){.grid{grid-template-columns:1fr}.stage{height:260px}}
+</style></head><body><div class="wrap">
+
+<div class="note"><b>Mockup για έγκριση: φωτογραφία προφίλ.</b> Στο «Το προφίλ μου → Τα στοιχεία μου». Ανεβαίνει από τον υπολογιστή ή τραβιέται με την κάμερα του κινητού, κόβεται σε κύκλο και αποθηκεύεται μικρή (256×256). Χωρίς φωτογραφία μένουν τα αρχικά, όπως σήμερα.
+<div class="switch"><button class="on" data-t="light">Ανοιχτό</button><button data-t="dark">Σκούρο</button></div></div>
+
+<div><div class="lbl">1. ΤΑ ΣΤΟΙΧΕΙΑ ΜΟΥ: ΧΩΡΙΣ ΚΑΙ ΜΕ ΦΩΤΟΓΡΑΦΙΑ</div>
+<div class="two">
+ <section class="card"><h3>Τα στοιχεία μου</h3><p class="lead">Μπαίνουν στο PDF προσφοράς και στην αφίσα QR.</p>
+  <div class="photo-row"><span class="ava" style="width:88px;height:88px;font-size:28px">ΚΦ</span>
+   <div><b>Φωτογραφία προφίλ</b><div class="btns"><button class="btn">Ανέβασμα φωτογραφίας</button></div><div class="hint">JPG, PNG ή WEBP, έως 8 MB. Στο κινητό ανοίγει και η κάμερα.</div></div></div>
+  <div class="grid"><label class="f"><span>Όνομα</span><div>Κωνσταντίνος</div></label><label class="f"><span>Επώνυμο</span><div>Φ.</div></label></div>
+ </section>
+ <section class="card"><h3>Τα στοιχεία μου</h3><p class="lead">Μπαίνουν στο PDF προσφοράς και στην αφίσα QR.</p>
+  <div class="photo-row"><span class="ava" style="width:88px;height:88px"><svg viewBox="0 0 88 88"><rect width="88" height="88" fill="#8fb3d9"/><circle cx="44" cy="36" r="17" fill="#e4c2a1"/><path d="M12 92c4-22 18-32 32-32s28 10 32 32z" fill="#2f3b4f"/></svg></span>
+   <div><b>Φωτογραφία προφίλ</b><div class="btns"><button class="btn ghost">Αλλαγή</button><button class="btn danger">Αφαίρεση</button></div><div class="hint">Η αφαίρεση σβήνει το αρχείο από τον server.</div></div></div>
+  <div class="err">⚠ Η εικόνα είναι πολύ μικρή (κάτω από 200×200). Διάλεξε μεγαλύτερη.</div>
+ </section>
+</div></div>
+
+<div><div class="lbl">2. ΚΟΨΙΜΟ ΣΕ ΚΥΚΛΟ (ΑΝΟΙΓΕΙ ΑΜΕΣΩΣ ΜΕΤΑ ΤΗΝ ΕΠΙΛΟΓΗ)</div>
+<div class="dlg"><header>Φωτογραφία προφίλ <span style="color:var(--ink-3)">✕</span></header>
+ <div class="stage"><div class="img"></div><div class="face"></div><div class="body"></div><div class="mask"></div><div class="ring"></div><div class="tip">Σύρε για να μετακινήσεις</div></div>
+ <div class="zoom"><span>−</span><input type="range" min="100" max="300" value="140" aria-label="Μεγέθυνση"><span>+</span></div>
+ <footer><button class="btn ghost">Άκυρο</button><button class="btn">Αποθήκευση</button></footer></div>
+</div>
+
+<div><div class="lbl">3. ΠΟΥ ΦΑΙΝΕΤΑΙ</div>
+<div class="where">
+ <div class="w"><b>Πάνω μπάρα</b><div class="bar"><span class="bell">🔔</span><span class="ava" style="width:34px;height:34px"><svg viewBox="0 0 88 88"><rect width="88" height="88" fill="#8fb3d9"/><circle cx="44" cy="36" r="17" fill="#e4c2a1"/><path d="M12 92c4-22 18-32 32-32s28 10 32 32z" fill="#2f3b4f"/></svg></span></div></div>
+ <div class="w"><b>Μενού avatar</b><div class="menu"><span class="ava" style="width:40px;height:40px"><svg viewBox="0 0 88 88"><rect width="88" height="88" fill="#8fb3d9"/><circle cx="44" cy="36" r="17" fill="#e4c2a1"/><path d="M12 92c4-22 18-32 32-32s28 10 32 32z" fill="#2f3b4f"/></svg></span><span><b style="margin:0">Κωνσταντίνος Φ.</b><small>Σύμβουλος ενέργειας</small></span></div></div>
+ <div class="w"><b>Ομάδα / συνεργάτες (για τον διαχειριστή)</b><div class="menu"><span class="ava" style="width:32px;height:32px"><svg viewBox="0 0 88 88"><rect width="88" height="88" fill="#8fb3d9"/><circle cx="44" cy="36" r="17" fill="#e4c2a1"/><path d="M12 92c4-22 18-32 32-32s28 10 32 32z" fill="#2f3b4f"/></svg></span><span><b style="margin:0">Κωνσταντίνος Φ.</b><small>31 αιτήσεις τον μήνα</small></span></div></div>
+ <div class="w"><b>PDF προσφοράς, «Σύμβουλος»<span class="tag">ΕΠΙΛΟΓΗ</span></b><div class="pdf"><div class="h">ΣΥΜΒΟΥΛΟΣ</div><div class="row"><span class="ava" style="width:30px;height:30px"><svg viewBox="0 0 88 88"><rect width="88" height="88" fill="#8fb3d9"/><circle cx="44" cy="36" r="17" fill="#e4c2a1"/><path d="M12 92c4-22 18-32 32-32s28 10 32 32z" fill="#2f3b4f"/></svg></span><span><b>Κωνσταντίνος Φ.</b><small>6971 234 567 · k@example.gr</small></span></div></div></div>
+</div></div>
+
+<div class="ann">
+ <div><b>Αποθήκευση:</b> το κόψιμο γίνεται στη συσκευή και στον server πάει μόνο η τελική εικόνα 256×256 JPEG (≈20 KB). Ο server την ξανακάνει JPEG (σβήνει μεταδεδομένα, π.χ. τοποθεσία GPS της φωτογραφίας) και την κρατά στον προστατευμένο φάκελο αρχείων του CRM, όχι στη Βιβλιοθήκη Πολυμέσων του WordPress.</div>
+ <div><b>Ποιος τη βλέπει:</b> μόνο συνδεδεμένοι χρήστες του CRM. Ο καθένας αλλάζει μόνο τη δική του. Η «Αφαίρεση» σβήνει το αρχείο. Όταν διαγράφεται ο χρήστης, σβήνεται κι αυτή.</div>
+ <div><b>PDF προσφοράς:</b> η φωτογραφία μπαίνει στο «Σύμβουλος» μόνο αν τη θέλεις (διακόπτης στο προφίλ, κλειστός από προεπιλογή), για να μένει το PDF επίσημο.</div>
+ <div><b>Κλασική εμφάνιση:</b> το avatar της δείχνει την ίδια φωτογραφία.</div>
+</div>
+</div>
+<script>document.querySelectorAll('[data-t]').forEach(function(b){b.addEventListener('click',function(){document.documentElement.setAttribute('data-theme',b.getAttribute('data-t'));document.querySelectorAll('[data-t]').forEach(function(x){x.classList.toggle('on',x===b)})})})</script>
+</body></html>

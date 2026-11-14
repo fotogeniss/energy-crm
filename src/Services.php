@@ -40,6 +40,7 @@ use EnergyCRM\Infrastructure\RenewalOffers;
 use EnergyCRM\Infrastructure\MonthlyStoreReport;
 use EnergyCRM\Infrastructure\StoreMonthReport;
 use EnergyCRM\Infrastructure\StalePriceNotice;
+use EnergyCRM\Infrastructure\ProfilePhoto;
 use EnergyCRM\Infrastructure\TicketAttachments;
 use EnergyCRM\Infrastructure\TicketNotices;
 use EnergyCRM\Infrastructure\TicketRetention;
@@ -182,6 +183,8 @@ final class Services
     private static ?TicketRepository $tickets = null;
 
     private static ?TicketAttachments $ticketAttachments = null;
+
+    private static ?ProfilePhoto $profilePhoto = null;
 
     private static ?TicketNotices $ticketNotices = null;
 
@@ -504,6 +507,12 @@ final class Services
     public static function ticketAttachments(): TicketAttachments
     {
         return self::$ticketAttachments ??= new TicketAttachments(new DocumentStorage(\ECRM_Files::dir()));
+    }
+
+    /** (382) Φωτογραφία προφίλ, στον ίδιο προστατευμένο φάκελο με τα έγγραφα. */
+    public static function profilePhoto(): ProfilePhoto
+    {
+        return self::$profilePhoto ??= new ProfilePhoto(new DocumentStorage(\ECRM_Files::dir()));
     }
 
     public static function ticketNotices(): TicketNotices

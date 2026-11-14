@@ -57,6 +57,11 @@ class ECRM_App {
 		$initials = '';
 		foreach ( array_slice( $parts, 0, 2 ) as $w ) { $initials .= mb_substr( $w, 0, 1, 'UTF-8' ); }
 		$initials = mb_strtoupper( $initials ?: mb_substr( $user->display_name, 0, 1, 'UTF-8' ), 'UTF-8' );
+		// (382) Η φωτογραφία προφίλ στη θέση των αρχικών, όπου υπάρχει.
+		$photo_url = \EnergyCRM\Infrastructure\ProfilePhoto::url( (int) $user->ID );
+		$avatar    = $photo_url !== ''
+			? '<img src="' . esc_url( $photo_url ) . '" alt="">'
+			: esc_html( $initials );
 
 		// Το σήμα δίπλα στις «Εκκρεμότητες» (δικό μου scope).
 		//
@@ -444,9 +449,9 @@ class ECRM_App {
 						 */
 						?>
 						<div class="ecrm-mewrap">
-							<button type="button" class="ecrm-avatar" data-me-toggle aria-haspopup="true" aria-expanded="false" title="<?php echo esc_attr( $user->display_name ); ?>"><?php echo esc_html( $initials ); ?></button>
+							<button type="button" class="ecrm-avatar" data-me-toggle data-me-av data-initials="<?php echo esc_attr( $initials ); ?>" aria-haspopup="true" aria-expanded="false" title="<?php echo esc_attr( $user->display_name ); ?>"><?php echo $avatar; // phpcs:ignore -- esc_url/esc_html πιο πάνω. ?></button>
 							<div class="ecrm-memenu" data-me-menu hidden>
-								<div class="ecrm-memenu__who"><span class="ecrm-avatar" aria-hidden="true"><?php echo esc_html( $initials ); ?></span><span><b><?php echo esc_html( $user->display_name ); ?></b><small><?php echo esc_html( $user->user_email ); ?></small></span></div>
+								<div class="ecrm-memenu__who"><span class="ecrm-avatar" data-me-av data-initials="<?php echo esc_attr( $initials ); ?>" aria-hidden="true"><?php echo $avatar; // phpcs:ignore -- esc_url/esc_html πιο πάνω. ?></span><span><b><?php echo esc_html( $user->display_name ); ?></b><small><?php echo esc_html( $user->user_email ); ?></small></span></div>
 								<button type="button" class="ecrm-memenu__i" data-me-go="profile">Το προφίλ μου</button>
 								<button type="button" class="ecrm-memenu__i" data-me-go="profile/notifications">Ειδοποιήσεις</button>
 								<button type="button" class="ecrm-memenu__i" data-me-go="profile/work">Ο σύνδεσμός μου</button>

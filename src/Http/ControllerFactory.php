@@ -220,6 +220,7 @@ final class ControllerFactory
             // (353) Νέα εμφάνιση «Signature», σε δοκιμή από τον διαχειριστή.
             new UiController(),
             new ProfileController(),
+            new ProfilePhotoController(Services::profilePhoto()),
 
             // Catalogue and form metadata.
             new CatalogueController(
@@ -293,7 +294,7 @@ final class ControllerFactory
                 Services::providerVisibility(),
                 Services::providers(),
             ),
-            new QuoteController(),
+            new QuoteController(Services::profilePhoto()),
             new GuaranteeSuggestController(new GuaranteeRuleRepository(), Services::providers()),
             new PostalSuggestController(),
         ];
