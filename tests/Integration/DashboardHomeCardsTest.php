@@ -142,8 +142,16 @@ final class DashboardHomeCardsTest extends IntegrationTestCase
     {
         global $wpdb;
 
+        // Τα προγράμματα έχουν foreign key στον πάροχο (AddForeignKeys).
+        $wpdb->insert(
+            Tables::name(Tables::PROVIDERS),
+            ['slug' => 'test-' . wp_generate_password(8, false), 'name' => 'Δοκιμή']
+        );
+        $provider = (int) $wpdb->insert_id;
+        self::assertGreaterThan(0, $provider, 'Ο πάροχος του τεστ δεν μπήκε: ' . $wpdb->last_error);
+
         $wpdb->insert(Tables::name(Tables::PROGRAMS), [
-            'provider_id' => 0,
+            'provider_id' => $provider,
             'name'        => $name,
             'energy_type' => 'power',
             'price_type'  => $priceType,
