@@ -39,7 +39,7 @@ export function qrPosterHtml(url, owner) {
 		'.foot{margin-top:auto;font-size:11pt;color:#555;padding:2mm 4mm;border-radius:4px;outline:none;min-width:40mm}' +
 		'.foot:hover,.foot:focus{background:#fff6d6}' +
 		'@media print{html,body{background:#fff}.bar{display:none}.sheet{box-shadow:none;margin:0}.foot{background:none!important}}' +
-		'</style></head><body>' +
+		'</style><style id="pg">@page{size:A5;margin:0}</style></head><body data-page>' +
 		'<div class="bar"><button type="button" data-size="a5">A5</button><button type="button" data-size="a4">A4</button>' +
 		'<button type="button" class="p" data-print>Εκτύπωση</button>' +
 		'<span>Η κάτω γραμμή αλλάζει αν την πατήσεις.</span></div>' +
@@ -51,11 +51,23 @@ export function qrPosterHtml(url, owner) {
 		'<div class="steps"><span><i>1</i>Σκάναρε</span><span><i>2</i>Φωτογράφισε τον λογαριασμό</span><span><i>3</i>Σε καλούμε</span></div>' +
 		'<div class="foot" contenteditable="true" spellcheck="false">' + esc(foot) + '</div>' +
 		'</div>' +
-		'<script>' +
-		'document.querySelectorAll("[data-size]").forEach(function(b){b.onclick=function(){' +
-		'var a4=b.getAttribute("data-size")==="a4";document.body.classList.toggle("a4",a4);' +
-		'var s=document.getElementById("pg");s.textContent="@page{size:"+(a4?"A4":"A5")+";margin:0}";};});' +
-		'var st=document.createElement("style");st.id="pg";st.textContent="@page{size:A5;margin:0}";document.head.appendChild(st);' +
-		'document.querySelector("[data-print]").onclick=function(){window.print();};' +
-		'</' + 'script></body></html>';
+		'</body></html>';
+}
+
+/**
+ * (395) Τα κουμπιά της αφίσας, από το παράθυρο της εφαρμογής (`openBlobPage`):
+ * χωρίς inline σενάριο μέσα στην αφίσα, για την Content-Security-Policy.
+ *
+ * @param {Document} doc
+ * @param {Window} win
+ */
+export function wireQrPoster(doc, win) {
+	doc.querySelectorAll('[data-size]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			var a4 = b.getAttribute('data-size') === 'a4';
+			doc.body.classList.toggle('a4', a4);
+			doc.getElementById('pg').textContent = '@page{size:' + (a4 ? 'A4' : 'A5') + ';margin:0}';
+		});
+	});
+	doc.querySelector('[data-print]').addEventListener('click', function () { win.print(); });
 }

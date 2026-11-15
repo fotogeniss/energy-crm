@@ -9,8 +9,8 @@
  * έρχεται σε δικό της γύρο.
  */
 
-import { api, esc, fetch, H, providerMark, toast, viewEl } from '@energy-crm/util';
-import { qrPosterHtml } from '@energy-crm/qr-poster';
+import { api, esc, fetch, H, openBlobPage, providerMark, toast, viewEl } from '@energy-crm/util';
+import { qrPosterHtml, wireQrPoster } from '@energy-crm/qr-poster';
 
 var SECTIONS = [
 	{ key: '', label: 'Τα στοιχεία μου' },
@@ -673,10 +673,8 @@ function showLink(main) {
 		box.querySelector('[data-pf-qr]').addEventListener('click', function () {
 			// Ίδια αφίσα με τους Υποψήφιους (344): ο σύνδεσμος με via=qr.
 			var target = l.url + (l.url.indexOf('?') >= 0 ? '&' : '?') + 'via=qr';
-			var page = URL.createObjectURL(new Blob([qrPosterHtml(target, { name: l.name || '', company: l.company || '' })], { type: 'text/html' }));
-			var win = window.open(page, '_blank');
-			setTimeout(function () { URL.revokeObjectURL(page); }, 60000);
-			if (!win) { toast('Ο browser μπλόκαρε το νέο παράθυρο. Επίτρεψέ το και ξαναπάτα.', false); }
+			var opened = openBlobPage(qrPosterHtml(target, { name: l.name || '', company: l.company || '' }), wireQrPoster);
+			if (!opened) { toast('Ο browser μπλόκαρε το νέο παράθυρο. Επίτρεψέ το και ξαναπάτα.', false); }
 		});
 	}
 	if (state.link) { paint(); return; }

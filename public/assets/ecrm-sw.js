@@ -94,9 +94,9 @@ function purgeShell() {
 
 var OFFLINE_HTML = '<!doctype html><html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Energy CRM</title>'
 	+ '<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1a1a18;color:#f1f1ee;font-family:system-ui,sans-serif;text-align:center;padding:24px}'
-	+ 'b{display:block;font-size:20px;margin-bottom:8px}p{color:#a3a099;max-width:320px;line-height:1.5}button{margin-top:16px;font:inherit;font-weight:700;padding:12px 20px;border-radius:12px;border:0;background:#16c217;color:#0b3d0c}</style></head>'
+	+ 'b{display:block;font-size:20px;margin-bottom:8px}p{color:#a3a099;max-width:320px;line-height:1.5}a{display:inline-block;margin-top:16px;font-weight:700;padding:12px 20px;border-radius:12px;background:#16c217;color:#0b3d0c;text-decoration:none}</style></head>'
 	+ '<body><div><b>Χωρίς σύνδεση</b><p>Η εφαρμογή δεν έχει ανοίξει ακόμα σε αυτό το κινητό με σύνδεση. Άνοιξέ την μία φορά με internet και μετά θα ανοίγει και χωρίς.</p>'
-	+ '<button onclick="location.reload()">Δοκίμασε ξανά</button></div></body></html>';
+	+ '<a href="">Δοκίμασε ξανά</a></div></body></html>';
 
 /* (313b) Μαζί με το κέλυφος κρατιέται ΚΑΙ ο κατάλογος παρόχων, με το nonce
  * που μόλις τυπώθηκε στη σελίδα. Πριν, η αντιγραφή γινόταν μόνο αν η σελίδα

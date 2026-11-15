@@ -329,6 +329,36 @@ export function banner(el, text, ok) {
 var toastTimer = null;
 
 /**
+ * (395) Αυτόνομη σελίδα (εκτύπωση αναφοράς, αφίσα QR) σε νέο παράθυρο.
+ *
+ * Χωρίς inline σενάρια και `onclick`: η Content-Security-Policy (394) θα τα
+ * μπλόκαρε, και η σελίδα από blob κληρονομεί την πολιτική της εφαρμογής. Τα
+ * κουμπιά τα δένει το `wire(doc, win)` από εδώ, μόλις φορτώσει η σελίδα (το
+ * `<body data-page>` την ξεχωρίζει από το αρχικό κενό about:blank).
+ *
+ * @param {string} html
+ * @param {function(Document, Window)} [wire]
+ * @returns {boolean} false αν ο browser μπλόκαρε το παράθυρο.
+ */
+export function openBlobPage(html, wire) {
+	var page = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+	var win = window.open(page, '_blank');
+	// Το παράθυρο έχει ήδη φορτώσει τη σελίδα· το blob δεν χρειάζεται μετά.
+	setTimeout(function () { URL.revokeObjectURL(page); }, 60000);
+	if (!win) return false;
+	if (wire) {
+		var tries = 0;
+		(function hook() {
+			var doc = null;
+			try { doc = win.document; } catch (e) { return; }
+			if (doc && doc.readyState !== 'loading' && doc.querySelector('body[data-page]')) { wire(doc, win); return; }
+			if (!win.closed && tries++ < 200) setTimeout(hook, 50);
+		})();
+	}
+	return true;
+}
+
+/**
  * @param {string}  msg
  * @param {boolean} [ok]     false = σφάλμα.
  * @param {{label: string, run: Function}} [action] (384) Ένα κουμπί μέσα στο

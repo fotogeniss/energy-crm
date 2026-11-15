@@ -18,7 +18,7 @@
  *     δίνει 2,33:1 σε λευκό, κάτω από το 3:1 που θέλουν τα γραφικά.
  */
 
-import { api, can, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, can, esc, fetch, H, openBlobPage, toast, viewEl } from '@energy-crm/util';
 import { minutesAgo, timeAgo } from '@energy-crm/format';
 import { openDetail, openPartner, openStoreList, go } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
@@ -354,8 +354,8 @@ function openPrintable(r) {
 	var providers = (r.providers || []).map(function (p) {
 		return '<tr><td>' + esc(p.name) + '</td><td class="r">' + esc(p.applications) + '</td><td class="r">' + esc(p.activated) + '</td></tr>';
 	}).join('');
-	var html = '<!doctype html><html lang="el"><head><meta charset="utf-8"><title>' + esc(r.label) + '</title><style>' + css + '</style></head><body>' +
-		'<div class="bar"><button type="button" onclick="window.print()">Εκτύπωση / PDF</button></div>' +
+	var html = '<!doctype html><html lang="el"><head><meta charset="utf-8"><title>' + esc(r.label) + '</title><style>' + css + '</style></head><body data-page>' +
+		'<div class="bar"><button type="button" data-print>Εκτύπωση / PDF</button></div>' +
 		'<h1>' + esc(r.label) + '</h1><div class="mt">Μηνιαία αναφορά ομάδας</div>' +
 		'<div class="tiles">' +
 		tile('Αιτήσεις', t.applications, t.target ? 'στόχος ' + t.target + ' (' + t.of_target + '%)' : '') +
@@ -366,10 +366,9 @@ function openPrintable(r) {
 		'<table><tr><th>Πωλητής</th><th class="r">Αιτήσεις</th><th class="r">Ενεργές</th><th class="r">Απορρ.</th></tr>' + members + '</table>' +
 		'<table><tr><th>Πάροχος</th><th class="r">Αιτήσεις</th><th class="r">Ενεργές</th></tr>' + providers + '</table>' +
 		'</body></html>';
-	var page = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-	var win = window.open(page, '_blank');
-	setTimeout(function () { URL.revokeObjectURL(page); }, 60000);
-	return !!win;
+	return openBlobPage(html, function (doc, win) {
+		doc.querySelector('[data-print]').addEventListener('click', function () { win.print(); });
+	});
 }
 
 /* (345) «Στόχοι μήνα»: ο τρέχων ή ο επόμενος μήνας, ένα πεδίο ανά πωλητή. */

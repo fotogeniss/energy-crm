@@ -3,12 +3,12 @@
  * Sends the user two ways — to a contract's detail once a lead has been
  * converted, and to the form when it is time to convert one. */
 
-import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, openBlobPage, toast, viewEl } from '@energy-crm/util';
 import { fmtDate } from '@energy-crm/format';
 import { go, openDetail } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
 import { storedForAi } from '@energy-crm/ai-docs';
-import { qrPosterHtml } from '@energy-crm/qr-poster';
+import { qrPosterHtml, wireQrPoster } from '@energy-crm/qr-poster';
 
 var leadsState = { stage: '', q: '', editing: null, showForm: false };
 export function loadLeads() {
@@ -526,11 +526,7 @@ function openHandoff(leadId, lead, onAbort) {
  * `via=qr`, ώστε ο υποψήφιος να γραφτεί «Από το QR μου». */
 function openQrPoster(url, owner) {
 	var target = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'via=qr';
-	var page = URL.createObjectURL(new Blob([qrPosterHtml(target, owner || {})], { type: 'text/html' }));
-	var win = window.open(page, '_blank');
-	// Το παράθυρο έχει ήδη φορτώσει τη σελίδα· το blob δεν χρειάζεται μετά.
-	setTimeout(function () { URL.revokeObjectURL(page); }, 60000);
-	return !!win;
+	return openBlobPage(qrPosterHtml(target, owner || {}), wireQrPoster);
 }
 
 // ---------------------------------------------------------------------
