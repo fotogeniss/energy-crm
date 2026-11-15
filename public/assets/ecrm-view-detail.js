@@ -242,7 +242,7 @@ function renderDetail(view, d) {
 	var statusOpts = Object.keys(statuses).filter(function (s) {
 		return allowedSet[s] && s !== c.status;
 	}).map(function (s) {
-		return '<button type="button" class="ecrm-statuschip ecrm-badge--' + s + '" data-status="' + s + '">' + esc(statuses[s]) + '</button>';
+		return '<button type="button" class="ecrm-statuschip ecrm-badge--' + s + '" data-status="' + s + '" aria-pressed="false">' + esc(statuses[s]) + '</button>';
 	}).join('');
 
 	// Τερματική κατάσταση: το allowedNext() είναι ο κενός πίνακας για τα
@@ -251,7 +251,9 @@ function renderDetail(view, d) {
 	var statusFlow = '<div class="ecrm-statusflow">' +
 		'<span class="ecrm-statusflow__now ecrm-badge ecrm-badge--' + esc(c.status) + '">' + esc(statuses[c.status] || c.status) + '</span>' +
 		(statusOpts
-			? '<span class="ecrm-statusflow__arrow" aria-hidden="true">&rarr;</span><div class="ecrm-statuschips">' + statusOpts + '</div>'
+			? '<span class="ecrm-statusflow__arrow" aria-hidden="true">&rarr;</span><div class="ecrm-statuschips">' + statusOpts + '</div>' +
+				// (396) Δύο βήματα και εδώ: η κατάσταση διαλέγεται, η «Αλλαγή» αλλάζει.
+				'<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm ecrm-statusflow__ok" data-stflow-ok disabled>Αλλαγή</button>'
 			: '<span class="ecrm-statusflow__end">Τερματική κατάσταση — καμία επιτρεπτή μετάβαση.</span>') +
 		'</div>';
 
@@ -642,10 +644,29 @@ function renderDetail(view, d) {
 		if (e.target.closest && e.target.closest('.sig-dh__menu button')) { dhMore.open = false; }
 	});
 
+	// (396) Το άγγιγμα σε κατάσταση τη διαλέγει· η αλλαγή γίνεται με «Αλλαγή».
+	// Ο ιδιοκτήτης (15/11): «να μπορώ να επιλέγω κατάσταση με κάποιο οκ, διότι
+	// μπορεί να πατήσω κάπου κατά λάθος και αλλάζει. Να γίνει παντού».
+	var stPicked = '';
 	view.querySelectorAll('.ecrm-statuschip').forEach(function (b) {
 		b.addEventListener('click', function () {
-			var to = this.getAttribute('data-status');
-			if (to === c.status) return;
+			var on = stPicked !== this.getAttribute('data-status');
+			stPicked = on ? this.getAttribute('data-status') : '';
+			view.querySelectorAll('.ecrm-statuschip').forEach(function (x) {
+				var me = on && x === b;
+				x.classList.toggle('is-picked', me);
+				x.setAttribute('aria-pressed', me ? 'true' : 'false');
+			});
+			view.querySelectorAll('[data-stflow-ok]').forEach(function (ok) {
+				ok.disabled = !stPicked;
+				ok.textContent = stPicked ? 'Αλλαγή σε «' + (statuses[stPicked] || stPicked) + '»' : 'Αλλαγή';
+			});
+		});
+	});
+	view.querySelectorAll('[data-stflow-ok]').forEach(function (ok) {
+		ok.addEventListener('click', function () {
+			var to = stPicked;
+			if (!to || to === c.status) return;
 			// (342) Απόρριψη/ακύρωση: πρώτα ο λόγος. Άκυρο = καμία αλλαγή.
 			// Πρόχειρο που πετιέται: χωρίς λόγο (CloseReason::required()).
 			(c.status === 'draft' ? Promise.resolve({ reason: '', note: '' }) : pickReason(to, statuses[to] || to, 1)).then(function (picked) {

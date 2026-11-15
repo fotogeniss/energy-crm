@@ -2250,7 +2250,19 @@
 	.ecrm-app[data-ui="signature"] .sig-cut__pages { display: none; }
 	.ecrm-app[data-ui="signature"] .sig-cuchips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
 	.ecrm-app[data-ui="signature"] .sig-cuchip { flex: 0 0 auto; }
-	.ecrm-app[data-ui="signature"] .sig-cusort { flex: 1 1 100%; }
+	/* (396) Αναζήτηση και ταξινόμηση στην ίδια γραμμή, πιο χαμηλά, το κείμενο
+	   στη μέση· η αναζήτηση μόνο με τον φακό. docs/UI-STATUS-CONFIRM.html (Δ). */
+	.ecrm-app[data-ui="signature"] .sig-cubar { flex-wrap: nowrap; gap: 8px; }
+	.ecrm-app[data-ui="signature"] .sig-cusearch { flex: 1 1 0; min-width: 44px; height: 38px; padding: 0 12px; }
+	.ecrm-app[data-ui="signature"] .sig-cusearch input { font-size: var(--fs-15); }
+	.ecrm-app[data-ui="signature"] .sig-cusearch input::placeholder { color: transparent; }
+	.ecrm-app[data-ui="signature"] .sig-cusort { flex: 0 0 auto; min-width: 0; height: 38px; padding: 0 10px 0 12px; gap: 4px; }
+	/* Η λέξη «Ταξινόμηση» μένει για τον αναγνώστη οθόνης, κρυμμένη· φαίνεται το ⇅. */
+	.ecrm-app[data-ui="signature"] .sig-cusort > span {
+		position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+	}
+	.ecrm-app[data-ui="signature"] .sig-cusort::before { content: "⇅"; font-size: var(--fs-14); color: var(--sig-ink-3); }
+	.ecrm-app[data-ui="signature"] .sig-cusort select { min-width: 0; max-width: 48vw; height: 100%; padding: 0 2px; line-height: normal; font-size: var(--fs-13); white-space: nowrap; text-overflow: ellipsis; }
 }
 
 /* ═══ (361) Το δίκτυό μου: ο χάρτης ════════════════════════════════════════
@@ -2408,7 +2420,7 @@
 .ecrm-app[data-ui="signature"] .sig-kbsheet__head .sig-plogo.is-text { width: 52px; font-size: var(--fs-18); }
 .ecrm-app[data-ui="signature"] .sig-kbsheet__head h3 { margin: 0; font-size: var(--fs-22); font-weight: 800; letter-spacing: -.03em; color: var(--sig-ink); }
 .ecrm-app[data-ui="signature"] .sig-kbsheet__head p { margin: 2px 0 0; font-size: var(--fs-13-5); color: var(--sig-ink-2); }
-.ecrm-app[data-ui="signature"] .sig-kbtabs { display: flex; gap: 4px; padding: 6px 22px 0; border-bottom: 1px solid var(--sig-hair-2); overflow-x: auto; }
+.ecrm-app[data-ui="signature"] .sig-kbtabs { display: flex; gap: 4px; padding: 6px 22px 0; border-bottom: 1px solid var(--sig-hair-2); overflow-x: auto; scrollbar-width: none; }
 .ecrm-app[data-ui="signature"] .sig-kbtabs button {
 	flex: 0 0 auto; border: 0; background: none; cursor: pointer; padding: 10px 14px; margin-bottom: -1px; white-space: nowrap;
 	font: inherit; font-size: var(--fs-14); font-weight: 700; color: var(--sig-ink-2); border-bottom: 2px solid transparent;
@@ -2995,6 +3007,13 @@
 .ecrm-app[data-ui="signature"] .ecrm-stmenu__f { border-color: var(--sig-hair); }
 .ecrm-app[data-ui="signature"] .ecrm-stmenu__sep { background: var(--sig-hair); }
 .ecrm-app[data-ui="signature"] .ecrm-stmenu__link { color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__rd { box-shadow: inset 0 0 0 2px var(--sig-ink-3); }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__opt.is-picked { background: var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__opt.is-picked .ecrm-stmenu__rd { box-shadow: inset 0 0 0 5px var(--sig-green); }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu.is-sheet .ecrm-stmenu__opt.is-picked .ecrm-stmenu__rd { box-shadow: inset 0 0 0 6px var(--sig-green); }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__acts { border-color: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .ecrm-stmenu__acts .ecrm-btn { border-radius: 999px; }
+.ecrm-app[data-ui="signature"] .ecrm-selsheet .ecrm-selsheet__t { color: var(--sig-ink); }
 /* (384b) Το σήμα γεμίζει τη στήλη της κατάστασης (190px), ίδιο πλάτος σε
    κάθε γραμμή· το «1/2» των υπογραφών μένει δίπλα του. */
 .ecrm-app[data-ui="signature"] .sig-crow__st .ecrm-badge {
@@ -3072,4 +3091,23 @@
 .ecrm-app[data-ui="signature"] [data-view="documents"] .sig-row > .sig-age { min-width: 118px; text-align: center; }
 @media (max-width: 767px) {
 	.ecrm-app[data-ui="signature"] [data-view="documents"] .sig-row > .ecrm-badge { width: 180px; margin-left: 50px; }
+}
+
+/* (396b) «Χρειάζονται εσένα» στο κινητό σε τρεις στήλες: εικονίδιο, όνομα με
+   την κατάσταση από κάτω, κουμπί ίδιου πλάτους σε όλες τις γραμμές. Ο
+   ιδιοκτήτης (15/11): «καμία στοίχιση» στο προηγούμενο· διάλεξε την εκδοχή 1
+   του docs/UI-NEEDS-MOBILE.html. Στον υπολογιστή δεν αλλάζει. */
+@media (max-width: 640px) {
+	.ecrm-app[data-ui="signature"] .sig-need { grid-template-columns: 36px minmax(0, 1fr) 100px; column-gap: 10px; padding: 12px 0; }
+	.ecrm-app[data-ui="signature"] .sig-need__ic { width: 36px; height: 36px; border-radius: 11px; }
+	.ecrm-app[data-ui="signature"] .sig-need__b { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+	.ecrm-app[data-ui="signature"] .sig-need__b p {
+		order: -1; max-width: 100%; margin: 0; font-size: var(--fs-14); font-weight: 700; color: var(--sig-ink);
+	}
+	.ecrm-app[data-ui="signature"] .sig-need__b b {
+		max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+		font-size: var(--fs-12-5); font-weight: 600; color: var(--sig-ink-2);
+	}
+	.ecrm-app[data-ui="signature"] .sig-need__b .ecrm-stbtn { width: auto; max-width: 100%; margin: 0; padding: 3px 8px 3px 10px; gap: 4px; font-size: var(--fs-12); }
+	.ecrm-app[data-ui="signature"] .sig-need__go { border-radius: 999px; padding: 7px 4px; font-size: var(--fs-12); }
 }

@@ -67,6 +67,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/status-menu'      => 'ecrm-status-menu.js',
 		'@energy-crm/qr'               => 'ecrm-qr.js',
 		'@energy-crm/datepick'         => 'ecrm-datepick.js',
+		'@energy-crm/select-sheet'     => 'ecrm-select-sheet.js',
 		'@energy-crm/qr-poster'        => 'ecrm-qr-poster.js',
 		// Ειχε ξεχαστει απο εδω στο (243) -- το ecrm-app.js το εισαγε, ο
 		// browser δεν μπορουσε να λυσει το bare specifier χωρις καταχωρηση, και
@@ -184,11 +185,13 @@ class ECRM_Shortcodes {
 		'@energy-crm/status-menu'      => [ '@energy-crm/util', '@energy-crm/close-reason' ],
 		'@energy-crm/qr'               => [],
 		'@energy-crm/qr-poster'        => [ '@energy-crm/util', '@energy-crm/qr' ],
+		'@energy-crm/select-sheet'     => [ '@energy-crm/util' ],
 		'@energy-crm/app'              => [
 			'@energy-crm/util',
 			'@energy-crm/navigate',
 			'@energy-crm/queue',
 			'@energy-crm/datepick',
+			'@energy-crm/select-sheet',
 			'@energy-crm/scope',
 			'@energy-crm/view-detail',
 			'@energy-crm/view-contracts',

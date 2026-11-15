@@ -444,7 +444,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	:root { --accent: <?php echo esc_html( $accent ); ?>; --accent-text:#1a2208;
 		--bg:#111110; --card:#ffffff; --ink:#2a2926; --muted:#6e6c66; --line:#dedcd7;
 		--soft:#f1f1ee; --ok:#00531e; --ok-bg:#e3f0e4; --err:#c32b47; --err-bg:#fdeaea; }
-	* { box-sizing:border-box; }
+	* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 	body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 		line-height:1.55; -webkit-font-smoothing:antialiased; padding:18px 14px 60px; }
 	.card { max-width:460px; margin:0 auto; background:var(--card); border-radius:18px; padding:22px 20px 24px; }

@@ -2,6 +2,12 @@
  * Builds on ecrm-form.css tokens. The shell is a fixed navy rail + scrolling
  * main column, echoing the energy-reseller CRM idiom but as its own identity. */
 
+/* (396e) Χωρίς το μπλε πλαίσιο του κινητού όταν πατιέται κάτι. Στο Android ο
+ * browser βάφει ό,τι πατήθηκε, και σε γραμμή που ανοίγει με κλικ έβγαινε μισή
+ * οθόνη μπλε («δεν το θέλουμε, έχουμε τα δικά μας εφέ», 15/11). Το
+ * περίγραμμα εστίασης από το πληκτρολόγιο (:focus-visible) μένει. */
+.ecrm-app, .ecrm-app *, .ecrm, .ecrm *, .ecrm-stmenu, .ecrm-stmenu * { -webkit-tap-highlight-color: transparent; }
+
 /* Ο καμβάς ΠΙΣΩ από το κέλυφος.
  *
  * Το `.ecrm-app` βάφει τον εαυτό του και έχει `min-height: 100vh`, αλλά ζει
@@ -489,6 +495,9 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 }
 .ecrm-statuschip::before { content: ""; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: currentColor; margin-right: 5px; }
 .ecrm-statuschip:hover { opacity: 1; border-color: var(--amber); }
+/* (396) Η διαλεγμένη κατάσταση, πριν το «Αλλαγή». */
+.ecrm-statuschip.is-picked { border-color: currentColor; box-shadow: 0 0 0 2px var(--accent-wash); }
+.ecrm-statusflow__ok:disabled { opacity: .45; cursor: default; }
 
 /* Η διαδρομή: πού είναι η σύμβαση, και πού επιτρέπεται να πάει. */
 .ecrm-statusflow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -557,7 +566,9 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 .ecrm-hist__more { display: block; width: 100%; margin-top: 6px; padding: 10px 0 0; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; font-size: var(--fs-12-5); font-weight: 600; color: var(--accent-ink); cursor: pointer; }
 .ecrm-hist__cap { font-size: var(--fs-11-5); color: var(--muted); text-align: center; margin-top: 8px; }
 @media (max-width: 600px) {
-	.ecrm-hist__chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+	/* (396) Χωρίς μπάρα κύλισης: τα κουμπιά κυλάνε με το δάχτυλο, η μπάρα από κάτω ήταν άσχημη (15/11). */
+	.ecrm-hist__chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+	.ecrm-hist__chips::-webkit-scrollbar { display: none; }
 	.ecrm-hist__chips .ecrm-filterchip { flex: 0 0 auto; }
 	.ecrm-hist__row { grid-template-columns: 28px 1fr; }
 	.ecrm-hist__when { grid-column: 2; text-align: left; padding-top: 0; }
@@ -1667,7 +1678,11 @@ button.ecrm-avatar:focus-visible { outline: 2px solid var(--amber); outline-offs
 .ecrm-tabdot--cancelled { background: var(--st-cancel); }
 .ecrm-tabdot--terminated { background: var(--st-term); }
 .ecrm-tab.is-on .ecrm-tabdot { box-shadow: 0 0 0 2px var(--chrome-ring); }
-@media (max-width: 600px) { .ecrm-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; } .ecrm-tab { flex: 0 0 auto; } }
+@media (max-width: 600px) {
+	.ecrm-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+	.ecrm-tabs::-webkit-scrollbar { display: none; }
+	.ecrm-tab { flex: 0 0 auto; }
+}
 
 .ecrm-modal__scope-sel { display: block; margin: 2px 0 16px; }
 .ecrm-modal__scope-sel .ecrm-field__label { display: block; margin-bottom: 6px; }
@@ -2601,7 +2616,8 @@ button.ecrm-stbtn { border: 0; font-family: inherit; line-height: inherit; curso
 }
 .ecrm-stmenu__h { padding: 8px 10px 6px; font-size: var(--fs-11); font-weight: 700; color: var(--muted); }
 .ecrm-stmenu:not(.is-sheet) .ecrm-stmenu__h { text-transform: uppercase; letter-spacing: .02em; }
-.ecrm-stmenu__list { max-height: 280px; overflow: auto; }
+/* (396c) Η κύλιση της λίστας σταματά στο τέλος της, δεν περνά στη σελίδα. */
+.ecrm-stmenu__list { max-height: 280px; overflow: auto; overscroll-behavior: contain; }
 .ecrm-stmenu__opt {
 	display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 8px;
 	background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
@@ -2628,8 +2644,24 @@ button.ecrm-stbtn { border: 0; font-family: inherit; line-height: inherit; curso
 	border-radius: 18px 18px 0 0; border-bottom: 0;
 }
 .ecrm-stmenu__grab { width: 40px; height: 4px; margin: 4px auto 8px; border-radius: 2px; background: var(--line-mid); }
-.ecrm-stmenu.is-sheet .ecrm-stmenu__list { max-height: 55vh; }
+.ecrm-stmenu.is-sheet .ecrm-stmenu__list { max-height: 55vh; touch-action: pan-y; }
+/* (396f) Φύλλο ανοιχτό: η σελίδα από κάτω δεν κυλά, ούτε όταν το δάχτυλο
+   σέρνεται στη σκιά, στον τίτλο ή στα κουμπιά· κυλά μόνο η λίστα. */
+html.ecrm-noscroll, html.ecrm-noscroll body { overflow: hidden; overscroll-behavior: none; }
+.ecrm-stmenu-shade, .ecrm-stmenu.is-sheet { touch-action: none; overscroll-behavior: contain; }
 .ecrm-stmenu.is-sheet .ecrm-stmenu__opt { padding: 12px 10px; font-size: var(--fs-15); }
+/* (396) Διαλέγω, μετά «Αλλαγή»: κύκλος επιλογής και κουμπιά στο τέλος. docs/UI-STATUS-CONFIRM.html (Β). */
+.ecrm-stmenu__rd { flex: 0 0 16px; width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--line-mid); }
+.ecrm-stmenu__opt.is-picked { background: var(--accent-wash); }
+.ecrm-stmenu__opt.is-picked .ecrm-stmenu__rd { box-shadow: inset 0 0 0 5px var(--accent-ink); }
+.ecrm-stmenu__acts { display: flex; gap: 8px; margin-top: 6px; padding: 8px 4px 2px; border-top: 1px solid var(--line); }
+.ecrm-stmenu__acts .ecrm-btn { flex: 1; justify-content: center; }
+.ecrm-stmenu.is-sheet .ecrm-stmenu__rd { flex-basis: 20px; width: 20px; height: 20px; }
+.ecrm-stmenu.is-sheet .ecrm-stmenu__opt.is-picked .ecrm-stmenu__rd { box-shadow: inset 0 0 0 6px var(--accent-ink); }
+.ecrm-stmenu.is-sheet .ecrm-stmenu__acts { gap: 10px; padding-top: 12px; }
+.ecrm-stmenu.is-sheet .ecrm-stmenu__acts .ecrm-btn { min-height: 46px; font-size: var(--fs-15); }
+/* (396) Λίστα επιλογής ως φύλλο (ecrm-select-sheet.js): ο τίτλος ξεχωρίζει από τις ομάδες. */
+.ecrm-selsheet .ecrm-selsheet__t { font-size: var(--fs-15); color: var(--ink); padding-bottom: 8px; }
 
 /* Μετά την αλλαγή: απαλό φως στη γραμμή· θολή όταν βγήκε από το φίλτρο. */
 .ecrm-rowlink.is-flash { animation: ecrm-stflash 1.6s ease-out; }

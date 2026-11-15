@@ -1121,7 +1121,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 		   δεν ακολουθεί το θέμα, γιατί ο καμβάς της υπογραφής δεν το ακολουθεί. */
 		--pad-ink:#1a1a18; --pad-border:#4a5568;
 	}
-	* { box-sizing: border-box; }
+	* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 	body { margin:0; font-family:<?php echo \EnergyCRM\Infrastructure\LocalFonts::STACK; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- σταθερά κλάσης, όχι είσοδος. Το esc_html() θα μετέτρεπε τα εισαγωγικά του «"Manrope"» σε &quot; και θα ΕΣΠΑΓΕ το CSS. ?>;
 		background:var(--page); font-size:13px; min-height:100vh; min-height:100dvh;
 		display:flex; align-items:center; justify-content:center; padding:20px; color:var(--ink); }

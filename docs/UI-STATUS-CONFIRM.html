@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>(396) Κινητό: «Χρειάζονται εσένα» και αλλαγή κατάστασης με επιβεβαίωση</title>
+<style>
+:root{--bg:#e9efec;--card:#fff;--ink:#1b1d1a;--ink2:#4a4f48;--ink3:#7c8279;--hair:#141e1417;--fill:#141e140f;--green:#16c217;--gink:#0a6b1d;--btop:#22cf23;--bbot:#0e9a12;--blue:#0f6fc6;--blue-t:#e8f1fd;--rose:#d0324b;--amber:#c46a00;--vio:#6d28d9;--teal:#00a99a;--teal-t:#e2f6f3;--amber-t:#fdf0dd}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:20px 12px 60px}
+.wrap{max-width:1100px;margin:0 auto}p.note{color:var(--ink3);max-width:900px;margin:0 0 14px}
+h2{font-size:15px;margin:28px 0 8px}
+.row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:6px}
+.tag{font-size:11px;font-weight:700;color:var(--ink3)}.tag.new{color:var(--gink)}
+.phone{width:360px;border-radius:30px;background:#f6f8f7;box-shadow:0 0 0 8px #1b1d1a,0 20px 40px #0003;padding:18px 12px;position:relative;overflow:hidden;min-height:430px}
+.panel{background:#fff;border-radius:22px;padding:16px 14px;box-shadow:0 0 0 1px var(--hair)}
+.ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}.ph h3{margin:0;font-size:19px}.ph a{color:var(--gink);font-size:14px}
+/* σήμερα */
+.need{display:grid;grid-template-columns:auto minmax(0,1fr) 124px;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--hair)}
+.need:first-of-type{border-top:0}
+.ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:700}
+.ic.d{background:var(--teal-t);color:var(--teal)}.ic.s{background:var(--amber-t);color:var(--amber)}
+.b{min-width:0}.b p{margin:3px 0 0;font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:4px 10px;font:inherit;font-size:13px;font-weight:600;width:140px;max-width:100%;white-space:nowrap;overflow:hidden}
+.st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 6px}
+.st span{overflow:hidden;text-overflow:ellipsis}.st i{margin-left:auto;font-style:normal;font-size:10px;opacity:.6}
+.st.draft{background:#eef1f4;color:#5b6472}.st.reg{background:var(--blue-t);color:var(--blue)}
+.go{border:0;border-radius:999px;padding:9px 6px;background:var(--fill);box-shadow:0 0 0 1px var(--hair);font:inherit;font-weight:700;font-size:14px;width:100%}
+.go.main{color:#fff;background:linear-gradient(180deg,var(--btop),var(--bbot));box-shadow:none}
+/* νέο */
+.n2{grid-template-columns:auto minmax(0,1fr) auto;gap:10px}
+.n2 .st{width:auto;font-size:12.5px}
+.n2 .go{width:auto;padding:6px 12px;font-size:12.5px;font-weight:600}
+/* φύλλο */
+.shade{position:absolute;inset:0;background:#0006}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:8px 14px 16px}
+.grab{width:40px;height:4px;border-radius:2px;background:#d5d9d4;margin:4px auto 10px}
+.sh{font-size:12px;color:var(--ink3);font-weight:600;margin:0 4px 8px}
+.opt{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:12px;font-size:15px}
+.opt .rd{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 2px #c6cbc4;flex:0 0 20px}
+.opt.on{background:#eef7ee}.opt.on .rd{box-shadow:inset 0 0 0 6px var(--green)}
+.opt .dot{width:8px;height:8px;border-radius:50%}
+.opt small{margin-left:auto;font-size:11px;color:var(--ink3)}.opt.red{color:var(--rose)}
+.sep{height:1px;background:var(--hair);margin:4px 6px}
+.acts{display:flex;gap:10px;margin-top:12px}
+.btn{flex:1;border:0;border-radius:999px;padding:12px;font:inherit;font-weight:700;font-size:15px}
+.btn.gho{background:#fff;box-shadow:0 0 0 1px var(--hair)}.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btop),var(--bbot))}
+.btn.off{opacity:.4}
+/* desktop menu */
+.menu{width:270px;background:#fff;border-radius:16px;box-shadow:0 0 0 1px var(--hair),0 12px 32px rgba(16,24,40,.16);padding:6px}
+.menu .opt{padding:8px 10px;font-size:13.5px;gap:10px}.menu .opt .rd{width:16px;height:16px;flex:0 0 16px}.menu .opt.on .rd{box-shadow:inset 0 0 0 5px var(--green)}
+.menu .acts{margin:8px 4px 4px}.menu .btn{padding:8px;font-size:13px}
+.legend{font-size:13px;line-height:1.7;max-width:900px;margin-top:22px}
+</style>
+</head>
+<body><div class="wrap">
+<p class="note"><b>Απόφαση 15/11:</b> εγκρίθηκαν Β, Γ, Δ (στο Δ η αναζήτηση χωρίς κείμενο, μόνο ο φακός). Το Α απορρίφθηκε («καμία στοίχιση») και ξαναγίνεται.</p>
+<p class="note"><b>(396)</b> Δύο αλλαγές από το screenshot του κινητού (15/11): (Α) το «Χρειάζονται εσένα» ξεστριμώχνεται, (Β) η αλλαγή κατάστασης γίνεται σε δύο βήματα, διαλέγω και μετά «Αλλαγή», ώστε ένα τυχαίο άγγιγμα να μην αλλάζει τίποτα. Το (Β) ισχύει παντού όπου υπάρχει το μενού κατάστασης (λίστα αιτήσεων, Αρχική, Κολλημένες, Εκκρεμότητες, Έγγραφα, καρτέλα αίτησης).</p>
+
+<h2>Α. «Χρειάζονται εσένα» στο κινητό</h2>
+<div class="row">
+  <div class="col"><div class="tag">ΤΩΡΑ</div>
+  <div class="phone"><section class="panel"><div class="ph"><h3>Χρειάζονται εσένα</h3><a>Όλες (47)</a></div>
+    <div class="need"><span class="ic d">…</span><div class="b"><button class="st draft"><span>Πρόχειρο</span><i>▾</i></button><p>ΠΑΝΑΓΙΩΤΑ ΚΑΤΣΑΡΟΥ, Protergia</p></div><button class="go main">Συνέχεια</button></div>
+    <div class="need"><span class="ic s">✎</span><div class="b"><button class="st reg"><span>Καταχώρηση</span><i>▾</i></button><p>ΚΩΝΣΤΑΝΤΙΝΟΣ ΝΙΚΑΣ, ΔΕΗ</p></div><button class="go">Για υπογραφή</button></div>
+    <div class="need"><span class="ic d">…</span><div class="b"><button class="st draft"><span>Πρόχειρο</span><i>▾</i></button><p>ΖΑΧΑΡΙΑΣ ΣΑΜΩΝΙΔΗΣ, Orizon</p></div><button class="go">Συνέχεια</button></div>
+    <div class="need"><span class="ic d">…</span><div class="b"><button class="st draft"><span>Πρόχειρο</span><i>▾</i></button><p>ΘΩΜΑΣ ΛΙΑΚΑΣ, ΔΕΗ</p></div><button class="go">Συνέχεια</button></div>
+  </section></div></div>
+
+  <div class="col"><div class="tag new">ΝΕΟ</div>
+  <div class="phone"><section class="panel"><div class="ph"><h3>Χρειάζονται εσένα</h3><a>Όλες (47)</a></div>
+    <div class="need n2"><span class="ic d">…</span><div class="b"><button class="st draft"><span>Πρόχειρο</span><i>▾</i></button><p>ΠΑΝΑΓΙΩΤΑ ΚΑΤΣΑΡΟΥ, Protergia</p></div><button class="go main">Συνέχεια</button></div>
+    <div class="need n2"><span class="ic s">✎</span><div class="b"><button class="st reg"><span>Καταχώρηση</span><i>▾</i></button><p>ΚΩΝΣΤΑΝΤΙΝΟΣ ΝΙΚΑΣ, ΔΕΗ</p></div><button class="go">Για υπογραφή</button></div>
+    <div class="need n2"><span class="ic d">…</span><div class="b"><button class="st draft"><span>Πρόχειρο</span><i>▾</i></button><p>ΖΑΧΑΡΙΑΣ ΣΑΜΩΝΙΔΗΣ, Orizon</p></div><button class="go">Συνέχεια</button></div>
+    <div class="need n2"><span class="ic d">…</span><div class="b"><button class="st draft"><span>Πρόχειρο</span><i>▾</i></button><p>ΘΩΜΑΣ ΛΙΑΚΑΣ, ΔΕΗ</p></div><button class="go">Συνέχεια</button></div>
+  </section></div></div>
+</div>
+
+<h2>Β. Αλλαγή κατάστασης: διαλέγω, μετά «Αλλαγή»</h2>
+<div class="row">
+  <div class="col"><div class="tag new">ΚΙΝΗΤΟ · 1. ΑΝΟΙΓΕΙ, ΤΙΠΟΤΑ ΔΙΑΛΕΓΜΕΝΟ</div>
+  <div class="phone"><div class="shade"></div><div class="sheet"><div class="grab"></div>
+    <div class="sh">ΚΩΝΣΤΑΝΤΙΝΟΣ ΝΙΚΑΣ · Καταχώρηση</div>
+    <div class="opt"><span class="rd"></span><span class="dot" style="background:var(--vio)"></span>Αναμονή υπογραφής</div>
+    <div class="opt"><span class="rd"></span><span class="dot" style="background:var(--vio)"></span>Προς οριστικοποίηση</div>
+    <div class="opt"><span class="rd"></span><span class="dot" style="background:var(--amber)"></span>Εκκρεμότητα</div>
+    <div class="sep"></div>
+    <div class="opt red"><span class="rd"></span><span class="dot" style="background:var(--rose)"></span>Ακυρώθηκε<small>λόγος</small></div>
+    <div class="acts"><button class="btn gho">Άκυρο</button><button class="btn pri off">Αλλαγή</button></div>
+  </div></div></div>
+
+  <div class="col"><div class="tag new">ΚΙΝΗΤΟ · 2. ΔΙΑΛΕΞΑ, ΤΩΡΑ ΕΠΙΒΕΒΑΙΩΝΩ</div>
+  <div class="phone"><div class="shade"></div><div class="sheet"><div class="grab"></div>
+    <div class="sh">ΚΩΝΣΤΑΝΤΙΝΟΣ ΝΙΚΑΣ · Καταχώρηση</div>
+    <div class="opt on"><span class="rd"></span><span class="dot" style="background:var(--vio)"></span>Αναμονή υπογραφής</div>
+    <div class="opt"><span class="rd"></span><span class="dot" style="background:var(--vio)"></span>Προς οριστικοποίηση</div>
+    <div class="opt"><span class="rd"></span><span class="dot" style="background:var(--amber)"></span>Εκκρεμότητα</div>
+    <div class="sep"></div>
+    <div class="opt red"><span class="rd"></span><span class="dot" style="background:var(--rose)"></span>Ακυρώθηκε<small>λόγος</small></div>
+    <div class="acts"><button class="btn gho">Άκυρο</button><button class="btn pri">Αλλαγή</button></div>
+  </div></div></div>
+
+  <div class="col"><div class="tag new">ΥΠΟΛΟΓΙΣΤΗΣ · ΙΔΙΟ ΣΧΗΜΑ ΣΤΟ ΜΕΝΟΥ</div>
+  <div class="menu"><div class="sh" style="margin:6px 10px">ΑΛΛΑΓΗ ΚΑΤΑΣΤΑΣΗΣ</div>
+    <div class="opt on"><span class="rd"></span><span class="dot" style="background:var(--vio)"></span>Αναμονή υπογραφής</div>
+    <div class="opt"><span class="rd"></span><span class="dot" style="background:var(--vio)"></span>Προς οριστικοποίηση</div>
+    <div class="opt"><span class="rd"></span><span class="dot" style="background:var(--amber)"></span>Εκκρεμότητα</div>
+    <div class="sep"></div>
+    <div class="opt red"><span class="rd"></span><span class="dot" style="background:var(--rose)"></span>Ακυρώθηκε<small>λόγος</small></div>
+    <div class="acts"><button class="btn gho">Άκυρο</button><button class="btn pri">Αλλαγή</button></div>
+  </div></div>
+</div>
+
+<h2>Γ. Λίστες επιλογής (select) στο κινητό: το δικό μας φύλλο αντί για του Android</h2>
+<div class="row">
+  <div class="col"><div class="tag">ΤΩΡΑ (Android)</div>
+  <div class="phone" style="background:#9fb3ad"><div class="sheet" style="position:absolute;left:10px;right:10px;bottom:auto;top:120px;border-radius:24px;background:#1f2a2b;color:#fff;padding:0">
+    <div class="opt" style="padding:20px 18px;font-size:19px;border-bottom:1px solid #ffffff22">Τελευταία κίνηση<span style="margin-left:auto">◉</span></div>
+    <div class="opt" style="padding:20px 18px;font-size:19px;border-bottom:1px solid #ffffff22">Όνομα Α–Ω<span style="margin-left:auto">○</span></div>
+    <div class="opt" style="padding:20px 18px;font-size:19px">Περισσότερες αιτήσεις<span style="margin-left:auto">○</span></div>
+  </div></div></div>
+
+  <div class="col"><div class="tag new">ΝΕΟ</div>
+  <div class="phone"><div class="shade"></div><div class="sheet"><div class="grab"></div>
+    <div class="sh">ΤΑΞΙΝΟΜΗΣΗ</div>
+    <div class="opt on"><span class="rd"></span>Τελευταία κίνηση<small style="color:var(--gink);font-size:16px">✓</small></div>
+    <div class="opt"><span class="rd"></span>Όνομα Α–Ω</div>
+    <div class="opt"><span class="rd"></span>Περισσότερες αιτήσεις</div>
+  </div></div></div>
+</div>
+
+<h2>Δ. Πελάτες στο κινητό: αναζήτηση και ταξινόμηση πιο μικρά, κείμενο στη μέση</h2>
+<style>
+.cus{font-size:13px;color:var(--ink2);margin:4px 2px 10px}
+.srch{display:flex;align-items:center;gap:8px;height:48px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px var(--hair);padding:0 16px;color:var(--ink3);font-size:16px;margin-bottom:10px}
+.sort{display:flex;align-items:flex-end;gap:8px;height:48px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px var(--hair);padding:0 16px 6px;font-size:14px;color:var(--ink2);overflow:hidden}
+.sort b{color:var(--ink)}
+.bar2{display:flex;gap:8px;align-items:center}
+.srch2{flex:1;display:flex;align-items:center;gap:6px;height:38px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px var(--hair);padding:0 12px;color:var(--ink3);font-size:13.5px;min-width:0;white-space:nowrap;overflow:hidden}
+.sort2{display:flex;align-items:center;gap:6px;height:38px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px var(--hair);padding:0 12px;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap}
+.sort2 i{font-style:normal;color:var(--ink3);font-weight:400}
+.crow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px solid var(--hair)}.crow .av{width:38px;height:38px;border-radius:12px;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.crow b{display:block;font-size:14px}.crow small{color:var(--ink3);font-size:12px}
+</style>
+<div class="row">
+  <div class="col"><div class="tag">ΤΩΡΑ</div>
+  <div class="phone"><div class="cus">63 πελάτες, ένας ανά ΑΦΜ</div>
+    <div class="srch">⌕ Όνομα, ΑΦΜ, τηλέφωνο ή email</div>
+    <div class="sort">Ταξινόμηση <b>Τελευταία κίνηση</b><span style="margin-left:auto">⌄</span></div>
+  </div></div>
+  <div class="col"><div class="tag new">ΝΕΟ</div>
+  <div class="phone"><div class="cus">63 πελάτες, ένας ανά ΑΦΜ</div>
+    <div class="bar2"><div class="srch2">⌕ Όνομα, ΑΦΜ, τηλ., email</div><div class="sort2"><i>⇅</i>Τελευταία κίνηση<i>▾</i></div></div>
+    <div style="margin-top:12px;background:#fff;border-radius:18px;box-shadow:0 0 0 1px var(--hair);padding:0 10px">
+      <div class="crow" style="border-top:0"><span class="av" style="background:#a3245e">ΧΣ</span><div><b>ΧΡΥΣΑΦΗΣ ΣΕΔΑΡΙΔΗΣ</b><small>ΑΦΜ 120144038 · Οικιακός</small></div></div>
+      <div class="crow"><span class="av" style="background:#2b4aa3">SH</span><div><b>SA HOSTEL GRUPP I.K.E.</b><small>ΑΦΜ 145281258 · Επαγγελματικός</small></div></div>
+    </div>
+  </div></div>
+</div>
+
+<div class="legend">
+  <p><b>Δ:</b> στο κινητό η αναζήτηση και η ταξινόμηση μπαίνουν <b>στην ίδια γραμμή</b>, ύψος 38 αντί για 42+42 σε δύο γραμμές, μικρότερα γράμματα, και το κείμενο κάθεται στη μέση (σήμερα η ταξινόμηση πέφτει χαμηλά και κόβεται). Η ταξινόμηση ανοίγει το φύλλο του Γ. Ίδια ρύθμιση και στις άλλες λίστες με αναζήτηση (Συμβάσεις, Υποψήφιοι). Στον υπολογιστή δεν αλλάζει.</p>
+  <p><b>Γ:</b> όλες οι λίστες επιλογής της νέας εμφάνισης (Ταξινόμηση, Πρόγραμμα, Νομός κ.λπ.) ανοίγουν στο κινητό ως φύλλο από κάτω, με τα χρώματα της εφαρμογής. Εδώ <b>χωρίς</b> «Αλλαγή»: το άγγιγμα διαλέγει και κλείνει, γιατί μια ταξινόμηση ή ένα πεδίο φόρμας αλλάζει ξανά με ένα άγγιγμα· δεν πειράζει τίποτα στη βάση. Μεγάλες λίστες (π.χ. νομοί) κυλάνε μέσα στο φύλλο. Στον υπολογιστή μένει η λίστα που ήδη έχει το ύφος μας (358b).</p>
+  <p><b>Α:</b> στο κινητό το κουμπί δεξιά παίρνει όσο χώρο θέλει το κείμενό του (μικρότερο, πιο λεπτό) και όχι σταθερά 124px· το σήμα κατάστασης δεν έχει πια σταθερό πλάτος, οπότε το «Καταχώρηση» χωρά ολόκληρο. Στον υπολογιστή δεν αλλάζει τίποτα.</p>
+  <p><b>Β:</b> το άγγιγμα σε μια κατάσταση μόνο τη <b>διαλέγει</b> (πράσινος κύκλος). Η αλλαγή γίνεται με «Αλλαγή», που μέχρι τότε είναι σβηστό και ανάβει μόλις διαλέξεις. «Άκυρο», άγγιγμα έξω ή Esc κλείνουν χωρίς αλλαγή. Απόρριψη/ακύρωση ζητούν λόγο όπως σήμερα, μετά το «Αλλαγή». Η «Αναίρεση» στο μήνυμα μένει. Πληκτρολόγιο: βελάκια διαλέγουν, Enter = «Αλλαγή».</p>
+</div>
+</div></body>
+</html>
