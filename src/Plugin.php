@@ -28,6 +28,8 @@ use EnergyCRM\Admin\PrivacyTools;
 use EnergyCRM\Http\ControllerFactory;
 use EnergyCRM\Http\Router;
 use EnergyCRM\SiteIntake\Admin\SiteIntakePage;
+use EnergyCRM\Infrastructure\ContentSecurityPolicy;
+use EnergyCRM\Infrastructure\CspReports;
 use EnergyCRM\Infrastructure\DocumentExposureCheck;
 use EnergyCRM\Infrastructure\DocumentProtection;
 use EnergyCRM\Infrastructure\DocumentsSweep;
@@ -130,6 +132,9 @@ final class Plugin
         // XML-RPC κλειστά σε ανώνυμους. Έλεγχος ασφαλείας 15/11/2026.
         (new Hardening())->register();
 
+        // (394) CSP σε δοκιμή: μόνο καταγραφή, στις σελίδες του CRM.
+        (new ContentSecurityPolicy())->register();
+
         (new NetworkSync(Services::network()))->register();
         (new AdminCreatedUsers(Services::team()))->register();
 
@@ -209,7 +214,7 @@ final class Plugin
 
             // Tools → Export/Erase Personal Data. Admin-only, and admin-ajax
             // counts as admin, which is where WordPress actually runs them.
-            (new HealthPage(new HealthChecks(), new ErrorLog()))->register();
+            (new HealthPage(new HealthChecks(), new ErrorLog(), new CspReports()))->register();
 
             // Αδελφή σελίδα της Υγείας: εκείνη λέει «τι δεν πάει καλά τώρα»,
             // αυτή «σε σχέση με πριν». Ίδιο δικαίωμα, ίδιο κέλυφος.

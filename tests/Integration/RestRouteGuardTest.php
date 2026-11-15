@@ -92,6 +92,10 @@ final class RestRouteGuardTest extends IntegrationTestCase
 
         self::ROOT . '/intake/(?P<token>\d+\-[a-f0-9]{20})/file' =>
             'ECRM_Intake::rest_file — ένα έγγραφο τη φορά, δεμένο σε υπογεγραμμένο ref του ίδιου υποψηφίου.',
+
+        self::ROOT . '/csp-report' =>
+            '(394) Ο browser στέλνει τι θα μπλόκαρε η CSP, και από τη σελίδα του πελάτη χωρίς σύνδεση. '
+            . 'Μόνο γράφει (όριο ανά IP, έως 100 γραμμές), δεν διαβάζει τίποτα.',
     ];
 
     protected function tearDown(): void

@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use EnergyCRM\Infrastructure\CspReports;
 use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Infrastructure\TeamInvite;
 use EnergyCRM\Infrastructure\UserSessions;
@@ -224,6 +225,8 @@ final class ControllerFactory
             new ProfilePhotoController(Services::profilePhoto()),
             // (388) «Το προφίλ μου → Ασφάλεια».
             new SecurityController(new UserSessions()),
+            // (394) Αναφορές CSP από τον browser (δημόσιο, με όριο).
+            new CspReportController(new CspReports()),
 
             // Catalogue and form metadata.
             new CatalogueController(

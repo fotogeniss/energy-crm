@@ -516,7 +516,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 
 	<input type="file" id="fi" accept="image/jpeg,image/png,image/webp,image/heic,application/pdf" multiple style="display:none">
 
-	<script>
+	<script nonce="<?php echo esc_attr( \EnergyCRM\Infrastructure\ContentSecurityPolicy::nonce() ); ?>">
 	(function () {
 		var REST = <?php echo wp_json_encode( $rest ); ?>;
 		var VIA = <?php echo wp_json_encode( $via ); ?>;

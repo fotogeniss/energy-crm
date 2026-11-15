@@ -1247,7 +1247,7 @@ echo \EnergyCRM\Infrastructure\LocalFonts::styleTag( ECRM_URL ); // phpcs:ignore
 	<div class="foot">Ασφαλής σύνδεσμος παρακολούθησης</div>
 </div>
 
-<script>
+<script nonce="<?php echo esc_attr( \EnergyCRM\Infrastructure\ContentSecurityPolicy::nonce() ); ?>">
 (function(){
 	var REST = <?php echo wp_json_encode( $rest ); ?>;
 	var TOKEN_OK = <?php echo $token_ok ? 'true' : 'false'; ?>;

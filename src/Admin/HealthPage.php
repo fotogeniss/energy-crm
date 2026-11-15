@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Admin;
 
+use EnergyCRM\Infrastructure\CspReports;
 use EnergyCRM\Infrastructure\ErrorLog;
 use EnergyCRM\Infrastructure\HealthChecks;
 use EnergyCRM\Infrastructure\ThemePreference;
@@ -49,12 +50,15 @@ final class HealthPage
 
     private const CLEAR = 'ecrm_clear_error_log';
 
+    private const CLEAR_CSP = 'ecrm_clear_csp_reports';
+
     /** @var string Το hook suffix που επιστρέφει η add_submenu_page(), για το admin_enqueue_scripts. */
     private string $hook = '';
 
     public function __construct(
         private readonly HealthChecks $checks,
         private readonly ErrorLog $errors,
+        private readonly CspReports $csp = new CspReports(),
     ) {
     }
 
@@ -62,6 +66,7 @@ final class HealthPage
     {
         add_action('admin_menu', [$this, 'addPage']);
         add_action('admin_post_' . self::CLEAR, [$this, 'clear']);
+        add_action('admin_post_' . self::CLEAR_CSP, [$this, 'clearCsp']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueSkin']);
     }
 
@@ -135,6 +140,18 @@ final class HealthPage
 
         check_admin_referer(self::CLEAR);
         $this->errors->clear();
+        wp_safe_redirect(admin_url('admin.php?page=' . self::PAGE));
+        exit;
+    }
+
+    public function clearCsp(): void
+    {
+        if (! current_user_can('manage_options')) {
+            wp_die('Δεν επιτρέπεται.');
+        }
+
+        check_admin_referer(self::CLEAR_CSP);
+        $this->csp->clear();
         wp_safe_redirect(admin_url('admin.php?page=' . self::PAGE));
         exit;
     }
@@ -240,8 +257,57 @@ final class HealthPage
 
         echo '</div>';
 
+        $this->cspCard();
+
         $this->copyBox($rows, $errors);
 
+        echo '</div>';
+    }
+
+    /**
+     * (394) Τι θα μπλόκαρε η Content-Security-Policy. Σε αυτή τη φάση δεν
+     * μπλοκάρεται τίποτα· η λίστα λέει τι πρέπει να φτιαχτεί πριν μπλοκάρει.
+     */
+    private function cspCard(): void
+    {
+        $reports = $this->csp->recent();
+
+        echo '<div class="ecrm-card" style="margin-top:16px">'
+            . '<div class="ecrm-step">Content-Security-Policy (δοκιμή)</div>';
+        echo '<p>Οι σελίδες του CRM λένε στον browser από πού επιτρέπεται να τρέξει κώδικας. '
+            . 'Προς το παρόν <strong>δεν μπλοκάρεται τίποτα</strong>: ο browser απλώς αναφέρει εδώ '
+            . 'ό,τι θα μπλόκαρε. Όταν η λίστα μένει άδεια για μερικές εβδομάδες, ενεργοποιείται.</p>';
+
+        if ($reports === []) {
+            echo '<p><em>Καμία αναφορά.</em></p></div>';
+
+            return;
+        }
+
+        echo '<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr>'
+            . '<th>Οδηγία</th><th>Τι</th><th>Σελίδα</th><th>Γραμμή</th><th>Φορές</th><th>Τελευταία (UTC)</th>'
+            . '</tr></thead><tbody>';
+
+        foreach ($reports as $r) {
+            $line    = (int) ($r['line'] ?? 0);
+            $blocked = (string) ($r['blocked'] ?? '');
+
+            echo '<tr>';
+            echo '<td><span class="ecrm-code">' . esc_html((string) ($r['directive'] ?? '')) . '</span></td>';
+            echo '<td><span class="ecrm-code">' . esc_html($blocked !== '' ? $blocked : '—') . '</span></td>';
+            echo '<td><span class="ecrm-code">' . esc_html((string) ($r['page'] ?? '')) . '</span></td>';
+            echo '<td>' . esc_html($line > 0 ? (string) $line : '—') . '</td>';
+            echo '<td>' . (int) ($r['count'] ?? 1) . '</td>';
+            echo '<td style="white-space:nowrap">' . esc_html((string) ($r['last'] ?? '')) . '</td>';
+            echo '</tr>';
+        }
+
+        echo '</tbody></table></div>';
+
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin-top:12px">';
+        wp_nonce_field(self::CLEAR_CSP);
+        echo '<input type="hidden" name="action" value="' . esc_attr(self::CLEAR_CSP) . '">';
+        echo '<button class="ecrm-btn ecrm-btn--ghost">Καθαρισμός λίστας</button></form>';
         echo '</div>';
     }
 

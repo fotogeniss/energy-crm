@@ -6,6 +6,20 @@
 Νεότερα πρώτα. Κάθε εγγραφή αναφέρει το πρόβλημα, όχι μόνο τη λύση.
 
 ---
+### (394) Content-Security-Policy, φάση καταγραφής
+
+Εύρημα 4 του ελέγχου ασφαλείας της 15/11: καμία CSP. Αν ποτέ ξεφύγει κείμενο χωρίς escape, τίποτα δεν εμποδίζει τον browser να τρέξει ό,τι κουβαλά. Μια CSP κατευθείαν σε μπλοκάρισμα όμως μπορεί να σπάσει σελίδες (θέμα, πρόσθετα, παλιά inline σενάρια). Γι' αυτό πρώτα μόνο καταγραφή.
+
+- **`Content-Security-Policy-Report-Only`** στη σελίδα της εφαρμογής (`[energy_crm_app]`), στη σελίδα παρακολούθησης (`?ecrm_track=`) και στον «σύνδεσμό μου» (`?ecrm_intake=`). Το υπόλοιπο site και το wp-admin δεν αγγίζονται. Σενάρια μόνο από το site ή με nonce της αίτησης, σύνδεση μόνο με το site, κανένα `<object>`, φόρμες μόνο προς το site, όχι μέσα σε ξένο iframe. Στις δημόσιες σελίδες και το jsdelivr (heic2any).
+- **Nonce** σε ό,τι τυπώνει το WordPress (φίλτρα `wp_script_attributes` / `wp_inline_script_attributes`: ρυθμίσεις, importmap, PWA) και στα δύο χειρόγραφα `<script>` (tracking, intake).
+- **Αναφορές:** `POST /ecrm/v1/csp-report`, δημόσιο (η σελίδα του πελάτη δεν έχει σύνδεση), όριο 60 ανά 10′ ανά IP, έως 16 KB, μόνο γνωστά πεδία, χωρίς query string (εκεί είναι το token του πελάτη), έως 100 διαφορετικές γραμμές. Φαίνονται στο **Energy CRM → Υγεία → «Content-Security-Policy (δοκιμή)»**, με καθαρισμό.
+- Ήδη γνωστά που θα φανούν και φτιάχνονται πριν το μπλοκάρισμα: `onclick` στο παράθυρο αναφοράς της Αρχικής και της αφίσας QR, το κουμπί της σελίδας εκτός σύνδεσης του service worker, και ό,τι inline σενάριο βάζει το θέμα.
+- Επόμενη φάση, όταν η λίστα μείνει άδεια μερικές εβδομάδες: `add_filter( 'ecrm_csp_enforce', '__return_true' );`. Κλείνει όλο με `ecrm_csp_enabled`.
+
+**Laravel-ready;** Ναι. Η πολιτική και ο καθαρισμός των αναφορών στο Domain (`Domain\Security\CspPolicy`, χωρίς WordPress)· στο Laravel γίνεται middleware με `@nonce` στα blade και route με throttle.
+
+Τεστ: unit `CspPolicyTest`, `EveryInlineScriptHasTheNonceTest` (κάθε χειρόγραφο `<script>` έχει nonce)· integration `ContentSecurityPolicyTest`· `RestRouteGuardTest` (η νέα δημόσια διαδρομή με αιτιολογία).
+
 ### (393) Σκλήρυνση μετά τον έλεγχο ασφαλείας της 15/11
 
 Ο ιδιοκτήτης ζήτησε «βαθύ και προσεκτικό» έλεγχο ασφαλείας (15/11). Ο κώδικας βγήκε καθαρός σε δικαιώματα, scope, SQL, XSS και uploads· τα ευρήματα ήταν γύρω από τους λογαριασμούς (project: claude/energy-crm-security-review-1511.md). Εδώ διορθώνονται τα 2, 5, 7 και 8.
