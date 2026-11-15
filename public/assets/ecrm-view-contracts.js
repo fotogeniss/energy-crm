@@ -49,8 +49,50 @@ export function setContractsReason(reason, label) {
 	contractsState.reasonLabel = label || '';
 }
 
+/* (386b) Το φίλτρο της λίστας στη διεύθυνση (`#contracts?status=…&page=2`),
+ * ώστε η ανανέωση και το «πίσω» από μια αίτηση να δείχνουν την ίδια λίστα.
+ * Κατάσταση, λόγος, σελίδα και «Δικά μου/Ομάδας» -- ΟΧΙ η αναζήτηση: εκεί
+ * γράφονται ονόματα και ΑΦΜ, που δεν πρέπει να μένουν στο ιστορικό του
+ * browser (GDPR). */
+export function contractsHash() {
+	var parts = [];
+	if (contractsState.status) parts.push('status=' + encodeURIComponent(contractsState.status));
+	if (contractsState.reason) {
+		parts.push('reason=' + encodeURIComponent(contractsState.reason));
+		if (contractsState.reasonLabel) parts.push('rl=' + encodeURIComponent(contractsState.reasonLabel));
+	}
+	if (contractsState.page > 1) parts.push('page=' + contractsState.page);
+	// Πάντα γραμμένο: η προεπιλογή διαφέρει ανά ρόλο (Back office → «Ομάδας»).
+	parts.push('scope=' + (scope() === 'team' ? 'team' : 'own'));
+	return 'contracts?' + parts.join('&');
+}
+
+/** Το αντίστροφο του contractsHash(): από το κομμάτι μετά το «?». */
+export function setContractsFromHash(query) {
+	var get = function (k) {
+		var m = new RegExp('(?:^|&)' + k + '=([^&]*)').exec(String(query || ''));
+		if (!m) return '';
+		try { return decodeURIComponent(m[1]); } catch (e) { return ''; }
+	};
+	contractsState.status = get('status');
+	contractsState.reason = get('reason');
+	contractsState.reasonLabel = contractsState.reason ? get('rl') : '';
+	contractsState.page = Math.max(1, parseInt(get('page'), 10) || 1);
+	var sc = get('scope');
+	if (sc) setScope(sc === 'team' ? 'team' : 'own');
+}
+
+function syncHash() {
+	var app = document.getElementById('ecrm-app');
+	if (!app || app.getAttribute('data-view') !== 'contracts') return;
+	var want = '#' + contractsHash();
+	// replace, όχι push: ένα κλικ σε καρτέλα φίλτρου δεν είναι «σελίδα» για το back.
+	if (location.hash !== want) { try { history.replaceState({ v: want.slice(1) }, '', want); } catch (e) {} }
+}
+
 export function loadContracts() {
 	var view = viewEl('contracts');
+	syncHash();
 	var url = api('/contracts') + '?status=' + encodeURIComponent(contractsState.status) + '&q=' + encodeURIComponent(contractsState.q) + '&scope=' + encodeURIComponent(scope()) +
 		(contractsState.reason ? '&reason=' + encodeURIComponent(contractsState.reason) : '');
 	fetch(url, { headers: H() })

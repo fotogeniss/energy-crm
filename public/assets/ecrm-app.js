@@ -2,7 +2,7 @@ import { api, esc, fetch, H, toast } from '@energy-crm/util';
 import { wire } from '@energy-crm/navigate';
 import { count as queueCount, flush as queueFlush, forget as queueForget, onChange as onQueueChange, pending as queuePending, purgeExpired, retryNow } from '@energy-crm/queue';
 import { openDetail } from '@energy-crm/view-detail';
-import { loadContracts, setContractsFilter, setContractsReason } from '@energy-crm/view-contracts';
+import { loadContracts, setContractsFilter, setContractsFromHash, setContractsReason } from '@energy-crm/view-contracts';
 import { loadPending } from '@energy-crm/view-pending';
 import { loadDocuments, setDocumentsFilter } from '@energy-crm/view-documents';
 import { loadCommissions } from '@energy-crm/view-commissions';
@@ -771,6 +771,9 @@ import { loadProfile } from '@energy-crm/view-profile';
 			openTicket(ticket[1]);
 			return;
 		}
+		// (386b) `#contracts?status=…`: η λίστα με το φίλτρο της.
+		var cq = /^contracts\?(.*)$/.exec(v);
+		if (cq) { setContractsFromHash(cq[1]); v = 'contracts'; }
 		if (VIEWS.indexOf(v) < 0) v = 'dashboard';
 		suppressHash = true; go(v); suppressHash = false;
 	}
