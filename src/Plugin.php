@@ -17,6 +17,7 @@ namespace EnergyCRM;
 use EnergyCRM\Access\AdminCreatedUsers;
 use EnergyCRM\Access\DepartingUser;
 use EnergyCRM\Access\DisabledAccounts;
+use EnergyCRM\Access\Hardening;
 use EnergyCRM\Access\LoginThrottle;
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
@@ -124,6 +125,10 @@ final class Plugin
         // Πριν από οτιδήποτε αγγίζει δικαιώματα: όσο ο λογαριασμός είναι
         // απενεργοποιημένος, κανένα ecrm_* δικαίωμα δεν ισχύει πουθενά.
         (new DisabledAccounts(Services::team()))->register();
+
+        // (393) Κωδικοί εφαρμογής μόνο για διαχειριστή, λίστα χρηστών και
+        // XML-RPC κλειστά σε ανώνυμους. Έλεγχος ασφαλείας 15/11/2026.
+        (new Hardening())->register();
 
         (new NetworkSync(Services::network()))->register();
         (new AdminCreatedUsers(Services::team()))->register();

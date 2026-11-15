@@ -241,6 +241,11 @@ class ECRM_Files {
 		if ( $requesting_uid <= 0 ) {
 			return false;
 		}
+		// (393) Απενεργοποιημένος λογαριασμός δεν έχει κανένα ecrm_* δικαίωμα
+		// (DisabledAccounts)· ούτε ένα link που είχε ήδη ανοίγει πια.
+		if ( ! user_can( $requesting_uid, \EnergyCRM\Access\Capability::USE_CRM ) ) {
+			return false;
+		}
 		if ( ! in_array( $partner_user_id, ECRM_DB::visible_user_ids( $bound_uid ), true ) ) {
 			return false;
 		}

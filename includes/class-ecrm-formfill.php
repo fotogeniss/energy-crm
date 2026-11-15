@@ -1010,7 +1010,7 @@ class ECRM_FormFill {
 		} catch ( \Throwable $e ) {
 			if ( ob_get_level() > 0 ) { ob_end_clean(); }
 			error_reporting( $er );
-			return [ 'ok' => false, 'error' => 'Σφάλμα δημιουργίας εντύπου: ' . $e->getMessage() ];
+			return [ 'ok' => false, 'error' => self::failure( $e ) ];
 		}
 		error_reporting( $er );
 
@@ -1069,7 +1069,7 @@ class ECRM_FormFill {
 		} catch ( \Throwable $e ) {
 			if ( ob_get_level() > 0 ) { ob_end_clean(); }
 			error_reporting( $er );
-			return [ 'ok' => false, 'error' => 'Σφάλμα δημιουργίας εντύπου: ' . $e->getMessage() ];
+			return [ 'ok' => false, 'error' => self::failure( $e ) ];
 		}
 		error_reporting( $er );
 
@@ -1081,5 +1081,16 @@ class ECRM_FormFill {
 
 		$fname = 'aitisi-' . ( $c['code'] ?? '' ) . '.pdf';
 		return [ 'ok' => true, 'bytes' => $bytes, 'filename' => $fname ];
+	}
+
+	/**
+	 * (393) Το σφάλμα στο ημερολόγιο, στον χρήστη ένα μήνυμα με κωδικό. Το
+	 * `getMessage()` μιας εξαίρεσης μπορεί να κουβαλά διαδρομές αρχείων του
+	 * server ή κομμάτια δεδομένων· δεν είναι για την οθόνη.
+	 */
+	private static function failure( \Throwable $e ): string {
+		$ref = substr( md5( uniqid( '', true ) ), 0, 8 );
+		error_log( '[Energy CRM] Έντυπο ' . $ref . ': ' . get_class( $e ) . ': ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		return 'Το έντυπο δεν δημιουργήθηκε (κωδικός ' . $ref . '). Δοκίμασε ξανά ή στείλε τον κωδικό στον διαχειριστή.';
 	}
 }

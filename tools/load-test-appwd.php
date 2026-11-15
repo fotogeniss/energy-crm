@@ -35,6 +35,12 @@ if (! class_exists('WP_Application_Passwords')) {
     return;
 }
 
+// (393) Οι κωδικοί εφαρμογής είναι πλέον μόνο για διαχειριστή (Access\Hardening).
+if (! apply_filters('ecrm_app_passwords_for_everyone', false)) {
+    echo "ΠΡΟΣΟΧΗ: για λογαριασμούς πωλητών χρειάζεται mu-plugin με\n";
+    echo "add_filter('ecrm_app_passwords_for_everyone', '__return_true'); -- μόνο σε τοπικό site.\n";
+}
+
 try {
     global $wpdb;
 

@@ -29,6 +29,7 @@ namespace EnergyCRM\Tests\Integration;
 use ECRM_Files;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Persistence\NetworkRepository;
+use EnergyCRM\Persistence\TeamRepository;
 
 final class FileServeSessionBindingTest extends IntegrationTestCase
 {
@@ -119,5 +120,18 @@ final class FileServeSessionBindingTest extends IntegrationTestCase
         $owner = $this->makeCrmUser(Roles::SELLER);
 
         self::assertTrue(ECRM_Files::requesterMayView($owner, $owner, $owner));
+    }
+
+    /**
+     * (393) Απενεργοποιημένος λογαριασμός: ούτε ένα link που πήρε πριν
+     * απενεργοποιηθεί (ισχύει μία ώρα) ανοίγει πια.
+     */
+    public function testADisabledAccountCannotOpenEvenItsOwnFile(): void
+    {
+        $owner = $this->makeCrmUser(Roles::SELLER);
+
+        (new TeamRepository())->setDisabled($owner, true);
+
+        self::assertFalse(ECRM_Files::requesterMayView($owner, $owner, $owner));
     }
 }

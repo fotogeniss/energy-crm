@@ -16,6 +16,7 @@ namespace EnergyCRM\Tests\Integration;
 
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Infrastructure\UserSessions;
+use WP_Application_Passwords;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Session_Tokens;
@@ -61,6 +62,20 @@ final class ProfileSecurityTest extends IntegrationTestCase
         self::assertTrue(wp_check_password(self::NEW, get_userdata($this->user)->user_pass, $this->user));
         self::assertSame([], WP_Session_Tokens::get_instance($this->user)->get_all());
         self::assertNotSame('', $response->get_data()['password_changed_at']);
+    }
+
+    /**
+     * (393) Ο κωδικός εφαρμογής δεν σβήνει μόνος του με την αλλαγή κωδικού·
+     * είναι ο τρόπος να μείνει μέσα όποιος έκλεψε τον λογαριασμό.
+     */
+    public function testChangingThePasswordAlsoRevokesApplicationPasswords(): void
+    {
+        WP_Application_Passwords::create_new_application_password($this->user, ['name' => 'κάποιο script']);
+
+        self::assertCount(1, WP_Application_Passwords::get_user_application_passwords($this->user));
+
+        self::assertSame(200, $this->change(self::OLD, self::NEW)->get_status());
+        self::assertSame([], WP_Application_Passwords::get_user_application_passwords($this->user));
     }
 
     public function testAWrongCurrentPasswordChangesNothing(): void

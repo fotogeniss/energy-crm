@@ -22,6 +22,7 @@ namespace EnergyCRM\Infrastructure;
 
 use EnergyCRM\Domain\Security\DeviceLabel;
 use EnergyCRM\Domain\Security\PasswordPolicy;
+use WP_Application_Passwords;
 use WP_Session_Tokens;
 use WP_User;
 
@@ -143,6 +144,12 @@ final class UserSessions
         $closed   = $this->destroyOthers($user->ID);
 
         wp_set_password($new, $user->ID);
+
+        // (393) Και οι κωδικοί εφαρμογής: δεν σβήνουν μόνοι τους με την αλλαγή
+        // κωδικού, και είναι ακριβώς ο τρόπος να μείνει μέσα όποιος τον έκλεψε.
+        if (class_exists(WP_Application_Passwords::class)) {
+            WP_Application_Passwords::delete_all_application_passwords($user->ID);
+        }
 
         // Αν η έκδοση του WordPress έκλεισε όλες τις συνδέσεις μαζί με τον
         // κωδικό, η τρέχουσα ξαναμπαίνει ίδια: ίδιο token, η σελίδα μένει
