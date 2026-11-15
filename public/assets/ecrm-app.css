@@ -707,6 +707,13 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 }
 .ecrm-collapse:hover { background: var(--chrome-wash-3); color: var(--chrome-ink-hi); }
 .ecrm-collapse svg { width: 18px; height: 18px; }
+/* (396g) Το ✕ μόνο στο κινητό, όπου το κουμπί κλείνει το συρτάρι. */
+.ecrm-collapse > span { display: inline-flex; }
+.ecrm-collapse .ecrm-collapse__x { display: none; }
+@media (max-width: 860px) {
+	.ecrm-collapse .ecrm-collapse__menu { display: none; }
+	.ecrm-collapse .ecrm-collapse__x { display: inline-flex; }
+}
 
 /* Collapsed (desktop): icon-only rail */
 @media (min-width: 861px) {

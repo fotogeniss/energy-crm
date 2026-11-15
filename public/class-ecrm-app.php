@@ -221,7 +221,8 @@ class ECRM_App {
 				<div class="ecrm-brand">
 					<span class="ecrm-brand__mark">E</span>
 					<span class="ecrm-brand__txt">Energy <strong>CRM</strong></span>
-					<button type="button" class="ecrm-collapse" data-collapse aria-label="Σύμπτυξη μενού"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></button>
+					<?php // (396g) Στο κινητό το ίδιο κουμπί γίνεται ✕ και κλείνει το συρτάρι (ecrm-app.js). ?>
+					<button type="button" class="ecrm-collapse" data-collapse aria-label="Σύμπτυξη μενού"><span class="ecrm-collapse__menu"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></span><span class="ecrm-collapse__x"><?php echo self::icon( 'close' ); // phpcs:ignore ?></span></button>
 				</div>
 				<?php if ( 'signature' === $ui ) : ?>
 				<nav class="ecrm-nav sig-rail" aria-label="Κύρια πλοήγηση">
@@ -724,6 +725,7 @@ class ECRM_App {
 			'gear'      => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
 			'phone'     => '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
 			'menu'      => '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',
+			'close'     => '<path d="M6 6l12 12"/><path d="M18 6 6 18"/>',
 			'bell'      => '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
 			'chat'      => '<path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/>',
 			'moon'      => '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',

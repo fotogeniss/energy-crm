@@ -464,6 +464,9 @@ import { loadProfile } from '@energy-crm/view-profile';
 	try { if (localStorage.getItem('ecrm_sidebar') === '1') app.setAttribute('data-collapsed', '1'); } catch (e) {}
 	var collapseBtn = app.querySelector('[data-collapse]');
 	if (collapseBtn) collapseBtn.addEventListener('click', function () {
+		// (396g) Στο κινητό το κουμπί είναι ✕: κλείνει το συρτάρι, δεν συμπτύσσει.
+		// Ο ιδιοκτήτης (15/11): «όταν πατάω το μενού δεν κλείνει… βάλε ένα Χ».
+		if (window.matchMedia('(max-width: 860px)').matches) { app.removeAttribute('data-mobnav'); return; }
 		var on = app.getAttribute('data-collapsed') === '1';
 		app.setAttribute('data-collapsed', on ? '0' : '1');
 		try { localStorage.setItem('ecrm_sidebar', on ? '0' : '1'); } catch (e) {}
@@ -501,6 +504,11 @@ import { loadProfile } from '@energy-crm/view-profile';
 	if (mobToggle) mobToggle.addEventListener('click', function () {
 		app.setAttribute('data-mobnav', app.getAttribute('data-mobnav') === '1' ? '0' : '1');
 	});
+	if (collapseBtn) {
+		var labelFor = function () { collapseBtn.setAttribute('aria-label', mq.matches ? 'Κλείσιμο μενού' : 'Σύμπτυξη μενού'); };
+		labelFor();
+		if (mq.addEventListener) mq.addEventListener('change', labelFor);
+	}
 	app.querySelectorAll('[data-mobnav-close]').forEach(function (b) { b.addEventListener('click', closeMob); });
 	app.querySelectorAll('.ecrm-nav__item[data-go]').forEach(function (b) {
 		b.addEventListener('click', function () { if (mq.matches) closeMob(); });
