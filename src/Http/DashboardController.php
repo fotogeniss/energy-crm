@@ -19,6 +19,7 @@ use ECRM_Notifications;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Partner\PerformanceTier;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -97,7 +98,7 @@ final class DashboardController implements Controller
 
             // Ο αριθμός «7 εκκρεμότητες» δεν οδηγεί πουθενά· η λίστα ναι.
             // Πέντε, οι πιο στάσιμες πρώτα — δες DashboardRepository::needsAttention().
-            'attention'   => $this->dashboard->needsAttention($actor),
+            'attention'   => $this->withAllowedNext($this->dashboard->needsAttention($actor)),
 
             // «Ελλείψεις & προθεσμίες», 31/08/2026 -- ό,τι χρειάζεται δικό
             // του βήμα αλλά ΔΕΝ είναι «σύμβαση σε εξέλιξη»: λείπον/ληγμένο
@@ -143,6 +144,28 @@ final class DashboardController implements Controller
         $done = $this->store->contractStats(UserScope::forSelf($actor))[$actor]['month'] ?? 0;
 
         return ['target' => $target, 'done' => $done];
+    }
+
+    /**
+     * (387) Η κατάσταση αλλάζει και από το «Χρειάζονται εσένα»
+     * (docs/UI-NEEDS-STATUS.html): κάθε γραμμή φέρει τις επιτρεπτές
+     * επόμενες, ίδιος υπολογισμός με τη λίστα και την καρτέλα. Χωρίς
+     * δικαίωμα αλλαγής: κενή λίστα. Το `extra_json` ήρθε μόνο γι' αυτό και
+     * δεν φεύγει προς τον browser.
+     *
+     * @param  list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private function withAllowedNext(array $rows): array
+    {
+        $may = current_user_can(Capability::CHANGE_STATUS);
+
+        foreach ($rows as $index => $row) {
+            $rows[$index]['allowed_next'] = $may ? ContractStatus::nextSlugsFor($row) : [];
+            unset($rows[$index]['extra_json']);
+        }
+
+        return $rows;
     }
 
     /**

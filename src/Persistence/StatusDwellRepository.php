@@ -136,7 +136,7 @@ final class StatusDwellRepository
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT c.id, c.code, c.status, c.provider_id, c.partner_user_id,
+                "SELECT c.id, c.code, c.status, c.provider_id, c.partner_user_id, c.energy_type, c.extra_json,
                         pv.name AS provider_name, pg.name AS program_name,
                         cu.first_name, cu.last_name, cu.company_name,
                         DATEDIFF(NOW(), ( SELECT MAX(e.created_at) FROM %i e

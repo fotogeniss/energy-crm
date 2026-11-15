@@ -17,19 +17,22 @@
 
 import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
 import { openDetail } from '@energy-crm/navigate';
+import { statusBadgeHTML, wireStatusMenus } from '@energy-crm/status-menu';
 
 var state = { data: null, provider: '' };
 
-export function loadEscalations() {
+/* keep: (390) ξαναφόρτωμα μετά από αλλαγή κατάστασης, στην ίδια καρτέλα παρόχου. */
+export function loadEscalations(keep) {
 	var view = viewEl('escalations');
-	view.innerHTML = '<div class="ecrm-card"><div class="ecrm-loading">Φόρτωση…</div></div>';
+	var provider = keep === true ? state.provider : '';
+	if (keep !== true) view.innerHTML = '<div class="ecrm-card"><div class="ecrm-loading">Φόρτωση…</div></div>';
 
 	fetch(api('/stuck'), { headers: H() })
 		.then(function (r) { return r.json(); })
 		.then(function (d) {
 			if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">' + esc((d && d.error) || 'Σφάλμα.') + '</div></div>'; return; }
 			state.data = d;
-			state.provider = '';
+			state.provider = provider;
 			render(view);
 		})
 		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
@@ -62,7 +65,7 @@ function rowHTML(r, group) {
 	var critical = r.compared ? days >= 3 * Math.max(1, Number(r.typical) || 0) : days >= 1.5 * (Number(r.limit) || 0);
 
 	return '<div class="ecrm-mgrrow" data-mgr-go="' + esc(r.id) + '">' +
-		'<span class="ecrm-mgrrow__badge"><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || r.status) + '</span></span>' +
+		'<span class="ecrm-mgrrow__badge">' + statusBadgeHTML(r, r.status_label || r.status) + '</span>' +
 		'<span class="ecrm-mgrrow__m"><b>' + esc(r.customer || '—') + '</b><small>' + esc(meta.join(' · ')) + '</small></span>' +
 		'<span class="ecrm-mgrrow__age' + (critical ? ' is-critical' : '') + '">' + esc(plural(days, 'μέρα', 'μέρες')) +
 		'<small>' + esc(cmp) + '</small></span>' +
@@ -129,6 +132,16 @@ function render(view) {
 		row.addEventListener('click', function () {
 			openDetail(row.getAttribute('data-mgr-go'));
 		});
+	});
+
+	// (390) Αλλαγή κατάστασης από το σήμα, με το μενού της λίστας (384).
+	var byId = {};
+	rows.forEach(function (r) { byId[String(r.id)] = r; });
+	wireStatusMenus(view, {
+		rows: byId,
+		statuses: (window.ECRM && ECRM.statuses) || {},
+		open: function (id) { openDetail(id); },
+		changed: function () { loadEscalations(true); },
 	});
 }
 

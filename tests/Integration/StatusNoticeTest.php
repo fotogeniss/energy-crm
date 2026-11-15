@@ -37,6 +37,7 @@ namespace EnergyCRM\Tests\Integration;
 
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Infrastructure\UserProfile;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\NotificationRepository;
 use EnergyCRM\Persistence\TeamRepository;
@@ -154,6 +155,20 @@ final class StatusNoticeTest extends IntegrationTestCase
         $this->moveTo($this->contractOf($this->owner), 'registration');
 
         self::assertSame([], $this->recipients);
+    }
+
+    /**
+     * (392) «Το προφίλ μου → Ειδοποιήσεις»: όποιος έκλεισε το email δεν το
+     * παίρνει· το καμπανάκι χτυπά κανονικά.
+     */
+    public function testNoEmailWhenTheOwnerTurnedItOff(): void
+    {
+        UserProfile::save($this->owner, ['notify_status_email' => false]);
+
+        $this->moveTo($this->contractOf($this->owner), 'pending_issue');
+
+        self::assertSame([], $this->recipients);
+        self::assertCount(1, $this->noticesFor($this->owner));
     }
 
     // --- fixtures ----------------------------------------------------------

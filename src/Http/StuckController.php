@@ -57,6 +57,8 @@ final class StuckController implements Controller
             $rows
         ));
         $labels = ContractStatus::labels();
+        // (390) Η κατάσταση αλλάζει και από εδώ, με το μενού της λίστας (384).
+        $may    = current_user_can(Capability::CHANGE_STATUS);
         $out    = [];
 
         foreach ($rows as $r) {
@@ -76,6 +78,7 @@ final class StuckController implements Controller
                 'typical'      => $r['stuck']['typical'],
                 'compared'     => $r['stuck']['compared'],
                 'limit'        => $r['stuck']['limit'],
+                'allowed_next' => $may ? ContractStatus::nextSlugsFor($r) : [],
             ];
         }
 

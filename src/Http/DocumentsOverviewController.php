@@ -25,8 +25,10 @@ namespace EnergyCRM\Http;
 use ECRM_DB;
 use ECRM_Docs;
 use ECRM_RateLimit;
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Infrastructure\DocumentKindReview;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\FileRepository;
@@ -84,6 +86,8 @@ final class DocumentsOverviewController implements Controller
         $missing = 0;
         $pending = 0;
         $out     = [];
+        // (391) Η κατάσταση αλλάζει και από εδώ, με το μενού της λίστας (384).
+        $may     = current_user_can(Capability::CHANGE_STATUS);
 
         foreach ($rows as $row) {
             $id    = (int) $row['id'];
@@ -126,6 +130,7 @@ final class DocumentsOverviewController implements Controller
                 'complete'     => $checklist['complete'],
                 'docs'         => $docs,
                 'pending'      => $hasPending,
+                'allowed_next' => $may ? ContractStatus::nextSlugsFor($row) : [],
             ];
         }
 

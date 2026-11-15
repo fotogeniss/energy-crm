@@ -176,6 +176,21 @@ final class StuckControllerTest extends IntegrationTestCase
         self::assertSame(401, $this->stuck()->get_status());
     }
 
+    /** (390) Η κατάσταση αλλάζει και από τις Κολλημένες: η γραμμή φέρει τις επόμενες. */
+    public function testEachRowCarriesTheNextStatuses(): void
+    {
+        $seller = $this->makeCrmUser(Roles::SELLER);
+        $id     = $this->sitting($seller, 'registration', ECRM_Notifications::escalation_days() + 2, $this->providerA);
+
+        wp_set_current_user($seller);
+        $row = $this->row($id);
+
+        self::assertNotNull($row);
+        self::assertContains('to_finalisation', $row['allowed_next']);
+        self::assertNotContains('registration', $row['allowed_next']);
+        self::assertArrayNotHasKey('extra_json', $row);
+    }
+
     private function stuck(): WP_REST_Response
     {
         return rest_do_request(new WP_REST_Request('GET', '/ecrm/v1/stuck'));

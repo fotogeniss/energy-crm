@@ -22,6 +22,7 @@ import { api, can, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { minutesAgo, timeAgo } from '@energy-crm/format';
 import { openDetail, openPartner, openStoreList, go } from '@energy-crm/navigate';
 import { openDialog } from '@energy-crm/dialog';
+import { statusBadgeHTML, wireStatusMenus } from '@energy-crm/status-menu';
 
 var MONTHS = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
 var MONTHS_LONG_NOM = ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος', 'Ιούλιος',
@@ -1014,7 +1015,9 @@ function sigNeedsRows(d) {
 		var kind = (it.status === 'awaiting_signature' || it.status === 'registration') ? 'is-sign' : it.status === 'draft' ? 'is-draft' : 'is-docs';
 		return { kind: kind, title: statuses[it.status] || it.status, name: it.customer || '—',
 			meta: [it.code ? '#' + it.code : '', it.provider || ''].filter(Boolean).join(', '),
-			act: w.act, attr: ' data-attn-go="' + esc(it.id) + '"', age: Number(it.days) || 0 };
+			act: w.act, attr: ' data-attn-go="' + esc(it.id) + '"', age: Number(it.days) || 0,
+			// (387) Το σήμα της κατάστασης ως κουμπί, όπως στη λίστα (384).
+			badge: (it.allowed_next || []).length ? statusBadgeHTML(it, statuses[it.status] || it.status) : '' };
 	});
 	var extra = d.attention_extra || {};
 	(extra.missing_docs || []).forEach(function (r) {
@@ -1056,7 +1059,7 @@ function sigNeedsHTML(d) {
 		var attr = r.attr;
 		return '<div class="sig-need' + (i >= SIG_NEEDS_SHOWN ? ' is-rest' : '') + '">' +
 			'<span class="sig-need__ic ' + esc(r.kind) + '">' + esc(SIG_ICON[r.kind] || '!') + '</span>' +
-			'<div class="sig-need__b"><b>' + esc(r.title) + '</b><p>' + esc(r.name) + (r.meta ? ', ' + esc(r.meta) : '') + '</p></div>' +
+			'<div class="sig-need__b">' + (r.badge || '<b>' + esc(r.title) + '</b>') + '<p>' + esc(r.name) + (r.meta ? ', ' + esc(r.meta) : '') + '</p></div>' +
 			'<time>' + esc(days) + '</time>' +
 			'<button type="button" class="sig-need__go' + (i === 0 ? ' is-main' : '') + '"' + attr + '>' + esc(r.act) + '</button></div>';
 	}).join('');
@@ -1156,6 +1159,19 @@ function dashboardHTML(d) {
 
 function wire(view, d) {
 	wireSignature(view);
+
+	// (387) Αλλαγή κατάστασης από το «Χρειάζονται εσένα». docs/UI-NEEDS-STATUS.html.
+	var needRows = {};
+	(d.attention || []).forEach(function (it) { needRows[String(it.id)] = it; });
+	var needs = view.querySelector('.sig-needs');
+	if (needs) {
+		wireStatusMenus(needs, {
+			rows: needRows,
+			statuses: (window.ECRM && ECRM.statuses) || {},
+			open: function (id) { openDetail(id); },
+			changed: function () { loadDashboard(); },
+		});
+	}
 
 	// Το κουμπί κάθε γραμμής ανοίγει την ίδια τη σύμβαση: το dashboard δείχνει
 	// δουλειά, και η δουλειά γίνεται στην καρτέλα.

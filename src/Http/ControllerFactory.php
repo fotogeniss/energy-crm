@@ -31,6 +31,7 @@ namespace EnergyCRM\Http;
 
 use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Infrastructure\TeamInvite;
+use EnergyCRM\Infrastructure\UserSessions;
 use EnergyCRM\Persistence\CrossSellQueries;
 use EnergyCRM\Persistence\CustomerHistoryQueries;
 use EnergyCRM\Persistence\GuaranteeRuleRepository;
@@ -221,6 +222,8 @@ final class ControllerFactory
             new UiController(),
             new ProfileController(),
             new ProfilePhotoController(Services::profilePhoto()),
+            // (388) «Το προφίλ μου → Ασφάλεια».
+            new SecurityController(new UserSessions()),
 
             // Catalogue and form metadata.
             new CatalogueController(

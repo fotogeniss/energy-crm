@@ -73,7 +73,7 @@ function showMenu(btn, id, opts) {
 	var next = (row.allowed_next || []).filter(function (s) { return s !== CANCEL; });
 	var hasCancel = (row.allowed_next || []).indexOf(CANCEL) !== -1;
 	var narrow = isNarrow();
-	var name = row.company_name || ((row.first_name || '') + ' ' + (row.last_name || '')).trim();
+	var name = row.company_name || ((row.first_name || '') + ' ' + (row.last_name || '')).trim() || row.customer || '';
 	var head = narrow && name ? name + ' · ' + (labels[row.status] || row.status) : 'Αλλαγή κατάστασης';
 
 	var el = document.createElement('div');

@@ -263,7 +263,7 @@ final class ContractQueries
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT c.id, c.code, c.status, c.activation_type, c.energy_type, c.updated_at,
+                "SELECT c.id, c.code, c.status, c.activation_type, c.energy_type, c.extra_json, c.updated_at,
                         cu.first_name, cu.last_name, cu.company_name
                  FROM %i c
                  LEFT JOIN %i cu ON cu.id = c.customer_id

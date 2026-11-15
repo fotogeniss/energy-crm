@@ -31,11 +31,13 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\DashboardRepository;
 use EnergyCRM\Persistence\Tables;
+use WP_REST_Request;
 
 final class DashboardAttentionTest extends IntegrationTestCase
 {
@@ -208,6 +210,29 @@ final class DashboardAttentionTest extends IntegrationTestCase
      * @param array<string, mixed> $data
      * @param array<string, mixed> $customer
      */
+    /**
+     * (387) Το «Χρειάζονται εσένα» αλλάζει κατάσταση με το μενού της λίστας:
+     * κάθε γραμμή φέρει τις επόμενες, και το `extra_json` (που χρειάστηκε για
+     * να βγουν) δεν φεύγει προς τον browser.
+     */
+    public function testTheHomeRowsCarryTheNextStepsAndNoExtraJson(): void
+    {
+        $partner = $this->makeCrmUser(Roles::PARTNER);
+        $this->contractFor($partner, ['status' => 'presale', 'energy_type' => 'power']);
+        wp_set_current_user($partner);
+
+        $response = rest_do_request(new WP_REST_Request('GET', '/ecrm/v1/dashboard'));
+
+        self::assertSame(200, $response->get_status());
+
+        $rows = $response->get_data()['attention'];
+
+        self::assertCount(1, $rows);
+        self::assertContains('registration', $rows[0]['allowed_next']);
+        self::assertNotContains('presale', $rows[0]['allowed_next']);
+        self::assertArrayNotHasKey('extra_json', $rows[0]);
+    }
+
     private function contractFor(int $ownerId, array $data, array $customer = []): int
     {
         if ($customer !== []) {

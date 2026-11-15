@@ -10,6 +10,7 @@ import { api, esc, fetch, H, viewEl } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
 import { openDetail } from '@energy-crm/navigate';
 import { scope, setScope } from '@energy-crm/scope';
+import { statusBadgeHTML, wireStatusMenus } from '@energy-crm/status-menu';
 
 export function loadPending() {
 	var view = viewEl('pending');
@@ -26,7 +27,7 @@ function renderPending(view, d) {
 		return '<tr class="ecrm-rowlink" data-id="' + r.id + '">' +
 			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span><span>' + esc(r.customer) + '</span></span></td>' +
 			'<td class="ecrm-col-sec"><span class="ecrm-code">' + esc(r.code || '') + '</span></td>' +
-			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || statuses[r.status] || r.status) + '</span></td>' +
+			'<td>' + statusBadgeHTML(r, r.status_label || statuses[r.status] || r.status) + '</td>' +
 			'<td><span class="ecrm-agepill' + (r.stale ? ' is-stale' : '') + '">' + r.age_days + ' ημέρες</span></td>' +
 			'</tr>';
 	}).join('');
@@ -45,6 +46,16 @@ function renderPending(view, d) {
 
 	view.querySelectorAll('.ecrm-rowlink').forEach(function (tr) { tr.addEventListener('click', function () { openDetail(this.getAttribute('data-id')); }); });
 	view.querySelectorAll('[data-pscope]').forEach(function (b) { b.addEventListener('click', function () { setScope(this.getAttribute('data-pscope')); loadPending(); }); });
+
+	// (390) Αλλαγή κατάστασης από το σήμα, με το μενού της λίστας (384).
+	var byId = {};
+	rows.forEach(function (r) { byId[String(r.id)] = r; });
+	wireStatusMenus(view, {
+		rows: byId,
+		statuses: statuses,
+		open: function (id) { openDetail(id); },
+		changed: function () { loadPending(); },
+	});
 }
 
 // ---------------------------------------------------------------------
@@ -62,7 +73,7 @@ function sigPendingHTML(d, rows, statuses) {
 			return '<li class="sig-row ecrm-rowlink" data-id="' + esc(String(r.id)) + '">' +
 				'<span class="sig-row__av" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span>' +
 				'<span class="sig-row__who"><b>' + esc(r.customer || '—') + '</b><small>' + esc(r.code ? '#' + r.code : '') + '</small></span>' +
-				'<span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || statuses[r.status] || r.status) + '</span>' +
+				statusBadgeHTML(r, r.status_label || statuses[r.status] || r.status) +
 				'<span class="sig-age' + (r.stale ? ' is-warn' : '') + '">' + esc(String(r.age_days)) + (Number(r.age_days) === 1 ? ' ημέρα' : ' ημέρες') + '</span>' +
 			'</li>';
 		}).join('') + '</ul>'

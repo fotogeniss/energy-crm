@@ -114,6 +114,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/format',
 			'@energy-crm/navigate',
 			'@energy-crm/scope',
+			'@energy-crm/status-menu',
 		],
 		'@energy-crm/navigate'         => [],
 		'@energy-crm/view-leads'       => [
@@ -136,7 +137,13 @@ class ECRM_Shortcodes {
 			'@energy-crm/view-customer-history',
 		],
 		'@energy-crm/view-customer-history' => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
-		'@energy-crm/view-dashboard'   => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate', '@energy-crm/dialog' ],
+		'@energy-crm/view-dashboard'   => [
+			'@energy-crm/util',
+			'@energy-crm/format',
+			'@energy-crm/navigate',
+			'@energy-crm/dialog',
+			'@energy-crm/status-menu',
+		],
 		'@energy-crm/view-import'      => [ '@energy-crm/util' ],
 		'@energy-crm/view-kb'          => [ '@energy-crm/util' ],
 		'@energy-crm/view-profile'     => [ '@energy-crm/util', '@energy-crm/qr-poster' ],
@@ -148,7 +155,7 @@ class ECRM_Shortcodes {
 		'@energy-crm/view-partner'     => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-team'        => [ '@energy-crm/util', '@energy-crm/format', '@energy-crm/navigate' ],
 		'@energy-crm/view-team-live'   => [ '@energy-crm/util', '@energy-crm/format' ],
-		'@energy-crm/view-escalations' => [ '@energy-crm/util', '@energy-crm/navigate' ],
+		'@energy-crm/view-escalations' => [ '@energy-crm/util', '@energy-crm/navigate', '@energy-crm/status-menu' ],
 		'@energy-crm/tickets'          => [
 			'@energy-crm/util',
 			'@energy-crm/format',
@@ -160,6 +167,7 @@ class ECRM_Shortcodes {
 			'@energy-crm/format',
 			'@energy-crm/navigate',
 			'@energy-crm/scope',
+			'@energy-crm/status-menu',
 		],
 		'@energy-crm/queue'            => [ '@energy-crm/util' ],
 		'@energy-crm/form'             => [

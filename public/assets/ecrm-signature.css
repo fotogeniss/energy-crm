@@ -3030,3 +3030,46 @@
 	.ecrm-app[data-ui="signature"] .sig-ready { flex-wrap: wrap; }
 	.ecrm-app[data-ui="signature"] .sig-ready__btn { margin-left: 0; }
 }
+
+/* (387) Το σήμα της κατάστασης στη θέση του τίτλου του «Χρειάζονται εσένα»
+   (docs/UI-NEEDS-STATUS.html): ίδιο μενού με τη λίστα αιτήσεων. */
+.ecrm-app[data-ui="signature"] .sig-need__b .ecrm-stbtn {
+	max-width: 100%; margin-bottom: 2px; padding: 3px 10px; gap: 6px; font-size: var(--fs-12);
+}
+
+/* (388) Ασφάλεια προφίλ: οι γραμμές των συνδέσεων με τη λεπτή γραμμή Signature. */
+.ecrm-app[data-ui="signature"] .sig-pf__sess { border-top-color: var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .sig-pf__sessic,
+.ecrm-app[data-ui="signature"] .sig-pf__meter i { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .sig-pf__meter i.is-on { background: var(--sig-amber); }
+.ecrm-app[data-ui="signature"] .sig-pf__meter i.is-ok { background: var(--sig-green); }
+.ecrm-app[data-ui="signature"] .sig-pf__f > small.is-ok { color: var(--sig-green-ink); }
+.ecrm-app[data-ui="signature"] .sig-pf__f > small.is-bad { color: var(--sig-rose); }
+
+/* (389) Μεγαλύτερα και ίδιου πλάτους σήματα κατάστασης, ώστε να στοιχίζονται
+   (ο ιδιοκτήτης, 15/11, με screenshots): «Χρειάζονται εσένα», Κολλημένες
+   αιτήσεις, Εκκρεμότητες. Το κείμενο αριστερά, το ▾ (όπου υπάρχει) δεξιά. */
+.ecrm-app[data-ui="signature"] .sig-need__b .ecrm-stbtn {
+	width: 188px; padding: 5px 12px; font-size: var(--fs-12-5);
+}
+/* Οι «μέρες» δίπλα σε ίδιο πλάτος, αλλιώς το σήμα μετακινείται ανά γραμμή. */
+.ecrm-app[data-ui="signature"] [data-view="pending"] .sig-row > .sig-age { min-width: 92px; text-align: center; }
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrrow__badge .ecrm-badge,
+.ecrm-app[data-ui="signature"] [data-view="pending"] .sig-row > .ecrm-badge {
+	width: 210px; padding: 5px 12px; gap: 6px; font-size: var(--fs-12-5);
+	overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] .sig-need__b .ecrm-stbtn { width: 140px; padding: 4px 10px; }
+	.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrrow__badge .ecrm-badge,
+	.ecrm-app[data-ui="signature"] [data-view="pending"] .sig-row > .ecrm-badge { width: 180px; }
+}
+
+/* (391) Έγγραφα: ίδιο σήμα κατάστασης (με ▾) και στοίχιση με Εκκρεμότητες/Κολλημένες. */
+.ecrm-app[data-ui="signature"] [data-view="documents"] .sig-row > .ecrm-badge {
+	width: 210px; padding: 5px 12px; gap: 6px; font-size: var(--fs-12-5);
+}
+.ecrm-app[data-ui="signature"] [data-view="documents"] .sig-row > .sig-age { min-width: 118px; text-align: center; }
+@media (max-width: 767px) {
+	.ecrm-app[data-ui="signature"] [data-view="documents"] .sig-row > .ecrm-badge { width: 180px; margin-left: 50px; }
+}

@@ -4,8 +4,9 @@
  * και οι ενότητες, δεξιά η ενότητα. Ό,τι αποθηκεύεται πάει στο
  * POST /me/profile (UserProfile, user meta)· το θέμα και η εμφάνιση
  * περνούν από τους διακόπτες που υπάρχουν ήδη στη σελίδα, ώστε να μην
- * υπάρχουν δύο δρόμοι για το ίδιο πράγμα. Η «Ασφάλεια» (2FA, ενεργές
- * συνδέσεις) έρχεται σε δικό της γύρο.
+ * υπάρχουν δύο δρόμοι για το ίδιο πράγμα. (388) «Ασφάλεια»: αλλαγή κωδικού
+ * και συνδέσεις (docs/UI-PROFILE-SECURITY.html)· η σύνδεση σε δύο βήματα
+ * έρχεται σε δικό της γύρο.
  */
 
 import { api, esc, fetch, H, providerMark, toast, viewEl } from '@energy-crm/util';
@@ -13,6 +14,7 @@ import { qrPosterHtml } from '@energy-crm/qr-poster';
 
 var SECTIONS = [
 	{ key: '', label: 'Τα στοιχεία μου' },
+	{ key: 'security', label: 'Ασφάλεια' },
 	{ key: 'notifications', label: 'Ειδοποιήσεις' },
 	{ key: 'look', label: 'Εμφάνιση' },
 	{ key: 'work', label: 'Η δουλειά μου' },
@@ -86,6 +88,7 @@ function render(view) {
 	});
 
 	var main = view.querySelector('[data-pf-main]');
+	if (state.section === 'security') { securityHTML(main); return; }
 	if (state.section === 'notifications') { notificationsHTML(main); return; }
 	if (state.section === 'look') { lookHTML(main); return; }
 	if (state.section === 'work') { workHTML(main); return; }
@@ -337,6 +340,182 @@ function detailsHTML(main) {
 		});
 		if (!body.first_name.trim() || !body.last_name.trim()) { toast('Το όνομα και το επώνυμο δεν μένουν κενά.', false); return; }
 		save(body, function () { toast('Αποθηκεύτηκε.'); render(viewEl('profile')); });
+	});
+}
+
+/* ---- 2. Ασφάλεια (388) — docs/UI-PROFILE-SECURITY.html ---------------
+ *
+ * Οι κανόνες του κωδικού ελέγχονται και εδώ, για να βλέπει ο χρήστης πριν
+ * πατήσει· ο server (Domain\Security\PasswordPolicy) ελέγχει ξανά, και μόνο
+ * εκείνος ξέρει τη λίστα των πιο συνηθισμένων.
+ */
+var PW_MIN = 10;
+
+function personalParts(p) {
+	var out = [];
+	[String(p.email || '').split('@')[0], p.display_name, p.first_name, p.last_name].forEach(function (v) {
+		v = String(v || '').toLowerCase().trim();
+		if (!v) return;
+		out.push(v);
+		v.split(/[\s._\-]+/).forEach(function (w) { out.push(w); });
+	});
+	return out.filter(function (w) { return w.length >= 3; });
+}
+
+function pwChecks(pw, p) {
+	var low = String(pw || '').toLowerCase();
+	return {
+		length: Array.from(pw || '').length >= PW_MIN,
+		personal: !!pw && !personalParts(p).some(function (w) { return low.indexOf(w) !== -1; }),
+		simple: !!pw && !/^(.)\1+$/.test(low) && !/^(0123456789|1234567890|12345678910|qwertyuiop)$/.test(low)
+	};
+}
+
+/* 0–4 γραμμές: μήκος και ποικιλία χαρακτήρων. Ενδεικτικό, όχι κανόνας. */
+function pwScore(pw) {
+	var n = Array.from(pw || '').length;
+	if (!n) return 0;
+	var kinds = [/[a-zα-ω]/, /[A-ZΑ-Ω]/, /[0-9]/, /[^A-Za-zΑ-Ωα-ω0-9]/].filter(function (r) { return r.test(pw); }).length;
+	var s = n >= 16 ? 3 : n >= 12 ? 2 : n >= PW_MIN ? 1 : 0;
+	return Math.min(4, s + (kinds >= 3 ? 1 : 0));
+}
+
+function sessionRowHTML(s) {
+	var id = esc(s.id);
+	return '<div class="sig-pf__sess"><span class="sig-pf__sessic" aria-hidden="true">' + (s.mobile ? '📱' : '💻') + '</span>' +
+		'<div><b>' + esc(s.device) + '</b>' + (s.current ? '<span class="sig-pf__now">αυτή η συσκευή</span>' : '') +
+		'<small>Σύνδεση ' + esc(s.login) + (s.ip ? ' · IP ' + esc(s.ip) : '') + '</small></div>' +
+		(s.current ? '' : '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-sess-out="' + id + '">Αποσύνδεση</button>') +
+		'</div>';
+}
+
+function sessionsHTML(list) {
+	var others = list.filter(function (s) { return !s.current; }).length;
+	return '<section class="sig-pf__card" data-pf-sessions><h3>Πού είμαι συνδεδεμένος</h3>' +
+		'<p class="sig-pf__lead">Αν δεν αναγνωρίζεις κάποια σύνδεση, αποσύνδεσέ την και άλλαξε κωδικό.</p>' +
+		(list.length ? list.map(sessionRowHTML).join('') : '<p class="sig-pf__lead">Καμία ενεργή σύνδεση.</p>') +
+		(others ? '<div class="sig-pf__foot"><button type="button" class="ecrm-btn ecrm-btn--danger" data-sess-all>Αποσύνδεση από όλες τις άλλες</button></div>' : '') +
+		'</section>';
+}
+
+function securityHTML(main) {
+	main.innerHTML = '<div class="ecrm-loading">Φόρτωση…</div>';
+	fetch(api('/me/security'), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) { main.innerHTML = '<div class="ecrm-empty">Σφάλμα.</div>'; return; }
+			renderSecurity(main, d);
+		})
+		.catch(function () { main.innerHTML = '<div class="ecrm-empty">Σφάλμα φόρτωσης.</div>'; });
+}
+
+function renderSecurity(main, d) {
+	var p = state.data.profile;
+	var changed = d.password_changed_at ? 'Τελευταία αλλαγή: ' + d.password_changed_at + '.' : 'Δεν έχει αλλάξει από εδώ.';
+	main.innerHTML = '<section class="sig-pf__card"><h3>Κωδικός</h3><p class="sig-pf__lead">' + esc(changed) + '</p>' +
+		'<div class="sig-pf__grid">' +
+			'<label class="sig-pf__f"><span>Τωρινός κωδικός</span><input class="ecrm-input" type="password" data-pw="current" autocomplete="current-password"></label><span></span>' +
+			'<label class="sig-pf__f"><span>Νέος κωδικός</span><input class="ecrm-input" type="password" data-pw="new" autocomplete="new-password" maxlength="200">' +
+				'<span class="sig-pf__meter" data-pw-meter><i></i><i></i><i></i><i></i></span><small data-pw-score></small></label>' +
+			'<label class="sig-pf__f"><span>Ξανά ο νέος</span><input class="ecrm-input" type="password" data-pw="again" autocomplete="new-password" maxlength="200">' +
+				'<small data-pw-same></small></label>' +
+		'</div>' +
+		'<div class="sig-pf__rules" data-pw-rules>' +
+			'<span data-rule="length">Τουλάχιστον ' + PW_MIN + ' χαρακτήρες</span>' +
+			'<span data-rule="personal">Όχι ίδιος με το email ή το όνομα</span>' +
+			'<span data-rule="simple">Όχι από τους πιο συνηθισμένους</span>' +
+		'</div>' +
+		'<div class="sig-pf__err" data-pw-err hidden></div>' +
+		'<div class="sig-pf__foot sig-pf__foot--note"><small>Οι άλλες συνδέσεις σου θα αποσυνδεθούν· εδώ μένεις συνδεδεμένος.</small>' +
+			'<button type="button" class="ecrm-btn ecrm-btn--primary" data-pw-save disabled>Αλλαγή κωδικού</button></div>' +
+		'</section>' +
+		'<div data-pf-sess-wrap>' + sessionsHTML(d.sessions || []) + '</div>';
+
+	var cur = main.querySelector('[data-pw="current"]');
+	var nw = main.querySelector('[data-pw="new"]');
+	var again = main.querySelector('[data-pw="again"]');
+	var btn = main.querySelector('[data-pw-save]');
+	var err = main.querySelector('[data-pw-err]');
+	var WORDS = ['', 'Αδύναμος', 'Μέτριος', 'Καλός κωδικός', 'Πολύ καλός κωδικός'];
+
+	function check() {
+		var c = pwChecks(nw.value, p);
+		var score = c.length ? Math.max(1, pwScore(nw.value)) : (nw.value ? 1 : 0);
+		main.querySelectorAll('[data-pw-meter] i').forEach(function (i, k) {
+			i.className = k < score ? (c.length && score >= 3 ? 'is-ok' : 'is-on') : '';
+		});
+		main.querySelector('[data-pw-score]').textContent = nw.value ? (c.length ? WORDS[score] : 'Πολύ σύντομος') : '';
+		Object.keys(c).forEach(function (k) {
+			var el = main.querySelector('[data-rule="' + k + '"]');
+			el.classList.toggle('is-ok', !!nw.value && c[k]);
+			el.classList.toggle('is-bad', !!nw.value && !c[k]);
+		});
+		var same = main.querySelector('[data-pw-same]');
+		same.textContent = again.value ? (again.value === nw.value ? '✓ Ίδιοι' : 'Δεν είναι ίδιοι') : '';
+		same.className = again.value ? (again.value === nw.value ? 'is-ok' : 'is-bad') : '';
+		btn.disabled = !(cur.value && c.length && c.personal && c.simple && again.value === nw.value);
+		err.hidden = true;
+	}
+	[cur, nw, again].forEach(function (el) { el.addEventListener('input', check); });
+
+	btn.addEventListener('click', function () {
+		btn.disabled = true;
+		var label = btn.textContent;
+		btn.textContent = 'Αλλαγή…';
+		fetch(api('/me/password'), {
+			method: 'POST',
+			headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+			body: JSON.stringify({ current: cur.value, new: nw.value })
+		})
+			.then(function (r) { return r.json(); })
+			.then(function (res) {
+				btn.textContent = label;
+				if (!res || !res.ok) {
+					err.hidden = false;
+					err.textContent = (res && (res.error || res.message)) || 'Ο κωδικός δεν άλλαξε.';
+					btn.disabled = false;
+					return;
+				}
+				var closed = Number(res.closed) || 0;
+				toast('Ο κωδικός άλλαξε.' + (closed ? ' Αποσυνδέθηκ' + (closed === 1 ? 'ε 1 άλλη σύνδεση.' : 'αν ' + closed + ' άλλες συνδέσεις.') : ''));
+				renderSecurity(main, res);
+			})
+			.catch(function () { btn.textContent = label; btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+	});
+
+	wireSessions(main);
+}
+
+function wireSessions(main) {
+	var wrap = main.querySelector('[data-pf-sess-wrap]');
+	function redraw(list) { wrap.innerHTML = sessionsHTML(list); wireSessions(main); }
+
+	wrap.querySelectorAll('[data-sess-out]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			b.disabled = true;
+			fetch(api('/me/sessions/' + encodeURIComponent(b.getAttribute('data-sess-out'))), { method: 'DELETE', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (res) {
+					if (!res || !res.ok) { b.disabled = false; toast((res && res.error) || 'Δεν έγινε.', false); return; }
+					toast('Η σύνδεση αποσυνδέθηκε.');
+					redraw(res.sessions || []);
+				})
+				.catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
+	});
+
+	var all = wrap.querySelector('[data-sess-all]');
+	if (all) all.addEventListener('click', function () {
+		all.disabled = true;
+		fetch(api('/me/sessions'), { method: 'DELETE', headers: H() })
+			.then(function (r) { return r.json(); })
+			.then(function (res) {
+				if (!res || !res.ok) { all.disabled = false; toast((res && res.error) || 'Δεν έγινε.', false); return; }
+				var n = Number(res.closed) || 0;
+				toast(n === 1 ? 'Αποσυνδέθηκε 1 σύνδεση.' : 'Αποσυνδέθηκαν ' + n + ' συνδέσεις.');
+				redraw(res.sessions || []);
+			})
+			.catch(function () { all.disabled = false; toast('Σφάλμα δικτύου.', false); });
 	});
 }
 

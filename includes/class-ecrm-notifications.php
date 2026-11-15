@@ -402,7 +402,7 @@ class ECRM_Notifications {
 		$days = self::threshold_days();
 
 		$rows = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.id, c.code, c.status, c.updated_at,
+			"SELECT c.id, c.code, c.status, c.updated_at, c.energy_type, c.extra_json,
 				DATEDIFF(NOW(), c.updated_at) AS age_days,
 				cu.first_name, cu.last_name, cu.company_name
 			 FROM {$ct} c LEFT JOIN {$cu} cu ON cu.id = c.customer_id
@@ -435,6 +435,9 @@ class ECRM_Notifications {
 				'age_days' => $age,
 				'stale'    => $is_stale,
 				'updated_at' => $r['updated_at'],
+				// (390) Οι επόμενες καταστάσεις, για το μενού των Εκκρεμοτήτων·
+				// το δικαίωμα αλλαγής το κρίνει ο NotificationsController.
+				'allowed_next' => \EnergyCRM\Domain\Contract\ContractStatus::nextSlugsFor( $r ),
 			];
 		}
 		// Stale first.
@@ -567,7 +570,8 @@ class ECRM_Notifications {
 		foreach ( $users as $u ) {
 			if ( ! is_email( $u->user_email ) ) { continue; }
 			// (379) Όποιος έκλεισε την ημερήσια σύνοψη από «Το προφίλ μου».
-			if ( ! \EnergyCRM\Infrastructure\UserProfile::prefs( (int) $u->ID )['notify_digest_email'] ) { continue; }
+			// (392) Και το «Μην με ενοχλείς»: την Κυριακή δεν πάει σύνοψη.
+			if ( ! \EnergyCRM\Infrastructure\UserProfile::wantsEmail( (int) $u->ID, 'notify_digest_email' ) ) { continue; }
 			$data  = self::followups_for( [ (int) $u->ID ] );
 			$tasks = class_exists( 'ECRM_Tasks' ) ? ECRM_Tasks::due_list( (int) $u->ID ) : [];
 			$missing_docs = self::missing_docs_for( [ (int) $u->ID ] );

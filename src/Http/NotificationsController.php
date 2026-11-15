@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_Notifications;
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Analytics\Month;
@@ -91,6 +92,13 @@ final class NotificationsController implements Controller
             : [$scope->actorId()];
 
         $data = ECRM_Notifications::followups_for($ids, $scope->actorId());
+
+        // (390) Χωρίς δικαίωμα αλλαγής κατάστασης, το σήμα μένει απλό.
+        if (! current_user_can(Capability::CHANGE_STATUS)) {
+            foreach ($data['rows'] as $i => $row) {
+                $data['rows'][$i]['allowed_next'] = [];
+            }
+        }
         $data['ok']        = true;
         $data['threshold'] = ECRM_Notifications::threshold_days();
 

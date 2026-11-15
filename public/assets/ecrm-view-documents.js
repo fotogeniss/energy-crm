@@ -14,6 +14,7 @@ import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
 import { initials, tint } from '@energy-crm/format';
 import { openDetail } from '@energy-crm/navigate';
 import { scope, setScope } from '@energy-crm/scope';
+import { statusBadgeHTML, wireStatusMenus } from '@energy-crm/status-menu';
 
 var currentFilter = 'all';
 
@@ -61,7 +62,7 @@ function renderDocuments(view, d) {
 		return '<tr>' +
 			'<td><span class="ecrm-cell-cust"><span class="ecrm-cell-mark ecrm-cell-mark--cust" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span><span>' + esc(r.customer) + '</span></span></td>' +
 			'<td class="ecrm-col-sec"><span class="ecrm-code">' + esc(r.code || '') + '</span></td>' +
-			'<td><span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || statuses[r.status] || r.status) + '</span></td>' +
+			'<td>' + statusBadgeHTML(r, r.status_label || statuses[r.status] || r.status) + '</td>' +
 			'<td><div class="ecrm-docchips">' + (docs || '—') + '</div></td>' +
 			'<td>' + req + '</td>' +
 			'<td><button type="button" class="ecrm-rowbtn" data-id="' + r.id + '">Ανοιγμα</button></td>' +
@@ -96,6 +97,16 @@ function renderDocuments(view, d) {
 
 	view.querySelectorAll('[data-id]').forEach(function (b) { b.addEventListener('click', function () { openDetail(this.getAttribute('data-id')); }); });
 	view.querySelectorAll('[data-dscope]').forEach(function (b) { b.addEventListener('click', function () { setScope(this.getAttribute('data-dscope')); loadDocuments(); }); });
+
+	// (391) Αλλαγή κατάστασης από το σήμα, με το μενού της λίστας (384).
+	var byId = {};
+	(d.rows || []).forEach(function (r) { byId[String(r.id)] = r; });
+	wireStatusMenus(view, {
+		rows: byId,
+		statuses: (window.ECRM && ECRM.statuses) || {},
+		open: function (id) { openDetail(id); },
+		changed: function () { loadDocuments(); },
+	});
 	view.querySelectorAll('[data-doc-filter]').forEach(function (b) {
 		b.addEventListener('click', function () { currentFilter = this.getAttribute('data-doc-filter'); if (lastData) renderDocuments(view, lastData); });
 	});
@@ -160,7 +171,7 @@ function sigDocumentsHTML(d, rows, statuses) {
 			return '<li class="sig-row sig-row--wrap ecrm-rowlink" data-id="' + esc(String(r.id)) + '">' +
 				'<span class="sig-row__av" style="--h:' + tint(r.customer) + '">' + esc(initials(r.customer)) + '</span>' +
 				'<span class="sig-row__who"><b>' + esc(r.customer || '—') + '</b><small>' + esc(r.code ? '#' + r.code : '') + '</small></span>' +
-				'<span class="ecrm-badge ecrm-badge--' + esc(r.status) + '">' + esc(r.status_label || statuses[r.status] || r.status) + '</span>' +
+				statusBadgeHTML(r, r.status_label || statuses[r.status] || r.status) +
 				need +
 				'<div class="sig-row__below">' + below + '</div>' +
 			'</li>';

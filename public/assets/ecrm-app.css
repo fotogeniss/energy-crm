@@ -2639,3 +2639,30 @@ button.ecrm-stbtn { border: 0; font-family: inherit; line-height: inherit; curso
 	.ecrm-rowlink.is-flash { animation: none; }
 	.ecrm-stbtn.is-busy::after { animation: none; }
 }
+
+/* ═══ (388) «Το προφίλ μου → Ασφάλεια» · docs/UI-PROFILE-SECURITY.html ═══ */
+.sig-pf__card + .sig-pf__card, [data-pf-sess-wrap] { margin-top: 16px; }
+.sig-pf__meter { display: flex; gap: 4px; margin-top: 2px; }
+.sig-pf__meter i { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-sunk); }
+.sig-pf__meter i.is-on { background: var(--amber); }
+.sig-pf__meter i.is-ok { background: var(--ok); }
+.sig-pf__f > small.is-ok, .sig-pf__rules .is-ok { color: var(--accent-ink); }
+.sig-pf__f > small.is-bad, .sig-pf__rules .is-bad { color: var(--err); }
+.sig-pf__rules { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--fs-12); color: var(--muted); }
+.sig-pf__rules span::before { content: "· "; }
+.sig-pf__rules span.is-ok::before { content: "✓ "; }
+.sig-pf__rules span.is-bad::before { content: "✕ "; }
+.sig-pf__err { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--st-cancel-bg); color: var(--err); font-size: var(--fs-13); }
+.sig-pf__foot--note { align-items: center; gap: 12px; }
+.sig-pf__foot--note small { font-size: var(--fs-12); color: var(--muted); }
+.sig-pf__sess { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.sig-pf__sess:first-of-type { border-top: 0; }
+.sig-pf__sess > div { flex: 1; min-width: 0; }
+.sig-pf__sess b { font-size: var(--fs-14); color: var(--ink); }
+.sig-pf__sess small { display: block; font-size: var(--fs-12); color: var(--muted); }
+.sig-pf__sessic { flex: 0 0 36px; width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: var(--surface-sunk); }
+.sig-pf__now { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--accent-wash); color: var(--accent-ink); font-size: var(--fs-11); font-weight: 700; }
+@media (max-width: 767px) {
+	.sig-pf__foot--note { flex-direction: column; align-items: stretch; }
+}
+.sig-pf__foot--note .ecrm-btn { flex: 0 0 auto; white-space: nowrap; }

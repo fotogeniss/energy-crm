@@ -328,7 +328,8 @@ final class DashboardRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT c.id, c.code, c.status, c.customer_id, c.updated_at, p.name provider,
+                'SELECT c.id, c.code, c.status, c.customer_id, c.updated_at, c.energy_type, c.extra_json,
+                        p.name provider,
                         DATEDIFF(UTC_TIMESTAMP(), c.updated_at) days
                  FROM %i c LEFT JOIN %i p ON p.id = c.provider_id
                  WHERE c.partner_user_id = %d AND c.status IN (' . $in . ')
