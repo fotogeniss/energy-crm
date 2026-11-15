@@ -103,7 +103,7 @@ final class MonitoringPage
         $data  = $this->report->all($this->requestedRange());
         $theme = ThemePreference::forUser(get_current_user_id());
 
-        echo '<div class="wrap ecrm ecrm-adminwrap" data-theme="' . esc_attr($theme) . '">';
+        echo '<div class="wrap ecrm ecrm-adminwrap" lang="el" data-theme="' . esc_attr($theme) . '">';
         echo '<h1>Παρακολούθηση</h1>';
 
         $this->rangeLinks((int) $data['days']);

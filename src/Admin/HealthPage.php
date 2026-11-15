@@ -168,7 +168,7 @@ final class HealthPage
         $warn   = array_filter($rows, static fn (array $r): bool => $r['ok'] === null);
         $theme  = ThemePreference::forUser(get_current_user_id());
 
-        echo '<div class="wrap ecrm ecrm-adminwrap" data-theme="' . esc_attr($theme) . '">';
+        echo '<div class="wrap ecrm ecrm-adminwrap" lang="el" data-theme="' . esc_attr($theme) . '">';
         echo '<h1>Υγεία</h1>';
 
         if ($bad === []) {
