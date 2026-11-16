@@ -29,6 +29,11 @@ final class DeiCatalogueSeedTest extends IntegrationTestCase
         (new SeedDeiCatalogue2026())->apply(new SchemaInspector());
 
         foreach (DeiCatalogue::all() as $code => $plan) {
+            // (405) Το αέριο το γράφει η 0063.
+            if (DeiCatalogue::isGas($code)) {
+                continue;
+            }
+
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
                     'SELECT category, price_type, active FROM %i WHERE provider_id = %d AND code = %s',

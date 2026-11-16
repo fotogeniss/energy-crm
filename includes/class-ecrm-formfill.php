@@ -128,6 +128,11 @@ class ECRM_FormFill {
 		if ( ( $p === 'δεη' || $p === 'dei' || $has( 'δεη ' ) || $has( 'ppc' ) ) && $e === 'power' ) {
 			return \EnergyCRM\Domain\Forms\DeiCatalogue::application( $program, 0.0 );
 		}
+		// (405) ΔΕΗ φυσικό αέριο: η μία αίτηση αερίου, και οι Ειδικοί Όροι του
+		// προγράμματος από το template_keys().
+		if ( ( $p === 'δεη' || $p === 'dei' || $has( 'δεη ' ) || $has( 'ppc' ) ) && $e === 'gas' ) {
+			return \EnergyCRM\Domain\Forms\DeiCatalogue::APP_GAS;
+		}
 		// Η Orizon είναι κινητή τηλεφωνία: ένα συμβόλαιο, πολλά έντυπα. Εδώ
 		// επιστρέφεται μόνο η σύμβαση — ποια φύλλα τη συνοδεύουν το αποφασίζει
 		// το MobilePaperwork, μέσω του template_keys().
@@ -473,6 +478,9 @@ class ECRM_FormFill {
 			// Meter / billing extras.
 			'ipistamenos_promitheftis'  => $xg( 'previous_provider' ),
 			'poso_eggiisis'             => $xg( 'guarantee' ),
+			// (405) «ΠΟΣΟ ΕΓΓΥΗΣΗΣ (ολογράφως)» της αίτησης αερίου ΔΕΗ: από τους
+			// Ειδικούς Όρους του προγράμματος.
+			'eggiisi_olografos'         => \EnergyCRM\Domain\Forms\DeiCatalogue::gasGuarantee( (string) ( $c['program_code'] ?? '' ) ),
 			'teleftaia_endeixi_metriti' => $xg( 'day_indication' ),
 			'isxis_paroxis'             => $xg( 'agreed_power' ),
 			// (319) «ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Μονοφασική / Τριφασική».
@@ -732,6 +740,13 @@ class ECRM_FormFill {
 		// προγράμματος, Γενικοί Όροι, και στα δυναμικά η Προσυμβατική.
 		if ( \EnergyCRM\Domain\Forms\FormTemplates::provider( $key ) === \EnergyCRM\Domain\Forms\DeiCatalogue::SLUG ) {
 			$x = self::extras( $c );
+
+			// (405) Αέριο ΔΕΗ με πρόγραμμα εκτός καταλόγου: μόνο η αίτηση, ποτέ
+			// οι Γενικοί Όροι ρεύματος.
+			if ( $key === \EnergyCRM\Domain\Forms\DeiCatalogue::APP_GAS
+				&& ! \EnergyCRM\Domain\Forms\DeiCatalogue::isGas( (string) ( $c['program_code'] ?? '' ) ) ) {
+				return [ $key ];
+			}
 
 			return \EnergyCRM\Domain\Forms\DeiCatalogue::paperwork(
 				(string) ( $c['program_code'] ?? '' ),

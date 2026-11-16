@@ -63,6 +63,42 @@ final class DeiCatalogue
     public const PRECONTRACT_BUSINESS = 'dei_prosymv_epaggelmatikou';
 
     /**
+     * (405) Η αίτηση φυσικού αερίου: μία σελίδα, ίδια για το myHome και το
+     * myBuilding GasControl (έντυπα που έστειλε ο ιδιοκτήτης 16/11). Οι
+     * Ειδικοί Όροι με τον τιμοκατάλογο είναι η δεύτερη σελίδα του καθενός.
+     */
+    public const APP_GAS = 'dei_fa_aitisi';
+
+    /** (405) Ημερομηνία των εντύπων που έστειλε ο ιδιοκτήτης (Γ21, αέριο). */
+    public const AS_OF_NOVEMBER = '2026-11-16';
+
+    /**
+     * (405) Ό,τι δεν πουλάμε πια. Ο ιδιοκτήτης (16/11) έστειλε τα έντυπα των
+     * προγραμμάτων που δουλεύει («βγάλε τα άλλα»): myHome Enter, EnterTwo,
+     * Maxima, 4All, myBusiness Enter, Γ21, myHome και myBuilding GasControl.
+     * Τα υπόλοιπα μένουν στον κατάλογο για τις παλιές αιτήσεις (τυπώνουν τα
+     * έντυπά τους), αλλά δεν προσφέρονται σε νέα· η 0063 τα απενεργοποιεί.
+     */
+    private const RETIRED = [
+        'dei_myhome_online',
+        'dei_myhome_plan',
+        'dei_myhome_4all_onerate',
+        'dei_myhome_4students',
+        'dei_myhome_dynamic',
+        'dei_g1',
+        'dei_mybusiness_4all',
+        'dei_mybusiness_dynamic',
+    ];
+
+    /** (405) Εγγύηση φυσικού αερίου ολογράφως, όπως στους Ειδικούς Όρους. */
+    private const GAS_GUARANTEE = [
+        // «Ο πελάτης δεν υποχρεούται στην καταβολή εγγύησης» (Προωθητική
+        // Ενέργεια, Ειδικοί Όροι myHome GasControl 11.26).
+        'dei_myhome_gascontrol'     => 'Μηδέν ευρώ (0,00 €) - προωθητική ενέργεια',
+        'dei_mybuilding_gascontrol' => 'Τριακόσια ευρώ (300,00 €)',
+    ];
+
+    /**
      * Κωδικός => πρόγραμμα.
      *
      * `tariff`: όπως γράφεται στο «Τιμολόγιο:» της αίτησης, με την έκδοση
@@ -137,6 +173,24 @@ final class DeiCatalogue
             'priceType' => 'dynamic', 'sort' => 22, 'dynamic' => true,
             'note' => 'Μόνο με τηλεμετρούμενο μετρητή.',
         ],
+        // (405) Από τα έντυπα του ιδιοκτήτη (16/11). Γ21: «Ειδικό Τιμολόγιο»
+        // (πράσινο), επαγγελματίες ΧΤ έως 25 kVA, αορίστου διάρκειας.
+        'dei_g21' => [
+            'label' => 'ΔΕΗ Γ21 Επαγγελματικό', 'tariff' => 'Γ21 Επαγγελματικό', 'category' => 'business',
+            'priceType' => 'special', 'sort' => 23, 'dynamic' => false,
+            'note' => 'Επαγγελματίες χαμηλής τάσης, έως 25 kVA.',
+        ],
+        // (405) Φυσικό αέριο, «Σταθερό Τιμολόγιο» 18 μηνών.
+        'dei_myhome_gascontrol' => [
+            'label' => 'ΔΕΗ myHome GasControl', 'tariff' => 'ΔΕΗ myHome GasControl 11.26', 'category' => 'home',
+            'priceType' => 'fixed', 'sort' => 30, 'dynamic' => false, 'energy' => 'gas',
+            'note' => 'Αυτόνομη θέρμανση, ζεστό νερό, κουζίνα. 18 μήνες, χωρίς εγγύηση (προωθητική).',
+        ],
+        'dei_mybuilding_gascontrol' => [
+            'label' => 'ΔΕΗ myBuilding GasControl', 'tariff' => 'ΔΕΗ myBuilding GasControl 11.26',
+            'category' => 'communal', 'priceType' => 'fixed', 'sort' => 31, 'dynamic' => false, 'energy' => 'gas',
+            'note' => 'Κεντρική θέρμανση (πολυκατοικία). 18 μήνες, εγγύηση 300 €.',
+        ],
     ];
 
     private function __construct()
@@ -146,12 +200,47 @@ final class DeiCatalogue
     /**
      * @return array<string, array{
      *     label: string, tariff: string, category: string, priceType: string,
-     *     sort: int, dynamic: bool, note: string
+     *     sort: int, dynamic: bool, note: string, energy?: string
      * }>
      */
     public static function all(): array
     {
         return self::PLANS;
+    }
+
+    /**
+     * (405) Όσα προσφέρονται σε νέα αίτηση: όλα εκτός από τα αποσυρμένα.
+     *
+     * @return array<string, array{
+     *     label: string, tariff: string, category: string, priceType: string,
+     *     sort: int, dynamic: bool, note: string, energy?: string
+     * }>
+     */
+    public static function offered(): array
+    {
+        return array_diff_key(self::PLANS, array_flip(self::RETIRED));
+    }
+
+    public static function isRetired(string $code): bool
+    {
+        return in_array($code, self::RETIRED, true);
+    }
+
+    /** (405) power ή gas. */
+    public static function energy(string $code): string
+    {
+        return self::PLANS[$code]['energy'] ?? 'power';
+    }
+
+    public static function isGas(string $code): bool
+    {
+        return self::energy($code) === 'gas';
+    }
+
+    /** (405) Το «ΠΟΣΟ ΕΓΓΥΗΣΗΣ (ολογράφως)» της αίτησης αερίου, ή ''. */
+    public static function gasGuarantee(string $code): string
+    {
+        return self::GAS_GUARANTEE[$code] ?? '';
     }
 
     public static function exists(string $code): bool
@@ -209,6 +298,10 @@ final class DeiCatalogue
      */
     public static function application(string $code, float $kva): string
     {
+        if (self::isGas($code)) {
+            return self::APP_GAS;
+        }
+
         $large = $kva > self::SMALL_KVA;
 
         if (self::isDynamic($code)) {
@@ -225,6 +318,12 @@ final class DeiCatalogue
      */
     public static function paperwork(string $code, float $kva): array
     {
+        // (405) Αέριο: η αίτηση και οι Ειδικοί Όροι. Γενικοί Όροι φυσικού
+        // αερίου δεν ήρθαν με τα έντυπα, και αυτοί του ρεύματος δεν ισχύουν.
+        if (self::isGas($code)) {
+            return [self::APP_GAS, self::termsSheet($code)];
+        }
+
         $large = $kva > self::SMALL_KVA;
         $keys  = [self::application($code, $kva)];
 
@@ -255,7 +354,7 @@ final class DeiCatalogue
     public static function templates(): array
     {
         $keys = [
-            self::APP_SMALL, self::APP_LARGE, self::APP_DYN_SMALL, self::APP_DYN_LARGE,
+            self::APP_SMALL, self::APP_LARGE, self::APP_DYN_SMALL, self::APP_DYN_LARGE, self::APP_GAS,
             self::TERMS_SMALL, self::TERMS_LARGE, self::TERMS_DYN_LARGE,
             self::PRECONTRACT_HOME, self::PRECONTRACT_BUSINESS,
         ];

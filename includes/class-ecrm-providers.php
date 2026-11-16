@@ -144,10 +144,12 @@ class ECRM_Providers {
 					// Ειδικούς Όρους. Από τις τιμές των εντύπων 11.26 μπαίνει εδώ
 					// η ενιαία· τις κλιμακωτές τις γράφει η 0062 στις υπάρχουσες
 					// εγκαταστάσεις, και σε νέα ο διαχειριστής.
+					// (405) Μόνο όσα προσφέρονται (όχι τα αποσυρμένα), και με το
+					// είδος τους: τα GasControl είναι φυσικό αέριο.
 					$dei_prices = \EnergyCRM\Domain\Pricing\DeiPrices2026::all();
-					foreach ( \EnergyCRM\Domain\Forms\DeiCatalogue::all() as $code => $plan ) {
+					foreach ( \EnergyCRM\Domain\Forms\DeiCatalogue::offered() as $code => $plan ) {
 						$starters[] = [
-							$plan['label'], $code, 'power', $plan['priceType'],
+							$plan['label'], $code, \EnergyCRM\Domain\Forms\DeiCatalogue::energy( $code ), $plan['priceType'],
 							$dei_prices[ $code ]['fixed_charge'] ?? null, $dei_prices[ $code ]['price_kwh'] ?? null,
 							$plan['category'],
 						];

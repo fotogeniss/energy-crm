@@ -33,15 +33,16 @@ final class DeiCatalogueTest extends TestCase
         return $map;
     }
 
-    public function testThirteenElectricityProgramsWithCodesThatFitTheColumn(): void
+    public function testEveryProgramHasACodeThatFitsTheColumn(): void
     {
-        self::assertCount(13, DeiCatalogue::all());
+        self::assertCount(16, DeiCatalogue::all());
 
         foreach (DeiCatalogue::all() as $code => $plan) {
             self::assertStringStartsWith('dei_', $code);
             self::assertLessThanOrEqual(32, strlen($code), $code);
             self::assertContains($plan['priceType'], ['fixed', 'variable', 'dynamic', 'special'], $code);
-            self::assertContains($plan['category'], ['home', 'business'], $code);
+            self::assertContains($plan['category'], ['home', 'business', 'communal'], $code);
+            self::assertContains(DeiCatalogue::energy($code), ['power', 'gas'], $code);
             self::assertSame($plan['priceType'] === 'dynamic', $plan['dynamic'], $code);
         }
     }
@@ -211,5 +212,70 @@ final class DeiCatalogueTest extends TestCase
         $variable = $program('dei_myhome_4all') + ['price_updated' => '2026-11-13'];
         self::assertFalse(ProgramPricing::isStale($variable, '2026-12-01'));
         self::assertTrue(ProgramPricing::isStale($variable, '2027-01-15'));
+    }
+
+    /**
+     * (405) Ο ιδιοκτήτης (16/11) έστειλε τα έντυπα όσων δουλεύει: αυτά
+     * προσφέρονται, τα υπόλοιπα μένουν μόνο για τις παλιές αιτήσεις.
+     */
+    public function testOnlyTheProgramsTheOwnerSentAreOffered(): void
+    {
+        self::assertSame(
+            [
+                'dei_myhome_enter', 'dei_myhome_entertwo', 'dei_myhome_maxima', 'dei_myhome_4all',
+                'dei_mybusiness_enter', 'dei_g21', 'dei_myhome_gascontrol', 'dei_mybuilding_gascontrol',
+            ],
+            array_keys(DeiCatalogue::offered())
+        );
+        self::assertTrue(DeiCatalogue::isRetired('dei_myhome_online'));
+        self::assertTrue(DeiCatalogue::isRetired('dei_g1'));
+        self::assertFalse(DeiCatalogue::isRetired('dei_g21'));
+        // Οι αποσυρμένοι κρατούν τα έντυπά τους για τις παλιές αιτήσεις.
+        self::assertSame('dei_eo_myhome_online', DeiCatalogue::termsSheet('dei_myhome_online'));
+    }
+
+    /** (405) Τιμές όπως στους τιμοκαταλόγους των εντύπων 16/11. */
+    public function testTheNewProgramsArePricedAsTheirForms(): void
+    {
+        $prices = DeiPrices2026::all();
+
+        self::assertSame(0.172, $prices['dei_g21']['price_kwh']);
+        self::assertSame(5.0, $prices['dei_g21']['fixed_charge']);
+        self::assertSame(0.0649, $prices['dei_myhome_gascontrol']['price_kwh']);
+        self::assertSame(14.9, $prices['dei_myhome_gascontrol']['fixed_charge']);
+        self::assertSame(0.0799, $prices['dei_mybuilding_gascontrol']['price_kwh']);
+        self::assertSame(14.9, $prices['dei_mybuilding_gascontrol']['fixed_charge']);
+        self::assertSame('special', DeiCatalogue::all()['dei_g21']['priceType']);
+        self::assertSame('communal', DeiCatalogue::all()['dei_mybuilding_gascontrol']['category']);
+    }
+
+    /** (405) Αέριο: η αίτηση αερίου και οι Ειδικοί Όροι, χωρίς Γενικούς Όρους ρεύματος. */
+    public function testGasPrintsItsOwnApplicationAndTerms(): void
+    {
+        self::assertTrue(DeiCatalogue::isGas('dei_myhome_gascontrol'));
+        self::assertSame(
+            ['dei_fa_aitisi', 'dei_eo_myhome_gascontrol'],
+            DeiCatalogue::paperwork('dei_myhome_gascontrol', 0.0)
+        );
+        self::assertSame(
+            ['dei_fa_aitisi', 'dei_eo_mybuilding_gascontrol'],
+            DeiCatalogue::paperwork('dei_mybuilding_gascontrol', 40.0)
+        );
+        self::assertSame(
+            ['dei_aitisi_mikrou', 'dei_eo_g21', 'dei_gos_mikrou'],
+            DeiCatalogue::paperwork('dei_g21', 15.0)
+        );
+        self::assertSame('Τριακόσια ευρώ (300,00 €)', DeiCatalogue::gasGuarantee('dei_mybuilding_gascontrol'));
+        self::assertSame('', DeiCatalogue::gasGuarantee('dei_myhome_enter'));
+
+        $map = self::map(DeiCatalogue::APP_GAS);
+        foreach (
+            ['onoma_timologiou', 'onomateponymo_pelati', 'afm_pelati', 'doy_pelati', 'adt_pelati',
+            'eponymia_etaireias', 'onomateponymo_ekprosopou', 'hkasp', 'odos_paroxis', 'tk_paroxis',
+            'eggiisi_olografos', 'kinito_pelati', 'email_pelati', 'idiotita_idioktitis'] as $field
+        ) {
+            self::assertArrayHasKey($field, $map['fields'], $field);
+        }
+        self::assertCount(1, $map['sigs']);
     }
 }

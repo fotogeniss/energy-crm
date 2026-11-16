@@ -59,6 +59,11 @@ final class SeedDeiCatalogue2026 implements Migration
         }
 
         foreach (DeiCatalogue::all() as $code => $plan) {
+            // (405) Η 0062 γράφει μόνο ρεύμα· το αέριο το γράφει η 0063.
+            if (DeiCatalogue::isGas($code)) {
+                continue;
+            }
+
             $exists = (int) $wpdb->get_var(
                 $wpdb->prepare(
                     'SELECT COUNT(*) FROM %i WHERE provider_id = %d AND code = %s',
@@ -91,6 +96,10 @@ final class SeedDeiCatalogue2026 implements Migration
         }
 
         foreach (DeiPrices2026::all() as $code => $price) {
+            if (DeiCatalogue::isGas($code)) {
+                continue;
+            }
+
             // update() γράφει NULL για null τιμές και `IS NULL` για null στο WHERE.
             $wpdb->update(
                 $programs,
