@@ -664,6 +664,11 @@
 	.ecrm-app[data-ui="signature"] .ecrm-wstep__b { font-size: var(--fs-11); padding: 7px 4px; }
 	.ecrm-app[data-ui="signature"] .ecrm-wstep__b strong { font-size: var(--fs-10); }
 	.ecrm-app[data-ui="signature"] .ecrm-chips { border-radius: 16px; }
+	/* (401) Τέσσερις ή περισσότερες επιλογές (π.χ. «Χρώμα») σε δύο ίσες
+	 * στήλες: οι κουκκίδες και τα κείμενα στοιχίζονται κάθετα, αντί να
+	 * σπάνε όπου τύχει (ιδιοκτήτης 16/11). Τρεις ή λιγότερες μένουν ως έχουν. */
+	.ecrm-app[data-ui="signature"] .ecrm-chips:has(> .ecrm-chip:nth-child(4)) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.ecrm-app[data-ui="signature"] .ecrm-chips:has(> .ecrm-chip:nth-child(4)) > .ecrm-chip { justify-content: flex-start; min-width: 0; }
 }
 
 /* ═══ (369) Σκελετός: πλαϊνή στήλη με ομάδες ═══
