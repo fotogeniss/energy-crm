@@ -394,12 +394,14 @@ final class RestRouteGuardTest extends IntegrationTestCase
      * path matched no route and WordPress answered 404 before the guard ever
      * ran (310). The old pick still comes first, so no other route changes;
      * a pattern none of these satisfy keeps 'sample' and shows up as a 404.
+     * (406) The last candidate is twelve hex digits, for the id of a
+     * remembered 2FA device; it comes last so no older route changes.
      */
     private static function sampleSegment(string $pattern): string
     {
         $candidates = str_contains($pattern, '\d')
-            ? ['1', 'sample1234']
-            : ['sample', 'sample1234', '1'];
+            ? ['1', 'sample1234', 'abc123abc123']
+            : ['sample', 'sample1234', '1', 'abc123abc123'];
 
         foreach ($candidates as $candidate) {
             if (preg_match('#^(?:' . $pattern . ')$#', $candidate) === 1) {

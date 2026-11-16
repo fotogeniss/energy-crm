@@ -121,7 +121,7 @@ final class TwoFactorTest extends IntegrationTestCase
         self::assertSame(403, $this->call('GET', '/team/2fa')->get_status());
         self::assertSame(403, $this->call('DELETE', '/team/' . $this->user->ID . '/2fa')->get_status());
 
-        $admin = self::factory()->user->create(['role' => 'administrator']);
+        $admin = $this->makeCrmUser('administrator');
         wp_set_current_user($admin);
 
         self::assertContains($this->user->ID, $this->call('GET', '/team/2fa')->get_data()['enabled']);

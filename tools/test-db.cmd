@@ -114,4 +114,8 @@ if not "!ECRM_EXIT!"=="0" (
 
 chcp %ECRM_OLD_CP% >nul 2>&1
 set ECRM_RC=!ECRM_EXIT!
-endlocal & exit /b %ECRM_RC%
+rem  (406) ΚΑΙ ΑΥΤΟ ΔΕΝ ΑΡΚΟΥΣΕ: το 406 τυπωσε «ΑΠΕΤΥΧΕ. Κωδικος: 1» και το
+rem  `&& git commit` προχωρησε ξανα. Ενα .cmd που τρεχει χωρις `call` δινει στο
+rem  `&&` τον κωδικο της ΤΕΛΕΥΤΑΙΑΣ ΕΝΤΟΛΗΣ του, οχι του `exit /b`. Γι αυτο η
+rem  τελευταια εντολη ειναι ενα `cmd /c exit` με τον σωστο κωδικο.
+endlocal & cmd /c exit %ECRM_RC%
