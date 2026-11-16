@@ -1797,8 +1797,10 @@ button.ecrm-avatar:focus-visible { outline: 2px solid var(--amber); outline-offs
 		padding: 4px 2px calc(4px + env(safe-area-inset-bottom));
 		box-shadow: 0 -2px 12px rgba(16,24,40,.06);
 	}
+	/* (399) min-width: 0 — με μεγάλα γράμματα συστήματος (ρύθμιση του κινητού) τα
+	   πέντε κουμπιά δεν χωρούσαν και το τελευταίο έβγαινε έξω από την οθόνη. */
 	.ecrm-botnav__item {
-		flex: 1; flex-direction: column; align-items: center; justify-content: center;
+		flex: 1 1 0; min-width: 0; flex-direction: column; align-items: center; justify-content: center;
 		gap: 2px; padding: 7px 2px; min-height: 52px; border-radius: 10px; width: auto;
 		font-size: var(--fs-10); font-weight: 650; color: var(--muted);
 	}
@@ -1806,7 +1808,7 @@ button.ecrm-avatar:focus-visible { outline: 2px solid var(--amber); outline-offs
 	.ecrm-botnav__item.is-active { background: none; color: var(--accent-ink); font-weight: 750; }
 	.ecrm-botnav__item .ecrm-nav__icon { width: 22px; height: 22px; flex: 0 0 22px; }
 	.ecrm-botnav__item .ecrm-nav__icon svg { width: 21px; height: 21px; }
-	.ecrm-botnav__txt { white-space: nowrap; }
+	.ecrm-botnav__txt { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 
@@ -2450,7 +2452,21 @@ button.ecrm-avatar:focus-visible { outline: 2px solid var(--amber); outline-offs
 .ecrm-step--row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ecrm-storemonthbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
 .ecrm-storemonths__older { width: auto; max-width: 220px; }
+/* (399) Οι μήνες («Τώρα · Οκτώβριος · …») δεν πλαταίνουν πια τη σελίδα στο
+   κινητό: κυλάνε μέσα στη δική τους γραμμή, χωρίς μπάρα. */
+.ecrm-storemonths { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.ecrm-storemonths::-webkit-scrollbar { display: none; }
+.ecrm-storemonths .ecrm-scope__b { flex: 0 0 auto; white-space: nowrap; }
+@media (max-width: 767px) {
+	/* (399) Δίχτυ ασφαλείας: κανένα στοιχείο δεν κάνει τη σελίδα να κυλά
+	   πλάγια στο κινητό. Με μεγάλα γράμματα συστήματος (ρύθμιση του κινητού
+	   του ιδιοκτήτη) οι μήνες της Αρχικής την έσπρωχναν έξω (16/11). */
+	.ecrm-app { overflow-x: clip; }
+	.ecrm-main, .ecrm-content { min-width: 0; max-width: 100vw; }
+	.ecrm-storemonths__older { max-width: 100%; }
+}
 .ecrm-tgtcol { min-width: 190px; }
+.ecrm-th-s { display: none; }
 .ecrm-tgt { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .ecrm-tgt__track { flex: 1; min-width: 60px; height: 7px; border-radius: 99px; background: var(--line); overflow: hidden; }
 .ecrm-tgt__fill { display: block; height: 100%; background: var(--st-active); }
@@ -2464,6 +2480,21 @@ button.ecrm-avatar:focus-visible { outline: 2px solid var(--amber); outline-offs
 @media (max-width: 620px) {
 	.ecrm-tgtcol { min-width: 150px; }
 	.ecrm-tgt__track { min-width: 36px; }
+	/* (399) Ο πίνακας «Πωλητές» της Αρχικής χωρά στο κινητό χωρίς οριζόντια
+	   κύλιση (ο ιδιοκτήτης, 16/11: «σπάει στο κινητό»): το όνομα σε μία
+	   γραμμή με την κουκκίδα, σύντομες επικεφαλίδες («Μήνας», «Απορρ.»· η
+	   πλήρης στο title), το «χωρίς στόχο» φεύγει (μένει ο αριθμός). */
+	.ecrm-storetable .ecrm-tgtcol { min-width: 0; }
+	.ecrm-storetable .ecrm-th-l { display: none; }
+	.ecrm-storetable .ecrm-th-s { display: inline; }
+	.ecrm-storetable th, .ecrm-storetable td { padding-left: 6px; padding-right: 6px; }
+	/* Σταθερό πλάτος στηλών: ο πίνακας ΠΟΤΕ δεν ξεπερνά την κάρτα, ό,τι
+	   μέγεθος γραμμάτων κι αν έχει το κινητό· το όνομα κόβεται με «…». */
+	.ecrm-storetable { table-layout: fixed; width: 100%; min-width: 0; }
+	.ecrm-storetable th:nth-child(2), .ecrm-storetable th:nth-child(6) { width: 19%; }
+	.ecrm-storetable th:nth-child(3) { width: 21%; }
+	.ecrm-storetable th, .ecrm-storetable td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.ecrm-storetable .ecrm-tgt__none { display: none; }
 }
 
 /* (348) Παρατηρήσεις: Protergia (μπλε, μόνο σε Εκκρεμότητα) και Agent (πράσινο). */

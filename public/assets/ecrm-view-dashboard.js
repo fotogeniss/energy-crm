@@ -200,10 +200,10 @@ function membersHTML(list) {
 
 	return '<div class="ecrm-card"><div class="ecrm-step ecrm-step--row"><span>Πωλητές</span>' +
 		'<button type="button" class="ecrm-btn ecrm-btn--sm" data-store-targets>Στόχοι μήνα</button></div>' +
-		'<div class="ecrm-tablewrap"><table class="ecrm-table"><thead><tr>' +
-		'<th>Πωλητής</th><th class="ecrm-tlnum">Σήμερα</th><th class="ecrm-tgtcol">Μήνας / στόχος</th>' +
+		'<div class="ecrm-tablewrap"><table class="ecrm-table ecrm-storetable"><thead><tr>' +
+		'<th>Πωλητής</th><th class="ecrm-tlnum">Σήμερα</th><th class="ecrm-tgtcol" title="Μήνας / στόχος"><span class="ecrm-th-l">Μήνας / στόχος</span><span class="ecrm-th-s">Μήνας</span></th>' +
 		'<th class="ecrm-tlnum ecrm-col-sec">Ενεργές μήνα</th><th class="ecrm-tlnum ecrm-col-sec">Περ. υπογρ.</th>' +
-		'<th class="ecrm-tlnum">Απορρ. 30 ημ.</th><th class="ecrm-col-sec">Τελευταία κίνηση</th>' +
+		'<th class="ecrm-tlnum" title="Απορρίψεις 30 ημερών"><span class="ecrm-th-l">Απορρ. 30 ημ.</span><span class="ecrm-th-s">Απορρ.</span></th><th class="ecrm-col-sec">Τελευταία κίνηση</th>' +
 		'</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 }
 
@@ -245,7 +245,7 @@ function monthsHTML() {
 /* «31/40» με μπάρα· πορτοκαλί όταν είναι πίσω από τον ρυθμό του μήνα. */
 function targetCell(done, target, behind) {
 	done = Number(done) || 0;
-	if (!target) return '<span class="ecrm-tgt"><b>' + done + '</b><span class="ecrm-muted"> · χωρίς στόχο</span></span>';
+	if (!target) return '<span class="ecrm-tgt" title="Χωρίς στόχο"><b>' + done + '</b><span class="ecrm-muted ecrm-tgt__none"> · χωρίς στόχο</span></span>';
 	var pct = Math.round(done * 100 / Number(target));
 	return '<span class="ecrm-tgt' + (behind ? ' is-behind' : '') + '"><b>' + done + '</b>/' + Number(target) +
 		'<span class="ecrm-tgt__track"><span class="ecrm-tgt__fill" style="width:' + Math.min(100, pct) + '%"></span></span>' +
