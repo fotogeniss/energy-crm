@@ -43,12 +43,18 @@ final class ContractTermTest extends TestCase
     }
 
     /**
-     * A month later than the 31st is a real edge: PHP rolls it forward, which
-     * is the behaviour we want recorded rather than discovered.
+     * (404) Το τέλος του μήνα μένει στον μήνα του. Ως τότε το τεστ κατέγραφε
+     * τη συμπεριφορά της PHP (31/01 + 1 μήνας = 03/03) χωρίς να την έχει
+     * διαλέξει κανείς· σε σύμβαση 6 μηνών από 31/08 η λήξη έβγαινε 03/03.
      */
-    public function testMonthEndRollsForwardAsPhpDoes(): void
+    public function testMonthEndStaysInItsMonth(): void
     {
-        self::assertSame('2026-03-03', ContractTerm::endDate('2026-01-31', 1));
+        self::assertSame('2026-02-28', ContractTerm::endDate('2026-01-31', 1));
+        self::assertSame('2027-02-28', ContractTerm::endDate('2026-08-31', 6));
+        self::assertSame('2029-02-28', ContractTerm::endDate('2028-02-29', 12));
+        self::assertSame('2028-02-29', ContractTerm::endDate('2027-08-31', 6), 'Δίσεκτο: η 29η υπάρχει.');
+        self::assertSame('2027-03-31', ContractTerm::endDate('2026-03-31', 12));
+        self::assertSame('2026-12-15', ContractTerm::endDate('2026-11-15', 1));
     }
 
     public function testWhitespaceIsNotAValue(): void

@@ -41,4 +41,29 @@ final class StatusTrackTest extends TestCase
             MobileLine::stageAfterSignature(['energy_type' => 'mobile', 'extra_json' => ''])
         );
     }
+
+    /** (403) Η κατάσταση άλλου είδους απορρίπτεται με μήνυμα, όχι σιωπηλά. */
+    public function testAStatusOfAnotherTrackIsRefusedWithAReason(): void
+    {
+        self::assertSame(
+            'Η κατάσταση «Αναμονή παράδοσης SIM» δεν ισχύει για αιτήσεις ρεύματος.',
+            StatusTrack::refusal(ContractStatus::AwaitingSim, StatusTrack::POWER)
+        );
+        self::assertSame(
+            'Η κατάσταση «Επιβεβαίωση ΘΑΛΗΣ» δεν ισχύει για αιτήσεις κινητής τηλεφωνίας.',
+            StatusTrack::refusal(ContractStatus::ThalisConfirmed, StatusTrack::MOBILE)
+        );
+    }
+
+    /** (403) Ό,τι ισχύει για το είδος περνά, και οι κοινές καταστάσεις παντού. */
+    public function testAStatusOfTheSameTrackPasses(): void
+    {
+        self::assertNull(StatusTrack::refusal(ContractStatus::AwaitingSim, StatusTrack::MOBILE));
+        self::assertNull(StatusTrack::refusal(ContractStatus::ThalisConfirmed, StatusTrack::POWER));
+
+        foreach ([StatusTrack::POWER, StatusTrack::GAS, StatusTrack::MOBILE] as $track) {
+            self::assertNull(StatusTrack::refusal(ContractStatus::Presale, $track));
+            self::assertNull(StatusTrack::refusal(ContractStatus::Cancelled, $track));
+        }
+    }
 }

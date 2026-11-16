@@ -145,7 +145,8 @@ class ECRM_PDF {
 		$footer = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'pdf_footer' ) : '';
 		$info   = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_info' ) : '';
 		$line   = $footer ?: ( $info ?: 'Δημιουργήθηκε από Energy CRM' );
-		$pdf->Cell( 0, 5, $line . ' · ' . gmdate( 'd/m/Y H:i' ), 0, 0, 'C' );
+		// (404) Ώρα site, όχι UTC.
+		$pdf->Cell( 0, 5, $line . ' · ' . current_time( 'd/m/Y H:i' ), 0, 0, 'C' );
 
 		return $pdf->Output( '', 'S' );
 	}
@@ -206,7 +207,7 @@ class ECRM_PDF {
 			[ 'Κατάσταση', $st_label ],
 			[ 'Ημ. Πληρωμής', ! empty( $meta['paid_at'] ) ? mysql2date( 'd/m/Y', $meta['paid_at'] ) : '—' ],
 			[ 'Πλήθος Συμβάσεων', (string) count( $lines ) ],
-			[ 'Έκδοση', gmdate( 'd/m/Y H:i' ) ],
+			[ 'Έκδοση', current_time( 'd/m/Y H:i' ) ],
 		] );
 
 		$pdf->Ln( 4 );
@@ -351,7 +352,7 @@ class ECRM_PDF {
 		$pdf->SetFont( 'DejaVu', '', 8.5 );
 		$color( $muted );
 		$pdf->Cell( 86, 4.5, $is_gas ? 'Προμήθεια φυσικού αερίου' : 'Προμήθεια ηλεκτρικής ενέργειας', 0, 2, 'R' );
-		$pdf->Cell( 86, 4.5, 'Ημερομηνία ' . ( $m['date'] ?? gmdate( 'd/m/Y' ) ), 0, 2, 'R' );
+		$pdf->Cell( 86, 4.5, 'Ημερομηνία ' . ( $m['date'] ?? current_time( 'd/m/Y' ) ), 0, 2, 'R' );
 
 		$y = max( $left_bottom, $pdf->GetY() ) + 4;
 		$pdf->SetDrawColor( $navy[0], $navy[1], $navy[2] );

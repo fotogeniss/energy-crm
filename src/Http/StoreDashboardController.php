@@ -166,7 +166,10 @@ final class StoreDashboardController implements Controller
         $tiles['month_change'] = StoreFigures::change($tiles['month'], $tiles['before']);
         $tiles['top_reason']   = $reasons !== [] ? CloseReason::label($reasons[0]['reason']) : '';
         $tiles['target']       = $targets === [] ? null : array_sum($targets);
-        $tiles['of_target']    = StoreFigures::ofTarget($tiles['month'], $tiles['target']);
+        $tiles['of_target']    = StoreFigures::teamOfTarget(
+            array_map(static fn (array $s): int => (int) $s['month'], $stats),
+            $targets
+        );
 
         // Πιο απασχολημένοι σήμερα πρώτα, μετά ο μήνας, μετά το όνομα.
         usort(

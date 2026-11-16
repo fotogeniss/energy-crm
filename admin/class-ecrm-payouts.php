@@ -38,15 +38,21 @@ class ECRM_Payouts {
 		global $wpdb;
 		$ct      = ECRM_DB::table( 'contracts' );
 		$payable = ECRM_DB::payable_statuses();
-		$sph     = implode( ',', array_fill( 0, count( $payable ), '%s' ) );
-		$where   = "status IN ($sph) AND (payout_id IS NULL OR payout_id = 0) AND partner_user_id IS NOT NULL";
-		$args    = $payable;
+		// (404) Όσες έγιναν ΠΟΤΕ Ενεργές (απόφαση ιδιοκτήτη 16/11), όχι μόνο
+		// όσες είναι Ενεργές τώρα: μια Ενεργή που ακυρώθηκε ή πήγε σε
+		// «Εκκρεμότητα» πριν μπει σε παρτίδα δεν πληρωνόταν ποτέ.
+		[ $earned, $earned_args ] = \EnergyCRM\Persistence\PayableClause::earned( $payable, 'c' );
+		[ $at, $at_args ]         = \EnergyCRM\Persistence\PayableClause::earnedAt( $payable, 'c' );
+		$where   = "{$earned} AND (c.payout_id IS NULL OR c.payout_id = 0) AND c.partner_user_id IS NOT NULL";
+		$args    = [ ...$at_args, ...$earned_args ];
 		if ( $partner ) {
-			$where .= ' AND partner_user_id = %d';
+			$where .= ' AND c.partner_user_id = %d';
 			$args[] = $partner;
 		}
 		return $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, partner_user_id, provider_id, program_id, energy_type, category, status, updated_at FROM {$ct} WHERE {$where}",
+			"SELECT c.id, c.partner_user_id, c.provider_id, c.program_id, c.energy_type, c.category, c.status, c.updated_at,
+			        {$at} AS earned_at
+			 FROM {$ct} c WHERE {$where}",
 			$args
 		), ARRAY_A );
 	}
@@ -219,10 +225,12 @@ class ECRM_Payouts {
 		}
 
 		// Τα σύνολα από τις σφραγισμένες γραμμές, όχι από όσες διαβάστηκαν.
+		[ $at, $at_args ] = \EnergyCRM\Persistence\PayableClause::earnedAt( ECRM_DB::payable_statuses(), 'c' );
 		$mine = $wpdb->get_results( $wpdb->prepare(
-			"SELECT id, partner_user_id, provider_id, program_id, energy_type, category, status, updated_at
-			 FROM {$ct} WHERE payout_id = %d",
-			$payout_id
+			"SELECT c.id, c.partner_user_id, c.provider_id, c.program_id, c.energy_type, c.category, c.status, c.updated_at,
+			        {$at} AS earned_at
+			 FROM {$ct} c WHERE c.payout_id = %d",
+			[ ...$at_args, $payout_id ]
 		), ARRAY_A );
 
 		// Το ποσό γράφεται και πάνω στην κάθε σύμβαση, όχι μόνο ως σύνολο στην
@@ -271,10 +279,12 @@ class ECRM_Payouts {
 	private static function period_for( array $rows ): string {
 		$latest = '';
 		foreach ( $rows as $r ) {
-			$month = substr( (string) ( $r['updated_at'] ?? '' ), 0, 7 );
+			// (404) Ο μήνας που κερδήθηκε, όχι η τελευταία αλλαγή της αίτησης.
+			$month = \EnergyCRM\Persistence\PayableClause::monthOf( $r );
 			if ( $month !== '' && $month > $latest ) { $latest = $month; }
 		}
-		return $latest !== '' ? $latest : gmdate( 'Y-m' );
+		// (404) Ώρα site: το gmdate() έδινε τον προηγούμενο μήνα τις πρώτες ώρες κάθε μήνα.
+		return $latest !== '' ? $latest : current_time( 'Y-m' );
 	}
 
 	/**

@@ -56,6 +56,32 @@ final class StoreFigures
     }
 
     /**
+     * (403) Το ποσοστό στόχου της ομάδας: μόνο όσοι ΕΧΟΥΝ στόχο, στον
+     * αριθμητή και στον παρονομαστή. Πριν, οι αιτήσεις ΟΛΩΝ διαιρούνταν με
+     * τους στόχους μόνο όσων είχαν: ο Α με στόχο 10 και 2 αιτήσεις και ο Β
+     * χωρίς στόχο με 9 έβγαζαν «110%» ενώ ο μόνος στόχος ήταν στο 20%.
+     *
+     * @param array<int, int> $doneById    αιτήσεις ανά χρήστη
+     * @param array<int, int> $targetsById στόχος ανά χρήστη (μόνο όσοι έχουν)
+     */
+    public static function teamOfTarget(array $doneById, array $targetsById): ?int
+    {
+        $done   = 0;
+        $target = 0;
+
+        foreach ($targetsById as $id => $goal) {
+            if ($goal <= 0) {
+                continue;
+            }
+
+            $target += $goal;
+            $done   += (int) ($doneById[$id] ?? 0);
+        }
+
+        return $target > 0 ? self::ofTarget($done, $target) : null;
+    }
+
+    /**
      * Πόσα ανά κλειδί (πωλητή ή πάροχο), τα περισσότερα πρώτα.
      *
      * Ισοπαλία: αλφαβητικά, ώστε η σειρά να μην αλλάζει από φόρτωση σε φόρτωση.

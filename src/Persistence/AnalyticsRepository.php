@@ -25,11 +25,12 @@ final class AnalyticsRepository
      */
     public function countsByStatus(UserScope $scope): array
     {
-        [$clause, $params] = $this->scopeClause($scope);
+        [$clause, $params] = $this->scopeClause($scope, 'c');
+        [$kept, $keptArg]  = $this->notDiscarded('c');
 
         $rows = $this->rows(
-            "SELECT status, COUNT(*) c FROM %i WHERE 1 = 1{$clause} GROUP BY status",
-            [Tables::name(Tables::CONTRACTS), ...$params]
+            "SELECT c.status, COUNT(*) c FROM %i c WHERE 1 = 1{$clause}{$kept} GROUP BY c.status",
+            [Tables::name(Tables::CONTRACTS), ...$params, ...$keptArg]
         );
 
         $counts = [];
@@ -83,17 +84,19 @@ final class AnalyticsRepository
     {
         [$clause, $params]  = $this->scopeClause($scope, 'ct');
         [$since, $sinceArg] = $this->sinceClause($days, 'ct');
+        [$sent, $sentArg]   = $this->submitted('ct');
 
         return $this->rows(
             "SELECT p.name, MAX(p.logo_url) logo, COUNT(*) c
              FROM %i ct LEFT JOIN %i p ON p.id = ct.provider_id
-             WHERE 1 = 1{$clause}{$since}
+             WHERE 1 = 1{$clause}{$since}{$sent}
              GROUP BY ct.provider_id ORDER BY c DESC LIMIT " . max(1, $limit),
             [
                 Tables::name(Tables::CONTRACTS),
                 Tables::name(Tables::PROVIDERS),
                 ...$params,
                 ...$sinceArg,
+                ...$sentArg,
             ]
         );
     }
@@ -142,12 +145,13 @@ final class AnalyticsRepository
      */
     public function byEnergyType(UserScope $scope): array
     {
-        [$clause, $params] = $this->scopeClause($scope);
+        [$clause, $params] = $this->scopeClause($scope, 'c');
+        [$sent, $sentArg]  = $this->submitted('c');
 
         return $this->rows(
-            "SELECT energy_type, COUNT(*) c FROM %i WHERE 1 = 1{$clause}
-             GROUP BY energy_type ORDER BY c DESC",
-            [Tables::name(Tables::CONTRACTS), ...$params]
+            "SELECT c.energy_type, COUNT(*) c FROM %i c WHERE 1 = 1{$clause}{$sent}
+             GROUP BY c.energy_type ORDER BY c DESC",
+            [Tables::name(Tables::CONTRACTS), ...$params, ...$sentArg]
         );
     }
 
@@ -157,13 +161,14 @@ final class AnalyticsRepository
     public function topRegions(UserScope $scope, int $limit = 8): array
     {
         [$clause, $params] = $this->scopeClause($scope, 'ct');
+        [$sent, $sentArg]  = $this->submitted('ct');
 
         return $this->rows(
             "SELECT COALESCE(NULLIF(cu.region, ''), '—') name, COUNT(*) c
              FROM %i ct LEFT JOIN %i cu ON cu.id = ct.customer_id
-             WHERE 1 = 1{$clause}
+             WHERE 1 = 1{$clause}{$sent}
              GROUP BY name ORDER BY c DESC LIMIT " . max(1, $limit),
-            [Tables::name(Tables::CONTRACTS), Tables::name(Tables::CUSTOMERS), ...$params]
+            [Tables::name(Tables::CONTRACTS), Tables::name(Tables::CUSTOMERS), ...$params, ...$sentArg]
         );
     }
 
@@ -172,12 +177,13 @@ final class AnalyticsRepository
      */
     public function monthlyTotals(UserScope $scope, int $year): array
     {
-        [$clause, $params] = $this->scopeClause($scope);
+        [$clause, $params] = $this->scopeClause($scope, 'c');
+        [$sent, $sentArg]  = $this->submitted('c');
 
         $rows = $this->rows(
-            "SELECT MONTH(created_at) m, COUNT(*) c FROM %i
-             WHERE YEAR(created_at) = %d{$clause} GROUP BY MONTH(created_at)",
-            [Tables::name(Tables::CONTRACTS), $year, ...$params]
+            "SELECT MONTH(c.created_at) m, COUNT(*) c FROM %i c
+             WHERE YEAR(c.created_at) = %d{$clause}{$sent} GROUP BY MONTH(c.created_at)",
+            [Tables::name(Tables::CONTRACTS), $year, ...$params, ...$sentArg]
         );
 
         $monthly = array_fill(1, 12, 0);
@@ -202,14 +208,15 @@ final class AnalyticsRepository
             return [];
         }
 
-        [$clause, $params] = $this->scopeClause($scope);
-        $statuses          = implode(',', array_fill(0, count($payableStatuses), '%s'));
+        [$clause, $params]       = $this->scopeClause($scope, 'c');
+        [$earned, $earnedParams] = PayableClause::earned($payableStatuses, 'c');
 
+        // (404) Όσες έγιναν ΠΟΤΕ Ενεργές, όπως οι Προμήθειες και οι Εκκαθαρίσεις.
         return $this->rows(
-            "SELECT partner_user_id, provider_id, program_id, energy_type, category, status,
-                    payout_amount
-             FROM %i WHERE status IN ({$statuses}){$clause} LIMIT " . max(1, $limit),
-            [Tables::name(Tables::CONTRACTS), ...$payableStatuses, ...$params]
+            "SELECT c.partner_user_id, c.provider_id, c.program_id, c.energy_type, c.category, c.status,
+                    c.payout_amount
+             FROM %i c WHERE {$earned}{$clause} LIMIT " . max(1, $limit),
+            [Tables::name(Tables::CONTRACTS), ...$earnedParams, ...$params]
         );
     }
 
@@ -223,14 +230,15 @@ final class AnalyticsRepository
      */
     public function dailyCreated(UserScope $scope, int $days): array
     {
-        [$clause, $params]  = $this->scopeClause($scope);
-        [$since, $sinceArg] = $this->sinceClause(max(1, $days));
+        [$clause, $params]  = $this->scopeClause($scope, 'c');
+        [$since, $sinceArg] = $this->sinceClause(max(1, $days), 'c');
+        [$sent, $sentArg]   = $this->submitted('c');
 
         $rows = $this->rows(
-            "SELECT DATE(created_at) d, COUNT(*) c FROM %i
-             WHERE 1 = 1{$clause}{$since}
-             GROUP BY DATE(created_at) ORDER BY d ASC",
-            [Tables::name(Tables::CONTRACTS), ...$params, ...$sinceArg]
+            "SELECT DATE(c.created_at) d, COUNT(*) c FROM %i c
+             WHERE 1 = 1{$clause}{$since}{$sent}
+             GROUP BY DATE(c.created_at) ORDER BY d ASC",
+            [Tables::name(Tables::CONTRACTS), ...$params, ...$sinceArg, ...$sentArg]
         );
 
         $daily = [];
@@ -251,12 +259,13 @@ final class AnalyticsRepository
      */
     public function statusCountsSince(UserScope $scope, int $days): array
     {
-        [$clause, $params]  = $this->scopeClause($scope);
-        [$since, $sinceArg] = $this->sinceClause(max(1, $days));
+        [$clause, $params]  = $this->scopeClause($scope, 'c');
+        [$since, $sinceArg] = $this->sinceClause(max(1, $days), 'c');
+        [$kept, $keptArg]   = $this->notDiscarded('c');
 
         $rows = $this->rows(
-            "SELECT status, COUNT(*) c FROM %i WHERE 1 = 1{$clause}{$since} GROUP BY status",
-            [Tables::name(Tables::CONTRACTS), ...$params, ...$sinceArg]
+            "SELECT c.status, COUNT(*) c FROM %i c WHERE 1 = 1{$clause}{$since}{$kept} GROUP BY c.status",
+            [Tables::name(Tables::CONTRACTS), ...$params, ...$sinceArg, ...$keptArg]
         );
 
         $counts = [];
@@ -322,6 +331,41 @@ final class AnalyticsRepository
         $column = ($alias === '' ? '' : $alias . '.') . 'created_at';
 
         return [' AND ' . $column . ' > DATE_SUB(CURDATE(), INTERVAL %d DAY)', [$days]];
+    }
+
+    /**
+     * (404) Μόνο αιτήσεις που ΣΤΑΛΘΗΚΑΝ: όχι πρόχειρα, και όχι πρόχειρα που
+     * πετάχτηκαν (ακυρώθηκαν χωρίς να περάσουν ποτέ από άλλη κατάσταση).
+     * Πριν, τα Στατιστικά μετρούσαν και αυτά σε παρόχους, είδη, περιοχές,
+     * μήνες και ημέρες, ενώ η Αρχική και το Κατάστημα όχι (403).
+     *
+     * @return array{0: string, 1: list<string>}
+     */
+    private function submitted(string $alias): array
+    {
+        [$kept, $args] = $this->notDiscarded($alias);
+
+        return [" AND {$alias}.status <> 'draft'" . $kept, $args];
+    }
+
+    /**
+     * (404) Χωρίς τα πρόχειρα που πετάχτηκαν. Ένα πρόχειρο που ακυρώνεται
+     * γίνεται «Ακυρώθηκε» χωρίς λόγο· στο funnel φούσκωνε το ποσοστό
+     * ακυρώσεων με αιτήσεις που δεν στάλθηκαν ποτέ.
+     *
+     * «Πετάχτηκε» = ακυρωμένη με γεγονός πρόχειρο → ακύρωση. Μια αίτηση που
+     * στάλθηκε και ακυρώθηκε αργότερα δεν έχει τέτοιο γεγονός και μετρά·
+     * το ίδιο και οι παλιές χωρίς ιστορικό (εισαγωγές), για να μη χαθούν.
+     *
+     * @return array{0: string, 1: list<string>}
+     */
+    private function notDiscarded(string $alias): array
+    {
+        return [
+            " AND NOT ({$alias}.status = 'cancelled' AND EXISTS (SELECT 1 FROM %i sd"
+            . " WHERE sd.contract_id = {$alias}.id AND sd.from_status = 'draft' AND sd.to_status = 'cancelled'))",
+            [Tables::name(Tables::EVENTS)],
+        ];
     }
 
     /**

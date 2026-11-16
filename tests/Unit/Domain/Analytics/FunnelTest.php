@@ -73,4 +73,15 @@ final class FunnelTest extends TestCase
     {
         self::assertSame(1, Funnel::from(['active' => 1])['total']);
     }
+
+    /** (404) Τα πρόχειρα φαίνονται ως βήμα, αλλά δεν μετρούν στον παρονομαστή. */
+    public function testDraftsAreNotPartOfTheRates(): void
+    {
+        $result = Funnel::from(['draft' => 6, 'presale' => 2, 'active' => 1, 'cancelled' => 1]);
+
+        self::assertSame(4, $result['total']);
+        self::assertSame(25.0, $result['conv_rate']);
+        self::assertSame(25.0, $result['canc_rate']);
+        self::assertSame(6, $result['funnel'][0]['count']);
+    }
 }

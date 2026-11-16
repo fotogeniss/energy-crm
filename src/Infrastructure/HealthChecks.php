@@ -484,7 +484,61 @@ final class HealthChecks
             ),
 
             self::row('Περιβάλλον', 'Έκδοση PHP', version_compare(PHP_VERSION, '8.2', '>='), PHP_VERSION),
+
+            $this->clocks(),
         ];
+    }
+
+    /**
+     * (403) Η ώρα της βάσης και η ώρα του WordPress συμφωνούν;
+     *
+     * Οι αιτήσεις παίρνουν `created_at` από το ρολόι της ΒΑΣΗΣ (DEFAULT
+     * CURRENT_TIMESTAMP)· η Αρχική ορίζει «σήμερα» και «αυτόν τον μήνα» με
+     * την ώρα του WORDPRESS, το Κατάστημα με της βάσης. Αν διαφέρουν, γύρω
+     * από τα μεσάνυχτα και την αλλαγή του μήνα οι δύο οθόνες μετρούν άλλα.
+     *
+     * @return array{group: string, label: string, ok: bool|null, detail: string}
+     */
+    private function clocks(): array
+    {
+        global $wpdb;
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-off admin health-check probe, not a hot path.
+        $db    = (string) $wpdb->get_var('SELECT NOW()');
+        $wp    = current_time('mysql');
+        $drift = self::clockDriftMinutes($db, $wp);
+
+        if ($drift === null) {
+            return self::row('Περιβάλλον', 'Ώρα βάσης και WordPress', null, 'Δεν διαβάστηκε η ώρα της βάσης.');
+        }
+
+        $times = sprintf('βάση %s, WordPress %s', substr($db, 11, 5), substr($wp, 11, 5));
+
+        return self::row('Περιβάλλον', 'Ώρα βάσης και WordPress', $drift <= 5, $drift <= 5
+            ? 'Ίδια (' . $times . ').'
+            : sprintf(
+                'Διαφέρουν κατά %d λεπτά (%s). Οι αιτήσεις γράφουν ώρα βάσης, η Αρχική μετρά με ώρα WordPress: '
+                . 'γύρω από τα μεσάνυχτα και την αλλαγή του μήνα, «σήμερα» και «μήνας» δεν συμφωνούν με το Κατάστημα. '
+                . 'Ζήτα από τον host ζώνη ώρας MySQL Europe/Athens, ή ρύθμισε την ίδια ζώνη στο WordPress.',
+                $drift,
+                $times
+            ));
+    }
+
+    /**
+     * Απόσταση σε λεπτά ανάμεσα σε δύο ώρες «Y-m-d H:i:s», ή null αν κάποια
+     * δεν διαβάζεται. Καθαρή συνάρτηση, για να ελέγχεται χωρίς βάση.
+     */
+    public static function clockDriftMinutes(string $a, string $b): ?int
+    {
+        $x = strtotime($a . ' UTC');
+        $y = strtotime($b . ' UTC');
+
+        if ($a === '' || $b === '' || $x === false || $y === false) {
+            return null;
+        }
+
+        return (int) round(abs($x - $y) / 60);
     }
 
     /**

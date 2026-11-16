@@ -218,13 +218,15 @@ class ECRM_Assistant {
 		global $wpdb;
 		$ct  = ECRM_DB::table( 'contracts' );
 		$uid = get_current_user_id();
-		$today_start = gmdate( 'Y-m-d 00:00:00' );
-		$month_start = gmdate( 'Y-m-01 00:00:00' );
+		// (404) Ώρα site, όπως η Αρχική (το gmdate() άλλαζε μέρα και μήνα 2-3
+		// ώρες αργότερα), και χωρίς τα πρόχειρα, όπως η Αρχική από το 403.
+		$today_start = current_time( 'Y-m-d' ) . ' 00:00:00';
+		$month_start = current_time( 'Y-m' ) . '-01 00:00:00';
 		return [
-			'today'   => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND created_at>=%s", $uid, $today_start ) ),
+			'today'   => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND created_at>=%s AND status<>'draft'", $uid, $today_start ) ),
 			'presale' => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND status='presale'", $uid ) ),
 			'finalisation' => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND status='finalisation'", $uid ) ),
-			'month'   => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND created_at>=%s", $uid, $month_start ) ),
+			'month'   => (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ct} WHERE partner_user_id=%d AND created_at>=%s AND status<>'draft'", $uid, $month_start ) ),
 		];
 	}
 }

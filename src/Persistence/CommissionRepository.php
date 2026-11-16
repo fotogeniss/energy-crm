@@ -49,10 +49,11 @@ final class CommissionRepository
             return [];
         }
 
-        [$clause, $scopeParams] = $this->scopeClause($scope, 'c');
-        $statusPlaceholders     = implode(',', array_fill(0, count($payableStatuses), '%s'));
-        $memberClause           = null === $memberId ? '' : ' AND c.partner_user_id = %d';
-        $memberParams           = null === $memberId ? [] : [$memberId];
+        [$clause, $scopeParams]   = $this->scopeClause($scope, 'c');
+        [$earned, $earnedParams]  = PayableClause::earned($payableStatuses, 'c');
+        [$earnedAt, $atParams]    = PayableClause::earnedAt($payableStatuses, 'c');
+        $memberClause             = null === $memberId ? '' : ' AND c.partner_user_id = %d';
+        $memberParams             = null === $memberId ? [] : [$memberId];
 
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var list<array<string, mixed>> $rows */
@@ -60,7 +61,7 @@ final class CommissionRepository
             $wpdb->prepare(
                 "SELECT c.id, c.code, c.status, c.provider_id, c.program_id,
                         c.energy_type, c.category, c.updated_at, c.payout_id,
-                        c.payout_amount,
+                        c.payout_amount, {$earnedAt} AS earned_at,
                         po.status AS payout_status,
                         p.name AS provider_name, p.logo_url AS provider_logo,
                         cu.first_name, cu.last_name, cu.company_name
@@ -68,15 +69,16 @@ final class CommissionRepository
                  LEFT JOIN %i cu ON cu.id = c.customer_id
                  LEFT JOIN %i p  ON p.id  = c.provider_id
                  LEFT JOIN %i po ON po.id = c.payout_id
-                 WHERE c.status IN ({$statusPlaceholders}){$memberClause}{$clause}
+                 WHERE {$earned}{$memberClause}{$clause}
                  ORDER BY c.updated_at DESC
                  LIMIT " . max(1, $limit),
                 [
+                    ...$atParams,
                     Tables::name(Tables::CONTRACTS),
                     Tables::name(Tables::CUSTOMERS),
                     Tables::name(Tables::PROVIDERS),
                     Tables::name(Tables::PAYOUTS),
-                    ...$payableStatuses,
+                    ...$earnedParams,
                     ...$memberParams,
                     ...$scopeParams,
                 ]
@@ -105,14 +107,14 @@ final class CommissionRepository
             return 0;
         }
 
-        [$clause, $scopeParams] = $this->scopeClause($scope);
-        $statusPlaceholders     = implode(',', array_fill(0, count($payableStatuses), '%s'));
+        [$clause, $scopeParams]  = $this->scopeClause($scope, 'c');
+        [$earned, $earnedParams] = PayableClause::earned($payableStatuses, 'c');
 
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         $total = $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(*) FROM %i WHERE status IN ({$statusPlaceholders}){$clause}",
-                [Tables::name(Tables::CONTRACTS), ...$payableStatuses, ...$scopeParams]
+                "SELECT COUNT(*) FROM %i c WHERE {$earned}{$clause}",
+                [Tables::name(Tables::CONTRACTS), ...$earnedParams, ...$scopeParams]
             )
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
@@ -125,10 +127,11 @@ final class CommissionRepository
      * commission rules read — this is an estimate, not a statement.
      *
      * @param list<string> $statuses
+     * @param list<string> $payable
      *
      * @return list<array<string, mixed>>
      */
-    public function inProgress(UserScope $scope, array $statuses, int $limit = 2000): array
+    public function inProgress(UserScope $scope, array $statuses, int $limit = 2000, array $payable = ['active']): array
     {
         global $wpdb;
 
@@ -136,17 +139,19 @@ final class CommissionRepository
             return [];
         }
 
-        [$clause, $scopeParams] = $this->scopeClause($scope);
+        [$clause, $scopeParams] = $this->scopeClause($scope, 'c');
         $statusPlaceholders     = implode(',', array_fill(0, count($statuses), '%s'));
+        // (404) Όσες κέρδισαν ήδη μετρούν στις πληρωτέες· όχι και εδώ.
+        [$never, $neverParams]  = PayableClause::neverEarned($payable, 'c');
 
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT provider_id, program_id, energy_type, category
-                 FROM %i WHERE status IN ({$statusPlaceholders}){$clause}
+                "SELECT c.provider_id, c.program_id, c.energy_type, c.category
+                 FROM %i c WHERE c.status IN ({$statusPlaceholders}) AND {$never}{$clause}
                  LIMIT " . max(1, $limit),
-                [Tables::name(Tables::CONTRACTS), ...$statuses, ...$scopeParams]
+                [Tables::name(Tables::CONTRACTS), ...$statuses, ...$neverParams, ...$scopeParams]
             ),
             ARRAY_A
         );

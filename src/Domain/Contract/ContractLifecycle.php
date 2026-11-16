@@ -64,6 +64,10 @@ final class ContractLifecycle
      */
     public const CREATED = 'ecrm_contract_created';
 
+    /** (403) Η μετάβαση δεν έγινε γιατί κάποιος άλλος άλλαξε την αίτηση στο μεταξύ. */
+    public const CHANGED_MEANWHILE = 'Η αίτηση άλλαξε στο μεταξύ από άλλον χρήστη. '
+        . 'Ανανέωσε τη σελίδα και δοκίμασε ξανά.';
+
     public function __construct(
         private readonly ContractTransitions $transitions,
         private readonly EventRepository $events,
@@ -71,6 +75,28 @@ final class ContractLifecycle
         private readonly PayoutRepository $payouts,
         private readonly StatusEntryGate $entry,
     ) {
+    }
+
+    /**
+     * (403) Γιατί ΔΕΝ θα γίνει η μετάβαση, πριν τη ζητήσει κανείς: είδος
+     * αίτησης και χαρτιά (`StatusEntryGate`), οι ίδιοι έλεγχοι που κάνει
+     * σιωπηλά το `moveTo()`. null όταν δεν υπάρχει λόγος άρνησης.
+     *
+     * @param array<string, mixed> $pendingExtra
+     */
+    public function refusalFor(int $contractId, ContractStatus $target, array $pendingExtra = []): ?string
+    {
+        $track = $this->transitions->trackOf($contractId);
+
+        if ($track !== null) {
+            $wrongTrack = StatusTrack::refusal($target, $track);
+
+            if ($wrongTrack !== null) {
+                return $wrongTrack;
+            }
+        }
+
+        return $this->entry->refusalOnEntry($target, $contractId, $pendingExtra);
     }
 
     /**

@@ -579,7 +579,9 @@ class ECRM_Tracking {
 			$full = null;
 			try {
 				$full = \EnergyCRM\Services::contractDetails()->forDocument( $id );
-				$pdf = ECRM_PDF::build( $full ?: $row, $sig_path ?: null, [ 'date' => gmdate( 'd/m/Y H:i' ), 'ip' => $ip ] );
+				// (404) Ώρα site, η ίδια με το signed_at: το gmdate() τύπωνε UTC,
+				// 2-3 ώρες πίσω, και μετά τα μεσάνυχτα την προηγούμενη μέρα.
+				$pdf = ECRM_PDF::build( $full ?: $row, $sig_path ?: null, [ 'date' => mysql2date( 'd/m/Y H:i', $now ), 'ip' => $ip ] );
 				if ( $pdf && class_exists( 'ECRM_Files' ) ) {
 					$signed_pdf_bytes = (string) $pdf;
 					$sp = ECRM_Files::put_bytes( $pdf, 'pdf', 'application/pdf', 'symvasi-ypografi.pdf' );

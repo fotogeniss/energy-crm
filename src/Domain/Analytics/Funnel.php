@@ -48,7 +48,10 @@ final class Funnel
      */
     public static function from(array $countsByStatus): array
     {
-        $total = array_sum($countsByStatus);
+        // (404) Τα πρόχειρα δεν είναι αιτήσεις που στάλθηκαν: φαίνονται ως
+        // βήμα, αλλά δεν μπαίνουν στον παρονομαστή της μετατροπής και των
+        // ακυρώσεων (όπως η Αρχική και το Κατάστημα από το 403).
+        $total = array_sum($countsByStatus) - ($countsByStatus[ContractStatus::Draft->value] ?? 0);
         $won   = 0;
         $lost  = 0;
         $steps = [];

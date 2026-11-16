@@ -30,6 +30,7 @@ use EnergyCRM\Domain\Contract\StatusEntryGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\RequestKey;
+use EnergyCRM\Domain\Contract\StatusTrack;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
 use EnergyCRM\Persistence\ContractRepository;
@@ -287,6 +288,12 @@ final class ContractSaveController implements Controller
             return $refusal;
         }
 
+        $refusal = $this->refuseWrongTrack($params, $existing);
+
+        if ($refusal !== null) {
+            return $refusal;
+        }
+
         $previousCustomer = $customerId > 0 && $customer !== []
             ? $this->customers->find($customerId, $scope)
             : null;
@@ -340,11 +347,21 @@ final class ContractSaveController implements Controller
             $this->contracts->assignCode($contractId, $scope);
         }
 
+        $warning = null;
+
         if ($statusChange !== null) {
-            $this->lifecycle->moveTo($contractId, $statusChange, [
+            $moved = $this->lifecycle->moveTo($contractId, $statusChange, [
                 'user_id' => $scope->actorId(),
                 'from'    => (string) $existing['status'],
             ]);
+
+            // (403) Τα στοιχεία σώθηκαν, η κατάσταση όχι (άλλος την άλλαξε στο
+            // μεταξύ). Η απάντηση λέει την πραγματική, όχι αυτή που ζητήθηκε.
+            if (! $moved) {
+                $statusChange = null;
+                $warning      = ContractLifecycle::CHANGED_MEANWHILE;
+                $existing     = $this->contracts->find($contractId, $scope) ?? $existing;
+            }
         }
 
         $this->recordHistory($contractId, $scope, $existing, $previousCustomer, $contract, $customer);
@@ -359,12 +376,57 @@ final class ContractSaveController implements Controller
         // guaranteed to exist in that case.
         $responseStatus = $statusChange ?? ($contract['status'] ?? ($existing !== null ? $existing['status'] : null));
 
-        return new WP_REST_Response([
+        $body = [
             'ok'          => true,
             'contract_id' => $contractId,
             'customer_id' => $customerId,
             'status'      => $responseStatus,
-        ], 200);
+        ];
+
+        if ($warning !== null) {
+            $body['warning'] = $warning;
+        }
+
+        return new WP_REST_Response($body, 200);
+    }
+
+    /**
+     * (403) Η κατάσταση που θα έχει η αίτηση μετά την αποθήκευση πρέπει να
+     * ισχύει για το είδος που θα έχει μετά την αποθήκευση. Πριν, μια αίτηση
+     * σε «Αναμονή παράδοσης SIM» που έχανε τη γραμμή κινητής (ή άλλαζε σε
+     * ρεύμα) έμενε σε κατάσταση που δεν ανήκει στο είδος της· και μια
+     * κατάσταση άλλου είδους απορριπτόταν σιωπηλά με απάντηση «ΟΚ».
+     *
+     * Ελέγχεται πριν γραφτεί οτιδήποτε (πελάτης ή αίτηση).
+     *
+     * @param array<string, mixed>      $params
+     * @param array<string, mixed>|null $existing
+     */
+    private function refuseWrongTrack(array $params, ?array $existing): ?WP_REST_Response
+    {
+        if ($existing === null) {
+            return null;
+        }
+
+        $after  = ContractSaveMapping::contractFrom($params, (int) ($existing['customer_id'] ?? 0), true);
+        $status = ContractStatus::tryFromSlug((string) ($after['status'] ?? $existing['status'] ?? ''));
+
+        if ($status === null) {
+            return null;
+        }
+
+        $track   = StatusTrack::of(array_merge($existing, $after));
+        $refusal = StatusTrack::refusal($status, $track);
+
+        if ($refusal === null) {
+            return null;
+        }
+
+        if (! isset($after['status'])) {
+            $refusal .= ' Άλλαξε πρώτα την κατάσταση της αίτησης.';
+        }
+
+        return new WP_REST_Response(['ok' => false, 'error' => $refusal, 'field' => 'status'], 422);
     }
 
     /**

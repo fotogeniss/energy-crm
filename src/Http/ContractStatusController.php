@@ -197,12 +197,26 @@ final class ContractStatusController implements Controller
             ], 422);
         }
 
-        $this->lifecycle->moveTo($id, $target->value, [
+        // (403) Είδος αίτησης και υπογραφή: ό,τι θα αρνιόταν σιωπηλά το
+        // moveTo(), το λέμε εδώ με το μήνυμά του.
+        $refusal = $this->lifecycle->refusalFor($id, $target);
+
+        if ($refusal !== null) {
+            return new WP_REST_Response(['ok' => false, 'error' => $refusal], 422);
+        }
+
+        $moved = $this->lifecycle->moveTo($id, $target->value, [
             'user_id' => $scope->actorId(),
             'from'    => $from,
             'message' => (string) $request['message'] ?: null,
             'reason'  => CloseReason::required($target->value, $from) ? $reason : null,
         ]);
+
+        // (403) Πριν απαντούσαμε «ΟΚ» με τη νέα κατάσταση χωρίς να κοιτάξουμε
+        // αν έγινε· η λίστα έδειχνε κατάσταση που η βάση δεν είχε.
+        if (! $moved) {
+            return new WP_REST_Response(['ok' => false, 'error' => ContractLifecycle::CHANGED_MEANWHILE], 409);
+        }
 
         // (384) Η λίστα αλλάζει τη γραμμή επιτόπου: χρειάζεται τις επόμενες.
         return new WP_REST_Response([

@@ -22,6 +22,7 @@ use EnergyCRM\Domain\Commission\CommissionAmount;
 use EnergyCRM\Domain\Commission\MonthlyTotals;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\CommissionRepository;
+use EnergyCRM\Persistence\PayableClause;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -88,7 +89,8 @@ final class CommissionsController implements Controller
             ];
 
             $entries[] = [
-                'month'  => substr((string) $row['updated_at'], 0, 7),
+                // (404) Ο μήνας που ΚΕΡΔΗΘΗΚΕ, όχι η τελευταία αλλαγή της αίτησης.
+                'month'  => PayableClause::monthOf($row),
                 'amount' => $amount,
                 // Υπολογιζόταν ήδη τρεις γραμμές πιο πάνω και πεταγόταν: η
                 // οθόνη έδειχνε σταθερό badge «Καταχωρημένο» σε κάθε μήνα.
@@ -101,7 +103,14 @@ final class CommissionsController implements Controller
         // Ζωντανός υπολογισμός, σωστά: τίποτα από αυτά δεν έχει μπει σε
         // παρτίδα, άρα δεν υπάρχει στιγμιότυπο να σεβαστούμε. Ίδια διόρθωση
         // εδώ: στρογγυλεύεται πριν την πρόσθεση, όχι μετά.
-        foreach ($this->commissions->inProgress($scope, ContractStatus::intermediateValues()) as $row) {
+        $inFlight = $this->commissions->inProgress(
+            $scope,
+            ContractStatus::intermediateValues(),
+            2000,
+            ECRM_DB::payable_statuses()
+        );
+
+        foreach ($inFlight as $row) {
             $expected += round((float) ECRM_Commissions::amount_for($row), 2);
         }
 

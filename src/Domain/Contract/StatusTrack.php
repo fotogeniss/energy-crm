@@ -36,4 +36,30 @@ final class StatusTrack
 
         return (string) ($contract['energy_type'] ?? '') === 'gas' ? self::GAS : self::POWER;
     }
+
+    /**
+     * (403) Η κατάσταση ισχύει για αυτό το είδος αίτησης; Αλλιώς το μήνυμα.
+     *
+     * Πριν, η άρνηση ζούσε μόνο μέσα στο `ContractLifecycle::moveTo()`, που
+     * γύριζε απλώς false· οι καλούντες δεν το κοίταζαν και απαντούσαν «ΟΚ» με
+     * τη νέα κατάσταση ενώ η βάση έμενε στην παλιά.
+     */
+    public static function refusal(ContractStatus $status, string $track): ?string
+    {
+        if ($status->appliesTo($track)) {
+            return null;
+        }
+
+        return sprintf('Η κατάσταση «%s» δεν ισχύει για αιτήσεις %s.', $status->label(), self::label($track));
+    }
+
+    /** Το είδος σε γενική, για μηνύματα: «αιτήσεις ρεύματος». */
+    public static function label(string $track): string
+    {
+        return match ($track) {
+            self::MOBILE => 'κινητής τηλεφωνίας',
+            self::GAS    => 'φυσικού αερίου',
+            default      => 'ρεύματος',
+        };
+    }
 }

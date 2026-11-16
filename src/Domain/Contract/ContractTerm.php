@@ -61,7 +61,17 @@ final class ContractTerm
         // Calendar months, not 30-day blocks: a 12-month contract signed on the
         // 3rd ends on the 3rd, whatever the month lengths in between. A 31st
         // rolls forward the way PHP rolls it — February has no 31st.
-        return $from->modify('+' . $months . ' months')->format('Y-m-d');
+        // (404) Χωρίς υπερχείλιση στο τέλος του μήνα. Το modify('+6 months')
+        // της PHP έκανε το 31/08 → «31/02» → 03/03, και το 29/02 + 12 → 01/03.
+        // Τώρα ο ίδιος αριθμός ημέρας, ή η τελευταία μέρα του μήνα αν δεν υπάρχει.
+        $day    = (int) $from->format('j');
+        $target = $from->modify('first day of this month')->modify('+' . $months . ' months');
+
+        return $target->setDate(
+            (int) $target->format('Y'),
+            (int) $target->format('n'),
+            min($day, (int) $target->format('t'))
+        )->format('Y-m-d');
     }
 
     /** (330) Η διάρκεια όταν η αίτηση δεν γράφει: 12 μήνες σε όλα τα τιμολόγια ρεύματος/αερίου. */

@@ -40,6 +40,14 @@ final class DashboardRepository
      * @var list<string>
      */
     // (354) Η Καταχώρηση περιμένει τον συνεργάτη: να τη στείλει για υπογραφή.
+    /**
+     * (403) Τα πρόχειρα δεν είναι αιτήσεις: δεν μετρούν στα «σήμερα», «χθες»,
+     * «αυτόν τον μήνα», στους παρόχους και στους μήνες της Αρχικής. Πριν τα
+     * μετρούσαν, ενώ το Κατάστημα και τα «Προγράμματα» όχι, και ο ίδιος
+     * πωλητής έβλεπε 3 στη μία οθόνη και 2 στην άλλη.
+     */
+    private const DRAFT = 'draft';
+
     private const NEEDS_ME = ['presale', 'registration', 'awaiting_signature', 'draft', 'pending_issue', 'debt'];
 
     /**
@@ -94,11 +102,13 @@ final class DashboardRepository
 
         return (int) $wpdb->get_var(
             $wpdb->prepare(
-                'SELECT COUNT(*) FROM %i WHERE partner_user_id = %d AND created_at >= %s AND created_at < %s',
+                'SELECT COUNT(*) FROM %i
+                 WHERE partner_user_id = %d AND created_at >= %s AND created_at < %s AND status <> %s',
                 Tables::name(Tables::CONTRACTS),
                 $userId,
                 $from,
-                $to
+                $to,
+                self::DRAFT
             )
         );
     }
@@ -184,12 +194,13 @@ final class DashboardRepository
             $wpdb->prepare(
                 'SELECT p.name, MAX(p.logo_url) logo, COUNT(*) c
                  FROM %i ct LEFT JOIN %i p ON p.id = ct.provider_id
-                 WHERE ct.partner_user_id = %d AND ct.created_at >= %s
+                 WHERE ct.partner_user_id = %d AND ct.created_at >= %s AND ct.status <> %s
                  GROUP BY ct.provider_id ORDER BY c DESC',
                 Tables::name(Tables::CONTRACTS),
                 Tables::name(Tables::PROVIDERS),
                 $userId,
-                $since
+                $since,
+                self::DRAFT
             ),
             ARRAY_A
         );
@@ -250,11 +261,12 @@ final class DashboardRepository
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 'SELECT MONTH(created_at) m, COUNT(*) c FROM %i
-                 WHERE partner_user_id = %d AND YEAR(created_at) = %d
+                 WHERE partner_user_id = %d AND YEAR(created_at) = %d AND status <> %s
                  GROUP BY MONTH(created_at)',
                 Tables::name(Tables::CONTRACTS),
                 $userId,
-                $year
+                $year,
+                self::DRAFT
             ),
             ARRAY_A
         );
@@ -427,10 +439,11 @@ final class DashboardRepository
 
         return (int) $wpdb->get_var(
             $wpdb->prepare(
-                'SELECT COUNT(*) FROM %i WHERE partner_user_id = %d AND created_at >= %s',
+                'SELECT COUNT(*) FROM %i WHERE partner_user_id = %d AND created_at >= %s AND status <> %s',
                 Tables::name(Tables::CONTRACTS),
                 $userId,
-                $since
+                $since,
+                self::DRAFT
             )
         );
     }

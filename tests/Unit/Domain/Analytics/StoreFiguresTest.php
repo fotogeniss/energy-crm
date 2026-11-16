@@ -62,4 +62,27 @@ final class StoreFiguresTest extends TestCase
         self::assertNull(StoreFigures::ofTarget(31, null));
         self::assertNull(StoreFigures::ofTarget(31, 0));
     }
+
+    /** (403) Όσοι δεν έχουν στόχο δεν φουσκώνουν το ποσοστό της ομάδας. */
+    public function testTeamTargetCountsOnlyThoseWithATarget(): void
+    {
+        // Α: στόχος 10, έκανε 2. Β: χωρίς στόχο, έκανε 9. Πριν: 110%.
+        self::assertSame(20, StoreFigures::teamOfTarget([1 => 2, 2 => 9], [1 => 10]));
+    }
+
+    public function testTeamTargetAddsEveryoneWithATarget(): void
+    {
+        self::assertSame(50, StoreFigures::teamOfTarget([1 => 4, 2 => 6, 3 => 7], [1 => 10, 2 => 10]));
+    }
+
+    public function testTeamTargetIsNullWithoutTargets(): void
+    {
+        self::assertNull(StoreFigures::teamOfTarget([1 => 5], []));
+        self::assertNull(StoreFigures::teamOfTarget([1 => 5], [1 => 0]));
+    }
+
+    public function testTeamTargetCountsZeroForSomeoneWithNoApplications(): void
+    {
+        self::assertSame(0, StoreFigures::teamOfTarget([], [7 => 10]));
+    }
 }

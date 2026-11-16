@@ -108,7 +108,10 @@ final class StoreMonthReport
                 'before'           => $prevApps,
                 'change'           => StoreFigures::change($applications, $prevApps),
                 'target'           => $targetTotal,
-                'of_target'        => StoreFigures::ofTarget($applications, $targetTotal),
+                'of_target'        => StoreFigures::teamOfTarget(
+                    array_map(static fn (array $s): int => (int) $s['applications'], $byOwner),
+                    $targets
+                ),
                 'activated'        => $activated,
                 'activated_before' => array_sum(array_column($before, 'activated')),
                 'lost'             => array_sum(array_column($byOwner, 'lost')),
