@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Integration;
 
 use EnergyCRM\Domain\Forms\DeiCatalogue;
+use EnergyCRM\Persistence\Schema\Migrations\RefreshDeiCatalogueNovember2026;
 use EnergyCRM\Persistence\Schema\Migrations\SeedDeiCatalogue2026;
 use EnergyCRM\Persistence\Schema\SchemaInspector;
 use EnergyCRM\Persistence\Tables;
@@ -27,6 +28,8 @@ final class DeiCatalogueSeedTest extends IntegrationTestCase
         (new SeedDeiCatalogue2026())->apply(new SchemaInspector());
         // Δεύτερη φορά: τίποτα δεν διπλασιάζεται.
         (new SeedDeiCatalogue2026())->apply(new SchemaInspector());
+        // (405) Και η 0063, όπως σε κάθε εγκατάσταση: κλείνει τα αποσυρμένα.
+        (new RefreshDeiCatalogueNovember2026())->apply(new SchemaInspector());
 
         foreach (DeiCatalogue::all() as $code => $plan) {
             // (405) Το αέριο το γράφει η 0063.
@@ -47,7 +50,7 @@ final class DeiCatalogueSeedTest extends IntegrationTestCase
             self::assertCount(1, $rows, $code);
             self::assertSame($plan['category'], $rows[0]['category'], $code);
             self::assertSame($plan['priceType'], $rows[0]['price_type'], $code);
-            self::assertSame('1', (string) $rows[0]['active'], $code);
+            self::assertSame(DeiCatalogue::isRetired($code) ? '0' : '1', (string) $rows[0]['active'], $code);
         }
     }
 

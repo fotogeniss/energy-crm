@@ -95,11 +95,15 @@ if /i "%1"=="all" (
 ) else (
   call composer test:integration
 )
+rem  (405) Ο κωδικος κρατιεται ΑΜΕΣΩΣ. Ως τωρα διαβαζοταν μετα τα echo του
+rem  «ΑΠΕΤΥΧΕ», βγαινε 0, και το `&& git commit` της αλυσιδας προχωρουσε:
+rem  στις 16/11 εγινε commit και push με αποτυχημενο integration test.
+set ECRM_EXIT=!errorlevel!
 
 rem --- Ρητο τελος. Ενα script που πεθαινει σιωπηλα μοιαζει με script που περασε. -
-if errorlevel 1 (
+if not "!ECRM_EXIT!"=="0" (
   echo.
-  echo   ---^> ΑΠΕΤΥΧΕ. Κωδικος: !errorlevel!
+  echo   ---^> ΑΠΕΤΥΧΕ. Κωδικος: !ECRM_EXIT!
   echo.
   echo   Αν το μηνυμα ελεγε «Unknown database», φτιαξ' τη απο το Adminer
   echo   ^(Local: Database -^> Open Adminer^):  CREATE DATABASE %ECRM_TEST_DB_NAME%;
@@ -108,6 +112,6 @@ if errorlevel 1 (
   echo   ---^> ΤΕΛΟΣ, καθαρο.
 )
 
-set ECRM_EXIT=%errorlevel%
 chcp %ECRM_OLD_CP% >nul 2>&1
-endlocal & exit /b %ECRM_EXIT%
+set ECRM_RC=!ECRM_EXIT!
+endlocal & exit /b %ECRM_RC%
