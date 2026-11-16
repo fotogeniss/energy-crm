@@ -1,0 +1,85 @@
+/* (406) Η οθόνη του δεύτερου βήματος στη σύνδεση (Access\TwoFactorLogin).
+ * Μπαίνει inline στη σελίδα· docs/UI-2FA.html, Δ. */
+:root {
+	--e2-g1: #2bd92c;
+	--e2-g2: #0e9a12;
+	--e2-g3: #06701a;
+	--e2-gink: #087219;
+	--e2-ink: #141613;
+	--e2-ink2: #545a52;
+	--e2-rose: #d70f3c;
+	--e2-white: #fff;
+	--e2-black: #111;
+	--e2-off: #c9cec7;
+	--e2-bg1: #0f1712;
+	--e2-bg2: #0a0f0c;
+	--e2-hair: rgba(16, 24, 15, .12);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+	margin: 0; display: grid; place-items: center; padding: 24px 16px; color: var(--e2-ink);
+	font: 15px/1.5 -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+	background:
+		radial-gradient(500px 320px at 20% 0, rgba(31, 191, 58, .25), transparent 70%),
+		radial-gradient(420px 320px at 100% 100%, rgba(20, 184, 166, .22), transparent 70%),
+		linear-gradient(160deg, var(--e2-bg1), var(--e2-bg2));
+}
+.e2-card {
+	width: 380px; max-width: 100%; padding: 30px 26px; text-align: center; border-radius: 26px;
+	background: rgba(255, 255, 255, .94); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+	box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .65), 0 0 0 1px rgba(255, 255, 255, .25);
+}
+.e2-brand { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; font-size: 13px; color: var(--e2-ink2); margin-bottom: 18px; }
+.e2-brand i {
+	width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-style: normal; color: var(--e2-white);
+	background: linear-gradient(180deg, var(--e2-g1), var(--e2-g2));
+}
+.e2-shield {
+	width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; margin: 0 auto 14px;
+	background: linear-gradient(160deg, var(--e2-g1), var(--e2-g3));
+	box-shadow: 0 10px 26px -8px rgba(14, 154, 18, .65), 0 0 0 6px rgba(22, 194, 23, .1);
+}
+.e2-shield svg { width: 28px; height: 28px; fill: none; stroke: var(--e2-white); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.e2-who {
+	display: inline-flex; align-items: center; gap: 8px; max-width: 100%; margin-bottom: 14px; padding: 4px 12px 4px 4px;
+	border-radius: 99px; background: rgba(16, 24, 15, .05); font-size: 13px; font-weight: 600;
+	overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.e2-who i {
+	width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; display: grid; place-items: center;
+	background: var(--e2-black); color: var(--e2-g1); font-size: 10px; font-weight: 800; font-style: normal;
+}
+h1 { margin: 0 0 4px; font-size: 21px; letter-spacing: -.01em; }
+p { margin: 0 0 18px; color: var(--e2-ink2); font-size: 14px; }
+.e2-code, .e2-backup {
+	width: 100%; border: 0; outline: 0; border-radius: 16px; padding: 14px 10px 14px 20px; text-align: center; color: var(--e2-ink);
+	background: var(--e2-white); box-shadow: 0 0 0 1px var(--e2-hair), 0 2px 6px -2px rgba(0, 0, 0, .1);
+	font: 700 28px ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .35em;
+}
+.e2-backup { font-size: 20px; letter-spacing: .15em; margin-bottom: 12px; }
+.e2-code:focus, .e2-backup:focus { box-shadow: 0 0 0 2px var(--e2-g2), 0 0 0 6px rgba(22, 194, 23, .12); }
+.e2-code.is-bad { box-shadow: 0 0 0 2px rgba(215, 15, 60, .6); }
+.e2-err { color: var(--e2-rose); font-size: 13px; font-weight: 600; margin: 10px 0 0; }
+.e2-keep { display: flex; gap: 10px; align-items: center; text-align: left; font-size: 13.5px; color: var(--e2-ink2); margin: 18px 0; cursor: pointer; }
+.e2-keep input { position: absolute; opacity: 0; pointer-events: none; }
+.e2-sw { width: 36px; height: 22px; flex: 0 0 36px; border-radius: 99px; background: var(--e2-off); position: relative; transition: background .2s; }
+.e2-sw::after {
+	content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%;
+	background: var(--e2-white); box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .2s;
+}
+.e2-keep input:checked + .e2-sw { background: var(--e2-g2); }
+.e2-keep input:checked + .e2-sw::after { transform: translateX(14px); }
+.e2-keep input:focus-visible + .e2-sw { box-shadow: 0 0 0 3px rgba(22, 194, 23, .3); }
+.e2-btn {
+	display: inline-flex; justify-content: center; width: 100%; border: 0; border-radius: 14px; padding: 13px 18px; cursor: pointer;
+	font: inherit; font-weight: 700; color: var(--e2-white); text-decoration: none;
+	background: linear-gradient(180deg, var(--e2-g1), var(--e2-g2));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, .33), 0 8px 18px -8px rgba(14, 154, 18, .66);
+}
+.e2-btn--ghost { background: var(--e2-white); color: var(--e2-ink); box-shadow: 0 0 0 1px var(--e2-hair); }
+.e2-alt { margin-top: 16px; }
+.e2-alt summary { color: var(--e2-gink); font-size: 13.5px; font-weight: 700; cursor: pointer; list-style: none; }
+.e2-alt summary::-webkit-details-marker { display: none; }
+.e2-alt[open] summary { margin-bottom: 12px; }
+.e2-alt p { margin: 0 0 10px; font-size: 13px; }

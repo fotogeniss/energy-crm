@@ -2140,6 +2140,8 @@
 .ecrm-app[data-ui="signature"] .sig-pf__side,
 .ecrm-app[data-ui="signature"] .sig-pf__card { border: 0; border-radius: 22px; background: var(--sig-glass-strong); box-shadow: 0 0 0 1px var(--sig-hair); }
 .ecrm-app[data-ui="signature"] .sig-pf__card { background: var(--sig-solid); }
+/* (406) Ενεργή σύνδεση σε δύο βήματα: η πράσινη κάρτα κρατά το χρώμα της και στο Signature */
+.ecrm-app[data-ui="signature"] .sig-pf__card.sig-2fa--on { color: var(--on-dark); background: linear-gradient(135deg, var(--p600) 0%, var(--p800) 100%); box-shadow: none; }
 .ecrm-app[data-ui="signature"] .sig-pf__me { border-bottom-color: var(--sig-hair); }
 .ecrm-app[data-ui="signature"] .sig-pf__av { color: var(--sig-on-btn); background: linear-gradient(135deg, var(--sig-btn-top), var(--sig-btn-bottom)); }
 /* (382) Φωτογραφία προφίλ */
@@ -2153,6 +2155,7 @@
 .ecrm-app[data-ui="signature"] .sig-pf__row b,
 .ecrm-app[data-ui="signature"] .sig-pf__stat b,
 .ecrm-app[data-ui="signature"] .sig-pf__prev b { color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .sig-pf__card.sig-2fa--on h3 { color: var(--on-dark); }
 .ecrm-app[data-ui="signature"] .sig-pf__me small,
 .ecrm-app[data-ui="signature"] .sig-pf__lead,
 .ecrm-app[data-ui="signature"] .sig-pf__row small,

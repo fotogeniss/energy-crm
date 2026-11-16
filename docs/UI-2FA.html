@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>(406) Σύνδεση σε δύο βήματα</title>
+<style>
+:root{--bg:#eef0ed;--card:#fff;--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--hair:#141e1417;--fill:#141e140f;--green:#16c217;--gink:#0a6b1d;--gt:#16c2171f;--btop:#22cf23;--bbot:#0e9a12;--rose:#d70f3c;--rt:#d70f3c14;--amber:#c46a00;--at:#ffa01424}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,"Segoe UI",Roboto,sans-serif;padding:24px 16px 60px}
+.wrap{max-width:1080px;margin:0 auto}p.note{color:var(--ink2);margin:0 0 16px;max-width:880px}
+h2{font-size:15px;margin:34px 0 10px;display:flex;gap:10px;align-items:center}h2 .tag{font-size:11px;font-weight:800;background:#1b1d1a;color:#fff;border-radius:99px;padding:2px 10px}
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.card{background:#fff;border-radius:22px;box-shadow:0 0 0 1px var(--hair);padding:22px;margin-bottom:16px;flex:1 1 320px;min-width:0}
+.card h3{margin:0 0 4px;font-size:17px;display:flex;align-items:center;gap:8px}.card>p{margin:0 0 14px;color:var(--ink2);font-size:13px}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11.5px;font-weight:700}
+.pill.off{background:var(--fill);color:var(--ink2)}.pill.on{background:var(--gt);color:var(--gink)}.pill.req{background:var(--at);color:var(--amber)}
+.btn{border:0;border-radius:99px;padding:10px 18px;font:inherit;font-weight:700;cursor:pointer}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btop),var(--bbot))}.btn.gho{background:#fff;box-shadow:0 0 0 1px var(--hair);color:var(--ink)}.btn.red{background:#fff;box-shadow:0 0 0 1px #d70f3c55;color:var(--rose)}.btn.sm{padding:7px 12px;font-size:12.5px}.btn.wide{width:100%}
+.foot{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--ink3)}
+.steps{display:flex;gap:6px;margin:0 0 14px}.steps i{flex:1;height:4px;border-radius:2px;background:var(--fill)}.steps i.on{background:var(--green)}
+.setup{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center}
+.qr{width:150px;height:150px;border-radius:14px;box-shadow:0 0 0 1px var(--hair);padding:10px;background:#fff}
+.key{font:600 14px/1.4 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;background:var(--fill);border-radius:10px;padding:8px 10px;display:inline-block;margin:6px 0}
+ol.s{margin:0;padding-left:18px;color:var(--ink2);font-size:13px}ol.s li{margin:4px 0}
+.otp{display:flex;gap:8px;margin:8px 0}.otp span{width:42px;height:50px;border-radius:12px;box-shadow:0 0 0 1px var(--hair);display:grid;place-items:center;font:700 22px ui-monospace,Menlo,monospace;background:#fff}
+.otp span.f{box-shadow:0 0 0 2px var(--green)}
+.codes{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;font:600 14px ui-monospace,Menlo,monospace;background:var(--fill);border-radius:14px;padding:14px 16px;margin:6px 0 10px}
+.warn{background:var(--at);color:#7a4300;border-radius:12px;padding:10px 12px;font-size:12.5px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin:4px 0 6px}.kv span{color:var(--ink3)}
+.check{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink2);margin:10px 0}.check i{width:18px;height:18px;border-radius:6px;background:var(--green);color:#fff;display:grid;place-items:center;font-style:normal;font-size:12px}
+/* login */
+.login{background:linear-gradient(160deg,#e9f6ea,#eef0ed);border-radius:22px;padding:30px 16px;display:flex;justify-content:center;flex:1 1 300px;min-width:0}
+.lbox{width:340px;max-width:100%;background:#fff;border-radius:22px;box-shadow:0 10px 30px -12px #0003,0 0 0 1px var(--hair);padding:24px 22px;text-align:center}
+.logo{width:46px;height:46px;border-radius:14px;margin:0 auto 10px;background:linear-gradient(180deg,var(--btop),var(--bbot));color:#fff;display:grid;place-items:center;font-size:22px}
+.lbox h4{margin:0 0 4px;font-size:18px}.lbox p{margin:0 0 14px;color:var(--ink2);font-size:13px}
+.lbox .otp{justify-content:center}.lbox .otp span{width:38px;height:46px;font-size:20px}
+.lbox a{color:var(--gink);font-size:12.5px;font-weight:600;text-decoration:none}
+.lbox .err{color:var(--rose);font-size:12.5px;margin:4px 0 8px}
+.phone{width:300px;max-width:calc(100% - 16px);margin:0 auto;border-radius:30px;background:#f6f8f7;box-shadow:0 0 0 8px #1b1d1a,0 20px 40px #0003;padding:26px 14px}
+.phone .lbox{width:100%;box-shadow:0 0 0 1px var(--hair)}
+/* team */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl th{text-align:left;color:var(--ink3);font-weight:600;font-size:12px;padding:6px 8px}.tbl td{padding:10px 8px;border-top:1px solid var(--hair)}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;box-shadow:0 0 0 1px var(--hair);margin-bottom:8px;font-size:13px}
+.opt.on{box-shadow:0 0 0 2px var(--green);background:#f6fff6}.opt .rd{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--ink3);flex:0 0 16px;margin-top:2px}.opt.on .rd{box-shadow:inset 0 0 0 5px var(--green)}
+.opt small{display:block;color:var(--ink3)}
+.legend{font-size:13px;line-height:1.7;max-width:900px}.legend p{margin:6px 0}
+.ask{background:#fff;border-radius:18px;box-shadow:0 0 0 2px #1b1d1a;padding:16px 18px;margin-top:26px;max-width:900px}
+.ask h3{margin:0 0 8px;font-size:15px}.ask ol{margin:0;padding-left:20px}.ask li{margin:6px 0}
+@media(max-width:640px){.tbl th:nth-child(2),.tbl td:nth-child(2){display:none}.tbl td,.tbl th{padding:8px 4px}.setup{grid-template-columns:1fr}.qr{margin:0 auto}.codes{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body><div class="wrap">
+<p class="note"><b>(406)</b> Σύνδεση σε δύο βήματα. Μετά τον κωδικό, ένας 6ψήφιος αριθμός από εφαρμογή στο κινητό (Google ή Microsoft Authenticator). Αν κλέψει κάποιος τον κωδικό, χωρίς το κινητό δεν μπαίνει. Μπαίνει στο «Το προφίλ μου → Ασφάλεια» (388), κάτω από τον κωδικό.</p>
+
+<h2><span class="tag">Α</span> Προφίλ → Ασφάλεια: ανενεργή</h2>
+<div class="row">
+  <section class="card"><h3>Σύνδεση σε δύο βήματα <span class="pill off">Ανενεργή</span></h3>
+    <p>Μετά τον κωδικό, γράφεις και έναν αριθμό από το κινητό σου. Ένας κλεμμένος κωδικός μόνος του δεν φτάνει.</p>
+    <div class="foot" style="justify-content:flex-start"><button class="btn pri">Ενεργοποίηση</button><span class="hint">Χρειάζεσαι Google ή Microsoft Authenticator στο κινητό.</span></div>
+  </section>
+  <section class="card"><h3>Σύνδεση σε δύο βήματα <span class="pill req">Υποχρεωτική για σένα</span></h3>
+    <p>Ο λογαριασμός σου είναι διαχειριστή: η ενεργοποίηση είναι υποχρεωτική. Μέχρι να την κάνεις, βλέπεις μόνο αυτή τη σελίδα.</p>
+    <div class="foot" style="justify-content:flex-start"><button class="btn pri">Ενεργοποίηση τώρα</button></div>
+  </section>
+</div>
+
+<h2><span class="tag">Β</span> Ενεργοποίηση σε τρία βήματα</h2>
+<div class="row">
+  <section class="card"><div class="steps"><i class="on"></i><i></i><i></i></div>
+    <h3>1. Σκάναρε με το κινητό</h3>
+    <div class="setup">
+      <svg class="qr" viewBox="0 0 29 29" shape-rendering="crispEdges"><rect width="29" height="29" fill="#fff"/><g fill="#1b1d1a"><path d="M0 0h7v7H0zM22 0h7v7h-7zM0 22h7v7H0z"/><path fill="#fff" d="M1 1h5v5H1zM23 1h5v5h-5zM1 23h5v5H1z"/><path d="M2 2h3v3H2zM24 2h3v3h-3zM2 24h3v3H2z"/><path d="M9 1h2v2H9zM13 0h1v3h-1zM16 2h3v1h-3zM9 5h4v1H9zM15 5h1v3h-1zM18 6h2v2h-2zM9 9h2v1H9zM12 8h3v2h-3zM0 9h3v1H0zM4 10h2v3H4zM17 9h4v1h-4zM23 9h2v2h-2zM26 10h3v1h-3zM8 12h3v2H8zM13 12h1v4h-1zM16 12h3v3h-3zM21 12h2v2h-2zM25 13h4v1h-4zM1 14h3v1H1zM6 15h2v3H6zM10 16h2v2h-2zM15 17h4v1h-4zM20 16h3v3h-3zM25 16h2v2h-2zM0 18h2v2H0zM9 19h3v1H9zM13 19h1v3h-1zM17 20h2v2h-2zM22 21h4v1h-4zM27 20h2v3h-2zM9 23h2v2H9zM12 24h4v1h-4zM18 23h3v1h-3zM23 24h2v4h-2zM9 27h3v2H9zM14 26h3v1h-3zM19 26h2v3h-2zM26 26h3v1h-3z"/></g></svg>
+      <div><ol class="s"><li>Άνοιξε το Authenticator στο κινητό.</li><li>Πάτα «+» και σκάναρε τον κωδικό QR.</li><li>Δεν σκανάρει; Γράψε το κλειδί:</li></ol>
+        <span class="key">JBSW Y3DP EHPK 3PXP</span></div>
+    </div>
+    <div class="foot"><button class="btn gho">Άκυρο</button><button class="btn pri">Επόμενο</button></div>
+  </section>
+  <section class="card"><div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
+    <h3>2. Γράψε τον αριθμό που βλέπεις</h3><p>Το Authenticator δείχνει έναν 6ψήφιο αριθμό που αλλάζει κάθε 30 δευτερόλεπτα.</p>
+    <div class="otp"><span>4</span><span>8</span><span>2</span><span>9</span><span class="f">1</span><span></span></div>
+    <div class="foot"><button class="btn gho">Πίσω</button><button class="btn pri">Έλεγχος</button></div>
+  </section>
+  <section class="card"><div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+    <h3>3. Κράτα τους εφεδρικούς κωδικούς</h3><p>Αν χάσεις το κινητό, μπαίνεις με έναν από αυτούς. Ο καθένας δουλεύει μία φορά.</p>
+    <div class="codes"><span>4821-7730</span><span>1196-0452</span><span>8834-2219</span><span>5507-6681</span><span>3069-9174</span><span>7712-4408</span><span>2290-5536</span><span>6643-1025</span></div>
+    <div class="warn">Φαίνονται μόνο τώρα. Τύπωσέ τους ή κατέβασέ τους και φύλαξέ τους μακριά από το κινητό.</div>
+    <div class="foot"><button class="btn gho sm">Εκτύπωση</button><button class="btn gho sm">Λήψη .txt</button><button class="btn pri">Τους κράτησα, τέλος</button></div>
+  </section>
+</div>
+
+<h2><span class="tag">Γ</span> Προφίλ → Ασφάλεια: ενεργή</h2>
+<div class="row">
+  <section class="card"><h3>Σύνδεση σε δύο βήματα <span class="pill on">Ενεργή</span></h3>
+    <div class="kv"><span>Από</span><b>16/11/2026</b><span>Εφαρμογή</span><b>Authenticator</b><span>Εφεδρικοί</span><b>6 από 8 αχρησιμοποίητοι</b><span>Αυτή η συσκευή</span><b>θυμάται έως 16/12</b></div>
+    <div class="foot" style="justify-content:flex-start"><button class="btn gho sm">Νέοι εφεδρικοί κωδικοί</button><button class="btn gho sm">Ξέχνα τις συσκευές που θυμάμαι</button><button class="btn red sm">Απενεργοποίηση</button></div>
+    <p class="hint" style="margin-top:10px">Η απενεργοποίηση ζητά τον κωδικό σου και έναν αριθμό από την εφαρμογή. Για τον διαχειριστή δεν υπάρχει (είναι υποχρεωτική).</p>
+  </section>
+</div>
+
+<h2><span class="tag">Δ</span> Η σύνδεση, δεύτερο βήμα</h2>
+<div class="row">
+  <div class="login"><div class="lbox"><div class="logo">⚡</div>
+    <h4>Επιβεβαίωση</h4><p>Γράψε τον 6ψήφιο αριθμό από το Authenticator.</p>
+    <div class="otp"><span>4</span><span>8</span><span>2</span><span>9</span><span>1</span><span class="f">7</span></div>
+    <div class="check"><i>✓</i>Να με θυμάται αυτή η συσκευή για 30 ημέρες</div>
+    <button class="btn pri wide">Σύνδεση</button>
+    <p style="margin:12px 0 0"><a>Δεν έχω το κινητό· εφεδρικός κωδικός</a></p>
+  </div></div>
+  <div class="phone"><div class="lbox"><div class="logo">⚡</div>
+    <h4>Επιβεβαίωση</h4><p>Γράψε τον 6ψήφιο αριθμό από το Authenticator.</p>
+    <div class="otp"><span>4</span><span>8</span><span>2</span><span>9</span><span>1</span><span></span></div>
+    <div class="err">Λάθος αριθμός. Δοκίμασε τον τωρινό (αλλάζει κάθε 30″).</div>
+    <div class="check"><i>✓</i>Να με θυμάται για 30 ημέρες</div>
+    <button class="btn pri wide">Σύνδεση</button>
+    <p style="margin:12px 0 0"><a>Εφεδρικός κωδικός</a></p>
+  </div></div>
+</div>
+
+<h2><span class="tag">Ε</span> Ομάδα και Ρυθμίσεις (διαχειριστής)</h2>
+<div class="row">
+  <section class="card"><h3>Ομάδα</h3>
+    <table class="tbl"><tr><th>Μέλος</th><th>Ρόλος</th><th>Δύο βήματα</th><th></th></tr>
+      <tr><td><b>Κωνσταντίνος Νίκας</b></td><td>Διαχειριστής</td><td><span class="pill on">Ενεργή</span></td><td></td></tr>
+      <tr><td><b>Γιώργος Π.</b></td><td>Πωλητής</td><td><span class="pill on">Ενεργή</span></td><td><button class="btn gho sm">Επαναφορά</button></td></tr>
+      <tr><td><b>Νίκη Α.</b></td><td>Πωλητής</td><td><span class="pill off">Όχι</span></td><td></td></tr>
+    </table>
+    <p class="hint" style="margin-top:10px">«Επαναφορά»: για όποιον έχασε κινητό και εφεδρικούς. Του σβήνει τη ρύθμιση· στην επόμενη σύνδεση την ξαναστήνει. Καταγράφεται στο ιστορικό ασφαλείας.</p>
+  </section>
+  <section class="card"><h3>Ρυθμίσεις → Ασφάλεια</h3><p>Ποιος πρέπει να έχει σύνδεση σε δύο βήματα;</p>
+    <div class="opt on"><span class="rd"></span><div><b>Διαχειριστές και back office</b><small>Οι υπόλοιποι την ενεργοποιούν αν θέλουν.</small></div></div>
+    <div class="opt"><span class="rd"></span><div><b>Όλοι</b><small>Κάθε χρήστης τη στήνει στην επόμενη σύνδεση.</small></div></div>
+    <div class="opt"><span class="rd"></span><div><b>Κανείς υποχρεωτικά</b><small>Μόνο όποιος τη θέλει.</small></div></div>
+  </section>
+</div>
+
+<div class="legend">
+  <h2>Από πίσω</h2>
+  <p>• <b>Πρότυπο TOTP</b> (RFC 6238): 6 ψηφία, 30″, δέχεται ±1 βήμα για μικρή διαφορά ρολογιού. Χωρίς εξωτερική υπηρεσία, χωρίς SMS, χωρίς κόστος. Ίδια λειτουργία με Google, Microsoft, Authy.</p>
+  <p>• <b>Το μυστικό κλειδί</b> κρυπτογραφείται στη βάση με την ίδια κρυπτογράφηση των προσωπικών δεδομένων (libsodium). Οι εφεδρικοί κωδικοί αποθηκεύονται μόνο ως hash. Ο ίδιος αριθμός δεν γίνεται δεκτός δύο φορές.</p>
+  <p>• <b>Η σύνδεση:</b> το WordPress ελέγχει πρώτα τον κωδικό· αν ο χρήστης έχει δύο βήματα, η σύνδεση δεν ολοκληρώνεται και εμφανίζεται η οθόνη Δ. Μετά από 5 λάθος αριθμούς κλειδώνει όπως ο κωδικός (LoginThrottle). Ο QR φτιάχνεται τοπικά (ecrm-qr.js), δεν φεύγει πουθενά.</p>
+  <p>• <b>«Να με θυμάται»:</b> υπογεγραμμένο cookie 30 ημερών σε αυτή τη συσκευή. Αλλαγή κωδικού ή «Ξέχνα τις συσκευές» το ακυρώνει.</p>
+  <p>• <b>Εφαρμογή στο κινητό (PWA):</b> μπαίνει από την ίδια σελίδα σύνδεσης· με «Να με θυμάται» ζητά αριθμό μία φορά τον μήνα. Οι Application Passwords μένουν μόνο για τον διαχειριστή, όπως σήμερα.</p>
+  <p>• Νέα σημεία: <code>POST /me/2fa/start</code>, <code>POST /me/2fa/confirm</code>, <code>POST /me/2fa/codes</code>, <code>DELETE /me/2fa</code>, <code>DELETE /team/{id}/2fa</code> (διαχειριστής).</p>
+</div>
+
+<div class="ask"><h3>Τι χρειάζομαι από εσάς</h3>
+  <ol>
+    <li><b>Ποιος υποχρεωτικά;</b> (Ε δεξιά) Πρόταση: διαχειριστές και back office υποχρεωτικά, οι πωλητές προαιρετικά.</li>
+    <li><b>Εναλλακτικός κωδικός με email</b> για όποιον δεν θέλει εφαρμογή; Πιο εύκολο για τους πωλητές, αλλά λιγότερο ασφαλές (αν κλαπεί το email, κλάπηκαν και τα δύο). Πρόταση: όχι τώρα.</li>
+    <li><b>«Να με θυμάται»</b> 30 ημέρες: εντάξει, ή άλλη διάρκεια;</li>
+  </ol>
+</div>
+</div></body>
+</html>

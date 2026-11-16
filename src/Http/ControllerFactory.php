@@ -32,6 +32,7 @@ namespace EnergyCRM\Http;
 use EnergyCRM\Infrastructure\CspReports;
 use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Infrastructure\TeamInvite;
+use EnergyCRM\Infrastructure\TwoFactor;
 use EnergyCRM\Infrastructure\UserSessions;
 use EnergyCRM\Persistence\CrossSellQueries;
 use EnergyCRM\Persistence\CustomerHistoryQueries;
@@ -225,6 +226,8 @@ final class ControllerFactory
             new ProfilePhotoController(Services::profilePhoto()),
             // (388) «Το προφίλ μου → Ασφάλεια».
             new SecurityController(new UserSessions()),
+            // (406) Σύνδεση σε δύο βήματα, προαιρετική.
+            new TwoFactorController(TwoFactor::make()),
             // (394) Αναφορές CSP από τον browser (δημόσιο, με όριο).
             new CspReportController(new CspReports()),
 

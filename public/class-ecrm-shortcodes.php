@@ -147,7 +147,7 @@ class ECRM_Shortcodes {
 		],
 		'@energy-crm/view-import'      => [ '@energy-crm/util' ],
 		'@energy-crm/view-kb'          => [ '@energy-crm/util' ],
-		'@energy-crm/view-profile'     => [ '@energy-crm/util', '@energy-crm/qr-poster' ],
+		'@energy-crm/view-profile'     => [ '@energy-crm/util', '@energy-crm/qr-poster', '@energy-crm/qr' ],
 		'@energy-crm/view-training'    => [ '@energy-crm/util' ],
 		'@energy-crm/datepick'         => [],
 		'@energy-crm/install-env'      => [],

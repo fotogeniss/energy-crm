@@ -5,12 +5,13 @@
  * POST /me/profile (UserProfile, user meta)· το θέμα και η εμφάνιση
  * περνούν από τους διακόπτες που υπάρχουν ήδη στη σελίδα, ώστε να μην
  * υπάρχουν δύο δρόμοι για το ίδιο πράγμα. (388) «Ασφάλεια»: αλλαγή κωδικού
- * και συνδέσεις (docs/UI-PROFILE-SECURITY.html)· η σύνδεση σε δύο βήματα
- * έρχεται σε δικό της γύρο.
+ * και συνδέσεις (docs/UI-PROFILE-SECURITY.html). (406) Σύνδεση σε δύο
+ * βήματα, πάντα προαιρετική (docs/UI-2FA.html).
  */
 
 import { api, esc, fetch, H, openBlobPage, providerMark, toast, viewEl } from '@energy-crm/util';
 import { qrPosterHtml, wireQrPoster } from '@energy-crm/qr-poster';
+import { qrSvg } from '@energy-crm/qr';
 
 var SECTIONS = [
 	{ key: '', label: 'Τα στοιχεία μου' },
@@ -429,6 +430,7 @@ function renderSecurity(main, d) {
 		'<div class="sig-pf__foot sig-pf__foot--note"><small>Οι άλλες συνδέσεις σου θα αποσυνδεθούν· εδώ μένεις συνδεδεμένος.</small>' +
 			'<button type="button" class="ecrm-btn ecrm-btn--primary" data-pw-save disabled>Αλλαγή κωδικού</button></div>' +
 		'</section>' +
+		'<div data-pf-2fa></div>' +
 		'<div data-pf-sess-wrap>' + sessionsHTML(d.sessions || []) + '</div>';
 
 	var cur = main.querySelector('[data-pw="current"]');
@@ -484,6 +486,269 @@ function renderSecurity(main, d) {
 	});
 
 	wireSessions(main);
+	load2fa(main.querySelector('[data-pf-2fa]'));
+}
+
+/* ---- (406) Σύνδεση σε δύο βήματα — docs/UI-2FA.html ------------------
+ *
+ * Πάντα προαιρετική. Το QR φτιάχνεται εδώ (ecrm-qr.js): το μυστικό δεν
+ * φεύγει προς καμία υπηρεσία. Οι εφεδρικοί κωδικοί φαίνονται μία φορά.
+ */
+var SHIELD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6z"/></svg>';
+var SHIELD_OK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6z"/>' +
+	'<path d="M8.5 12l2.4 2.4L15.5 9.8"/></svg>';
+
+function post2fa(path, body, method) {
+	return fetch(api('/me/2fa' + path), {
+		method: method || 'POST',
+		headers: Object.assign({ 'Content-Type': 'application/json' }, H()),
+		body: body ? JSON.stringify(body) : undefined
+	}).then(function (r) { return r.json(); });
+}
+
+function load2fa(box) {
+	if (!box) return;
+	fetch(api('/me/2fa'), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) { if (d && d.ok) render2fa(box, d); })
+		.catch(function () {});
+}
+
+function render2fa(box, d) {
+	if (!d.available) {
+		box.innerHTML = '<section class="sig-pf__card sig-2fa"><div class="sig-2fa__hero"><span class="sig-2fa__shield">' + SHIELD + '</span>' +
+			'<div><h3>Σύνδεση σε δύο βήματα</h3><p class="sig-pf__lead">Δεν γίνεται σε αυτόν τον server: λείπει η κρυπτογράφηση (libsodium).</p></div></div></section>';
+		return;
+	}
+	if (d.enabled) { renderActive(box, d); return; }
+
+	box.innerHTML = '<section class="sig-pf__card sig-2fa">' +
+		'<div class="sig-2fa__hero"><span class="sig-2fa__shield">' + SHIELD + '</span>' +
+		'<div><h3>Σύνδεση σε δύο βήματα <span class="sig-2fa__chip">Ανενεργή</span></h3>' +
+		'<p class="sig-pf__lead">Προαιρετική. Ένας κλεμμένος κωδικός μόνος του δεν θα φτάνει.</p></div></div>' +
+		'<div class="sig-2fa__ben"><div><b>Ένα δευτερόλεπτο</b>Ένας αριθμός από το κινητό, όταν μπαίνεις.</div>' +
+		'<div><b>Μία φορά τον μήνα</b>Σε δική σου συσκευή που σε θυμάται.</div>' +
+		'<div><b>Χωρίς SMS</b>Δουλεύει και χωρίς σήμα.</div></div>' +
+		'<div class="sig-2fa__foot"><button type="button" class="ecrm-btn ecrm-btn--primary" data-2fa-on>Ενεργοποίηση</button>' +
+		'<small>Google ή Microsoft Authenticator στο κινητό</small></div></section>';
+
+	box.querySelector('[data-2fa-on]').addEventListener('click', function () {
+		var b = this;
+		b.disabled = true;
+		post2fa('/start').then(function (res) {
+			if (!res || !res.ok) { b.disabled = false; toast((res && res.error) || 'Δεν έγινε.', false); return; }
+			stepScan(box, res);
+		}).catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
+	});
+}
+
+function stepper(cur) {
+	var names = ['Σκανάρισμα', 'Έλεγχος', 'Εφεδρικοί'];
+	return '<div class="sig-2fa__steps">' + names.map(function (n, i) {
+		var cls = i < cur ? ' is-done' : (i === cur ? ' is-cur' : '');
+		return (i ? '<span class="sig-2fa__ln' + (i <= cur ? ' is-done' : '') + '"></span>' : '') +
+			'<span class="sig-2fa__st' + cls + '"><i>' + (i < cur ? '✓' : (i + 1)) + '</i><span>' + esc(n) + '</span></span>';
+	}).join('') + '</div>';
+}
+
+function stepScan(box, setup) {
+	box.innerHTML = '<section class="sig-pf__card sig-2fa">' + stepper(0) +
+		'<div class="sig-2fa__setup"><div class="sig-2fa__qr">' + qrSvg(setup.uri) + '</div>' +
+		'<div><ol class="sig-2fa__how"><li>Άνοιξε το Authenticator στο κινητό σου.</li><li>Πάτα «+» και στόχευσε τον κωδικό.</li>' +
+		'<li>Δεν σκανάρει; Γράψε το κλειδί:</li></ol>' +
+		'<div class="sig-2fa__key"><code>' + esc(setup.grouped) + '</code>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-2fa-copy>Αντιγραφή</button></div></div></div>' +
+		'<div class="sig-2fa__foot is-end"><button type="button" class="ecrm-btn ecrm-btn--ghost" data-2fa-cancel>Άκυρο</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-2fa-next>Επόμενο</button></div></section>';
+
+	box.querySelector('[data-2fa-copy]').addEventListener('click', function () {
+		copyText(setup.secret, 'Το κλειδί αντιγράφηκε.');
+	});
+	box.querySelector('[data-2fa-cancel]').addEventListener('click', function () { load2fa(box); });
+	box.querySelector('[data-2fa-next]').addEventListener('click', function () { stepCode(box, setup); });
+}
+
+function codeInputHTML() {
+	return '<input class="sig-2fa__code" data-2fa-code inputmode="numeric" autocomplete="one-time-code" maxlength="7" ' +
+		'placeholder="••••••" aria-label="Αριθμός 6 ψηφίων">';
+}
+
+function digitsOf(input) { return String(input.value || '').replace(/\D/g, ''); }
+
+function stepCode(box, setup) {
+	box.innerHTML = '<section class="sig-pf__card sig-2fa">' + stepper(1) +
+		'<h3>Γράψε τον αριθμό</h3><p class="sig-pf__lead">Αυτόν που δείχνει τώρα η εφαρμογή για το Energy CRM.</p>' +
+		codeInputHTML() + '<div class="sig-pf__err" data-2fa-err hidden></div>' +
+		'<div class="sig-2fa__foot is-end"><button type="button" class="ecrm-btn ecrm-btn--ghost" data-2fa-back>Πίσω</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-2fa-check disabled>Έλεγχος</button></div></section>';
+
+	var input = box.querySelector('[data-2fa-code]');
+	var btn = box.querySelector('[data-2fa-check]');
+	var err = box.querySelector('[data-2fa-err]');
+	input.focus();
+	input.addEventListener('input', function () { btn.disabled = digitsOf(input).length !== 6; err.hidden = true; input.classList.remove('is-bad'); });
+	input.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !btn.disabled) btn.click(); });
+	box.querySelector('[data-2fa-back]').addEventListener('click', function () { stepScan(box, setup); });
+	btn.addEventListener('click', function () {
+		btn.disabled = true;
+		post2fa('/confirm', { code: digitsOf(input) }).then(function (res) {
+			if (!res || !res.ok) {
+				err.hidden = false; err.textContent = (res && res.error) || 'Δεν έγινε.';
+				input.classList.add('is-bad'); input.select(); btn.disabled = false;
+				return;
+			}
+			stepCodes(box, res);
+		}).catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+	});
+}
+
+function codesText(codes) {
+	var me = state.data.profile;
+	return 'Energy CRM — εφεδρικοί κωδικοί σύνδεσης\n' + (me.email || '') + '\n\n' +
+		codes.map(function (c, i) { return (i + 1) + '. ' + c; }).join('\n') +
+		'\n\nΚάθε κωδικός δουλεύει μία φορά. Φύλαξέ τους μακριά από το κινητό.\n';
+}
+
+function vaultHTML(codes) {
+	var me = state.data.profile;
+	return '<div class="sig-2fa__vault"><div class="sig-2fa__vtop"><span>ENERGY CRM · ' + esc(me.email || '') + '</span>' +
+		'<span>' + esc(new Date().toLocaleDateString('el-GR')) + '</span></div>' +
+		'<div class="sig-2fa__vgrid">' + codes.map(function (c, i) { return '<span><i>' + (i + 1) + '</i>' + esc(c) + '</span>'; }).join('') + '</div></div>' +
+		'<div class="sig-2fa__warn">Φαίνονται μόνο τώρα. Φύλαξέ τους μακριά από το κινητό.</div>';
+}
+
+function wireVault(box, codes) {
+	box.querySelector('[data-2fa-ccopy]').addEventListener('click', function () { copyText(codesText(codes), 'Οι κωδικοί αντιγράφηκαν.'); });
+	box.querySelector('[data-2fa-cdl]').addEventListener('click', function () {
+		var a = document.createElement('a');
+		a.href = URL.createObjectURL(new Blob([codesText(codes)], { type: 'text/plain;charset=utf-8' }));
+		a.download = 'energy-crm-efedrikoi-kodikoi.txt';
+		document.body.appendChild(a); a.click(); a.remove();
+		setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+	});
+	box.querySelector('[data-2fa-cprint]').addEventListener('click', function () {
+		openBlobPage('<!doctype html><html lang="el"><head><meta charset="utf-8"><title>Εφεδρικοί κωδικοί</title></head>' +
+			'<body data-page style="font:16px/1.6 ui-monospace,Menlo,Consolas,monospace;padding:32px"><pre>' + esc(codesText(codes)) + '</pre></body></html>',
+			function (doc, win) { win.print(); });
+	});
+}
+
+function vaultButtonsHTML() {
+	return '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-2fa-ccopy>Αντιγραφή</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-2fa-cprint>Εκτύπωση</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-2fa-cdl>Λήψη</button>';
+}
+
+function stepCodes(box, res) {
+	box.innerHTML = '<section class="sig-pf__card sig-2fa">' + stepper(2) +
+		'<div class="sig-2fa__ok">✓ Η εφαρμογή συνδέθηκε.</div>' +
+		'<h3>Κράτα τους εφεδρικούς κωδικούς</h3><p class="sig-pf__lead">Αν χάσεις το κινητό, μπαίνεις με έναν από αυτούς. Ο καθένας δουλεύει μία φορά.</p>' +
+		vaultHTML(res.codes || []) +
+		'<div class="sig-2fa__foot">' + vaultButtonsHTML() + '<span class="sig-2fa__sp"></span>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--primary" data-2fa-done>Τους κράτησα</button></div></section>';
+	wireVault(box, res.codes || []);
+	box.querySelector('[data-2fa-done]').addEventListener('click', function () {
+		toast('Η σύνδεση σε δύο βήματα ενεργοποιήθηκε.');
+		renderActive(box, res);
+	});
+}
+
+function deviceRowHTML(dv) {
+	return '<div class="sig-pf__sess"><span class="sig-pf__sessic" aria-hidden="true">' + (dv.mobile ? '📱' : '💻') + '</span>' +
+		'<div><b>' + esc(dv.label || 'Συσκευή') + '</b>' + (dv.current ? '<span class="sig-pf__now">αυτή η συσκευή</span>' : '') +
+		'<small>έως ' + esc(dv.until) + '</small></div>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-2fa-forget="' + esc(dv.id) + '">Ξέχνα την</button></div>';
+}
+
+function renderActive(box, d) {
+	var devices = d.devices || [];
+	box.innerHTML = '<section class="sig-pf__card sig-2fa sig-2fa--on">' +
+		'<div class="sig-2fa__hero"><span class="sig-2fa__shield is-on">' + SHIELD_OK + '</span>' +
+		'<div><h3>Προστατεύεσαι <span class="sig-2fa__chip is-on">Ενεργή</span></h3>' +
+		'<p class="sig-2fa__sub">Σύνδεση σε δύο βήματα' + (d.since ? ' από ' + esc(d.since) : '') + ', με Authenticator.</p></div></div>' +
+		'<div class="sig-2fa__stats"><div><small>Εφεδρικοί κωδικοί</small><b>' + esc(d.backup_left) + ' από 8</b></div>' +
+		'<div><small>Συσκευές που με θυμούνται</small><b>' + devices.length + '</b></div>' +
+		'<div><small>Τελευταίος έλεγχος</small><b>' + esc(d.last_used || '—') + '</b></div></div>' +
+		'<div class="sig-2fa__foot"><button type="button" class="ecrm-btn ecrm-btn--sm sig-2fa__glass" data-2fa-new>Νέοι εφεδρικοί κωδικοί</button>' +
+		'<button type="button" class="ecrm-btn ecrm-btn--sm sig-2fa__white" data-2fa-off>Απενεργοποίηση</button></div>' +
+		'<div data-2fa-panel></div></section>' +
+		'<section class="sig-pf__card"><h3>Συσκευές που με θυμούνται</h3>' +
+		'<p class="sig-pf__lead">Εδώ δεν ζητείται αριθμός για 30 ημέρες. Αλλαγή κωδικού τις ξεχνά όλες.</p>' +
+		(devices.length ? devices.map(deviceRowHTML).join('') : '<p class="sig-pf__lead">Καμία.</p>') +
+		(devices.length > 1 ? '<div class="sig-pf__foot"><button type="button" class="ecrm-btn ecrm-btn--ghost" data-2fa-forget-all>Ξέχνα όλες</button></div>' : '') +
+		'</section>';
+
+	var panel = box.querySelector('[data-2fa-panel]');
+
+	box.querySelector('[data-2fa-new]').addEventListener('click', function () {
+		panel.innerHTML = '<div class="sig-2fa__panel"><p>Για νέους εφεδρικούς, γράψε τον αριθμό της εφαρμογής. Οι παλιοί παύουν να ισχύουν.</p>' +
+			codeInputHTML() + '<div class="sig-pf__err" data-2fa-err hidden></div>' +
+			'<div class="sig-2fa__foot is-end"><button type="button" class="ecrm-btn ecrm-btn--primary" data-2fa-go>Νέοι κωδικοί</button></div></div>';
+		var input = panel.querySelector('[data-2fa-code]');
+		input.focus();
+		panel.querySelector('[data-2fa-go]').addEventListener('click', function () {
+			var b = this; b.disabled = true;
+			post2fa('/codes', { code: digitsOf(input) }).then(function (res) {
+				if (!res || !res.ok) { b.disabled = false; showErr(panel, res); return; }
+				panel.innerHTML = '<div class="sig-2fa__panel">' + vaultHTML(res.codes || []) + '<div class="sig-2fa__foot">' + vaultButtonsHTML() + '</div></div>';
+				wireVault(panel, res.codes || []);
+			}).catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
+	});
+
+	box.querySelector('[data-2fa-off]').addEventListener('click', function () {
+		panel.innerHTML = '<div class="sig-2fa__panel"><p>Για απενεργοποίηση, ο κωδικός πρόσβασης και ένας αριθμός από την εφαρμογή.</p>' +
+			'<input class="ecrm-input" type="password" data-2fa-pw autocomplete="current-password" placeholder="Κωδικός πρόσβασης">' +
+			codeInputHTML() + '<div class="sig-pf__err" data-2fa-err hidden></div>' +
+			'<div class="sig-2fa__foot is-end"><button type="button" class="ecrm-btn ecrm-btn--danger" data-2fa-go>Απενεργοποίηση</button></div></div>';
+		panel.querySelector('[data-2fa-pw]').focus();
+		panel.querySelector('[data-2fa-go]').addEventListener('click', function () {
+			var b = this; b.disabled = true;
+			post2fa('/disable', { password: panel.querySelector('[data-2fa-pw]').value, code: digitsOf(panel.querySelector('[data-2fa-code]')) })
+				.then(function (res) {
+					if (!res || !res.ok) { b.disabled = false; showErr(panel, res); return; }
+					toast('Η σύνδεση σε δύο βήματα απενεργοποιήθηκε.');
+					render2fa(box, res);
+				}).catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
+	});
+
+	box.querySelectorAll('[data-2fa-forget]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			b.disabled = true;
+			post2fa('/devices/' + encodeURIComponent(b.getAttribute('data-2fa-forget')), null, 'DELETE').then(function (res) {
+				if (!res || !res.ok) { b.disabled = false; toast((res && res.error) || 'Δεν έγινε.', false); return; }
+				toast('Η συσκευή ξεχάστηκε.');
+				renderActive(box, res);
+			}).catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		});
+	});
+
+	var all = box.querySelector('[data-2fa-forget-all]');
+	if (all) all.addEventListener('click', function () {
+		all.disabled = true;
+		post2fa('/devices', null, 'DELETE').then(function (res) {
+			if (!res || !res.ok) { all.disabled = false; toast((res && res.error) || 'Δεν έγινε.', false); return; }
+			toast('Ξεχάστηκαν όλες οι συσκευές.');
+			renderActive(box, res);
+		}).catch(function () { all.disabled = false; toast('Σφάλμα δικτύου.', false); });
+	});
+}
+
+function showErr(panel, res) {
+	var err = panel.querySelector('[data-2fa-err]');
+	err.hidden = false;
+	err.textContent = (res && res.error) || 'Δεν έγινε.';
+	var input = panel.querySelector('[data-2fa-code]');
+	if (input) { input.classList.add('is-bad'); input.select(); }
+}
+
+function copyText(text, done) {
+	if (navigator.clipboard && navigator.clipboard.writeText) {
+		navigator.clipboard.writeText(text).then(function () { toast(done); }, function () { toast('Δεν αντιγράφηκε.', false); });
+	} else {
+		toast('Δεν αντιγράφηκε.', false);
+	}
 }
 
 function wireSessions(main) {

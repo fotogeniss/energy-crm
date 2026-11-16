@@ -112,7 +112,7 @@ function renderTeam(view, d, flash) {
 		return providersPromise;
 	}
 
-	if (window.ECRM && window.ECRM.isAdmin) { loadOrphans(view.querySelector('[data-orphans]')); }
+	if (window.ECRM && window.ECRM.isAdmin) { loadOrphans(view.querySelector('[data-orphans]')); mark2fa(view); }
 
 	var showAdd = view.querySelector('[data-show-add]');
 	if (showAdd) showAdd.addEventListener('click', function () {
@@ -423,4 +423,51 @@ function sigTeamHTML(members, canManage, flash) {
 		(cards
 			? '<div class="sig-teamgrid">' + cards + '</div>'
 			: '<div class="sig-tempty"><b>Κανένα μέλος στην ομάδα ακόμα.</b>' + (canManage ? '<span>Πάτα «+ Νέος πωλητής» για τον πρώτο.</span>' : '') + '</div>');
+}
+
+/* (406) Ποιος έχει σύνδεση σε δύο βήματα (μόνο για τον διαχειριστή), και
+ * «Επαναφορά 2FA» για όποιον έχασε κινητό και εφεδρικούς κωδικούς. Η σύνδεση
+ * σε δύο βήματα είναι πάντα προαιρετική· η επαναφορά απλώς τη σβήνει. */
+function mark2fa(view) {
+	fetch(api('/team/2fa'), { headers: H() })
+		.then(function (r) { return r.json(); })
+		.then(function (d) {
+			if (!d || !d.ok) return;
+			var on = (d.enabled || []).map(String);
+			view.querySelectorAll('[data-member]').forEach(function (row) {
+				var id = row.getAttribute('data-member');
+				if (on.indexOf(id) === -1) return;
+				var name = row.querySelector('.sig-member__who b, .ecrm-cell-cust > span:last-child');
+				if (name) {
+					var chip = document.createElement('span');
+					chip.className = 'sig-2fa__tchip';
+					chip.title = 'Σύνδεση σε δύο βήματα';
+					chip.textContent = '2FA';
+					name.appendChild(chip);
+				}
+				var where = row.querySelector('.sig-mm__menu') || row.querySelector('td:last-child');
+				if (!where) return;
+				var b = document.createElement('button');
+				b.type = 'button';
+				b.className = 'ecrm-btn ecrm-btn--ghost ecrm-btn--sm';
+				b.textContent = 'Επαναφορά 2FA';
+				b.addEventListener('click', function (ev) {
+					ev.stopPropagation();
+					if (!confirm('Επαναφορά της σύνδεσης σε δύο βήματα; Θα μπαίνει μόνο με τον κωδικό του, μέχρι να την ξαναστήσει.')) return;
+					b.disabled = true;
+					fetch(api('/team/' + encodeURIComponent(id) + '/2fa'), { method: 'DELETE', headers: H() })
+						.then(function (r) { return r.json(); })
+						.then(function (res) {
+							if (!res || !res.ok) { b.disabled = false; toast((res && res.error) || 'Δεν έγινε.', false); return; }
+							toast('Η σύνδεση σε δύο βήματα επαναφέρθηκε.');
+							b.remove();
+							var chip = row.querySelector('.sig-2fa__tchip');
+							if (chip) chip.remove();
+						})
+						.catch(function () { b.disabled = false; toast('Σφάλμα δικτύου.', false); });
+				});
+				where.appendChild(b);
+			});
+		})
+		.catch(function () {});
 }

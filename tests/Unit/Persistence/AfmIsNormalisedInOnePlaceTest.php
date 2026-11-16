@@ -44,6 +44,13 @@ final class AfmIsNormalisedInOnePlaceTest extends TestCase
             'digits(): Ταχυδρομικός Κώδικας, όχι ΑΦΜ. Κόβει μη-ψηφία για να πάρει '
             . 'το 5ψήφιο ΤΚ από ελεύθερο κείμενο (CHANGELOG (216)) -- δεν αγγίζει '
             . 'afm_hash ούτε μπαίνει σε blind index.',
+
+        'src/Domain/Security/BackupCodes.php' =>
+            '(406) Εφεδρικοί κωδικοί σύνδεσης σε δύο βήματα, όχι ΑΦΜ: «4821-7730» και '
+            . '«48217730» είναι ο ίδιος κωδικός.',
+
+        'src/Domain/Security/Totp.php' =>
+            '(406) Ο 6ψήφιος αριθμός του Authenticator, όχι ΑΦΜ: «482 917» γράφεται και με κενό.',
     ];
 
     /** Μια συμβολοσειρά που μοιάζει με regex και περιέχει \D. */

@@ -19,6 +19,7 @@ use EnergyCRM\Access\DepartingUser;
 use EnergyCRM\Access\DisabledAccounts;
 use EnergyCRM\Access\Hardening;
 use EnergyCRM\Access\LoginThrottle;
+use EnergyCRM\Access\TwoFactorLogin;
 use EnergyCRM\Access\NetworkSync;
 use EnergyCRM\Access\Roles;
 use EnergyCRM\Admin\FormCalibrator;
@@ -123,6 +124,9 @@ final class Plugin
         // Πριν από κάθε έλεγχο κωδικού: μια σειρά αποτυχιών σταματάει να
         // δέχεται προσπάθειες, αντί να τις πληρώνει ο server μία-μία.
         (new LoginThrottle())->register();
+
+        // (406) Σύνδεση σε δύο βήματα, μόνο για όποιον την ενεργοποίησε.
+        (new TwoFactorLogin(new LoginThrottle()))->register();
 
         // Πριν από οτιδήποτε αγγίζει δικαιώματα: όσο ο λογαριασμός είναι
         // απενεργοποιημένος, κανένα ecrm_* δικαίωμα δεν ισχύει πουθενά.
