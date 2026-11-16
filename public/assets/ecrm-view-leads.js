@@ -739,7 +739,7 @@ function sigLeadsHTML(d, form) {
 		form +
 		flow +
 		(hero || todayCard ? '<div class="sig-lhero' + (hero ? '' : ' is-solo') + '">' + hero + todayCard + '</div>' : '') +
-		'<div class="sig-lsearch"><input type="search" class="ecrm-input" placeholder="Αναζήτηση ονόματος, τηλεφώνου, ενδιαφέροντος…" value="' + esc(leadsState.q) + '" data-lq></div>' +
+		'<div class="sig-lsearch"><svg class="ecrm-i ecrm-search__ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" class="ecrm-input" placeholder="Αναζήτηση ονόματος, τηλεφώνου, ενδιαφέροντος…" aria-label="Αναζήτηση υποψηφίου" value="' + esc(leadsState.q) + '" data-lq></div>' +
 		groups;
 }
 

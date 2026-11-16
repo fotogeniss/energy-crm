@@ -3098,8 +3098,8 @@
    ιδιοκτήτης (15/11): «καμία στοίχιση» στο προηγούμενο· διάλεξε την εκδοχή 1
    του docs/UI-NEEDS-MOBILE.html. Στον υπολογιστή δεν αλλάζει. */
 @media (max-width: 640px) {
-	.ecrm-app[data-ui="signature"] .sig-need { grid-template-columns: 36px minmax(0, 1fr) 100px; column-gap: 10px; padding: 12px 0; }
-	.ecrm-app[data-ui="signature"] .sig-need__ic { width: 36px; height: 36px; border-radius: 11px; }
+	.ecrm-app[data-ui="signature"] .sig-need { grid-template-columns: 32px minmax(0, 1fr) 96px; column-gap: 8px; padding: 12px 0; }
+	.ecrm-app[data-ui="signature"] .sig-need__ic { width: 32px; height: 32px; border-radius: 10px; }
 	.ecrm-app[data-ui="signature"] .sig-need__b { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
 	.ecrm-app[data-ui="signature"] .sig-need__b p {
 		order: -1; max-width: 100%; margin: 0; font-size: var(--fs-14); font-weight: 700; color: var(--sig-ink);
@@ -3108,6 +3108,39 @@
 		max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 		font-size: var(--fs-12-5); font-weight: 600; color: var(--sig-ink-2);
 	}
-	.ecrm-app[data-ui="signature"] .sig-need__b .ecrm-stbtn { width: auto; max-width: 100%; margin: 0; padding: 3px 8px 3px 10px; gap: 4px; font-size: var(--fs-12); }
+	/* (398) Ολόκληρο το όνομα της κατάστασης («Αναμονή υπογραφής»): λίγο
+	   μικρότερα γράμματα και χωρίς το ▾ — το σήμα ανοίγει το μενού κι έτσι. */
+	.ecrm-app[data-ui="signature"] .sig-need__b .ecrm-stbtn { width: auto; max-width: 100%; margin: 0; padding: 3px 8px; gap: 4px; font-size: var(--fs-11-5); font-weight: 600; }
+	.ecrm-app[data-ui="signature"] .sig-need__b .ecrm-stbtn__car { display: none; }
 	.ecrm-app[data-ui="signature"] .sig-need__go { border-radius: 999px; padding: 7px 4px; font-size: var(--fs-12); }
+}
+
+/* (398) Συμβάσεις και Υποψήφιοι στο κινητό: η αναζήτηση όπως στους Πελάτες
+   (396, docs/UI-STATUS-CONFIRM.html Δ): χαμηλότερη, μόνο ο φακός, και στις
+   Συμβάσεις τα «Αποθήκευση φίλτρου»/«Φίλτρα» ως εικονίδια στην ίδια γραμμή.
+   Στον υπολογιστή ο φακός δεν φαίνεται και τίποτα δεν αλλάζει. */
+.ecrm-search__ic { display: none; }
+@media (max-width: 760px) {
+	.ecrm-app[data-ui="signature"] .ecrm-search-row { flex-wrap: nowrap; gap: 8px; }
+	.ecrm-app[data-ui="signature"] .ecrm-search-row .ecrm-search { flex: 1 1 0; min-width: 0; }
+	.ecrm-app[data-ui="signature"] .ecrm-search,
+	.ecrm-app[data-ui="signature"] .sig-lsearch { position: relative; }
+	.ecrm-app[data-ui="signature"] .ecrm-search .ecrm-search__ic,
+	.ecrm-app[data-ui="signature"] .sig-lsearch .ecrm-search__ic {
+		display: block; position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+		width: 16px; height: 16px; color: var(--sig-ink-3); pointer-events: none;
+	}
+	.ecrm-app[data-ui="signature"] .ecrm-search .ecrm-input,
+	.ecrm-app[data-ui="signature"] .sig-lsearch .ecrm-input {
+		height: 38px; padding: 0 12px 0 36px; border-radius: 999px; font-size: var(--fs-15);
+	}
+	.ecrm-app[data-ui="signature"] .ecrm-search .ecrm-input::placeholder,
+	.ecrm-app[data-ui="signature"] .sig-lsearch .ecrm-input::placeholder { color: transparent; }
+	.ecrm-app[data-ui="signature"] .ecrm-search-row > .ecrm-btn {
+		flex: 0 0 38px; width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 999px;
+	}
+	.ecrm-app[data-ui="signature"] .ecrm-search-row > .ecrm-btn .ecrm-btn__t {
+		position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+	}
+	.ecrm-app[data-ui="signature"] .sig-lsearch { margin-bottom: 14px; }
 }

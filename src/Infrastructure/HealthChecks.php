@@ -106,7 +106,7 @@ final class HealthChecks
                 );
             } else {
                 $perms = fileperms($config);
-                $loose = $perms !== false && ($perms & 0o044) !== 0;
+                $loose = $perms !== false && self::configTooOpen($perms);
 
                 $out[] = self::row('Μυστικά', 'Δικαιώματα wp-config.php', ! $loose, $loose
                     ? sprintf('%04o — το διαβάζουν και άλλοι χρήστες του server. Βάλε 0640 ή 0600.', $perms & 0o777)
@@ -115,6 +115,17 @@ final class HealthChecks
         }
 
         return $out;
+    }
+
+    /**
+     * (398) Τι σημαίνει «ανοιχτό» για το wp-config.php: να το διαβάζουν οι
+     * ΑΛΛΟΙ χρήστες του server, ή να γράφει η ομάδα. Το 0640 είναι σωστό
+     * (η ομάδα του web server διαβάζει) — το μήνυμα το έλεγε, ο έλεγχος όχι:
+     * κοκκίνιζε και το 0640 (μάσκα 0o044, βρέθηκε στο live 15/11).
+     */
+    public static function configTooOpen(int $mode): bool
+    {
+        return ($mode & 0o027) !== 0;
     }
 
     /**
