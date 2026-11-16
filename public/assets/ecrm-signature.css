@@ -669,6 +669,10 @@
 	 * σπάνε όπου τύχει (ιδιοκτήτης 16/11). Τρεις ή λιγότερες μένουν ως έχουν. */
 	.ecrm-app[data-ui="signature"] .ecrm-chips:has(> .ecrm-chip:nth-child(4)) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	.ecrm-app[data-ui="signature"] .ecrm-chips:has(> .ecrm-chip:nth-child(4)) > .ecrm-chip { justify-content: flex-start; min-width: 0; }
+	/* (402) Όλα τα γκρι πλαίσια επιλογών της φόρμας στο ίδιο πλάτος, όσο η
+	 * κάρτα: πριν το πλέγμα του «Χρώμα» είχε πλάτος όσο το περιεχόμενό του και
+	 * έβγαινε πιο στενό από τα άλλα (ιδιοκτήτης 16/11: «ίδια εμφάνιση»). */
+	.ecrm-app[data-ui="signature"] .ecrm-row > .ecrm-chips { flex: 1 1 100%; width: 100%; max-width: 100%; box-sizing: border-box; }
 }
 
 /* ═══ (369) Σκελετός: πλαϊνή στήλη με ομάδες ═══
