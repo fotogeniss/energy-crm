@@ -1077,23 +1077,53 @@ function sigFeedHTML(feed) {
 
 /* Η νησίδα: το τελευταίο γεγονός, αν έγινε τα τελευταία 30 λεπτά. */
 /* (357) Η ειδοποίηση πάνω φεύγει μόνη της μετά από 8'' και έχει ✕ (αίτημα
- * ιδιοκτήτη 11/11). Όσες έκλεισε δεν ξαναβγαίνουν σε αυτή την καρτέλα. */
-var ISLAND_KEY = 'ecrm_island_seen';
+ * ιδιοκτήτη 11/11).
+ *
+ * (413) «Μου τη βγάζει κάθε φορά που συνδέομαι, πατάω ✕ και ξαναβγαίνει»
+ * (ιδιοκτήτης 17/11). Τρία λάθη μαζί:
+ * 1. Το «την είδα» ζούσε στο sessionStorage: κάθε νέα σύνδεση, νέα καρτέλα ή
+ *    άνοιγμα της εφαρμογής στο κινητό είναι νέα συνεδρία, άρα ξανά από την
+ *    αρχή. Τώρα κρατιέται στη συσκευή (localStorage, ανά χρήστη) η ώρα του
+ *    νεότερου γεγονότος που φάνηκε· βγαίνει μόνο ό,τι είναι πιο καινούριο.
+ * 2. Κρατούσε ένα μόνο γεγονός: αν από πίσω υπήρχε άλλο ίδιο (η μεταφορά
+ *    χαρτοφυλακίου γράφει ένα ανά σύμβαση, 54 μαζί), ξαναβγαίνε το επόμενο.
+ *    Με την ώρα, όλη η ομάδα σβήνει μαζί.
+ * 3. Έδειχνε και ό,τι έκανες ο ίδιος. Η νησίδα είναι για ό,τι έγινε χωρίς
+ *    εσένα· η δική σου ενέργεια δεν είναι νέο (`actor_id`, DashboardRepository).
+ * Μόνο η ώρα και ο κωδικός χρήστη μένουν στη συσκευή, κανένα στοιχείο πελάτη. */
 var ISLAND_SECONDS = 8;
 
-function islandId(f) {
-	return String(f.created_at || '') + '|' + String(f.code || '') + '|' + String(f.type || '');
+function islandKey() {
+	return 'ecrm_island_seen_' + String((window.ECRM && ECRM.userId) || 0);
 }
 
-function islandSeen(id) {
-	try { return sessionStorage.getItem(ISLAND_KEY) === id; } catch (e) { return false; }
+function islandSeenUpTo() {
+	try { return localStorage.getItem(islandKey()) || ''; } catch (e) { return ''; }
+}
+
+function islandMarkSeen(createdAt) {
+	try {
+		if (String(createdAt) > islandSeenUpTo()) { localStorage.setItem(islandKey(), String(createdAt)); }
+	} catch (e) {}
+}
+
+/* Το γεγονός που αξίζει νησίδα: το νεότερο που δεν έκανες εσύ, δεν το είδες
+ * ήδη, και έγινε τα τελευταία 30 λεπτά. */
+function islandEvent(feed) {
+	var me = Number((window.ECRM && ECRM.userId) || 0);
+	var seen = islandSeenUpTo();
+	var f = (feed || []).filter(function (x) { return Number(x.actor_id || 0) !== me || !me; })[0];
+	if (!f || !f.created_at || String(f.created_at) <= seen) return null;
+	var m = minutesAgo(f.created_at);
+	if (m === null || m > 30) return null;
+	return { f: f, m: m };
 }
 
 function sigIslandHTML(feed) {
-	var f = (feed || [])[0];
-	var m = f ? minutesAgo(f.created_at) : null;
-	if (m === null || m > 30 || islandSeen(islandId(f))) return '';
-	return '<div class="sig-island" role="status" data-island="' + esc(islandId(f)) + '"><span class="sig-island__dot"></span><span class="sig-island__t"><b>' + esc(f.message || f.type) + '</b>' +
+	var hit = islandEvent(feed);
+	if (!hit) return '';
+	var f = hit.f, m = hit.m;
+	return '<div class="sig-island" role="status" data-island="' + esc(f.created_at) + '"><span class="sig-island__dot"></span><span class="sig-island__t"><b>' + esc(f.message || f.type) + '</b>' +
 		'<small>' + esc(m === 0 ? 'μόλις τώρα' : 'πριν ' + m + '′') + (f.code ? ', #' + esc(f.code) : '') + '</small></span>' +
 		'<button type="button" class="sig-island__x" data-island-x aria-label="Κλείσιμο">✕</button></div>';
 }
@@ -1101,8 +1131,9 @@ function sigIslandHTML(feed) {
 function wireIsland(view) {
 	var island = view.querySelector('[data-island]');
 	if (!island) return;
+	// Φάνηκε: δεν ξαναβγαίνει, είτε πατηθεί ✕ είτε φύγει μόνη της.
+	islandMarkSeen(island.getAttribute('data-island'));
 	function close() {
-		try { sessionStorage.setItem(ISLAND_KEY, island.getAttribute('data-island')); } catch (e) {}
 		island.classList.add('is-gone');
 		setTimeout(function () { if (island.parentNode) island.parentNode.removeChild(island); }, 300);
 	}

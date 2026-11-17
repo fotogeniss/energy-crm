@@ -290,7 +290,7 @@ final class DashboardRepository
         /** @var list<array<string, mixed>> $rows */
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                'SELECT e.type, e.to_status, e.message, e.created_at, c.code
+                'SELECT e.type, e.to_status, e.message, e.created_at, e.user_id AS actor_id, c.code
                  FROM %i e LEFT JOIN %i c ON c.id = e.contract_id
                  WHERE c.partner_user_id = %d
                  ORDER BY e.created_at DESC LIMIT %d',
