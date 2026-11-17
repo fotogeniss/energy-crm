@@ -219,7 +219,8 @@ class ECRM_App {
 
 			<aside class="ecrm-sidebar">
 				<div class="ecrm-brand">
-					<span class="ecrm-brand__mark">E</span>
+					<?php // (410) Το σύμβολο: κεραυνός σε μαύρο πλακίδιο. docs/UI-LOGO.html. ?>
+					<span class="ecrm-brand__mark" aria-hidden="true"><svg viewBox="0 0 64 64" focusable="false"><defs><radialGradient id="ecrm-mark-tile" cx="0.3" cy="0.15" r="1.05"><stop offset="0" stop-color="#2c2e29"/><stop offset="0.6" stop-color="#141512"/><stop offset="1" stop-color="#090a08"/></radialGradient></defs><rect width="64" height="64" rx="15" fill="url(#ecrm-mark-tile)"/><rect x="0.6" y="0.6" width="62.8" height="62.8" rx="14.4" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="1.2"/><path d="M35.5 12 L21.5 34.5 H31.5 L28.5 52 L42.5 29 H32.5 Z" fill="#16c217" fill-opacity="0.2" stroke="#16c217" stroke-width="3.8" stroke-linejoin="round"/></svg></span>
 					<span class="ecrm-brand__txt">Energy <strong>CRM</strong></span>
 					<?php // (396g) Στο κινητό το ίδιο κουμπί γίνεται ✕ και κλείνει το συρτάρι (ecrm-app.js). ?>
 					<button type="button" class="ecrm-collapse" data-collapse aria-label="Σύμπτυξη μενού"><span class="ecrm-collapse__menu"><?php echo self::icon( 'menu' ); // phpcs:ignore ?></span><span class="ecrm-collapse__x"><?php echo self::icon( 'close' ); // phpcs:ignore ?></span></button>

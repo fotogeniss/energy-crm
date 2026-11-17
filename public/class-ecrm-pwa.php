@@ -37,6 +37,40 @@ class ECRM_Pwa {
 
 	public static function init(): void {
 		add_action( 'template_redirect', [ __CLASS__, 'maybe_serve' ], 0 );
+		add_filter( 'get_site_icon_url', [ __CLASS__, 'site_icon' ], 10, 2 );
+	}
+
+	/**
+	 * (410) Το σύμβολο του CRM (κεραυνός, docs/UI-LOGO.html) ως εικονίδιο του
+	 * site: καρτέλα browser, σελίδα σύνδεσης, wp-admin, «Προσθήκη στην αρχική
+	 * οθόνη» του iPhone. Το WordPress τυπώνει μόνο του τα <link> σε wp_head,
+	 * login_head και admin_head όταν υπάρχει εικονίδιο (`wp_site_icon()`), και
+	 * ρωτά ακριβώς αυτό το φίλτρο. Αν ο διαχειριστής έχει βάλει δικό του
+	 * εικονίδιο (Εμφάνιση › Προσαρμογή), μένει εκείνο.
+	 *
+	 * Ως 32 px: το SVG με γεμάτο κεραυνό (η λεπτή γραμμή δεν διαβάζεται τόσο
+	 * μικρή). Από 180 px και πάνω: τα PNG του manifest.
+	 *
+	 * @param mixed $url  Ό,τι έδωσε το WordPress (κενό = κανένα εικονίδιο).
+	 * @param mixed $size Το μέγεθος σε px.
+	 */
+	public static function site_icon( $url, $size ): string {
+		if ( is_string( $url ) && '' !== $url ) {
+			return $url;
+		}
+
+		$size = (int) $size;
+		$file = 'ecrm-mark.svg';
+
+		if ( $size > 192 ) {
+			$file = 'icon-512.png';
+		} elseif ( $size > 180 ) {
+			$file = 'icon-192.png';
+		} elseif ( $size > 64 ) {
+			$file = 'apple-touch-icon-180.png';
+		}
+
+		return ECRM_URL . 'public/assets/icons/' . $file;
 	}
 
 	public static function maybe_serve(): void {
@@ -86,9 +120,12 @@ class ECRM_Pwa {
 			'start_url'        => self::start_url(),
 			'scope'            => home_url( '/' ),
 			'display'          => 'standalone',
-			'background_color' => '#111110',
+			// (410) Το φόντο του εικονιδίου: η οθόνη εκκίνησης ταιριάζει με το σύμβολο.
+			'background_color' => '#0d0e0c',
 			'theme_color'      => $accent,
 			'lang'             => 'el',
+			// (410) Ο κεραυνός σε μαύρο πλακίδιο. Το maskable έχει το σύμβολο στο 78%,
+			// μέσα στην ασφαλή ζώνη που κόβει το Android.
 			'icons'            => [
 				[
 					'src'   => esc_url_raw( ECRM_URL . 'public/assets/icons/icon-192.png' ),

@@ -126,14 +126,9 @@
 	padding: 16px 12px;
 }
 .ecrm-app[data-ui="signature"] .ecrm-sidebar__foot { border-top-color: var(--sig-hair-2); }
+/* (410) Το σύμβολο είναι πια SVG (κεραυνός σε μαύρο πλακίδιο): μόνο μια απαλή σκιά από κάτω. */
 .ecrm-app[data-ui="signature"] .ecrm-brand__mark {
-	border-radius: 9px; color: transparent; position: relative;
-	background: conic-gradient(from 200deg, var(--sig-green), var(--sig-teal), var(--sig-green));
-	box-shadow: 0 4px 12px -4px var(--sig-green), inset 0 1px 0 rgba(255, 255, 255, .5);
-}
-.ecrm-app[data-ui="signature"] .ecrm-brand__mark::after {
-	content: ""; position: absolute; inset: 0; margin: auto; width: 10px; height: 10px; border-radius: 50%;
-	background: var(--sig-on-btn); box-shadow: 0 0 0 3px rgba(255, 255, 255, .35);
+	border-radius: 9px; box-shadow: 0 6px 14px -6px rgba(0, 0, 0, .55);
 }
 .ecrm-app[data-ui="signature"] .ecrm-brand__txt { color: var(--sig-ink); letter-spacing: -.02em; }
 .ecrm-app[data-ui="signature"] .ecrm-nav__label {

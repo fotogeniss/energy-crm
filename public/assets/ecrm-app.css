@@ -54,7 +54,9 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 	transition: width .18s ease;
 }
 .ecrm-brand { display: flex; align-items: center; gap: 10px; padding: 4px 6px 16px; }
-.ecrm-brand__mark { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--amber), var(--amber-bright)); color: var(--on-accent); display: grid; place-items: center; font-weight: 800; font-size: var(--fs-18); }
+/* (410) Το σύμβολο είναι SVG (class-ecrm-app.php): το πλακίδιο και ο κεραυνός ζουν μέσα του. */
+.ecrm-brand__mark { width: 30px; height: 30px; flex: 0 0 30px; display: block; border-radius: 8px; }
+.ecrm-brand__mark svg { display: block; width: 100%; height: 100%; }
 .ecrm-brand__txt { font-size: var(--fs-15); font-weight: 700; letter-spacing: -.01em; color: var(--chrome-ink-hi); }
 .ecrm-brand__txt strong { font-weight: 800; }
 
