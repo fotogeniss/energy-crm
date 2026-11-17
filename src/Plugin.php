@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace EnergyCRM;
 
 use EnergyCRM\Access\AdminCreatedUsers;
+use EnergyCRM\Access\BlogClosed;
 use EnergyCRM\Access\DepartingUser;
 use EnergyCRM\Access\DisabledAccounts;
 use EnergyCRM\Access\Hardening;
@@ -132,9 +133,12 @@ final class Plugin
         // απενεργοποιημένος, κανένα ecrm_* δικαίωμα δεν ισχύει πουθενά.
         (new DisabledAccounts(Services::team()))->register();
 
-        // (393) Κωδικοί εφαρμογής μόνο για διαχειριστή, λίστα χρηστών και
-        // XML-RPC κλειστά σε ανώνυμους. Έλεγχος ασφαλείας 15/11/2026.
+        // (393) Λίστα χρηστών και XML-RPC κλειστά σε ανώνυμους. (409)
+        // Κωδικοί εφαρμογής κλειστοί για όλους, μετά το spam της 17/11.
         (new Hardening())->register();
+
+        // (409) Άρθρα, σχόλια, feeds και sitemap χρηστών κλειστά.
+        (new BlogClosed())->register();
 
         // (394) CSP σε δοκιμή: μόνο καταγραφή, στις σελίδες του CRM.
         (new ContentSecurityPolicy())->register();

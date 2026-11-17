@@ -1,8 +1,8 @@
 <?php
 
 /**
- * (393) Σκλήρυνση γύρω από το CRM: κωδικοί εφαρμογής μόνο για διαχειριστή,
- * λίστα χρηστών και XML-RPC κλειστά σε ανώνυμους.
+ * (393) Σκλήρυνση γύρω από το CRM: λίστα χρηστών και XML-RPC κλειστά σε
+ * ανώνυμους. (409) Κωδικοί εφαρμογής κλειστοί για όλους, και ο διαχειριστής.
  *
  * @package EnergyCRM
  */
@@ -25,21 +25,36 @@ final class HardeningTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function testOnlyTheAdministratorKeepsApplicationPasswords(): void
+    /** (409) Ούτε ο διαχειριστής: με κωδικούς του «test» γράφτηκε το spam της 17/11. */
+    public function testNobodyKeepsApplicationPasswords(): void
     {
         $hardening = new Hardening();
 
         self::assertFalse($hardening->appPasswordsFor(true, get_userdata($this->makeCrmUser(Roles::SELLER))));
         self::assertFalse($hardening->appPasswordsFor(true, get_userdata($this->makeCrmUser(Roles::PARTNER))));
-        $admin = get_userdata($this->administrator());
+        self::assertFalse($hardening->appPasswordsFor(true, get_userdata($this->administrator())));
+        self::assertFalse(wp_is_application_passwords_available());
+        self::assertFalse(wp_is_application_passwords_available_for_user($this->administrator()));
+    }
 
-        self::assertTrue($hardening->appPasswordsFor(true, $admin));
-        self::assertFalse($hardening->appPasswordsFor(false, $admin));
+    /** Τοπικά, για το tools/load-test-appwd.php, ξανανοίγουν με φίλτρο. */
+    public function testTheLoadTestFilterStillReopensThem(): void
+    {
+        $open = static fn (): bool => true;
+        add_filter('ecrm_app_passwords_for_everyone', $open);
+
+        try {
+            self::assertTrue((new Hardening())->appPasswordsAvailable(true));
+            self::assertFalse((new Hardening())->appPasswordsAvailable(false));
+        } finally {
+            remove_filter('ecrm_app_passwords_for_everyone', $open);
+        }
     }
 
     public function testTheFilterIsActuallyRegistered(): void
     {
         self::assertNotFalse(has_filter('wp_is_application_passwords_available_for_user'));
+        self::assertNotFalse(has_filter('wp_is_application_passwords_available'));
         self::assertFalse(apply_filters('xmlrpc_enabled', true));
     }
 

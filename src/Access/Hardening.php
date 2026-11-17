@@ -4,7 +4,17 @@
  * (393) Σκλήρυνση του WordPress γύρω από το CRM. Έλεγχος ασφαλείας 15/11/2026
  * (project: claude/energy-crm-security-review-1511.md, ευρήματα 2 και 5).
  *
- * ## Application Passwords μόνο για διαχειριστή
+ * ## Application Passwords κλειστοί για ΟΛΟΥΣ (409)
+ *
+ * Ως το 408 τους κρατούσε ο διαχειριστής. Στις 17/11 βρέθηκαν 16 κωδικοί
+ * εφαρμογής στον «test» («PBN Automation», «Blacklink WP Poster» κ.λπ.),
+ * με τους οποίους γράφτηκαν 4.768 άρθρα spam ακόμη και μετά το καθάρισμα
+ * της 21/10 (project: claude/energy-crm-incident-1711.md). Το CRM δεν τους
+ * χρειάζεται για κανέναν, οπότε κλείνουν και για τον διαχειριστή, και η
+ * 0064 σβήνει όσους υπάρχουν. Μόνο τοπικά, για το tools/load-test-appwd.php:
+ *   add_filter( 'ecrm_app_passwords_for_everyone', '__return_true' );
+ *
+ * ## Το αρχικό σκεπτικό (393)
  *
  * Ένας κωδικός εφαρμογής του WordPress μπαίνει στο REST χωρίς cookie, χωρίς
  * nonce, και δεν σβήνει όταν αλλάξει ο κανονικός κωδικός. Μετά από
@@ -38,6 +48,7 @@ final class Hardening
 {
     public function register(): void
     {
+        add_filter('wp_is_application_passwords_available', [$this, 'appPasswordsAvailable']);
         add_filter('wp_is_application_passwords_available_for_user', [$this, 'appPasswordsFor'], 10, 2);
 
         if (apply_filters('ecrm_close_user_listing', true)) {
@@ -52,18 +63,20 @@ final class Hardening
     }
 
     /**
-     * Κωδικοί εφαρμογής μόνο για όποιον έχει `manage_options`. Το
-     * tools/load-test-appwd.php δουλεύει με λογαριασμούς πωλητών· για εκείνο,
-     * και μόνο σε τοπικό site, ένα mu-plugin με
+     * (409) Κωδικοί εφαρμογής για κανέναν: ούτε σύνδεση με αυτούς, ούτε η
+     * ενότητα στο προφίλ του wp-admin που τους φτιάχνει. Μόνο αν τοπικά το
+     * ζητήσει το tools/load-test-appwd.php, με mu-plugin:
      *   add_filter( 'ecrm_app_passwords_for_everyone', '__return_true' );
      */
+    public function appPasswordsAvailable(bool $available): bool
+    {
+        return $available && (bool) apply_filters('ecrm_app_passwords_for_everyone', false);
+    }
+
+    /** Ίδιος κανόνας ανά χρήστη: εκεί το WordPress ρωτά στη σύνδεση. */
     public function appPasswordsFor(bool $available, WP_User $user): bool
     {
-        if (apply_filters('ecrm_app_passwords_for_everyone', false)) {
-            return $available;
-        }
-
-        return $available && user_can($user, 'manage_options');
+        return $this->appPasswordsAvailable($available);
     }
 
     /**

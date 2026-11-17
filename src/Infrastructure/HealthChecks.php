@@ -22,6 +22,7 @@ use EnergyCRM\Persistence\CustomerFields;
 use EnergyCRM\Persistence\Schema\Migration;
 use EnergyCRM\Persistence\Schema\MigrationList;
 use EnergyCRM\Persistence\Schema\MigrationRunner;
+use EnergyCRM\Persistence\Schema\Migrations\RevokeApplicationPasswords;
 use EnergyCRM\Persistence\Tables;
 
 final class HealthChecks
@@ -36,6 +37,7 @@ final class HealthChecks
     {
         return array_merge(
             $this->secrets(),
+            $this->security(),
             $this->encryption(),
             $this->documents(),
             $this->schema(),
@@ -486,6 +488,63 @@ final class HealthChecks
             self::row('Περιβάλλον', 'Έκδοση PHP', version_compare(PHP_VERSION, '8.2', '>='), PHP_VERSION),
 
             $this->clocks(),
+        ];
+    }
+
+    /**
+     * (409) Τα δύο σημάδια του spam της 17/11 (claude/energy-crm-incident-1711.md).
+     *
+     * Το CRM δεν γράφει άρθρα και δεν χρησιμοποιεί κωδικούς εφαρμογής. Αν
+     * εμφανιστεί έστω ένα από τα δύο, κάποιος άλλος γράφει στο site.
+     *
+     * @return list<array{group: string, label: string, ok: bool|null, detail: string}>
+     */
+    private function security(): array
+    {
+        global $wpdb;
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- admin health-check probe, not a hot path.
+        $posts = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE post_type = %s AND post_status IN (%s, %s, %s)',
+                $wpdb->posts,
+                'post',
+                'publish',
+                'future',
+                'private'
+            )
+        );
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- admin health-check probe, not a hot path.
+        $keys = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE meta_key = %s AND meta_value NOT IN (%s, %s)',
+                $wpdb->usermeta,
+                RevokeApplicationPasswords::META_KEY,
+                '',
+                'a:0:{}'
+            )
+        );
+
+        return [
+            self::row(
+                'Ασφάλεια',
+                'Άρθρα WordPress',
+                $posts === 0,
+                $posts === 0
+                    ? 'Κανένα. Το CRM δεν γράφει άρθρα.'
+                    : $posts . ' άρθρα. Το CRM δεν γράφει άρθρα: πιθανό spam από παραβιασμένο λογαριασμό. '
+                    . 'Δες Άρθρα στο wp-admin και άλλαξε κωδικούς.'
+            ),
+            self::row(
+                'Ασφάλεια',
+                'Κωδικοί εφαρμογής',
+                $keys === 0,
+                $keys === 0
+                    ? 'Κανένας. Είναι κλειστοί για όλους.'
+                    : $keys . ' χρήστες έχουν κωδικούς εφαρμογής. Το CRM δεν τους χρησιμοποιεί: '
+                    . 'σβήσ\' τους από το προφίλ του χρήστη στο wp-admin.'
+            ),
         ];
     }
 
