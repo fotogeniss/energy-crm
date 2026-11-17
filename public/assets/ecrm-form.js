@@ -632,7 +632,10 @@ import { openDialog } from '@energy-crm/dialog';
 				'&energy=' + encodeURIComponent(state.energy_type || 'power') +
 				'&customer_type=' + encodeURIComponent(state.customer_type || 'individual') +
 				'&program=' + encodeURIComponent(programCode()) +
-				'&activation_type=' + encodeURIComponent(state.activation_type || '');
+				'&activation_type=' + encodeURIComponent(state.activation_type || '') +
+				// (408) ΔΕΗ: η ισχύς διαλέγει αίτηση μικρού (έως 25 kVA) ή
+				// μεγάλου πελάτη. Ο κανόνας ζει στο DeiCatalogue, όχι εδώ.
+				'&agreed_power=' + encodeURIComponent(fieldVal('agreed_power'));
 
 			if (provFieldsCache[qs]) {
 				paintProviderFields(card, provFieldsCache[qs]);
@@ -1238,6 +1241,11 @@ import { openDialog } from '@energy-crm/dialog';
 		(function () {
 			var el = root.querySelector('[name="agreed_power"]');
 			if (el) { el.addEventListener('input', refreshGuaranteeSuggestion); el.addEventListener('change', refreshGuaranteeSuggestion); }
+			// (408) Και το έντυπο: στη ΔΕΗ, 35 kVA και πάνω = αίτηση μεγάλου
+			// πελάτη. Στο 'change' (όταν φύγει από το πεδίο), όχι σε κάθε
+			// πλήκτρο: η κάρτα του παρόχου δανείζεται πεδία και θα έκλεβε
+			// την εστίαση από όποιον γράφει.
+			if (el) { el.addEventListener('change', refreshProviderFields); }
 			// (329) Ο πίνακας ΦΑ αλλάζει με τον μετρητή και την πάγια εντολή.
 			['gas_meter_type', 'payment_method'].forEach(function (n) {
 				var sel = root.querySelector('[name="' + n + '"]');

@@ -52,8 +52,12 @@ class ECRM_FormFill {
 	 * so the wrong match here means the customer signs a form naming a tariff
 	 * they did not buy. $activation_type is kept because callers pass it and a
 	 * provider may yet need it to pick between contracts.
+	 *
+	 * (408) $kva is the supply's power (DeiCatalogue::kva() of agreed_power).
+	 * Only ΔΕΗ uses it: up to 25 kVA the small-customer application, above it
+	 * the large-customer one. 0 = not typed yet, which is the small one.
 	 */
-	public static function template_key( string $provider_name, string $energy_type, string $customer_type = '', string $program = '', string $activation_type = '' ): string {
+	public static function template_key( string $provider_name, string $energy_type, string $customer_type = '', string $program = '', string $activation_type = '', float $kva = 0.0 ): string {
 		$p = self::norm( $provider_name );
 		$e = $energy_type;
 		$biz = in_array( $customer_type, [ 'company', 'sole_prop' ], true );
@@ -126,7 +130,7 @@ class ECRM_FormFill {
 		// Και για πρόγραμμα χωρίς κωδικό (φτιαγμένο με το χέρι): η αίτηση και
 		// οι Γενικοί Όροι, χωρίς Ειδικούς.
 		if ( ( $p === 'δεη' || $p === 'dei' || $has( 'δεη ' ) || $has( 'ppc' ) ) && $e === 'power' ) {
-			return \EnergyCRM\Domain\Forms\DeiCatalogue::application( $program, 0.0 );
+			return \EnergyCRM\Domain\Forms\DeiCatalogue::application( $program, $kva );
 		}
 		// (405) ΔΕΗ φυσικό αέριο: η μία αίτηση αερίου, και οι Ειδικοί Όροι του
 		// προγράμματος από το template_keys().
@@ -729,7 +733,8 @@ class ECRM_FormFill {
 			(string) ( $c['energy_type'] ?? '' ),
 			(string) ( $c['customer_type'] ?? '' ),
 			(string) ( $c['program_code'] ?? '' ),
-			(string) ( $c['activation_type'] ?? '' )
+			(string) ( $c['activation_type'] ?? '' ),
+			\EnergyCRM\Domain\Forms\DeiCatalogue::kva( (string) ( self::extras( $c )['agreed_power'] ?? '' ) )
 		);
 
 		if ( $key === '' ) {

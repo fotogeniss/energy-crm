@@ -10,7 +10,7 @@
  * ## Τι τυπώνεται
  *
  * 1. Η «Αίτηση Προσφοράς Προμήθειας» (μία σελίδα, έκδοση 01.04.2026). Η ΔΕΗ
- *    έχει τέσσερις: έως 25 kVA, μεγάλου πελάτη, και οι δύο ξανά για προϊόν
+ *    έχει τέσσερις: μικρού πελάτη, μεγάλου πελάτη, και οι δύο ξανά για προϊόν
  *    δυναμικής τιμολόγησης. Διαλέγει η ισχύς παροχής και το πρόγραμμα.
  * 2. Οι Ειδικοί Όροι του προγράμματος, με τον τιμοκατάλογό του. Υπογραφή
  *    μόνο όπου τη ζητά η ίδια η ΔΕΗ («ΠΕΛΑΤΗΣ (ΥΠΟΓΡΑΦΗ)»).
@@ -41,8 +41,13 @@ final class DeiCatalogue
     /** Ημερομηνία των εντύπων από τα οποία πάρθηκαν τιμές και σελίδες. */
     public const AS_OF = '2026-11-13';
 
-    /** Πάνω από αυτή την ισχύ παροχής η ΔΕΗ θέλει την αίτηση «Μεγάλου Πελάτη». */
-    public const SMALL_KVA = 25.0;
+    /**
+     * Από αυτή την ισχύ παροχής ΚΑΙ πάνω τυπώνεται η αίτηση «Μεγάλου Πελάτη».
+     *
+     * (408) Ο ιδιοκτήτης, 17/11: «μεγαλύτερο ή ίσο με 35 μεγάλος, τα άλλα
+     * μικρά». Ως τώρα: πάνω από 25.
+     */
+    public const LARGE_KVA = 35.0;
 
     public const APP_SMALL = 'dei_aitisi_mikrou';
 
@@ -293,7 +298,7 @@ final class DeiCatalogue
     /**
      * Η αίτηση που θέλει η ΔΕΗ για αυτό το πρόγραμμα και αυτή την ισχύ.
      *
-     * Χωρίς δηλωμένη ισχύ (0): η αίτηση έως 25 kVA, που καλύπτει όλα τα
+     * Χωρίς δηλωμένη ισχύ (0): η αίτηση μικρού πελάτη, που καλύπτει όλα τα
      * οικιακά και τις περισσότερες μικρές επιχειρήσεις.
      */
     public static function application(string $code, float $kva): string
@@ -302,7 +307,7 @@ final class DeiCatalogue
             return self::APP_GAS;
         }
 
-        $large = $kva > self::SMALL_KVA;
+        $large = $kva >= self::LARGE_KVA;
 
         if (self::isDynamic($code)) {
             return $large ? self::APP_DYN_LARGE : self::APP_DYN_SMALL;
@@ -324,7 +329,7 @@ final class DeiCatalogue
             return [self::APP_GAS, self::termsSheet($code)];
         }
 
-        $large = $kva > self::SMALL_KVA;
+        $large = $kva >= self::LARGE_KVA;
         $keys  = [self::application($code, $kva)];
 
         if (self::termsSheet($code) !== '') {

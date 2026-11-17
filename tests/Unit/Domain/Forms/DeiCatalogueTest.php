@@ -66,12 +66,38 @@ final class DeiCatalogueTest extends TestCase
     public function testTheApplicationDependsOnPowerAndOnDynamicPricing(): void
     {
         self::assertSame(DeiCatalogue::APP_SMALL, DeiCatalogue::application('dei_myhome_enter', 0.0));
-        self::assertSame(DeiCatalogue::APP_SMALL, DeiCatalogue::application('dei_mybusiness_enter', 25.0));
-        self::assertSame(DeiCatalogue::APP_LARGE, DeiCatalogue::application('dei_mybusiness_enter', 25.1));
+        self::assertSame(DeiCatalogue::APP_SMALL, DeiCatalogue::application('dei_mybusiness_enter', 34.9));
+        self::assertSame(DeiCatalogue::APP_LARGE, DeiCatalogue::application('dei_mybusiness_enter', 35.0));
         self::assertSame(DeiCatalogue::APP_DYN_SMALL, DeiCatalogue::application('dei_myhome_dynamic', 12.0));
         self::assertSame(DeiCatalogue::APP_DYN_LARGE, DeiCatalogue::application('dei_mybusiness_dynamic', 50.0));
         // Πρόγραμμα φτιαγμένο με το χέρι: η απλή αίτηση.
         self::assertSame(DeiCatalogue::APP_SMALL, DeiCatalogue::application('', 0.0));
+    }
+
+    /**
+     * (408) Ο ιδιοκτήτης, 17/11: «μεγαλύτερο ή ίσο με 35 μεγάλος, τα άλλα
+     * μικρά». Έτσι πληκτρολογεί ο συνεργάτης την ισχύ, και η φόρμα δείχνει
+     * αμέσως την αντίστοιχη αίτηση.
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function supplyPowers(): iterable
+    {
+        yield '8'      => ['8', DeiCatalogue::APP_SMALL];
+        yield '12 kVA' => ['12 kVA', DeiCatalogue::APP_SMALL];
+        yield '25'     => ['25', DeiCatalogue::APP_SMALL];
+        yield '34,9'   => ['34,9', DeiCatalogue::APP_SMALL];
+        yield '35'     => ['35', DeiCatalogue::APP_LARGE];
+        yield '35kVA'  => ['35kVA', DeiCatalogue::APP_LARGE];
+        yield '40'     => ['40', DeiCatalogue::APP_LARGE];
+        yield '55'     => ['55', DeiCatalogue::APP_LARGE];
+        yield 'κενό'   => ['', DeiCatalogue::APP_SMALL];
+    }
+
+    #[DataProvider('supplyPowers')]
+    public function testTheTypedPowerPicksSmallOrLargeCustomer(string $typed, string $expected): void
+    {
+        self::assertSame($expected, DeiCatalogue::application('dei_mybusiness_enter', DeiCatalogue::kva($typed)));
     }
 
     public function testThePaperworkFollowsTheOrderOfTheApplication(): void
@@ -82,7 +108,7 @@ final class DeiCatalogueTest extends TestCase
         );
         self::assertSame(
             ['dei_aitisi_megalou', 'dei_eo_mybusiness_enter', 'dei_gos_megalou'],
-            DeiCatalogue::paperwork('dei_mybusiness_enter', 35.0)
+            DeiCatalogue::paperwork('dei_mybusiness_enter', 40.0)
         );
         self::assertSame(
             ['dei_aitisi_dyn_mikrou', 'dei_eo_myhome_dynamic', 'dei_gos_mikrou',

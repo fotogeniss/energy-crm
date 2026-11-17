@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use ECRM_FormFill;
+use EnergyCRM\Domain\Forms\DeiCatalogue;
 use EnergyCRM\Domain\Forms\FormTemplates;
 use EnergyCRM\Domain\Forms\ProviderFormFields;
 use EnergyCRM\Plugin;
@@ -55,6 +56,13 @@ final class ProviderFormController implements Controller
                     'default'           => '',
                     'sanitize_callback' => 'sanitize_key',
                 ],
+                // (408) Η ισχύς παροχής: στη ΔΕΗ διαλέγει αίτηση μικρού (έως
+                // 25 kVA) ή μεγάλου πελάτη. Ελεύθερο κείμενο, όπως στη φόρμα.
+                'agreed_power' => [
+                    'type'              => 'string',
+                    'default'           => '',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
             ],
         ]);
     }
@@ -66,7 +74,8 @@ final class ProviderFormController implements Controller
             (string) $request['energy'],
             (string) $request['customer_type'],
             (string) $request['program'],
-            (string) $request['activation_type']
+            (string) $request['activation_type'],
+            DeiCatalogue::kva((string) $request['agreed_power'])
         );
 
         // Άγνωστος συνδυασμός: ΚΑΝΕΝΑ φιλτράρισμα. Το κενό main_inputs σημαίνει
