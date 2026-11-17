@@ -70,7 +70,17 @@ class ECRM_Pwa {
 			$file = 'apple-touch-icon-180.png';
 		}
 
-		return ECRM_URL . 'public/assets/icons/' . $file;
+		return self::icon_url( $file );
+	}
+
+	/**
+	 * (411) Το URL ενός εικονιδίου με `?v=` την ώρα του αρχείου, όπως κάθε
+	 * άλλο asset (`ECRM_Shortcodes::asset_version()`). Το Android κρατά το
+	 * εικονίδιο της εγκατεστημένης εφαρμογής και το ξαναζητά όταν δει νέο
+	 * URL στο manifest· χωρίς αυτό, μετά το 410 έμενε το παλιό «E».
+	 */
+	public static function icon_url( string $file ): string {
+		return ECRM_URL . 'public/assets/icons/' . $file . '?v=' . ECRM_Shortcodes::asset_version( 'icons/' . $file );
 	}
 
 	public static function maybe_serve(): void {
@@ -110,7 +120,6 @@ class ECRM_Pwa {
 	}
 
 	private static function serve_manifest(): void {
-		$accent  = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'accent_color', ECRM_Admin::DEFAULT_ACCENT ) : '#c2f04a';
 		$company = class_exists( 'ECRM_Admin' ) ? (string) ECRM_Admin::get( 'company_name' ) : '';
 		$name    = $company !== '' ? $company . ' — Energy CRM' : 'Energy CRM';
 
@@ -122,25 +131,27 @@ class ECRM_Pwa {
 			'display'          => 'standalone',
 			// (410) Το φόντο του εικονιδίου: η οθόνη εκκίνησης ταιριάζει με το σύμβολο.
 			'background_color' => '#0d0e0c',
-			'theme_color'      => $accent,
+			// (411) Η μπάρα του κινητού στο χρώμα του συμβόλου. Ήταν το λάιμ του
+			// accent (#c2f04a), που δεν ταιριάζει με το σκούρο εικονίδιο.
+			'theme_color'      => '#0d0e0c',
 			'lang'             => 'el',
 			// (410) Ο κεραυνός σε μαύρο πλακίδιο. Το maskable έχει το σύμβολο στο 78%,
 			// μέσα στην ασφαλή ζώνη που κόβει το Android.
 			'icons'            => [
 				[
-					'src'   => esc_url_raw( ECRM_URL . 'public/assets/icons/icon-192.png' ),
+					'src'   => esc_url_raw( self::icon_url( 'icon-192.png' ) ),
 					'sizes' => '192x192',
 					'type'  => 'image/png',
 					'purpose' => 'any',
 				],
 				[
-					'src'   => esc_url_raw( ECRM_URL . 'public/assets/icons/icon-512.png' ),
+					'src'   => esc_url_raw( self::icon_url( 'icon-512.png' ) ),
 					'sizes' => '512x512',
 					'type'  => 'image/png',
 					'purpose' => 'any',
 				],
 				[
-					'src'   => esc_url_raw( ECRM_URL . 'public/assets/icons/icon-maskable-512.png' ),
+					'src'   => esc_url_raw( self::icon_url( 'icon-maskable-512.png' ) ),
 					'sizes' => '512x512',
 					'type'  => 'image/png',
 					'purpose' => 'maskable',
