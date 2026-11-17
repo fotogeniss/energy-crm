@@ -43,6 +43,12 @@ final class TwoFactorLogin
 
     private const MAX_TRIES = 5;
 
+    /** (412) Το σύμβολο του 410 στη θέση του «⚡»: κεραυνός σε μαύρο πλακίδιο. */
+    private const MARK = '<svg viewBox="0 0 64 64" width="26" height="26" aria-hidden="true">'
+        . '<rect width="64" height="64" rx="15" fill="#141512"/>'
+        . '<path d="M35.5 12 L21.5 34.5 H31.5 L28.5 52 L42.5 29 H32.5 Z" fill="#16c217" fill-opacity="0.2"'
+        . ' stroke="#16c217" stroke-width="4" stroke-linejoin="round"/></svg>';
+
     private ?TwoFactor $twoFactor = null;
 
     /** Το TwoFactor φτιάχνεται όταν χρειαστεί: εδώ το wp_salt() μπορεί να μην υπάρχει ακόμη. */
@@ -242,7 +248,7 @@ final class TwoFactorLogin
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<meta name="robots" content="noindex,nofollow">'
             . '<title>Επιβεβαίωση · Energy CRM</title><style>' . self::css() . '</style></head>'
-            . '<body><main class="e2-card"><div class="e2-brand"><i>⚡</i>Energy CRM</div>'
+            . '<body><main class="e2-card"><div class="e2-brand"><i>' . self::MARK . '</i>Energy CRM</div>'
             . $inner
             . '</main></body></html>';
 

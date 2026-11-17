@@ -1,0 +1,100 @@
+/* (412) Η σελίδα σύνδεσης (wp-login.php) στην ταυτότητα του 410: σκούρο φόντο,
+ * το σύμβολο με τον κεραυνό, λευκή κάρτα και πράσινο κουμπί, όπως η οθόνη του
+ * δεύτερου βήματος (ecrm-2fa-login.css). Φορτώνει το Access\LoginLook.
+ *
+ * Το θέμα του site βάφει κι αυτό τη σελίδα (navy/amber, inline στο
+ * login_head, μετά από αυτό το αρχείο). Γι' αυτό κάθε κανόνας εδώ ξεκινά με
+ * `body.login.ecrm-login`: πιο συγκεκριμένος, κερδίζει χωρίς να πειράξουμε το
+ * θέμα, που μένει πίσω στη μεταφορά. Τα `!important` μόνο όπου τα έχει και
+ * το θέμα: εικόνα λογοτύπου, κουμπί, σύνδεσμοι κάτω από τη φόρμα. */
+:root {
+	--el-g1: #2bd92c;
+	--el-g2: #0e9a12;
+	--el-gink: #087219;
+	--el-ink: #141613;
+	--el-ink2: #545a52;
+	--el-white: #fff;
+	--el-bg1: #0f1712;
+	--el-bg2: #0a0f0c;
+	--el-hair: rgba(16, 24, 15, .12);
+	--el-soft: #c6c4bd;
+	--el-rose: #d70f3c;
+}
+body.login.ecrm-login {
+	min-height: 100vh; color: var(--el-ink);
+	font: 15px/1.5 -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+	background:
+		radial-gradient(500px 320px at 20% 0, rgba(31, 191, 58, .22), transparent 70%),
+		radial-gradient(420px 320px at 100% 100%, rgba(20, 184, 166, .18), transparent 70%),
+		linear-gradient(160deg, var(--el-bg1), var(--el-bg2));
+	background-attachment: fixed;
+}
+body.login.ecrm-login #login { width: 380px; max-width: calc(100% - 32px); padding: 8vh 0 32px; }
+body.login.ecrm-login h1 { margin-bottom: 22px; }
+body.login.ecrm-login h1 a {
+	width: auto; height: auto; margin: 0 auto; padding-top: 76px; text-indent: 0; overflow: visible;
+	background: url("icons/ecrm-mark-lg.svg") center top / 64px 64px no-repeat !important;
+	color: var(--el-white); font-size: 24px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2;
+	text-decoration: none; box-shadow: none; outline-offset: 6px;
+}
+body.login.ecrm-login h1 a::before { content: none; }
+body.login.ecrm-login form {
+	margin-top: 0; padding: 26px 24px; border: 0; border-radius: 26px;
+	background: rgba(255, 255, 255, .95); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+	box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .65), 0 0 0 1px rgba(255, 255, 255, .25);
+}
+body.login.ecrm-login label { color: var(--el-ink2); font-size: 13.5px; font-weight: 600; }
+body.login.ecrm-login form .input,
+body.login.ecrm-login input[type="text"],
+body.login.ecrm-login input[type="password"],
+body.login.ecrm-login input[type="email"] {
+	margin-top: 6px; padding: 10px 14px; border: 0; border-radius: 14px; color: var(--el-ink);
+	background: var(--el-white); font-size: 16px;
+	box-shadow: 0 0 0 1px var(--el-hair), 0 2px 6px -2px rgba(0, 0, 0, .1);
+}
+body.login.ecrm-login form .input:focus,
+body.login.ecrm-login input[type="text"]:focus,
+body.login.ecrm-login input[type="password"]:focus {
+	border: 0; outline: 0; box-shadow: 0 0 0 2px var(--el-g2), 0 0 0 6px rgba(22, 194, 23, .12);
+}
+/* Κανένα default εφέ browser: το γαλάζιο του αυτόματου γεμίσματος (Chrome) γίνεται λευκό. */
+body.login.ecrm-login input:-webkit-autofill {
+	-webkit-text-fill-color: var(--el-ink); caret-color: var(--el-ink);
+	box-shadow: inset 0 0 0 1000px var(--el-white), 0 0 0 1px var(--el-hair);
+	transition: background-color 600000s 0s;
+}
+body.login.ecrm-login input:-webkit-autofill:focus {
+	box-shadow: inset 0 0 0 1000px var(--el-white), 0 0 0 2px var(--el-g2), 0 0 0 6px rgba(22, 194, 23, .12);
+}
+body.login.ecrm-login .wp-pwd .button.wp-hide-pw { color: var(--el-ink2); }
+body.login.ecrm-login .wp-pwd .button.wp-hide-pw:focus { box-shadow: 0 0 0 2px var(--el-g2); }
+body.login.ecrm-login input[type="checkbox"] { border-color: var(--el-hair); border-radius: 6px; }
+body.login.ecrm-login input[type="checkbox"]:checked::before { filter: hue-rotate(70deg) saturate(1.4); }
+body.login.ecrm-login .forgetmenot { margin-top: 10px; }
+body.login.ecrm-login .forgetmenot label { font-weight: 500; }
+body.login.ecrm-login .forgetmenot { float: none; }
+body.login.ecrm-login .submit { display: block; clear: both; margin-top: 16px; }
+body.login.ecrm-login .button-primary {
+	float: none; width: 100%; min-height: 46px; padding: 0 18px;
+	border: 0 !important; border-radius: 14px !important;
+	color: var(--el-white) !important; font-size: 15px; font-weight: 700 !important; text-shadow: none !important;
+	background: linear-gradient(180deg, var(--el-g1), var(--el-g2)) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, .33), 0 8px 18px -8px rgba(14, 154, 18, .66) !important;
+}
+body.login.ecrm-login .button-primary:hover,
+body.login.ecrm-login .button-primary:focus { background: linear-gradient(180deg, var(--el-g1), var(--el-gink)) !important; }
+body.login.ecrm-login .button-primary:focus-visible { box-shadow: 0 0 0 3px rgba(22, 194, 23, .45) !important; }
+body.login.ecrm-login .message,
+body.login.ecrm-login .notice,
+body.login.ecrm-login #login_error {
+	margin-bottom: 16px; padding: 12px 16px; border: 0; border-radius: 16px; color: var(--el-ink);
+	background: rgba(255, 255, 255, .95); box-shadow: inset 4px 0 0 var(--el-g2);
+}
+body.login.ecrm-login #login_error { box-shadow: inset 4px 0 0 var(--el-rose); }
+body.login.ecrm-login #nav,
+body.login.ecrm-login #backtoblog { padding: 0 8px; text-align: center; }
+body.login.ecrm-login #nav a,
+body.login.ecrm-login #backtoblog a { color: var(--el-soft) !important; font-size: 13.5px; }
+body.login.ecrm-login #nav a:hover,
+body.login.ecrm-login #backtoblog a:hover { color: var(--el-white) !important; }
+body.login.ecrm-login .language-switcher { display: none; }

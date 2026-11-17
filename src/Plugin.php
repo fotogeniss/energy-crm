@@ -19,6 +19,7 @@ use EnergyCRM\Access\BlogClosed;
 use EnergyCRM\Access\DepartingUser;
 use EnergyCRM\Access\DisabledAccounts;
 use EnergyCRM\Access\Hardening;
+use EnergyCRM\Access\LoginLook;
 use EnergyCRM\Access\LoginThrottle;
 use EnergyCRM\Access\TwoFactorLogin;
 use EnergyCRM\Access\NetworkSync;
@@ -128,6 +129,9 @@ final class Plugin
 
         // (406) Σύνδεση σε δύο βήματα, μόνο για όποιον την ενεργοποίησε.
         (new TwoFactorLogin(new LoginThrottle()))->register();
+
+        // (412) Η σελίδα σύνδεσης με το σύμβολο και τα χρώματα του 410.
+        (new LoginLook())->register();
 
         // Πριν από οτιδήποτε αγγίζει δικαιώματα: όσο ο λογαριασμός είναι
         // απενεργοποιημένος, κανένα ecrm_* δικαίωμα δεν ισχύει πουθενά.
