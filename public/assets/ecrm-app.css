@@ -135,6 +135,47 @@ html:has(.ecrm-app[data-theme="dark"]) { background: var(--page-canvas-dark); }
 }
 .ecrm-offline[hidden] { display: none; }
 
+/* (407) Χωρίς σήμα -- docs/UI-OFFLINE.html. Η κάρτα «θέλει σύνδεση» μπαίνει
+   δίπλα στις όψεις (ecrm-app.js, showNeedNet) και πατάει πάνω στο .ecrm-card,
+   οπότε παίρνει την όψη της κάρτας και στις δύο εμφανίσεις. Χρώματα μόνο από
+   tokens. */
+.ecrm-neednet { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: start; padding: 28px; }
+.ecrm-neednet[hidden] { display: none; }
+.ecrm-neednet__icon { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; background: var(--surface-sunk); }
+.ecrm-neednet__icon svg { width: 32px; height: 32px; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ecrm-neednet h2 { margin: 0 0 4px; font-size: var(--fs-18); color: var(--ink); }
+.ecrm-neednet p { margin: 0 0 18px; font-size: var(--fs-14); color: var(--muted); }
+.ecrm-neednet__can { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.ecrm-neednet__go { display: block; padding: 14px; border: 0; border-radius: 16px; background: var(--surface-sunk); font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
+.ecrm-neednet__go b { display: block; font-size: var(--fs-14); }
+.ecrm-neednet__go span { display: block; margin-top: 2px; font-size: var(--fs-12); color: var(--muted); }
+.ecrm-neednet__go.is-main { background: var(--accent-wash); }
+.ecrm-neednet__go.is-main b { color: var(--accent-ink); }
+.ecrm-neednet__go:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.ecrm-neednet__wait { display: flex; gap: 8px; align-items: center; font-size: var(--fs-12-5); color: var(--faint); }
+.ecrm-neednet__wait i { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
+/* Το μενού: όσες οθόνες θέλουν σύνδεση αχνίζουν, με μια γκρι κουκκίδα. */
+.ecrm-app[data-net="off"] .ecrm-nav__item[data-go]:not([data-offline-ok]) { opacity: .5; }
+.ecrm-app[data-net="off"] .ecrm-nav__item[data-go]:not([data-offline-ok]) .ecrm-nav__icon::after { content: ""; position: absolute; right: -3px; bottom: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); box-shadow: 0 0 0 2px var(--surface); }
+/* Η σφραγίδα «Αποθηκευμένο αντίγραφο» (Βάση Γνώσης, Εκπαίδευση). */
+.ecrm-savedcopy { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 0 0 12px; }
+.ecrm-savedcopy__at { display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 999px; background: var(--surface-sunk); font-size: var(--fs-12); font-weight: 600; color: var(--muted); }
+.ecrm-savedcopy__at::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+.ecrm-savedcopy small { font-size: var(--fs-12); color: var(--muted); }
+/* Χωρίς σήμα η αναζήτηση, τα φίλτρα και ο AIde κλειδώνουν, και φαίνεται. */
+.ecrm-app .ecrm-view [data-kbq]:disabled,
+.ecrm-app .ecrm-view [data-kbask]:disabled,
+.ecrm-app .ecrm-view [data-kbf]:disabled { opacity: .45; cursor: default; pointer-events: none; }
+@media (max-width: 860px) {
+	.ecrm-neednet { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 20px; }
+	.ecrm-neednet h2 { font-size: var(--fs-22); }
+	.ecrm-neednet p { font-size: var(--fs-15); }
+	.ecrm-neednet__can { grid-template-columns: minmax(0, 1fr); }
+	.ecrm-neednet__go { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+	.ecrm-neednet__go span { display: none; }
+	.ecrm-neednet__go::after { content: "›"; color: var(--faint); font-size: var(--fs-18); }
+}
+
 /* (347) «Εφαρμογή στο κινητό» -- docs/UI-INSTALL-APP.html. Το banner φαίνεται
    μόνο στην Αρχική: η ecrm-app.js βάζει data-view στο #ecrm-app σε κάθε
    αλλαγή όψης, και το markup ζει πάντα στη σελίδα. Χρώματα μόνο από tokens. */

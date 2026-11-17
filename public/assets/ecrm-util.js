@@ -162,6 +162,60 @@ export function viewEl(name) {
 }
 
 /**
+ * (407) Did this answer come from the service worker's saved copy?
+ *
+ * Only the knowledge base and the lessons are ever saved (ecrm-sw.js, 407),
+ * and the copy carries the moment it was saved. Returns «16/11 21:05», or ''
+ * for a live answer.
+ */
+export function savedCopyAt(response) {
+	var at = 0;
+
+	try { at = Number(response.headers.get('X-ECRM-Cached-At') || 0); } catch (e) {}
+	if (!at) { return ''; }
+
+	var d = new Date(at);
+	var two = function (n) { return ('0' + n).slice(-2); };
+
+	return two(d.getDate()) + '/' + two(d.getMonth() + 1) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes());
+}
+
+/**
+ * (407) The «saved copy» stamp, right under the screen's own header.
+ *
+ * Built with textContent: the date and the note are ours, but nothing in a
+ * view should depend on that staying true.
+ */
+export function markSavedCopy(view, at, note) {
+	var box = document.createElement('div');
+	box.className = 'ecrm-savedcopy';
+
+	var stamp = document.createElement('span');
+	stamp.className = 'ecrm-savedcopy__at';
+	stamp.textContent = 'Αποθηκευμένο αντίγραφο · ' + at;
+	box.appendChild(stamp);
+
+	if (note) {
+		var small = document.createElement('small');
+		small.textContent = note;
+		box.appendChild(small);
+	}
+
+	var head = view.querySelector('header');
+	if (head && head.parentNode === view) {
+		view.insertBefore(box, head.nextSibling);
+	} else {
+		view.insertBefore(box, view.firstChild);
+	}
+}
+
+/** (407) What a screen that can open offline says when nothing was saved yet. */
+export function notSavedYet(what) {
+	return '<div class="ecrm-card"><div class="ecrm-empty">' + esc(what) +
+		' δεν έχει αποθηκευτεί ακόμα σε αυτό το κινητό. Άνοιξέ τη μία φορά με σύνδεση και μετά θα ανοίγει και χωρίς.</div></div>';
+}
+
+/**
  * The application root, for the few things that are not inside a view.
  *
  * An overlay or a toast belongs to the app, not to whichever screen happened

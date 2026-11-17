@@ -56,6 +56,16 @@
  *
  * Οτιδήποτε άλλο REST μένει ανέγγιχτο, όπως πριν.
  *
+ * ## (407) Βάση Γνώσης και Εκπαίδευση χωρίς σήμα
+ *
+ * docs/UI-OFFLINE.html. Δύο ακόμη αντίγραφα στο SHELL_CACHE, network-first:
+ * το GET /kb χωρίς φίλτρα (όλη η Βάση Γνώσης) και το GET /kb?section=training
+ * (τα μαθήματα). Οδηγοί που γράφει ο διαχειριστής, καμία πληροφορία πελάτη.
+ * Αναζήτηση/φίλτρα δεν αποθηκεύονται: χωρίς σήμα παίρνουν το αντίγραφο χωρίς
+ * φίλτρα, και η οθόνη το λέει (`X-ECRM-Cached-At`, βλ. ecrm-view-kb.js).
+ * Σβήνονται μαζί με το κέλυφος: στην «Έξοδο» και όταν η σελίδα έρθει χωρίς
+ * κέλυφος (δεν είσαι πια συνδεδεμένος).
+ *
  * @package EnergyCRM
  */
 
@@ -63,6 +73,52 @@ var CACHE_NAME = 'ecrm-assets-v1';
 var SHELL_CACHE = 'ecrm-shell-v1';
 var SHELL_MAX_AGE = 14 * 24 * 3600 * 1000;
 var PROVIDERS_KEY = '/__ecrm/providers';
+var KB_KEY = '/__ecrm/kb';
+var TRAINING_KEY = '/__ecrm/kb-training';
+
+/* (407) Η διαδρομή REST και οι παράμετροί της, και για τα δύο σχήματα URL
+ * (/wp-json/... και ?rest_route=...). Το `_` (cache-buster) δεν μετράει. */
+function restCall(url) {
+	var route = url.searchParams.get('rest_route');
+	if (!route) {
+		var at = url.pathname.indexOf('/wp-json/');
+		if (at === -1) { return null; }
+		route = url.pathname.slice(at + '/wp-json'.length);
+	}
+	var params = {};
+	url.searchParams.forEach(function (v, k) {
+		if (k !== 'rest_route' && k !== '_') { params[k] = v; }
+	});
+	return { route: route.replace(/\/$/, ''), params: params };
+}
+
+/* null = δεν είναι η Βάση Γνώσης· '' = με φίλτρα (δεν αποθηκεύεται, χωρίς
+ * σήμα παίρνει το αντίγραφο χωρίς φίλτρα)· αλλιώς το κλειδί του αντιγράφου. */
+function kbKey(url) {
+	var call = restCall(url);
+	if (!call || call.route !== '/ecrm/v1/kb') { return null; }
+	var p = call.params;
+	if (p.section === 'training') { return TRAINING_KEY; }
+	var bare = !p.q && !p.energy && !p.section && !p.type && (!p.provider || p.provider === '0');
+	return bare ? KB_KEY : '';
+}
+
+/* Το αντίγραφο κρατά πότε σώθηκε· η οθόνη το δείχνει. */
+function saveStamped(key, res) {
+	return res.blob().then(function (body) {
+		var copy = new Response(body, { headers: {
+			'Content-Type': res.headers.get('Content-Type') || 'application/json; charset=utf-8',
+			'X-ECRM-Cached-At': String(Date.now())
+		} });
+		return caches.open(SHELL_CACHE).then(function (cache) { return cache.put(key, copy); });
+	});
+}
+
+/* Το URL μιας διαδρομής πάνω στη βάση REST, όποιο σχήμα κι αν έχει. */
+function restUrl(base, path, query) {
+	var join = base.indexOf('?') === -1 ? '?' : '&';
+	return base + path + (query ? join + query : '');
+}
 
 function isProvidersCall(url) {
 	if (url.pathname.replace(/\/$/, '').slice(-'/wp-json/ecrm/v1/providers'.length) === '/wp-json/ecrm/v1/providers') {
@@ -107,12 +163,38 @@ function cacheProvidersFrom(html) {
 	var nonce = /"nonce":"([A-Za-z0-9]+)"/.exec(html);
 	if (!rest || !nonce) { return Promise.resolve(); }
 	var base = rest[1].replace(/\\\//g, '/').replace(/\/$/, '');
-	return fetch(base + '/providers', { credentials: 'same-origin', headers: { 'X-WP-Nonce': nonce[1] } })
+	var opts = { credentials: 'same-origin', headers: { 'X-WP-Nonce': nonce[1] } };
+	var providers = fetch(restUrl(base, '/providers', ''), opts)
 		.then(function (res) {
 			if (!res || !res.ok) { return; }
 			return caches.open(SHELL_CACHE).then(function (cache) { return cache.put(PROVIDERS_KEY, res); });
 		})
 		.catch(function () {});
+	// (407) Μαζί και η Βάση Γνώσης και τα μαθήματα, για τον ίδιο λόγο (313b):
+	// να υπάρχουν ακόμη κι αν ο συνεργάτης δεν τα άνοιξε ποτέ με σύνδεση.
+	var kb = fetch(restUrl(base, '/kb', 'q=&energy=&section=&type=&provider=0'), opts)
+		.then(function (res) { if (res && res.ok) { return saveStamped(KB_KEY, res); } })
+		.catch(function () {});
+	var training = fetch(restUrl(base, '/kb', 'section=training'), opts)
+		.then(function (res) { if (res && res.ok) { return saveStamped(TRAINING_KEY, res); } })
+		.catch(function () {});
+	return Promise.all([providers, kb, training]);
+}
+
+/* (407) Network-first. Χωρίς σήμα: το ίδιο αντίγραφο, ή για αναζήτηση/φίλτρα
+ * το αντίγραφο χωρίς φίλτρα. Αν δεν σώθηκε ποτέ, η αποτυχία φτάνει στην οθόνη. */
+function handleKb(req, key) {
+	return fetch(req).then(function (res) {
+		if (res && res.ok && key) { saveStamped(key, res.clone()).catch(function () {}); }
+		return res;
+	}).catch(function () {
+		return caches.open(SHELL_CACHE).then(function (cache) {
+			return cache.match(key || KB_KEY).then(function (hit) {
+				if (hit) { return hit; }
+				throw new Error('offline');
+			});
+		});
+	});
 }
 
 function handleNavigation(req, event) {
@@ -131,7 +213,10 @@ function handleNavigation(req, event) {
 			return caches.open(SHELL_CACHE).then(function (cache) {
 				if (html.indexOf('id="ecrm-app"') === -1) {
 					// Η ίδια σελίδα χωρίς κέλυφος = δεν είσαι πια συνδεδεμένος.
-					return cache.delete(shellKey(url)).then(function () { return res; });
+					// (407) Φεύγουν μαζί και τα αντίγραφα της Βάσης Γνώσης.
+					return Promise.all([
+						cache.delete(shellKey(url)), cache.delete(KB_KEY), cache.delete(TRAINING_KEY)
+					]).then(function () { return res; });
 				}
 				var marked = html.replace(/<html\b/i, '<html data-ecrm-offline-shell="1"');
 				var copy = new Response(marked, { headers: {
@@ -217,6 +302,8 @@ self.addEventListener('fetch', function (event) {
 		event.respondWith(handleNavigation(req)); return;
 	}
 	if (isProvidersCall(url)) { event.respondWith(handleProviders(req)); return; }
+	var kb = kbKey(url);
+	if (kb !== null) { event.respondWith(handleKb(req, kb)); return; }
 	if (!isPluginAsset(url)) { return; }
 
 	event.respondWith(

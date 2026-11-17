@@ -8,17 +8,24 @@
  * Τα μαθήματα δεν έχουν πάροχο, οπότε το endpoint τα γυρίζει σε μία ομάδα,
  * ήδη ταξινομημένα κατά sort_order. Γι' αυτό το groups απλώς ισοπεδώνεται.
  */
-import { api, esc, fetch, H, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, markSavedCopy, notSavedYet, savedCopyAt, toast, viewEl } from '@energy-crm/util';
 
 export function loadTraining() {
 	var view = viewEl('training');
+	var savedAt = '';
 	fetch(api('/kb') + '?section=training', { headers: H() })
-		.then(function (r) { return r.json(); })
+		.then(function (r) { savedAt = savedCopyAt(r); return r.json(); })
 		.then(function (d) {
 			if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
 			renderTraining(view, d);
+			// (407) Από το αντίγραφο του service worker, χωρίς σήμα.
+			if (savedAt) { markSavedCopy(view, savedAt, 'Το «Το διάβασα» θέλει σύνδεση.'); }
 		})
-		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
+		.catch(function () {
+			view.innerHTML = !navigator.onLine
+				? notSavedYet('Η Εκπαίδευση')
+				: '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>';
+		});
 }
 
 /* Όλα τα μαθήματα σε μία λίστα, με τη σειρά που τα έστειλε ο server. */
@@ -240,6 +247,6 @@ function renderTraining(view, d) {
 				 * ανοιχτή, το τοπικό άθροισμα θα ήταν λάθος σιωπηλά. */
 				paint(res.done, res.total);
 			})
-			.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+			.catch(function () { btn.disabled = false; toast(navigator.onLine ? 'Σφάλμα δικτύου.' : 'Το «Το διάβασα» θέλει σύνδεση.', false); });
 	});
 }

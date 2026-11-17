@@ -3156,3 +3156,17 @@
 	}
 	.ecrm-app[data-ui="signature"] .sig-lsearch { margin-bottom: 14px; }
 }
+
+/* (407) Χωρίς σήμα: η κάρτα «θέλει σύνδεση» και η σφραγίδα στα χρώματα του Signature. */
+.ecrm-app[data-ui="signature"] .ecrm-neednet { border: 0; border-radius: 22px; background: var(--sig-solid); box-shadow: 0 0 0 1px var(--sig-hair); }
+.ecrm-app[data-ui="signature"] .ecrm-neednet__icon,
+.ecrm-app[data-ui="signature"] .ecrm-neednet__go,
+.ecrm-app[data-ui="signature"] .ecrm-savedcopy__at { background: var(--sig-fill); }
+.ecrm-app[data-ui="signature"] .ecrm-neednet h2,
+.ecrm-app[data-ui="signature"] .ecrm-neednet__go b { color: var(--sig-ink); }
+.ecrm-app[data-ui="signature"] .ecrm-neednet p,
+.ecrm-app[data-ui="signature"] .ecrm-neednet__go span,
+.ecrm-app[data-ui="signature"] .ecrm-savedcopy__at,
+.ecrm-app[data-ui="signature"] .ecrm-savedcopy small { color: var(--sig-ink-2); }
+.ecrm-app[data-ui="signature"] .ecrm-neednet__go.is-main { background: var(--sig-green-tint); }
+.ecrm-app[data-ui="signature"] .ecrm-neednet__go.is-main b { color: var(--sig-green-ink); }

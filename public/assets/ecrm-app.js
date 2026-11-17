@@ -56,7 +56,105 @@ import { loadProfile } from '@energy-crm/view-profile';
 	var suppressHash = false;
 	// (379) «Το προφίλ μου»: ποια ενότητα ανοίγει (#profile/notifications).
 	var profileSection = '';
+	// ---- (407) Χωρίς σήμα: ποιες οθόνες ανοίγουν -------------------------
+	// docs/UI-OFFLINE.html. Ανοίγουν μόνο όσες δεν δείχνουν στοιχεία πελατών:
+	// η αίτηση (μπαίνει στην ουρά), η Βάση Γνώσης και η Εκπαίδευση (αντίγραφο
+	// του service worker) και ο οδηγός εγκατάστασης. Όλες οι άλλες δείχνουν
+	// μία κάρτα «θέλει σύνδεση» και ανοίγουν μόνες τους μόλις γυρίσει το σήμα.
+	var OFFLINE_OK = ['new-contract', 'kb', 'training', 'install'];
+	var NEED_NET_TITLE = {
+		dashboard: 'Η Αρχική θέλει σύνδεση',
+		leads: 'Οι Υποψήφιοι θέλουν σύνδεση',
+		contracts: 'Οι Συμβάσεις θέλουν σύνδεση',
+		pending: 'Οι Εκκρεμότητες θέλουν σύνδεση',
+		documents: 'Τα Έγγραφα θέλουν σύνδεση',
+		tasks: 'Οι Εργασίες θέλουν σύνδεση',
+		customers: 'Οι Πελάτες θέλουν σύνδεση',
+		renewals: 'Οι Λήξεις θέλουν σύνδεση',
+		network: 'Το δίκτυό μου θέλει σύνδεση',
+		team: 'Η ομάδα μου θέλει σύνδεση',
+		teamlive: 'Η «Ομάδα τώρα» θέλει σύνδεση',
+		escalations: 'Οι Κολλημένες αιτήσεις θέλουν σύνδεση',
+		tickets: 'Οι Αναφορές θέλουν σύνδεση',
+		import: 'Η Εισαγωγή Excel θέλει σύνδεση',
+		commissions: 'Οι Προμήθειες θέλουν σύνδεση',
+		calc: 'Η Προσφορά θέλει σύνδεση',
+		analytics: 'Τα Στατιστικά θέλουν σύνδεση',
+		profile: 'Το προφίλ μου θέλει σύνδεση',
+		contract: 'Η σύμβαση θέλει σύνδεση',
+		customer: 'Η καρτέλα του πελάτη θέλει σύνδεση',
+		partner: 'Η καρτέλα του συνεργάτη θέλει σύνδεση',
+		edit: 'Η επεξεργασία της αίτησης θέλει σύνδεση'
+	};
+	var NEED_NET_CAN = [
+		['new-contract', 'Νέα αίτηση', 'Μπαίνει σε ουρά και φεύγει μόνη της'],
+		['kb', 'Βάση Γνώσης', 'Δικαιολογητικά, εγγυήσεις, χρεώσεις'],
+		['training', 'Εκπαίδευση', 'Τα μαθήματά σου']
+	];
+	// Το hash που περιμένει σύνδεση. Κενό = καμία οθόνη δεν περιμένει.
+	var waitingFor = '';
+	var needNetEl = null;
+
+	app.querySelectorAll('[data-go]').forEach(function (b) {
+		if (OFFLINE_OK.indexOf(b.getAttribute('data-go')) >= 0) { b.setAttribute('data-offline-ok', ''); }
+	});
+
+	function needsNet(view) {
+		return !navigator.onLine && OFFLINE_OK.indexOf(view) < 0;
+	}
+
+	function hideNeedNet() {
+		waitingFor = '';
+		if (needNetEl) { needNetEl.hidden = true; }
+	}
+
+	/* «key» είναι η όψη (contracts) ή το είδος της καρτέλας (contract). Η
+	 * κάρτα μπαίνει μία φορά δίπλα στις όψεις και απλώς ξαναγράφεται. */
+	function showNeedNet(key, hash, navView) {
+		var first = app.querySelector('.ecrm-view');
+		if (!first) { return; }
+		if (!needNetEl) {
+			needNetEl = document.createElement('section');
+			needNetEl.className = 'ecrm-card ecrm-neednet';
+			needNetEl.setAttribute('role', 'status');
+			first.parentNode.insertBefore(needNetEl, first);
+			needNetEl.addEventListener('click', function (e) {
+				var b = e.target.closest('[data-neednet-go]');
+				if (b) { go(b.getAttribute('data-neednet-go')); }
+			});
+		}
+		var can = NEED_NET_CAN.filter(function (c) {
+			return !!app.querySelector('.ecrm-view[data-view="' + c[0] + '"]');
+		}).map(function (c) {
+			return '<button type="button" class="ecrm-neednet__go' + (c[0] === 'new-contract' ? ' is-main' : '') + '" data-neednet-go="' + esc(c[0]) + '">' +
+				'<b>' + esc(c[1]) + '</b><span>' + esc(c[2]) + '</span></button>';
+		}).join('');
+		needNetEl.innerHTML =
+			'<span class="ecrm-neednet__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.3 9.2 4.5 4.5 0 0 0 7 18z"/><path d="M4 4l16 16"/></svg></span>' +
+			'<div class="ecrm-neednet__main">' +
+				'<h2>' + esc(NEED_NET_TITLE[key] || 'Αυτή η οθόνη θέλει σύνδεση') + '</h2>' +
+				'<p>Τα στοιχεία των πελατών δεν κρατιούνται στο κινητό. Η οθόνη θα ανοίξει μόνη της μόλις γυρίσει το σήμα.</p>' +
+				'<div class="ecrm-neednet__can">' + can + '</div>' +
+				'<div class="ecrm-neednet__wait"><i></i>Περιμένει σύνδεση…</div>' +
+			'</div>';
+		needNetEl.hidden = false;
+		waitingFor = hash;
+
+		app.setAttribute('data-view', navView || key);
+		app.querySelectorAll('.ecrm-view').forEach(function (v) { v.classList.remove('is-active'); });
+		app.querySelectorAll('.ecrm-nav__item[data-go]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-go') === (navView || key)); });
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
 	function go(view) {
+		if (needsNet(view)) {
+			if (!suppressHash && VIEWS.indexOf(view) >= 0) {
+				try { if (location.hash.slice(1) !== view) history.pushState({ v: view }, '', '#' + view); } catch (e) {}
+			}
+			showNeedNet(view, view, view);
+			return;
+		}
+		hideNeedNet();
 		app.setAttribute('data-view', view);
 		app.querySelectorAll('.ecrm-view').forEach(function (v) { v.classList.toggle('is-active', v.getAttribute('data-view') === view); });
 		app.querySelectorAll('.ecrm-nav__item[data-go]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-go') === view); });
@@ -126,6 +224,8 @@ import { loadProfile } from '@energy-crm/view-profile';
 	var offlineEl = app.querySelector('#ecrm-offline');
 	var wasOffline = !navigator.onLine;
 	function paintOnline() {
+		// (407) Το μενού αχνίζει τις οθόνες που θέλουν σύνδεση (ecrm-app.css).
+		app.setAttribute('data-net', navigator.onLine ? 'on' : 'off');
 		if (!offlineEl) return;
 		offlineEl.hidden = navigator.onLine;
 	}
@@ -135,6 +235,10 @@ import { loadProfile } from '@energy-crm/view-profile';
 		// σε κάθε φόρτωση σελίδας (ήδη online) θα ήταν θόρυβος χωρίς νόημα.
 		if (wasOffline) { toast('Η σύνδεση επανήλθε.'); }
 		wasOffline = false;
+		// (407) Η οθόνη που περίμενε ανοίγει μόνη της, με φρέσκα στοιχεία.
+		if (waitingFor) { var back = waitingFor; hideNeedNet(); route(back, false); }
+		// Η Βάση Γνώσης / Εκπαίδευση από αντίγραφο ξαναφορτώνει ζωντανή.
+		else if (app.querySelector('.ecrm-view.is-active .ecrm-savedcopy')) { go(app.getAttribute('data-view')); }
 		autoSend(true);
 	});
 	window.addEventListener('offline', function () {
@@ -749,6 +853,16 @@ import { loadProfile } from '@energy-crm/view-profile';
 	// σύνδεσμος της ειδοποίησης στο καμπανάκι.
 	function route(hash, push) {
 		var v = hash || '';
+		// (407) Χωρίς σήμα, οι διαδρομές με δική τους φόρτωση (μήνας του
+		// Καταστήματος, ενότητα προφίλ, αίτημα) δεν ξεκινούν καν: η κάρτα
+		// κρατά ολόκληρο το hash και το ξαναπαίζει όταν γυρίσει το σήμα.
+		var deep = /^(store|profile|tickets)\//.exec(v);
+		if (deep && !navigator.onLine) {
+			if (push) { try { history.pushState({ v: v }, '', '#' + v); } catch (e) {} }
+			var deepView = deep[1] === 'store' ? 'dashboard' : deep[1];
+			showNeedNet(deepView, v, deepView);
+			return;
+		}
 		// (349) `#store/2026-10`: Αρχική → Κατάστημα → εκείνος ο μήνας (μηνιαία αναφορά).
 		var storeMonth = /^store\/(\d{4}-\d{2})$/.exec(v);
 		if (storeMonth) {
@@ -770,6 +884,11 @@ import { loadProfile } from '@energy-crm/view-profile';
 		var sub = /^(contract|customer|partner|edit)\/(\d+)$/.exec(v);
 		if (sub) {
 			if (push) { try { history.pushState({ v: v }, '', '#' + v); } catch (e) {} }
+			// (407) Η καρτέλα θέλει σύνδεση· η λίστα της φωτίζεται στο μενού.
+			if (!navigator.onLine) {
+				showNeedNet(sub[1], v, { contract: 'contracts', edit: 'contracts', customer: 'customers', partner: 'team' }[sub[1]]);
+				return;
+			}
 			openSub(sub[1], +sub[2]);
 			return;
 		}

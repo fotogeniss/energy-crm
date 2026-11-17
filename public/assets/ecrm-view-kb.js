@@ -1,6 +1,6 @@
 /* Energy CRM — knowledge base: provider paperwork, filtered. */
 
-import { api, esc, fetch, H, providerMark, toast, viewEl } from '@energy-crm/util';
+import { api, esc, fetch, H, markSavedCopy, notSavedYet, providerMark, savedCopyAt, toast, viewEl } from '@energy-crm/util';
 
 var kbState = { q: '', energy: '', section: '', type: '', provider: 0, sigProv: '', sigTab: '', refocus: false };
 
@@ -8,6 +8,9 @@ var kbState = { q: '', energy: '', section: '', type: '', provider: 0, sigProv: 
 // module (strict mode) το clearTimeout(kbT) πετούσε ReferenceError με το
 // πρώτο γράμμα, οπότε η αναζήτηση δεν έτρεχε ποτέ.
 var kbT = 0;
+
+// (407) Πότε σώθηκε το αντίγραφο που δείχνεται τώρα· '' = ζωντανή απάντηση.
+var kbSavedAt = '';
 
 /* (362) «Signature»: ο φάκελος του παρόχου. Αριστερά οι πάροχοι, δεξιά ο
  * φάκελος του επιλεγμένου με καρτέλες ανά ενότητα και όλα ανοιχτά για
@@ -24,13 +27,32 @@ export function loadKB() {
 	var sig = isSignature();
 	var qs = '?q=' + encodeURIComponent(kbState.q) + '&energy=' + kbState.energy +
 		'&section=' + (sig ? '' : kbState.section) + '&type=' + kbState.type + '&provider=' + (sig ? 0 : kbState.provider);
+	var savedAt = '';
 	fetch(api('/kb') + qs, { headers: H() })
-		.then(function (r) { return r.json(); })
+		.then(function (r) { savedAt = savedCopyAt(r); return r.json(); })
 		.then(function (d) {
 			if (!d || !d.ok) { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα.</div></div>'; return; }
+			if (savedAt) {
+				// (407) Το αντίγραφο είναι ΟΛΗ η Βάση Γνώσης, χωρίς φίλτρα: τα
+				// φίλτρα γυρίζουν στο «Όλα» ώστε να λένε την αλήθεια.
+				kbState.q = ''; kbState.energy = ''; kbState.section = ''; kbState.type = ''; kbState.provider = 0;
+			}
+			kbSavedAt = savedAt;
 			renderKB(view, d);
 		})
-		.catch(function () { view.innerHTML = '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>'; });
+		.catch(function () {
+			view.innerHTML = !navigator.onLine
+				? notSavedYet('Η Βάση Γνώσης')
+				: '<div class="ecrm-card"><div class="ecrm-empty">Σφάλμα δικτύου.</div></div>';
+		});
+}
+
+/* (407) Χωρίς σήμα, από το αντίγραφο: διαβάζεται κανονικά (πάροχος, καρτέλες,
+ * άνοιγμα ενότητας), αλλά η αναζήτηση, τα φίλτρα και ο AIde θέλουν τον server
+ * και κλειδώνουν, με την εξήγηση από πάνω. docs/UI-OFFLINE.html. */
+function offlineKB(view, at) {
+	markSavedCopy(view, at, 'Η αναζήτηση, τα φίλτρα και ο AIde θέλουν σύνδεση. Οι οδηγοί διαβάζονται κανονικά.');
+	view.querySelectorAll('[data-kbq], [data-kbask], [data-kbf]').forEach(function (el) { el.disabled = true; });
 }
 function kbChip(group, val, label, active) {
 	return '<button type="button" class="ecrm-chip2' + (active ? ' is-on' : '') + '" data-kbf="' + group + '" data-kbv="' + esc(val) + '">' + esc(label) + '</button>';
@@ -243,4 +265,6 @@ function wireKB(view) {
 	// κινητό θα άνοιγε το πληκτρολόγιο χωρίς λόγο.
 	if (kbState.refocus && document.activeElement !== qEl) { qEl.focus(); qEl.setSelectionRange(qEl.value.length, qEl.value.length); }
 	kbState.refocus = false;
+	// Κάθε ξαναζωγράφισμα (πάροχος, καρτέλα) κρατά τη σφραγίδα και το κλείδωμα.
+	if (kbSavedAt) { offlineKB(view, kbSavedAt); }
 }

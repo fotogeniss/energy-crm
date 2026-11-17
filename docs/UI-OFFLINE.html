@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>(407) Χωρίς σήμα</title>
+<style>
+:root{--bg:#eef0ed;--card:#fff;--ink:#1b1d1a;--ink2:#5f635d;--ink3:#9a9e97;--hair:#141e1417;--fill:#141e140f;--green:#16c217;--gink:#0a6b1d;--gt:#16c2171f;--btop:#22cf23;--bbot:#0e9a12;--amber:#c46a00;--at:#ffa01424;--slate:#2b2d29}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,"Segoe UI",Roboto,sans-serif;padding:24px 16px 60px}
+.wrap{max-width:1120px;margin:0 auto}p.note{color:var(--ink2);margin:0 0 16px;max-width:900px}
+h1{font-size:20px;margin:0 0 6px}
+h2{font-size:15px;margin:34px 0 10px;display:flex;gap:10px;align-items:center}h2 .tag{font-size:11px;font-weight:800;background:#1b1d1a;color:#fff;border-radius:99px;padding:2px 10px}
+.btn{border:0;border-radius:99px;padding:10px 18px;font:inherit;font-weight:700;cursor:pointer}
+.btn.pri{color:#fff;background:linear-gradient(180deg,var(--btop),var(--bbot))}.btn.gho{background:#fff;box-shadow:0 0 0 1px var(--hair);color:var(--ink)}.btn.sm{padding:7px 12px;font-size:12.5px}
+
+/* εφαρμογή */
+.app{display:grid;grid-template-columns:230px 1fr;gap:16px;background:linear-gradient(135deg,#f3f6f1,#e7efe6);border-radius:26px;padding:16px;box-shadow:0 0 0 1px var(--hair)}
+.side{background:#fffc;border-radius:22px;padding:14px;box-shadow:0 0 0 1px var(--hair)}
+.brand{display:flex;gap:8px;align-items:center;font-weight:800;margin-bottom:12px}.brand i{width:26px;height:26px;border-radius:8px;background:linear-gradient(180deg,var(--btop),var(--bbot))}
+.new{display:block;text-align:center;color:#fff;background:linear-gradient(180deg,var(--btop),var(--bbot));border-radius:99px;padding:9px;font-weight:700;margin-bottom:12px}
+.nav a{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;color:var(--ink);text-decoration:none;font-size:13.5px}
+.nav a b{width:22px;height:22px;border-radius:7px;background:var(--fill)}
+.nav a.cur{background:var(--gt);font-weight:700}
+.nav a.need{color:var(--ink3)}.nav a.need b{opacity:.5}
+.nav a.need::after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--ink3);opacity:.55}
+.nav small{display:block;margin:12px 8px 4px;font-size:11px;color:var(--ink3);font-weight:700}
+.main{min-width:0}
+.bar{display:flex;align-items:center;gap:10px;background:#fffc;border-radius:16px;padding:10px 14px;box-shadow:0 0 0 1px var(--hair);margin-bottom:12px;font-size:13px}
+.off{display:flex;gap:10px;align-items:center;border-radius:14px;padding:10px 14px;background:var(--slate);color:#f1f1ee;font-size:13px;margin-bottom:14px}
+.off i{width:8px;height:8px;border-radius:50%;background:#ffb547;flex:none}
+
+/* η κάρτα */
+.need-card{background:#fff;border-radius:22px;box-shadow:0 0 0 1px var(--hair);padding:28px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:start}
+.cloud{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:var(--fill)}
+.cloud svg{width:32px;height:32px;fill:none;stroke:var(--ink2);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.need-card h3{margin:0 0 4px;font-size:19px}
+.need-card .lead{margin:0 0 18px;color:var(--ink2)}
+.can{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.can a{display:block;padding:14px;border-radius:16px;background:var(--fill);color:var(--ink);text-decoration:none}
+.can a b{display:block;font-size:14px}.can a span{font-size:12px;color:var(--ink2)}
+.can a.go{background:var(--gt)}.can a.go b{color:var(--gink)}
+.wait{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink3)}
+.wait i{width:8px;height:8px;border-radius:50%;background:var(--ink3)}
+
+/* κινητό */
+.phones{display:flex;gap:24px;flex-wrap:wrap}
+.phone{width:360px;max-width:100%;border-radius:34px;padding:12px;background:#111;box-shadow:0 20px 40px -24px #0008}
+.screen{border-radius:24px;overflow:hidden;background:linear-gradient(135deg,#f3f6f1,#e7efe6);min-height:560px;padding:12px}
+.screen .off{border-radius:12px;font-size:12.5px}
+.screen .need-card{grid-template-columns:1fr;padding:20px;gap:14px;font-size:15px}
+.screen .need-card h3{font-size:20px}
+.screen .can{grid-template-columns:1fr}
+.screen .can a{display:flex;justify-content:space-between;align-items:center}
+.screen .can a span{font-size:12.5px}
+
+/* βάση γνώσης offline */
+.kb{background:#fff;border-radius:22px;box-shadow:0 0 0 1px var(--hair);padding:20px}
+.stamp{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);border-radius:99px;padding:4px 10px;margin-bottom:12px}
+.stamp i{width:7px;height:7px;border-radius:50%;background:var(--ink3)}
+.kb h4{margin:0 0 8px}.kb ol{margin:0;padding-left:20px;color:var(--ink2)}
+.ask{display:flex;gap:10px;margin:14px 0 0;align-items:center}
+.ask input{flex:1;min-width:0;border:0;border-radius:99px;padding:10px 14px;background:var(--fill);font:inherit;color:var(--ink3)}
+.ask .btn{opacity:.45;cursor:default}
+.ask small{font-size:12px;color:var(--ink3)}
+
+.toast{display:inline-flex;gap:10px;align-items:center;background:var(--slate);color:#fff;border-radius:14px;padding:10px 14px;font-size:13px}
+.toast i{width:8px;height:8px;border-radius:50%;background:var(--green)}
+ul.rules{color:var(--ink2);margin:0;padding-left:18px}ul.rules li{margin:4px 0}
+
+@media (max-width:860px){.app{grid-template-columns:1fr}.side{display:none}.need-card{grid-template-columns:1fr}.can{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>(407) Χωρίς σήμα: τι ανοίγει και τι λέει η εφαρμογή</h1>
+<p class="note">Σήμερα, χωρίς σήμα, ανοίγει η «Νέα αίτηση» και η αίτηση μπαίνει σε ουρά. Κάθε άλλη οθόνη γράφει «Σφάλμα φόρτωσης.», σαν να χάλασε κάτι. Η πρόταση: μία ίδια, ήρεμη κάρτα παντού, που λέει τι δουλεύει τώρα. Η Βάση Γνώσης και η Εκπαίδευση ανοίγουν και χωρίς σήμα. <b>Κανένα στοιχείο πελάτη δεν μένει στο κινητό</b>: κρατιούνται μόνο οδηγοί και κατάλογος προγραμμάτων, όπως και σήμερα, και σβήνονται στην Έξοδο.</p>
+
+<h2><span class="tag">1</span> Οθόνη που θέλει σύνδεση (π.χ. Συμβάσεις)</h2>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><i></i>Energy CRM</div>
+    <span class="new">+ Νέα αίτηση</span>
+    <nav class="nav">
+      <a class="need"><b></b>Αρχική</a>
+      <a class="need"><b></b>Υποψήφιοι</a>
+      <a class="need cur"><b></b>Συμβάσεις</a>
+      <a class="need"><b></b>Πελάτες</a>
+      <small>ΚΑΘΗΜΕΡΙΝΑ</small>
+      <a class="need"><b></b>Εκκρεμότητες</a>
+      <a class="need"><b></b>Προσφορά</a>
+      <small>ΒΟΗΘΕΙΑ</small>
+      <a><b></b>Βάση Γνώσης</a>
+      <a><b></b>Εκπαίδευση</a>
+    </nav>
+  </aside>
+  <main class="main">
+    <div class="bar">Καλώς ήρθες, <b>test</b></div>
+    <div class="off"><i></i>Εκτός σύνδεσης — ό,τι κάνεις τώρα μπαίνει σε ουρά και θα σταλεί μόλις γυρίσει η σύνδεση.</div>
+    <section class="need-card">
+      <span class="cloud"><svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.3 9.2 4.5 4.5 0 0 0 7 18z"/><path d="M4 4l16 16"/></svg></span>
+      <div>
+        <h3>Οι Συμβάσεις θέλουν σύνδεση</h3>
+        <p class="lead">Τα στοιχεία των πελατών δεν κρατιούνται στο κινητό. Η οθόνη θα ανοίξει μόνη της μόλις γυρίσει το σήμα.</p>
+        <div class="can">
+          <a class="go" href="#"><b>Νέα αίτηση</b><span>Μπαίνει σε ουρά και φεύγει μόνη της</span></a>
+          <a href="#"><b>Βάση Γνώσης</b><span>Δικαιολογητικά, εγγυήσεις, χρεώσεις</span></a>
+          <a href="#"><b>Εκπαίδευση</b><span>Τα μαθήματά σου</span></a>
+        </div>
+        <div class="wait"><i></i>Περιμένει σύνδεση…</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<h2><span class="tag">2</span> Το ίδιο στο κινητό, με μεγάλα γράμματα</h2>
+<div class="phones">
+  <div class="phone"><div class="screen">
+    <div class="off"><i></i>Εκτός σύνδεσης — ό,τι κάνεις τώρα μπαίνει σε ουρά.</div>
+    <section class="need-card">
+      <span class="cloud"><svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.3 9.2 4.5 4.5 0 0 0 7 18z"/><path d="M4 4l16 16"/></svg></span>
+      <div>
+        <h3>Η Αρχική θέλει σύνδεση</h3>
+        <p class="lead">Τα στοιχεία των πελατών δεν κρατιούνται στο κινητό. Θα ανοίξει μόνη της μόλις γυρίσει το σήμα.</p>
+        <div class="can">
+          <a class="go" href="#"><b>Νέα αίτηση</b><span>›</span></a>
+          <a href="#"><b>Βάση Γνώσης</b><span>›</span></a>
+          <a href="#"><b>Εκπαίδευση</b><span>›</span></a>
+        </div>
+        <div class="wait"><i></i>Περιμένει σύνδεση…</div>
+      </div>
+    </section>
+  </div></div>
+
+  <div class="phone"><div class="screen">
+    <div class="off"><i></i>Εκτός σύνδεσης — ό,τι κάνεις τώρα μπαίνει σε ουρά.</div>
+    <section class="kb">
+      <span class="stamp"><i></i>Αποθηκευμένο αντίγραφο · 16/11 21:05</span>
+      <h4>Δικαιολογητικά Enerwave — Οικιακά</h4>
+      <ol>
+        <li>Τελευταίο εκκαθαριστικό του τωρινού προμηθευτή (2 όψεις)</li>
+        <li>Αντίγραφο ΑΔΤ ή διαβατηρίου</li>
+        <li>Όπου απαιτείται, φωτογραφία του μετρητή</li>
+      </ol>
+      <div class="ask"><input value="Ρώτησε τον AIde…" disabled><span class="btn pri sm">Ρώτησε</span></div>
+      <div class="ask"><small>Ο AIde χρειάζεται σύνδεση. Οι οδηγοί διαβάζονται κανονικά.</small></div>
+    </section>
+  </div></div>
+</div>
+
+<h2><span class="tag">3</span> Όταν γυρίσει το σήμα</h2>
+<p class="note">Το banner φεύγει, η οθόνη που περίμενε ανοίγει μόνη της με φρέσκα στοιχεία, και η ουρά αδειάζει όπως σήμερα.</p>
+<span class="toast"><i></i>Η σύνδεση επανήλθε.</span>
+
+<h2><span class="tag">4</span> Τι αλλάζει, τι όχι</h2>
+<ul class="rules">
+  <li><b>Μενού:</b> οι οθόνες που θέλουν σύνδεση γίνονται πιο αχνές με μια μικρή γκρι κουκκίδα. Πατιούνται κανονικά και δείχνουν την κάρτα. Χωρίς σήμα δεν αλλάζει τίποτα άλλο.</li>
+  <li><b>Κρατιούνται στο κινητό:</b> το κέλυφος (όπως σήμερα), ο κατάλογος παρόχων (όπως σήμερα) και, νέο, η Βάση Γνώσης και τα μαθήματα. Τίποτα από πελάτες, συμβάσεις, προμήθειες ή ομάδα.</li>
+  <li><b>Σβήνονται:</b> στην Έξοδο, και όταν η σελίδα δεν είναι πια συνδεδεμένη (όπως σήμερα το κέλυφος).</li>
+  <li><b>Προσφορά:</b> η σύγκριση λογαριασμού γίνεται στον server, άρα θέλει σύνδεση. Δείχνει την κάρτα.</li>
+  <li><b>Δεν αλλάζει:</b> η «Νέα αίτηση», η ουρά, το banner, η αυτόματη αποστολή.</li>
+</ul>
+</div>
+</body>
+</html>
