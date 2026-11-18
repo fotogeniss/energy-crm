@@ -35,7 +35,36 @@ final class UserSessions
 
     public const FAIL_WINDOW = 15 * 60;
 
+    public const TOO_MANY = 'Πολλές λάθος προσπάθειες. Δοκίμασε ξανά σε λίγα λεπτά.';
+
+    private const FAIL_KEY = 'ecrm_pwfail_';
+
     private const META = 'session_tokens';
+
+    /**
+     * (414) Ένας μετρητής για κάθε «απόδειξε ότι είσαι εσύ» μέσα στη σύνδεση:
+     * τωρινός κωδικός (αλλαγή κωδικού, απενεργοποίηση δύο βημάτων) και αριθμός
+     * της εφαρμογής (νέοι εφεδρικοί, απενεργοποίηση). Πριν, μόνο η αλλαγή
+     * κωδικού μετρούσε· το `/me/2fa/disable` δεχόταν απεριόριστες δοκιμές
+     * κωδικού, και με κλεμμένη συνεδρία έδινε τον κωδικό χωρίς όριο.
+     */
+    public static function tooManyFailures(int $userId): bool
+    {
+        return (int) get_transient(self::FAIL_KEY . $userId) >= self::MAX_FAILS;
+    }
+
+    public static function recordFailure(int $userId): void
+    {
+        $key   = self::FAIL_KEY . $userId;
+        $fails = (int) get_transient($key);
+
+        set_transient($key, $fails + 1, self::FAIL_WINDOW);
+    }
+
+    public static function clearFailures(int $userId): void
+    {
+        delete_transient(self::FAIL_KEY . $userId);
+    }
 
     /**
      * @return list<array{id: string, device: string, mobile: bool, ip: string, login: string, current: bool}>
@@ -101,19 +130,16 @@ final class UserSessions
      */
     public function changePassword(WP_User $user, string $current, string $new): array
     {
-        $failKey = 'ecrm_pwfail_' . $user->ID;
-        $fails   = (int) get_transient($failKey);
-
-        if ($fails >= self::MAX_FAILS) {
+        if (self::tooManyFailures($user->ID)) {
             return [
                 'ok'     => false,
                 'status' => 429,
-                'error'  => 'Πολλές λάθος προσπάθειες. Δοκίμασε ξανά σε λίγα λεπτά.',
+                'error'  => self::TOO_MANY,
             ];
         }
 
         if (! wp_check_password($current, $user->user_pass, $user->ID)) {
-            set_transient($failKey, $fails + 1, self::FAIL_WINDOW);
+            self::recordFailure($user->ID);
 
             return ['ok' => false, 'status' => 400, 'error' => 'Ο τωρινός κωδικός δεν είναι σωστός.'];
         }
@@ -134,7 +160,7 @@ final class UserSessions
             return ['ok' => false, 'status' => 400, 'error' => $problem];
         }
 
-        delete_transient($failKey);
+        self::clearFailures($user->ID);
 
         $manager  = WP_Session_Tokens::get_instance($user->ID);
         $token    = wp_get_session_token();

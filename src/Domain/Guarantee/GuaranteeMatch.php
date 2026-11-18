@@ -55,6 +55,8 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Domain\Guarantee;
 
+use EnergyCRM\Domain\Forms\DeiCatalogue;
+
 final class GuaranteeMatch
 {
     /**
@@ -178,7 +180,12 @@ final class GuaranteeMatch
             return null;
         }
 
-        $power = self::toNumber($contract['agreed_power'] ?? null);
+        // (416) Ο ίδιος αναγνώστης με το έντυπο της ΔΕΗ (`DeiCatalogue::kva()`):
+        // «Ισχύς 25» έβγαζε σωστό έντυπο αλλά καμία εγγύηση, γιατί εδώ
+        // διαβαζόταν μόνο αριθμός στην αρχή.
+        $typed = $contract['agreed_power'] ?? null;
+        $kva   = is_scalar($typed) ? DeiCatalogue::kva((string) $typed) : 0.0;
+        $power = $kva > 0 ? $kva : null;
 
         // Ο κανόνας μιλά για ισχύ και η σύμβαση δεν τη δηλώνει: δεν μπορεί να
         // επιβεβαιωθεί, άρα δεν ταιριάζει.

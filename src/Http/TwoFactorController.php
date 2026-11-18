@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Http;
 
 use EnergyCRM\Infrastructure\TwoFactor;
+use EnergyCRM\Infrastructure\UserSessions;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_User;
@@ -107,9 +108,17 @@ final class TwoFactorController implements Controller
     {
         $user = wp_get_current_user();
 
+        if (UserSessions::tooManyFailures($user->ID)) {
+            return self::fail(UserSessions::TOO_MANY, 429);
+        }
+
         if (! $this->twoFactor->verify($user->ID, (string) $request['code'])) {
+            UserSessions::recordFailure($user->ID);
+
             return self::fail('Λάθος αριθμός από την εφαρμογή.', 422);
         }
+
+        UserSessions::clearFailures($user->ID);
 
         return $this->status(['codes' => $this->twoFactor->newBackupCodes($user->ID)]);
     }
@@ -118,14 +127,25 @@ final class TwoFactorController implements Controller
     {
         $user = wp_get_current_user();
 
+        // (414) Ίδιος μετρητής με την αλλαγή κωδικού: χωρίς αυτόν, εδώ ο
+        // κωδικός δοκιμαζόταν απεριόριστα.
+        if (UserSessions::tooManyFailures($user->ID)) {
+            return self::fail(UserSessions::TOO_MANY, 429);
+        }
+
         if (! wp_check_password((string) $request['password'], $user->user_pass, $user->ID)) {
+            UserSessions::recordFailure($user->ID);
+
             return self::fail('Λάθος κωδικός πρόσβασης.', 422);
         }
 
         if (! $this->twoFactor->verify($user->ID, (string) $request['code'])) {
+            UserSessions::recordFailure($user->ID);
+
             return self::fail('Λάθος αριθμός από την εφαρμογή.', 422);
         }
 
+        UserSessions::clearFailures($user->ID);
         $this->twoFactor->disable($user->ID);
 
         return $this->status();

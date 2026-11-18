@@ -533,6 +533,13 @@ final class TeamController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν ανήκει στην ομάδα σου.'], 403);
         }
 
+        // (414) Διαχειριστής που βρέθηκε κάτω από συνεργάτη δεν απενεργοποιείται,
+        // δεν αφαιρείται και δεν «προάγεται» από εκείνον: το set_role() της
+        // προαγωγής θα του αφαιρούσε τον ρόλο διαχειριστή.
+        if (user_can($member, 'manage_options')) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Ο διαχειριστής δεν αλλάζει από την Ομάδα.'], 403);
+        }
+
         if ($request['op'] === 'promote') {
             return $this->promote($member);
         }

@@ -37,4 +37,13 @@ final class ClockDriftTest extends TestCase
         self::assertNull(HealthChecks::clockDriftMinutes('', '2026-11-16 12:00:00'));
         self::assertNull(HealthChecks::clockDriftMinutes('όχι ώρα', '2026-11-16 12:00:00'));
     }
+
+    /** (416) Η ζώνη του WordPress: μόνο η ώρα Ελλάδας είναι πράσινη. */
+    public function testOnlyAthensTimeIsGreen(): void
+    {
+        self::assertTrue(HealthChecks::timezone('Europe/Athens')['ok']);
+        self::assertFalse(HealthChecks::timezone('UTC')['ok']);
+        self::assertFalse(HealthChecks::timezone('+02:00')['ok']);
+        self::assertStringContainsString('Δεν έχει οριστεί', HealthChecks::timezone('')['detail']);
+    }
 }

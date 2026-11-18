@@ -50,7 +50,7 @@ class ECRM_Payouts {
 			$args[] = $partner;
 		}
 		return $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.id, c.partner_user_id, c.provider_id, c.program_id, c.energy_type, c.category, c.status, c.updated_at,
+			"SELECT c.id, c.partner_user_id, c.provider_id, c.program_id, c.energy_type, c.category, c.status, c.updated_at, c.signed_at, c.created_at,
 			        {$at} AS earned_at
 			 FROM {$ct} c WHERE {$where}",
 			$args
@@ -114,7 +114,9 @@ class ECRM_Payouts {
 				echo '<td>' . esc_html( $u ? $u->display_name : ( '#' . $uid ) ) . '</td>';
 				echo '<td>' . (int) $v['cnt'] . '</td>';
 				echo '<td><strong>' . number_format( $v['amount'], 2 ) . '</strong></td>';
-				echo '<td><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline" onsubmit="return confirm(\'Δημιουργία εκκαθάρισης για ' . esc_attr( $u ? $u->display_name : ( '#' . $uid ) ) . ';\')">';
+				// (414) esc_js και όχι esc_attr: ο browser ξεκωδικοποιεί το &#039; πριν
+				// τρέξει το JS, οπότε όνομα με «'» έτρεχε κώδικα ως διαχειριστής.
+				echo '<td><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="display:inline" onsubmit="return confirm(\'Δημιουργία εκκαθάρισης για ' . esc_js( $u ? $u->display_name : ( '#' . $uid ) ) . ';\')">';
 				wp_nonce_field( 'ecrm_create_payout' );
 				echo '<input type="hidden" name="action" value="ecrm_create_payout"><input type="hidden" name="partner_user_id" value="' . (int) $uid . '">';
 				echo '<button class="button button-primary button-small">Δημιουργία εκκαθάρισης</button></form></td>';
@@ -227,7 +229,7 @@ class ECRM_Payouts {
 		// Τα σύνολα από τις σφραγισμένες γραμμές, όχι από όσες διαβάστηκαν.
 		[ $at, $at_args ] = \EnergyCRM\Persistence\PayableClause::earnedAt( ECRM_DB::payable_statuses(), 'c' );
 		$mine = $wpdb->get_results( $wpdb->prepare(
-			"SELECT c.id, c.partner_user_id, c.provider_id, c.program_id, c.energy_type, c.category, c.status, c.updated_at,
+			"SELECT c.id, c.partner_user_id, c.provider_id, c.program_id, c.energy_type, c.category, c.status, c.updated_at, c.signed_at, c.created_at,
 			        {$at} AS earned_at
 			 FROM {$ct} c WHERE c.payout_id = %d",
 			[ ...$at_args, $payout_id ]

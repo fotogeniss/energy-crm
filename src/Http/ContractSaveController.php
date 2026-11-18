@@ -30,6 +30,7 @@ use EnergyCRM\Domain\Contract\StatusEntryGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\RequestKey;
+use EnergyCRM\Domain\Contract\SignedFieldsLock;
 use EnergyCRM\Domain\Contract\StatusTrack;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
@@ -297,6 +298,21 @@ final class ContractSaveController implements Controller
         $previousCustomer = $customerId > 0 && $customer !== []
             ? $this->customers->find($customerId, $scope)
             : null;
+
+        // (415) Μετά την υπογραφή του πελάτη: πάροχος, πρόγραμμα, είδος, πελάτης
+        // και ΑΦΜ κλειδώνουν (εκτός διαχειριστή). Πριν από κάθε γράψιμο.
+        if ($existing !== null && ! current_user_can('manage_options')) {
+            $locked = SignedFieldsLock::refusal(
+                $existing,
+                ContractSaveMapping::contractFrom($params, $customerId, true),
+                (string) ($previousCustomer['afm'] ?? ''),
+                isset($customer['afm']) ? (string) $customer['afm'] : null
+            );
+
+            if ($locked !== null) {
+                return new WP_REST_Response(['ok' => false] + $locked, 422);
+            }
+        }
 
         if ($customer !== []) {
             if ($customerId > 0) {

@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM;
 
+use EnergyCRM\Access\AdminAreaClosed;
 use EnergyCRM\Access\AdminCreatedUsers;
 use EnergyCRM\Access\BlogClosed;
 use EnergyCRM\Access\DepartingUser;
@@ -143,6 +144,9 @@ final class Plugin
 
         // (409) Άρθρα, σχόλια, feeds και sitemap χρηστών κλειστά.
         (new BlogClosed())->register();
+
+        // (414) Το wp-admin μόνο για διαχειριστές· οι άλλοι στο CRM.
+        (new AdminAreaClosed())->register();
 
         // (394) CSP σε δοκιμή: μόνο καταγραφή, στις σελίδες του CRM.
         (new ContentSecurityPolicy())->register();

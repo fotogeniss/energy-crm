@@ -85,15 +85,27 @@ final class PayableClause
     }
 
     /**
-     * Ο μήνας (Y-m) της προμήθειας μιας γραμμής: κέρδισης, αλλιώς τελευταίας αλλαγής.
+     * Ο μήνας (Y-m) της προμήθειας μιας γραμμής: κέρδισης, αλλιώς υπογραφής,
+     * αλλιώς δημιουργίας.
+     *
+     * (416) Όχι πια η τελευταία αλλαγή (`updated_at`) πριν από αυτά: σε
+     * αιτήσεις χωρίς γεγονός «Ενεργή» (εισαγωγές, παλιές) αλλάζει σε κάθε
+     * επεξεργασία (ON UPDATE), και η προμήθεια μετακόμιζε σε άλλο μήνα.
+     * Το `updated_at` μένει μόνο για γραμμή που δεν έχει τίποτε από τα τρία.
      *
      * @param array<string, mixed> $row
      */
     public static function monthOf(array $row): string
     {
-        $at = (string) ($row['earned_at'] ?? '');
+        foreach (['earned_at', 'signed_at', 'created_at', 'updated_at'] as $column) {
+            $at = (string) ($row[$column] ?? '');
 
-        return substr($at !== '' ? $at : (string) ($row['updated_at'] ?? ''), 0, 7);
+            if ($at !== '') {
+                return substr($at, 0, 7);
+            }
+        }
+
+        return '';
     }
 
     /** @param list<string> $values */

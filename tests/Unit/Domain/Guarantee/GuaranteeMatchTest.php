@@ -154,6 +154,8 @@ final class GuaranteeMatchTest extends TestCase
 
         self::assertSame(110.0, GuaranteeMatch::amountFor($rules, ['agreed_power' => '8,5']));
         self::assertSame(110.0, GuaranteeMatch::amountFor($rules, ['agreed_power' => ' 8 kVA ']));
+        // (416) Όπως το έντυπο της ΔΕΗ: ο αριθμός μετράει όπου κι αν είναι.
+        self::assertSame(110.0, GuaranteeMatch::amountFor($rules, ['agreed_power' => 'Ισχύς 8,5']));
     }
 
     /**

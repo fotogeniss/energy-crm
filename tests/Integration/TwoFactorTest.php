@@ -148,6 +148,30 @@ final class TwoFactorTest extends IntegrationTestCase
         self::assertFalse($this->twoFactor->isEnabled($this->user->ID));
     }
 
+    /** (414) Πέντε λάθη στην απενεργοποίηση: κλείνει, ακόμη και για τον σωστό κωδικό. */
+    public function testDisablingStopsAfterFiveWrongTries(): void
+    {
+        wp_set_password('Σωστός-κωδικός-2026', $this->user->ID);
+        $this->user = new WP_User($this->user->ID);
+        $secret     = $this->enableReturningSecret();
+        wp_set_current_user($this->user->ID);
+        $next = Totp::code($secret, Totp::stepAt(time()) + 1);
+
+        for ($i = 0; $i < 5; $i++) {
+            $wrong = $this->call('POST', '/me/2fa/disable', ['password' => 'λάθος-' . $i, 'code' => $next]);
+            self::assertSame(422, $wrong->get_status());
+        }
+
+        $ok = $this->call('POST', '/me/2fa/disable', ['password' => 'Σωστός-κωδικός-2026', 'code' => $next]);
+        self::assertSame(429, $ok->get_status());
+        self::assertTrue($this->twoFactor->isEnabled($this->user->ID));
+
+        // Ο ίδιος μετρητής κλείνει και τους νέους εφεδρικούς.
+        self::assertSame(429, $this->call('POST', '/me/2fa/codes', ['code' => $next])->get_status());
+
+        delete_transient('ecrm_pwfail_' . $this->user->ID);
+    }
+
     /** @return list<string> */
     private function enable(): array
     {

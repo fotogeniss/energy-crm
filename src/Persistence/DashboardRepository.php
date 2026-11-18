@@ -334,6 +334,8 @@ final class DashboardRepository
         // χέρι (τρία), και όταν η (304) έβαλε πέντε καταστάσεις, η τέταρτη τιμή
         // έπεφτε στο LIMIT: «LIMIT 'pending_issue'» = LIMIT 0, η «Χρειάζεται
         // ενέργεια» της Αρχικής έμενε πάντα άδεια (integration, 15/10).
+        // (416) `NOW()` όπως παντού (βλ. countOpenedThisWeek): το UTC_TIMESTAMP()
+        // που ήταν εδώ, με βάση σε ώρα Ελλάδας, έβγαζε λάθος «ημέρες» μετά τα μεσάνυχτα.
         $in = implode(', ', array_fill(0, count(self::NEEDS_ME), '%s'));
 
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
@@ -342,7 +344,7 @@ final class DashboardRepository
             $wpdb->prepare(
                 'SELECT c.id, c.code, c.status, c.customer_id, c.updated_at, c.energy_type, c.extra_json,
                         p.name provider,
-                        DATEDIFF(UTC_TIMESTAMP(), c.updated_at) days
+                        DATEDIFF(NOW(), c.updated_at) days
                  FROM %i c LEFT JOIN %i p ON p.id = c.provider_id
                  WHERE c.partner_user_id = %d AND c.status IN (' . $in . ')
                  ORDER BY c.updated_at ASC LIMIT %d',

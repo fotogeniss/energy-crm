@@ -463,6 +463,31 @@ final class ContractQueries
     }
 
     /**
+     * (415) Έχει ο πελάτης έστω μία αίτηση που υπέγραψε; Τότε το ΑΦΜ του
+     * κλειδώνει (`SignedFieldsLock`). Χωρίς scope: το ερώτημα είναι για τον
+     * πελάτη, όχι για το τι βλέπει ο καλών, και απαντά μόνο ναι/όχι.
+     */
+    public function customerHasSigned(int $customerId): bool
+    {
+        global $wpdb;
+
+        if ($customerId <= 0) {
+            return false;
+        }
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $found = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT 1 FROM %i WHERE customer_id = %d AND signed_at IS NOT NULL LIMIT 1",
+                [$this->table, $customerId]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $found !== null;
+    }
+
+    /**
      * Contracts already on file for a ΑΦΜ or supply number — across the whole
      * company, on purpose.
      *

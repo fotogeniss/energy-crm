@@ -17,6 +17,7 @@ use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Domain\Contract\SignedFieldsLock;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\CustomerEventRepository;
 use EnergyCRM\Persistence\CustomerNoteRepository;
@@ -421,6 +422,19 @@ final class CustomersController implements Controller
             return new WP_REST_Response([
                 'ok'    => false,
                 'error' => 'Μη έγκυρο ΑΦΜ (αποτυχία ελέγχου ψηφίου).',
+                'field' => 'afm',
+            ], 422);
+        }
+
+        // (415) Με υπογεγραμμένη αίτηση το ΑΦΜ δεν αλλάζει (εκτός διαχειριστή).
+        if (
+            SignedFieldsLock::afmChanged((string) ($before['afm'] ?? ''), $data['afm'] ?? null)
+            && ! current_user_can('manage_options')
+            && $this->queries->customerHasSigned($customerId)
+        ) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => SignedFieldsLock::AFM_MESSAGE,
                 'field' => 'afm',
             ], 422);
         }

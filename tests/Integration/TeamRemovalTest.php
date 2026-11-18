@@ -193,6 +193,23 @@ final class TeamRemovalTest extends IntegrationTestCase
         );
     }
 
+    /** (414) Διαχειριστής κάτω από συνεργάτη: ούτε απενεργοποίηση ούτε προαγωγή. */
+    public function testAnAdministratorInTheTeamIsNotTouched(): void
+    {
+        $admin = $this->makeCrmUser('administrator');
+        $this->team->attach($admin, $this->manager);
+
+        foreach (['toggle', 'promote', 'remove'] as $op) {
+            $request = new WP_REST_Request('POST', '/ecrm/v1/team/' . $admin);
+            $request->set_body_params(['id' => $admin, 'op' => $op]);
+
+            self::assertSame(403, rest_do_request($request)->get_status(), $op);
+        }
+
+        self::assertFalse($this->team->isDisabled($admin));
+        self::assertTrue(user_can($admin, 'manage_options'));
+    }
+
     // --- fixtures ----------------------------------------------------------
 
     private function remove(): WP_REST_Response

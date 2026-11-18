@@ -60,7 +60,7 @@ final class CommissionRepository
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT c.id, c.code, c.status, c.provider_id, c.program_id,
-                        c.energy_type, c.category, c.updated_at, c.payout_id,
+                        c.energy_type, c.category, c.updated_at, c.signed_at, c.created_at, c.payout_id,
                         c.payout_amount, {$earnedAt} AS earned_at,
                         po.status AS payout_status,
                         p.name AS provider_name, p.logo_url AS provider_logo,

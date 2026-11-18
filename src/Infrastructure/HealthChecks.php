@@ -488,6 +488,8 @@ final class HealthChecks
             self::row('Περιβάλλον', 'Έκδοση PHP', version_compare(PHP_VERSION, '8.2', '>='), PHP_VERSION),
 
             $this->clocks(),
+
+            self::timezone(wp_timezone_string()),
         ];
     }
 
@@ -581,6 +583,28 @@ final class HealthChecks
                 . 'Ζήτα από τον host ζώνη ώρας MySQL Europe/Athens, ή ρύθμισε την ίδια ζώνη στο WordPress.',
                 $drift,
                 $times
+            ));
+    }
+
+    /**
+     * (416) Η ώρα του WordPress σε Ελλάδα.
+     *
+     * Ο έλεγχος «βάση και WordPress» πιο πάνω πιάνει βάση σε UTC μόνο αν το
+     * WordPress είναι σε ώρα Ελλάδας. Αν στον νέο host μείνουν και τα δύο σε
+     * UTC, συμφωνούν μεταξύ τους αλλά όχι με τα κινητά: η ειδοποίηση της
+     * Αρχικής δεν βγαίνει ποτέ και τα «πριν από…» πάνε 2-3 ώρες πίσω.
+     *
+     * @return array{group: string, label: string, ok: bool|null, detail: string}
+     */
+    public static function timezone(string $zone): array
+    {
+        $ok = $zone === 'Europe/Athens';
+
+        return self::row('Περιβάλλον', 'Ζώνη ώρας', $ok, $ok
+            ? 'Europe/Athens.'
+            : sprintf(
+                '%s. Ρυθμίσεις → Γενικές → Ζώνη ώρας: «Αθήνα», και ζήτα από τον host MySQL στην ίδια ζώνη.',
+                $zone !== '' ? $zone : 'Δεν έχει οριστεί'
             ));
     }
 
