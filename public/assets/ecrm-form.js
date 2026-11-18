@@ -2044,6 +2044,11 @@ import { openDialog } from '@energy-crm/dialog';
 			// though it had been.
 			var consentEl = q('[data-consent]');
 			if (consentEl) consentEl.checked = !!c.consent_at;
+			// (420) Οι σημειώσεις της αίτησης. Το collect() τις στέλνει ΠΑΝΤΑ, αλλά
+			// εδώ δεν φορτώνονταν: κάθε επεξεργασία από τη φόρμα τις έσβηνε (και το
+			// «Από lead: …», «Ανανέωση από …»). Βρέθηκε στους ελέγχους στο live, 18/11.
+			var notesEl = q('[data-notes]');
+			if (notesEl) notesEl.value = c.notes || '';
 			if (c.extra) { Object.keys(c.extra).forEach(function (k) { setField(k, c.extra[k], false, true); }); }
 			// (418) Ποια πεδία ήρθαν γεμάτα από τη βάση. Αν ο συνεργάτης τα αδειάσει,
 			// το collect() τα στέλνει κενά, ώστε να σβηστούν. Πριν, ένα άδειο πεδίο

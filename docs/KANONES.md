@@ -105,6 +105,7 @@
 |---|---|
 | Πεδίο που αδειάζει στη φόρμα | `data-loaded` στο `ecrm-form.js` + `customerFrom($params, $isUpdate)` |
 | Ιδιώτης με παλιά επωνυμία | `customerFrom()` σβήνει `company_name`· `ECRM_FormFill` δεν την τυπώνει |
+| Πεδίο που η φόρμα στέλνει πάντα (σημειώσεις, συναίνεση) | φορτώνεται στο `applyEdit()` — `FormLoadsWhatItAlwaysSendsTest` |
 | Έντυπο ΔΕΗ μικρού/μεγάλου | `DeiCatalogue::LARGE_KVA` (≥ 35 kVA μεγάλος) |
 
 ### K8 — Κανείς δεν βλέπει ή αλλάζει κάτι εκτός του scope του
