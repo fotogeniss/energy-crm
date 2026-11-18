@@ -36,18 +36,27 @@ declare(strict_types=1);
 namespace EnergyCRM\Domain\Contract;
 
 use EnergyCRM\Persistence\ContractTransitions;
+use EnergyCRM\Persistence\EventRepository;
 
 final class DeletionGate
 {
     public const WAS_SIGNED = 'Η σύμβαση υπογράφηκε, οπότε δεν διαγράφεται. '
         . 'Αν χρειάζεται να σταματήσει, χρησιμοποίησε «Ακύρωση» ή «Έκλεισε».';
 
-    public function __construct(private readonly ContractTransitions $contracts)
-    {
+    /** (417) */
+    public const WAS_ACTIVE = 'Η σύμβαση υπήρξε Ενεργή, οπότε δεν διαγράφεται. '
+        . 'Αν χρειάζεται να σταματήσει, χρησιμοποίησε «Ακύρωση».';
+
+    public function __construct(
+        private readonly ContractTransitions $contracts,
+        private readonly ?EventRepository $events = null,
+    ) {
     }
 
     /**
-     * Άρνηση της διαγραφής, ή null για να προχωρήσει.
+     * (417) Και όταν υπήρξε ποτέ Ενεργή, ακόμη κι αν το `signed_at` σβήστηκε
+     * από νέα αποστολή υπογραφής: αλλιώς «ξαναστείλε» + «διαγραφή» έσβηνε
+     * αίτηση που πληρώθηκε (έλεγχος 18/11, εύρημα 1).
      */
     public function refusalOnDelete(int $contractId): ?string
     {
@@ -59,6 +68,12 @@ final class DeletionGate
             return null;
         }
 
-        return trim($row['signed_at']) === '' ? null : self::WAS_SIGNED;
+        if (trim($row['signed_at']) !== '') {
+            return self::WAS_SIGNED;
+        }
+
+        return $this->events !== null && $this->events->hasReached($contractId, ContractStatus::Active->value)
+            ? self::WAS_ACTIVE
+            : null;
     }
 }

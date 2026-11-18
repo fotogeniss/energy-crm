@@ -265,7 +265,7 @@ final class Services
 
     public static function deletionGate(): DeletionGate
     {
-        return self::$deletionGate ??= new DeletionGate(self::contractTransitions());
+        return self::$deletionGate ??= new DeletionGate(self::contractTransitions(), self::events());
     }
 
     public static function documents(): DocumentQueue

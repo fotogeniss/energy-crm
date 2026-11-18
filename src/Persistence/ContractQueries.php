@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\SupplyNumber;
 
 final class ContractQueries
 {
@@ -463,6 +464,39 @@ final class ContractQueries
     }
 
     /**
+     * (417) Πρόχειρο ανανέωσης που υπάρχει ήδη για την ίδια παροχή του ίδιου
+     * πελάτη, μέσα στο scope. Δύο κλικ στο «Ανανέωση» έφτιαχναν δύο πρόχειρα.
+     *
+     * @return array{id: int, code: string}|null
+     */
+    public function openRenewal(UserScope $scope, int $customerId, string $energyType, string $supply): ?array
+    {
+        global $wpdb;
+
+        if ($customerId <= 0) {
+            return null;
+        }
+
+        [$clause, $scopeParams] = ScopeClause::forScope($scope, 'c');
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var array<string, mixed>|null $row */
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT c.id, c.code FROM %i c
+                 WHERE c.customer_id = %d AND c.status = 'draft' AND c.activation_type = 'renewal'
+                   AND c.energy_type = %s AND " . SupplyNumber::sql("COALESCE(c.supply_number, '')") . " = %s{$clause}
+                 ORDER BY c.id DESC LIMIT 1",
+                [$this->table, $customerId, $energyType, SupplyNumber::key($supply), ...$scopeParams]
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return $row ? ['id' => (int) $row['id'], 'code' => (string) ($row['code'] ?? '')] : null;
+    }
+
+    /**
      * (415) Έχει ο πελάτης έστω μία αίτηση που υπέγραψε; Τότε το ΑΦΜ του
      * κλειδώνει (`SignedFieldsLock`). Χωρίς scope: το ερώτημα είναι για τον
      * πελάτη, όχι για το τι βλέπει ο καλών, και απαντά μόνο ναι/όχι.
@@ -519,8 +553,9 @@ final class ContractQueries
         }
 
         if ($supply !== '') {
-            $match[]  = 'c.supply_number = %s';
-            $params[] = $supply;
+            // (417) Χωρίς κενά/παύλες και στις δύο πλευρές (SupplyNumber).
+            $match[]  = SupplyNumber::sql('c.supply_number') . ' = %s';
+            $params[] = SupplyNumber::key($supply);
         }
 
         if ($match === []) {

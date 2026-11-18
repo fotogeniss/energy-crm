@@ -148,6 +148,10 @@ final class EventRepository
      * Reads `to_status` and not `from_status`: a status the contract left is
      * one it reached, but the first entry of all has no `from` at all, so
      * asking the other side would miss a contract that has moved exactly once.
+     *
+     * (417) Κάθε γεγονός με αυτό το `to_status`, όχι μόνο `status_change`: ίδιος
+     * ορισμός με το `PayableClause` («έγινε ποτέ Ενεργή»). Αίτηση που γράφτηκε
+     * κατευθείαν σε μια κατάσταση (γεγονός `created`) έχει φτάσει σε αυτήν.
      */
     public function hasReached(int $contractId, string $status): bool
     {
@@ -161,11 +165,10 @@ final class EventRepository
             $wpdb->prepare(
                 'SELECT EXISTS (
                      SELECT 1 FROM %i
-                     WHERE contract_id = %d AND type = %s AND to_status = %s
+                     WHERE contract_id = %d AND to_status = %s
                  )',
                 $this->table,
                 $contractId,
-                'status_change',
                 $status
             )
         ) === 1;

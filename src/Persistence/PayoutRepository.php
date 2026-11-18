@@ -333,6 +333,16 @@ final class PayoutRepository
             return;
         }
 
+        $payoutId = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT p.id FROM %i c INNER JOIN %i p ON p.id = c.payout_id
+                 WHERE c.id = %d AND p.status = 'pending'",
+                Tables::name(Tables::CONTRACTS),
+                Tables::name(Tables::PAYOUTS),
+                $contractId
+            )
+        );
+
         $wpdb->query(
             $wpdb->prepare(
                 "UPDATE %i c INNER JOIN %i p ON p.id = c.payout_id
@@ -341,6 +351,39 @@ final class PayoutRepository
                 Tables::name(Tables::CONTRACTS),
                 Tables::name(Tables::PAYOUTS),
                 $contractId
+            )
+        );
+
+        if ($payoutId > 0) {
+            $this->refreshTotals($payoutId);
+        }
+    }
+
+    /**
+     * (417) Πλήθος και ποσό της ΕΚΚΡΕΜΟΥΣ παρτίδας από τις γραμμές που έμειναν.
+     *
+     * Χωρίς αυτό, μετά από ακύρωση η λίστα (admin και συνεργάτη) έδειχνε το
+     * παλιό σύνολο, το PDF το σωστό, και η «Σήμανση ως πληρωμένη» κατέγραφε το
+     * παλιό (έλεγχος 18/11, εύρημα 5). Πληρωμένη παρτίδα δεν αγγίζεται.
+     */
+    public function refreshTotals(int $payoutId): void
+    {
+        global $wpdb;
+
+        if ($payoutId <= 0) {
+            return;
+        }
+
+        $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE %i p SET
+                     p.cnt = ( SELECT COUNT(*) FROM %i c WHERE c.payout_id = p.id ),
+                     p.amount = ( SELECT COALESCE(SUM(c.payout_amount), 0) FROM %i c WHERE c.payout_id = p.id )
+                 WHERE p.id = %d AND p.status = 'pending'",
+                Tables::name(Tables::PAYOUTS),
+                Tables::name(Tables::CONTRACTS),
+                Tables::name(Tables::CONTRACTS),
+                $payoutId
             )
         );
     }

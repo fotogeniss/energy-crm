@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\SupplyNumber;
 
 final class CustomerRepository
 {
@@ -315,8 +316,9 @@ final class CustomerRepository
         }
 
         if ($supply !== '') {
-            $match[]  = 'c.supply_number = %s';
-            $params[] = $supply;
+            // (417) Χωρίς κενά/παύλες και στις δύο πλευρές (SupplyNumber).
+            $match[]  = SupplyNumber::sql('c.supply_number') . ' = %s';
+            $params[] = SupplyNumber::key($supply);
         }
 
         if ($match === []) {

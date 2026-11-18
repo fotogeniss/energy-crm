@@ -429,6 +429,27 @@ final class FileRepository
         );
     }
 
+    /** (417) Το είδος ενός αρχείου της σύμβασης, ή null αν δεν υπάρχει. */
+    public function kindOf(int $fileId, int $contractId): ?string
+    {
+        global $wpdb;
+
+        if ($fileId <= 0 || $contractId <= 0) {
+            return null;
+        }
+
+        $kind = $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT doc_kind FROM %i WHERE id = %d AND contract_id = %d',
+                $this->table,
+                $fileId,
+                $contractId
+            )
+        );
+
+        return $kind === null ? null : (string) $kind;
+    }
+
     /**
      * Ο συνεργάτης σβήνει ΕΝΑ συγκεκριμένο έγγραφο (π.χ. ανέβηκε λάθος
      * αρχείο, ή διπλό) -- bytes και σειρά μαζί, ίδιο μοτίβο με

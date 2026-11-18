@@ -254,14 +254,17 @@ class ECRM_Import {
 			}
 			$note = \EnergyCRM\Providers\Domain\ProviderNote::fromRaw( (string) ( $pair['message'] ?? '' ) );
 
-			$params = array_merge( [ $supply ], $ids );
+			// (417) Ο αριθμός χωρίς κενά/παύλες και στις δύο πλευρές:
+			// «1 12345678-01 8» στη βάση = «112345678018» στο Excel.
+			$params = array_merge( [ \EnergyCRM\Domain\Contract\SupplyNumber::key( $supply ) ], $ids );
 			if ( $provider_id > 0 ) {
 				$params[] = $provider_id;
 			}
 
 			$row = $wpdb->get_row( $wpdb->prepare(
 				"SELECT id, status, signed_at, partner_user_id FROM {$ct}"
-					. " WHERE supply_number = %s AND partner_user_id IN ($ph){$scope_provider}"
+					. ' WHERE ' . \EnergyCRM\Domain\Contract\SupplyNumber::sql( 'supply_number' ) . ' = %s'
+					. " AND partner_user_id IN ($ph){$scope_provider}"
 					. ' ORDER BY id DESC LIMIT 1',
 				$params
 			), ARRAY_A );

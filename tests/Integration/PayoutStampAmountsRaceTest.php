@@ -80,6 +80,26 @@ final class PayoutStampAmountsRaceTest extends IntegrationTestCase
         self::assertNull($row['payout_amount'], 'Η αφύλακτη γραφή θα ξανάγραφε εδώ ένα παλιωμένο ποσό.');
     }
 
+    /** (417) Μετά την ακύρωση, πλήθος και ποσό της παρτίδας από όσες έμειναν. */
+    public function testReleasingAContractRefreshesTheBatchTotals(): void
+    {
+        global $wpdb;
+
+        $partner  = $this->makePartner();
+        $payoutId = $this->pendingBatch($partner);
+        $kept     = $this->claimedContract($partner, $payoutId);
+        $gone     = $this->claimedContract($partner, $payoutId);
+
+        $this->payouts->stampAmounts($payoutId, [$kept => 30.0, $gone => 12.5]);
+        $wpdb->update(Tables::name(Tables::PAYOUTS), ['cnt' => 2, 'amount' => 42.5], ['id' => $payoutId]);
+
+        $this->payouts->releaseFromPendingBatch($gone);
+
+        $batch = $this->storedRow('payouts', $payoutId);
+        self::assertSame(1, (int) $batch['cnt']);
+        self::assertSame(30.0, (float) $batch['amount']);
+    }
+
     public function testAnInvalidPayoutIdTouchesNothing(): void
     {
         $partner    = $this->makePartner();

@@ -184,6 +184,17 @@ final class SignLinkController implements Controller
         ];
 
         if ($alreadySigned && $confirmResend) {
+            // (417) Πριν σβηστεί οτιδήποτε. Πρώτα: αίτηση που έγινε ποτέ Ενεργή
+            // δεν ξαναϋπογράφεται από πωλητή. Το σβήσιμο του signed_at την
+            // έκανε διαγράψιμη και ξεκλείδωνε τα πεδία του 415 (έλεγχος 18/11,
+            // εύρημα 1). Δεύτερο: αν η μετάβαση δεν επιτρέπεται (π.χ.
+            // Ακυρωμένη), η υπογραφή χανόταν και μετά ερχόταν η άρνηση.
+            $refusal = $this->refusalBeforeErasing($id, $contract);
+
+            if ($refusal !== null) {
+                return new WP_REST_Response(['ok' => false, 'error' => $refusal], 409);
+            }
+
             // Σβήνει ΜΟΝΟ την υπογραφή αυτού του ρόλου -- η υπογραφή του
             // άλλου ρόλου (αν υπάρχει) μένει ανέπαφη. Δες
             // FileRepository::deleteKind().
@@ -319,6 +330,39 @@ final class SignLinkController implements Controller
         $label = $status?->label() ?? (string) ($contract['status'] ?? '');
 
         return 'Η αίτηση είναι σε κατάσταση «' . $label . '» και δεν μπορεί να σταλεί για υπογραφή από εκεί.';
+    }
+
+    /** (417) Αίτηση που έγινε ποτέ Ενεργή: νέα υπογραφή μόνο από τον διαχειριστή. */
+    public const ACTIVE_RESIGN = 'Η αίτηση έχει γίνει Ενεργή, οπότε η υπογραφή του πελάτη δεν σβήνεται πια. '
+        . 'Αν χρειάζεται νέα υπογραφή, μίλα με τον διαχειριστή.';
+
+    /**
+     * Ο λόγος που ΔΕΝ πρέπει να σβηστεί η υπογραφή, ή null.
+     *
+     * @param array<string, mixed> $contract
+     */
+    private function refusalBeforeErasing(int $id, array $contract): ?string
+    {
+        if (
+            ! current_user_can('manage_options')
+            && $this->events->hasReached($id, ContractStatus::Active->value)
+        ) {
+            return self::ACTIVE_RESIGN;
+        }
+
+        $from   = ContractStatus::tryFromSlug((string) ($contract['status'] ?? ''));
+        $target = ContractStatus::AwaitingSignature;
+
+        if ($from !== null && $from !== $target && ! $from->canMoveTo($target)) {
+            return sprintf(
+                'Η αίτηση είναι «%s», οπότε δεν ξαναστέλνεται για υπογραφή. Η υπογραφή δεν πειράχτηκε.',
+                $from->label()
+            );
+        }
+
+        $refusal = $this->lifecycle->refusalFor($id, $target);
+
+        return $refusal !== null ? $refusal . ' Η υπογραφή δεν πειράχτηκε.' : null;
     }
 
     /**

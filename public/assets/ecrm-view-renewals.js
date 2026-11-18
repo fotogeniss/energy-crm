@@ -149,7 +149,7 @@ function renew(btn, id, programId) {
 		.then(function (d) {
 			btn.disabled = false;
 			if (d && d.ok && d.contract_id) {
-				toast('Δημιουργήθηκε ανανέωση — άνοιξε για επεξεργασία.');
+				toast(d.existing ? 'Υπάρχει ήδη πρόχειρο ανανέωσης — ανοίγει αυτό.' : 'Δημιουργήθηκε ανανέωση — άνοιξε για επεξεργασία.');
 				// load the new draft into the form
 				fetch(api('/contracts/' + d.contract_id), { headers: H() })
 					.then(function (r) { return r.json(); })

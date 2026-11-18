@@ -19,6 +19,7 @@ use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ProviderVisibility;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\ContractTerm;
 use EnergyCRM\Domain\Contract\ExtraFields;
 use EnergyCRM\Infrastructure\RenewalOffers;
@@ -149,6 +150,35 @@ final class RenewalsController implements Controller
                 'error' => 'Δεν έχεις πλέον πρόσβαση στον πάροχο αυτής της σύμβασης, '
                     . 'οπότε δεν μπορείς να την ανανεώσεις. Ζήτα από τον υπεύθυνό σου.',
             ], 403);
+        }
+
+        // (417) Ανανεώνεται αίτηση που προχώρησε: όχι πρόχειρο, όχι ακυρωμένη.
+        $status = (string) ($source['status'] ?? '');
+
+        if (in_array($status, [ContractStatus::Draft->value, ContractStatus::Cancelled->value], true)) {
+            return new WP_REST_Response([
+                'ok'    => false,
+                'error' => $status === ContractStatus::Draft->value
+                    ? 'Πρόχειρο δεν ανανεώνεται. Ολοκλήρωσε πρώτα την αίτηση.'
+                    : 'Ακυρωμένη αίτηση δεν ανανεώνεται. Αν ο πελάτης επιστρέφει, φτιάξε νέα αίτηση.',
+            ], 422);
+        }
+
+        // (417) Δεύτερο κλικ: ανοίγει το πρόχειρο που υπάρχει, δεν φτιάχνει δεύτερο.
+        $open = $this->queries->openRenewal(
+            $scope,
+            (int) ($source['customer_id'] ?? 0),
+            (string) ($source['energy_type'] ?? ''),
+            (string) ($source['supply_number'] ?? '')
+        );
+
+        if ($open !== null) {
+            return new WP_REST_Response([
+                'ok'          => true,
+                'existing'    => true,
+                'contract_id' => $open['id'],
+                'code'        => $open['code'],
+            ], 200);
         }
 
         $draft = $this->carriedForward($source);

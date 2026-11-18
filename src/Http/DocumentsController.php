@@ -17,8 +17,10 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use ECRM_Docs;
 use ECRM_Files;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Document\SystemKind;
 use EnergyCRM\Infrastructure\ErrorLog;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\FileRepository;
@@ -28,6 +30,10 @@ use WP_REST_Response;
 
 final class DocumentsController implements Controller
 {
+    /** (417) */
+    public const SYSTEM_FILE = 'Αυτό το αρχείο το έφτιαξε το σύστημα (υπογραφή ή αίτηση) και δεν σβήνεται. '
+        . 'Αν είναι λάθος, μίλα με τον διαχειριστή.';
+
     /** What a scanned ID or bill may be. Anything else is not stored. */
     private const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
@@ -111,6 +117,15 @@ final class DocumentsController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε η σύμβαση.'], 404);
         }
 
+        // (417) Υπογραφή, αποδεικτικό υπογραφής, αίτηση και φύλλα του
+        // συστήματος δεν σβήνονται από τη λίστα εγγράφων (εκτός διαχειριστή):
+        // ήταν ο μόνος δρόμος να χαθεί η υπογραφή του πελάτη χωρίς ίχνος.
+        $kind = $this->files->kindOf($fileId, $contractId);
+
+        if ($kind !== null && SystemKind::isSystem($kind) && ! current_user_can('manage_options')) {
+            return new WP_REST_Response(['ok' => false, 'error' => self::SYSTEM_FILE], 403);
+        }
+
         if (! $this->files->deleteFile($fileId, $contractId)) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε το έγγραφο.'], 404);
         }
@@ -157,7 +172,11 @@ final class DocumentsController implements Controller
                 continue;
             }
 
-            $kind      = sanitize_text_field((string) ($kinds[$index] ?? 'other'));
+            // (417) Μόνο είδη της λίστας. Πριν, `kinds[]=signature` ανέβαζε
+            // εικόνα που τυπωνόταν ως υπογραφή του πελάτη στο έντυπο του
+            // παρόχου (έλεγχος 18/11, εύρημα 2). Ίδιος κανόνας με την αλλαγή
+            // είδους και τα ανεβάσματα του πελάτη.
+            $kind      = self::uploadKind((string) ($kinds[$index] ?? 'other'));
             $expiresAt = self::sanitizeExpiry($expiryDates[$index] ?? null);
             $fileId    = $this->files->attach(
                 $contractId,
@@ -215,6 +234,14 @@ final class DocumentsController implements Controller
         );
 
         return sprintf('Δεν αποθηκεύτηκε — τεχνικό πρόβλημα, κωδικός %s.', $code);
+    }
+
+    /** Είδος από τη λίστα του `ECRM_Docs`, αλλιώς «Άλλο». */
+    public static function uploadKind(string $requested): string
+    {
+        $kind = sanitize_key($requested);
+
+        return array_key_exists($kind, ECRM_Docs::kinds()) ? $kind : 'other';
     }
 
     /**

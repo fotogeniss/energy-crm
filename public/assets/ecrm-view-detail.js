@@ -128,7 +128,10 @@ function filesCard(c) {
 			// (274) Σβήσιμο λάθος/διπλού εγγράφου. Ίδιος λόγος με το
 			// kindPicker: ΕΞΩ από το <a>, δικό του κουμπί -- όχι μέρος του
 			// συνδέσμου λήψης.
-			var delBtn = '<button type="button" class="ecrm-file__del" data-delfile="' + esc(String(f.id)) +
+			// (417) Υπογραφή/αποδεικτικό: χωρίς ✕ για όποιον δεν είναι
+			// διαχειριστής -- ο server το αρνείται ούτως ή άλλως.
+			var delBtn = f.system_label && !(window.ECRM && window.ECRM.isAdmin) ? '' :
+				'<button type="button" class="ecrm-file__del" data-delfile="' + esc(String(f.id)) +
 				'" title="Διαγραφή εγγράφου" aria-label="Διαγραφή εγγράφου">✕</button>';
 
 			if (f.kind_source !== 'ai' || !f.kind_before) {
