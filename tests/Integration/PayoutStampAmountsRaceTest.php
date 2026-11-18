@@ -19,6 +19,7 @@
  * μεταφέρθηκε σε `PayoutRepository::stampAmounts()`, ακριβώς για να μπορεί
  * να μετρηθεί εδώ.
  *
+ * @kanonas K5
  * @package EnergyCRM
  */
 

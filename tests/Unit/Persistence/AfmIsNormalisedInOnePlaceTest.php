@@ -12,6 +12,7 @@
  * στην αποθήκευση, preg_replace στο /contracts/duplicate, άλλο ένα στο
  * /lookup/afm, και σκέτο trim στο /customers/check.
  *
+ * @kanonas K11
  * @package EnergyCRM
  */
 

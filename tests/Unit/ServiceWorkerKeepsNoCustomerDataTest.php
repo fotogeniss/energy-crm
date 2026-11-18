@@ -9,6 +9,7 @@
  * `ecrm-sw.js` πρέπει να είναι σε αυτή τη λίστα. Αν κάποιος προσθέσει
  * `/contracts` ή `/customers` για «να ανοίγει offline», σταματά εδώ.
  *
+ * @kanonas K9
  * @package EnergyCRM
  */
 

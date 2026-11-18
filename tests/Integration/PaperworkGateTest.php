@@ -55,6 +55,7 @@
  * `awaiting_signature`. Τα tests παρακάτω αναπαράγουν ακριβώς αυτή την
  * κλήση.
  *
+ * @kanonas K4
  * @package EnergyCRM
  */
 

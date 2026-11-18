@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @kanonas K8
  * @package EnergyCRM
  */
 

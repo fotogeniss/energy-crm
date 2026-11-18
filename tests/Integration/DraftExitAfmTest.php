@@ -28,6 +28,7 @@
  * the development database, which is harmless there and would not be in
  * production.
  *
+ * @kanonas K4
  * @package EnergyCRM
  */
 

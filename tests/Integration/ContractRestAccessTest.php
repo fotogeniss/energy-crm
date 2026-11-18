@@ -12,6 +12,7 @@
  * Everything here goes through rest_do_request, so the request is dispatched by
  * WP_REST_Server exactly as it would be for a browser.
  *
+ * @kanonas K8
  * @package EnergyCRM
  */
 

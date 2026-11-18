@@ -19,6 +19,7 @@
  * customer, then a contract linking it to a partner, the same two-step shape
  * EncryptedCustomerColumnsTest already uses.
  *
+ * @kanonas K8
  * @package EnergyCRM
  */
 

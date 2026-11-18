@@ -28,6 +28,7 @@
  * real" into a regression test for that fix, and test 7 was added to pin the
  * address-block half of it. Both would fail again on the old code.
  *
+ * @kanonas K7
  * @package EnergyCRM
  */
 
@@ -580,6 +581,57 @@ final class ContractSaveMappingTest extends IntegrationTestCase
     }
 
     // --- Fixtures και βοηθοί -------------------------------------------------
+
+    /** (418) Πεδίο που αδειάζει σε επεξεργασία σβήνεται· όσα δεν στάλθηκαν μένουν. */
+    public function testAFieldSentEmptyOnAnEditIsCleared(): void
+    {
+        $created = $this->save([
+            'customer_type' => 'individual',
+            'afm'           => self::VALID_AFM,
+            'first_name'    => 'Λάθος',
+            'last_name'     => 'Email',
+            'email'         => 'palio@example.com',
+            'phone'         => '2101234567',
+            'status'        => 'draft',
+        ]);
+        self::assertSame(200, $created->get_status(), (string) ($created->get_data()['error'] ?? ''));
+
+        $edited = $this->save(['contract_id' => (int) $created->get_data()['contract_id'], 'email' => '']);
+        self::assertSame(200, $edited->get_status(), (string) ($edited->get_data()['error'] ?? ''));
+
+        $customer = (new CustomerRepository())->find(
+            (int) $created->get_data()['customer_id'],
+            \EnergyCRM\Access\UserScope::forSelf(get_current_user_id())
+        );
+        self::assertSame('', (string) ($customer['email'] ?? ''), 'Το email που άδειασε έμεινε.');
+        self::assertSame('2101234567', (string) ($customer['phone'] ?? ''), 'Το τηλέφωνο δεν στάλθηκε και άλλαξε.');
+    }
+
+    /** (418) Από Εταιρεία σε Ιδιώτη: η επωνυμία φεύγει, ώστε να μην τυπώνεται. */
+    public function testSwitchingToIndividualDropsTheCompanyName(): void
+    {
+        $created = $this->save([
+            'customer_type' => 'company',
+            'afm'           => self::VALID_AFM,
+            'company_name'  => 'Παλιά Επωνυμία ΑΕ',
+            'first_name'    => 'Γιώργος',
+            'last_name'     => 'Ιδιώτης',
+            'status'        => 'draft',
+        ]);
+        self::assertSame(200, $created->get_status(), (string) ($created->get_data()['error'] ?? ''));
+
+        $this->save([
+            'contract_id'   => (int) $created->get_data()['contract_id'],
+            'customer_type' => 'individual',
+            'company_name'  => 'Παλιά Επωνυμία ΑΕ',
+        ]);
+
+        $customer = (new CustomerRepository())->find(
+            (int) $created->get_data()['customer_id'],
+            \EnergyCRM\Access\UserScope::forSelf(get_current_user_id())
+        );
+        self::assertSame('', (string) ($customer['company_name'] ?? ''));
+    }
 
     /**
      * @param array<string, mixed> $params

@@ -288,6 +288,33 @@ final class ContractQueriesTest extends IntegrationTestCase
         self::assertSame([], $this->queries->expiring(UserScope::forSelf($this->alice), 30));
     }
 
+    /** (418) Παλιές ληγμένες φεύγουν: δεν σπρώχνουν έξω όσες λήγουν τώρα. */
+    public function testALongExpiredContractLeavesTheList(): void
+    {
+        $this->contractFor($this->alice, ['status' => 'active', 'end_date' => $this->daysFromToday(-200)]);
+        $recent = $this->contractFor($this->alice, ['status' => 'active', 'end_date' => $this->daysFromToday(-20)]);
+
+        $rows = $this->queries->expiring(UserScope::forSelf($this->alice), 30);
+
+        self::assertSame([$recent], array_map(static fn (array $r): int => (int) $r['id'], $rows));
+    }
+
+    /** (418) Όποια ανανεώθηκε ήδη δεν ξαναζητά ανανέωση. */
+    public function testARenewedContractLeavesTheList(): void
+    {
+        $customer = $this->customers->create($this->customerData('094014201'));
+        $this->contractFor($this->alice, [
+            'status' => 'active', 'end_date' => $this->daysFromToday(10), 'customer_id' => $customer,
+            'energy_type' => 'power',
+        ]);
+        $this->contractFor($this->alice, [
+            'status' => 'registration', 'activation_type' => 'renewal', 'customer_id' => $customer,
+            'energy_type' => 'power',
+        ]);
+
+        self::assertSame([], $this->queries->expiring(UserScope::forSelf($this->alice), 30));
+    }
+
     // --- possibleDuplicates ------------------------------------------------
 
     /**
@@ -371,6 +398,7 @@ final class ContractQueriesTest extends IntegrationTestCase
      */
     private function daysFromToday(int $days): string
     {
-        return date('Y-m-d', strtotime('+' . $days . ' days'));
+        // (418) Και αρνητικά: το «+-200 days» η PHP το διαβάζει ως +200.
+        return date('Y-m-d', strtotime(sprintf('%+d days', $days)));
     }
 }

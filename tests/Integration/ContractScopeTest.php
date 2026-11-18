@@ -11,6 +11,7 @@
  * This is the IDOR class of bug, the one closed in roadmap step 2. Nothing has
  * been stopping it from coming back.
  *
+ * @kanonas K8
  * @package EnergyCRM
  */
 

@@ -181,6 +181,25 @@ final class ContractRepository
     }
 
     /**
+     * (418) Νέα αίτηση στο όνομα του κατόχου αυτού από το οποίο βγαίνει (lead,
+     * δίδυμη αίτηση), όχι αυτού που πάτησε το κουμπί.
+     *
+     * Ο μάνατζερ ή το Back office που μετέτρεπε το lead ενός πωλητή έπαιρνε
+     * την αίτηση, άρα και την προμήθεια. Ο κάτοχος μετράει μόνο αν είναι μέσα
+     * στο scope του δράστη· αλλιώς, όπως πριν, ο δράστης.
+     *
+     * @param array<string, mixed> $data
+     */
+    public function createFor(array $data, UserScope $scope, int $ownerId): int
+    {
+        $owner = $ownerId > 0 && $ownerId !== $scope->actorId() && $scope->includes($ownerId)
+            ? UserScope::forSelf($ownerId)
+            : $scope;
+
+        return $this->create($data, $owner);
+    }
+
+    /**
      * Stamp the human reference on a freshly created contract.
      *
      * The code is derived from the row id, so it can only be written after the

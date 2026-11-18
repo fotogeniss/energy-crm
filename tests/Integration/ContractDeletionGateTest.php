@@ -15,6 +15,7 @@
  * Τα fixtures εδώ γράφουν το `signed_at` απευθείας αντί να καταγράφουν ένα
  * ψευδο-γεγονός `status_change` προς μια κατάσταση που δεν υπάρχει πια.
  *
+ * @kanonas K2
  * @package EnergyCRM
  */
 

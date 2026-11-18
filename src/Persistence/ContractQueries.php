@@ -34,6 +34,27 @@ use EnergyCRM\Domain\Contract\SupplyNumber;
 
 final class ContractQueries
 {
+    /**
+     * (418) Πόσες μέρες μετά τη λήξη μένει μια αίτηση στις «Λήξεις».
+     *
+     * Χωρίς κάτω όριο, και με `ORDER BY end_date ASC LIMIT 300`, οι παλιές
+     * ληγμένες μαζεύονταν μπροστά και με τον καιρό έσπρωχναν έξω από τη λίστα
+     * ακριβώς αυτές που λήγουν τώρα.
+     */
+    public const EXPIRED_DAYS = 90;
+
+    /**
+     * (418) «Δεν έχει ήδη ανανεωθεί»: καμία μεταγενέστερη αίτηση ανανέωσης του
+     * ίδιου πελάτη, ίδιου είδους, που να μην ακυρώθηκε. Χωρίς αυτό, η
+     * ανανεωμένη έμενε στις Λήξεις και έβγαζε και κλήση ανανέωσης.
+     */
+    public static function notRenewed(string $alias): string
+    {
+        return 'NOT EXISTS ( SELECT 1 FROM ' . Tables::name(Tables::CONTRACTS) . ' r'
+            . " WHERE r.customer_id = {$alias}.customer_id AND r.energy_type = {$alias}.energy_type"
+            . " AND r.activation_type = 'renewal' AND r.id > {$alias}.id AND r.status <> 'cancelled' )";
+    }
+
     private string $table;
 
     /** Customer columns arrive here through joins, so they need translating. */
@@ -395,10 +416,12 @@ final class ContractQueries
                  LEFT JOIN %i p  ON p.id  = c.provider_id
                  WHERE c.end_date IS NOT NULL
                    AND c.status NOT IN ('cancelled', 'draft')
-                   AND DATEDIFF(c.end_date, NOW()) <= %d{$clause}
+                   AND DATEDIFF(c.end_date, NOW()) <= %d
+                   AND DATEDIFF(c.end_date, NOW()) >= %d
+                   AND " . self::notRenewed('c') . "{$clause}
                  ORDER BY c.end_date ASC
                  LIMIT 300",
-                [$this->table, $customers, $providers, $withinDays, ...$params]
+                [$this->table, $customers, $providers, $withinDays, -self::EXPIRED_DAYS, ...$params]
             ),
             ARRAY_A
         );

@@ -117,7 +117,8 @@ final class CompanionController implements Controller
         $draft['status'] = 'draft';
         $draft['notes']  = CompanionDraft::note($source);
 
-        $contractId = $this->contracts->create($draft, $scope);
+        // (418) Η δίδυμη ανήκει σε όποιον ανήκει η αρχική.
+        $contractId = $this->contracts->createFor($draft, $scope, (int) ($source['partner_user_id'] ?? 0));
 
         if ($contractId <= 0) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Η δημιουργία απέτυχε.'], 500);

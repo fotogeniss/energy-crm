@@ -65,14 +65,31 @@ final class ContractSaveMapping
      *
      * @return array<string, string>
      */
-    public static function customerFrom(array $params): array
+    public static function customerFrom(array $params, bool $isUpdate = false): array
     {
         $customer = [];
 
         foreach (self::CUSTOMER_FIELDS as $field) {
-            if (isset($params[$field]) && $params[$field] !== '') {
-                $customer[$field] = sanitize_text_field((string) $params[$field]);
+            if (! isset($params[$field])) {
+                continue;
             }
+
+            // (418) Σε επεξεργασία, κενό που ΣΤΑΛΘΗΚΕ σημαίνει «σβήσ' το»: η
+            // φόρμα στέλνει κενό μόνο για πεδίο που ήρθε γεμάτο και το άδειασε
+            // ο συνεργάτης. Πριν, λάθος email ή επωνυμία δεν έφευγαν ποτέ. Σε
+            // δημιουργία, κενό = δεν δόθηκε.
+            if ($params[$field] === '' && ! $isUpdate) {
+                continue;
+            }
+
+            $customer[$field] = sanitize_text_field((string) $params[$field]);
+        }
+
+        // (418) Ιδιώτης δεν έχει επωνυμία. Το κρυφό πεδίο της κρατούσε την
+        // παλιά τιμή όταν ο τύπος γύριζε από Εταιρεία σε Ιδιώτη, και τα
+        // έντυπα του παρόχου τύπωναν την επωνυμία αντί για το ονοματεπώνυμο.
+        if (($customer['customer_type'] ?? '') === 'individual') {
+            $customer['company_name'] = '';
         }
 
         // Το ΑΦΜ αποθηκεύεται σκέτα ψηφία. Η αναζήτηση και ο έλεγχος διπλοτύπων

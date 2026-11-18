@@ -19,6 +19,7 @@
  * σύμβαση. Διορθώθηκε στο ίδιο commit (SELECT στο ContractRepository::
  * reachableAmong()), γιατί ήταν το ίδιο σημείο κώδικα.
  *
+ * @kanonas K4
  * @package EnergyCRM
  */
 

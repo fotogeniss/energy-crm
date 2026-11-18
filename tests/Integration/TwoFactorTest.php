@@ -60,7 +60,11 @@ final class TwoFactorTest extends IntegrationTestCase
         self::assertFalse($this->twoFactor->isEnabled($this->user->ID), 'Πριν το confirm δεν ισχύει.');
         self::assertNull($this->twoFactor->confirm($this->user->ID, '000000'));
 
-        $codes = $this->twoFactor->confirm($this->user->ID, $this->now($setup['secret']));
+        // (419) Ο αριθμός κρατιέται μία φορά. Το test τον ξαναϋπολόγιζε παρακάτω,
+        // και αν στο μεταξύ άλλαζε το 30″ βήμα, έπαιρνε τον ΕΠΟΜΕΝΟ αριθμό, που
+        // σωστά περνά: κόκκινο τυχαία (18/11, μία φορά σε πολλά τρεξίματα).
+        $code  = $this->now($setup['secret']);
+        $codes = $this->twoFactor->confirm($this->user->ID, $code);
 
         self::assertIsArray($codes);
         self::assertCount(8, $codes);
@@ -71,7 +75,7 @@ final class TwoFactorTest extends IntegrationTestCase
         self::assertStringNotContainsString($setup['secret'], $stored);
 
         // Ο αριθμός της ενεργοποίησης δεν περνά ξανά (ίδιο βήμα).
-        self::assertFalse($this->twoFactor->verify($this->user->ID, $this->now($setup['secret'])));
+        self::assertFalse($this->twoFactor->verify($this->user->ID, $code));
         self::assertFalse($this->twoFactor->verify($this->user->ID, '123456'));
     }
 

@@ -54,6 +54,7 @@ final class RenewalCallRepository
                    AND c.end_date <= CURDATE() + INTERVAL %d DAY
                    AND c.status NOT IN ('cancelled', 'draft')
                    AND c.partner_user_id IS NOT NULL
+                   AND " . ContractQueries::notRenewed('c') . "
                    AND NOT EXISTS (
                        SELECT 1 FROM %i t
                         WHERE t.contract_id = c.id AND t.kind = %s AND DATE(t.due_at) = c.end_date

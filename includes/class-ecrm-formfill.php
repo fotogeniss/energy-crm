@@ -207,7 +207,9 @@ class ECRM_FormFill {
 		$rep_name     = trim( $xg( 'rep_first_name' ) . ' ' . $xg( 'rep_last_name' ) );
 
 		$name = trim( (string) ( $c['first_name'] ?? '' ) . ' ' . (string) ( $c['last_name'] ?? '' ) );
-		if ( ! empty( $c['company_name'] ) ) { $name = (string) $c['company_name']; }
+		// (418) Επωνυμία μόνο για εταιρεία. Ιδιώτης με παλιά επωνυμία (ο τύπος
+		// άλλαξε από Εταιρεία σε Ιδιώτη) τύπωνε την επωνυμία στο ονοματεπώνυμο.
+		if ( ! empty( $c['company_name'] ) && ( $c['customer_type'] ?? '' ) !== 'individual' ) { $name = (string) $c['company_name']; }
 
 		// The three addresses every provider form asks for. Usually identical,
 		// which is why one used to be enough; different exactly when it matters
@@ -338,7 +340,7 @@ class ECRM_FormFill {
 			'eponymo_pelati'          => (string) ( $c['last_name'] ?? '' ),
 			'onoma_pelati'            => (string) ( $c['first_name'] ?? '' ),
 			'patronymo_pelati'        => (string) ( $c['father_name'] ?? '' ),
-			'eponymia_etaireias'      => (string) ( $c['company_name'] ?? '' ),
+			'eponymia_etaireias'      => ( $c['customer_type'] ?? '' ) === 'individual' ? '' : (string) ( $c['company_name'] ?? '' ),
 			'afm_pelati'              => (string) ( $c['afm'] ?? '' ),
 			'afm_etaireias'           => (string) ( $c['afm'] ?? '' ),
 			'doy_pelati'              => (string) ( $c['doy'] ?? '' ),

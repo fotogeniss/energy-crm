@@ -2045,6 +2045,13 @@ import { openDialog } from '@energy-crm/dialog';
 			var consentEl = q('[data-consent]');
 			if (consentEl) consentEl.checked = !!c.consent_at;
 			if (c.extra) { Object.keys(c.extra).forEach(function (k) { setField(k, c.extra[k], false, true); }); }
+			// (418) Ποια πεδία ήρθαν γεμάτα από τη βάση. Αν ο συνεργάτης τα αδειάσει,
+			// το collect() τα στέλνει κενά, ώστε να σβηστούν. Πριν, ένα άδειο πεδίο
+			// δεν στελνόταν καθόλου και η παλιά τιμή (λάθος email, επωνυμία)
+			// ξαναεμφανιζόταν μετά την αποθήκευση.
+			qa('.ecrm-input').forEach(function (i) {
+				if (i.value && !i.getAttribute('data-extra')) { i.setAttribute('data-loaded', '1'); } else { i.removeAttribute('data-loaded'); }
+			});
 			// «Πάνω στο έντυπο» (31/08): selectProvider()/sel.value= παραπάνω ΔΕΝ
 			// στέλνουν 'change' -- τα μόνα σημεία που καλούν refreshProviderFields()
 			// είναι το κλικ σε κάρτα παρόχου, το chip και το onchange του
@@ -2182,7 +2189,7 @@ import { openDialog } from '@energy-crm/dialog';
 			// A new application must read its own documents, even if they
 			// happen to be named like the previous customer's.
 			extractedFor = ''; clearTimeout(autoTimer);
-			qa('.ecrm-input').forEach(function (i) { i.value = ''; });
+			qa('.ecrm-input').forEach(function (i) { i.value = ''; i.removeAttribute('data-loaded'); });
 			// A new application starts with both addresses assumed identical,
 			// which is the common case and matches the column defaults.
 			root.querySelectorAll('[data-addr-same]').forEach(function (cb) {
@@ -2910,7 +2917,13 @@ import { openDialog } from '@energy-crm/dialog';
 			};
 			payload.extra = {};
 			qa('.ecrm-input').forEach(function (i) {
-				if (!i.value) return;
+				if (!i.value) {
+					// (418) Ήταν γεμάτο και το άδειασε: «σβήσ' το», όχι «άσ' το όπως ήταν».
+					if (state.contract_id && i.name && i.getAttribute('data-loaded') && !i.getAttribute('data-extra') && !(i.name in payload)) {
+						payload[i.name] = '';
+					}
+					return;
+				}
 				if (i.getAttribute('data-extra')) payload.extra[i.name] = i.value;
 				else payload[i.name] = i.value;
 			});

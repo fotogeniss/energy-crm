@@ -218,14 +218,15 @@ final class LeadsController implements Controller
             ? SiteLeadPrefill::contract($site, $this->providers?->active() ?? [])
             : [];
 
-        $contractId = $this->contracts->create($fromSite + [
+        // (418) Στο όνομα του κατόχου του lead, όχι αυτού που πατά «Μετατροπή».
+        $contractId = $this->contracts->createFor($fromSite + [
             'customer_id'   => $customerId ?: null,
             'energy_type'   => $energy,
             'category'      => 'home',
             'customer_type' => 'individual',
             'status'        => 'draft',
             'notes'         => $lead['interest'] ? 'Από lead: ' . $lead['interest'] : null,
-        ], $scope);
+        ], $scope, (int) ($lead['partner_user_id'] ?? 0));
 
         if ($contractId <= 0) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Η μετατροπή απέτυχε.'], 500);

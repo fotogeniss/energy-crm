@@ -236,9 +236,9 @@ final class ContractSaveController implements Controller
             return $refusal;
         }
 
-        $customer = ContractSaveMapping::customerFrom($params);
+        $customer = ContractSaveMapping::customerFrom($params, (int) $request['contract_id'] > 0);
 
-        if (isset($customer['afm']) && ! ECRM_Validate::afm($customer['afm'])) {
+        if (isset($customer['afm']) && $customer['afm'] !== '' && ! ECRM_Validate::afm($customer['afm'])) {
             return new WP_REST_Response([
                 'ok'    => false,
                 'error' => 'Μη έγκυρο ΑΦΜ (αποτυχία ελέγχου ψηφίου).',
@@ -254,7 +254,7 @@ final class ContractSaveController implements Controller
         // it, so the agent sees a saved contract and the customer never gets
         // the signature link. A save that stops with a message is the only
         // version of this the agent finds out about.
-        if (isset($customer['email']) && ! is_email($customer['email'])) {
+        if (isset($customer['email']) && $customer['email'] !== '' && ! is_email($customer['email'])) {
             return new WP_REST_Response([
                 'ok'    => false,
                 'error' => 'Μη έγκυρη διεύθυνση email. Διόρθωσέ την ή άφησέ την κενή.',
@@ -595,7 +595,15 @@ final class ContractSaveController implements Controller
         }
 
         return $this->refuseMissingAfm(
-            $this->draftExit->refusalOnMove($source, $target, $customerId, $scope, $afm)
+            // (418) ΑΦΜ που σβήνεται σε αυτή την αποθήκευση δεν καλύπτεται από
+            // το αποθηκευμένο: μετά την εγγραφή δεν θα υπάρχει.
+            $this->draftExit->refusalOnMove(
+                $source,
+                $target,
+                array_key_exists('afm', $customer) && $afm === '' ? 0 : $customerId,
+                $scope,
+                $afm
+            )
         );
     }
 

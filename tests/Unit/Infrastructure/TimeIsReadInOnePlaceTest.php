@@ -20,6 +20,7 @@
  * δύο μοτίβα που το προκάλεσαν**. Στο ίδιο πνεύμα με τα
  * `TypographyIsDecidedInOnePlaceTest` και `ColourIsDecidedInOnePlaceTest`.
  *
+ * @kanonas K12
  * @package EnergyCRM
  */
 

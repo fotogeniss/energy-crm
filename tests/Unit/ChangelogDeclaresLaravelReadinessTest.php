@@ -79,6 +79,14 @@ final class ChangelogDeclaresLaravelReadinessTest extends TestCase
         return $out;
     }
 
+    /**
+     * (419) Η νέα μορφή τίτλου (`### (326) …`) δεν διαβαζόταν καθόλου: από την
+     * αλλαγή και μετά ο έλεγχος δεν κοίταζε καμία εγγραφή. Οι (286)–(325)
+     * έμειναν χωρίς τη γραμμή και μένουν ως ιστορία· ο κανόνας ξαναπιάνει από
+     * την πρώτη που την έχει.
+     */
+    private const FIRST_NEW_FORMAT_ENTRY_UNDER_THE_RULE = 326;
+
     public function testEveryRecentEntryDeclaresItsLaravelReadiness(): void
     {
         $missing = [];
@@ -90,6 +98,16 @@ final class ChangelogDeclaresLaravelReadinessTest extends TestCase
 
             if (! str_contains($body, 'Laravel-ready')) {
                 $missing[] = $number;
+            }
+        }
+
+        foreach (ChangelogEntries::all() as $label => $body) {
+            if (
+                ChangelogEntries::isNewFormat($body)
+                && ChangelogEntries::number($label) >= self::FIRST_NEW_FORMAT_ENTRY_UNDER_THE_RULE
+                && ! str_contains($body, 'Laravel-ready')
+            ) {
+                $missing[] = $label;
             }
         }
 
