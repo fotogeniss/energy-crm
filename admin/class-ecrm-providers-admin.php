@@ -97,6 +97,8 @@ JS;
 			'provider_deleted' => 'Ο πάροχος διαγράφηκε.',
 			'program_saved'    => 'Το πρόγραμμα αποθηκεύτηκε.',
 			'program_deleted'  => 'Το πρόγραμμα διαγράφηκε.',
+			'provider_retired' => 'Ο πάροχος έχει αιτήσεις: απενεργοποιήθηκε μαζί με τα προγράμματά του αντί να διαγραφεί. Οι αιτήσεις τον κρατούν.',
+			'program_retired'  => 'Το πρόγραμμα έχει αιτήσεις: απενεργοποιήθηκε αντί να διαγραφεί. Οι αιτήσεις το κρατούν.',
 			'price_saved'      => 'Η τιμή αποθηκεύτηκε με σημερινή ημερομηνία.',
 			'exit_saved'       => 'Η ρήτρα αποχώρησης αποθηκεύτηκε.',
 		];
@@ -370,11 +372,11 @@ JS;
 
 	public static function delete_provider(): void {
 		self::guard( 'ecrm_delete_provider' );
-		global $wpdb;
 		$id = (int) ( $_POST['id'] ?? 0 );
-		if ( $id ) {
-			$wpdb->delete( ECRM_DB::table( 'programs' ), [ 'provider_id' => $id ] );
-			$wpdb->delete( ECRM_DB::table( 'providers' ), [ 'id' => $id ] );
+		// (421) Με αιτήσεις: απενεργοποίηση, όχι διαγραφή (K5, K7, K10).
+		$done = $id ? \EnergyCRM\Services::providers()->deleteOrRetireProvider( $id ) : '';
+		if ( \EnergyCRM\Persistence\ProviderRepository::RETIRED === $done ) {
+			self::back( 'provider_retired', $id );
 		}
 		self::back( 'provider_deleted' );
 	}
@@ -442,12 +444,10 @@ JS;
 
 	public static function delete_program(): void {
 		self::guard( 'ecrm_delete_program' );
-		global $wpdb;
 		$id       = (int) ( $_POST['id'] ?? 0 );
 		$provider = (int) ( $_POST['provider_id'] ?? 0 );
-		if ( $id ) {
-			$wpdb->delete( ECRM_DB::table( 'programs' ), [ 'id' => $id ] );
-		}
-		self::back( 'program_deleted', $provider );
+		// (421) Με αιτήσεις: απενεργοποίηση, όχι διαγραφή (K5, K7, K10).
+		$done = $id ? \EnergyCRM\Services::providers()->deleteOrRetireProgram( $id ) : '';
+		self::back( \EnergyCRM\Persistence\ProviderRepository::RETIRED === $done ? 'program_retired' : 'program_deleted', $provider );
 	}
 }

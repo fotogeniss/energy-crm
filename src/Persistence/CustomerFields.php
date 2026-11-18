@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Persistence;
 
+use EnergyCRM\Domain\Customer\PhoneNumber;
 use EnergyCRM\Infrastructure\FieldCipher;
 use EnergyCRM\Infrastructure\KeyFingerprint;
 
@@ -147,7 +148,7 @@ final class CustomerFields
         }
 
         if (array_key_exists(self::PHONE_INDEXED, $customer)) {
-            $customer[self::PHONE_INDEX_COLUMN] = $this->cipher->blindIndex((string) $customer[self::PHONE_INDEXED]);
+            $customer[self::PHONE_INDEX_COLUMN] = $this->phoneIndex((string) $customer[self::PHONE_INDEXED]);
         }
 
         if (! self::isEnabled()) {
@@ -271,5 +272,43 @@ final class CustomerFields
     public function index(string $value): string
     {
         return $this->cipher->blindIndex($value);
+    }
+
+    /**
+     * (422) Το `phone_hash`: από τα ψηφία του αριθμού (`PhoneNumber::key()`),
+     * ίδιο στην αποθήκευση και στην αναζήτηση (K11). Τιμή χωρίς ψηφία μένει
+     * ως έχει, όπως πριν.
+     */
+    public function phoneIndex(string $value): string
+    {
+        $key = PhoneNumber::key($value);
+
+        return $this->cipher->blindIndex($key !== '' ? $key : $value);
+    }
+
+    /**
+     * (422) Το LIKE του κινητού (απλό κείμενο): ψηφία με ψηφία, όπως κι αν
+     * γράφτηκε ο αριθμός στη στήλη ή στην αναζήτηση. Ταιριάζει με το
+     * `PhoneNumber::sql()` πάνω στη στήλη.
+     */
+    public static function phoneLike(string $term): string
+    {
+        global $wpdb;
+
+        return '%' . $wpdb->esc_like(PhoneNumber::likeTerm($term)) . '%';
+    }
+
+    /**
+     * (421) Το `afm_hash` για ό,τι γράφτηκε στην αναζήτηση: κομμένο σε ψηφία,
+     * όπως κόβεται και στην αποθήκευση (`ECRM_Validate::digits()`, K11). Πριν,
+     * «090 003 373» ή «ΑΦΜ 090003373» δεν έβρισκε τίποτα όταν η στήλη είναι
+     * κρυπτογραφημένη. Όρος χωρίς ψηφία (όνομα) μένει ως έχει: δεν ταιριάζει
+     * με κανένα hash, όπως και πριν.
+     */
+    public function afmSearchIndex(string $term): string
+    {
+        $digits = \ECRM_Validate::digits($term);
+
+        return $this->index($digits !== '' ? $digits : $term);
     }
 }

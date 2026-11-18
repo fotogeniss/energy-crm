@@ -37,7 +37,9 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Integration;
 
 use EnergyCRM\Access\Roles;
+use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractAddresses;
+use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\Tables;
 use EnergyCRM\Providers\Persistence\ProviderGrantRepository;
@@ -605,6 +607,29 @@ final class ContractSaveMappingTest extends IntegrationTestCase
         );
         self::assertSame('', (string) ($customer['email'] ?? ''), 'Το email που άδειασε έμεινε.');
         self::assertSame('2101234567', (string) ($customer['phone'] ?? ''), 'Το τηλέφωνο δεν στάλθηκε και άλλαξε.');
+    }
+
+    /** (421) Επεξεργασία: ό,τι λείπει από τον σάκο extra μένει, το κενό φεύγει. */
+    public function testAnEditMergesTheExtrasInsteadOfReplacingThem(): void
+    {
+        $created = $this->save([
+            'customer_type' => 'individual',
+            'afm'           => self::VALID_AFM,
+            'first_name'    => 'Σάκος',
+            'last_name'     => 'Extra',
+            'status'        => 'draft',
+            'extra'         => ['agreed_power' => '8', 'kad' => '35.14', 'gemi' => '999'],
+        ]);
+        self::assertSame(200, $created->get_status(), (string) ($created->get_data()['error'] ?? ''));
+        $contractId = (int) $created->get_data()['contract_id'];
+
+        $edited = $this->save(['contract_id' => $contractId, 'extra' => ['agreed_power' => '12', 'kad' => '']]);
+        self::assertSame(200, $edited->get_status(), (string) ($edited->get_data()['error'] ?? ''));
+
+        // Μέσα από το repository: οι τιμές του σάκου κρυπτογραφούνται στη βάση.
+        $row   = (new ContractRepository())->find($contractId, UserScope::forAdministrator(1));
+        $extra = json_decode((string) ($row['extra_json'] ?? ''), true);
+        self::assertSame(['agreed_power' => '12', 'gemi' => '999'], $extra);
     }
 
     /** (418) Από Εταιρεία σε Ιδιώτη: η επωνυμία φεύγει, ώστε να μην τυπώνεται. */

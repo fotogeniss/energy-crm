@@ -29,6 +29,7 @@ use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\StatusEntryGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Domain\Contract\ExtraFields;
 use EnergyCRM\Domain\Contract\RequestKey;
 use EnergyCRM\Domain\Contract\SignedFieldsLock;
 use EnergyCRM\Domain\Contract\StatusTrack;
@@ -228,6 +229,13 @@ final class ContractSaveController implements Controller
             if ($existing === null) {
                 return new WP_REST_Response(['ok' => false, 'error' => 'Η σύμβαση δεν βρέθηκε.'], 404);
             }
+        }
+
+        // (421) Σε επεξεργασία ο σάκος `extra` συγχωνεύεται με τον αποθηκευμένο
+        // αντί να τον αντικαθιστά (ExtraFields::merge()).
+        if ($existing !== null && is_array($params['extra'] ?? null)) {
+            $stored          = json_decode((string) ($existing['extra_json'] ?? ''), true);
+            $params['extra'] = ExtraFields::merge(is_array($stored) ? $stored : [], $params['extra']);
         }
 
         $refusal = $this->refuseProvider($params, $existing, $scope);

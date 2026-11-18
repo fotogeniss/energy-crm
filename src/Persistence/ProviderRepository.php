@@ -154,4 +154,104 @@ final class ProviderRepository
 
         return $out;
     }
+
+    /** Το πρόγραμμα/ο πάροχος σβήστηκε: καμία αίτηση δεν τον είχε. */
+    public const DELETED = 'deleted';
+
+    /** Είχε αιτήσεις: απενεργοποιήθηκε αντί να σβηστεί. */
+    public const RETIRED = 'retired';
+
+    /**
+     * (421) Διαγραφή προγράμματος από τη σελίδα «Πάροχοι».
+     *
+     * Το `contracts.program_id` είναι `ON DELETE SET NULL` και το
+     * `commission_rules.program_id` `ON DELETE CASCADE`: μία διαγραφή άφηνε
+     * κάθε αίτηση του προγράμματος χωρίς πρόγραμμα (έντυπο, τιμή, ρήτρα) και
+     * έσβηνε τους κανόνες προμήθειας του. Αν υπάρχει έστω μία αίτηση, το
+     * πρόγραμμα απενεργοποιείται: φεύγει από τη «Νέα αίτηση», οι παλιές το
+     * κρατούν. Κανόνες K5, K7, K10.
+     *
+     * @return self::DELETED|self::RETIRED
+     */
+    public function deleteOrRetireProgram(int $programId): string
+    {
+        global $wpdb;
+
+        $programs = Tables::name(Tables::PROGRAMS);
+
+        if ($this->contractsUsing('program_id', [$programId]) > 0) {
+            $wpdb->update($programs, ['active' => 0], ['id' => $programId]);
+
+            return self::RETIRED;
+        }
+
+        $wpdb->delete($programs, ['id' => $programId]);
+
+        return self::DELETED;
+    }
+
+    /**
+     * (421) Το ίδιο για τον πάροχο. Ο πάροχος παίρνει μαζί του (CASCADE) όλα
+     * τα προγράμματά του, άρα μετράνε οι αιτήσεις του παρόχου ΚΑΙ όσες
+     * δείχνουν σε πρόγραμμά του. Αν υπάρχει έστω μία, απενεργοποιούνται ο
+     * πάροχος και τα προγράμματά του, και δεν σβήνεται τίποτα.
+     *
+     * @return self::DELETED|self::RETIRED
+     */
+    public function deleteOrRetireProvider(int $providerId): string
+    {
+        global $wpdb;
+
+        $programs  = Tables::name(Tables::PROGRAMS);
+        $providers = Tables::name(Tables::PROVIDERS);
+
+        /** @var list<string> $programIds */
+        $programIds = $wpdb->get_col(
+            $wpdb->prepare('SELECT id FROM %i WHERE provider_id = %d', $programs, $providerId)
+        );
+        $programIds = array_map('intval', $programIds);
+
+        if (
+            $this->contractsUsing('provider_id', [$providerId]) > 0
+            || $this->contractsUsing('program_id', $programIds) > 0
+        ) {
+            $wpdb->update($providers, ['active' => 0], ['id' => $providerId]);
+            $wpdb->update($programs, ['active' => 0], ['provider_id' => $providerId]);
+
+            return self::RETIRED;
+        }
+
+        $wpdb->delete($programs, ['provider_id' => $providerId]);
+        $wpdb->delete($providers, ['id' => $providerId]);
+
+        return self::DELETED;
+    }
+
+    /**
+     * Πόσες αιτήσεις (οποιασδήποτε κατάστασης) δείχνουν σε αυτά τα id.
+     *
+     * @param 'program_id'|'provider_id' $column
+     * @param list<int>                  $ids
+     */
+    private function contractsUsing(string $column, array $ids): int
+    {
+        global $wpdb;
+
+        $ids = array_values(array_filter($ids, static fn (int $id): bool => $id > 0));
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM %i WHERE %i IN ({$placeholders})",
+                [Tables::name(Tables::CONTRACTS), $column, ...$ids]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+    }
 }

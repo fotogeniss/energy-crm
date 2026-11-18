@@ -2055,7 +2055,8 @@ import { openDialog } from '@energy-crm/dialog';
 			// δεν στελνόταν καθόλου και η παλιά τιμή (λάθος email, επωνυμία)
 			// ξαναεμφανιζόταν μετά την αποθήκευση.
 			qa('.ecrm-input').forEach(function (i) {
-				if (i.value && !i.getAttribute('data-extra')) { i.setAttribute('data-loaded', '1'); } else { i.removeAttribute('data-loaded'); }
+				// (421) Και τα πεδία του σάκου `extra`: ο server πλέον συγχωνεύει.
+				if (i.value) { i.setAttribute('data-loaded', '1'); } else { i.removeAttribute('data-loaded'); }
 			});
 			// «Πάνω στο έντυπο» (31/08): selectProvider()/sel.value= παραπάνω ΔΕΝ
 			// στέλνουν 'change' -- τα μόνα σημεία που καλούν refreshProviderFields()
@@ -2924,8 +2925,9 @@ import { openDialog } from '@energy-crm/dialog';
 			qa('.ecrm-input').forEach(function (i) {
 				if (!i.value) {
 					// (418) Ήταν γεμάτο και το άδειασε: «σβήσ' το», όχι «άσ' το όπως ήταν».
-					if (state.contract_id && i.name && i.getAttribute('data-loaded') && !i.getAttribute('data-extra') && !(i.name in payload)) {
-						payload[i.name] = '';
+					if (state.contract_id && i.name && i.getAttribute('data-loaded')) {
+						if (i.getAttribute('data-extra')) { if (!(i.name in payload.extra)) payload.extra[i.name] = ''; }
+						else if (!(i.name in payload)) { payload[i.name] = ''; }
 					}
 					return;
 				}

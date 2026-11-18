@@ -60,4 +60,43 @@ final class ExtraFields
 
         return $clean === [] ? null : wp_json_encode($clean);
     }
+
+    /**
+     * (421) Σε επεξεργασία: ό,τι υπάρχει ήδη στον σάκο μένει, ό,τι στάλθηκε
+     * υπερισχύει, και ό,τι στάλθηκε ΚΕΝΟ φεύγει.
+     *
+     * Πριν, ο σάκος αντικαθιστούνταν ολόκληρος από ό,τι είχε η φόρμα στην
+     * οθόνη. Ένα κλειδί χωρίς πεδίο εκείνη τη στιγμή (πεδία του εντύπου του
+     * παρόχου που φορτώνουν λίγο μετά, ή γραμμένα από άλλη διαδρομή) χανόταν
+     * στην πρώτη αποθήκευση. Η φόρμα στέλνει κενό μόνο για πεδίο που ήρθε
+     * γεμάτο και το άδειασε ο συνεργάτης (`data-loaded`).
+     *
+     * @param array<string, mixed> $stored
+     * @param array<string, mixed> $sent
+     * @return array<string, mixed>
+     */
+    public static function merge(array $stored, array $sent): array
+    {
+        $out = $stored;
+
+        foreach ($sent as $key => $value) {
+            // Ίδιο κλειδί με αυτό που αποθηκεύει το toJson() (ο κανόνας του
+            // sanitize_key(), χωρίς WordPress), αλλιώς ένα «Kad» δεν θα έσβηνε
+            // το «kad».
+            $key = (string) preg_replace('/[^a-z0-9_\-]/', '', strtolower((string) $key));
+
+            if ($key === '') {
+                continue;
+            }
+
+            if (is_scalar($value) && trim((string) $value) === '') {
+                unset($out[$key]);
+                continue;
+            }
+
+            $out[$key] = $value;
+        }
+
+        return $out;
+    }
 }

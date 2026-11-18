@@ -19,6 +19,7 @@ namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\SupplyNumber;
+use EnergyCRM\Domain\Customer\PhoneNumber;
 
 final class CustomerRepository
 {
@@ -131,16 +132,19 @@ final class CustomerRepository
             // that is neither just hashes to something no row has, which is
             // harmless.
             $conditions[] = "( CONCAT_WS(' ', cu.first_name, cu.last_name, cu.company_name) LIKE %s"
-                . ' OR cu.afm LIKE %s OR cu.phone LIKE %s OR cu.'
+                . ' OR cu.afm LIKE %s OR cu.phone LIKE %s OR ' . PhoneNumber::sql('cu.mobile') . ' LIKE %s OR cu.'
                 . CustomerFields::INDEX_COLUMN . ' = %s OR cu.'
                 . CustomerFields::PHONE_INDEX_COLUMN . ' = %s )';
+            // (421) Και το κινητό (ήταν μόνο στη γρήγορη αναζήτηση), και το ΑΦΜ
+            // σε ψηφία (K11).
             $params       = [
                 ...$params,
                 $like,
                 $like,
                 $like,
-                $this->fields->index($term),
-                $this->fields->index($term),
+                CustomerFields::phoneLike($term),
+                $this->fields->afmSearchIndex($term),
+                $this->fields->phoneIndex($term),
             ];
         }
 
@@ -208,17 +212,20 @@ final class CustomerRepository
         if ($term !== '') {
             $like         = '%' . $wpdb->esc_like($term) . '%';
             $conditions[] = "( CONCAT_WS(' ', cu.first_name, cu.last_name, cu.company_name) LIKE %s"
-                . ' OR cu.afm LIKE %s OR cu.phone LIKE %s OR cu.email LIKE %s OR cu.'
+                . ' OR cu.afm LIKE %s OR cu.phone LIKE %s OR ' . PhoneNumber::sql('cu.mobile')
+                . ' LIKE %s OR cu.email LIKE %s OR cu.'
                 . CustomerFields::INDEX_COLUMN . ' = %s OR cu.'
                 . CustomerFields::PHONE_INDEX_COLUMN . ' = %s )';
+            // (421) Και το κινητό, και το ΑΦΜ σε ψηφία (K11).
             $params       = [
                 ...$params,
                 $like,
                 $like,
                 $like,
+                CustomerFields::phoneLike($term),
                 $like,
-                $this->fields->index($term),
-                $this->fields->index($term),
+                $this->fields->afmSearchIndex($term),
+                $this->fields->phoneIndex($term),
             ];
         }
 
