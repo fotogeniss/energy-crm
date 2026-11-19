@@ -1,0 +1,303 @@
+{
+ "page_w": 210.0,
+ "page_h": 297.0,
+ "fields": {
+  "arithmos_aitisis": {
+   "page": 1,
+   "x": 37.4,
+   "y": 23.3,
+   "maxw": 22.4,
+   "size": 8
+  },
+  "kodikos_synergati": {
+   "page": 1,
+   "x": 38.0,
+   "y": 29.6,
+   "maxw": 22.4,
+   "size": 8
+  },
+  "onoma_timologiou": [
+   {
+    "page": 1,
+    "x": 120.7,
+    "y": 23.3,
+    "maxw": 74.5,
+    "size": 8
+   },
+   {
+    "page": 2,
+    "x": 108.1,
+    "y": 206.7,
+    "maxw": 45.0,
+    "size": 8
+   }
+  ],
+  "imerominia_aitisis": [
+   {
+    "page": 1,
+    "x": 26.7,
+    "y": 43.3,
+    "maxw": 20.0,
+    "size": 8
+   },
+   {
+    "page": 1,
+    "x": 28.2,
+    "y": 113.6,
+    "maxw": 19.2,
+    "size": 8
+   }
+  ],
+  "onomateponymo_pelati": [
+   {
+    "page": 1,
+    "x": 23.9,
+    "y": 53.4,
+    "maxw": 53.5,
+    "size": 8,
+    "when": "not_company"
+   },
+   {
+    "page": 1,
+    "x": 131.0,
+    "y": 218.0,
+    "maxw": 62,
+    "size": 8,
+    "when": "not_company"
+   },
+   {
+    "page": 2,
+    "x": 117.0,
+    "y": 251.0,
+    "maxw": 62,
+    "size": 8,
+    "when": "not_company"
+   }
+  ],
+  "afm_pelati": [
+   {
+    "page": 1,
+    "x": 101.1,
+    "y": 53.4,
+    "maxw": 25.7,
+    "size": 8,
+    "when": "not_company"
+   },
+   {
+    "page": 1,
+    "x": 11.0,
+    "y": 66.7,
+    "maxw": 24.5,
+    "size": 8,
+    "when": "company"
+   }
+  ],
+  "doy_pelati": [
+   {
+    "page": 1,
+    "x": 139.9,
+    "y": 53.4,
+    "maxw": 39.2,
+    "size": 8,
+    "when": "not_company"
+   },
+   {
+    "page": 1,
+    "x": 47.1,
+    "y": 66.7,
+    "maxw": 31.5,
+    "size": 8,
+    "when": "company"
+   }
+  ],
+  "adt_pelati": {
+   "page": 1,
+   "x": 28.7,
+   "y": 56.7,
+   "maxw": 17.9,
+   "size": 8,
+   "when": "not_company"
+  },
+  "poli_katoikias": {
+   "page": 1,
+   "x": 58.9,
+   "y": 56.7,
+   "maxw": 25.0,
+   "size": 8,
+   "when": "not_company"
+  },
+  "odos_arithmos_katoikias": {
+   "page": 1,
+   "x": 105.2,
+   "y": 56.7,
+   "maxw": 73.6,
+   "size": 8,
+   "when": "not_company"
+  },
+  "eponymia_etaireias": {
+   "page": 1,
+   "x": 27.2,
+   "y": 63.4,
+   "maxw": 48.0,
+   "size": 8,
+   "when": "company"
+  },
+  "dieuthynsi_katoikias": {
+   "page": 1,
+   "x": 101.3,
+   "y": 63.4,
+   "maxw": 72.0,
+   "size": 8,
+   "when": "company"
+  },
+  "onomateponymo_ekprosopou": [
+   {
+    "page": 1,
+    "x": 11.1,
+    "y": 70.1,
+    "maxw": 96.4,
+    "size": 8,
+    "when": "company"
+   },
+   {
+    "page": 1,
+    "x": 131.0,
+    "y": 218.0,
+    "maxw": 62,
+    "size": 8,
+    "when": "company"
+   },
+   {
+    "page": 2,
+    "x": 117.0,
+    "y": 251.0,
+    "maxw": 62,
+    "size": 8,
+    "when": "company"
+   }
+  ],
+  "tasi_paroxis": {
+   "page": 1,
+   "x": 30.8,
+   "y": 117.0,
+   "maxw": 9.6,
+   "size": 8
+  },
+  "isxis_paroxis": {
+   "page": 1,
+   "x": 69.0,
+   "y": 117.0,
+   "maxw": 6.7,
+   "size": 8
+  },
+  "odos_paroxis": {
+   "page": 1,
+   "x": 34.4,
+   "y": 120.4,
+   "maxw": 36.4,
+   "size": 8
+  },
+  "arithmos_odou_paroxis": {
+   "page": 1,
+   "x": 95.5,
+   "y": 120.4,
+   "maxw": 9.9,
+   "size": 8
+  },
+  "poli_paroxis": {
+   "page": 1,
+   "x": 126.2,
+   "y": 120.4,
+   "maxw": 20.6,
+   "size": 8
+  },
+  "tk_paroxis": {
+   "page": 1,
+   "x": 160.7,
+   "y": 120.4,
+   "maxw": 29.1,
+   "size": 8
+  },
+  "arithmos_paroxis": {
+   "page": 1,
+   "x": 86.2,
+   "y": 123.8,
+   "maxw": 33.9,
+   "size": 8
+  },
+  "odos_arithmos_apostolis": {
+   "page": 1,
+   "x": 136.3,
+   "y": 143.6,
+   "maxw": 59.0,
+   "size": 8
+  },
+  "tk_apostolis": {
+   "page": 1,
+   "x": 136.3,
+   "y": 147.0,
+   "maxw": 13,
+   "size": 8
+  },
+  "poli_apostolis": {
+   "page": 1,
+   "x": 150.3,
+   "y": 147.0,
+   "maxw": 44.0,
+   "size": 8
+  },
+  "kinito_pelati": {
+   "page": 1,
+   "x": 136.3,
+   "y": 150.4,
+   "maxw": 21,
+   "size": 8
+  },
+  "tilefono_pelati": {
+   "page": 1,
+   "x": 159.3,
+   "y": 150.4,
+   "maxw": 35.0,
+   "size": 8
+  },
+  "email_pelati": {
+   "page": 1,
+   "x": 136.3,
+   "y": 157.0,
+   "maxw": 59.0,
+   "size": 8
+  },
+  "eggiisi_se_lexeis": {
+   "page": 2,
+   "x": 74.0,
+   "y": 212.4,
+   "maxw": 100.0,
+   "size": 8
+  },
+  "eggiisi_arithmos": {
+   "page": 2,
+   "x": 14.7,
+   "y": 215.6,
+   "maxw": 11.2,
+   "size": 8
+  }
+ },
+ "sigs": [
+  {
+   "page": 1,
+   "x": 131.0,
+   "y": 205.5,
+   "w": 50,
+   "h": 0,
+   "fit_h": 12.0
+  },
+  {
+   "page": 2,
+   "x": 117.0,
+   "y": 238.0,
+   "w": 55,
+   "h": 0,
+   "fit_h": 12.0
+  }
+ ]
+}

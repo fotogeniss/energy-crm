@@ -17,6 +17,12 @@
  * 3. Οι Γενικοί Όροι Σύμβασης (μικρού ή μεγάλου πελάτη), χωρίς συμπλήρωση.
  * 4. Στα δυναμικά, η Προσυμβατική Ενημέρωση -- την αναφέρει η ίδια η αίτηση.
  *
+ * (424) Αυτά ισχύουν πλέον μόνο για τα αποσυρμένα προγράμματα. Όσα πουλάμε
+ * τυπώνουν ακριβώς το πακέτο που έστειλε ο ιδιοκτήτης 19/11: «Αίτηση/Σύμβαση
+ * Προμήθειας» (μικρού ή μεγάλου πελάτη, με τους «Όρους Τιμολόγησης» στη 2η
+ * σελίδα), Green Pass στα οικιακά, και οι Ειδικοί Όροι του προγράμματος
+ * (ίδιοι στο pixel με αυτούς που υπήρχαν ήδη). Δες `paperwork()`.
+ *
  * ## Εκδόσεις
  *
  * Η ΔΕΗ βγάζει νέα έκδοση σχεδόν κάθε μήνα («myHome Enter 11.26», «12.26»).
@@ -62,6 +68,28 @@ final class DeiCatalogue
     public const TERMS_LARGE = 'dei_gos_megalou';
 
     public const TERMS_DYN_LARGE = 'dei_gos_dyn_megalou';
+
+    /**
+     * (424) Η «Αίτηση/Σύμβαση Προμήθειας» με τους «Όρους Τιμολόγησης» στη
+     * δεύτερη σελίδα: το έντυπο που έστειλε ο ιδιοκτήτης 19/11 («αυτές
+     * θέλουμε»), αντί για την «Αίτηση Προσφοράς» του dei.gr και τους Γενικούς
+     * Όρους. Μία για μικρό πελάτη (έως 25 kVA στον τίτλο της) και μία για
+     * μεγάλο, όπως και η παλιά.
+     */
+    public const CONTRACT_SMALL = 'dei_symvasi_mikrou';
+
+    public const CONTRACT_LARGE = 'dei_symvasi_megalou';
+
+    /** (424) Οι Ειδικοί Όροι της υπηρεσίας Green Pass, στα οικιακά του πακέτου. */
+    public const GREEN_PASS = 'dei_greenpass';
+
+    /**
+     * (424) Ό,τι υπογράφηκε πριν από αυτή τη μέρα, υπογράφηκε πάνω στην
+     * «Αίτηση Προσφοράς». Ξανατυπώνεται σε εκείνη, με την υπογραφή του: η
+     * υπογραφή του πελάτη δεν μπαίνει ποτέ σε έντυπο που δεν υπέγραψε (K1).
+     * Στο live, 19/11, υπήρχε μία μόνο υπογεγραμμένη αίτηση ΔΕΗ (02/09).
+     */
+    public const PACKAGES_FROM = '2026-11-19 00:00:00';
 
     public const PRECONTRACT_HOME = 'dei_prosymv_oikiakou';
 
@@ -301,13 +329,17 @@ final class DeiCatalogue
      * Χωρίς δηλωμένη ισχύ (0): η αίτηση μικρού πελάτη, που καλύπτει όλα τα
      * οικιακά και τις περισσότερες μικρές επιχειρήσεις.
      */
-    public static function application(string $code, float $kva): string
+    public static function application(string $code, float $kva, string $signedAt = ''): string
     {
         if (self::isGas($code)) {
             return self::APP_GAS;
         }
 
         $large = $kva >= self::LARGE_KVA;
+
+        if (self::isPackaged($code, $signedAt)) {
+            return $large ? self::CONTRACT_LARGE : self::CONTRACT_SMALL;
+        }
 
         if (self::isDynamic($code)) {
             return $large ? self::APP_DYN_LARGE : self::APP_DYN_SMALL;
@@ -321,7 +353,7 @@ final class DeiCatalogue
      *
      * @return list<string>
      */
-    public static function paperwork(string $code, float $kva): array
+    public static function paperwork(string $code, float $kva, string $signedAt = ''): array
     {
         // (405) Αέριο: η αίτηση και οι Ειδικοί Όροι. Γενικοί Όροι φυσικού
         // αερίου δεν ήρθαν με τα έντυπα, και αυτοί του ρεύματος δεν ισχύουν.
@@ -329,8 +361,23 @@ final class DeiCatalogue
             return [self::APP_GAS, self::termsSheet($code)];
         }
 
+        // (424) Τα προγράμματα που πουλάμε: ακριβώς το πακέτο του ιδιοκτήτη.
+        // Αίτηση/Σύμβαση (με Όρους Τιμολόγησης), Green Pass στα οικιακά,
+        // Ειδικοί Όροι. Χωρίς Γενικούς Όρους και Προσυμβατική.
+        if (self::isPackaged($code, $signedAt)) {
+            $keys = [self::application($code, $kva, $signedAt)];
+
+            if ((self::PLANS[$code]['category'] ?? '') === 'home') {
+                $keys[] = self::GREEN_PASS;
+            }
+
+            $keys[] = self::termsSheet($code);
+
+            return $keys;
+        }
+
         $large = $kva >= self::LARGE_KVA;
-        $keys  = [self::application($code, $kva)];
+        $keys  = [self::application($code, $kva, $signedAt)];
 
         if (self::termsSheet($code) !== '') {
             $keys[] = self::termsSheet($code);
@@ -352,6 +399,20 @@ final class DeiCatalogue
     }
 
     /**
+     * (424) Πρόγραμμα ρεύματος που πουλάμε (όχι αποσυρμένο, όχι αέριο): τυπώνει
+     * το πακέτο «Αίτηση/Σύμβαση». Τα αποσυρμένα, και ό,τι υπογράφηκε πριν από
+     * το `PACKAGES_FROM`, κρατούν τα έντυπα πάνω στα οποία πουλήθηκαν.
+     */
+    public static function isPackaged(string $code, string $signedAt = ''): bool
+    {
+        if (trim($signedAt) !== '' && $signedAt < self::PACKAGES_FROM) {
+            return false;
+        }
+
+        return self::exists($code) && ! self::isRetired($code) && ! self::isGas($code);
+    }
+
+    /**
      * Κάθε έντυπο της ΔΕΗ που πρέπει να υπάρχει στον δίσκο.
      *
      * @return list<string>
@@ -362,6 +423,7 @@ final class DeiCatalogue
             self::APP_SMALL, self::APP_LARGE, self::APP_DYN_SMALL, self::APP_DYN_LARGE, self::APP_GAS,
             self::TERMS_SMALL, self::TERMS_LARGE, self::TERMS_DYN_LARGE,
             self::PRECONTRACT_HOME, self::PRECONTRACT_BUSINESS,
+            self::CONTRACT_SMALL, self::CONTRACT_LARGE, self::GREEN_PASS,
         ];
 
         foreach (array_keys(self::PLANS) as $code) {

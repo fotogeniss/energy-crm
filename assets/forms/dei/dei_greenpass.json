@@ -1,0 +1,60 @@
+{
+ "page_w": 210.0,
+ "page_h": 297.0,
+ "fields": {
+  "arithmos_paroxis": {
+   "page": 2,
+   "x": 81.1,
+   "y": 158.2,
+   "maxw": 96.3,
+   "size": 9
+  },
+  "dieuthynsi_paroxis": {
+   "page": 2,
+   "x": 81.1,
+   "y": 170.7,
+   "maxw": 96.3,
+   "size": 9
+  },
+  "onomateponymo_pelati": {
+   "page": 2,
+   "x": 33.5,
+   "y": 184.9,
+   "maxw": 61.0,
+   "size": 8.5,
+   "when": "not_company"
+  },
+  "onomateponymo_ekprosopou": {
+   "page": 2,
+   "x": 33.5,
+   "y": 184.9,
+   "maxw": 61.0,
+   "size": 8.5,
+   "when": "company"
+  },
+  "afm_pelati": {
+   "page": 2,
+   "x": 92.4,
+   "y": 184.9,
+   "maxw": 29.3,
+   "size": 8.5
+  },
+  "topos_imerominia_aitisis": {
+   "page": 2,
+   "x": 127.0,
+   "y": 184.9,
+   "maxw": 50.4,
+   "size": 8.5
+  }
+ },
+ "sigs": [
+  {
+   "page": 2,
+   "x": 139.0,
+   "y": 193.5,
+   "w": 40,
+   "h": 0,
+   "fit_h": 11.0
+  }
+ ]
+}

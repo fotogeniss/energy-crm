@@ -146,6 +146,11 @@ final class ProviderFormFields
         'paratiriseis'               => ['eidiki_katigoria', 'promotion'],
         'teleftaia_endeixi_metriti'  => ['day_indication'],
         'poso_eggiisis'              => ['guarantee'],
+        // (424) Η εγγύηση στην «Αίτηση/Σύμβαση» ΔΕΗ: σε αριθμό (μικρός πελάτης)
+        // ή ευρώ (μεγάλος). Τα ολογράφως και τα λεπτά βγαίνουν από το ίδιο
+        // ποσό, δεν πληκτρολογούνται χωριστά.
+        'eggiisi_arithmos'           => ['guarantee'],
+        'eggiisi_evro'               => ['guarantee'],
         'ipistamenos_promitheftis'   => ['previous_provider'],
         'idiotita_idioktitis'        => ['capacity_role'],
         'idiotita_misthotis'         => ['capacity_role'],

@@ -57,7 +57,7 @@ class ECRM_FormFill {
 	 * Only ΔΕΗ uses it: up to 25 kVA the small-customer application, above it
 	 * the large-customer one. 0 = not typed yet, which is the small one.
 	 */
-	public static function template_key( string $provider_name, string $energy_type, string $customer_type = '', string $program = '', string $activation_type = '', float $kva = 0.0 ): string {
+	public static function template_key( string $provider_name, string $energy_type, string $customer_type = '', string $program = '', string $activation_type = '', float $kva = 0.0, string $signed_at = '' ): string {
 		$p = self::norm( $provider_name );
 		$e = $energy_type;
 		$biz = in_array( $customer_type, [ 'company', 'sole_prop' ], true );
@@ -130,7 +130,8 @@ class ECRM_FormFill {
 		// Και για πρόγραμμα χωρίς κωδικό (φτιαγμένο με το χέρι): η αίτηση και
 		// οι Γενικοί Όροι, χωρίς Ειδικούς.
 		if ( ( $p === 'δεη' || $p === 'dei' || $has( 'δεη ' ) || $has( 'ppc' ) ) && $e === 'power' ) {
-			return \EnergyCRM\Domain\Forms\DeiCatalogue::application( $program, $kva );
+			// (424) Με την ώρα υπογραφής: ό,τι υπογράφηκε στο παλιό έντυπο, εκεί.
+			return \EnergyCRM\Domain\Forms\DeiCatalogue::application( $program, $kva, $signed_at );
 		}
 		// (405) ΔΕΗ φυσικό αέριο: η μία αίτηση αερίου, και οι Ειδικοί Όροι του
 		// προγράμματος από το template_keys().
@@ -487,6 +488,13 @@ class ECRM_FormFill {
 			// (405) «ΠΟΣΟ ΕΓΓΥΗΣΗΣ (ολογράφως)» της αίτησης αερίου ΔΕΗ: από τους
 			// Ειδικούς Όρους του προγράμματος.
 			'eggiisi_olografos'         => \EnergyCRM\Domain\Forms\DeiCatalogue::gasGuarantee( (string) ( $c['program_code'] ?? '' ) ),
+			// (424) Η εγγύηση στην «Αίτηση/Σύμβαση» ρεύματος της ΔΕΗ: ολογράφως
+			// και σε αριθμό (μικρός πελάτης), ή ευρώ και λεπτά χωριστά (μεγάλος).
+			// Ό,τι δεν διαβάζεται ως ποσό μένει κενό, για το χέρι.
+			'eggiisi_se_lexeis'         => \EnergyCRM\Domain\Forms\GreekAmount::words( $xg( 'guarantee' ), false ),
+			'eggiisi_arithmos'          => \EnergyCRM\Domain\Forms\GreekAmount::figure( $xg( 'guarantee' ) ),
+			'eggiisi_evro'              => \EnergyCRM\Domain\Forms\GreekAmount::euros( $xg( 'guarantee' ) ),
+			'eggiisi_lepta'             => \EnergyCRM\Domain\Forms\GreekAmount::centsPart( $xg( 'guarantee' ) ),
 			'teleftaia_endeixi_metriti' => $xg( 'day_indication' ),
 			'isxis_paroxis'             => $xg( 'agreed_power' ),
 			// (319) «ΦΑΣΕΙΣ ΠΑΡΟΧΗΣ: Μονοφασική / Τριφασική».
@@ -736,7 +744,8 @@ class ECRM_FormFill {
 			(string) ( $c['customer_type'] ?? '' ),
 			(string) ( $c['program_code'] ?? '' ),
 			(string) ( $c['activation_type'] ?? '' ),
-			\EnergyCRM\Domain\Forms\DeiCatalogue::kva( (string) ( self::extras( $c )['agreed_power'] ?? '' ) )
+			\EnergyCRM\Domain\Forms\DeiCatalogue::kva( (string) ( self::extras( $c )['agreed_power'] ?? '' ) ),
+			(string) ( $c['signed_at'] ?? '' )
 		);
 
 		if ( $key === '' ) {
@@ -757,7 +766,8 @@ class ECRM_FormFill {
 
 			return \EnergyCRM\Domain\Forms\DeiCatalogue::paperwork(
 				(string) ( $c['program_code'] ?? '' ),
-				\EnergyCRM\Domain\Forms\DeiCatalogue::kva( (string) ( $x['agreed_power'] ?? '' ) )
+				\EnergyCRM\Domain\Forms\DeiCatalogue::kva( (string) ( $x['agreed_power'] ?? '' ) ),
+				(string) ( $c['signed_at'] ?? '' )
 			);
 		}
 

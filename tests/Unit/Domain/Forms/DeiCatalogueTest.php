@@ -66,9 +66,13 @@ final class DeiCatalogueTest extends TestCase
 
     public function testTheApplicationDependsOnPowerAndOnDynamicPricing(): void
     {
-        self::assertSame(DeiCatalogue::APP_SMALL, DeiCatalogue::application('dei_myhome_enter', 0.0));
-        self::assertSame(DeiCatalogue::APP_SMALL, DeiCatalogue::application('dei_mybusiness_enter', 34.9));
-        self::assertSame(DeiCatalogue::APP_LARGE, DeiCatalogue::application('dei_mybusiness_enter', 35.0));
+        // (424) Τα προγράμματα που πουλάμε: η «Αίτηση/Σύμβαση» του ιδιοκτήτη.
+        self::assertSame(DeiCatalogue::CONTRACT_SMALL, DeiCatalogue::application('dei_myhome_enter', 0.0));
+        self::assertSame(DeiCatalogue::CONTRACT_SMALL, DeiCatalogue::application('dei_mybusiness_enter', 34.9));
+        self::assertSame(DeiCatalogue::CONTRACT_LARGE, DeiCatalogue::application('dei_mybusiness_enter', 35.0));
+        // Τα αποσυρμένα κρατούν την «Αίτηση Προσφοράς» πάνω στην οποία πουλήθηκαν.
+        self::assertSame(DeiCatalogue::APP_SMALL, DeiCatalogue::application('dei_myhome_online', 8.0));
+        self::assertSame(DeiCatalogue::APP_LARGE, DeiCatalogue::application('dei_mybusiness_4all', 40.0));
         self::assertSame(DeiCatalogue::APP_DYN_SMALL, DeiCatalogue::application('dei_myhome_dynamic', 12.0));
         self::assertSame(DeiCatalogue::APP_DYN_LARGE, DeiCatalogue::application('dei_mybusiness_dynamic', 50.0));
         // Πρόγραμμα φτιαγμένο με το χέρι: η απλή αίτηση.
@@ -84,15 +88,15 @@ final class DeiCatalogueTest extends TestCase
      */
     public static function supplyPowers(): iterable
     {
-        yield '8'      => ['8', DeiCatalogue::APP_SMALL];
-        yield '12 kVA' => ['12 kVA', DeiCatalogue::APP_SMALL];
-        yield '25'     => ['25', DeiCatalogue::APP_SMALL];
-        yield '34,9'   => ['34,9', DeiCatalogue::APP_SMALL];
-        yield '35'     => ['35', DeiCatalogue::APP_LARGE];
-        yield '35kVA'  => ['35kVA', DeiCatalogue::APP_LARGE];
-        yield '40'     => ['40', DeiCatalogue::APP_LARGE];
-        yield '55'     => ['55', DeiCatalogue::APP_LARGE];
-        yield 'κενό'   => ['', DeiCatalogue::APP_SMALL];
+        yield '8'      => ['8', DeiCatalogue::CONTRACT_SMALL];
+        yield '12 kVA' => ['12 kVA', DeiCatalogue::CONTRACT_SMALL];
+        yield '25'     => ['25', DeiCatalogue::CONTRACT_SMALL];
+        yield '34,9'   => ['34,9', DeiCatalogue::CONTRACT_SMALL];
+        yield '35'     => ['35', DeiCatalogue::CONTRACT_LARGE];
+        yield '35kVA'  => ['35kVA', DeiCatalogue::CONTRACT_LARGE];
+        yield '40'     => ['40', DeiCatalogue::CONTRACT_LARGE];
+        yield '55'     => ['55', DeiCatalogue::CONTRACT_LARGE];
+        yield 'κενό'   => ['', DeiCatalogue::CONTRACT_SMALL];
     }
 
     #[DataProvider('supplyPowers')]
@@ -103,13 +107,23 @@ final class DeiCatalogueTest extends TestCase
 
     public function testThePaperworkFollowsTheOrderOfTheApplication(): void
     {
+        // (424) Ακριβώς τα πακέτα του ιδιοκτήτη (19/11): Αίτηση/Σύμβαση, Green
+        // Pass στα οικιακά, Ειδικοί Όροι.
         self::assertSame(
-            ['dei_aitisi_mikrou', 'dei_eo_myhome_enter', 'dei_gos_mikrou'],
+            ['dei_symvasi_mikrou', 'dei_greenpass', 'dei_eo_myhome_enter'],
             DeiCatalogue::paperwork('dei_myhome_enter', 8.0)
         );
         self::assertSame(
-            ['dei_aitisi_megalou', 'dei_eo_mybusiness_enter', 'dei_gos_megalou'],
+            ['dei_symvasi_megalou', 'dei_greenpass', 'dei_eo_myhome_4all'],
+            DeiCatalogue::paperwork('dei_myhome_4all', 40.0)
+        );
+        self::assertSame(
+            ['dei_symvasi_megalou', 'dei_eo_mybusiness_enter'],
             DeiCatalogue::paperwork('dei_mybusiness_enter', 40.0)
+        );
+        self::assertSame(
+            ['dei_aitisi_mikrou', 'dei_eo_myhome_online', 'dei_gos_mikrou'],
+            DeiCatalogue::paperwork('dei_myhome_online', 8.0)
         );
         self::assertSame(
             ['dei_aitisi_dyn_mikrou', 'dei_eo_myhome_dynamic', 'dei_gos_mikrou',
@@ -154,6 +168,67 @@ final class DeiCatalogueTest extends TestCase
 
             self::assertCount(1, $map['sigs'], $key);
         }
+    }
+
+    /**
+     * (424) Ό,τι υπογράφηκε πριν από το πακέτο ξανατυπώνεται στο έντυπο που
+     * υπέγραψε ο πελάτης: η υπογραφή του δεν μπαίνει σε άλλο χαρτί.
+     *
+     * @kanonas K1
+     */
+    public function testWhatWasSignedBeforeKeepsItsForm(): void
+    {
+        self::assertSame(
+            ['dei_aitisi_mikrou', 'dei_eo_myhome_enter', 'dei_gos_mikrou'],
+            DeiCatalogue::paperwork('dei_myhome_enter', 8.0, '2026-09-02 12:19:59')
+        );
+        self::assertSame(
+            DeiCatalogue::APP_LARGE,
+            DeiCatalogue::application('dei_mybusiness_enter', 40.0, '2026-11-18 23:59:59')
+        );
+        self::assertSame(
+            ['dei_symvasi_mikrou', 'dei_greenpass', 'dei_eo_myhome_enter'],
+            DeiCatalogue::paperwork('dei_myhome_enter', 8.0, '2026-11-19 09:00:00')
+        );
+        // Ανυπόγραφη: το πακέτο.
+        self::assertSame(DeiCatalogue::CONTRACT_SMALL, DeiCatalogue::application('dei_myhome_enter', 8.0, ''));
+    }
+
+    /**
+     * (424) Η «Αίτηση/Σύμβαση» του ιδιοκτήτη: τα στοιχεία της πρώτης σελίδας,
+     * τιμολόγιο και εγγύηση στους Όρους Τιμολόγησης, υπογραφή και στις δύο
+     * σελίδες (όπως το ζητά το έντυπο: «Ο/Η ΑΙΤΩΝ… και υπογραφή»).
+     */
+    public function testTheContractsAskForWhatTheOwnersFormsAsk(): void
+    {
+        foreach ([DeiCatalogue::CONTRACT_SMALL, DeiCatalogue::CONTRACT_LARGE] as $key) {
+            $map = self::map($key);
+
+            foreach (
+                ['arithmos_aitisis', 'kodikos_synergati', 'onoma_timologiou', 'imerominia_aitisis',
+                'onomateponymo_pelati', 'afm_pelati', 'doy_pelati', 'adt_pelati', 'poli_katoikias',
+                'odos_arithmos_katoikias', 'eponymia_etaireias', 'dieuthynsi_katoikias',
+                'onomateponymo_ekprosopou', 'tasi_paroxis', 'isxis_paroxis', 'odos_paroxis',
+                'arithmos_odou_paroxis', 'poli_paroxis', 'tk_paroxis', 'arithmos_paroxis',
+                'odos_arithmos_apostolis', 'tk_apostolis', 'poli_apostolis', 'kinito_pelati',
+                'tilefono_pelati', 'email_pelati'] as $field
+            ) {
+                self::assertArrayHasKey($field, $map['fields'], $key . ': ' . $field);
+            }
+
+            self::assertSame([1, 2], array_column($map['sigs'], 'page'), $key);
+            self::assertCount(2, FormTemplates::pages(self::formsDir(), $key, $map), $key);
+        }
+
+        self::assertArrayHasKey('eggiisi_se_lexeis', self::map(DeiCatalogue::CONTRACT_SMALL)['fields']);
+        self::assertArrayHasKey('eggiisi_arithmos', self::map(DeiCatalogue::CONTRACT_SMALL)['fields']);
+        self::assertArrayHasKey('eggiisi_evro', self::map(DeiCatalogue::CONTRACT_LARGE)['fields']);
+
+        $green = self::map(DeiCatalogue::GREEN_PASS);
+        foreach (['arithmos_paroxis', 'dieuthynsi_paroxis', 'afm_pelati', 'topos_imerominia_aitisis'] as $field) {
+            self::assertArrayHasKey($field, $green['fields'], 'Green Pass: ' . $field);
+        }
+        self::assertSame([2], array_column($green['sigs'], 'page'));
     }
 
     /**
@@ -289,7 +364,7 @@ final class DeiCatalogueTest extends TestCase
             DeiCatalogue::paperwork('dei_mybuilding_gascontrol', 40.0)
         );
         self::assertSame(
-            ['dei_aitisi_mikrou', 'dei_eo_g21', 'dei_gos_mikrou'],
+            ['dei_symvasi_mikrou', 'dei_eo_g21'],
             DeiCatalogue::paperwork('dei_g21', 15.0)
         );
         self::assertSame('Τριακόσια ευρώ (300,00 €)', DeiCatalogue::gasGuarantee('dei_mybuilding_gascontrol'));
