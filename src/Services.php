@@ -31,6 +31,7 @@ use EnergyCRM\Domain\Contract\CancellationGate;
 use EnergyCRM\Domain\Contract\DeletionGate;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Infrastructure\ContractDocuments;
+use EnergyCRM\Infrastructure\PrintedFields;
 use EnergyCRM\Infrastructure\ActivationTerm;
 use EnergyCRM\Infrastructure\ContractNotices;
 use EnergyCRM\Infrastructure\DuplicateFollowUp;
@@ -475,6 +476,16 @@ final class Services
     public static function contractDetails(): ContractDetails
     {
         return self::$contractDetails ??= new ContractDetails();
+    }
+
+    /** (428) Τα πεδία που τυπώνει το έντυπο μιας αίτησης (K3). */
+    public static function printedFields(): PrintedFields
+    {
+        return new PrintedFields(
+            self::contractDetails(),
+            self::contractQueries(),
+            (\EnergyCRM\Plugin::instance()?->dir() ?? '') . 'assets/forms'
+        );
     }
 
     /** The status rows and the cron sweep. Takes no UserScope — see ARCHITECTURE. */

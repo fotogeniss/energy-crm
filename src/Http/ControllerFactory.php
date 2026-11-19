@@ -91,6 +91,7 @@ final class ControllerFactory
                 Services::paperworkGate(),
                 Services::requestKeys(),
                 Services::providerVisibility(),
+                Services::printedFields(),
             ),
             new ContractStatusController(
                 $scope,
@@ -166,7 +167,8 @@ final class ControllerFactory
                 $queries,
                 Services::files(),
                 Services::customerNotes(),
-                Services::customerEvents()
+                Services::customerEvents(),
+                Services::printedFields()
             ),
             new LeadsController(
                 $scope,
@@ -250,7 +252,8 @@ final class ControllerFactory
                 Services::contracts(),
                 Services::files(),
                 Services::customers(),
-                Services::leads()
+                Services::leads(),
+                Services::printedFields()
             ),
             new VatLookupController(Services::aade()),
             // (331) «Τι λέω στον πελάτη».

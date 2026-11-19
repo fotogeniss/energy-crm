@@ -41,8 +41,67 @@ final class SignedFieldsLock
     public const AFM_MESSAGE = 'Ο πελάτης έχει υπογεγραμμένη αίτηση, οπότε το ΑΦΜ του δεν αλλάζει πια. '
         . 'Αν χρειάζεται αλλαγή, μίλα με τον διαχειριστή.';
 
+    /**
+     * (428) Ό,τι τυπώνεται στο υπογεγραμμένο έντυπο. Απόφαση ιδιοκτήτη 19/11:
+     * «κλειδώνουν όλα τα τυπωμένα πεδία». Πριν, μια αλλαγή διεύθυνσης ή
+     * εγγύησης μετά την υπογραφή ξανάφτιαχνε το έντυπο με τα νέα στοιχεία ΚΑΙ
+     * την υπογραφή του πελάτη: χαρτί που ο πελάτης δεν υπέγραψε.
+     */
+    public const PRINTED_MESSAGE = 'Η αίτηση έχει υπογραφεί από τον πελάτη και %s τυπώνεται στο υπογεγραμμένο '
+        . 'έντυπο, οπότε δεν αλλάζει πια. Αν χρειάζεται αλλαγή, μίλα με τον διαχειριστή.';
+
+    /** Ονόματα για το μήνυμα· ό,τι λείπει λέγεται «αυτό το στοιχείο». */
+    private const PRINTED_LABELS = [
+        'first_name' => 'το όνομα', 'last_name' => 'το επώνυμο', 'father_name' => 'το πατρώνυμο',
+        'company_name' => 'η επωνυμία', 'doy' => 'η ΔΟΥ', 'adt' => 'η ταυτότητα',
+        'birth_date' => 'η ημερομηνία γέννησης',
+        'street' => 'η διεύθυνση', 'street_no' => 'ο αριθμός οδού', 'postal_code' => 'ο Τ.Κ.', 'city' => 'η πόλη',
+        'region' => 'η περιοχή', 'phone' => 'το τηλέφωνο', 'mobile' => 'το κινητό', 'email' => 'το email',
+        'supply_number' => 'ο αριθμός παροχής', 'meter_number' => 'ο αριθμός μετρητή', 'guarantee' => 'η εγγύηση',
+        'agreed_power' => 'η συμφωνημένη ισχύς',
+    ];
+
     private function __construct()
     {
+    }
+
+    /**
+     * (428) Το πρώτο τυπωμένο στοιχείο που αλλάζει, ή null.
+     *
+     * Αυστηρό: και το κενό που γεμίζει μετρά, γιατί κι αυτό θα τυπωνόταν
+     * δίπλα στην υπογραφή. Η ίδια τιμή ξαναστελμένη δεν είναι αλλαγή.
+     *
+     * @param array<string, mixed> $before  Οι τιμές τώρα.
+     * @param array<string, mixed> $after   Ό,τι θα γραφτεί (μόνο όσα στάλθηκαν).
+     * @param list<string>         $printed Τα πεδία που τυπώνει το έντυπο.
+     */
+    public static function printedChange(array $before, array $after, array $printed): ?string
+    {
+        foreach ($printed as $name) {
+            if (! array_key_exists($name, $after)) {
+                continue;
+            }
+
+            if (self::text($before[$name] ?? null) !== self::text($after[$name])) {
+                return $name;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return array{field: string, error: string} */
+    public static function printedRefusal(string $field): array
+    {
+        return [
+            'field' => $field,
+            'error' => sprintf(self::PRINTED_MESSAGE, self::PRINTED_LABELS[$field] ?? 'αυτό το στοιχείο'),
+        ];
+    }
+
+    private static function text(mixed $value): string
+    {
+        return is_scalar($value) ? trim((string) $value) : '';
     }
 
     /** @param array<string, mixed> $contract */

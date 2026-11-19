@@ -44,7 +44,9 @@ use ECRM_RateLimit;
 use ECRM_Validate;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Contract\ExtraFields;
+use EnergyCRM\Domain\Contract\SignedFieldsLock;
 use EnergyCRM\Infrastructure\ExtractionGate;
+use EnergyCRM\Infrastructure\PrintedFields;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\FileRepository;
@@ -61,6 +63,7 @@ final class ExtractionController implements Controller
         private readonly FileRepository $files,
         private readonly CustomerRepository $customers,
         private readonly LeadRepository $leads,
+        private readonly ?PrintedFields $printed = null,
     ) {
     }
 
@@ -442,10 +445,28 @@ final class ExtractionController implements Controller
         $extra      = self::decodeExtra($contract['extra_json'] ?? null);
         $extraDirty = false;
 
+        // (428) Ούτε κενό δεν γεμίζει πια σε ό,τι τυπώνεται σε υπογεγραμμένη
+        // αίτηση (K3, απόφαση ιδιοκτήτη 19/11): θα εμφανιζόταν δίπλα στην
+        // υπογραφή του πελάτη χωρίς να το έχει υπογράψει. Εκτός διαχειριστή.
+        $locked = [];
+
+        if ($this->printed !== null && ! current_user_can('manage_options')) {
+            $locked = $this->printed->onSignedContractsOf($customerId);
+
+            if (SignedFieldsLock::isSigned($contract)) {
+                $own    = $this->printed->ofContract($contractId);
+                $locked = array_merge($locked, $own['columns'], $own['extras']);
+            }
+        }
+
         foreach ($data as $field => $value) {
             $value = is_string($value) ? trim($value) : $value;
 
             if ($value === null || $value === '' || $field === 'customer_type') {
+                continue;
+            }
+
+            if (in_array((string) $field, $locked, true)) {
                 continue;
             }
 

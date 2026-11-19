@@ -18,6 +18,7 @@ use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\SignedFieldsLock;
+use EnergyCRM\Infrastructure\PrintedFields;
 use EnergyCRM\Persistence\ContractQueries;
 use EnergyCRM\Persistence\CustomerEventRepository;
 use EnergyCRM\Persistence\CustomerNoteRepository;
@@ -60,6 +61,7 @@ final class CustomersController implements Controller
         private readonly FileRepository $files,
         private readonly CustomerNoteRepository $notes,
         private readonly CustomerEventRepository $events,
+        private readonly ?PrintedFields $printed = null,
     ) {
     }
 
@@ -437,6 +439,17 @@ final class CustomersController implements Controller
                 'error' => SignedFieldsLock::AFM_MESSAGE,
                 'field' => 'afm',
             ], 422);
+        }
+
+        // (428) Και ό,τι άλλο τυπώνεται σε υπογεγραμμένη αίτησή του (K3,
+        // απόφαση ιδιοκτήτη 19/11): η καρτέλα πελάτη είναι δεύτερη πόρτα προς
+        // το ίδιο υπογεγραμμένο χαρτί.
+        if ($this->printed !== null && ! current_user_can('manage_options')) {
+            $field = SignedFieldsLock::printedChange($before, $data, $this->printed->onSignedContractsOf($customerId));
+
+            if ($field !== null) {
+                return new WP_REST_Response(['ok' => false] + SignedFieldsLock::printedRefusal($field), 422);
+            }
         }
 
         // Προειδοποίηση, όχι εμπόδιο -- απόφαση ιδιοκτήτη (05/09): ο

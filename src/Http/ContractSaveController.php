@@ -35,6 +35,7 @@ use EnergyCRM\Domain\Contract\SignedFieldsLock;
 use EnergyCRM\Domain\Contract\StatusTrack;
 use EnergyCRM\Infrastructure\DocumentQueue;
 use EnergyCRM\Infrastructure\DraftExitGate;
+use EnergyCRM\Infrastructure\PrintedFields;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\RequestKeyRepository;
@@ -52,6 +53,7 @@ final class ContractSaveController implements Controller
         private readonly StatusEntryGate $paperwork,
         private readonly RequestKeyRepository $requestKeys,
         private readonly ProviderVisibility $providerAccess,
+        private readonly ?PrintedFields $printed = null,
     ) {
     }
 
@@ -306,6 +308,16 @@ final class ContractSaveController implements Controller
         $previousCustomer = $customerId > 0 && $customer !== []
             ? $this->customers->find($customerId, $scope)
             : null;
+
+        // (428) Ό,τι τυπώνεται στο υπογεγραμμένο έντυπο δεν αλλάζει (K3,
+        // απόφαση ιδιοκτήτη 19/11), εκτός διαχειριστή. Πριν από κάθε γράψιμο.
+        if (! current_user_can('manage_options')) {
+            $locked = $this->refusePrinted($params, $existing, $contractId, $customerId, $customer, $previousCustomer);
+
+            if ($locked !== null) {
+                return new WP_REST_Response(['ok' => false] + $locked, 422);
+            }
+        }
 
         // (415) Μετά την υπογραφή του πελάτη: πάροχος, πρόγραμμα, είδος, πελάτης
         // και ΑΦΜ κλειδώνουν (εκτός διαχειριστή). Πριν από κάθε γράψιμο.
@@ -708,6 +720,71 @@ final class ContractSaveController implements Controller
         }
 
         return new WP_REST_Response(['ok' => false, 'error' => $refusal, 'field' => 'afm'], 422);
+    }
+
+    /**
+     * (428) Το πρώτο τυπωμένο στοιχείο που αλλάζει μετά την υπογραφή, ή null.
+     *
+     * Δύο ερωτήσεις. Πρώτα ο πελάτης: τα στοιχεία του που τυπώνονται σε
+     * οποιαδήποτε υπογεγραμμένη αίτησή του, ακόμα κι αν αυτή εδώ είναι νέα ή
+     * πρόχειρη (ο πελάτης είναι μία γραμμή, κοινή σε όλες). Μετά η ίδια η
+     * αίτηση, αν έχει υπογραφεί: οι στήλες της και τα extra του εντύπου. Τα
+     * extra φτάνουν εδώ ήδη ενωμένα με τα αποθηκευμένα (ExtraFields::merge()),
+     * οπότε κλειδί που λείπει σημαίνει «σβήνεται».
+     *
+     * @param array<string, mixed>      $params
+     * @param array<string, mixed>|null $existing
+     * @param array<string, string>     $customer
+     * @param array<string, mixed>|null $previousCustomer
+     * @return array{field: string, error: string}|null
+     */
+    private function refusePrinted(
+        array $params,
+        ?array $existing,
+        int $contractId,
+        int $customerId,
+        array $customer,
+        ?array $previousCustomer,
+    ): ?array {
+        if ($this->printed === null) {
+            return null;
+        }
+
+        if ($customerId > 0 && $customer !== [] && $previousCustomer !== null) {
+            $field = SignedFieldsLock::printedChange(
+                $previousCustomer,
+                $customer,
+                $this->printed->onSignedContractsOf($customerId)
+            );
+
+            if ($field !== null) {
+                return SignedFieldsLock::printedRefusal($field);
+            }
+        }
+
+        if ($existing === null || ! SignedFieldsLock::isSigned($existing)) {
+            return null;
+        }
+
+        $printed = $this->printed->ofContract($contractId);
+        $field   = SignedFieldsLock::printedChange(
+            $existing,
+            ContractSaveMapping::contractFrom($params, $customerId, true),
+            $printed['columns']
+        );
+
+        if ($field === null && is_array($params['extra'] ?? null)) {
+            $stored = json_decode((string) ($existing['extra_json'] ?? ''), true);
+            $after  = [];
+
+            foreach ($printed['extras'] as $name) {
+                $after[$name] = $params['extra'][$name] ?? '';
+            }
+
+            $field = SignedFieldsLock::printedChange(is_array($stored) ? $stored : [], $after, $printed['extras']);
+        }
+
+        return $field === null ? null : SignedFieldsLock::printedRefusal($field);
     }
 
     /** (426) Το ίδιο για την εγγύηση της ΔΕΗ: η φόρμα βάζει το μήνυμα στο πεδίο της. */

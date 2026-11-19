@@ -557,6 +557,32 @@ final class ContractQueries
      * κλειδώνει (`SignedFieldsLock`). Χωρίς scope: το ερώτημα είναι για τον
      * πελάτη, όχι για το τι βλέπει ο καλών, και απαντά μόνο ναι/όχι.
      */
+    /**
+     * (428) Οι υπογεγραμμένες αιτήσεις του πελάτη: τα στοιχεία του που
+     * τυπώνονται σε αυτές δεν αλλάζουν πια (K3).
+     *
+     * @return list<int>
+     */
+    public function signedContractIdsOf(int $customerId): array
+    {
+        global $wpdb;
+
+        if ($customerId <= 0) {
+            return [];
+        }
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        $ids = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT id FROM %i WHERE customer_id = %d AND signed_at IS NOT NULL",
+                [$this->table, $customerId]
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return array_values(array_map('intval', (array) $ids));
+    }
+
     public function customerHasSigned(int $customerId): bool
     {
         global $wpdb;

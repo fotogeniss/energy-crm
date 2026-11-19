@@ -71,4 +71,27 @@ final class SignedFieldsLockTest extends TestCase
 
         self::assertNull(SignedFieldsLock::refusal(self::SIGNED, $patch, '', null));
     }
+    /** (428) Τυπωμένα πεδία: αλλαγή, σβήσιμο και γέμισμα κενού μετρούν· η ίδια τιμή όχι. */
+    public function testPrintedFieldsAreStrict(): void
+    {
+        $before  = ['street' => 'Ερμού', 'guarantee' => '120', 'phone' => ''];
+        $printed = ['street', 'guarantee', 'phone'];
+
+        $same = ['street' => ' Ερμού ', 'guarantee' => '120'];
+
+        self::assertNull(SignedFieldsLock::printedChange($before, $same, $printed));
+        self::assertNull(SignedFieldsLock::printedChange($before, ['notes' => 'άλλο'], $printed));
+        self::assertSame('street', SignedFieldsLock::printedChange($before, ['street' => 'Σταδίου'], $printed));
+        self::assertSame('guarantee', SignedFieldsLock::printedChange($before, ['guarantee' => ''], $printed));
+        self::assertSame('phone', SignedFieldsLock::printedChange($before, ['phone' => '2101234567'], $printed));
+    }
+
+    public function testThePrintedRefusalNamesTheField(): void
+    {
+        $refusal = SignedFieldsLock::printedRefusal('street');
+
+        self::assertSame('street', $refusal['field']);
+        self::assertStringContainsString('η διεύθυνση τυπώνεται', $refusal['error']);
+        self::assertStringContainsString('αυτό το στοιχείο', SignedFieldsLock::printedRefusal('kad')['error']);
+    }
 }
