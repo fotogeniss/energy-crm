@@ -46,15 +46,79 @@ namespace EnergyCRM\Infrastructure;
 
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractStatus;
+use EnergyCRM\Domain\Forms\DeiCatalogue;
+use EnergyCRM\Domain\Forms\GreekAmount;
 use EnergyCRM\Persistence\CustomerRepository;
+use EnergyCRM\Persistence\ProviderRepository;
 
 final class DraftExitGate
 {
     /** Shown to the agent, and the same sentence from both endpoints. */
     public const MISSING_AFM = 'Χρειάζεται ΑΦΜ πελάτη για να προχωρήσει η αίτηση πέρα από το πρόχειρο.';
 
-    public function __construct(private readonly CustomerRepository $customers)
+    /**
+     * (426) Η «Αίτηση/Σύμβαση» της ΔΕΗ γράφει την εγγύηση ολογράφως και σε
+     * αριθμό. Ο ιδιοκτήτης (19/11): υποχρεωτική στη ΔΕΗ. Μηδέν είναι ποσό.
+     */
+    public const MISSING_GUARANTEE = 'Η ΔΕΗ ζητά ποσό εγγύησης στην αίτηση (γράψε 0 αν δεν υπάρχει εγγύηση).';
+
+    public function __construct(
+        private readonly CustomerRepository $customers,
+        private readonly ?ProviderRepository $providers = null,
+    ) {
+    }
+
+    /**
+     * (426) Η εγγύηση που ζητά το έντυπο ΔΕΗ, ή null όταν δεν λείπει.
+     *
+     * Μόνο για τα προγράμματα ρεύματος της ΔΕΗ που τυπώνουν την «Αίτηση/
+     * Σύμβαση» (`DeiCatalogue::isPackaged()`). `$extra`: ό,τι θα έχει η
+     * αίτηση μετά την αποθήκευση· αλλιώς ό,τι έχει ήδη (`extra_json`).
+     *
+     * @param array<string, mixed>      $contract `program_id`, `extra_json`, `signed_at`
+     * @param array<string, mixed>|null $extra
+     */
+    public function missingGuarantee(array $contract, ?array $extra = null): ?string
     {
+        $programId = (int) ($contract['program_id'] ?? 0);
+
+        if ($programId <= 0 || $this->providers === null) {
+            return null;
+        }
+
+        $program = $this->providers->programsByIds([$programId])[$programId] ?? null;
+        $code    = (string) ($program['code'] ?? '');
+
+        if ($program === null || ! DeiCatalogue::isPackaged($code, (string) ($contract['signed_at'] ?? ''))) {
+            return null;
+        }
+
+        if ($extra === null) {
+            $stored = json_decode((string) ($contract['extra_json'] ?? ''), true);
+            $extra  = is_array($stored) ? $stored : [];
+        }
+
+        return GreekAmount::cents((string) ($extra['guarantee'] ?? '')) === null ? self::MISSING_GUARANTEE : null;
+    }
+
+    /**
+     * (426) Το ίδιο, μόνο για την έξοδο από το πρόχειρο (ίδιος κανόνας με το ΑΦΜ):
+     * ό,τι έχει ήδη περάσει δεν ξανακρίνεται.
+     *
+     * @param array<string, mixed>      $contract
+     * @param array<string, mixed>|null $extra
+     */
+    public function guaranteeOnMove(
+        ?ContractStatus $from,
+        ContractStatus $target,
+        array $contract,
+        ?array $extra = null,
+    ): ?string {
+        if (($from !== null && $from !== ContractStatus::Draft) || ! $this->guards($target)) {
+            return null;
+        }
+
+        return $this->missingGuarantee($contract, $extra);
     }
 
     /**

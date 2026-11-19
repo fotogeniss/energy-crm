@@ -528,6 +528,13 @@ final class ContractSaveController implements Controller
 
             return $this->refuseMissingAfm(
                 $this->draftExit->refusalOnCreate($target, $customerId, $scope, $afm)
+            ) ?? $this->refuseMissingGuarantee(
+                $this->draftExit->guaranteeOnMove(
+                    null,
+                    $target,
+                    ['program_id' => (int) ($params['program_id'] ?? 0)],
+                    is_array($params['extra'] ?? null) ? $params['extra'] : []
+                )
             );
         }
 
@@ -612,6 +619,19 @@ final class ContractSaveController implements Controller
                 $scope,
                 $afm
             )
+        ) ?? $this->refuseMissingGuarantee(
+            // (426) Ό,τι θα έχει η αίτηση μετά την αποθήκευση: το πρόγραμμα
+            // που στέλνεται, και τα extra ήδη ενωμένα με τα αποθηκευμένα.
+            $this->draftExit->guaranteeOnMove(
+                $source,
+                $target,
+                [
+                    'program_id' => (int) ($params['program_id'] ?? $existing['program_id'] ?? 0),
+                    'signed_at'  => (string) ($existing['signed_at'] ?? ''),
+                    'extra_json' => (string) ($existing['extra_json'] ?? ''),
+                ],
+                is_array($params['extra'] ?? null) ? $params['extra'] : null
+            )
         );
     }
 
@@ -688,6 +708,16 @@ final class ContractSaveController implements Controller
         }
 
         return new WP_REST_Response(['ok' => false, 'error' => $refusal, 'field' => 'afm'], 422);
+    }
+
+    /** (426) Το ίδιο για την εγγύηση της ΔΕΗ: η φόρμα βάζει το μήνυμα στο πεδίο της. */
+    private function refuseMissingGuarantee(?string $refusal): ?WP_REST_Response
+    {
+        if ($refusal === null) {
+            return null;
+        }
+
+        return new WP_REST_Response(['ok' => false, 'error' => $refusal, 'field' => 'guarantee'], 422);
     }
 
     /**

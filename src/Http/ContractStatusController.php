@@ -153,6 +153,13 @@ final class ContractStatusController implements Controller
             return new WP_REST_Response(['ok' => false, 'error' => $missingAfm, 'field' => 'afm'], 422);
         }
 
+        // (426) Η εγγύηση της ΔΕΗ, στην ίδια πόρτα και με τον ίδιο κανόνα.
+        $missingGuarantee = $this->draftExit->guaranteeOnMove($source, $target, $current);
+
+        if ($missingGuarantee !== null) {
+            return new WP_REST_Response(['ok' => false, 'error' => $missingGuarantee, 'field' => 'guarantee'], 422);
+        }
+
         // Documents gate: some statuses may not be entered with paperwork missing.
         if (in_array($target->value, ECRM_Docs::gate_statuses(), true)) {
             $missing = ECRM_Docs::missing_labels(

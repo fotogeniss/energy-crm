@@ -249,7 +249,7 @@ final class Services
 
     public static function draftExitGate(): DraftExitGate
     {
-        return self::$draftExitGate ??= new DraftExitGate(self::customers());
+        return self::$draftExitGate ??= new DraftExitGate(self::customers(), self::providers());
     }
 
     public static function cancellationGate(): CancellationGate

@@ -186,6 +186,7 @@ final class ContractsBulkController implements Controller
         $skipped   = 0;
         $rejected  = [];
         $missingAfm = 0;
+        $missingGuarantee = 0;
 
         foreach ($rows as $row) {
             $id   = (int) $row['id'];
@@ -234,6 +235,21 @@ final class ContractsBulkController implements Controller
                 continue;
             }
 
+            // (426) Η εγγύηση της ΔΕΗ. Οι γραμμές εδώ δεν έχουν πρόγραμμα ούτε
+            // extra, οπότε διαβάζεται η αίτηση -- μόνο για όσες βγαίνουν από
+            // το πρόχειρο, οι υπόλοιπες δεν ξανακρίνονται.
+            if (
+                $source === ContractStatus::Draft
+                && $this->draftExit->guaranteeOnMove(
+                    $source,
+                    $target,
+                    $this->contracts->find($id, $scope) ?? []
+                ) !== null
+            ) {
+                $missingGuarantee++;
+                continue;
+            }
+
             // Ποιος το έκανε, και όχι ποιανού είναι. Το πεδίο κουβαλούσε τον
             // κάτοχο επειδή η ειδοποίηση το χρησιμοποιούσε ως παραλήπτη· τώρα
             // η ειδοποίηση βρίσκει μόνη της τον κάτοχο από τη σύμβαση, οπότε
@@ -266,6 +282,14 @@ final class ContractsBulkController implements Controller
             $response['notice']      = trim(($response['notice'] ?? '') . sprintf(
                 ' %d σύμβαση/εις δεν άλλαξαν: χρειάζονται ΑΦΜ πελάτη για να βγουν από το πρόχειρο.',
                 $missingAfm
+            ));
+        }
+
+        if ($missingGuarantee > 0) {
+            $response['missing_guarantee'] = $missingGuarantee;
+            $response['notice']            = trim(($response['notice'] ?? '') . sprintf(
+                ' %d σύμβαση/εις ΔΕΗ δεν άλλαξαν: χρειάζονται ποσό εγγύησης (ή 0) για να βγουν από το πρόχειρο.',
+                $missingGuarantee
             ));
         }
 

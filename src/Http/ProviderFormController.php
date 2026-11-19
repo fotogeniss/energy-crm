@@ -86,6 +86,7 @@ final class ProviderFormController implements Controller
             return new WP_REST_Response([
                 'ok'          => true,
                 'template'    => '',
+                'requires_guarantee' => false,
                 'fields'      => [],
                 'main_inputs' => [],
                 'positions'   => [],
@@ -97,6 +98,10 @@ final class ProviderFormController implements Controller
         return new WP_REST_Response([
             'ok'       => true,
             'template' => $template,
+
+            // (426) Η «Αίτηση/Σύμβαση» της ΔΕΗ γράφει την εγγύηση: η φόρμα
+            // δεν οριστικοποιεί χωρίς αυτήν (DraftExitGate::MISSING_GUARANTEE).
+            'requires_guarantee' => DeiCatalogue::isPackaged((string) $request['program']),
 
             // (284) Ο φάκελος του παρόχου μέσα στο assets/forms/, για την εικόνα
             // της σελ. 1 στο «Πάνω στο έντυπο». Από εδώ και όχι υπολογισμένος

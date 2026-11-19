@@ -796,7 +796,9 @@ import { openDialog } from '@energy-crm/dialog';
 				if (names.indexOf(n) < 0) names.push(n);
 				labels[n] = d.fields[n].label || '';
 			});
-			printed = { names: names, labels: labels };
+			// (426) Το έντυπο ΔΕΗ ζητά εγγύηση: ο κανόνας ζει στο DeiCatalogue
+			// (DraftExitGate), η απάντηση έρχεται με τα πεδία του εντύπου.
+			printed = { names: names, labels: labels, requiresGuarantee: !!(d && d.requires_guarantee) };
 		}
 
 		function paintProviderFields(card, d) {
@@ -3423,6 +3425,11 @@ import { openDialog } from '@energy-crm/dialog';
 			fieldNote(this, v && !validAfm(v) ? 'Μη έγκυρο ΑΦΜ (έλεγχος ψηφίου).' : '', 'err');
 			checkCustomerMatch();
 		});
+		// (426) Το μήνυμα «γράψε το ποσό» φεύγει μόλις γραφτεί ποσό.
+		var guaranteeInput = root.querySelector('[name="guarantee"]');
+		if (guaranteeInput) guaranteeInput.addEventListener('input', function () {
+			if (/\d/.test(this.value)) fieldNote(this, '', 'err');
+		});
 		var supEl = root.querySelector('[name="supply_number"]');
 		if (supEl) supEl.addEventListener('blur', function () {
 			var d = this.value.replace(/\D+/g, '');
@@ -3595,6 +3602,15 @@ import { openDialog } from '@energy-crm/dialog';
 			if (status === FINAL && afmv && !validAfm(afmv)) {
 				toast('Μη έγκυρο ΑΦΜ — διόρθωσέ το πριν την οριστικοποίηση.', false);
 				fieldNote(afmEl, 'Μη έγκυρο ΑΦΜ (έλεγχος ψηφίου).', 'err');
+				return;
+			}
+			// (426) Εγγύηση ΔΕΗ: υποχρεωτική, το 0 μετράει ως ποσό. Ο server
+			// αρνείται το ίδιο (DraftExitGate::MISSING_GUARANTEE).
+			if (status === FINAL && printed.requiresGuarantee && !/\d/.test(readField('guarantee'))) {
+				var guaranteeEl = root.querySelector('[name="guarantee"]');
+				toast('Η ΔΕΗ ζητά ποσό εγγύησης στην αίτηση.', false);
+				fieldNote(guaranteeEl, 'Γράψε το ποσό της εγγύησης (0 αν δεν υπάρχει).', 'err');
+				if (guaranteeEl) guaranteeEl.focus();
 				return;
 			}
 			// (341) Έλεγχος πριν την αποστολή, μία φορά ανά πάτημα.
