@@ -207,6 +207,7 @@ import { openDialog } from '@energy-crm/dialog';
 		// would never print. Runs off the same code the print pipeline reads
 		// (programsCache[].code -> mobilePricing), so the screen cannot drift
 		// from the paper.
+		var pricingKeptFor = 0; // (429) το πρόγραμμα με το οποίο φορτώθηκε η αίτηση
 		function updateMobilePricing() {
 			var base = root.querySelector('[name="base_price"]');
 			var offer = root.querySelector('[name="offer_price"]');
@@ -216,7 +217,14 @@ import { openDialog } from '@energy-crm/dialog';
 			var program = programsCache.filter(function (p) { return parseInt(p.id, 10) === state.program_id; })[0];
 			var pricing = program && program.code ? mobilePricing[program.code] : null;
 
-			if (!pricing) { base.value = ''; offer.value = ''; after.value = ''; return; }
+			if (!pricing) {
+				// (429) Πρόγραμμα χωρίς τιμοκατάλογο (π.χ. αποσυρμένο): οι τιμές
+				// της αίτησης όπως αποθηκεύτηκαν μένουν. Πριν, σβήνονταν στην
+				// οθόνη και η επόμενη αποθήκευση τις έσβηνε και από το έντυπο
+				// (K7)· μετά το 428, σε υπογεγραμμένη, η αποθήκευση κολλούσε.
+				if (pricingKeptFor && state.program_id === pricingKeptFor && base.getAttribute('data-loaded')) return;
+				base.value = ''; offer.value = ''; after.value = ''; return;
+			}
 
 			var offerSel = root.querySelector('[name="mobile_offer"]');
 			var combined = offerSel && (offerSel.value === 'family' || offerSel.value === 'combo');
@@ -2200,6 +2208,7 @@ import { openDialog } from '@energy-crm/dialog';
 		function applyEdit(c) {
 			if (!c) return;
 			dirty = false;
+			pricingKeptFor = parseInt(c.program_id, 10) || 0;
 			state.contract_id = parseInt(c.id, 10) || 0;
 			state.customer_id = parseInt(c.customer_id, 10) || 0;
 			/* Το «Εξαγωγή με AI» γεννιέται disabled στο markup και το ξεκλειδώνει
@@ -2359,6 +2368,7 @@ import { openDialog } from '@energy-crm/dialog';
 		}
 
 		function resetForm() {
+			pricingKeptFor = 0;
 			dirty = false;
 			state.contract_id = 0; state.customer_id = 0; state.extracted_json = null;
 			state.advice = null;
