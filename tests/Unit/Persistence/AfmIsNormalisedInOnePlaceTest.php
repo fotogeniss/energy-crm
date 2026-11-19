@@ -46,6 +46,10 @@ final class AfmIsNormalisedInOnePlaceTest extends TestCase
             . 'το 5ψήφιο ΤΚ από ελεύθερο κείμενο (CHANGELOG (216)) -- δεν αγγίζει '
             . 'afm_hash ούτε μπαίνει σε blind index.',
 
+        'src/Domain/Customer/PhoneNumber.php' =>
+            '(422) key(): τηλέφωνο, όχι ΑΦΜ. Ο ένας κανόνας σύγκρισης τηλεφώνου για το '
+            . 'phone_hash (K11)· το afm_hash δεν το αγγίζει.',
+
         'src/Domain/Security/BackupCodes.php' =>
             '(406) Εφεδρικοί κωδικοί σύνδεσης σε δύο βήματα, όχι ΑΦΜ: «4821-7730» και '
             . '«48217730» είναι ο ίδιος κωδικός.',

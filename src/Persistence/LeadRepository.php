@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Customer\PhoneNumber;
 
 final class LeadRepository
 {
@@ -68,8 +69,10 @@ final class LeadRepository
 
         if ($term !== '') {
             $like         = '%' . $wpdb->esc_like($term) . '%';
-            $conditions[] = '( name LIKE %s OR phone LIKE %s OR email LIKE %s OR interest LIKE %s )';
-            $params       = [...$params, $like, $like, $like, $like];
+            // (422) Το τηλέφωνο ψηφία με ψηφία (K11).
+            $conditions[] = '( name LIKE %s OR ' . PhoneNumber::sql('phone')
+                . ' LIKE %s OR email LIKE %s OR interest LIKE %s )';
+            $params       = [...$params, $like, CustomerFields::phoneLike($term), $like, $like];
         }
 
         $where = implode(' AND ', $conditions);
