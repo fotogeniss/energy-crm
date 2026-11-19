@@ -68,7 +68,7 @@ function field(label, val) {
 }
 function filesCard(c) {
 	// Η αίτηση/φύλλα/υπογεγραμμένο αντίγραφο δεν έρχονται καν εδώ: ο server τα
-	// κρατά έξω (SystemKind) -- έχουν το δικό τους κουμπί «PDF έντυπο».
+	// κρατά έξω (SystemKind) -- έχουν το δικό τους κουμπί «PDF αίτησης».
 	var files = c.files || [];
 	var kindLabel = c.doc_kinds || { id_card: 'Ταυτότητα', provider_bill: 'Λογαριασμός', other: 'Έγγραφο' };
 
@@ -442,7 +442,7 @@ function renderDetail(view, d) {
 	/* (353h) Τα κουμπιά ενεργειών, μία φορά: τα χρησιμοποιούν και η κλασική
 	   καρτέλα και η «Signature». Ίδια data-* και στις δύο, οπότε η καλωδίωση
 	   πιο κάτω (querySelector μέσα στο view) δεν ξέρει ποια ζωγραφίστηκε. */
-	var printBtnHTML = '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-printform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg> PDF έντυπο</button>';
+	var printBtnHTML = '<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-printform="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 18H5a2 2 0 01-2-2v-4a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2h-2M7 15h10v6H7z"/></svg> PDF αίτησης</button>';
 	var editBtnHTML = '<button type="button" class="ecrm-btn ecrm-btn--primary ecrm-btn--sm" data-detail-edit>' + svgIcon('edit') + ' Επεξεργασία</button>';
 	var signBtnHTML = ( c.status !== 'active' && c.status !== 'cancelled'
 		? '<button type="button" class="ecrm-btn ecrm-btn--primary" data-sign="' + c.id + '"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M4 16l9-9 3 3-9 9H4z"/><path d="M13 5l3 3"/></svg> Στείλε για υπογραφή</button>'
@@ -521,9 +521,12 @@ function renderDetail(view, d) {
 				'<span class="sig-dh__av" style="--h:' + tint(name) + '">' + esc(initials(name)) + '</span>' +
 				'<div class="sig-dh__who"><h2>' + esc(name) + '</h2><small>' + esc(sub) +
 					(c.consent_at ? ' <span class="sig-dh__gdpr" title="Συναίνεση: ' + esc(fmtDate(c.consent_at)) + '">✓ GDPR</span>' : '') + '</small></div>' +
-				'<div class="sig-dh__acts">' + signBtnHTML + editBtnHTML + companionSlot +
+				// (425) Το «PDF αίτησης» φανερό, δίπλα στο «Επεξεργασία» (ιδιοκτήτης
+				// 19/11: «η εκτύπωση δεν υπάρχει πουθενά» -- ήταν κρυμμένη στο «⋯»).
+				// Μακέτα εγκρίθηκε την ίδια μέρα.
+				'<div class="sig-dh__acts">' + signBtnHTML + printBtnHTML + editBtnHTML + companionSlot +
 					'<details class="sig-dh__more" data-dh-more><summary aria-label="Περισσότερες ενέργειες">⋯</summary>' +
-					'<div class="sig-dh__menu">' + printBtnHTML + provBtnHTML + trackBtnHTML + taskBtnHTML + delBtnHTML + '</div></details>' +
+					'<div class="sig-dh__menu">' + provBtnHTML + trackBtnHTML + taskBtnHTML + delBtnHTML + '</div></details>' +
 				'</div>' +
 			'</header>' +
 			stageHTML +
