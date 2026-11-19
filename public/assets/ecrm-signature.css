@@ -1056,8 +1056,22 @@
 	.ecrm-app[data-ui="signature"] .sig-dh__av { width: 56px; height: 56px; border-radius: 18px; font-size: var(--fs-18); }
 	.ecrm-app[data-ui="signature"] .sig-dh__who h2 { font-size: var(--fs-28); }
 	.ecrm-app[data-ui="signature"] .sig-dh__who small { font-size: var(--fs-13); }
-	.ecrm-app[data-ui="signature"] .sig-dh__acts { grid-column: 1 / -1; justify-content: flex-start; }
-	.ecrm-app[data-ui="signature"] .sig-dh__acts > [data-sign] { flex: 1 1 100%; justify-content: center; }
+	/* (427) Στοίχιση στο κινητό (μακέτα εγκρίθηκε 19/11): avatar στο ύψος
+	 * του ονόματος, «✓ GDPR» στην αρχή της γραμμής του, κουμπιά σε σειρές
+	 * ίδιου ύψους -- υπογραφή όλο το πλάτος, PDF/Επεξεργασία μισά-μισά,
+	 * «+ Αέριο» ως το «⋯». */
+	.ecrm-app[data-ui="signature"] .sig-dh { align-items: start; }
+	.ecrm-app[data-ui="signature"] .sig-dh__gdpr { display: table; margin: 8px 0 0; }
+	.ecrm-app[data-ui="signature"] .sig-dh__acts { grid-column: 1 / -1; justify-content: flex-start; align-items: stretch; }
+	.ecrm-app[data-ui="signature"] .sig-dh__acts > .ecrm-btn,
+	.ecrm-app[data-ui="signature"] .sig-dh__acts [data-companion-slot] > * { min-height: 48px; justify-content: center; }
+	.ecrm-app[data-ui="signature"] .sig-dh__acts > [data-sign] { flex: 1 1 100%; }
+	.ecrm-app[data-ui="signature"] .sig-dh__acts > [data-printform],
+	.ecrm-app[data-ui="signature"] .sig-dh__acts > [data-detail-edit] { flex: 1 1 calc(50% - 4px); min-width: 0; }
+	.ecrm-app[data-ui="signature"] .sig-dh__acts [data-companion-slot] { flex: 1 1 calc(100% - 56px); min-width: 0; display: flex; }
+	.ecrm-app[data-ui="signature"] .sig-dh__acts [data-companion-slot] > * { flex: 1 1 auto; min-width: 0; }
+	.ecrm-app[data-ui="signature"] .sig-dh__more { flex: 0 0 48px; }
+	.ecrm-app[data-ui="signature"] .sig-dh__more > summary { width: 48px; height: 48px; }
 	.ecrm-app[data-ui="signature"] .sig-stage { display: flex; overflow-x: auto; scrollbar-width: none; margin-right: -14px; padding-right: 14px; }
 	.ecrm-app[data-ui="signature"] .sig-stage::-webkit-scrollbar { display: none; }
 	.ecrm-app[data-ui="signature"] .sig-stage__s { flex: 0 0 132px; }

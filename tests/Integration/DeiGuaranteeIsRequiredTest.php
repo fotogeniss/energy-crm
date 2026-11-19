@@ -108,10 +108,45 @@ final class DeiGuaranteeIsRequiredTest extends IntegrationTestCase
 
             $response = $this->save(['contract_id' => $contractId, 'status' => ContractStatus::Presale->value]);
 
-            $error    = (string) ($response->get_data()['error'] ?? '');
+            $error = (string) ($response->get_data()['error'] ?? '');
 
             self::assertSame(200, $response->get_status(), $code . ': ' . $error);
         }
+    }
+
+    /** Η αποστολή για υπογραφή ρωτά το ίδιο: ο πελάτης θα υπέγραφε κενό κουτί. */
+    public function testTheSignLinkIsNotSentWithoutAGuarantee(): void
+    {
+        $contractId = $this->makeDraft($this->program('dei_myhome_entertwo'), []);
+
+        $response = $this->signLink($contractId, false);
+
+        self::assertSame(422, $response->get_status());
+        self::assertSame(DraftExitGate::MISSING_GUARANTEE, $response->get_data()['error'] ?? null);
+        self::assertSame(ContractStatus::Draft->value, $this->statusOf($contractId));
+    }
+
+    /**
+     * (427) Παλιά υπογεγραμμένη (πριν από το νέο πακέτο) που ξαναστέλνεται: το
+     * `signed_at` σβήνεται και τυπώνεται το νέο έντυπο, άρα θέλει εγγύηση.
+     * Ως το 427 ο έλεγχος κοίταζε την παλιά ημερομηνία και την άφηνε να περάσει.
+     */
+    public function testAnOldSignedContractSentAgainNeedsTheGuarantee(): void
+    {
+        global $wpdb;
+
+        $contractId = $this->makeDraft($this->program('dei_myhome_entertwo'), []);
+        $wpdb->update(
+            Tables::name(Tables::CONTRACTS),
+            ['status' => ContractStatus::Registration->value, 'signed_at' => '2026-11-02 10:00:00'],
+            ['id' => $contractId]
+        );
+
+        $response = $this->signLink($contractId, true);
+
+        self::assertSame(422, $response->get_status());
+        self::assertSame(DraftExitGate::MISSING_GUARANTEE, $response->get_data()['error'] ?? null);
+        self::assertSame('2026-11-02 10:00:00', (string) $this->storedRow('contracts', $contractId)['signed_at']);
     }
 
     // --- fixtures and helpers ------------------------------------------------
@@ -172,6 +207,14 @@ final class DeiGuaranteeIsRequiredTest extends IntegrationTestCase
     {
         $request = new WP_REST_Request('POST', self::ROUTE);
         $request->set_body_params($params);
+
+        return rest_do_request($request);
+    }
+
+    private function signLink(int $contractId, bool $confirmResend): WP_REST_Response
+    {
+        $request = new WP_REST_Request('POST', self::ROUTE . '/' . $contractId . '/sign-link');
+        $request->set_param('confirm_resend', $confirmResend);
 
         return rest_do_request($request);
     }

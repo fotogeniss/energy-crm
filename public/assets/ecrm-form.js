@@ -3596,12 +3596,15 @@ import { openDialog } from '@energy-crm/dialog';
 			if (status === FINAL && !afmv) {
 				toast('Χρειάζεται ΑΦΜ πελάτη για την οριστικοποίηση.', false);
 				fieldNote(afmEl, 'Συμπλήρωσε το ΑΦΜ του πελάτη.', 'err');
-				if (afmEl) afmEl.focus();
+				// (427) Το ΑΦΜ είναι στο βήμα 3, η «Οριστικοποίηση» στο 4:
+				// σκέτο focus() σε κρυμμένο βήμα δεν δείχνει τίποτα.
+				if (afmEl) goToField(afmEl);
 				return;
 			}
 			if (status === FINAL && afmv && !validAfm(afmv)) {
 				toast('Μη έγκυρο ΑΦΜ — διόρθωσέ το πριν την οριστικοποίηση.', false);
 				fieldNote(afmEl, 'Μη έγκυρο ΑΦΜ (έλεγχος ψηφίου).', 'err');
+				if (afmEl) goToField(afmEl);
 				return;
 			}
 			// (426) Εγγύηση ΔΕΗ: υποχρεωτική, το 0 μετράει ως ποσό. Ο server
@@ -3610,7 +3613,7 @@ import { openDialog } from '@energy-crm/dialog';
 				var guaranteeEl = root.querySelector('[name="guarantee"]');
 				toast('Η ΔΕΗ ζητά ποσό εγγύησης στην αίτηση.', false);
 				fieldNote(guaranteeEl, 'Γράψε το ποσό της εγγύησης (0 αν δεν υπάρχει).', 'err');
-				if (guaranteeEl) guaranteeEl.focus();
+				if (guaranteeEl) goToField(guaranteeEl);
 				return;
 			}
 			// (341) Έλεγχος πριν την αποστολή, μία φορά ανά πάτημα.
@@ -3717,7 +3720,14 @@ import { openDialog } from '@energy-crm/dialog';
 						// buttons on screen has to move with it.
 						setStage(status || state.status);
 						uploadFiles();
-					} else { toast((d && d.error) || 'Η αποθήκευση απέτυχε.', false); }
+					} else {
+						toast((d && d.error) || 'Η αποθήκευση απέτυχε.', false);
+						// (427) Ο server λέει ποιο πεδίο φταίει (ΑΦΜ, email,
+						// εγγύηση ΔΕΗ): το μήνυμα πάει κάτω από αυτό, και η φόρμα
+						// πηγαίνει στο βήμα του.
+						var badEl = d && d.field ? root.querySelector('[name="' + d.field + '"]') : null;
+						if (badEl && badEl.type !== 'hidden' && d.error) { fieldNote(badEl, d.error, 'err'); goToField(badEl); }
+					}
 				})
 				.catch(function () { return queueSave(payload); })
 				.finally(function () { btn.disabled = false; });

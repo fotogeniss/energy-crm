@@ -154,7 +154,11 @@ final class SignLinkController implements Controller
         // (426) Ο πελάτης υπογράφει το έντυπο της ΔΕΗ όπως τυπώνεται: χωρίς
         // ποσό εγγύησης θα υπέγραφε κενό κουτί. Σε κάθε κατάσταση, όχι μόνο
         // στο πρόχειρο, γιατί εδώ φτιάχνεται το χαρτί που υπογράφεται.
-        $missingGuarantee = $this->draftExit->missingGuarantee($contract);
+        //
+        // (427) Χωρίς το `signed_at`: ό,τι στέλνεται τώρα για υπογραφή τυπώνεται
+        // στο έντυπο του σήμερα (K1). Μια παλιά υπογεγραμμένη που ξαναστέλνεται
+        // χάνει το `signed_at` παρακάτω και τυπώνει το νέο πακέτο, με την εγγύηση.
+        $missingGuarantee = $this->draftExit->missingGuarantee(['signed_at' => ''] + $contract);
 
         if ($missingGuarantee !== null) {
             return new WP_REST_Response(['ok' => false, 'error' => $missingGuarantee, 'field' => 'guarantee'], 422);
