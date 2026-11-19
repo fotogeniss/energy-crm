@@ -862,14 +862,19 @@ import { openDialog } from '@energy-crm/dialog';
 		// οπότε μένει εκτός mockup, όχι μαντεψιά.
 		var docOverlayBuilt = null; // template key που είναι ήδη χτισμένο, ή null
 		var docSlots = []; // [{ input, target }]
+		// (423) Τα σημεία του εντύπου με σειρά ανάγνωσης (σελίδα, ύψος, θέση),
+		// για το «Επόμενο» του κινητού: [{ wrap, names, targets, label }].
+		var docSpots = [];
 
 		// (317) Ανοίγει και σε Volton και Orizon (ζητήθηκε 15/10: «είναι πολύ
-		// χρήσιμο, μου λένε οι χρήστες»). Οι υπόλοιποι πάροχοι μένουν κλειστοί
-		// μέχρι να ελεγχθούν τα έντυπά τους ένα-ένα.
-		var DOC_OVERLAY_PROVIDERS = /^(protergia|volton|orizon)_/;
-
+		// χρήσιμο, μου λένε οι χρήστες»).
+		// (423) Σε ΟΛΑ τα έντυπα (ιδιοκτήτης 19/11: «όλες οι αιτήσεις πάνω στη
+		// φόρμα, όχι μόνο αυτά που έχεις κάνει»): ΔΕΗ, NRG, Enerwave, Elpedison,
+		// Zenith. Οι θέσεις είναι οι ίδιες με της εκτύπωσης (ECRM_FormFill), που
+		// ήδη τυπώνει σωστά σε αυτά. Έντυπο χωρίς ούτε ένα κουτί που να γράφει
+		// κείμενο δεν δείχνει τον διακόπτη (refreshDocOverlay).
 		function docOverlaySupported(d) {
-			return !!(d && DOC_OVERLAY_PROVIDERS.test(d.template || '') && d.positions
+			return !!(d && d.template && d.positions
 				&& d.positions.fields && Object.keys(d.positions.fields).length && d.positions.pageSize);
 		}
 
@@ -987,7 +992,7 @@ import { openDialog } from '@energy-crm/dialog';
 			root.querySelectorAll('.ecrm-docsw__tab').forEach(function (t) {
 				t.classList.toggle('is-on', t.getAttribute('data-docview') === view);
 			});
-			if (view === 'doc') { syncDocOverlayValues(); docFit(); }
+			if (view === 'doc') { syncDocOverlayValues(); docFit(); } else { docSheetClose(); }
 		}
 
 		root.querySelectorAll('.ecrm-docsw__tab').forEach(function (tab) {
@@ -1001,6 +1006,8 @@ import { openDialog } from '@energy-crm/dialog';
 
 			pagesEl.innerHTML = '';
 			docSlots = [];
+			docSpots = [];
+			docSheetClose();
 			if (hint) {
 				if (!hint.getAttribute('data-def')) hint.setAttribute('data-def', hint.textContent);
 				hint.textContent = hint.getAttribute('data-def');
@@ -1112,6 +1119,23 @@ import { openDialog } from '@energy-crm/dialog';
 
 				pageBox(spot.page).appendChild(wrap);
 				placed.push({ page: spot.page, x: spot.x, y: spot.y, wrap: wrap, names: names });
+
+				// (423) Στο κινητό το κουτί δεν γράφεται επί τόπου (θα ήταν 5 px):
+				// το πάτημα ανοίγει το πάνελ στο κάτω μέρος.
+				var entry = {
+					page: spot.page, x: spot.x, y: spot.y, wrap: wrap, names: names, targets: targets,
+					label: tag.textContent,
+					labels: names.map(function (n) { return docOverlayInputLabel(n, d); }),
+					onForm: names.length === 1 && d.fields && d.fields[names[0]] ? (d.fields[names[0]].onForm || '') : ''
+				};
+				docSpots.push(entry);
+				wrap.addEventListener('click', function () {
+					if (docCompact) docSheetOpen(docSpots.indexOf(entry));
+				});
+			});
+
+			docSpots.sort(function (a, b) {
+				return (a.page - b.page) || (Math.abs(a.y - b.y) < 1.5 ? a.x - b.x : a.y - b.y);
 			});
 
 			// Πλάτος κάθε κουτιού: ως το επόμενο κουτί της ίδιας γραμμής του
@@ -1164,17 +1188,42 @@ import { openDialog } from '@energy-crm/dialog';
 			docFit();
 		}
 
-		// Η κλίμακα του εντύπου: όσο χωράει η στήλη, ποτέ πάνω από 1. Κάτω
-		// από DOC_MIN δεν μικραίνει άλλο (θα γινόταν αδύνατο να γράψεις)· η
-		// σελίδα τότε κυλά οριζόντια (CSS: .ecrm-docpages overflow-x).
+		// Η κλίμακα του εντύπου: όσο χωράει η στήλη, ποτέ πάνω από 1.
+		// (423) Κάτω από DOC_MIN (κινητό) η σελίδα ΔΕΝ κυλά πια οριζόντια: χωράει
+		// ολόκληρη στην οθόνη και τα κουτιά γίνονται πλαίσια που ανοίγουν το
+		// πάνελ στο κάτω μέρος (docCompact). Ως τότε σταματούσε στο 70%, ξεπερνούσε
+		// την οθόνη και τα κουτιά έμεναν έξω δεξιά (screenshot ιδιοκτήτη 19/11,
+		// Orizon κινητής). Από DOC_MIN και πάνω όλα όπως πριν.
 		var DOC_W = 760, DOC_MIN = 0.7;
+		var docCompact = false;
 		function docFit() {
 			var pagesEl = root.querySelector('[data-docoverlay-pages]');
 			var sec = root.querySelector('[data-doc-overlay]');
 			if (!pagesEl || !sec || sec.hidden) return;
+			// (423) Το διαθέσιμο πλάτος μετριέται με τις σελίδες ΜΑΖΕΜΕΝΕΣ. Αλλιώς
+			// η στήλη (flex, min-width:auto) φούσκωνε στο πλάτος του ίδιου του
+			// χαρτιού (760 px), η μέτρηση έβγαζε 760 και η κλίμακα έμενε 1: στο
+			// κινητό το έντυπο έβγαινε σε πλήρες μέγεθος έξω από την οθόνη.
+			var scales = pagesEl.querySelectorAll('.ecrm-docscale');
+			var before = [];
+			scales.forEach(function (sc) { before.push(sc.style.width); sc.style.width = '0px'; });
 			var avail = pagesEl.clientWidth;
-			if (!avail) return;
-			var k = Math.max(DOC_MIN, Math.min(1, avail / DOC_W));
+			if (!avail) {
+				scales.forEach(function (sc, i) { sc.style.width = before[i]; });
+				return;
+			}
+			var k = Math.min(1, avail / DOC_W);
+			var compact = k < DOC_MIN;
+			if (compact !== docCompact) {
+				docCompact = compact;
+				sec.classList.toggle('is-compact', compact);
+				docSlots.forEach(function (sl) {
+					sl.input.readOnly = compact;
+					sl.input.tabIndex = compact ? -1 : 0;
+				});
+				if (!compact) docSheetClose();
+			}
+			docProgress();
 			pagesEl.querySelectorAll('.ecrm-docscale').forEach(function (sc) {
 				var box = sc.firstChild;
 				var ratio = 297 / 210;
@@ -1191,6 +1240,139 @@ import { openDialog } from '@energy-crm/dialog';
 			docSlots.forEach(function (s) {
 				if (document.activeElement !== s.input) s.input.value = s.target.value || '';
 			});
+			docProgress();
+		}
+
+		// ── (423) «Πάνω στο έντυπο» στο κινητό ───────────────────────────
+		// Εγκρίθηκε πάνω σε μακέτα 19/11 (NRG, 390 px). Ολόκληρη η σελίδα στην
+		// οθόνη, κάθε σημείο ένα πλαίσιο, πάτημα → πάνελ κάτω με μεγάλο πεδίο,
+		// «‹», «Επόμενο › …», «Τέλος». Το πάνελ γράφει στο ΠΡΑΓΜΑΤΙΚΟ
+		// .ecrm-input (ίδιο event 'input'), όπως και τα κουτιά: τίποτα δεν
+		// κρατά δική του τιμή.
+		function docSpotFilled(sp) {
+			return sp.targets.every(function (t) { return (t.value || '').trim() !== ''; });
+		}
+
+		function docProgress() {
+			var sec = root.querySelector('[data-doc-overlay]');
+			if (!sec) return;
+			var bar = sec.querySelector('[data-docprog]');
+			if (!bar) {
+				bar = document.createElement('div');
+				bar.className = 'ecrm-docprog';
+				bar.setAttribute('data-docprog', '');
+				bar.innerHTML = '<div class="ecrm-docprog__row"><span class="ecrm-docprog__t"></span>'
+					+ '<span class="ecrm-docprog__n"></span></div><div class="ecrm-docprog__bar"><i></i></div>';
+				var pagesEl = sec.querySelector('[data-docoverlay-pages]');
+				if (pagesEl) sec.insertBefore(bar, pagesEl);
+			}
+			var done = 0;
+			docSpots.forEach(function (sp) {
+				var f = docSpotFilled(sp);
+				sp.wrap.classList.toggle('is-filled', f);
+				if (f) done++;
+			});
+			var name = providerName();
+			bar.querySelector('.ecrm-docprog__t').textContent = (name ? name + ' · ' : '') + 'πατήστε ένα πλαίσιο';
+			bar.querySelector('.ecrm-docprog__n').textContent = done + ' από ' + docSpots.length + ' συμπληρωμένα';
+			bar.querySelector('.ecrm-docprog__bar i').style.width = (docSpots.length ? Math.round(done / docSpots.length * 100) : 0) + '%';
+		}
+
+		var docSheet = null, docSheetAt = -1;
+
+		function docSheetEl() {
+			if (docSheet) return docSheet;
+			docSheet = document.createElement('div');
+			docSheet.className = 'ecrm-docsheet';
+			docSheet.hidden = true;
+			docSheet.setAttribute('role', 'dialog');
+			docSheet.setAttribute('aria-label', 'Συμπλήρωση σημείου του εντύπου');
+			docSheet.innerHTML = '<div class="ecrm-docsheet__h"><span class="ecrm-docsheet__l"></span>'
+				+ '<span class="ecrm-docsheet__c"></span></div><div class="ecrm-docsheet__s"></div>'
+				+ '<div class="ecrm-docsheet__ins"></div><div class="ecrm-docsheet__btns">'
+				+ '<button type="button" class="ecrm-docsheet__prev" aria-label="Προηγούμενο">‹</button>'
+				+ '<button type="button" class="ecrm-docsheet__next"></button>'
+				+ '<button type="button" class="ecrm-docsheet__done">Τέλος</button></div>';
+			root.appendChild(docSheet);
+			docSheet.querySelector('.ecrm-docsheet__prev').addEventListener('click', function () { docSheetOpen(docSheetAt - 1); });
+			docSheet.querySelector('.ecrm-docsheet__next').addEventListener('click', function () { docSheetOpen(docSheetAt + 1); });
+			docSheet.querySelector('.ecrm-docsheet__done').addEventListener('click', docSheetClose);
+			// Το πληκτρολόγιο του κινητού μικραίνει το ορατό κομμάτι της σελίδας:
+			// το πάνελ μένει πάνω του, όχι από κάτω του.
+			if (window.visualViewport) {
+				var lift = function () {
+					var vv = window.visualViewport;
+					docSheet.style.bottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop) + 'px';
+				};
+				window.visualViewport.addEventListener('resize', lift);
+				window.visualViewport.addEventListener('scroll', lift);
+			}
+			return docSheet;
+		}
+
+		function docSheetOpen(i) {
+			if (i < 0 || i >= docSpots.length) return;
+			var sp = docSpots[i], el = docSheetEl();
+			if (docSheetAt >= 0 && docSpots[docSheetAt]) docSpots[docSheetAt].wrap.classList.remove('is-active');
+			docSheetAt = i;
+			sp.wrap.classList.add('is-active');
+
+			el.querySelector('.ecrm-docsheet__l').textContent = sp.label;
+			el.querySelector('.ecrm-docsheet__c').textContent = (i + 1) + ' / ' + docSpots.length;
+			var sub = el.querySelector('.ecrm-docsheet__s');
+			sub.textContent = sp.onForm ? 'Στο έντυπο: «' + sp.onForm + '»' : '';
+			sub.hidden = !sp.onForm;
+
+			var ins = el.querySelector('.ecrm-docsheet__ins');
+			ins.innerHTML = '';
+			sp.targets.forEach(function (target, k) {
+				var input = document.createElement('input');
+				var ttype = (target.getAttribute('type') || 'text').toLowerCase();
+				input.type = (ttype === 'date' || ttype === 'number' || ttype === 'email' || ttype === 'tel') ? ttype : 'text';
+				var im = target.getAttribute('inputmode');
+				if (im) input.setAttribute('inputmode', im);
+				input.className = 'ecrm-docsheet__i';
+				input.value = target.value || '';
+				input.placeholder = sp.names.length > 1 ? sp.labels[k] : sp.label;
+				input.setAttribute('aria-label', input.placeholder);
+				input.setAttribute('enterkeyhint', i + 1 < docSpots.length ? 'next' : 'done');
+				input.addEventListener('input', function () {
+					target.value = input.value;
+					target.dispatchEvent(new Event('input', { bubbles: true }));
+					docProgress();
+				});
+				input.addEventListener('change', function () {
+					target.dispatchEvent(new Event('change', { bubbles: true }));
+				});
+				input.addEventListener('keydown', function (e) {
+					if (e.key !== 'Enter') return;
+					e.preventDefault();
+					if (k + 1 < sp.targets.length) { ins.children[k + 1].focus(); return; }
+					if (i + 1 < docSpots.length) docSheetOpen(i + 1); else docSheetClose();
+				});
+				ins.appendChild(input);
+			});
+
+			el.querySelector('.ecrm-docsheet__prev').disabled = i === 0;
+			var next = el.querySelector('.ecrm-docsheet__next');
+			next.hidden = i + 1 >= docSpots.length;
+			next.textContent = next.hidden ? '' : 'Επόμενο › ' + docSpots[i + 1].label;
+
+			el.hidden = false;
+			// Το πλαίσιο στο πάνω τρίτο της οθόνης, πάνω από το πάνελ.
+			var r = sp.wrap.getBoundingClientRect();
+			window.scrollTo({ top: window.pageYOffset + r.top - window.innerHeight * 0.3, behavior: 'smooth' });
+			var first = ins.querySelector('input');
+			if (first) first.focus({ preventScroll: true });
+		}
+
+		function docSheetClose() {
+			if (docSheetAt >= 0 && docSpots[docSheetAt]) docSpots[docSheetAt].wrap.classList.remove('is-active');
+			docSheetAt = -1;
+			if (!docSheet || docSheet.hidden) return;
+			var a = document.activeElement;
+			if (a && docSheet.contains(a)) a.blur();
+			docSheet.hidden = true;
 		}
 
 		// Ζωντανή αλλαγή οπουδήποτε (πληκτρολόγηση στην κλασική φόρμα,
@@ -1227,6 +1409,13 @@ import { openDialog } from '@energy-crm/dialog';
 				docOverlayBuilt = builtKey;
 			} else {
 				syncDocOverlayValues();
+			}
+
+			// (423) Κανένα κουτί δεν μπήκε (π.χ. έντυπο μόνο με κουκκίδες
+			// επιλογής): ο διακόπτης θα άνοιγε άδειο χαρτί.
+			if (!docSpots.length) {
+				sw.hidden = true;
+				docShowView('classic');
 			}
 		}
 

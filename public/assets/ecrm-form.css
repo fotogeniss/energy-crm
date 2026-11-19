@@ -1259,8 +1259,8 @@
 .ecrm-docbox[hidden], .ecrm-docpage[hidden] { display: none; }
 /* Το έντυπο στήνεται σε 760px και κλιμακώνεται ολόκληρο από τη JS (docFit):
  * το .ecrm-docscale κρατά το ΠΡΑΓΜΑΤΙΚΟ μέγεθος μετά την κλίμακα, ώστε η
- * σελίδα να πιάνει σωστό χώρο. Κάτω από ένα όριο δεν μικραίνει άλλο και
- * κυλά οριζόντια (κινητό), αντί τα κουτιά να γίνουν αδύνατα στο γράψιμο. */
+ * σελίδα να πιάνει σωστό χώρο. (423) Στο κινητό χωράει ολόκληρη (.is-compact
+ * παρακάτω)· το overflow-x μένει μόνο ως δίχτυ ασφαλείας. */
 .ecrm-docpages { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .ecrm-docscale { position: relative; margin: 0 auto; }
 .ecrm-docscale > .ecrm-docbox { max-width: none; margin: 0; transform-origin: 0 0; }
@@ -1298,6 +1298,65 @@
 /* Το πρώτο παιδί είναι το .ecrm-docfld__tag, οπότε το :first-child δεν
  * έπιανε ποτέ το πρώτο input (317)· το «+» το πιάνει. */
 .ecrm-docfld--multi .ecrm-docfld__i { min-width: 0; width: auto; flex: 1 1 0; }
+
+/* (423) «Πάνω στο έντυπο» στο κινητό (μακέτα εγκρίθηκε 19/11). Η JS βάζει
+ * .is-compact όταν η σελίδα πρέπει να μικρύνει κάτω από 70% για να χωρέσει:
+ * ολόκληρη στην οθόνη, κάθε σημείο πλαίσιο που ανοίγει το πάνελ από κάτω.
+ * Πάνω από 70% (υπολογιστής, tablet) δεν αλλάζει τίποτα. */
+/* Η κάρτα δεν φουσκώνει από το πλάτος του χαρτιού μέσα της (flex γονείς). */
+.ecrm-docoverlay { min-width: 0; max-width: 100%; }
+.ecrm-docprog { display: none; margin-bottom: 10px; }
+.ecrm-docoverlay.is-compact .ecrm-docprog { display: block; }
+.ecrm-docprog__row { display: flex; justify-content: space-between; gap: 10px; font-size: var(--fs-12); color: var(--muted); margin-bottom: 6px; }
+.ecrm-docprog__n { white-space: nowrap; }
+.ecrm-docprog__bar { height: 4px; border-radius: 2px; background: var(--surface-track); overflow: hidden; }
+.ecrm-docprog__bar i { display: block; height: 100%; width: 0; background: var(--accent-hover); border-radius: 2px; }
+.ecrm-docoverlay.is-compact .ecrm-docfld { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* Μέσα στο χαρτί που έχει μικρύνει ~0,45: πάχη ×2 για να φαίνονται ~1 px. */
+.ecrm-docoverlay.is-compact .ecrm-docfld__i {
+	pointer-events: none; border-width: 2px; border-color: var(--p300); background: var(--accent-wash);
+}
+.ecrm-docoverlay.is-compact .ecrm-docfld.is-filled .ecrm-docfld__i { background: var(--accent-wash-2); border-color: var(--accent-hover); }
+.ecrm-docoverlay.is-compact .ecrm-docfld.is-active .ecrm-docfld__i {
+	background: var(--surface); border: 3px solid var(--accent-deep); box-shadow: 0 0 0 8px rgba(18, 164, 19, .25);
+}
+.ecrm-docoverlay.is-compact .ecrm-docfld__tag { display: none; }
+
+.ecrm-docsheet {
+	position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--surface);
+	border-radius: 16px 16px 0 0; box-shadow: 0 -8px 24px -8px rgba(0, 0, 0, .25);
+	padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.ecrm-docsheet[hidden] { display: none; }
+.ecrm-docsheet__h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ecrm-docsheet__l { font-size: var(--fs-15); font-weight: 800; color: var(--ink); }
+.ecrm-docsheet__c { font-size: var(--fs-12); color: var(--muted); white-space: nowrap; }
+.ecrm-docsheet__s { font-size: var(--fs-11-5); color: var(--muted); margin-top: 2px; }
+.ecrm-docsheet__s[hidden] { display: none; }
+.ecrm-docsheet__ins { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+/* 17 px: κάτω από 16 το iPhone κάνει μόνο του zoom στη σελίδα. */
+.ecrm-docsheet__i {
+	box-sizing: border-box; width: 100%; height: 48px; padding: 0 12px; font-family: inherit; font-size: var(--fs-17);
+	font-weight: 700; color: var(--ink); background: var(--surface); border: 1.5px solid var(--accent-hover);
+	border-radius: 10px; outline: none;
+}
+.ecrm-docsheet__i:focus { box-shadow: 0 0 0 3px var(--accent-wash); }
+.ecrm-docsheet__i::placeholder { color: var(--muted); font-weight: 400; }
+.ecrm-docsheet__btns { display: flex; gap: 8px; margin-top: 12px; }
+.ecrm-docsheet__btns button {
+	height: 44px; border-radius: 10px; font-family: inherit; font-size: var(--fs-14); font-weight: 800;
+	cursor: pointer; -webkit-tap-highlight-color: transparent; border: none;
+}
+.ecrm-docsheet__prev { flex: 0 0 64px; background: var(--surface-sunk); color: var(--ink); font-size: var(--fs-22) !important; }
+.ecrm-docsheet__prev:disabled { opacity: .4; cursor: default; }
+.ecrm-docsheet__next {
+	/* Ίδιο χρώμα με το κύριο κουμπί της φόρμας (.ecrm-btn--primary). */
+	flex: 1 1 auto; min-width: 0; background: var(--amber); color: var(--on-accent);
+	white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 12px;
+}
+.ecrm-docsheet__next[hidden] { display: none; }
+.ecrm-docsheet__done { flex: 0 0 76px; background: var(--surface); color: var(--ink); border: 1px solid var(--line-mid) !important; }
+.ecrm-docsheet__done:only-child, .ecrm-docsheet__next[hidden] + .ecrm-docsheet__done { flex: 1 1 auto; }
 .ecrm-docfld--multi .ecrm-docfld__tag + .ecrm-docfld__i { flex: 2 1 0; }
 
 /* (289) Σειρά που την κρύβει ο πάροχος (π.χ. «Τιμολόγιο» στην Protergia).
