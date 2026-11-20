@@ -55,6 +55,12 @@ final class PowerGuarantee
 
     private const KOT = 40;
 
+    /** Ίδιος χρήστης: οι πίνακες με διακανονισμό και η Καθολική Υπηρεσία έχουν άλλα ποσά. */
+    private const NOTE_SAME = ' · σε διακανονισμό πάνω από 400 € ή Καθολική Υπηρεσία ισχύει άλλο ποσό';
+
+    /** Νέος χρήστης: μόνο η Καθολική Υπηρεσία (προκαταβολή) έχει άλλο ποσό. */
+    private const NOTE_UNIVERSAL = ' · σε Καθολική Υπηρεσία ισχύει άλλο ποσό (προκαταβολή)';
+
     /** Μένουν στον ίδιο πάροχο, με την εγγύηση που ήδη έχουν. */
     private const NO_TABLE = ['renewal', 'program_change'];
 
@@ -100,23 +106,26 @@ final class PowerGuarantee
             }
 
             $reason = $label . ($newUser
-                ? ' · νέος χρήστης'
-                : ' · ίδιος χρήστης: ή της εγγύησης του προηγούμενου προμηθευτή, αν είναι μικρότερη');
+                ? ' · νέος χρήστης' . self::NOTE_UNIVERSAL
+                : ' · ίδιος χρήστης: ή της εγγύησης του προηγούμενου προμηθευτή, αν είναι μικρότερη' . self::NOTE_SAME);
 
-            return [
-                'amount' => (float) self::from(self::HOME, $kva),
-                'reason' => $reason . ' · με διακανονισμό πάνω από 400 € ισχύει μεγαλύτερο ποσό',
-            ];
+            return ['amount' => (float) self::from(self::HOME, $kva), 'reason' => $reason];
         }
 
         if ($newUser) {
-            return ['amount' => (float) self::from(self::BUSINESS_NEW, $kva), 'reason' => $label . ' · νέος χρήστης'];
+            return [
+                'amount' => (float) self::from(self::BUSINESS_NEW, $kva),
+                'reason' => $label . ' · νέος χρήστης' . self::NOTE_UNIVERSAL,
+            ];
         }
 
+        // (431β) Και στα επαγγελματικά ο πίνακας έχει άλλα ποσά με διακανονισμό
+        // πάνω από 400 € και στην Καθολική Υπηρεσία (σελ. 8)· η αιτία το λέει.
         return [
             'amount' => (float) self::from(self::BUSINESS_SAME, $kva),
             'reason' => $label . ' · ίδιος χρήστης: ή της εγγύησης του προηγούμενου προμηθευτή, αν είναι μεγαλύτερη'
-                . ' · αν αλλάζει χρήστης: ' . self::euro(self::from(self::BUSINESS_NEW, $kva)) . ' €',
+                . ' · αν αλλάζει χρήστης: ' . self::euro(self::from(self::BUSINESS_NEW, $kva)) . ' €'
+                . self::NOTE_SAME,
         ];
     }
 

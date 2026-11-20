@@ -3520,7 +3520,8 @@ import { openDialog } from '@energy-crm/dialog';
 					// (432) Γραμμή «ένα από»: αρκεί ένα είδος, ή το πεδίο της (ενδείξεις).
 					return (d.required || []).map(function (r) {
 						var kinds = r.kinds || [r.kind];
-						var ok = kinds.some(function (k) { return have.indexOf(k) > -1; }) || !!(r.field && fieldVal(r.field).trim());
+						var ok = kinds.some(function (k) { return have.indexOf(k) > -1; }) || !!(r.field && fieldVal(r.field).trim())
+							|| (r.unless || []).some(function (k) { return have.indexOf(k) > -1; });
 						return { label: r.label, ok: ok };
 					});
 				})

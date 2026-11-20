@@ -26,7 +26,8 @@ declare(strict_types=1);
 namespace EnergyCRM\Domain\Document;
 
 /**
- * @phpstan-type DocItem array{key: string, label: string, hint: string, kinds: list<string>, field: string}
+ * @phpstan-type DocItem array{key: string, label: string, hint: string, kinds: list<string>, field: string,
+ *                              unless: list<string>}
  * @phpstan-type DocList array{required: list<DocItem>, reminders: list<string>}
  */
 final class ProtergiaDocs
@@ -48,7 +49,14 @@ final class ProtergiaDocs
     private const COMMUNAL = 'Κοινόχρηστο: υπεύθυνη δήλωση διαχειριστή με την απόφαση της γενικής συνέλευσης '
         . '(όχι σε οικογενειακή πολυκατοικία)';
 
-    private const EDA_THESS = 'ΕΔΑ Θεσσαλονίκης: φωτογραφία μετρητή ή υπεύθυνη δήλωση με τις ενδείξεις';
+    private const EDA_THESS = 'ΕΔΑ Θεσσαλονίκης: φωτογραφία μετρητή ή υπεύθυνη δήλωση με τις ενδείξεις (υποχρεωτικό)';
+
+    private const EDA_THESS_OPTIONAL = 'ΕΔΑ Θεσσαλονίκης: φωτογραφία μετρητή (προαιρετική)';
+
+    private const GAS_NEW_USER = 'Αν αλλάζει και ο χρήστης: εξοφλημένος λογαριασμός, ή αποδεικτικό ΗΚΑΣΠ μαζί με '
+        . 'μισθωτήριο / Ε9';
+
+    private const GAS_OTHER_DETAILS = 'Αν η σύμβαση ΕΔΑ έχει άλλα στοιχεία από την αίτηση: και μισθωτήριο ή Ε1';
 
     private function __construct()
     {
@@ -188,11 +196,32 @@ final class ProtergiaDocs
      */
     private static function gas(string $activation, array $id): ?array
     {
+        // (432β) Σελ. 9 του PDF, γραμμή-γραμμή. «Νέα στοιχεία χρήστη» και
+        // «Επανασύνδεση»: εξοφλημένος λογαριασμός, ΑΛΛΙΩΣ αποδεικτικό ΗΚΑΣΠ
+        // ΜΑΖΙ με μισθωτήριο ή Ε9. Δύο γραμμές: η δεύτερη δεν χρειάζεται όταν
+        // υπάρχει λογαριασμός (`unless`).
+        $billOrProof = static fn (string $bill): array => [
+            self::item(
+                'proof',
+                $bill . ' ή αποδεικτικό ΗΚΑΣΠ',
+                'ένα από τα δύο',
+                ['provider_bill', 'connection_contract']
+            ),
+            self::item(
+                'title',
+                'Μισθωτήριο ή Ε9',
+                'μαζί με το αποδεικτικό ΗΚΑΣΠ· δεν χρειάζεται με λογαριασμό',
+                ['lease', 'e9'],
+                '',
+                ['provider_bill']
+            ),
+        ];
+
         switch ($activation) {
             case 'change_provider':
                 return [
                     'required'  => [$id, self::item('bill', 'Λογαριασμός παρόχου', 'ο τελευταίος', ['provider_bill'])],
-                    'reminders' => [self::EDA_THESS],
+                    'reminders' => [self::GAS_NEW_USER, self::EDA_THESS_OPTIONAL],
                 ];
 
             case 'new_connection':
@@ -201,22 +230,26 @@ final class ProtergiaDocs
                         $id,
                         self::item('connection', 'Σύμβαση σύνδεσης με την ΕΔΑ', '', ['connection_contract']),
                     ],
-                    'reminders' => [],
+                    'reminders' => [self::GAS_OTHER_DETAILS],
                 ];
 
             case 'reconnection':
+                return ['required' => array_merge([$id], $billOrProof('Τελικός λογαριασμός')), 'reminders' => []];
+
             case 'succession':
+                // «Διαδοχή (Μεταβίβαση Παροχής Protergia)»: λογαριασμός, ή
+                // μισθωτήριο / Ε9, χωρίς ΗΚΑΣΠ.
                 return [
                     'required'  => [
                         $id,
                         self::item(
                             'right',
-                            'Εξοφλημένος λογαριασμός, αποδεικτικό ΗΚΑΣΠ, μισθωτήριο ή Ε9',
-                            'ένα από αυτά',
-                            ['provider_bill', 'connection_contract', 'lease', 'e9']
+                            'Εξοφλημένος λογαριασμός, μισθωτήριο ή Ε9',
+                            'ένα από τα τρία',
+                            ['provider_bill', 'lease', 'e9']
                         ),
                     ],
-                    'reminders' => $activation === 'succession' ? [self::EDA_THESS] : [],
+                    'reminders' => [self::EDA_THESS],
                 ];
         }
 
@@ -251,10 +284,24 @@ final class ProtergiaDocs
 
     /**
      * @param list<string> $kinds
+     * @param list<string> $unless Αν υπάρχει ένα από αυτά, η γραμμή δεν χρειάζεται.
      * @return DocItem
      */
-    private static function item(string $key, string $label, string $hint, array $kinds, string $field = ''): array
-    {
-        return ['key' => $key, 'label' => $label, 'hint' => $hint, 'kinds' => $kinds, 'field' => $field];
+    private static function item(
+        string $key,
+        string $label,
+        string $hint,
+        array $kinds,
+        string $field = '',
+        array $unless = [],
+    ): array {
+        return [
+            'key'    => $key,
+            'label'  => $label,
+            'hint'   => $hint,
+            'kinds'  => $kinds,
+            'field'  => $field,
+            'unless' => $unless,
+        ];
     }
 }

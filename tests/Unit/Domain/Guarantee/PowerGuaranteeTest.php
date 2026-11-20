@@ -74,6 +74,9 @@ final class PowerGuaranteeTest extends TestCase
         self::assertNotNull($out);
         self::assertStringContainsString('μεγαλύτερη', $out['reason']);
         self::assertStringContainsString('340 €', $out['reason']);
+        // (431β) Και στα επαγγελματικά λέγεται ότι ο διακανονισμός και η ΚΥ αλλάζουν το ποσό.
+        self::assertStringContainsString('διακανονισμό', $out['reason']);
+        self::assertStringContainsString('Καθολική Υπηρεσία', $out['reason']);
     }
 
     public function testNoSuggestionWhereTheTableDoesNotApply(): void

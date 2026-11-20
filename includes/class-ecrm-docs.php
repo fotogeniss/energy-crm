@@ -283,15 +283,18 @@ class ECRM_Docs {
 	 * (432) Checklist από ομάδες: κάθε γραμμή περνά με ΕΝΑ από τα είδη της, ή με
 	 * το πεδίο της φόρμας όπου η γραμμή το δέχεται (ενδείξεις μετρητή).
 	 *
-	 * @param array{required: list<array{key: string, label: string, hint: string, kinds: list<string>, field: string}>, reminders: list<string>} $req
+	 * @param array{required: list<array{key: string, label: string, hint: string, kinds: list<string>, field: string, unless: list<string>}>, reminders: list<string>} $req
 	 * @param list<string>         $present
 	 * @param array<string, mixed> $extras
 	 */
 	private static function grouped( array $req, array $present, array $extras ): array {
 		$items = []; $missing = [];
 		foreach ( $req['required'] as $r ) {
+			// (432β) `unless`: η γραμμή δεν χρειάζεται όταν υπάρχει κάτι άλλο
+			// (μισθωτήριο/Ε9 στο αέριο, όταν υπάρχει εξοφλημένος λογαριασμός).
 			$ok = (bool) array_intersect( $r['kinds'], $present )
-				|| ( '' !== $r['field'] && '' !== trim( (string) ( $extras[ $r['field'] ] ?? '' ) ) );
+				|| ( '' !== $r['field'] && '' !== trim( (string) ( $extras[ $r['field'] ] ?? '' ) ) )
+				|| (bool) array_intersect( $r['unless'], $present );
 			$items[] = [
 				'kind'  => $r['kinds'][0],
 				'kinds' => $r['kinds'],

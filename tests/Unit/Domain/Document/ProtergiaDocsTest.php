@@ -75,11 +75,32 @@ final class ProtergiaDocsTest extends TestCase
         self::assertContains('fek', array_column($this->req($company)['required'], 'key'));
     }
 
+    /** (432β) Αέριο, επανασύνδεση: λογαριασμός, αλλιώς ΗΚΑΣΠ ΜΑΖΙ με μισθωτήριο/Ε9. */
+    public function testGasReconnectionNeedsTheProofTogetherWithTheTitle(): void
+    {
+        $r = $this->req(['activation' => 'reconnection', 'energy' => 'gas']);
+
+        self::assertSame(['id', 'proof', 'title'], array_column($r['required'], 'key'));
+        self::assertSame(['provider_bill', 'connection_contract'], $r['required'][1]['kinds']);
+        self::assertSame(['lease', 'e9'], $r['required'][2]['kinds']);
+        self::assertSame(['provider_bill'], $r['required'][2]['unless']);
+    }
+
+    /** (432β) Αέριο, αλλαγή προμηθευτή: η φωτογραφία της ΕΔΑ Θεσσαλονίκης είναι προαιρετική. */
+    public function testGasChangeOfSupplierReminders(): void
+    {
+        $r = $this->req(['activation' => 'change_provider', 'energy' => 'gas']);
+
+        self::assertStringContainsString('προαιρετική', implode(' | ', $r['reminders']));
+        self::assertStringContainsString('αλλάζει και ο χρήστης', implode(' | ', $r['reminders']));
+    }
+
     public function testGasHasNoCompanyPapersAndRenewalFallsBack(): void
     {
         $gas = $this->req(['activation' => 'new_connection', 'energy' => 'gas', 'customer_type' => 'company']);
 
         self::assertSame(['id', 'connection'], array_column($gas['required'], 'key'));
+        self::assertStringContainsString('άλλα στοιχεία', $gas['reminders'][0]);
         self::assertNull(ProtergiaDocs::requirements(['activation' => 'renewal', 'energy' => 'power']));
         self::assertNull(ProtergiaDocs::requirements(['activation' => 'program_change', 'energy' => 'gas']));
     }

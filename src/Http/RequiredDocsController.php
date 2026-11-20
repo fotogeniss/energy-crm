@@ -98,10 +98,11 @@ final class RequiredDocsController implements Controller
                 'ok'        => true,
                 'required'  => array_map(
                     static fn (array $r): array => [
-                        'kind'  => $r['kinds'][0],
-                        'kinds' => $r['kinds'],
-                        'field' => $r['field'],
-                        'label' => $r['label'],
+                        'kind'   => $r['kinds'][0],
+                        'kinds'  => $r['kinds'],
+                        'field'  => $r['field'],
+                        'unless' => $r['unless'],
+                        'label'  => $r['label'],
                     ],
                     $protergia['required']
                 ),
