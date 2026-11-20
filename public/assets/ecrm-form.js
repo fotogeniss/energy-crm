@@ -1446,7 +1446,8 @@ import { openDialog } from '@energy-crm/dialog';
 			// την εστίαση από όποιον γράφει.
 			if (el) { el.addEventListener('change', refreshProviderFields); }
 			// (329) Ο πίνακας ΦΑ αλλάζει με τον μετρητή και την πάγια εντολή.
-			['gas_meter_type', 'payment_method'].forEach(function (n) {
+			// (431) Και ο πίνακας ΗΕ με την ειδική κατηγορία (ΚΟΤ / ευάλωτος).
+			['gas_meter_type', 'payment_method', 'eidiki_katigoria'].forEach(function (n) {
 				var sel = root.querySelector('[name="' + n + '"]');
 				if (sel) { sel.addEventListener('change', refreshGuaranteeSuggestion); }
 			});
@@ -1968,7 +1969,9 @@ import { openDialog } from '@energy-crm/dialog';
 					// (329) Αέριο: ο πίνακας ΦΑ θέλει μετρητή, πληρωμή και είδος αίτησης.
 					'&meter_type=' + encodeURIComponent(fieldVal('gas_meter_type')) +
 					'&payment_method=' + encodeURIComponent(fieldVal('payment_method')) +
-					'&activation_type=' + encodeURIComponent(state.activation_type || '');
+					'&activation_type=' + encodeURIComponent(state.activation_type || '') +
+					// (431) Ρεύμα Protergia: ΚΟΤ / ευάλωτος έχει δική του εγγύηση.
+					'&special_category=' + encodeURIComponent(fieldVal('eidiki_katigoria'));
 
 				fetch(api('/guarantee/suggest') + qs, { headers: headers() })
 					.then(function (r) { return r.json(); })

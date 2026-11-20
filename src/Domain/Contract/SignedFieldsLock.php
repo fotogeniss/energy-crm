@@ -50,6 +50,13 @@ final class SignedFieldsLock
     public const PRINTED_MESSAGE = 'Η αίτηση έχει υπογραφεί από τον πελάτη και %s τυπώνεται στο υπογεγραμμένο '
         . 'έντυπο, οπότε δεν αλλάζει πια. Αν χρειάζεται αλλαγή, μίλα με τον διαχειριστή.';
 
+    /**
+     * (431) Ο πελάτης έχει υπογεγραμμένη ΑΛΛΗ αίτηση (ή η αλλαγή έρχεται από την
+     * καρτέλα πελάτη): το «η αίτηση έχει υπογραφεί» μπέρδευε σε νέα αίτηση.
+     */
+    public const PRINTED_CUSTOMER_MESSAGE = 'Ο πελάτης έχει υπογεγραμμένη αίτηση και %s τυπώνεται στο '
+        . 'υπογεγραμμένο έντυπο, οπότε δεν αλλάζει πια. Αν χρειάζεται αλλαγή, μίλα με τον διαχειριστή.';
+
     /** Ονόματα για το μήνυμα· ό,τι λείπει λέγεται «αυτό το στοιχείο». */
     private const PRINTED_LABELS = [
         'first_name' => 'το όνομα', 'last_name' => 'το επώνυμο', 'father_name' => 'το πατρώνυμο',
@@ -90,12 +97,19 @@ final class SignedFieldsLock
         return null;
     }
 
-    /** @return array{field: string, error: string} */
-    public static function printedRefusal(string $field): array
+    /**
+     * @param bool $customer Το στοιχείο είναι του πελάτη (κλειδωμένο από μια
+     *                       υπογεγραμμένη αίτησή του), όχι αυτής της αίτησης.
+     * @return array{field: string, error: string}
+     */
+    public static function printedRefusal(string $field, bool $customer = false): array
     {
         return [
             'field' => $field,
-            'error' => sprintf(self::PRINTED_MESSAGE, self::PRINTED_LABELS[$field] ?? 'αυτό το στοιχείο'),
+            'error' => sprintf(
+                $customer ? self::PRINTED_CUSTOMER_MESSAGE : self::PRINTED_MESSAGE,
+                self::PRINTED_LABELS[$field] ?? 'αυτό το στοιχείο'
+            ),
         ];
     }
 

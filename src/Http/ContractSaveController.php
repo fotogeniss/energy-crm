@@ -758,7 +758,10 @@ final class ContractSaveController implements Controller
             );
 
             if ($field !== null) {
-                return SignedFieldsLock::printedRefusal($field);
+                return SignedFieldsLock::printedRefusal(
+                    $field,
+                    $existing === null || ! SignedFieldsLock::isSigned($existing)
+                );
             }
         }
 

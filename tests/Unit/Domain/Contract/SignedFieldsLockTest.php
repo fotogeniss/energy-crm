@@ -93,5 +93,8 @@ final class SignedFieldsLockTest extends TestCase
         self::assertSame('street', $refusal['field']);
         self::assertStringContainsString('η διεύθυνση τυπώνεται', $refusal['error']);
         self::assertStringContainsString('αυτό το στοιχείο', SignedFieldsLock::printedRefusal('kad')['error']);
+        $customer = SignedFieldsLock::printedRefusal('street', true)['error'];
+
+        self::assertStringStartsWith('Ο πελάτης έχει υπογεγραμμένη', $customer);
     }
 }

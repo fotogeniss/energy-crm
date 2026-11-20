@@ -126,6 +126,40 @@ final class GuaranteeSuggestRouteTest extends IntegrationTestCase
         self::assertSame(999.0, rest_do_request($request)->get_data()['amount']);
     }
 
+    /** (431) Ρεύμα Protergia: ο πίνακας ΗΕ v16 νικά τους κανόνες, όταν υπάρχει ισχύς. */
+    public function testProtergiaPowerTakesTheAmountFromThePowerTable(): void
+    {
+        global $wpdb;
+
+        $seller = $this->makeCrmUser(Roles::SELLER);
+        $table  = Tables::name(Tables::PROVIDERS);
+        $id     = (int) $wpdb->get_var($wpdb->prepare('SELECT id FROM %i WHERE slug = %s', $table, 'protergia'));
+
+        if ($id <= 0) {
+            $wpdb->insert($table, ['slug' => 'protergia', 'name' => 'Protergia']);
+            $id = (int) $wpdb->insert_id;
+        }
+
+        $this->makeRule(['provider_id' => $id, 'energy_type' => 'power', 'amount' => 999]);
+        wp_set_current_user($seller);
+
+        $request = new WP_REST_Request('GET', self::ROUTE);
+        $request->set_query_params([
+            'provider_id' => $id, 'energy_type' => 'power', 'category' => 'business',
+            'agreed_power' => '25 kVA', 'activation_type' => 'succession', 'payment_method' => 'manual',
+        ]);
+        $data = rest_do_request($request)->get_data();
+
+        self::assertSame(340.0, $data['amount']);
+        self::assertStringContainsString('νέος χρήστης', $data['reason']);
+
+        // Ανανέωση: ο πίνακας δεν απαντά, αποφασίζουν οι κανόνες.
+        $request->set_query_params([
+            'provider_id' => $id, 'energy_type' => 'power', 'agreed_power' => '25', 'activation_type' => 'renewal',
+        ]);
+        self::assertSame(999.0, rest_do_request($request)->get_data()['amount']);
+    }
+
     public function testAnAnonymousRequestIsRejected(): void
     {
         wp_set_current_user(0);

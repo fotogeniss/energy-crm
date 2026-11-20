@@ -448,7 +448,7 @@ final class CustomersController implements Controller
             $field = SignedFieldsLock::printedChange($before, $data, $this->printed->onSignedContractsOf($customerId));
 
             if ($field !== null) {
-                return new WP_REST_Response(['ok' => false] + SignedFieldsLock::printedRefusal($field), 422);
+                return new WP_REST_Response(['ok' => false] + SignedFieldsLock::printedRefusal($field, true), 422);
             }
         }
 

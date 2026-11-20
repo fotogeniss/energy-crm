@@ -23,8 +23,10 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use EnergyCRM\Domain\Forms\DeiCatalogue;
 use EnergyCRM\Domain\Guarantee\GasMeterGuarantee;
 use EnergyCRM\Domain\Guarantee\GuaranteeMatch;
+use EnergyCRM\Domain\Guarantee\PowerGuarantee;
 use EnergyCRM\Persistence\GuaranteeRuleRepository;
 use EnergyCRM\Persistence\ProviderRepository;
 use WP_REST_Request;
@@ -91,6 +93,12 @@ final class GuaranteeSuggestController implements Controller
                     'default'           => '',
                     'sanitize_callback' => 'sanitize_key',
                 ],
+                // (431) Ρεύμα Protergia: ΚΟΤ / ευάλωτος έχει δική του εγγύηση.
+                'special_category' => [
+                    'type'              => 'string',
+                    'default'           => '',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
             ],
         ]);
     }
@@ -116,6 +124,17 @@ final class GuaranteeSuggestController implements Controller
             ], 200);
         }
 
+        $power = $this->powerTable($request, $contract);
+
+        if ($power !== null) {
+            return new WP_REST_Response([
+                'ok'     => true,
+                'amount' => $power['amount'],
+                'reason' => $power['reason'],
+                'source' => PowerGuarantee::SOURCE,
+            ], 200);
+        }
+
         $amount = GuaranteeMatch::amountFor($this->rules->active(), $contract);
 
         return new WP_REST_Response([
@@ -137,20 +156,7 @@ final class GuaranteeSuggestController implements Controller
      */
     private function gasTable(WP_REST_Request $request, array $contract): ?array
     {
-        if ($contract['energy_type'] !== 'gas' || $this->providers === null || (int) $contract['provider_id'] <= 0) {
-            return null;
-        }
-
-        $slug = '';
-
-        foreach ($this->providers->active() as $provider) {
-            if ((int) $provider['id'] === (int) $contract['provider_id']) {
-                $slug = (string) $provider['slug'];
-                break;
-            }
-        }
-
-        if ($slug !== 'protergia') {
+        if ($contract['energy_type'] !== 'gas' || ! $this->isProtergia((int) $contract['provider_id'])) {
             return null;
         }
 
@@ -160,5 +166,42 @@ final class GuaranteeSuggestController implements Controller
             (string) $request['payment_method'],
             (string) $request['activation_type']
         );
+    }
+    /**
+     * (431) Ο πίνακας ΗΕ της Protergia: ρεύμα, Protergia. Κερδίζει τους κανόνες
+     * των Ρυθμίσεων για τον ίδιο λόγο με το αέριο. Ανανέωση και αλλαγή
+     * προγράμματος δεν έχουν πρόταση από τον πίνακα: εκεί αποφασίζουν οι κανόνες.
+     *
+     * @param array<string, int|string> $contract
+     * @return array{amount: float|null, reason: string}|null
+     */
+    private function powerTable(WP_REST_Request $request, array $contract): ?array
+    {
+        if ($contract['energy_type'] !== 'power' || ! $this->isProtergia((int) $contract['provider_id'])) {
+            return null;
+        }
+
+        return PowerGuarantee::suggest(
+            DeiCatalogue::kva((string) $contract['agreed_power']),
+            (string) $contract['category'],
+            (string) $request['payment_method'],
+            (string) $request['activation_type'],
+            (string) $request['special_category']
+        );
+    }
+
+    private function isProtergia(int $providerId): bool
+    {
+        if ($this->providers === null || $providerId <= 0) {
+            return false;
+        }
+
+        foreach ($this->providers->active() as $provider) {
+            if ((int) $provider['id'] === $providerId) {
+                return (string) $provider['slug'] === 'protergia';
+            }
+        }
+
+        return false;
     }
 }
