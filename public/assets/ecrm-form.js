@@ -2566,6 +2566,15 @@ import { openDialog } from '@energy-crm/dialog';
 					['heir_cert', 'Εγγυτέρων συγγενών'],
 					['gemi', 'ΓΕΜΗ / Καταστατικό'],
 					['iban', 'IBAN'],
+					// (432) Όσα ζητά η Protergia.
+					['meter_photo', 'Φωτογραφία μετρητή'],
+					['lease', 'Μισθωτήριο'],
+					['connection_contract', 'Σύμβαση σύνδεσης ΔΕΔΔΗΕ/ΕΔΑ'],
+					['kad', 'Έναρξη / ΚΑΔ'],
+					['fek', 'ΦΕΚ εκπροσώπησης'],
+					['payment_proof', 'Απόδειξη εξόφλησης'],
+					['installments', 'Δοσολόγιο'],
+					['manager_decl', 'ΥΔ διαχειριστή'],
 					['other', 'Άλλο']
 				];
 				var kindSel = '<select class="ecrm-kind" data-i="' + i + '">' +
@@ -3493,7 +3502,13 @@ import { openDialog } from '@energy-crm/dialog';
 		function requiredDocs() {
 			var qs = '?activation_type=' + encodeURIComponent(state.activation_type || '') +
 				'&energy_type=' + encodeURIComponent(state.energy_type || '') +
-				'&contract_id=' + (state.contract_id || 0);
+				'&contract_id=' + (state.contract_id || 0) +
+				// (432) Protergia: ο πίνακάς της θέλει πάροχο, κατηγορία, πελάτη, ισχύ.
+				'&provider_id=' + (state.provider_id || 0) +
+				'&category=' + encodeURIComponent(state.category || '') +
+				'&customer_type=' + encodeURIComponent(state.customer_type || '') +
+				'&company_type=' + encodeURIComponent(fieldVal('company_type')) +
+				'&agreed_power=' + encodeURIComponent(fieldVal('agreed_power'));
 			return fetch(api('/docs/required') + qs, { headers: headers() })
 				.then(function (r) { return r.json(); })
 				.then(function (d) {
@@ -3502,7 +3517,12 @@ import { openDialog } from '@energy-crm/dialog';
 					state.files.forEach(function (f) { have.push(f.kind); });
 					// Σε κινητή, «λογαριασμός παρόχου» είναι ο λογαριασμός τηλεφωνίας (ECRM_Docs::checklist).
 					if (state.energy_type === 'mobile' && have.indexOf('telecom_bill') > -1) have.push('provider_bill');
-					return (d.required || []).map(function (r) { return { label: r.label, ok: have.indexOf(r.kind) > -1 }; });
+					// (432) Γραμμή «ένα από»: αρκεί ένα είδος, ή το πεδίο της (ενδείξεις).
+					return (d.required || []).map(function (r) {
+						var kinds = r.kinds || [r.kind];
+						var ok = kinds.some(function (k) { return have.indexOf(k) > -1; }) || !!(r.field && fieldVal(r.field).trim());
+						return { label: r.label, ok: ok };
+					});
 				})
 				// Χωρίς σύνδεση η λίστα δεν ξέρει τι απαιτείται: δεν λέει τίποτα.
 				.catch(function () { return []; });

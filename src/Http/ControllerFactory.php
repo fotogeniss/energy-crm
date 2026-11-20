@@ -115,7 +115,7 @@ final class ControllerFactory
             new ContractDocumentsController($scope, $details, Services::files(), Services::contractDocuments()),
             new DocumentsController($scope, Services::contracts(), Services::files()),
             // (341) Έλεγχος πριν την αποστολή: τα απαιτούμενα δικαιολογητικά.
-            new RequiredDocsController($scope, Services::contracts()),
+            new RequiredDocsController($scope, Services::contracts(), Services::providers()),
             new DocumentKindController(
                 $scope,
                 Services::contracts(),

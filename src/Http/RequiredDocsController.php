@@ -20,15 +20,22 @@ namespace EnergyCRM\Http;
 use ECRM_Docs;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
+use EnergyCRM\Domain\Document\ProtergiaDocs;
+use EnergyCRM\Domain\Forms\DeiCatalogue;
 use EnergyCRM\Persistence\ContractRepository;
+use EnergyCRM\Persistence\ProviderRepository;
 use WP_REST_Request;
 use WP_REST_Response;
 
+/**
+ * @phpstan-import-type DocList from ProtergiaDocs
+ */
 final class RequiredDocsController implements Controller
 {
     public function __construct(
         private readonly ScopeResolver $scopes,
         private readonly ContractRepository $contracts,
+        private readonly ?ProviderRepository $providers = null,
     ) {
     }
 
@@ -42,6 +49,24 @@ final class RequiredDocsController implements Controller
                 'activation_type' => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_key'],
                 'energy_type'     => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_key'],
                 'contract_id'     => ['type' => 'integer', 'default' => 0],
+                // (432) Protergia: ο δικός της πίνακας θέλει όσα η φόρμα ξέρει ήδη.
+                'provider_id'     => ['type' => 'integer', 'default' => 0],
+                'category'        => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_key'],
+                'customer_type'   => [
+                    'type'              => 'string',
+                    'default'           => '',
+                    'sanitize_callback' => 'sanitize_key',
+                ],
+                'company_type'    => [
+                    'type'              => 'string',
+                    'default'           => '',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'agreed_power'    => [
+                    'type'              => 'string',
+                    'default'           => '',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
             ],
         ]);
     }
@@ -58,9 +83,31 @@ final class RequiredDocsController implements Controller
         $required = ECRM_Docs::required_for((string) $request['activation_type'], $energy !== '' ? $energy : null);
         $present  = [];
         $id       = (int) $request['contract_id'];
+        $contract = $id > 0 ? $this->contracts->find($id, $scope) : null;
 
-        if ($id > 0 && $this->contracts->find($id, $scope) !== null) {
+        if ($contract !== null) {
             $present = ECRM_Docs::present_kinds($id);
+        }
+
+        // (432) Protergia: ίδιος πίνακας με την καρτέλα και την πύλη
+        // (ECRM_Docs::checklist()), με τα στοιχεία όπως είναι τώρα στη φόρμα.
+        $protergia = $this->protergia($request, $energy, (string) ($contract['created_at'] ?? ''));
+
+        if ($protergia !== null) {
+            return new WP_REST_Response([
+                'ok'        => true,
+                'required'  => array_map(
+                    static fn (array $r): array => [
+                        'kind'  => $r['kinds'][0],
+                        'kinds' => $r['kinds'],
+                        'field' => $r['field'],
+                        'label' => $r['label'],
+                    ],
+                    $protergia['required']
+                ),
+                'reminders' => $protergia['reminders'],
+                'present'   => array_values($present),
+            ], 200);
         }
 
         return new WP_REST_Response([
@@ -71,5 +118,36 @@ final class RequiredDocsController implements Controller
             ),
             'present'  => array_values($present),
         ], 200);
+    }
+    /** @return DocList|null */
+    private function protergia(WP_REST_Request $request, string $energy, string $createdAt): ?array
+    {
+        $providerId = (int) $request['provider_id'];
+
+        if ($this->providers === null || $providerId <= 0) {
+            return null;
+        }
+
+        $slug = '';
+
+        foreach ($this->providers->active() as $provider) {
+            if ((int) $provider['id'] === $providerId) {
+                $slug = (string) $provider['slug'];
+                break;
+            }
+        }
+
+        if (! ProtergiaDocs::applies($slug, $energy, $createdAt)) {
+            return null;
+        }
+
+        return ProtergiaDocs::requirements([
+            'activation'    => (string) $request['activation_type'],
+            'energy'        => $energy,
+            'category'      => (string) $request['category'],
+            'customer_type' => (string) $request['customer_type'],
+            'company_type'  => (string) $request['company_type'],
+            'kva'           => DeiCatalogue::kva((string) $request['agreed_power']),
+        ]);
     }
 }

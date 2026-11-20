@@ -126,7 +126,11 @@ final class DocumentsOverviewController implements Controller
                 'customer'     => $name ?: '—',
                 'status'       => $row['status'],
                 'status_label' => $labels[$row['status']] ?? $row['status'],
-                'missing'      => array_map([ECRM_Docs::class, 'label'], $checklist['missing']),
+                // (432) Από τις γραμμές του checklist: η γραμμή «ένα από» δεν είναι είδος.
+                'missing'      => array_values(array_map(
+                    static fn (array $it): string => (string) $it['label'],
+                    array_filter($checklist['items'], static fn (array $it): bool => empty($it['ok']))
+                )),
                 'complete'     => $checklist['complete'],
                 'docs'         => $docs,
                 'pending'      => $hasPending,

@@ -77,14 +77,23 @@ function filesCard(c) {
 	if (c.doc_checklist && c.doc_checklist.items && c.doc_checklist.items.length) {
 		var ck = c.doc_checklist;
 		var rows = ck.items.map(function (it) {
+			// (432) Γραμμές Protergia: μια μικρή εξήγηση κάτω από την ετικέτα
+			// («ένα από τα τρία», «να φαίνεται ο αριθμός παροχής»).
 			return '<li class="ecrm-check ' + (it.ok ? 'is-ok' : 'is-missing') + '">' +
 				'<span class="ecrm-check__mark">' + (it.ok ? '✓' : '&#9675;') + '</span>' +
-				'<span>' + esc(it.label) + '</span></li>';
+				'<span>' + esc(it.label) + (it.hint ? '<small class="ecrm-check__hint">' + esc(it.hint) + '</small>' : '') + '</span></li>';
 		}).join('');
 		var banner = ck.complete
 			? '<div class="ecrm-check__note is-ok">Όλα τα δικαιολογητικά παρόντα.</div>'
 			: '<div class="ecrm-check__note is-missing">Λείπουν δικαιολογητικά — δεν μπορεί να δρομολογηθεί/ενεργοποιηθεί.</div>';
-		checklist = '<div class="ecrm-step">Απαιτούμενα δικαιολογητικά</div><ul class="ecrm-checklist">' + rows + '</ul>' + banner;
+		// (432) «Αν ισχύει»: όσα το CRM δεν ξέρει (διακανονισμός, Καθολική
+		// Υπηρεσία). Υπενθύμιση, όχι απαίτηση: δεν μετρούν στο «λείπουν».
+		var reminders = (ck.reminders || []).length
+			? '<div class="ecrm-step">Αν ισχύει</div><ul class="ecrm-checklist ecrm-checklist--remind">' + ck.reminders.map(function (r) {
+				return '<li class="ecrm-check is-remind"><span class="ecrm-check__mark">!</span><span>' + esc(r) + '</span></li>';
+			}).join('') + '</ul>'
+			: '';
+		checklist = '<div class="ecrm-step">Απαιτούμενα δικαιολογητικά</div><ul class="ecrm-checklist">' + rows + '</ul>' + banner + reminders;
 	}
 
 	// Έγγραφα λήξιμου είδους (π.χ. ταυτότητα) που έχουν ήδη λήξει -- παρόντα,
@@ -1171,6 +1180,12 @@ function renderDetail(view, d) {
 			['sim_card', /(sim[-_]?card|καρτα ?sim)/],
 			['iban', /(iban)/],
 			['gemi', /(γεμη|καταστατικ)/],
+			// (432) Είδη της Protergia.
+			['meter_photo', /(μετρητ|meter)/],
+			['lease', /(μισθωτ|lease)/],
+			['kad', /(εναρξ|καδ)/],
+			['fek', /(φεκ|fek)/],
+			['installments', /(δοσολογ|διακανον)/],
 			['death_cert', /(θανατ)/],
 			['heir_cert', /(κληρονομ|συγγεν)/],
 			['residence', /(κατοικ|residence)/],

@@ -37,6 +37,15 @@ class ECRM_Docs {
 			'heir_cert'     => 'Πιστοποιητικό εγγυτέρων συγγενών',
 			'gemi'          => 'ΓΕΜΗ / Καταστατικό',
 			'iban'          => 'IBAN / αποδεικτικό λογαριασμού',
+			// (432) Όσα ζητά η Protergia (Back Office 19-20/11).
+			'meter_photo'         => 'Φωτογραφία μετρητή',
+			'lease'               => 'Μισθωτήριο (TAXISnet)',
+			'connection_contract' => 'Σύμβαση σύνδεσης ΔΕΔΔΗΕ/ΕΔΑ',
+			'kad'                 => 'Έναρξη δραστηριότητας / ΚΑΔ',
+			'fek'                 => 'ΦΕΚ εκπροσώπησης',
+			'payment_proof'       => 'Απόδειξη εξόφλησης',
+			'installments'        => 'Δοσολόγιο διακανονισμού',
+			'manager_decl'        => 'ΥΔ διαχειριστή πολυκατοικίας',
 			'other'         => 'Άλλο έγγραφο',
 		] );
 	}
@@ -183,8 +192,16 @@ class ECRM_Docs {
 	 * @return array{items: array<array{kind:string,label:string,ok:bool}>, missing: string[], complete: bool}
 	 */
 	public static function checklist( int $contract_id, ?string $activation_type, ?string $energy_type = null ): array {
+		$present = self::present_kinds( $contract_id );
+
+		// (432) Protergia, αιτήσεις από το ProtergiaDocs::FROM: ο δικός της πίνακας,
+		// με «ένα από» και υπενθυμίσεις. Οι παλιότερες μένουν στον γενικό.
+		$protergia = self::protergia( $contract_id, (string) $activation_type, (string) $energy_type );
+		if ( null !== $protergia ) {
+			return self::grouped( $protergia['requirements'], $present, $protergia['extras'] );
+		}
+
 		$required = self::required_for( $activation_type, $energy_type );
-		$present  = self::present_kinds( $contract_id );
 		// Σε κινητή, «λογαριασμός παρόχου» είναι ο λογαριασμός τηλεφωνίας.
 		if ( 'mobile' === (string) $energy_type && in_array( 'telecom_bill', $present, true ) ) {
 			$present[] = 'provider_bill';
@@ -198,9 +215,92 @@ class ECRM_Docs {
 		return [ 'items' => $items, 'missing' => $missing, 'complete' => empty( $missing ) ];
 	}
 
-	/** Missing-doc labels for a contract (for error messages). */
+	/**
+	 * Missing-doc labels for a contract (for error messages).
+	 *
+	 * (432) Από τις ετικέτες των γραμμών του checklist, όχι από το είδος: μια
+	 * γραμμή «Ε9, μισθωτήριο ή τελικός λογαριασμός» δεν είναι ένα είδος.
+	 */
 	public static function missing_labels( int $contract_id, ?string $activation_type, ?string $energy_type = null ): array {
 		$c = self::checklist( $contract_id, $activation_type, $energy_type );
-		return array_map( [ __CLASS__, 'label' ], $c['missing'] );
+		$labels = [];
+		foreach ( $c['items'] as $it ) {
+			if ( empty( $it['ok'] ) ) {
+				$labels[] = (string) $it['label'];
+			}
+		}
+		return $labels;
+	}
+
+	/**
+	 * (432) Ο πίνακας της Protergia για αυτή την αίτηση, ή null.
+	 *
+	 * Πρώτα ένα φτηνό ερώτημα (πάροχος, ημερομηνία)· η πλήρης ανάγνωση της
+	 * αίτησης (με αποκρυπτογραφημένα extra: νομική μορφή, ισχύς, ενδείξεις)
+	 * μόνο όταν ο πίνακας ισχύει.
+	 *
+	 * @return array{requirements: array, extras: array<string, mixed>}|null
+	 */
+	private static function protergia( int $contract_id, string $activation_type, string $energy_type ): ?array {
+		global $wpdb;
+
+		if ( $contract_id <= 0 ) {
+			return null;
+		}
+
+		$row = $wpdb->get_row( $wpdb->prepare(
+			'SELECT c.created_at, p.slug FROM %i c LEFT JOIN %i p ON p.id = c.provider_id WHERE c.id = %d',
+			ECRM_DB::table( 'contracts' ),
+			ECRM_DB::table( 'providers' ),
+			$contract_id
+		), ARRAY_A );
+
+		if ( ! $row || ! \EnergyCRM\Domain\Document\ProtergiaDocs::applies( (string) $row['slug'], $energy_type, (string) $row['created_at'] ) ) {
+			return null;
+		}
+
+		$full = \EnergyCRM\Services::contractDetails()->forDocument( $contract_id );
+		if ( null === $full ) {
+			return null;
+		}
+
+		$extras = json_decode( (string) ( $full['extra_json'] ?? '' ), true );
+		$extras = is_array( $extras ) ? $extras : [];
+
+		$requirements = \EnergyCRM\Domain\Document\ProtergiaDocs::requirements( [
+			'activation'    => $activation_type,
+			'energy'        => $energy_type,
+			'category'      => (string) ( $full['category'] ?? '' ),
+			'customer_type' => (string) ( $full['customer_type'] ?? '' ),
+			'company_type'  => (string) ( $extras['company_type'] ?? '' ),
+			'kva'           => \EnergyCRM\Domain\Forms\DeiCatalogue::kva( (string) ( $extras['agreed_power'] ?? '' ) ),
+		] );
+
+		return null === $requirements ? null : [ 'requirements' => $requirements, 'extras' => $extras ];
+	}
+
+	/**
+	 * (432) Checklist από ομάδες: κάθε γραμμή περνά με ΕΝΑ από τα είδη της, ή με
+	 * το πεδίο της φόρμας όπου η γραμμή το δέχεται (ενδείξεις μετρητή).
+	 *
+	 * @param array{required: list<array{key: string, label: string, hint: string, kinds: list<string>, field: string}>, reminders: list<string>} $req
+	 * @param list<string>         $present
+	 * @param array<string, mixed> $extras
+	 */
+	private static function grouped( array $req, array $present, array $extras ): array {
+		$items = []; $missing = [];
+		foreach ( $req['required'] as $r ) {
+			$ok = (bool) array_intersect( $r['kinds'], $present )
+				|| ( '' !== $r['field'] && '' !== trim( (string) ( $extras[ $r['field'] ] ?? '' ) ) );
+			$items[] = [
+				'kind'  => $r['kinds'][0],
+				'kinds' => $r['kinds'],
+				'label' => $r['label'],
+				'hint'  => $r['hint'],
+				'ok'    => $ok,
+			];
+			if ( ! $ok ) { $missing[] = $r['key']; }
+		}
+		return [ 'items' => $items, 'missing' => $missing, 'complete' => empty( $missing ), 'reminders' => $req['reminders'] ];
 	}
 }

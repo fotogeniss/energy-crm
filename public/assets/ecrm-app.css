@@ -1262,6 +1262,11 @@ button.ecrm-avatar:focus-visible { outline: 2px solid var(--amber); outline-offs
 .ecrm-check__note { font-size:var(--fs-13); font-weight:600; padding:8px 12px; border-radius:10px; margin-bottom:12px; }
 .ecrm-check__note.is-ok { background:var(--st-routed-bg); color:var(--st-routed); }
 .ecrm-check__note.is-missing { background:var(--st-pending-bg); color:var(--st-pending); }
+/* (432) Δικαιολογητικά Protergia: εξήγηση κάτω από τη γραμμή, και «Αν ισχύει». */
+.ecrm-check__hint { display:block; margin-top:2px; font-size:var(--fs-12); font-weight:400; color:var(--muted); }
+.ecrm-check:has(.ecrm-check__hint) { align-items:flex-start; }
+.ecrm-check.is-remind { color:var(--muted); font-size:var(--fs-13); }
+.ecrm-check.is-remind .ecrm-check__mark { background:var(--st-pending-bg); color:var(--st-pending); }
 .ecrm-docup { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); }
 .ecrm-docup__kind { max-width:220px; }
 .ecrm-docup__msg { font-size:var(--fs-13); color:var(--muted); }
