@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\EventRepository;
@@ -58,15 +59,15 @@ final class ContractWritesTest extends IntegrationTestCase
 
         $this->events    = new EventRepository();
         $this->contracts = new ContractRepository(null, null, $this->events);
-        $this->alice     = $this->makePartner();
-        $this->bob       = $this->makePartner();
+        $this->alice     = $this->makeCrmUser(Roles::PARTNER);
+        $this->bob       = $this->makeCrmUser(Roles::PARTNER);
     }
 
     // --- reassign ----------------------------------------------------------
 
     public function testAManagerMovesAContractToSomebodyInTheirTeam(): void
     {
-        $manager    = $this->makePartner();
+        $manager    = $this->makeCrmUser(Roles::PARTNER);
         $contractId = $this->contractOf($this->alice);
         $team       = UserScope::forTeam($manager, [$this->alice, $this->bob]);
 
@@ -85,7 +86,7 @@ final class ContractWritesTest extends IntegrationTestCase
     public function testAContractCannotBeHandedToSomebodyOutsideTheScope(): void
     {
         $contractId = $this->contractOf($this->alice);
-        $outsider   = $this->makePartner();
+        $outsider   = $this->makeCrmUser(Roles::PARTNER);
 
         self::assertFalse(
             $this->contracts->reassign($contractId, $outsider, UserScope::forSelf($this->alice))
@@ -118,9 +119,26 @@ final class ContractWritesTest extends IntegrationTestCase
     public function testAnAdministratorIsNotLimitedByTheTree(): void
     {
         $contractId = $this->contractOf($this->bob);
-        $admin      = UserScope::forAdministrator($this->makePartner());
+        $admin      = UserScope::forAdministrator($this->makeCrmUser(Roles::PARTNER));
 
         self::assertTrue($this->contracts->reassign($contractId, $this->alice, $admin));
+        self::assertSame($this->alice, $this->ownerOnDisk($contractId));
+    }
+
+    /**
+     * (436) Ο διαχειριστής «περιέχει» κάθε αριθμό χρήστη, όχι όμως κάθε χρήστης
+     * μπορεί να έχει αίτηση: συνδρομητής ή ανύπαρκτος δεν είναι κάτοχος.
+     *
+     * @kanonas K6
+     */
+    public function testAnAdministratorCannotHandAContractToSomebodyOutsideTheCrm(): void
+    {
+        $contractId = $this->contractOf($this->alice);
+        $admin      = UserScope::forAdministrator($this->makeCrmUser('administrator'));
+
+        self::assertFalse($this->contracts->reassign($contractId, $this->makePartner(), $admin));
+        self::assertFalse($this->contracts->reassign($contractId, 999999, $admin));
+        self::assertSame(0, $this->contracts->handOver($this->alice, $this->makePartner(), $admin));
         self::assertSame($this->alice, $this->ownerOnDisk($contractId));
     }
 
@@ -150,7 +168,7 @@ final class ContractWritesTest extends IntegrationTestCase
     public function testARefusedReassignRecordsNoEvent(): void
     {
         $contractId = $this->contractOf($this->alice);
-        $outsider   = $this->makePartner();
+        $outsider   = $this->makeCrmUser(Roles::PARTNER);
 
         self::assertFalse(
             $this->contracts->reassign($contractId, $outsider, UserScope::forSelf($this->alice))
@@ -161,7 +179,7 @@ final class ContractWritesTest extends IntegrationTestCase
     /** handOver() μετακινεί πολλές συμβάσεις μαζί -- καθεμιά παίρνει το δικό της γεγονός. */
     public function testHandOverRecordsAnEventOnEveryMovedContract(): void
     {
-        $manager = $this->makePartner();
+        $manager = $this->makeCrmUser(Roles::PARTNER);
         $team    = UserScope::forTeam($manager, [$this->alice, $this->bob]);
 
         $first  = $this->contractOf($this->alice);

@@ -41,6 +41,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Persistence;
 
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\ContractCode;
 
@@ -370,6 +371,14 @@ final class ContractRepository
             return false;
         }
 
+        // (436) Για διαχειριστή και Back office το scope «περιέχει» κάθε
+        // αριθμό χρήστη, ακόμη και συνδρομητή, απενεργοποιημένο ή ανύπαρκτο.
+        // Αίτηση σε τέτοιον εξαφανιζόταν από κάθε συνεργάτη, και η προμήθειά της
+        // (435) πήγαινε σε κανέναν. Μόνο σε χρήστη του CRM.
+        if (! self::isCrmUser($newOwnerId)) {
+            return false;
+        }
+
         $previousOwnerId = $this->ownerId($contractId, $scope);
 
         [$clause, $params] = $this->scopeClause($scope);
@@ -401,6 +410,15 @@ final class ContractRepository
         }
 
         return $moved;
+    }
+
+    /**
+     * (436) Υπάρχων, ενεργός χρήστης του CRM. Ο απενεργοποιημένος χάνει τα
+     * δικαιώματά του (`DisabledAccounts::stripCapabilities()`), άρα αποκλείεται κι αυτός.
+     */
+    private static function isCrmUser(int $userId): bool
+    {
+        return $userId > 0 && user_can($userId, Capability::USE_CRM);
     }
 
     /** ' από X' / ' σε Y' -- ό,τι από τα δύο υπάρχει ακόμα ως λογαριασμός WordPress. */
@@ -446,7 +464,7 @@ final class ContractRepository
             return 0;
         }
 
-        if (! $scope->includes($fromUserId) || ! $scope->includes($toUserId)) {
+        if (! $scope->includes($fromUserId) || ! $scope->includes($toUserId) || ! self::isCrmUser($toUserId)) {
             return 0;
         }
 
