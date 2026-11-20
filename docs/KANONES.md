@@ -96,6 +96,7 @@
 | Διαδρομή | Φύλακας |
 |---|---|
 | Ακύρωση σε εκκρεμή παρτίδα | `releaseFromPendingBatch()` + `refreshTotals()` |
+| Ανάθεση σε άλλον / μεταφορά χαρτοφυλακίου με γραμμή σε εκκρεμή παρτίδα | `ContractRepository::reassign()`/`handOver()` → `releaseFromPendingBatch()` |
 | Δημιουργία παρτίδας | `PayoutRepository::stampAmounts()` (guarded) |
 | Διαγραφή παρτίδας | μόνο εκκρεμής |
 | Αλλαγή προγράμματος μετά την υπογραφή | K3 |

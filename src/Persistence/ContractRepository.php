@@ -389,6 +389,15 @@ final class ContractRepository
             $this->events->record($contractId, $scope->actorId(), 'reassigned', [
                 'message' => 'Ανάθεση' . $this->fromToNames($previousOwnerId, $newOwnerId),
             ]);
+
+            // (435) Η προμήθεια ακολουθεί τον κάτοχο (K6). Αν η αίτηση ήταν σε
+            // ΕΚΚΡΕΜΗ εκκαθάριση του παλιού κατόχου, βγαίνει από εκεί και μπαίνει
+            // στην επόμενη του νέου· αλλιώς ο παλιός θα πληρωνόταν για αίτηση που
+            // δεν είναι πια δική του, και ο νέος ποτέ. Πληρωμένη παρτίδα μένει
+            // όπως είναι (K5).
+            if ($previousOwnerId !== $newOwnerId) {
+                (new PayoutRepository())->releaseFromPendingBatch($contractId);
+            }
         }
 
         return $moved;
@@ -468,8 +477,15 @@ final class ContractRepository
 
         $message = 'Μεταφορά χαρτοφυλακίου' . $this->fromToNames($fromUserId, $toUserId);
 
+        // (435) Ό,τι ήταν σε ΕΚΚΡΕΜΗ εκκαθάριση του παλιού βγαίνει από εκεί και
+        // πάει στον νέο (απόφαση 06/09: «οι ανεξόφλητες προμήθειές του περνούν
+        // στον μάνατζερ»). Πριν, έμεναν στην παρτίδα του παλιού και πληρώνονταν
+        // σε αυτόν· η `unsettled_rows()` του νέου δεν τις έβλεπε ποτέ.
+        $payouts = new PayoutRepository();
+
         foreach ($movingIds as $contractId) {
             $this->events->record((int) $contractId, $scope->actorId(), 'reassigned', ['message' => $message]);
+            $payouts->releaseFromPendingBatch((int) $contractId);
         }
 
         return (int) $moved;
