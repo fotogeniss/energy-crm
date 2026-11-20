@@ -290,8 +290,21 @@ function isAuth(status) {
 	return status === 401 || status === 403;
 }
 
-/** Στέλνει μία εγγραφή. Επιστρέφει 'sent' | 'kept' | 'blocked' | 'auth'. */
+/**
+ * Στέλνει μία εγγραφή. Επιστρέφει 'sent' | 'drafted' | 'kept' | 'blocked' | 'auth'.
+ *
+ * (430) 'drafted': ο server αρνήθηκε την οριστικοποίηση (λείπει ΑΦΜ, εγγύηση
+ * ΔΕΗ κ.λπ., ό,τι δεν ελέγχεται εκτός σύνδεσης), και η αίτηση γράφτηκε ως
+ * πρόχειρη ώστε να μη χαθεί η δουλειά. Πριν, έμενε «απορρίφθηκε» με μόνη
+ * επιλογή τη διαγραφή.
+ */
 function send(record) {
+	return sendOnce(record).then(function (result) {
+		return result === 'sent' && record.draftRetried ? 'drafted' : result;
+	});
+}
+
+function sendOnce(record) {
 	var chain = Promise.resolve();
 
 	if (record.contractId === 0) {
@@ -304,6 +317,18 @@ function send(record) {
 
 			return r.json().then(function (d) {
 				if (!d || !d.ok) {
+					/* (430) Άρνηση της οριστικοποίησης (422), όχι των στοιχείων:
+					 * μία δεύτερη προσπάθεια ως πρόχειρη. Τίποτα δεν γράφτηκε
+					 * στην πρώτη (K10), οπότε το ίδιο client_request_id ισχύει. */
+					if (r.status === 422 && !record.draftRetried
+						&& record.payload && record.payload.status && record.payload.status !== 'draft') {
+						record.draftRetried = true;
+						record.draftReason = (d && d.error) || '';
+						record.payload = Object.assign({}, record.payload, { status: 'draft' });
+
+						return put(record).then(function () { return sendOnce(record); });
+					}
+
 					/* Ο server ΑΡΝΗΘΗΚΕ -- λάθος ΑΦΜ, λάθος email, ό,τι δεν
 					 * μπόρεσε να ελεγχθεί offline. Καμία επανάληψη δεν θα το
 					 * αλλάξει, οπότε σταματά εδώ και μένει ορατό με το μήνυμα
@@ -374,10 +399,10 @@ function send(record) {
  * σήμα δεν κερδίζει τίποτα από δέκα ταυτόχρονα uploads φωτογραφιών, και τα
  * χάνει όλα μαζί αν πέσει πάλι.
  *
- * @return {Promise<{sent: number, kept: number, blocked: number, auth: boolean}>}
+ * @return {Promise<{sent: number, kept: number, blocked: number, drafted: number, draftReason: string, auth: boolean}>}
  */
 export function flush() {
-	var report = { sent: 0, kept: 0, blocked: 0, auth: false };
+	var report = { sent: 0, kept: 0, blocked: 0, drafted: 0, draftReason: '', auth: false };
 
 	if (_running) { return Promise.resolve(report); }
 	if (typeof navigator !== 'undefined' && navigator.onLine === false) { return Promise.resolve(report); }
@@ -396,6 +421,11 @@ export function flush() {
 				return send(record).then(function (result) {
 					if (result === 'auth') { report.auth = true; }
 					else if (result === 'sent') { report.sent++; }
+					else if (result === 'drafted') {
+						report.sent++;
+						report.drafted++;
+						report.draftReason = report.draftReason || record.draftReason || '';
+					}
 					else if (result === 'blocked') { report.blocked++; }
 					else { report.kept++; }
 				});
