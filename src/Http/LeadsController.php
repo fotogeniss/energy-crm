@@ -16,6 +16,7 @@ namespace EnergyCRM\Http;
 
 use ECRM_Files;
 use ECRM_Leads;
+use ECRM_Validate;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
@@ -202,13 +203,32 @@ final class LeadsController implements Controller
         // πωλητής να μην τα ξαναγράψει. Για κάθε άλλον υποψήφιο: κενά, όπως πριν.
         $site = $this->siteLeads?->privateData($lead);
 
-        $customerId = $this->customers->create([
-            'customer_type' => 'individual',
-            'first_name'    => $first,
-            'last_name'     => $last,
-            'mobile'        => (string) $lead['phone'],
-            'email'         => (string) $lead['email'],
-        ] + ($site !== null ? SiteLeadPrefill::customer($site) : []));
+        $prefill = $site !== null ? SiteLeadPrefill::customer($site) : [];
+
+        // (434) Υποψήφιος από το site με ΑΦΜ που ΥΠΑΡΧΕΙ ήδη: ο ίδιος πελάτης, όχι
+        // δεύτερος. Πριν, κάθε μετατροπή έφτιαχνε νέα γραμμή πελάτη με το ίδιο
+        // ΑΦΜ (K11: ένας πελάτης ανά ΑΦΜ)· και ο υπάρχων, αν είχε υπογεγραμμένη
+        // αίτηση, γλίτωνε έτσι το κλείδωμα του 428 μέσα από τον «δίδυμό» του.
+        // Τα στοιχεία του υπάρχοντος δεν πατιούνται: ό,τι αλλάζει, αλλάζει από
+        // τη φόρμα, με τους δικούς της ελέγχους. Ίδιος κανόνας με το
+        // ContractSaveController (findIdByAfm, στο scope του χρήστη).
+        if (isset($prefill['afm'])) {
+            $prefill['afm'] = ECRM_Validate::digits((string) $prefill['afm']);
+        }
+
+        $customerId = ($prefill['afm'] ?? '') !== ''
+            ? $this->customers->findIdByAfm($scope, (string) $prefill['afm'])
+            : 0;
+
+        if ($customerId <= 0) {
+            $customerId = $this->customers->create([
+                'customer_type' => 'individual',
+                'first_name'    => $first,
+                'last_name'     => $last,
+                'mobile'        => (string) $lead['phone'],
+                'email'         => (string) $lead['email'],
+            ] + $prefill);
+        }
 
         $energy = in_array($lead['energy_type'], ['power', 'gas', 'mobile'], true)
             ? (string) $lead['energy_type']
