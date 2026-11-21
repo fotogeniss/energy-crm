@@ -74,8 +74,17 @@ class ECRM_Tasks {
 
 		$labels = ECRM_DB::statuses();
 		foreach ( (array) $rows as $r ) {
-			$manager = (int) get_user_meta( (int) $r['partner_user_id'], 'ecrm_parent', true );
-			if ( ! $manager ) { continue; } // no upline to escalate to
+			// (438) Ο πρώτος ΕΝΕΡΓΟΣ προϊστάμενος. Ως τώρα πήγαινε στον άμεσο,
+			// ακόμα κι αν ήταν απενεργοποιημένος: η εργασία έμενε σε κάποιον που
+			// δεν μπαίνει πια, και το email με τον πελάτη πήγαινε σε αυτόν.
+			$manager = 0;
+			foreach ( \EnergyCRM\Services::network()->uplineOf( (int) $r['partner_user_id'] ) as $up ) {
+				if ( user_can( (int) $up, \EnergyCRM\Access\Capability::USE_CRM ) ) {
+					$manager = (int) $up;
+					break;
+				}
+			}
+			if ( ! $manager ) { continue; } // no active upline to escalate to
 
 			$cust = $r['company_name'] ?: trim( ( $r['first_name'] ?? '' ) . ' ' . ( $r['last_name'] ?? '' ) );
 			$age  = (int) $r['age'];

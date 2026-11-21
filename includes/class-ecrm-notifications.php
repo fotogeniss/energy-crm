@@ -531,7 +531,10 @@ class ECRM_Notifications {
 		), ARRAY_A );
 
 		$user = $row ? get_userdata( (int) $row['partner_user_id'] ) : null;
-		if ( ! $user || ! is_email( $user->user_email ) ) {
+		// (438) Ο απενεργοποιημένος χάνει το USE_CRM (`DisabledAccounts`)
+		// αλλά κρατά τον ρόλο και το email: χωρίς αυτόν τον έλεγχο συνέχιζε να
+		// παίρνει ονόματα πελατών και κωδικούς αιτήσεων, ενώ δεν μπαίνει πια.
+		if ( ! $user || ! is_email( $user->user_email ) || ! user_can( $user, \EnergyCRM\Access\Capability::USE_CRM ) ) {
 			return;
 		}
 		// (379) «Το προφίλ μου»: ο ίδιος μπορεί να κλείσει αυτά τα email, ή να
@@ -569,6 +572,9 @@ class ECRM_Notifications {
 		$users = get_users( [ 'role__in' => array_keys( ECRM_DB::roles() ), 'fields' => [ 'ID', 'user_email', 'display_name' ] ] );
 		foreach ( $users as $u ) {
 			if ( ! is_email( $u->user_email ) ) { continue; }
+			// (438) Ο ρόλος μένει και στον απενεργοποιημένο· το USE_CRM όχι.
+			// Ίδιος έλεγχος με τη μηνιαία αναφορά (`MonthlyStoreReport`).
+			if ( ! user_can( (int) $u->ID, \EnergyCRM\Access\Capability::USE_CRM ) ) { continue; }
 			// (379) Όποιος έκλεισε την ημερήσια σύνοψη από «Το προφίλ μου».
 			// (392) Και το «Μην με ενοχλείς»: την Κυριακή δεν πάει σύνοψη.
 			if ( ! \EnergyCRM\Infrastructure\UserProfile::wantsEmail( (int) $u->ID, 'notify_digest_email' ) ) { continue; }
