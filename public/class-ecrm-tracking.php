@@ -19,6 +19,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class ECRM_Tracking {
 
+	/** (440) `files.uploaded_via` για ό,τι ανέβασε ο πελάτης από τον σύνδεσμο. */
+	public const VIA_LINK = 'customer_link';
+
+	/**
+	 * (440) Πόσα αρχεία ανεβάζει ο πελάτης από τον σύνδεσμο. Απόφαση
+	 * ιδιοκτήτη 21/11: 10, όσο η φόρμα του συνεργάτη, και μόνο τα δικά του.
+	 */
+	public const CUSTOMER_UPLOADS = 10;
+
 	public static function init(): void {
 		add_action( 'template_redirect', [ __CLASS__, 'maybe_render' ] );
 		add_action( 'rest_api_init', [ __CLASS__, 'routes' ] );
@@ -938,7 +947,10 @@ class ECRM_Tracking {
 
 		global $wpdb;
 		$ct  = ECRM_DB::table( 'contracts' );
-		$row = $wpdb->get_row( $wpdb->prepare( "SELECT status, activation_type FROM {$ct} WHERE id = %d", $id ), ARRAY_A );
+		// (440) Και το energy_type: χωρίς αυτό η λίστα που γύριζε μετά το
+		// ανέβασμα ήταν του ρεύματος/γενική, και σε αέριο ή Protergia έλεγε
+		// στον πελάτη άλλα χαρτιά από ό,τι η ίδια η σελίδα πριν.
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT status, activation_type, energy_type FROM {$ct} WHERE id = %d", $id ), ARRAY_A );
 		if ( ! $row ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'not_found' ], 404 );
 		}
@@ -950,9 +962,18 @@ class ECRM_Tracking {
 		// ECRM_Intake::rest_file() -- χωρίς αυτό, ο σύνδεσμος παρακολούθησης
 		// γίνεται δωρεάν αποθηκευτικός χώρος για όποιον τον έχει, ασχέτως αν
 		// είναι ο πελάτης ή κάποιος στον οποίο το προώθησε. AUDIT 29/08.
+		//
+		// (440) Μετρούν μόνο όσα ανέβασε ο ίδιος από εδώ. Ως τώρα μετρούσαν
+		// και του συνεργάτη και το υπογεγραμμένο PDF, με όριο 6: σε
+		// επαγγελματική Protergia (6 χαρτιά) ο πελάτης έβλεπε «μέγιστο αριθμό»
+		// χωρίς να έχει ανεβάσει τίποτα.
 		$ft    = ECRM_DB::table( 'files' );
-		$count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$ft} WHERE contract_id = %d", $id ) );
-		if ( $count >= 6 ) {
+		$count = (int) $wpdb->get_var( $wpdb->prepare(
+			"SELECT COUNT(*) FROM {$ft} WHERE contract_id = %d AND uploaded_via = %s",
+			$id,
+			self::VIA_LINK
+		) );
+		if ( $count >= self::CUSTOMER_UPLOADS ) {
 			return new WP_REST_Response( [ 'ok' => false, 'error' => 'Έχετε ήδη ανεβάσει τον μέγιστο αριθμό αρχείων.' ], 400 );
 		}
 
@@ -1007,6 +1028,7 @@ class ECRM_Tracking {
 			'mime'          => $stored['mime'],
 			'path'          => $stored['path'],
 			'protected'     => 1,
+			'uploaded_via'  => self::VIA_LINK,
 		] );
 
 		$label = $catalog[ $kind ] ?? 'έγγραφο';

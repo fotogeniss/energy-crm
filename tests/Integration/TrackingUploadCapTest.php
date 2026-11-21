@@ -3,6 +3,9 @@
 /**
  * `POST /track/{token}/upload` -- the file-count cap, mirrored from intake.
  *
+ * (440) Από 21/11: 10 αρχεία, και μετρούν μόνο όσα ανέβασε ο πελάτης από τον
+ * σύνδεσμο (απόφαση ιδιοκτήτη).
+ *
  * AUDIT finding, 29/08: ECRM_Intake::rest_file() has always capped a lead at
  * six files, with the reason written on the check itself -- "without a cap,
  * the link becomes free storage for whoever holds it." ECRM_Tracking::rest_upload()
@@ -41,27 +44,56 @@ final class TrackingUploadCapTest extends IntegrationTestCase
         $this->contracts = new ContractRepository();
     }
 
-    /** The sixth file still goes through -- the cap is >=6, not >5. */
-    public function testTheSixthFileIsAccepted(): void
+    /** (440) Το δέκατο αρχείο του πελάτη περνά. */
+    public function testTheTenthCustomerFileIsAccepted(): void
     {
         $contractId = $this->contract();
-        $this->seedFiles($contractId, 5);
+        $this->seedFiles($contractId, 9, ECRM_Tracking::VIA_LINK);
 
         $response = $this->upload($contractId, self::VALID_PNG);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
     }
 
-    /** The seventh is refused -- same threshold, same message shape as intake. */
-    public function testTheSeventhFileIsRefused(): void
+    /** (440) Το ενδέκατο όχι. */
+    public function testTheEleventhCustomerFileIsRefused(): void
     {
         $contractId = $this->contract();
-        $this->seedFiles($contractId, 6);
+        $this->seedFiles($contractId, 10, ECRM_Tracking::VIA_LINK);
 
         $response = $this->upload($contractId, self::VALID_PNG);
 
         self::assertSame(400, $response->get_status());
-        self::assertSame(6, $this->fileCount($contractId), 'A refused upload must not have written a row.');
+        self::assertSame(10, $this->fileCount($contractId), 'A refused upload must not have written a row.');
+    }
+
+    /**
+     * (440) Τα αρχεία του γραφείου και η υπογραφή δεν μετρούν: ο πελάτης
+     * έβλεπε «μέγιστο αριθμό» χωρίς να έχει ανεβάσει τίποτα.
+     */
+    public function testOfficeFilesDoNotCountAgainstTheCustomer(): void
+    {
+        $contractId = $this->contract();
+        $this->seedFiles($contractId, 12, null);
+
+        $response = $this->upload($contractId, self::VALID_PNG);
+
+        self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
+    }
+
+    /** Και ό,τι ανέβηκε από εδώ σημειώνεται, αλλιώς το όριο δεν θα έπιανε ποτέ. */
+    public function testACustomerUploadIsMarked(): void
+    {
+        global $wpdb;
+
+        $contractId = $this->contract();
+        $this->upload($contractId, self::VALID_PNG);
+
+        self::assertSame(ECRM_Tracking::VIA_LINK, (string) $wpdb->get_var($wpdb->prepare(
+            'SELECT uploaded_via FROM %i WHERE contract_id = %d',
+            Tables::name(Tables::FILES),
+            $contractId
+        )));
     }
 
     /** Files hanging off a DIFFERENT contract do not count against this one's cap. */
@@ -69,17 +101,32 @@ final class TrackingUploadCapTest extends IntegrationTestCase
     {
         $mine   = $this->contract();
         $theirs = $this->contract();
-        $this->seedFiles($theirs, 6);
+        $this->seedFiles($theirs, 10, ECRM_Tracking::VIA_LINK);
 
         $response = $this->upload($mine, self::VALID_PNG);
 
         self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
     }
 
-    private function contract(): int
+    /** (440) Η λίστα μετά το ανέβασμα είναι η ίδια με της σελίδας (αέριο). */
+    public function testTheListAfterUploadMatchesThePage(): void
+    {
+        $contractId = $this->contract('gas');
+
+        $page   = rest_do_request(new WP_REST_Request('GET', '/ecrm/v1/track/' . ECRM_Tracking::token($contractId)));
+        $upload = $this->upload($contractId, self::VALID_PNG);
+
+        self::assertSame(200, $upload->get_status(), (string) ($upload->get_data()['error'] ?? ''));
+        self::assertSame(
+            array_column($page->get_data()['docs']['items'], 'label'),
+            array_column($upload->get_data()['docs']['items'], 'label')
+        );
+    }
+
+    private function contract(string $energy = 'power'): int
     {
         $contractId = $this->contracts->create(
-            ['status' => 'new', 'supply_number' => '12345678901', 'energy_type' => 'power'],
+            ['status' => 'new', 'supply_number' => '12345678901', 'energy_type' => $energy],
             UserScope::forSelf($this->makePartner())
         );
 
@@ -88,7 +135,7 @@ final class TrackingUploadCapTest extends IntegrationTestCase
         return $contractId;
     }
 
-    private function seedFiles(int $contractId, int $howMany): void
+    private function seedFiles(int $contractId, int $howMany, ?string $via): void
     {
         global $wpdb;
 
@@ -100,6 +147,7 @@ final class TrackingUploadCapTest extends IntegrationTestCase
                 'mime'        => 'image/png',
                 'path'        => "existing-{$i}.png",
                 'protected'   => 1,
+                'uploaded_via' => $via,
             ]);
         }
     }

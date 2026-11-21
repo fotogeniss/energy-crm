@@ -27,6 +27,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddEventReasonColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddEventStatusIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddFileExpiryColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddFileKindSourceColumns;
+use EnergyCRM\Persistence\Schema\Migrations\AddFileUploadedViaColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddGuaranteeRuleForeignKeys;
 use EnergyCRM\Persistence\Schema\Migrations\AddIntakeColumns;
@@ -157,6 +158,7 @@ final class MigrationList
             new RefreshDeiCatalogueNovember2026(),
             new RevokeApplicationPasswords(),
             new RehashCustomerPhone(),
+            new AddFileUploadedViaColumn(),
         ];
     }
 }

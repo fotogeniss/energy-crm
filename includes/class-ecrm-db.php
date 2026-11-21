@@ -259,6 +259,7 @@ class ECRM_DB {
 			doc_kind    VARCHAR(24) NOT NULL DEFAULT 'other',
 			kind_source VARCHAR(16) NULL,
 			kind_before VARCHAR(24) NULL,
+			uploaded_via VARCHAR(16) NULL,
 			filename    VARCHAR(255) NULL,
 			mime        VARCHAR(80)  NULL,
 			path        VARCHAR(500) NULL,
