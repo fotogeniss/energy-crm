@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
@@ -41,7 +42,8 @@ final class DuplicateFollowUpTest extends IntegrationTestCase
 
         $this->contracts = new ContractRepository();
         $this->customers = new CustomerRepository();
-        $this->owner      = $this->makePartner();
+        // (439) Συνεργάτης του CRM: οι εργασίες πάνε μόνο σε όποιον μπαίνει.
+        $this->owner      = $this->makeCrmUser(Roles::PARTNER);
     }
 
     /** Δεύτερη σύμβαση, ίδιο ΑΦΜ, άλλος πελάτης-εγγραφή: αφήνει εργασία στον ιδιοκτήτη της ΝΕΑΣ. */

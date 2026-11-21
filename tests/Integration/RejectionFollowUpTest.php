@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Tests\Integration;
 
+use EnergyCRM\Access\Roles;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\Tables;
@@ -48,7 +49,8 @@ final class RejectionFollowUpTest extends IntegrationTestCase
         parent::setUp();
 
         $this->contracts = new ContractRepository();
-        $this->owner      = $this->makePartner();
+        // (439) Συνεργάτης του CRM: οι εργασίες πάνε μόνο σε όποιον μπαίνει.
+        $this->owner      = $this->makeCrmUser(Roles::PARTNER);
     }
 
     /** 05/10/2026: κάθε «Ακυρώθηκε» αφήνει εργασία. */

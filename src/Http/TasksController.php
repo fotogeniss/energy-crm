@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\ContractRepository;
@@ -131,7 +132,10 @@ final class TasksController implements Controller
         // a task is work, and handing work to a stranger is not a thing.
         $assignee = (int) $request['assigned_to'];
 
-        if ($assignee <= 0 || ! $scope->includes($assignee)) {
+        // (439) Και μόνο σε χρήστη του CRM: για τον διαχειριστή το scope
+        // «περιέχει» κάθε αριθμό, και η εργασία πήγαινε σε συνδρομητή ή σε
+        // απενεργοποιημένο, που δεν μπαίνει να τη δει (ίδιο με το 436).
+        if ($assignee <= 0 || ! $scope->includes($assignee) || ! user_can($assignee, Capability::USE_CRM)) {
             $assignee = $scope->actorId();
         }
 

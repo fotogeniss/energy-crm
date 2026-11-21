@@ -324,7 +324,8 @@ final class Services
     {
         return new RenewalCalls(
             new RenewalCallRepository(),
-            new RenewalOffers(self::providerVisibility(), self::providers())
+            new RenewalOffers(self::providerVisibility(), self::providers()),
+            self::network()
         );
     }
 
@@ -546,6 +547,7 @@ final class Services
         return self::$rejectionFollowUp ??= new RejectionFollowUp(
             self::contractDetails(),
             self::tasks(),
+            self::network(),
         );
     }
 
@@ -556,6 +558,7 @@ final class Services
             self::customers(),
             self::scopeResolver(),
             self::tasks(),
+            self::network(),
         );
     }
 

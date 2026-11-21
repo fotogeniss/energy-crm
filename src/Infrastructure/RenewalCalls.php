@@ -17,6 +17,7 @@ namespace EnergyCRM\Infrastructure;
 
 use EnergyCRM\Access\UserScope;
 use EnergyCRM\Domain\Contract\RenewalCall;
+use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\RenewalCallRepository;
 
 final class RenewalCalls
@@ -24,6 +25,7 @@ final class RenewalCalls
     public function __construct(
         private readonly RenewalCallRepository $calls,
         private readonly RenewalOffers $offers,
+        private readonly NetworkRepository $network,
     ) {
     }
 
@@ -33,7 +35,14 @@ final class RenewalCalls
         $made = 0;
 
         foreach ($this->calls->due($days) as $row) {
-            $owner = (int) $row['partner_user_id'];
+            // (439) Ο πωλητής, αλλιώς ο πρώτος ενεργός προϊστάμενος: σε
+            // απενεργοποιημένο η κλήση δεν θα γινόταν ποτέ και ο πελάτης θα
+            // έληγε χωρίς τηλέφωνο.
+            $owner = $this->network->handlerFor((int) $row['partner_user_id']);
+
+            if ($owner <= 0) {
+                continue;
+            }
 
             // Τα προγράμματα που βλέπει ο ίδιος ο πωλητής: δεν του προτείνουμε
             // πάροχο που δεν πουλά.

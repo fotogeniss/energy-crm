@@ -59,6 +59,7 @@ use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractDetails;
 use EnergyCRM\Persistence\CustomerRepository;
+use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\TaskRepository;
 
 final class DuplicateFollowUp
@@ -68,6 +69,7 @@ final class DuplicateFollowUp
         private readonly CustomerRepository $customers,
         private readonly ScopeResolver $scopes,
         private readonly TaskRepository $tasks,
+        private readonly NetworkRepository $network,
     ) {
     }
 
@@ -112,12 +114,14 @@ final class DuplicateFollowUp
         // έκανε ο ίδιος αυτό το αίτημα -- ίδια εμβέλεια με το ζωντανό
         // /customers/check, ούτε στενότερη ούτε ευρύτερη.
         $scope   = $this->scopes->forUser($owner);
+        // (439) Το scope του κατόχου· η εργασία όμως σε όποιον μπαίνει ακόμα.
+        $handler = $this->network->handlerFor($owner);
         $matches = array_values(array_filter(
             $this->customers->duplicatesOf($scope, $afm, $supply),
             static fn (array $m): bool => (int) $m['contract_id'] !== $contractId
         ));
 
-        if ($matches === []) {
+        if ($matches === [] || $handler <= 0) {
             return;
         }
 
@@ -127,7 +131,7 @@ final class DuplicateFollowUp
         $this->tasks->create([
             'contract_id' => $contractId,
             'customer_id' => null,
-            'assigned_to' => $owner,
+            'assigned_to' => $handler,
             'created_by'  => null,
             'title'       => trim('Πιθανή διπλοεγγραφή — ' . $code),
             'note'        => sprintf(

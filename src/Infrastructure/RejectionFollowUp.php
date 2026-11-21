@@ -92,6 +92,7 @@ use EnergyCRM\Domain\Contract\CloseReason;
 use EnergyCRM\Domain\Contract\ContractLifecycle;
 use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Persistence\ContractDetails;
+use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\TaskRepository;
 
 final class RejectionFollowUp
@@ -99,6 +100,7 @@ final class RejectionFollowUp
     public function __construct(
         private readonly ContractDetails $details,
         private readonly TaskRepository $tasks,
+        private readonly NetworkRepository $network,
     ) {
     }
 
@@ -135,7 +137,8 @@ final class RejectionFollowUp
 
         // Χωρίς ιδιοκτήτη δεν υπάρχει σε ποιον να ανατεθεί -- και το
         // `assigned_to` του πίνακα `tasks` είναι NOT NULL, δεν δέχεται 0.
-        $owner = (int) $row['partner_user_id'];
+        // (439) Ο κάτοχος, αλλιώς ο πρώτος ενεργός προϊστάμενος.
+        $owner = $this->network->handlerFor((int) $row['partner_user_id']);
 
         if ($owner <= 0) {
             return;

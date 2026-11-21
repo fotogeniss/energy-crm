@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Persistence;
 
+use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\NetworkPath;
 
 final class NetworkRepository
@@ -95,6 +96,29 @@ final class NetworkRepository
         $lineage = NetworkPath::ids($this->pathFor($userId));
 
         return array_reverse(array_slice($lineage, 0, -1));
+    }
+
+    /**
+     * (439) Ποιος κάνει τη δουλειά ενός χρήστη: ο ίδιος, αλλιώς ο πρώτος
+     * ενεργός προϊστάμενός του. 0 όταν δεν υπάρχει κανείς.
+     *
+     * Ο απενεργοποιημένος κρατά ρόλο και αιτήσεις, αλλά χάνει το `USE_CRM`
+     * (`DisabledAccounts`) και δεν μπαίνει. Μια εργασία στο όνομά του
+     * (κλήση ανανέωσης, απόρριψη, διπλοεγγραφή) δεν τη βλέπει κανείς.
+     */
+    public function handlerFor(int $userId): int
+    {
+        if ($userId <= 0) {
+            return 0;
+        }
+
+        foreach ([$userId, ...$this->uplineOf($userId)] as $candidate) {
+            if (user_can($candidate, Capability::USE_CRM)) {
+                return $candidate;
+            }
+        }
+
+        return 0;
     }
 
     /**
