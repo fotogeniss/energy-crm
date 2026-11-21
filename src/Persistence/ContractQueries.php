@@ -51,8 +51,13 @@ final class ContractQueries
      */
     public static function notRenewed(string $alias): string
     {
+        // (442) Και ίδια παροχή, όπως το `openRenewal()` (417). Πελάτης με
+        // δύο παροχές ρεύματος (σπίτι, μαγαζί): η ανανέωση της μίας έκρυβε
+        // και την άλλη από τις Λήξεις, και η άλλη δεν έπαιρνε κλήση ανανέωσης.
         return 'NOT EXISTS ( SELECT 1 FROM ' . Tables::name(Tables::CONTRACTS) . ' r'
             . " WHERE r.customer_id = {$alias}.customer_id AND r.energy_type = {$alias}.energy_type"
+            . ' AND ' . SupplyNumber::sql('COALESCE(r.supply_number, \'\')')
+            . ' = ' . SupplyNumber::sql("COALESCE({$alias}.supply_number, '')")
             . " AND r.activation_type = 'renewal' AND r.id > {$alias}.id AND r.status <> 'cancelled' )";
     }
 

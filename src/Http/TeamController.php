@@ -580,7 +580,18 @@ final class TeamController implements Controller
         $wasDisabled = $this->team->isDisabled($member);
         $this->team->setDisabled($member, ! $wasDisabled);
 
-        return new WP_REST_Response(['ok' => true, 'active' => $wasDisabled], 200);
+        // (442) Απόφαση ιδιοκτήτη 21/11: με την απενεργοποίηση, οι ανοιχτές
+        // εργασίες και τα ανοιχτά leads πάνε σε αυτόν που τον απενεργοποίησε.
+        // Οι αιτήσεις μένουν στον ίδιο (η προμήθεια είναι δική του). Στην
+        // επανενεργοποίηση δεν γυρίζουν πίσω: τα έχει πια κάποιος άλλος.
+        $moved = ['tasks' => 0, 'leads' => 0];
+
+        if (! $wasDisabled) {
+            $moved['tasks'] = $this->tasks->handOverOpen($member, $actor);
+            $moved['leads'] = $this->leads->handOverOpen($member, $actor);
+        }
+
+        return new WP_REST_Response(['ok' => true, 'active' => $wasDisabled] + $moved, 200);
     }
 
     /**

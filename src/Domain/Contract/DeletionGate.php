@@ -47,6 +47,10 @@ final class DeletionGate
     public const WAS_ACTIVE = 'Η σύμβαση υπήρξε Ενεργή, οπότε δεν διαγράφεται. '
         . 'Αν χρειάζεται να σταματήσει, χρησιμοποίησε «Ακύρωση».';
 
+    /** (442) */
+    public const IN_PAYOUT = 'Η σύμβαση είναι σε εκκαθάριση προμηθειών, οπότε δεν διαγράφεται. '
+        . 'Αν χρειάζεται να σταματήσει, χρησιμοποίησε «Ακύρωση».';
+
     public function __construct(
         private readonly ContractTransitions $contracts,
         private readonly ?EventRepository $events = null,
@@ -70,6 +74,20 @@ final class DeletionGate
 
         if (trim($row['signed_at']) !== '') {
             return self::WAS_SIGNED;
+        }
+
+        // (442) Ενεργή τώρα, ή μέσα σε παρτίδα εκκαθάρισης. Παλιές αιτήσεις
+        // και εισαγωγές δεν έχουν γεγονός «Ενεργή» ούτε signed_at, οπότε
+        // διαγράφονταν ενώ ήταν Ενεργές ή είχαν ήδη πληρωθεί, και η παρτίδα
+        // έμενε με λάθος σύνολο και χωρίς τη γραμμή τους στο PDF.
+        $facts = $this->contracts->deletionFactsOf($contractId);
+
+        if ($facts !== null && $facts['payout_id'] > 0) {
+            return self::IN_PAYOUT;
+        }
+
+        if ($facts !== null && $facts['status'] === ContractStatus::Active->value) {
+            return self::WAS_ACTIVE;
         }
 
         return $this->events !== null && $this->events->hasReached($contractId, ContractStatus::Active->value)

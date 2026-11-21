@@ -315,6 +315,28 @@ final class ContractQueriesTest extends IntegrationTestCase
         self::assertSame([], $this->queries->expiring(UserScope::forSelf($this->alice), 30));
     }
 
+    /** (442) Δύο παροχές του ίδιου πελάτη: η ανανέωση της μίας δεν κρύβει την άλλη. */
+    public function testRenewingOneSupplyKeepsTheOtherOnTheList(): void
+    {
+        $customer = $this->customers->create($this->customerData('094014201'));
+        $this->contractFor($this->alice, [
+            'status' => 'active', 'end_date' => $this->daysFromToday(10), 'customer_id' => $customer,
+            'energy_type' => 'power', 'supply_number' => '11111111111',
+        ]);
+        $shop = $this->contractFor($this->alice, [
+            'status' => 'active', 'end_date' => $this->daysFromToday(12), 'customer_id' => $customer,
+            'energy_type' => 'power', 'supply_number' => '22222222222',
+        ]);
+        $this->contractFor($this->alice, [
+            'status' => 'registration', 'activation_type' => 'renewal', 'customer_id' => $customer,
+            'energy_type' => 'power', 'supply_number' => '1-1111111111',
+        ]);
+
+        $rows = $this->queries->expiring(UserScope::forSelf($this->alice), 30);
+
+        self::assertSame([$shop], array_map(static fn (array $r): int => (int) $r['id'], $rows));
+    }
+
     // --- possibleDuplicates ------------------------------------------------
 
     /**

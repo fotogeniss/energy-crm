@@ -114,6 +114,27 @@ final class ContractTransitions
     }
 
     /**
+     * (442) Η τωρινή κατάσταση και η παρτίδα εκκαθάρισης, για τη διαγραφή.
+     *
+     * @return array{status: string, payout_id: int}|null
+     */
+    public function deletionFactsOf(int $contractId): ?array
+    {
+        global $wpdb;
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare('SELECT status, payout_id FROM %i WHERE id = %d', $this->table, $contractId),
+            ARRAY_A
+        );
+
+        if (! is_array($row)) {
+            return null;
+        }
+
+        return ['status' => (string) ($row['status'] ?? ''), 'payout_id' => (int) ($row['payout_id'] ?? 0)];
+    }
+
+    /**
      * Τα τρία πεδία που χρειάζεται ο `PaperworkGate`, ή null όταν δεν υπάρχει
      * τέτοια σύμβαση.
      *

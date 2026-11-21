@@ -255,6 +255,32 @@ final class LeadRepository
         return $moved === false ? 0 : (int) $moved;
     }
 
+    /**
+     * (442) Τα ΑΝΟΙΧΤΑ leads ενός χρήστη σε άλλον (όχι won/lost: εκείνα
+     * έκλεισαν, και ποιος τα δούλεψε είναι ιστορικό). Για την απενεργοποίηση:
+     * ο απενεργοποιημένος δεν μπαίνει, και ένα ραντεβού επανάκλησης στο όνομά
+     * του δεν το έβλεπε κανείς.
+     */
+    public function handOverOpen(int $fromUserId, int $toUserId): int
+    {
+        global $wpdb;
+
+        if ($fromUserId <= 0 || $toUserId <= 0 || $fromUserId === $toUserId) {
+            return 0;
+        }
+
+        $moved = $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE %i SET partner_user_id = %d WHERE partner_user_id = %d AND stage NOT IN ('won', 'lost')",
+                $this->table,
+                $toUserId,
+                $fromUserId
+            )
+        );
+
+        return $moved === false ? 0 : (int) $moved;
+    }
+
     public function delete(int $leadId, UserScope $scope): bool
     {
         global $wpdb;
