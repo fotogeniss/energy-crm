@@ -662,25 +662,39 @@ class ECRM_Tracking {
 
 		\EnergyCRM\Services::contractNotices()->signed( $id, (string) ( $row['first_name'] ?? '' ) );
 
-		// Notify the seller.
-		if ( ! empty( $row['partner_user_id'] ) ) {
-			$u = get_userdata( (int) $row['partner_user_id'] );
-			if ( $u && is_email( $u->user_email ) ) {
-				wp_mail(
-					$u->user_email,
-					sprintf( '✍️ Υπογράφηκε: %s', $row['code'] ),
-					sprintf(
-						$moved
-							? "Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση προχώρησε σε «%s»."
-							: "Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση δεν προχώρησε σε «%s» γιατί λείπουν δικαιολογητικά. Δες τη λίστα ελέγχου της αίτησης.",
-						$row['code'],
-						$next->label()
-					)
-				);
-			}
-		}
+		self::notify_seller_signed( $row, $moved, $next->label() );
 
 		return new WP_REST_Response( [ 'ok' => true, 'message' => 'Ευχαριστούμε! Η υπογραφή καταχωρήθηκε.' ], 200 );
+	}
+
+	/**
+	 * Email στον πωλητή ότι ο πελάτης υπέγραψε.
+	 *
+	 * (441) Όχι σε απενεργοποιημένο (χωρίς `USE_CRM`): κρατά ρόλο και email,
+	 * και έπαιρνε ακόμα κωδικούς αιτήσεων αφού έφυγε. Ίδιος έλεγχος με τα
+	 * υπόλοιπα email του 438.
+	 *
+	 * @param array<string, mixed> $row
+	 */
+	public static function notify_seller_signed( array $row, bool $moved, string $next_label ): void {
+		if ( empty( $row['partner_user_id'] ) ) {
+			return;
+		}
+		$u = get_userdata( (int) $row['partner_user_id'] );
+		if ( ! $u || ! is_email( $u->user_email ) || ! user_can( $u, \EnergyCRM\Access\Capability::USE_CRM ) ) {
+			return;
+		}
+		wp_mail(
+			$u->user_email,
+			sprintf( '✍️ Υπογράφηκε: %s', $row['code'] ),
+			sprintf(
+				$moved
+					? "Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση προχώρησε σε «%s»."
+					: "Ο πελάτης υπέγραψε ηλεκτρονικά τη σύμβαση %s.\nΗ κατάσταση δεν προχώρησε σε «%s» γιατί λείπουν δικαιολογητικά. Δες τη λίστα ελέγχου της αίτησης.",
+				$row['code'],
+				$next_label
+			)
+		);
 	}
 
 	// --- (354b) ΑΦΜ πριν από την υπογραφή, και το αποδεικτικό ----------------

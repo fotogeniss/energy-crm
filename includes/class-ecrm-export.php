@@ -28,6 +28,7 @@ class ECRM_Export {
 		$cu  = ECRM_DB::table( 'customers' );
 		$pr  = ECRM_DB::table( 'providers' );
 		$pg  = ECRM_DB::table( 'programs' );
+		$ev  = ECRM_DB::table( 'events' );
 		$uid = get_current_user_id();
 		$st  = ECRM_DB::statuses();
 		$acts = ECRM_DB::activation_types();
@@ -69,7 +70,9 @@ class ECRM_Export {
 		$sql = "SELECT c.code, p.name AS provider, c.energy_type, c.category, c.customer_type,
 				cu.first_name, cu.last_name, cu.company_name, cu.mobile,
 				c.supply_number, c.invoice_code, c.status, c.partner_user_id, c.payout_id,
-				c.start_date, c.end_date, c.created_at, c.updated_at
+				c.start_date, c.end_date, c.created_at, c.updated_at,
+				( SELECT MAX(ce.created_at) FROM {$ev} ce
+				   WHERE ce.contract_id = c.id AND ce.to_status = 'cancelled' ) AS cancelled_at
 			FROM {$ct} c
 			LEFT JOIN {$cu} cu ON cu.id = c.customer_id
 			LEFT JOIN {$pr} p  ON p.id  = c.provider_id
@@ -128,7 +131,10 @@ class ECRM_Export {
 				'', // ΜΗΝΑΣ ΕΚΚΑΘΑΡΙΣΗΣ
 				'', // ΗΜΕΡΟΜΗΝΙΑ THALIS
 				$fmt( $r['start_date'] ),
-				( $r['status'] === 'cancelled' ) ? $fmt( $r['updated_at'] ) : '',
+				// (441) Η μέρα της ακύρωσης από το ιστορικό. Το updated_at αλλάζει
+				// σε κάθε επεξεργασία (ON UPDATE), και η ημερομηνία τερματισμού
+				// μετακόμιζε σε όποια μέρα διορθώθηκε κάτι (ίδιο με το 416).
+				( $r['status'] === 'cancelled' ) ? $fmt( $r['cancelled_at'] ?: $r['updated_at'] ) : '',
 				$fmt( $r['end_date'] ),
 			];
 		}
