@@ -136,9 +136,13 @@ final class LeadsController implements Controller
         $scope  = $this->scopes->forCurrentUser();
         $id     = (int) ($request['id'] ?? 0);
 
-        $data = $this->fieldsFrom($params);
+        $data = $this->fieldsFrom($params, $id > 0);
 
         if ($id > 0) {
+            if (isset($data['name']) && $data['name'] === '') {
+                return new WP_REST_Response(['ok' => false, 'error' => 'Το όνομα είναι υποχρεωτικό.'], 400);
+            }
+
             return $this->leads->update($id, $scope, $data)
                 ? new WP_REST_Response(['ok' => true, 'id' => $id], 200)
                 : new WP_REST_Response(['ok' => false, 'error' => 'Δεν βρέθηκε.'], 404);
@@ -296,11 +300,16 @@ final class LeadsController implements Controller
     }
 
     /**
+     * (445) Σε επεξεργασία γράφονται μόνο τα πεδία που στάλθηκαν, όπως στις
+     * αιτήσεις (ContractSaveMapping). Ως τώρα κάθε πεδίο που έλειπε γινόταν
+     * κενό: η φόρμα επεξεργασίας δεν έχει «Λόγο απώλειας», οπότε μια διόρθωση
+     * τηλεφώνου σε χαμένο υποψήφιο έσβηνε τον λόγο.
+     *
      * @param array<string, mixed> $params
      *
      * @return array<string, mixed>
      */
-    private function fieldsFrom(array $params): array
+    private function fieldsFrom(array $params, bool $isUpdate = false): array
     {
         $stage  = array_key_exists((string) ($params['stage'] ?? ''), ECRM_Leads::stages())
             ? (string) $params['stage'] : null;
@@ -328,6 +337,14 @@ final class LeadsController implements Controller
 
         if ($stage !== null) {
             $data['stage'] = $stage;
+        }
+
+        if ($isUpdate) {
+            foreach (array_keys($data) as $key) {
+                if ($key !== 'updated_at' && ! array_key_exists($key, $params)) {
+                    unset($data[$key]);
+                }
+            }
         }
 
         return $data;
