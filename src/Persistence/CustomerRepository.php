@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Persistence;
 
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\Domain\Contract\ContractStatus;
 use EnergyCRM\Domain\Contract\SupplyNumber;
 use EnergyCRM\Domain\Customer\PhoneNumber;
 
@@ -103,6 +104,30 @@ final class CustomerRepository
     public function isReachable(int $customerId, UserScope $scope): bool
     {
         return $this->find($customerId, $scope) !== null;
+    }
+
+    /**
+     * (444) Αν ο πελάτης έχει αίτηση που έχει βγει από το πρόχειρο και δεν
+     * ακυρώθηκε. Χωρίς scope, ίδιος λόγος με το hasOtherContracts(): το ΑΦΜ
+     * είναι κοινό σε όλες τις αιτήσεις του. Μόνο ναι/όχι.
+     */
+    public function hasContractPastDraft(int $customerId): bool
+    {
+        global $wpdb;
+
+        if ($customerId <= 0) {
+            return false;
+        }
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE customer_id = %d AND status NOT IN (%s, %s)',
+                $this->contractsTable,
+                $customerId,
+                ContractStatus::Draft->value,
+                ContractStatus::Cancelled->value
+            )
+        ) > 0;
     }
 
     /**

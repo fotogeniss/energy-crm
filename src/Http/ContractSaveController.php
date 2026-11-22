@@ -292,6 +292,21 @@ final class ContractSaveController implements Controller
             $customerId = $this->customerForChangedAfm($customerId, $contractId, $scope, $customer);
         }
 
+        // (444) Το ΑΦΜ δεν σβήνεται όσο ο πελάτης έχει αίτηση εκτός προχείρου
+        // (K4). Η «Αποθήκευση αλλαγών» δεν στέλνει κατάσταση, οπότε ο έλεγχος
+        // εξόδου από πρόχειρο (418) δεν έτρεχε, και η αίτηση έφευγε για
+        // υπογραφή με κενό ΑΦΜ.
+        if (
+            $customerId > 0 && array_key_exists('afm', $customer) && $customer['afm'] === ''
+            && (string) ($this->customers->find($customerId, $scope)['afm'] ?? '') !== ''
+            && $this->customers->hasContractPastDraft($customerId)
+        ) {
+            return new WP_REST_Response(
+                ['ok' => false, 'error' => CustomersController::AFM_IN_USE, 'field' => 'afm'],
+                422
+            );
+        }
+
         // Before anything is written, including the customer row: a refused
         // save must leave the whole request without effect. Putting this after
         // the customer update would answer 409 having already changed the

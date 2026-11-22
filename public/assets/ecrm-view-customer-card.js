@@ -267,9 +267,8 @@ function auditFooter(event) {
 
 /* Ενα generic dialog επεξεργασίας για ένα υποσύνολο πεδίων -- τα τρία μπλοκ
  * (Ταυτότητα/Διεύθυνση/Επικοινωνία) στέλνουν διαφορετική λίστα `fields`,
- * ίδιο PATCH /customers/{id} και ίδιος χειρισμός needs_confirm και για τα
- * τρία (μόνο η Ταυτότητα στέλνει ποτέ 'afm', οπότε μόνο εκεί ενεργοποιείται
- * στην πράξη).
+ * ίδιο PATCH /customers/{id} και ίδιος χειρισμός άρνησης και για τα τρία.
+ * (444) Το διπλό ΑΦΜ δεν ρωτά πια «συνέχεια;»: ο server αρνείται (K11).
  *
  * @param {Array<[string,string,string?]>} fields [κλειδί, ετικέτα, τύπος πεδίου]
  */
@@ -285,9 +284,8 @@ function editFields(id, name, eyebrow, kpi, fields, current) {
 		}).join('') +
 		'</div>' + contractImpactHint(kpi);
 
-	function save(payload, confirmDuplicate, close, btn) {
+	function save(payload, close, btn) {
 		btn.disabled = true;
-		if (confirmDuplicate) { payload = Object.assign({}, payload, { confirm_duplicate: true }); }
 
 		fetch(api('/customers/' + id), {
 			method: 'PATCH',
@@ -302,17 +300,6 @@ function editFields(id, name, eyebrow, kpi, fields, current) {
 					// refreshCard(), όχι openCustomerCard() -- βλ. σχόλιό του: ίδιο φρέσκο
 					// fetch, χωρίς το ενδιάμεσο άδειασμα σε "Φόρτωση…".
 					refreshCard(id);
-					return;
-				}
-
-				if (res && res.needs_confirm && res.reason === 'afm_duplicate') {
-					btn.disabled = false;
-					// window.confirm(), ίδιο μοτίβο με το SignLinkController::create()
-					// στο ecrm-view-detail.js -- needs_confirm από τον server, «ναι»
-					// από τον χρήστη, δεύτερη κλήση με confirm_duplicate: true.
-					if (window.confirm(res.error + ' Θέλεις να συνεχίσεις;')) {
-						save(payload, true, close, btn);
-					}
 					return;
 				}
 
@@ -332,7 +319,7 @@ function editFields(id, name, eyebrow, kpi, fields, current) {
 			fields.forEach(function (f) {
 				payload[f[0]] = (el.querySelector('[data-ef="' + f[0] + '"]').value || '').trim();
 			});
-			save(payload, false, close, btn);
+			save(payload, close, btn);
 		},
 	});
 }

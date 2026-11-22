@@ -84,6 +84,7 @@
 | Εισαγωγή Excel παρόχου | `ECRM_Import` → `moveTo()` |
 | Αποστολή για υπογραφή / υπογραφή πελάτη | `SignLinkController`, `ECRM_Tracking` → `moveTo()` |
 | Έξοδος από πρόχειρο χωρίς ΑΦΜ | `DraftExitGate` (και ΑΦΜ που σβήνεται στην ίδια αποθήκευση) |
+| Σβήσιμο ΑΦΜ πελάτη με αίτηση εκτός προχείρου (φόρμα «Αποθήκευση αλλαγών», καρτέλα πελάτη) | `CustomerRepository::hasContractPastDraft()` στο `ContractSaveController` και στο `CustomersController::updateFull()` (444) |
 | Έξοδος από πρόχειρο χωρίς εγγύηση ΔΕΗ, αποστολή υπογραφής χωρίς εγγύηση ΔΕΗ | `DraftExitGate::guaranteeOnMove()`, `missingGuarantee()` (το 0 είναι ποσό) |
 | Δικαιολογητικά Protergia (αιτήσεις από `ProtergiaDocs::FROM`) | `ECRM_Docs::checklist()` → `ProtergiaDocs` (ένα από, υπενθυμίσεις)· οι παλιότερες στον γενικό πίνακα |
 
@@ -154,6 +155,9 @@
 πελάτη, η αίτηση δένει σε εκείνον· αλλιώς, αν ο παλιός πελάτης έχει κι άλλες αιτήσεις,
 νέος πελάτης μόνο γι' αυτή· αλλιώς διορθώνεται ο ίδιος
 (`ContractSaveController::customerForChangedAfm()`).
+
+Καρτέλα πελάτη (444, απόφαση ιδιοκτήτη 22/11, αντικαθιστά την απόφαση 05/09): ΑΦΜ που
+ανήκει ήδη σε άλλον πελάτη απορρίπτεται, χωρίς «συνέχεια;» (`CustomersController::updateFull()`).
 
 Ο ίδιος κανόνας και στην αναζήτηση (421): `CustomerFields::afmSearchIndex()` (ΑΦΜ σε
 ψηφία) και `ContractQueries::supplyLike()` (παροχή χωρίς κενά/παύλες), σε λίστα

@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Integration;
 
 use EnergyCRM\Access\Roles;
+use EnergyCRM\Access\UserScope;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\NetworkRepository;
 use EnergyCRM\Persistence\Tables;
@@ -233,12 +234,10 @@ final class CustomerRestAccessTest extends IntegrationTestCase
     }
 
     /**
-     * 247, Στάδιο 3: το ΑΦΜ ήδη ανήκει σε άλλον πελάτη -- προειδοποίηση, όχι
-     * εμπόδιο (απόφαση ιδιοκτήτη 05/09). Χωρίς confirm_duplicate, ο server
-     * αρνείται ώστε ο client να ρωτήσει πρώτα -- ίδιο σχήμα needs_confirm με
-     * το SignLinkController::create().
+     * (444) Το ΑΦΜ ανήκει ήδη σε άλλον πελάτη: άρνηση (K11, απόφαση ιδιοκτήτη
+     * 22/11). Ως τότε ήταν προειδοποίηση με «ναι» (απόφαση 05/09).
      */
-    public function testEditingToAnAfmAlreadyOnFileNeedsConfirmation(): void
+    public function testEditingToAnAfmAlreadyOnFileIsRefused(): void
     {
         $other = $this->customers->create($this->customerData('200000006'));
         $this->giveCustomerAContract($other, $this->alice);
@@ -249,12 +248,12 @@ final class CustomerRestAccessTest extends IntegrationTestCase
             'afm' => '200000006',
         ]);
 
-        self::assertSame(409, $response->get_status());
-        self::assertTrue($response->get_data()['needs_confirm'] ?? false);
+        self::assertSame(422, $response->get_status());
+        self::assertSame('afm', $response->get_data()['field'] ?? null);
     }
 
-    /** Με confirm_duplicate: true, ο συνεργάτης προχωράει ούτως ή άλλως. */
-    public function testEditingToAnAfmAlreadyOnFileProceedsWithConfirmation(): void
+    /** (444) Το παλιό «confirm_duplicate» δεν παρακάμπτει πια την άρνηση. */
+    public function testTheOldConfirmationNoLongerOverridesTheRefusal(): void
     {
         $other = $this->customers->create($this->customerData('200000006'));
         $this->giveCustomerAContract($other, $this->alice);
@@ -262,12 +261,13 @@ final class CustomerRestAccessTest extends IntegrationTestCase
         wp_set_current_user($this->alice);
 
         $response = $this->send('PATCH', '/ecrm/v1/customers/' . $this->customerId, [
-            'afm'                => '200000006',
+            'afm'               => '200000006',
             'confirm_duplicate' => true,
         ]);
 
-        self::assertSame(200, $response->get_status());
-        self::assertSame(['afm'], $response->get_data()['changed'] ?? null);
+        self::assertSame(422, $response->get_status());
+        $stored = $this->customers->find($this->customerId, UserScope::forAdministrator(1));
+        self::assertNotSame('200000006', (string) ($stored['afm'] ?? ''));
     }
 
     /**
