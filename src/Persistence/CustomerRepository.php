@@ -106,6 +106,31 @@ final class CustomerRepository
     }
 
     /**
+     * (443) Αν ο πελάτης έχει κι άλλη αίτηση εκτός από αυτή, σε οποιονδήποτε.
+     *
+     * Χωρίς scope επίτηδες: η γραμμή του πελάτη είναι κοινή σε όλες τις αιτήσεις
+     * του, και η ερώτηση είναι αν μια αλλαγή ταυτότητας θα φανεί και σε αίτηση
+     * άλλου. Επιστρέφει μόνο ναι/όχι, κανένα στοιχείο.
+     */
+    public function hasOtherContracts(int $customerId, int $exceptContractId): bool
+    {
+        global $wpdb;
+
+        if ($customerId <= 0) {
+            return false;
+        }
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE customer_id = %d AND id <> %d',
+                $this->contractsTable,
+                $customerId,
+                $exceptContractId
+            )
+        ) > 0;
+    }
+
+    /**
      * Customers reachable by the actor, with a contract count, newest first.
      *
      * @return list<array<string, mixed>>

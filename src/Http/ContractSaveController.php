@@ -288,6 +288,10 @@ final class ContractSaveController implements Controller
             $customerId = $this->customers->findIdByAfm($scope, $customer['afm']);
         }
 
+        if ($existing !== null && $customerId > 0) {
+            $customerId = $this->customerForChangedAfm($customerId, $contractId, $scope, $customer);
+        }
+
         // Before anything is written, including the customer row: a refused
         // save must leave the whole request without effect. Putting this after
         // the customer update would answer 409 having already changed the
@@ -352,6 +356,14 @@ final class ContractSaveController implements Controller
         // that column alone rather than blank it — see contractFrom().
         $isUpdate = $existing !== null;
         $contract = ContractSaveMapping::contractFrom($params, $customerId, $isUpdate);
+
+        // (443) Η συναίνεση καταγράφεται μία φορά. Η φόρμα ξαναστέλνει το
+        // τσεκαρισμένο κουτάκι σε κάθε επεξεργασία, και κάθε αποθήκευση έγραφε
+        // την ώρα και την IP της, π.χ. του Back office από το γραφείο, μετά
+        // την υπογραφή. Η απόδειξη είναι η πρώτη φορά.
+        if ($isUpdate && trim((string) ($existing['consent_at'] ?? '')) !== '') {
+            unset($contract['consent_at'], $contract['consent_ip']);
+        }
 
         // On an edit, a status in the payload is a real transition — the form
         // only ever sends one starting from draft (ecrm-form.js: stay on
@@ -831,6 +843,51 @@ final class ContractSaveController implements Controller
 
         if (! $attached && ! $this->customers->isReachable($customerId, $scope)) {
             return false;
+        }
+
+        return $customerId;
+    }
+
+    /**
+     * (443) Ο πελάτης της αίτησης όταν η επεξεργασία αλλάζει το ΑΦΜ του.
+     *
+     * Ο πελάτης είναι μία γραμμή, κοινή σε όλες τις αιτήσεις του. Αλλαγή ΑΦΜ
+     * σημαίνει συνήθως «ήταν άλλο πρόσωπο», όχι «διόρθωσε αυτόν τον πελάτη
+     * παντού». Απόφαση ιδιοκτήτη 22/11:
+     * - το νέο ΑΦΜ ανήκει ήδη σε πελάτη (στο scope): η αίτηση δένει σε εκείνον,
+     *   όπως ήδη η νέα αίτηση και η μετατροπή lead (K11)·
+     * - αλλιώς, αν ο παλιός έχει κι άλλες αιτήσεις: νέος πελάτης μόνο γι' αυτή·
+     * - αλλιώς (μόνη του αίτηση, ή δεν είχε ΑΦΜ): διορθώνεται ο ίδιος.
+     *
+     * Μόνο διαβάζει. Αν η αίτηση είναι υπογεγραμμένη, η αλλαγή πελάτη πέφτει
+     * στο κλείδωμα (K3) πριν γραφτεί οτιδήποτε.
+     *
+     * @param array<string, string> $customer
+     * @return int Ο πελάτης, ή 0 για νέο.
+     */
+    private function customerForChangedAfm(int $customerId, int $contractId, UserScope $scope, array $customer): int
+    {
+        $afm = (string) ($customer['afm'] ?? '');
+
+        if ($afm === '') {
+            return $customerId;
+        }
+
+        $current = $this->customers->find($customerId, $scope);
+        $stored  = ECRM_Validate::digits((string) ($current['afm'] ?? ''));
+
+        if ($stored === $afm) {
+            return $customerId;
+        }
+
+        $other = $this->customers->findIdByAfm($scope, $afm);
+
+        if ($other > 0) {
+            return $other;
+        }
+
+        if ($stored !== '' && $this->customers->hasOtherContracts($customerId, $contractId)) {
+            return 0;
         }
 
         return $customerId;

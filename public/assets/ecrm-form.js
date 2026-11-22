@@ -3167,6 +3167,16 @@ import { openDialog } from '@energy-crm/dialog';
 		}
 		function readField(name) { var el = root.querySelector('[name="' + name + '"]'); return el ? el.value.trim() : ''; }
 
+		/* (443) Μετά από επιτυχημένη αποθήκευση, ό,τι είναι γεμάτο είναι πλέον
+		 * αποθηκευμένο, όπως όταν ανοίγει υπάρχουσα αίτηση (applyEdit). Χωρίς
+		 * αυτό, ένα πεδίο που ο συνεργάτης άδειαζε μετά την πρώτη «Αποθήκευση
+		 * προσωρινά» δεν στελνόταν, και το έντυπο τύπωνε την παλιά τιμή (K7). */
+		function markLoaded() {
+			qa('.ecrm-input').forEach(function (i) {
+				if (i.value) { i.setAttribute('data-loaded', '1'); } else { i.removeAttribute('data-loaded'); }
+			});
+		}
+
 		// React to customer-type chip changes for conditional sections.
 		root.querySelectorAll('.ecrm-chips[data-field="customer_type"] .ecrm-chip').forEach(function (c) {
 			c.addEventListener('click', function () { setTimeout(applyCustomerType, 0); });
@@ -3732,6 +3742,7 @@ import { openDialog } from '@energy-crm/dialog';
 				.then(function (d) {
 					if (d && d.ok) {
 						state.contract_id = d.contract_id; state.customer_id = d.customer_id;
+						markLoaded();
 						dirty = false;
 						/* Επιτυχής απευθείας αποθήκευση παίρνει πίσω την
 						 * κυριότητα από την ουρά. Χωρίς αυτό, μια αίτηση που
@@ -3784,7 +3795,7 @@ import { openDialog } from '@energy-crm/dialog';
 				.then(function (d) {
 					// Ιδια κυριότητα με το doSave(): πέτυχε απευθείας, άρα η
 					// ουρά δεν κρατά πια τίποτα γι' αυτή την αίτηση.
-					if (d && d.ok) { forget(draft.client_request_id); state.contract_id = d.contract_id; state.customer_id = d.customer_id; uploadFiles(); cb(); }
+					if (d && d.ok) { forget(draft.client_request_id); state.contract_id = d.contract_id; state.customer_id = d.customer_id; markLoaded(); uploadFiles(); cb(); }
 					else { toast('Αποτυχία αποθήκευσης.', false); }
 				})
 				.catch(function () { toast('Σφάλμα δικτύου.', false); });
