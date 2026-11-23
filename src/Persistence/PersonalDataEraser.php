@@ -40,6 +40,12 @@ use EnergyCRM\Domain\Forms\ProviderFormFields;
 
 final class PersonalDataEraser
 {
+    /**
+     * (449) Ανακοινώνει τα τηλέφωνα των υποψηφίων που μόλις σβήστηκαν, ώστε να
+     * μάθει το Call Gateway. Ο eraser δεν ξέρει ποιος ακούει.
+     */
+    public const LEAD_PHONES_ERASED = 'ecrm_lead_phones_erased';
+
     /** Stands in for an erased name where the column cannot be NULL. */
     private const REDACTED = '—';
 
@@ -250,7 +256,11 @@ final class PersonalDataEraser
      */
     private function eraseLeads(array $contractIds): int
     {
-        return $this->redactRows(
+        // Τα τηλέφωνα διαβάζονται ΠΡΙΝ σβηστούν: το Call Gateway πρέπει να μάθει ποιους
+        // αριθμούς αφορά η διαγραφή (το Gateway κρατά κλήσεις και υποψηφίους ανά αριθμό).
+        $phones = $this->leadPhones($contractIds);
+
+        $changed = $this->redactRows(
             Tables::LEADS,
             'name = %s, phone = NULL, email = NULL, notes = NULL, interest = NULL, lost_reason = NULL,'
                 . ' site_data = NULL',
@@ -258,6 +268,43 @@ final class PersonalDataEraser
             $contractIds,
             [self::REDACTED]
         );
+
+        if ($phones !== []) {
+            // = self::LEAD_PHONES_ERASED, γραμμένο ρητά για τον έλεγχο προθέματος του phpcs.
+            do_action('ecrm_lead_phones_erased', $phones);
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Τα τηλέφωνα των υποψηφίων που ακολουθούν αυτές τις συμβάσεις.
+     *
+     * @param list<int> $contractIds
+     *
+     * @return list<string>
+     */
+    private function leadPhones(array $contractIds): array
+    {
+        global $wpdb;
+
+        if ($contractIds === []) {
+            return [];
+        }
+
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+        /** @var list<string|null> $phones */
+        $phones = $wpdb->get_col(
+            $wpdb->prepare(
+                'SELECT DISTINCT phone FROM %i WHERE phone IS NOT NULL AND phone <> \'\' AND contract_id IN ('
+                    . $this->idPlaceholders($contractIds) . ')',
+                Tables::name(Tables::LEADS),
+                ...$contractIds
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        return array_values(array_filter(array_map('strval', $phones), static fn (string $p): bool => $p !== ''));
     }
 
     /**

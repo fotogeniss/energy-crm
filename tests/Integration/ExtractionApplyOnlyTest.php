@@ -323,6 +323,28 @@ final class ExtractionApplyOnlyTest extends IntegrationTestCase
         self::assertSame('8930099999999999999', $this->extraOf($contractId)['sim_number'] ?? null);
     }
 
+    /**
+     * (447) Ένας πελάτης ανά ΑΦΜ: το ΑΦΜ που διάβασε το AI δεν γεμίζει το κενό
+     * του πελάτη όταν ανήκει ήδη σε άλλον πελάτη.
+     *
+     * @kanonas K11
+     */
+    public function testAnAfmThatBelongsToAnotherCustomerIsNotFilledIn(): void
+    {
+        $this->makeContract(['status' => 'draft', 'first_name' => 'Βασίλης', 'afm' => '123456783']);
+        $contractId = $this->makeContract(['status' => 'draft', 'mobile' => '6900000000']);
+
+        $response = $this->extract([
+            'contract_id' => $contractId,
+            'apply'       => '1',
+            'data'        => wp_json_encode(['afm' => '123456783', 'first_name' => 'Άννα']),
+        ]);
+
+        self::assertSame(200, $response->get_status(), (string) ($response->get_data()['error'] ?? ''));
+        self::assertNotContains('afm', $response->get_data()['applied']);
+        self::assertContains('first_name', $response->get_data()['applied']);
+    }
+
     // --- fixtures ------------------------------------------------------------
 
     /**

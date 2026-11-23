@@ -128,6 +128,10 @@ final class Services
 
     private static ?\EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig $siteIntakeConfig = null;
 
+    private static ?\EnergyCRM\GatewayIntake\Infrastructure\GatewayIntakeConfig $gatewayIntakeConfig = null;
+
+    private static ?\EnergyCRM\GatewayIntake\Infrastructure\GatewayEventOutbox $gatewayEventOutbox = null;
+
     private static ?\EnergyCRM\SiteIntake\Infrastructure\SiteStatusOutbox $siteStatusOutbox = null;
 
     private static ?ProviderGrantRepository $providerGrants = null;
@@ -409,6 +413,23 @@ final class Services
     public static function siteIntakeConfig(): \EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig
     {
         return self::$siteIntakeConfig ??= new \EnergyCRM\SiteIntake\Infrastructure\SiteIntakeConfig(self::secrets());
+    }
+
+    /** (448) Η σύνδεση με το AI τηλεφωνικό κέντρο (Call Gateway). */
+    public static function gatewayIntakeConfig(): \EnergyCRM\GatewayIntake\Infrastructure\GatewayIntakeConfig
+    {
+        return self::$gatewayIntakeConfig ??= new \EnergyCRM\GatewayIntake\Infrastructure\GatewayIntakeConfig(
+            self::secrets()
+        );
+    }
+
+    /** (449) Τα γεγονότα «μη καλέσεις» και διαγραφής προς το Call Gateway. */
+    public static function gatewayEventOutbox(): \EnergyCRM\GatewayIntake\Infrastructure\GatewayEventOutbox
+    {
+        return self::$gatewayEventOutbox ??= new \EnergyCRM\GatewayIntake\Infrastructure\GatewayEventOutbox(
+            self::gatewayIntakeConfig(),
+            new \EnergyCRM\Infrastructure\FieldCipher(wp_salt('secure_auth'))
+        );
     }
 
     /** (350) Οι αλλαγές κατάστασης προς το site σύγκρισης τιμών. */

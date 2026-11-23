@@ -99,7 +99,11 @@ final class SiteIntakeDomainTest extends TestCase
 
         self::assertSame('app-20261013-0001', $app->ref);
         self::assertSame('Μαρία Παπαδοπούλου', $app->fullName);
-        self::assertSame('2026-10-13 06:15:00', $app->consentAt, 'Η συναίνεση σε UTC, όπως το created_at.');
+        self::assertSame(
+            '2026-10-13 06:15:00',
+            $app->consentAt,
+            'Το Domain δίνει UTC· σε ώρα site τη μετατρέπει το repository (K12).'
+        );
         self::assertSame('Volton Blue Flat 18M · 330 kWh/μήνα · ~71,40 €/μήνα · Οικιακό', $app->interest);
         self::assertSame('094014201', $app->private['afm']);
         self::assertSame('1 23456789-01', $app->private['supply_number']);

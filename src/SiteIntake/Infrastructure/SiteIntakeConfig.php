@@ -15,9 +15,8 @@ declare(strict_types=1);
 
 namespace EnergyCRM\SiteIntake\Infrastructure;
 
-use EnergyCRM\Access\Capability;
+use EnergyCRM\Infrastructure\IntakeOwner;
 use EnergyCRM\Infrastructure\SecretStore;
-use EnergyCRM\Persistence\TeamRepository;
 use EnergyCRM\SiteIntake\Domain\SiteStatusUpdate;
 
 final class SiteIntakeConfig
@@ -105,21 +104,6 @@ final class SiteIntakeConfig
     /** Γιατί ο χρήστης δεν μπορεί να πάρει αιτήσεις, ή '' αν μπορεί. Για τη σελίδα ρυθμίσεων. */
     public function ownerProblem(): string
     {
-        $uid = $this->ownerId();
-
-        if ($uid <= 0) {
-            return 'Δεν έχει οριστεί χρήστης.';
-        }
-        if (get_userdata($uid) === false) {
-            return 'Ο χρήστης δεν υπάρχει πια.';
-        }
-        if (get_user_meta($uid, TeamRepository::DISABLED_META, true)) {
-            return 'Ο χρήστης είναι απενεργοποιημένος στην Ομάδα.';
-        }
-        if (! user_can($uid, Capability::CREATE_CONTRACT)) {
-            return 'Ο χρήστης δεν έχει δικαίωμα να φτιάχνει σύμβαση.';
-        }
-
-        return '';
+        return IntakeOwner::problem($this->ownerId());
     }
 }

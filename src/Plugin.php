@@ -209,6 +209,7 @@ final class Plugin
         // (350) Αλλαγή κατάστασης σε αίτηση από το site -> ενημέρωση του site
         // (ο πελάτης βλέπει την πορεία στην εφαρμογή). Μετά το ActivationTerm.
         Services::siteStatusOutbox()->register();
+        Services::gatewayEventOutbox()->register();
 
         // (336) Τιμές κυμαινόμενων που παλιώνουν -> ειδοποίηση στους διαχειριστές.
         Services::stalePriceNotice()->register();

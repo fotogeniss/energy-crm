@@ -16,6 +16,7 @@ use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\NotAuthenticated;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Domain\Analytics\Month;
+use EnergyCRM\GatewayIntake\Http\GatewayIntakeController;
 use EnergyCRM\Infrastructure\MonthlyStoreReport;
 use EnergyCRM\Infrastructure\StalePriceNotice;
 use EnergyCRM\Infrastructure\TicketNotices;
@@ -146,8 +147,8 @@ final class NotificationsController implements Controller
             return $month !== null ? '#store/' . $month : '#dashboard';
         }
 
-        // (349) Νέα αίτηση από το site: οι Υποψήφιοι.
-        if ($type === self::SITE_LEAD) {
+        // (349) Νέα αίτηση από το site, (448) υποψήφιος από κλήση AI: οι Υποψήφιοι.
+        if ($type === self::SITE_LEAD || $type === GatewayIntakeController::NOTICE) {
             return '#leads';
         }
 

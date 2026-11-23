@@ -501,6 +501,20 @@ final class ExtractionController implements Controller
                 continue;
             }
 
+            // (447) Ένας πελάτης ανά ΑΦΜ (K11). Το ΑΦΜ που διάβασε το AI
+            // γέμιζε το κενό του πελάτη ακόμη κι αν ανήκε ήδη σε άλλον πελάτη,
+            // και έμεναν δύο με το ίδιο ΑΦΜ, όπως ως το 444 από την καρτέλα.
+            // Τότε δεν γράφεται· ο πωλητής το βλέπει στη φόρμα, που δένει στον
+            // σωστό πελάτη (443).
+            if ('afm' === $field) {
+                $value = ECRM_Validate::digits((string) $value);
+                $owner = $this->customers->findIdByAfm($scope, $value);
+
+                if ($owner > 0 && $owner !== $customerId) {
+                    continue;
+                }
+            }
+
             if ($customer !== null && (string) ($customer[$field] ?? '') === '') {
                 $customerPatch[$field] = $value;
             }

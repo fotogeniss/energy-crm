@@ -41,7 +41,9 @@ class ECRM_Leads {
 		// 'chatbot' επίτηδες: εδώ ξέρεις ποιος πωλητής τον έφερε.
 		// Το 'site' γράφεται ΜΟΝΟ από το SiteIntakeController (310): αίτηση από
 		// το site σύγκρισης τιμών, με υπογραφή του server του site.
+		// Το 'ai_call' (448) γράφεται ΜΟΝΟ από το GatewayIntakeController: υποψήφιος
+		// από το AI τηλεφωνικό κέντρο, με λίστα IP και υπογραφή του Gateway.
 		// Το 'qr' (344): ο ίδιος σύνδεσμος, σκαναρισμένος από την αφίσα του καταστήματος.
-		return [ 'phone' => 'Τηλέφωνο', 'link' => 'Από τον σύνδεσμό μου', 'qr' => 'Από το QR μου', 'site' => 'Από το site', 'chatbot' => 'Chatbot', 'referral' => 'Σύσταση', 'walk_in' => 'Επίσκεψη', 'social' => 'Social', 'other' => 'Άλλο' ];
+		return [ 'phone' => 'Τηλέφωνο', 'link' => 'Από τον σύνδεσμό μου', 'qr' => 'Από το QR μου', 'site' => 'Από το site', 'ai_call' => 'Κλήση AI', 'chatbot' => 'Chatbot', 'referral' => 'Σύσταση', 'walk_in' => 'Επίσκεψη', 'social' => 'Social', 'other' => 'Άλλο' ];
 	}
 }

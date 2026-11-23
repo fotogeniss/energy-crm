@@ -57,6 +57,10 @@ final class DatabaseAccessStaysInPersistenceTest extends TestCase
      * @var array<string, string>
      */
     private const ALLOWED = [
+        'src/GatewayIntake/Infrastructure/GatewayEventOutbox.php' =>
+            'GET_LOCK/RELEASE_LOCK γύρω από την ουρά «μη καλέσεις» (449): lock στον '
+            . 'server, όχι ανάγνωση δεδομένων. Δεν αγγίζει πίνακα.',
+
         'src/Infrastructure/ExtractionGate.php' =>
             'Μετράει ταυτόχρονες εξαγωγές με ατομικό counter. Δεν είναι δεδομένα '
             . 'της εφαρμογής αλλά κατάσταση χωρητικότητας του ίδιου του διακομιστή, '

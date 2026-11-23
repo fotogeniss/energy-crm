@@ -104,7 +104,8 @@ final class SiteLeadRepository
             'stage'           => 'new',
             'interest'        => $app->interest,
             'notes'           => $app->notes,
-            'consent_at'      => $app->consentAt,
+            // K12: το Domain δίνει UTC, η στήλη κρατά ώρα site (όπως το created_at).
+            'consent_at'      => get_date_from_gmt($app->consentAt),
             'consent_ip'      => $app->consentIp !== '' ? $app->consentIp : null,
             'external_ref'    => $app->ref,
             'site_data'       => FieldCipher::isAvailable() ? $this->cipher->encrypt($json) : $json,

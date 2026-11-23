@@ -29,6 +29,9 @@ declare(strict_types=1);
 
 namespace EnergyCRM\Http;
 
+use EnergyCRM\GatewayIntake\Http\DoNotCallController;
+use EnergyCRM\GatewayIntake\Http\GatewayIntakeController;
+use EnergyCRM\GatewayIntake\Persistence\GatewayLeadRepository;
 use EnergyCRM\Infrastructure\CspReports;
 use EnergyCRM\Infrastructure\SignatureState;
 use EnergyCRM\Infrastructure\TeamInvite;
@@ -184,6 +187,18 @@ final class ControllerFactory
                 Services::siteIntakeConfig(),
                 Services::siteLeads(),
                 Services::notifications(),
+            ),
+            // (448) Υποψήφιοι από το AI τηλεφωνικό κέντρο. Χωρίς login: λίστα IP + υπογραφή HMAC.
+            new GatewayIntakeController(
+                Services::gatewayIntakeConfig(),
+                new GatewayLeadRepository(),
+                Services::notifications(),
+            ),
+            // (449) «Δεν θέλει κλήσεις»: από τον πωλητή προς το Gateway.
+            new DoNotCallController(
+                $scope,
+                Services::leads(),
+                Services::gatewayEventOutbox(),
             ),
             new TeamController(
                 $scope,
