@@ -29,6 +29,15 @@ final class StoreRepository
     /** Το παράθυρο των απορρίψεων. */
     public const LOST_DAYS = 30;
 
+    /**
+     * (446) Το γεγονός «Ενεργή» μετρά μόνο αν είναι το πρώτο της αίτησης, όπως
+     * στην προμήθεια (`PayableClause::earnedAt()`, MIN) και στα Analytics (K5:
+     * ένας ορισμός). Μια αίτηση που ξαναγίνεται Ενεργή, π.χ. μετά από
+     * εκκρεμότητα, δεν μετρά δεύτερη φορά σε άλλον μήνα. Ένα %i: τα γεγονότα.
+     */
+    private const FIRST_ACTIVE = "NOT EXISTS ( SELECT 1 FROM %i fa WHERE fa.contract_id = e.contract_id
+        AND fa.type = 'status_change' AND fa.to_status = 'active' AND fa.created_at < e.created_at )";
+
     /** Αρχή του τρέχοντος μήνα, σε ώρα βάσης. Χωρίς %, για να μη μπερδέψει το prepare(). */
     private const MONTH_START = 'CURDATE() - INTERVAL (DAYOFMONTH(CURDATE()) - 1) DAY';
 
@@ -108,11 +117,12 @@ final class StoreRepository
     public function activatedThisMonth(UserScope $scope): array
     {
         $start = self::MONTH_START;
+        $first = self::FIRST_ACTIVE;
 
         return $this->eventCounts(
             $scope,
-            "e.to_status = 'active' AND e.created_at >= {$start}",
-            []
+            "e.to_status = 'active' AND e.created_at >= {$start} AND {$first}",
+            [Tables::name(Tables::EVENTS)]
         );
     }
 
@@ -243,7 +253,12 @@ final class StoreRepository
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         $range     = 'e.created_at >= %s AND e.created_at < %s + INTERVAL 1 MONTH';
-        $activated = $this->eventCounts($scope, "e.to_status = 'active' AND {$range}", [$start, $start]);
+        $first     = self::FIRST_ACTIVE;
+        $activated = $this->eventCounts(
+            $scope,
+            "e.to_status = 'active' AND {$range} AND {$first}",
+            [$start, $start, Tables::name(Tables::EVENTS)]
+        );
         $lostBy    = [];
 
         if ($lost !== []) {
@@ -286,6 +301,7 @@ final class StoreRepository
         global $wpdb;
 
         [$clause, $params] = ScopeClause::forScope($scope, 'c');
+        $first             = self::FIRST_ACTIVE;
 
         // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
         $rows = $wpdb->get_results(
@@ -295,7 +311,8 @@ final class StoreRepository
                             applications,
                         SUM( EXISTS ( SELECT 1 FROM %i e WHERE e.contract_id = c.id AND e.type = 'status_change'
                                       AND e.to_status = 'active'
-                                      AND e.created_at >= %s AND e.created_at < %s + INTERVAL 1 MONTH ) ) activated
+                                      AND e.created_at >= %s AND e.created_at < %s + INTERVAL 1 MONTH
+                                      AND {$first} ) ) activated
                  FROM %i c
                  LEFT JOIN %i p ON p.id = c.provider_id
                  WHERE c.partner_user_id IS NOT NULL{$clause}
@@ -308,6 +325,7 @@ final class StoreRepository
                     Tables::name(Tables::EVENTS),
                     $start,
                     $start,
+                    Tables::name(Tables::EVENTS),
                     Tables::name(Tables::CONTRACTS),
                     Tables::name(Tables::PROVIDERS),
                     ...$params,

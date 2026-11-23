@@ -101,6 +101,7 @@
 | Δημιουργία παρτίδας | `PayoutRepository::stampAmounts()` (guarded) |
 | Διαγραφή παρτίδας | μόνο εκκρεμής |
 | Αλλαγή προγράμματος μετά την υπογραφή | K3 |
+| Αρχική (πλακίδιο «Κλεισμένες μήνα» και προμήθεια), «Η ομάδα μου» και μηνιαία αναφορά (446) | πρώτη ενεργοποίηση: `DashboardRepository::closedThisMonth()`/`closedBetween()` (MIN), `StoreRepository::FIRST_ACTIVE` |
 | Διαγραφή προγράμματος/παρόχου (σβήνει κανόνες προμήθειας με CASCADE) | `ProviderRepository::deleteOrRetireProgram()`/`deleteOrRetireProvider()` — με αιτήσεις: απενεργοποίηση |
 
 ### K6 — Η αίτηση (και η προμήθεια) ανήκει σε όποιον ανήκει η πηγή της

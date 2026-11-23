@@ -146,6 +146,25 @@ final class StoreDashboardControllerTest extends IntegrationTestCase
         self::assertSame(1, $this->member($this->store()->get_data(), $this->member)['activated']);
     }
 
+    /**
+     * (446) Μετρά η πρώτη ενεργοποίηση, όπως η προμήθεια: μια αίτηση που
+     * ενεργοποιήθηκε πριν από δύο μήνες και ξαναγίνεται Ενεργή τώρα δεν είναι
+     * «ενεργή του μήνα».
+     *
+     * @kanonas K5
+     */
+    public function testAReactivationIsNotANewActivation(): void
+    {
+        $id = $this->contract($this->member, 'active');
+        $this->event($id, 'active', 60, 'finalisation');
+        $this->event($id, 'pending_issue', 59, 'active');
+        $this->event($id, 'active', 0, 'pending_issue');
+
+        wp_set_current_user($this->manager);
+
+        self::assertSame(0, $this->member($this->store()->get_data(), $this->member)['activated']);
+    }
+
     public function testOverdueCallbacksAreSplitBySeller(): void
     {
         global $wpdb;

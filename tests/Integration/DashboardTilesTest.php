@@ -312,20 +312,63 @@ final class DashboardTilesTest extends IntegrationTestCase
         }
     }
 
-    public function testClosedMonthExcludesAContractThatWasCancelledAfter(): void
+    /**
+     * (446) Ενεργοποιήθηκε τον μήνα και μετά ακυρώθηκε: πληρώνεται (404, K5),
+     * άρα μετρά και εδώ. Ως τότε το πλακίδιο ζητούσε `status = active` σήμερα
+     * και διαφωνούσε με την οθόνη Προμηθειών (απόφαση ιδιοκτήτη 22/11).
+     *
+     * @kanonas K5
+     */
+    public function testClosedMonthCountsAContractThatWasCancelledAfter(): void
     {
-        $wonThenCancelled = $this->contractFor('cancelled');
-        $this->becameActiveDaysAgo($wonThenCancelled, 1);
-        $this->stamp($wonThenCancelled, ['payout_amount' => 200]);
+        global $wpdb;
 
-        $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
-
-        self::assertSame(
-            0,
-            $tiles['closed_month'],
-            'Η σημερινή στήλη status δεν είναι active πια — δεν πρέπει να μετράει σαν κλεισμένη με προμήθεια.'
+        $wpdb->query(
+            "SET @@session.timestamp = UNIX_TIMESTAMP("
+            . "CONCAT(DATE_FORMAT(CURDATE(), '%Y-%m-15'), ' 12:00:00'))"
         );
-        self::assertSame(0.0, $tiles['closed_month_commission']);
+
+        try {
+            $wonThenCancelled = $this->contractFor('cancelled');
+            $this->becameActiveDaysAgo($wonThenCancelled, 1);
+            $this->stamp($wonThenCancelled, ['payout_amount' => 200]);
+
+            $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+            self::assertSame(1, $tiles['closed_month']);
+            self::assertEqualsWithDelta(200.0, $tiles['closed_month_commission'], 0.01);
+        } finally {
+            $wpdb->query('SET @@session.timestamp = DEFAULT');
+        }
+    }
+
+    /**
+     * (446) Πρώτη ενεργοποίηση πριν από μήνες, ξανά Ενεργή τώρα: δεν είναι
+     * «κλεισμένη του μήνα». Η προμήθεια μετρά στον μήνα της πρώτης.
+     *
+     * @kanonas K5
+     */
+    public function testAReactivationDoesNotCountAgainInALaterMonth(): void
+    {
+        global $wpdb;
+
+        $wpdb->query(
+            "SET @@session.timestamp = UNIX_TIMESTAMP("
+            . "CONCAT(DATE_FORMAT(CURDATE(), '%Y-%m-15'), ' 12:00:00'))"
+        );
+
+        try {
+            $again = $this->contractFor('active');
+            $this->becameActiveDaysAgo($again, 90);
+            $this->becameActiveDaysAgo($again, 3);
+            $this->stamp($again, ['payout_amount' => 150]);
+
+            $tiles = $this->dashboard->tiles($this->partner, $this->monthStart());
+
+            self::assertSame(0, $tiles['closed_month']);
+        } finally {
+            $wpdb->query('SET @@session.timestamp = DEFAULT');
+        }
     }
 
     public function testClosedMonthCommissionIsNotDoubleCountedOnReactivation(): void

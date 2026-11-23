@@ -633,21 +633,19 @@ final class DashboardRepository
     }
 
     /**
-     * Πόσες συμβάσεις έγιναν `active` μέσα στον μήνα, και η προμήθειά τους.
+     * Πόσες συμβάσεις ενεργοποιήθηκαν για πρώτη φορά μέσα στον μήνα, και η
+     * προμήθειά τους.
      *
-     * «Έγιναν active», όχι «είναι active»: ψάχνει το γεγονός `to_status =
-     * active` μέσα στο παράθυρο, όχι μόνο τη σημερινή στήλη `status` — αλλιώς
-     * μια σύμβαση που έγινε ενεργή τον προηγούμενο μήνα θα μετρούσε κάθε μήνα
-     * μετά, για πάντα. Φιλτράρεται ΚΑΙ σε `status = 'active' ΤΩΡΑ`, ώστε μια
-     * σύμβαση που έγινε ενεργή και μετά ακυρώθηκε να μη μείνει στο «κλεισμένες
-     * με προμήθεια» — η προμήθεια διαβάζεται από τη ΣΗΜΕΡΙΝΗ στήλη
-     * `payout_amount`, όχι από ιστορικό.
+     * (446) Ίδιος ορισμός με την οθόνη Προμηθειών (K5, απόφαση 16/11 στο 404,
+     * επιβεβαίωση 22/11): μετρά η ΠΡΩΤΗ φορά που έγινε Ενεργή
+     * (`PayableClause::earnedAt()`, MIN), όπου κι αν βρίσκεται τώρα. Ως τότε
+     * το πλακίδιο ζητούσε και `status = 'active'` σήμερα: μια αίτηση που
+     * ενεργοποιήθηκε και μετά ακυρώθηκε πληρωνόταν αλλά έλειπε από εδώ, και
+     * μια επανενεργοποίηση (π.χ. μετά από εκκρεμότητα) μετρούσε ξανά σε άλλον
+     * μήνα.
      *
-     * Το άθροισμα γίνεται σε PHP και όχι με SQL SUM(): μια σύμβαση μπορεί να
-     * έχει περισσότερα από ένα γεγονός `to_status=active` μέσα στο ίδιο
-     * παράθυρο (π.χ. active → pending → active ξανά), και ένα JOIN θα την
-     * μέτραγε τόσες φορές όσα τα γεγονότα — το ίδιο λάθος διπλομέτρησης που
-     * προειδοποιεί το σχόλιο του `CommissionRepository::payable()`.
+     * Το άθροισμα γίνεται σε PHP, μία φορά ανά σύμβαση (GROUP BY στο
+     * υποερώτημα), όχι ανά γεγονός.
      *
      * @return array{0: int, 1: float}
      */
@@ -662,15 +660,16 @@ final class DashboardRepository
                 'SELECT DISTINCT c.id, c.payout_amount, c.provider_id, c.program_id,
                         c.energy_type, c.category, c.status
                  FROM %i c
-                 WHERE c.partner_user_id = %d AND c.status = %s
+                 WHERE c.partner_user_id = %d
                    AND c.id IN (
                        SELECT e.contract_id FROM %i e
-                       WHERE e.to_status = %s AND e.created_at >= %s
+                       WHERE e.to_status = %s
+                       GROUP BY e.contract_id
+                       HAVING MIN(e.created_at) >= %s
                    )',
                 [
                     Tables::name(Tables::CONTRACTS),
                     $userId,
-                    'active',
                     Tables::name(Tables::EVENTS),
                     'active',
                     $monthStart,
@@ -698,8 +697,8 @@ final class DashboardRepository
 
     /**
      * (381) Πόσες ενεργοποιήθηκαν μέσα σε κλειστό παράθυρο (τον προηγούμενο
-     * μήνα). Ίδιος ορισμός με το closedThisMonth(): σήμερα ενεργές, με γεγονός
-     * `to_status=active` μέσα στο παράθυρο, η καθεμία μία φορά.
+     * μήνα). Ίδιος ορισμός με το closedThisMonth(): η πρώτη ενεργοποίηση
+     * μέσα στο παράθυρο, η καθεμία μία φορά (446).
      */
     private function closedBetween(int $userId, string $from, string $to): int
     {
@@ -708,14 +707,15 @@ final class DashboardRepository
         return (int) $wpdb->get_var(
             $wpdb->prepare(
                 'SELECT COUNT(DISTINCT c.id) FROM %i c
-                 WHERE c.partner_user_id = %d AND c.status = %s
+                 WHERE c.partner_user_id = %d
                    AND c.id IN (
                        SELECT e.contract_id FROM %i e
-                       WHERE e.to_status = %s AND e.created_at >= %s AND e.created_at < %s
+                       WHERE e.to_status = %s
+                       GROUP BY e.contract_id
+                       HAVING MIN(e.created_at) >= %s AND MIN(e.created_at) < %s
                    )',
                 Tables::name(Tables::CONTRACTS),
                 $userId,
-                'active',
                 Tables::name(Tables::EVENTS),
                 'active',
                 $from,
