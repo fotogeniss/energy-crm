@@ -27,6 +27,40 @@ function leadCbInput(v) {
 	// 'YYYY-MM-DD HH:MM:SS' -> 'YYYY-MM-DDTHH:MM'
 	return v.replace(' ', 'T').slice(0, 16);
 }
+// «Δεν θέλει κλήσεις»: κουμπί στην κάρτα του lead. Η ενέργεια είναι τελική
+// (ο αριθμός μπαίνει στη λίστα DNC του Gateway), γι' αυτό ζητά επιβεβαίωση.
+// Κρύβεται όταν το lead είναι ήδη σημειωμένο έτσι (do_not_call).
+var DNC_ICON = '<svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>';
+function dncBtn(l) {
+	if (l.do_not_call) return '';
+	return '<button type="button" class="ecrm-btn ecrm-btn--danger ecrm-btn--sm" data-ldnc="' + l.id + '">' + DNC_ICON + ' Δεν θέλει κλήσεις</button>';
+}
+function confirmDnc(l, done) {
+	openDialog({
+		eyebrow: 'Μην καλείτε',
+		title: 'Δεν θέλει κλήσεις;',
+		lead: ['Ο αριθμός ', { b: l.phone || '' }, ' θα μπει στη λίστα «Μην καλείτε» και δεν θα ξανακληθεί από το AI τηλεφωνικό κέντρο.'],
+		body: '<ul class="ecrm-dnclist">' +
+			(l.stage === 'won' ? '' : '<li>Το lead περνά σε «Χαμένο» (αιτία: «Δεν θέλει κλήσεις»).</li>') +
+			'<li>Η ενέργεια δεν αναιρείται από εδώ.</li></ul>',
+		danger: true,
+		confirm: 'Ναι, καταχώρηση',
+		onConfirm: function (ov, close, btn) {
+			btn.disabled = true;
+			fetch(api('/leads/' + l.id + '/do-not-call'), { method: 'POST', headers: H() })
+				.then(function (r) { return r.json(); })
+				.then(function (res) {
+					close();
+					if (!res || !res.ok) { toast((res && res.error) || 'Αποτυχία καταχώρησης.', false); return; }
+					toast(res.gateway ? 'Καταχωρήθηκε. Ο αριθμός δεν θα ξανακληθεί.'
+						: 'Σημειώθηκε. Η ειδοποίηση προς το τηλεφωνικό κέντρο είναι σε αναμονή και θα ξαναδοκιμαστεί αυτόματα.', !!res.gateway);
+					done();
+				})
+				.catch(function () { btn.disabled = false; toast('Σφάλμα δικτύου.', false); });
+		}
+	});
+}
+
 function renderLeads(view, d) {
 	var stages = d.stages || {}, sources = d.sources || {}, counts = d.counts || {};
 	var sChips = [['', 'Όλα']].concat(Object.keys(stages).map(function (k) { return [k, stages[k]]; }))
@@ -77,9 +111,11 @@ function renderLeads(view, d) {
 				'<div class="ecrm-leadmeta">' + tel + (l.source_label ? ' <span class="ecrm-muted">· ' + esc(l.source_label) + '</span>' : '') + '</div></div>' +
 				'<span class="ecrm-leadstage">' + esc(l.stage_label) + '</span></div>' +
 			(l.interest ? '<div class="ecrm-leadint">' + esc(l.interest) + '</div>' : '') +
+			(l.do_not_call ? '<div class="ecrm-dncbadge">' + DNC_ICON + ' Δεν θέλει κλήσεις</div>' : '') +
 			'<div class="ecrm-leadcard__bar">' + cb +
 				'<span class="ecrm-leadcard__actions">' + conv +
 					'<button type="button" class="ecrm-btn ecrm-btn--ghost ecrm-btn--sm" data-ledit="' + l.id + '">Επεξεργασία</button>' +
+					dncBtn(l) +
 					'<button type="button" class="ecrm-iconbtn" data-ldel="' + l.id + '" title="Διαγραφή" aria-label="Διαγραφή"><svg class="ecrm-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg></button>' +
 				'</span></div>' +
 		'</div>';
@@ -187,6 +223,13 @@ function renderLeads(view, d) {
 			var id = +this.getAttribute('data-ledit');
 			var lead = (d.leads || []).filter(function (x) { return x.id === id; })[0];
 			if (lead) { leadsState.editing = lead; leadsState.showForm = true; renderLeads(view, d); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+		});
+	});
+	view.querySelectorAll('[data-ldnc]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			var id = Number(this.getAttribute('data-ldnc'));
+			var lead = (d.leads || []).filter(function (x) { return x.id === id; })[0];
+			if (lead) confirmDnc(lead, loadLeads);
 		});
 	});
 	view.querySelectorAll('[data-ldel]').forEach(function (b) {

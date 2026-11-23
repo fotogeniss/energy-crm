@@ -20,6 +20,7 @@ use ECRM_Validate;
 use EnergyCRM\Access\Capability;
 use EnergyCRM\Access\ScopeResolver;
 use EnergyCRM\Access\UserScope;
+use EnergyCRM\GatewayIntake\Domain\DoNotCallDecision;
 use EnergyCRM\Persistence\ContractRepository;
 use EnergyCRM\Persistence\CustomerRepository;
 use EnergyCRM\Persistence\LeadRepository;
@@ -116,6 +117,7 @@ final class LeadsController implements Controller
                 'notes'        => $row['notes'],
                 'contract_id'  => (int) ($row['contract_id'] ?? 0),
                 'lost_reason'  => $row['lost_reason'],
+                'do_not_call'  => $row['lost_reason'] === DoNotCallDecision::LOST_REASON,
                 'updated_at'   => $row['updated_at'],
             ],
             $this->leads->search($scope, (string) $request['stage'], trim((string) $request['q']))

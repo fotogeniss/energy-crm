@@ -1616,6 +1616,9 @@ button.ecrm-avatar:focus-visible { outline: 2px solid var(--amber); outline-offs
 .ecrm-leadint { font-size:var(--fs-13-5); color:var(--muted-strong); margin:8px 0 0; }
 .ecrm-leadcard__bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
 .ecrm-leadcard__actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.ecrm-dncbadge { display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:var(--fs-12); font-weight:700; color:var(--st-cancel); background:var(--st-cancel-bg); border-radius:6px; padding:3px 8px; }
+.ecrm-dncbadge .ecrm-i { width:13px; height:13px; }
+.ecrm-dnclist { margin:0 0 14px; padding-left:18px; font-size:var(--fs-13-5); color:var(--muted-strong); }
 .ecrm-leadcb { font-size:var(--fs-12-5); color:var(--muted); font-weight:600; }
 .ecrm-leadcb.is-over { color:var(--st-cancel); }
 .ecrm-iconbtn { border:0; background:var(--bg); border-radius:8px; padding:5px 9px; cursor:pointer; font-size:var(--icon-13); }
