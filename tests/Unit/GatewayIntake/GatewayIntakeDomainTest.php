@@ -138,6 +138,20 @@ final class GatewayIntakeDomainTest extends TestCase
         self::assertStringContainsString('Εισερχόμενη', $lead->notes);
     }
 
+    public function testAnOutboundCallWithoutConsentNeedsARegistryCheck(): void
+    {
+        $lead = GatewayLead::fromPayload(self::outbound([
+            'consent'             => null,
+            'call_basis'          => 'registry_clear',
+            'registry_checked_at' => '2026-11-24T09:15:00.000Z',
+        ]));
+
+        self::assertNull($lead->consentGivenAt);
+        self::assertStringContainsString('εκτός Μητρώου άρθρου 11', $lead->notes);
+        self::assertStringContainsString('2026-11-24 09:15 UTC', $lead->notes);
+        self::assertStringNotContainsString('Συγκατάθεση για αυτοματοποιημένες', $lead->notes);
+    }
+
     public function testAMissingNameGetsALabelNotAnError(): void
     {
         foreach ([null, '12345'] as $name) {
@@ -171,6 +185,16 @@ final class GatewayIntakeDomainTest extends TestCase
             'ενδιαφέρον'                   => [self::outbound(['interest' => 'maybe'])],
             'τύπος πελάτη'                 => [self::outbound(['customer_type' => 'company'])],
             'εξερχόμενη χωρίς συγκατάθεση' => [self::outbound(['consent' => null])],
+            'χωρίς συγκατάθεση, άλλη βάση' => [
+                self::outbound([
+                    'consent'             => null,
+                    'call_basis'          => 'consent',
+                    'registry_checked_at' => '2026-11-24T09:00:00Z',
+                ]),
+            ],
+            'χωρίς συγκατάθεση, χωρίς ώρα ελέγχου' => [
+                self::outbound(['consent' => null, 'call_basis' => 'registry_clear']),
+            ],
             'συγκατάθεση χωρίς επιβεβαίωση' => [
                 self::outbound(['consent' => array_merge($consent, ['verified_at' => null])]),
             ],

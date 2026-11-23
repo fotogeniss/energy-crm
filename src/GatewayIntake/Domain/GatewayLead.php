@@ -19,10 +19,15 @@
  *
  * ## Συγκατάθεση
  *
- * Εξερχόμενη κλήση γίνεται μόνο με επιβεβαιωμένη συγκατάθεση (άρθρο 11 ν.
- * 3471/2006)· ο έλεγχος είναι στο Gateway, πριν την κλήση. Εδώ κρατάμε την
- * ένδειξη: πότε δόθηκε, πότε επιβεβαιώθηκε, ποιο κείμενο. Εισερχόμενη κλήση
- * (μας πήρε ο πελάτης) δεν έχει συγκατάθεση και δεν χρειάζεται.
+ * Εξερχόμενη κλήση έχει μία από δύο βάσεις, και τις δύο τις ελέγχει το Gateway
+ * πριν την κλήση:
+ *  - `consent`: επιβεβαιωμένη συγκατάθεση. Κρατάμε πότε δόθηκε, πότε
+ *    επιβεβαιώθηκε, ποιο κείμενο.
+ *  - `registry_clear`: χωρίς συγκατάθεση, ο αριθμός ήταν εκτός Μητρώου άρθρου 11
+ *    (ν. 3471/2006) και εκτός «μη καλείτε». Απόφαση 24/11 με γνώμη του νομικού της
+ *    εταιρείας. Κρατάμε πότε έγινε ο έλεγχος.
+ * Εξερχόμενη χωρίς καμία από τις δύο απορρίπτεται. Εισερχόμενη κλήση (μας πήρε ο
+ * πελάτης) δεν χρειάζεται βάση.
  *
  * Καθαρή κλάση, χωρίς WordPress.
  *
@@ -96,6 +101,7 @@ final class GatewayLead
         }
 
         $consent = self::consent($p['consent'] ?? null, $direction);
+        $checked = $consent === null ? self::registryCheck($p, $direction) : null;
 
         $name = self::text($p, 'name', 160);
         if ($name !== '' && preg_match('/\p{L}/u', $name) !== 1) {
@@ -114,7 +120,7 @@ final class GatewayLead
             $transferred,
             $consent['given'] ?? null,
             self::interestLine($interest === null ? null : (string) $interest, $customerType, $transferred),
-            self::notesText($direction, $provider, $notesIn, $consent),
+            self::notesText($direction, $provider, $notesIn, $consent, $checked),
         );
     }
 
@@ -128,11 +134,7 @@ final class GatewayLead
     private static function consent(mixed $c, string $direction): ?array
     {
         if (! is_array($c)) {
-            if ($direction === 'outbound') {
-                throw new InvalidGatewayLead('Εξερχόμενη κλήση χωρίς συγκατάθεση.');
-            }
-
-            return null;
+            return null; // η εξερχόμενη χωρίς συγκατάθεση ελέγχεται στο registryCheck()
         }
 
         $id       = self::text($c, 'id', 36);
@@ -148,6 +150,30 @@ final class GatewayLead
         }
 
         return ['given' => $given, 'verified' => $verified, 'id' => strtolower($id), 'text_id' => $textId];
+    }
+
+    /**
+     * Εξερχόμενη χωρίς συγκατάθεση: δεκτή μόνο με βάση `registry_clear` και
+     * ημερομηνία ελέγχου. Επιστρέφει τη στιγμή του ελέγχου (UTC), ή null σε εισερχόμενη.
+     *
+     * @param array<string, mixed> $p
+     *
+     * @throws InvalidGatewayLead
+     */
+    private static function registryCheck(array $p, string $direction): ?int
+    {
+        if ($direction !== 'outbound') {
+            return null;
+        }
+        if (($p['call_basis'] ?? null) !== 'registry_clear') {
+            throw new InvalidGatewayLead('Εξερχόμενη κλήση χωρίς συγκατάθεση και χωρίς έλεγχο Μητρώου.');
+        }
+        $checked = strtotime(self::text($p, 'registry_checked_at', 40));
+        if ($checked === false) {
+            throw new InvalidGatewayLead('Λείπει πότε ελέγχθηκε το Μητρώο.');
+        }
+
+        return $checked;
     }
 
     /** Η γραμμή που βλέπει ο πωλητής στη λίστα (στήλη 255 χαρακτήρων). */
@@ -171,8 +197,13 @@ final class GatewayLead
     /**
      * @param array{given: int, verified: int, id: string, text_id: string}|null $consent
      */
-    private static function notesText(string $direction, string $provider, string $notes, ?array $consent): string
-    {
+    private static function notesText(
+        string $direction,
+        string $provider,
+        string $notes,
+        ?array $consent,
+        ?int $registryChecked
+    ): string {
         $lines = [$direction === 'outbound'
             ? 'Εξερχόμενη κλήση από το AI τηλεφωνικό κέντρο.'
             : 'Εισερχόμενη κλήση στο AI τηλεφωνικό κέντρο.'];
@@ -186,6 +217,10 @@ final class GatewayLead
         if ($consent !== null) {
             $lines[] = 'Συγκατάθεση για αυτοματοποιημένες κλήσεις: κείμενο ' . $consent['text_id']
                 . ', επιβεβαίωση με SMS. Η πλήρης απόδειξη (' . $consent['id'] . ') είναι στο Gateway.';
+        }
+        if ($registryChecked !== null) {
+            $lines[] = 'Κλήση χωρίς συγκατάθεση: ο αριθμός ήταν εκτός Μητρώου άρθρου 11 και εκτός «μη καλείτε» '
+                . 'στον έλεγχο της ' . gmdate('Y-m-d H:i', $registryChecked) . ' UTC. Η απόδειξη είναι στο Gateway.';
         }
         $lines[] = 'Το AI δεν συλλέγει ΑΦΜ, IBAN ή ταυτότητα. Αυτά τα παίρνει ο πωλητής από τον πελάτη.';
 
