@@ -4,7 +4,13 @@
  * (432) Τα δικαιολογητικά που ζητά η Protergia, ανά είδος αίτησης.
  *
  * Πηγή: Back Office, 19 και 20/11/2026 (email «ΔΙΚΑΙΟΛΟΓΗΤΙΚΑ-ΕΓΓΥΗΣΕΙΣ» για
- * το ρεύμα, «Απαραίτητα Δικαιολογητικά Φυσικού Αερίου» της Protergia v16).
+ * το ρεύμα, «Απαραίτητα Δικαιολογητικά Φυσικού Αερίου» της Protergia v16), και
+ * οι απαντήσεις του Back Office στις διευκρινίσεις, 23/11/2026 (454):
+ * - αέριο, «Άλλες Κατηγορίες Πελατών»: τα ίδια δικαιολογητικά· σε ατομική
+ *   επιχείρηση και η έναρξη δραστηριότητας, σε εταιρεία το καταστατικό και τα
+ *   στοιχεία ΓΕΜΗ·
+ * - διαδοχή: ισχύει και για νέο ενοικιαστή· λόγω θανάτου, αν δεν υπάρχει
+ *   πρόσφατος λογαριασμός, πιστοποιητικό θανάτου και εγγυτέρων συγγενών.
  *
  * Ο γενικός πίνακας (`ECRM_Docs::required_map()`) ζητά για όλους τους
  * παρόχους λίγα και πάντα όλα μαζί. Η Protergia ζητά περισσότερα, και συχνά
@@ -56,6 +62,10 @@ final class ProtergiaDocs
     private const GAS_NEW_USER = 'Αν αλλάζει και ο χρήστης: εξοφλημένος λογαριασμός, ή αποδεικτικό ΗΚΑΣΠ μαζί με '
         . 'μισθωτήριο / Ε9';
 
+    /** (454) Back Office 23/11. Το CRM δεν ξέρει αν η διαδοχή είναι λόγω θανάτου: υπενθύμιση. */
+    private const DEATH = 'Διαδοχή λόγω θανάτου, χωρίς πρόσφατο λογαριασμό: πιστοποιητικό θανάτου '
+        . 'και πιστοποιητικό εγγυτέρων συγγενών';
+
     private const GAS_OTHER_DETAILS = 'Αν η σύμβαση ΕΔΑ έχει άλλα στοιχεία από την αίτηση: και μισθωτήριο ή Ε1';
 
     private function __construct()
@@ -103,8 +113,9 @@ final class ProtergiaDocs
             return null;
         }
 
-        if ($c['energy'] === 'power' && $business) {
-            $papers           = self::companyPapers((string) ($c['company_type'] ?? ''));
+        if ($business) {
+            $type             = (string) ($c['company_type'] ?? '');
+            $papers           = $c['energy'] === 'gas' ? self::gasCompanyPapers($type) : self::companyPapers($type);
             $list['required'] = array_merge($list['required'], $papers);
         }
 
@@ -183,7 +194,7 @@ final class ProtergiaDocs
                             ['provider_bill', 'e9', 'lease']
                         ),
                     ],
-                    'reminders' => [self::UNIVERSAL],
+                    'reminders' => [self::UNIVERSAL, self::DEATH],
                 ];
         }
 
@@ -249,7 +260,7 @@ final class ProtergiaDocs
                             ['provider_bill', 'lease', 'e9']
                         ),
                     ],
-                    'reminders' => [self::EDA_THESS],
+                    'reminders' => [self::EDA_THESS, self::DEATH],
                 ];
         }
 
@@ -275,6 +286,26 @@ final class ProtergiaDocs
         $papers[] = self::item('fek', 'ΦΕΚ εκπροσώπησης', 'σε ατομική επιχείρηση δεν χρειάζεται', ['fek']);
 
         return $papers;
+    }
+
+    /**
+     * (454) Αέριο, «Άλλες Κατηγορίες Πελατών» (Back Office 23/11): σε ατομική
+     * επιχείρηση η έναρξη δραστηριότητας, σε εταιρεία το καταστατικό με τα
+     * στοιχεία ΓΕΜΗ. Χωρίς νομική μορφή γραμμένη, και τα δύο, για τον ίδιο λόγο
+     * με το ρεύμα.
+     *
+     * @return list<DocItem>
+     */
+    private static function gasCompanyPapers(string $companyType): array
+    {
+        $kad     = self::item('kad', 'Έναρξη δραστηριότητας', 'σε ατομική επιχείρηση', ['kad']);
+        $statute = self::item('statute', 'Καταστατικό και στοιχεία ΓΕΜΗ', 'σε εταιρεία', ['gemi']);
+
+        if (self::isSoleTrader($companyType)) {
+            return [$kad];
+        }
+
+        return trim($companyType) === '' ? [$kad, $statute] : [$statute];
     }
 
     public static function isSoleTrader(string $companyType): bool

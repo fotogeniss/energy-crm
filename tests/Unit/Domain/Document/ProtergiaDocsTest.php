@@ -1,7 +1,7 @@
 <?php
 
 /**
- * (432) Τα δικαιολογητικά της Protergia (Back Office 19-20/11).
+ * (432) Τα δικαιολογητικά της Protergia (Back Office 19-20/11, διευκρινίσεις 23/11).
  *
  * @kanonas K4
  * @package EnergyCRM
@@ -95,14 +95,44 @@ final class ProtergiaDocsTest extends TestCase
         self::assertStringContainsString('αλλάζει και ο χρήστης', implode(' | ', $r['reminders']));
     }
 
-    public function testGasHasNoCompanyPapersAndRenewalFallsBack(): void
+    public function testRenewalAndProgramChangeFallBack(): void
     {
-        $gas = $this->req(['activation' => 'new_connection', 'energy' => 'gas', 'customer_type' => 'company']);
-
-        self::assertSame(['id', 'connection'], array_column($gas['required'], 'key'));
-        self::assertStringContainsString('άλλα στοιχεία', $gas['reminders'][0]);
         self::assertNull(ProtergiaDocs::requirements(['activation' => 'renewal', 'energy' => 'power']));
         self::assertNull(ProtergiaDocs::requirements(['activation' => 'program_change', 'energy' => 'gas']));
+    }
+
+    /**
+     * (454) Back Office 23/11: αέριο, «Άλλες Κατηγορίες Πελατών» = τα ίδια, και σε
+     * ατομική η έναρξη δραστηριότητας, σε εταιρεία καταστατικό και ΓΕΜΗ.
+     */
+    public function testGasCompanyPapers(): void
+    {
+        $gas = ['activation' => 'new_connection', 'energy' => 'gas', 'customer_type' => 'company'];
+
+        $company = $this->req($gas + ['company_type' => 'Ι.Κ.Ε.']);
+        self::assertSame(['id', 'connection', 'statute'], array_column($company['required'], 'key'));
+        self::assertSame(['gemi'], $company['required'][2]['kinds']);
+        self::assertStringContainsString('άλλα στοιχεία', $company['reminders'][0]);
+
+        $sole = $this->req($gas + ['company_type' => 'Ατομική']);
+        self::assertSame(['id', 'connection', 'kad'], array_column($sole['required'], 'key'));
+
+        // Χωρίς νομική μορφή: και τα δύο.
+        self::assertSame(['id', 'connection', 'kad', 'statute'], array_column($this->req($gas)['required'], 'key'));
+
+        // Οικιακό αέριο: τίποτα από αυτά.
+        $home = $this->req(['activation' => 'new_connection', 'energy' => 'gas', 'category' => 'home']);
+        self::assertSame(['id', 'connection'], array_column($home['required'], 'key'));
+    }
+
+    /** (454) Διαδοχή λόγω θανάτου: υπενθύμιση, σε ρεύμα και αέριο. */
+    public function testSuccessionRemindsAboutDeathCertificates(): void
+    {
+        foreach (['power', 'gas'] as $energy) {
+            $r = $this->req(['activation' => 'succession', 'energy' => $energy, 'category' => 'home']);
+
+            self::assertStringContainsString('πιστοποιητικό θανάτου', implode(' | ', $r['reminders']), $energy);
+        }
     }
 
     /**
