@@ -1489,6 +1489,11 @@
 .ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrgroup__n { color: var(--sig-ink-3); }
 .ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrrow { padding: 12px 16px; border-top-color: var(--sig-hair-2); cursor: pointer; }
 .ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrrow:hover { background: var(--sig-fill); }
+/* (455) Το γκρι του hover έμενε τετράγωνο και έβγαινε έξω από τις στρογγυλές γωνίες της κάρτας
+ * (ακτίνα 22 με εσωτερικό 4px → 18 στη γραμμή). Πρώτη γραμμή χωρίς τίτλο ομάδας (ένας πάροχος) και τελευταία. */
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrgroup > .ecrm-mgrrow:first-child { border-radius: 18px 18px 0 0; }
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrgroup > .ecrm-mgrrow:last-child { border-radius: 0 0 18px 18px; }
+.ecrm-app[data-ui="signature"] .sig-stuck .ecrm-mgrgroup > .ecrm-mgrrow:only-child { border-radius: 18px; }
 .ecrm-app[data-ui="signature"] [data-view="escalations"] .ecrm-xsell__tabs { margin-bottom: 4px; }
 
 @media (max-width: 760px) {
