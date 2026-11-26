@@ -1,0 +1,215 @@
+{
+ "page_w": 210.1,
+ "page_h": 297.1,
+ "fields": {
+  "onomateponymo_pelati": {
+   "page": 1,
+   "x": 51.5,
+   "y": 65.2
+  },
+  "dieuthynsi_katoikias": {
+   "page": 1,
+   "x": 26.2,
+   "y": 74.8
+  },
+  "adt_pelati": {
+   "page": 1,
+   "x": 18.3,
+   "y": 80.2
+  },
+  "afm_pelati": {
+   "page": 1,
+   "x": 67.7,
+   "y": 80.2
+  },
+  "doy_pelati": {
+   "page": 1,
+   "x": 131.6,
+   "y": 80.2
+  },
+  "tilefono_pelati": {
+   "page": 1,
+   "x": 25.8,
+   "y": 90.1
+  },
+  "kinito_pelati": {
+   "page": 1,
+   "x": 68.4,
+   "y": 91.2
+  },
+  "email_pelati": {
+   "page": 1,
+   "x": 130.7,
+   "y": 91.2
+  },
+  "arithmos_aitisis": {
+   "page": 1,
+   "x": 33.7,
+   "y": 47.8,
+   "maxw": 11
+  },
+  "imerominia_aitisis": {
+   "page": 1,
+   "x": 66.2,
+   "y": 47.8,
+   "size": 7,
+   "maxw": 12.4
+  },
+  "onoma_programmatos": {
+   "page": 1,
+   "x": 110.1,
+   "y": 47.8
+  },
+  "arithmos_paroxis": {
+   "page": 1,
+   "x": 23.5,
+   "y": 159.6
+  },
+  "dieuthynsi_paroxis": {
+   "page": 1,
+   "x": 26.4,
+   "y": 164.8
+  },
+  "kodikos_timologiou": {
+   "page": 1,
+   "x": 26.2,
+   "y": 173.7
+  },
+  "ipistamenos_promitheftis": {
+   "page": 1,
+   "x": 111.2,
+   "y": 182.9
+  },
+  "typos_pelati_etaireia": {
+   "page": 1,
+   "x": 20.9,
+   "y": 55.2,
+   "check": true
+  },
+  "typos_pelati_idiotis": {
+   "page": 1,
+   "x": 37.3,
+   "y": 55.2,
+   "check": true
+  },
+  "typos_pelati_atomiki": {
+   "page": 1,
+   "x": 70.1,
+   "y": 55.2,
+   "check": true
+  },
+  "diarkeia_aoristou": {
+   "page": 1,
+   "x": 24.6,
+   "y": 238.6,
+   "check": true
+  },
+  "diarkeia_6_mines": {
+   "page": 1,
+   "x": 43.6,
+   "y": 238.6,
+   "check": true
+  },
+  "diarkeia_12_mines": {
+   "page": 1,
+   "x": 63.3,
+   "y": 238.6,
+   "check": true
+  },
+  "diarkeia_18_mines": {
+   "page": 1,
+   "x": 83.0,
+   "y": 238.6,
+   "check": true
+  },
+  "diarkeia_24_mines": {
+   "page": 1,
+   "x": 102.4,
+   "y": 238.6,
+   "check": true
+  },
+  "diarkeia_36_mines": {
+   "page": 1,
+   "x": 123.2,
+   "y": 238.6,
+   "check": true
+  },
+  "onomateponymo_epikoinonias": {
+   "page": 1,
+   "x": 52.1,
+   "y": 140.2
+  },
+  "adt_epikoinonias": {
+   "page": 1,
+   "x": 19.5,
+   "y": 142.8
+  },
+  "afm_epikoinonias": {
+   "page": 1,
+   "x": 74.5,
+   "y": 142.8
+  },
+  "tilefono_epikoinonias": {
+   "page": 1,
+   "x": 25.8,
+   "y": 147.4
+  },
+  "kinito_epikoinonias": {
+   "page": 1,
+   "x": 70.4,
+   "y": 147.4
+  },
+  "email_epikoinonias": {
+   "page": 1,
+   "x": 131.2,
+   "y": 147.4
+  },
+  "teleftaia_endeixi_metriti": {
+   "page": 1,
+   "x": 48.2,
+   "y": 178.4
+  },
+  "poso_eggiisis": {
+   "page": 1,
+   "x": 96.2,
+   "y": 187.5
+  },
+  "kad": [
+   {
+    "page": 1,
+    "x": 19.4,
+    "y": 193.2
+   },
+   {
+    "page": 1,
+    "x": 18.5,
+    "y": 84.8
+   }
+  ],
+  "onomateponymo_ekprosopou": {
+   "page": 1,
+   "x": 41.8,
+   "y": 70.1
+  }
+ },
+ "sig": {
+  "page": 2,
+  "x": 14.0,
+  "y": 212.0,
+  "w": 42,
+  "h": 0
+ },
+ "labels": {
+  "typos_pelati_atomiki": "ΕΤΑΙΡΕΙΑ ΙΔΙΩΤΗΣ ΑΤΟΜΙΚΗ ΕΠΙΧΕΙΡΗΣΗ",
+  "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
+  "afm_pelati": "Α.Φ.Μ.",
+  "doy_pelati": "Δ.Ο.Υ.",
+  "tilefono_pelati": "ΤΗΛΕΦΩΝΟ",
+  "kinito_pelati": "ΚΙΝΗΤΟ",
+  "email_pelati": "EMAIL",
+  "onomateponymo_epikoinonias": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
+  "afm_epikoinonias": "Α.Φ.Μ.",
+  "poso_eggiisis": "ΕΓΓΥΗΣΗΣ",
+  "kad": "Κ.Α.Δ."
+ }
+}

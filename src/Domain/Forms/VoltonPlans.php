@@ -34,6 +34,12 @@
  * της Protergia. Ένας φτιαχτός αριθμός εκεί δεν θα τυπωνόταν πουθενά, θα
  * φαινόταν όμως στο dropdown σαν να είναι η τιμή που πληρώνει ο πελάτης.
  *
+ * (457) Τα νέα μπλε (σταθερά) από τους Ειδικούς Όρους που έστειλε η Volton
+ * 26/11/2026 (ισχύς από 23/11): οι τιμές €/kWh είναι κι εδώ με έκπτωση
+ * συνέπειας. Το Fixed Plus έχει τους πρώτους 3 μήνες χαμηλότερη τιμή (Promo:
+ * 0,145 οικιακό, 0,165 Γ21)· στο dropdown γράφεται η τιμή όλης της υπόλοιπης
+ * διάρκειας. Τα παλιά μπλε μένουν ενεργά (απόφαση ιδιοκτήτη 26/11).
+ *
  * (456) Τα Yellow Simple Γ22/Γ23 μετρήθηκαν από τους Ειδικούς Όρους (6,90 €).
  * Τρία πάγια έμειναν `null` επειδή **δεν μετρήθηκαν**, όχι επειδή είναι μηδέν:
  * `yellow simple` Γ22/Γ23 και `green ειδικό` Γ22/Γ23 δεν διαβάστηκαν από τις
@@ -83,6 +89,23 @@ final class VoltonPlans
             'priceType'   => 'fixed',
             'fixedCharge' => 14.90,
             'priceKwh'    => 0.145,
+        ],
+        // (457) Νέα σταθερά από 23/11/2026, Ειδικοί Όροι Volton 11.2026|01.
+        'volton_blue_fixed_plus_18m' => [
+            'label'       => 'Volton Blue Fixed Plus 18M',
+            'energyType'  => 'power',
+            'category'    => 'home',
+            'priceType'   => 'fixed',
+            'fixedCharge' => 12.90,
+            'priceKwh'    => 0.180,
+        ],
+        'volton_blue_flat_12m' => [
+            'label'       => 'Volton Blue Flat 12M',
+            'energyType'  => 'power',
+            'category'    => 'home',
+            'priceType'   => 'fixed',
+            'fixedCharge' => 14.90,
+            'priceKwh'    => 0.175,
         ],
         'volton_blue_student' => [
             'label'       => 'Volton Blue Student',
@@ -190,6 +213,31 @@ final class VoltonPlans
             'priceType'   => 'fixed',
             'fixedCharge' => 14.90,
             'priceKwh'    => 0.165,
+        ],
+        // (457) Νέα σταθερά από 23/11/2026, Ειδικοί Όροι Volton 11.2026|01.
+        'volton_blue_fixed_plus_18m_g21' => [
+            'label'       => 'Volton Blue Fixed Plus 18M Business Γ21',
+            'energyType'  => 'power',
+            'category'    => 'business',
+            'priceType'   => 'fixed',
+            'fixedCharge' => 13.90,
+            'priceKwh'    => 0.195,
+        ],
+        'volton_blue_flat_24m_g21' => [
+            'label'       => 'Volton Blue Flat 24M Business Γ21',
+            'energyType'  => 'power',
+            'category'    => 'business',
+            'priceType'   => 'fixed',
+            'fixedCharge' => 14.90,
+            'priceKwh'    => 0.190,
+        ],
+        'volton_blue_flat_12m_g21' => [
+            'label'       => 'Volton Blue Flat 12M Business Γ21',
+            'energyType'  => 'power',
+            'category'    => 'business',
+            'priceType'   => 'fixed',
+            'fixedCharge' => 15.90,
+            'priceKwh'    => 0.195,
         ],
         'volton_yellow_zero_g21' => [
             'label'       => 'Volton Yellow Zero Business Γ21',

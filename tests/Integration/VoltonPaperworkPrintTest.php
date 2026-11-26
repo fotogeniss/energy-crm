@@ -3,6 +3,7 @@
 /**
  * (456) Volton: η αίτηση τυπώνει και τους Ειδικούς Όρους του προγράμματος,
  * και η μετάβαση 0067 φέρνει τα νέα κίτρινα προγράμματα στη βάση.
+ * (457) Και τα νέα μπλε (0068), μία φορά το καθένα.
  *
  * @kanonas K7
  * @package EnergyCRM
@@ -13,6 +14,7 @@ declare(strict_types=1);
 namespace EnergyCRM\Tests\Integration;
 
 use ECRM_FormFill;
+use EnergyCRM\Persistence\Schema\Migrations\AddVoltonBlueNovember2026;
 use EnergyCRM\Persistence\Schema\Migrations\AddVoltonYellowNovember2026;
 use EnergyCRM\Persistence\Schema\SchemaInspector;
 use EnergyCRM\Persistence\Tables;
@@ -27,7 +29,10 @@ final class VoltonPaperworkPrintTest extends IntegrationTestCase
             'program_code'  => 'volton_stay_win_g22',
         ]);
 
-        self::assertSame(['volton_he', 'volton_eo_stay_win_g22', 'volton_promo_stay_win_g22'], $keys);
+        self::assertSame(
+            ['volton_he', 'volton_go', 'volton_eo_stay_win_g22', 'volton_promo_stay_win_g22'],
+            $keys
+        );
     }
 
     /** Υπογεγραμμένη πριν: το ίδιο χαρτί που υπέγραψε ο πελάτης (K1). */
@@ -40,7 +45,7 @@ final class VoltonPaperworkPrintTest extends IntegrationTestCase
             'signed_at'     => '2026-11-10 12:00:00',
         ]);
 
-        self::assertSame(['volton_he'], $keys);
+        self::assertSame(['volton_he_v1'], $keys);
     }
 
     public function testTheMigrationAddsTheNewPlansAndFillsOnlyEmptyCharges(): void
@@ -96,5 +101,39 @@ final class VoltonPaperworkPrintTest extends IntegrationTestCase
         self::assertEqualsWithDelta(10.90, (float) $charge('volton_yellow_protect_oct26'), 0.001);
         self::assertEqualsWithDelta(6.90, (float) $charge('volton_yellow_simple_g22'), 0.001);
         self::assertEqualsWithDelta(7.50, (float) $charge('volton_yellow_simple_g23'), 0.001);
+    }
+
+    public function testTheBlueMigrationAddsEachNewPlanOnce(): void
+    {
+        global $wpdb;
+
+        $providers = Tables::name(Tables::PROVIDERS);
+        $programs  = Tables::name(Tables::PROGRAMS);
+
+        $provider = (int) $wpdb->get_var($wpdb->prepare('SELECT id FROM %i WHERE slug = %s', $providers, 'volton'));
+
+        if ($provider <= 0) {
+            $wpdb->insert($providers, ['slug' => 'volton', 'name' => 'Volton']);
+            $provider = (int) $wpdb->insert_id;
+        }
+
+        (new AddVoltonBlueNovember2026())->apply(new SchemaInspector());
+        (new AddVoltonBlueNovember2026())->apply(new SchemaInspector());
+
+        foreach (AddVoltonBlueNovember2026::NEW as $code) {
+            self::assertSame(1, (int) $wpdb->get_var($wpdb->prepare(
+                'SELECT COUNT(*) FROM %i WHERE provider_id = %d AND code = %s AND active = 1',
+                $programs,
+                $provider,
+                $code
+            )), $code);
+        }
+
+        self::assertEqualsWithDelta(0.180, (float) $wpdb->get_var($wpdb->prepare(
+            'SELECT price_kwh FROM %i WHERE provider_id = %d AND code = %s',
+            $programs,
+            $provider,
+            'volton_blue_fixed_plus_18m'
+        )), 0.0001);
     }
 }

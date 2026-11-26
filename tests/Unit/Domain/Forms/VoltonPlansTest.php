@@ -124,4 +124,27 @@ final class VoltonPlansTest extends TestCase
         self::assertFalse(VoltonPlans::exists('volton_picasso'));
         self::assertFalse(VoltonPlans::exists(''));
     }
+
+    /**
+     * (457) Οι νέες τιμές, γραμμή-γραμμή από τους Ειδικούς Όρους 11.2026|01
+     * (πάγιο, τιμή με έκπτωση συνέπειας).
+     */
+    public function testTheNewBluePlansMatchTheirTerms(): void
+    {
+        $expected = [
+            'volton_blue_fixed_plus_18m'     => ['home', 12.90, 0.180],
+            'volton_blue_flat_12m'           => ['home', 14.90, 0.175],
+            'volton_blue_fixed_plus_18m_g21' => ['business', 13.90, 0.195],
+            'volton_blue_flat_24m_g21'       => ['business', 14.90, 0.190],
+            'volton_blue_flat_12m_g21'       => ['business', 15.90, 0.195],
+        ];
+        $all = VoltonPlans::all();
+
+        foreach ($expected as $code => [$category, $charge, $rate]) {
+            self::assertSame($category, $all[$code]['category'], $code);
+            self::assertSame('fixed', $all[$code]['priceType'], $code);
+            self::assertEqualsWithDelta($charge, $all[$code]['fixedCharge'], 0.001, $code);
+            self::assertEqualsWithDelta($rate, $all[$code]['priceKwh'], 0.0001, $code);
+        }
+    }
 }

@@ -40,6 +40,7 @@ use EnergyCRM\Persistence\Schema\Migrations\AddProviderStatusMapColumn;
 use EnergyCRM\Persistence\Schema\Migrations\AddSiteIntakeColumns;
 use EnergyCRM\Persistence\Schema\Migrations\AddSupplyNumberIndex;
 use EnergyCRM\Persistence\Schema\Migrations\AddTaskKindColumn;
+use EnergyCRM\Persistence\Schema\Migrations\AddVoltonBlueNovember2026;
 use EnergyCRM\Persistence\Schema\Migrations\AddVoltonYellowNovember2026;
 use EnergyCRM\Persistence\Schema\Migrations\AddTrackKeyColumn;
 use EnergyCRM\Persistence\Schema\Migrations\CreateCustomerEventsTable;
@@ -161,6 +162,7 @@ final class MigrationList
             new RehashCustomerPhone(),
             new AddFileUploadedViaColumn(),
             new AddVoltonYellowNovember2026(),
+            new AddVoltonBlueNovember2026(),
         ];
     }
 }

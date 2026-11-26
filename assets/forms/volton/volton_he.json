@@ -27,20 +27,17 @@
    "x": 131.6,
    "y": 80.2
   },
-  "tilefono_pelati": {
-   "page": 1,
-   "x": 25.8,
-   "y": 90.1
-  },
   "kinito_pelati": {
    "page": 1,
-   "x": 68.4,
-   "y": 91.2
+   "x": 36.4,
+   "y": 91.2,
+   "maxw": 20
   },
   "email_pelati": {
    "page": 1,
-   "x": 130.7,
-   "y": 91.2
+   "x": 66.4,
+   "y": 91.2,
+   "maxw": 55
   },
   "arithmos_aitisis": {
    "page": 1,
@@ -190,26 +187,35 @@
    "page": 1,
    "x": 41.8,
    "y": 70.1
+  },
+  "topos_imerominia_aitisis": {
+   "page": 2,
+   "x": 62.8,
+   "y": 210.5,
+   "size": 8,
+   "maxw": 42
   }
- },
- "sig": {
-  "page": 2,
-  "x": 14.0,
-  "y": 212.0,
-  "w": 42,
-  "h": 0
  },
  "labels": {
   "typos_pelati_atomiki": "ΕΤΑΙΡΕΙΑ ΙΔΙΩΤΗΣ ΑΤΟΜΙΚΗ ΕΠΙΧΕΙΡΗΣΗ",
   "onomateponymo_pelati": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
   "afm_pelati": "Α.Φ.Μ.",
   "doy_pelati": "Δ.Ο.Υ.",
-  "tilefono_pelati": "ΤΗΛΕΦΩΝΟ",
   "kinito_pelati": "ΚΙΝΗΤΟ",
   "email_pelati": "EMAIL",
   "onomateponymo_epikoinonias": "ΟΝΟΜΑΤΕΠΩΝΥΜΟ/ΕΠΩΝΥΜΙΑ",
   "afm_epikoinonias": "Α.Φ.Μ.",
   "poso_eggiisis": "ΕΓΓΥΗΣΗΣ",
   "kad": "Κ.Α.Δ."
- }
+ },
+ "sigs": [
+  {
+   "page": 2,
+   "x": 11.0,
+   "y": 202.7,
+   "w": 42,
+   "h": 0,
+   "fit_h": 11
+  }
+ ]
 }
