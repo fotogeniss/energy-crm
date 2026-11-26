@@ -34,6 +34,7 @@
  * της Protergia. Ένας φτιαχτός αριθμός εκεί δεν θα τυπωνόταν πουθενά, θα
  * φαινόταν όμως στο dropdown σαν να είναι η τιμή που πληρώνει ο πελάτης.
  *
+ * (456) Τα Yellow Simple Γ22/Γ23 μετρήθηκαν από τους Ειδικούς Όρους (6,90 €).
  * Τρία πάγια έμειναν `null` επειδή **δεν μετρήθηκαν**, όχι επειδή είναι μηδέν:
  * `yellow simple` Γ22/Γ23 και `green ειδικό` Γ22/Γ23 δεν διαβάστηκαν από τις
  * δικές τους σελίδες (μόνο το Γ21 κάθε οικογένειας διαβάστηκε). Το `stay & win`
@@ -128,6 +129,16 @@ final class VoltonPlans
             'fixedCharge' => 4.90,
             'priceKwh'    => null,
         ],
+        // (456) Από τους Ειδικούς Όρους της Volton (10.2026): κίτρινο, Γ1/Γ1Ν,
+        // 1,280 × ΜΤΑΜ + 0,004, 12 μήνες. «Oct '26» είναι μέρος του ονόματος.
+        'volton_yellow_protect_oct26' => [
+            'label'       => "Volton Yellow Protect Oct '26",
+            'energyType'  => 'power',
+            'category'    => 'home',
+            'priceType'   => 'variable',
+            'fixedCharge' => 10.90,
+            'priceKwh'    => null,
+        ],
         'volton_green_eidiko' => [
             'label'       => 'Volton Green Ειδικό',
             'energyType'  => 'power',
@@ -220,13 +231,14 @@ final class VoltonPlans
             'fixedCharge' => 6.90,
             'priceKwh'    => null,
         ],
-        // Πάγιο αμέτρητο (βλ. docblock κλάσης) — όχι μηδέν.
+        // (456) Τα πάγια Γ22/Γ23 από τους Ειδικούς Όρους της Volton (03.2026|03):
+        // 6,90 €, όπως το Γ21.
         'volton_yellow_simple_g22' => [
             'label'       => 'Volton Yellow Simple Business Γ22',
             'energyType'  => 'power',
             'category'    => 'business',
             'priceType'   => 'variable',
-            'fixedCharge' => null,
+            'fixedCharge' => 6.90,
             'priceKwh'    => null,
         ],
         'volton_yellow_simple_g23' => [
@@ -234,7 +246,17 @@ final class VoltonPlans
             'energyType'  => 'power',
             'category'    => 'business',
             'priceType'   => 'variable',
-            'fixedCharge' => null,
+            'fixedCharge' => 6.90,
+            'priceKwh'    => null,
+        ],
+        // (456) Ειδικοί Όροι Volton: κίτρινο, Γ21 έως 25 kVA, 1,1990 × ΜΤΑΜ +
+        // 0,014 με έκπτωση συνέπειας, 12 μήνες.
+        'volton_yellow_standard_g21' => [
+            'label'       => 'Volton Yellow Standard Business Γ21',
+            'energyType'  => 'power',
+            'category'    => 'business',
+            'priceType'   => 'variable',
+            'fixedCharge' => 9.90,
             'priceKwh'    => null,
         ],
         'volton_green_eidiko_g21' => [

@@ -1,0 +1,24 @@
+{
+ "page_w": 215.9,
+ "page_h": 279.4,
+ "print_only": true,
+ "sigs": [
+  {
+   "page": 3,
+   "x": 24.5,
+   "y": 211.4,
+   "w": 42,
+   "h": 0,
+   "fit_h": 11
+  }
+ ],
+ "fields": {
+  "topos_imerominia_aitisis": {
+   "page": 3,
+   "x": 105.6,
+   "y": 219.9,
+   "size": 8,
+   "maxw": 48.0
+  }
+ }
+}

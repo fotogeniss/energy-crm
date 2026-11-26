@@ -116,7 +116,9 @@ final class VoltonPlansTest extends TestCase
         $plans = VoltonPlans::all();
 
         self::assertSame(0.00, $plans['volton_yellow_zero']['fixedCharge']);
-        self::assertNull($plans['volton_yellow_simple_g22']['fixedCharge']);
+        self::assertNull($plans['volton_green_eidiko_g22']['fixedCharge']);
+        // (456) Μετρήθηκαν από τους Ειδικούς Όρους της Volton.
+        self::assertSame(6.90, $plans['volton_yellow_simple_g22']['fixedCharge']);
         self::assertNull($plans['volton_green_eidiko_g23']['fixedCharge']);
 
         self::assertFalse(VoltonPlans::exists('volton_picasso'));

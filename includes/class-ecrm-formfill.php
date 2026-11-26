@@ -782,8 +782,14 @@ class ECRM_FormFill {
 			if ( $key === 'volton_he' ) {
 				$x = self::extras( $c );
 
+				// (456) Η αίτηση, οι Ειδικοί Όροι του προγράμματος και η
+				// Προωθητική όπου υπάρχει (απόφαση ιδιοκτήτη 26/11). Το combo
+				// κινητής μένει στο τέλος, όπως πριν.
 				return array_merge(
-					[ $key ],
+					\EnergyCRM\Domain\Forms\VoltonPaperwork::forProgram(
+						(string) ( $c['program_code'] ?? '' ),
+						(string) ( $c['signed_at'] ?? '' )
+					),
 					\EnergyCRM\Domain\Forms\MobilePaperwork::comboAttachmentFor( (string) ( $x['combo_mobile_offer'] ?? '' ) )
 				);
 			}
